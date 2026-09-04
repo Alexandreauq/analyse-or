@@ -18,13 +18,26 @@
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   html, body {
     margin: 0; background: var(--bg); color: var(--text);
-    font-family: 'Inter', sans-serif; min-height: 100%;
+    font-family: 'Inter', sans-serif; min-height: 100%; overflow-x: hidden;
   }
   button { font: inherit; cursor: pointer; }
   a { text-decoration: none; }
   [hidden] { display: none !important; }
 
   .app { max-width: 720px; margin: 0 auto; }
+
+  /* Les deux écrans occupent tout le viewport et se superposent pendant
+     la transition ; #or glisse par-dessus #home puis repart au retour. */
+  .home, #or {
+    position: fixed; inset: 0; overflow-y: auto; -webkit-overflow-scrolling: touch;
+    background: var(--bg);
+  }
+  #or {
+    z-index: 2; transform: translateX(100%);
+    transition: transform 0.32s cubic-bezier(.4, 0, .2, 1);
+  }
+  #or.screen-in { transform: translateX(0); }
+  #or.no-anim { transition: none; }
 
   /* Nav des modules (Or / Minières / Indices), fixe en haut à droite */
   .tabbar {
@@ -41,7 +54,8 @@
 
   /* Écran d'accueil */
   .home {
-    min-height: 100vh; display: flex; flex-direction: column;
+    z-index: 1;
+    display: flex; flex-direction: column;
     align-items: center; justify-content: center; text-align: center;
     padding: 24px; gap: 10px;
   }
@@ -115,7 +129,7 @@
   <button class="tab disabled" disabled>Indices</button>
 </nav>
 
-<div id="home" class="home" hidden>
+<div id="home" class="home">
   <div class="home-wordmark">IA Investment</div>
   <p class="home-tagline">Analyse macro-fondamentale automatisée, mise à jour en continu.</p>
   <p class="home-hint">Choisis un module — <span class="gold-word">Or</span> en haut à droite pour commencer.</p>
@@ -244,24 +258,54 @@ function currentRoute() {
   return location.hash === '#or' ? 'or' : 'home';
 }
 
-function renderRoute() {
-  const route = currentRoute();
-  document.getElementById('home').hidden = route !== 'home';
-  document.getElementById('or').hidden = route !== 'or';
-  document.querySelectorAll('.tab[data-route]').forEach(tab => {
-    tab.classList.toggle('active', tab.dataset.route === route);
-  });
-  if (route === 'or' && !scoreLoaded) {
+// #home reste toujours affiché en dessous ; #or glisse par-dessus (et repart)
+// pour donner un effet de transition façon navigation mobile.
+function showOr(animate) {
+  const orEl = document.getElementById('or');
+  orEl.hidden = false;
+  if (!animate) {
+    orEl.classList.add('no-anim');
+    orEl.classList.add('screen-in');
+    requestAnimationFrame(() => orEl.classList.remove('no-anim'));
+  } else {
+    requestAnimationFrame(() => orEl.classList.add('screen-in'));
+  }
+  if (!scoreLoaded) {
     scoreLoaded = true;
     loadScore();
   }
 }
 
+function showHome(animate) {
+  const orEl = document.getElementById('or');
+  if (!animate) {
+    orEl.classList.remove('screen-in');
+    orEl.hidden = true;
+    return;
+  }
+  orEl.classList.remove('screen-in');
+  const onEnd = (e) => {
+    if (e.propertyName !== 'transform') return;
+    orEl.hidden = true;
+    orEl.removeEventListener('transitionend', onEnd);
+  };
+  orEl.addEventListener('transitionend', onEnd);
+}
+
+function renderRoute(animate) {
+  const route = currentRoute();
+  document.querySelectorAll('.tab[data-route]').forEach(tab => {
+    tab.classList.toggle('active', tab.dataset.route === route);
+  });
+  if (route === 'or') showOr(animate);
+  else showHome(animate);
+}
+
 document.querySelectorAll('.tab[data-route]').forEach(tab => {
   tab.addEventListener('click', () => { location.hash = '#' + tab.dataset.route; });
 });
-window.addEventListener('hashchange', renderRoute);
-renderRoute();
+window.addEventListener('hashchange', () => renderRoute(true));
+renderRoute(false);
 </script>
 </body>
 </html>

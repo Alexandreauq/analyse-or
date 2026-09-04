@@ -698,7 +698,7 @@ def send_email(payload, dashboard_path=OUTPUT_HTML_PATH):
     """
     smtp_user = os.environ.get("SMTP_USER")
     smtp_password = os.environ.get("SMTP_PASSWORD")
-    mail_to = os.environ.get("MAIL_TO", smtp_user)
+    mail_to = os.environ.get("MAIL_TO") or smtp_user
 
     if not smtp_user or not smtp_password:
         print("\n(Envoi d'email ignoré : SMTP_USER / SMTP_PASSWORD non configurés.)")

@@ -32,7 +32,6 @@ jobs:
           FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
           SMTP_USER: ${{ secrets.SMTP_USER }}
           SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
-          MAIL_TO: ${{ secrets.MAIL_TO }}
 
       - name: Publier les données mises à jour sur le site
         run: |

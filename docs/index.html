@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#15161c">
-<title>Analyse Or</title>
+<title>IA Investment</title>
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icons/icon-192.png">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
@@ -20,25 +20,43 @@
     margin: 0; background: var(--bg); color: var(--text);
     font-family: 'Inter', sans-serif; min-height: 100%;
   }
-  .app { max-width: 720px; margin: 0 auto; padding-bottom: 84px; }
-  header { padding: 20px 20px 0; }
+  button { font: inherit; cursor: pointer; }
+  a { text-decoration: none; }
+  [hidden] { display: none !important; }
+
+  .app { max-width: 720px; margin: 0 auto; }
+
+  /* Nav des modules (Or / Minières / Indices), fixe en haut à droite */
+  .tabbar {
+    position: fixed; top: 0; right: 0; z-index: 10;
+    display: flex; gap: 6px;
+    padding: max(14px, env(safe-area-inset-top)) 16px 12px max(12px, env(safe-area-inset-right));
+  }
+  .tab {
+    font-size: 12px; padding: 6px 12px; border-radius: 999px;
+    background: var(--panel); border: 1px solid var(--border); color: var(--muted);
+  }
+  .tab.active { color: var(--gold); border-color: var(--gold); }
+  .tab.disabled { opacity: 0.35; pointer-events: none; }
+
+  /* Écran d'accueil */
+  .home {
+    min-height: 100vh; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; text-align: center;
+    padding: 24px; gap: 10px;
+  }
+  .home-wordmark { font-family: 'Fraunces', serif; font-weight: 500; font-size: 34px; letter-spacing: -0.01em; }
+  .home-tagline { color: var(--muted); font-size: 13px; max-width: 280px; line-height: 1.5; margin: 0; }
+  .home-hint { color: var(--muted); font-size: 12px; margin-top: 28px; }
+  .home-hint .gold-word { color: var(--gold); }
+
+  /* Écran d'un module (Or) */
+  .screen main { padding: 0 20px 40px; }
+  header { padding: 64px 20px 0; }
+  .back-link { color: var(--muted); font-size: 12px; display: inline-block; margin-bottom: 10px; }
   .eyebrow { color: var(--muted); font-size: 12px; margin-bottom: 4px; }
   h1 { font-family: 'Fraunces', serif; font-weight: 500; font-size: 24px; margin: 0 0 4px; }
   .updated { color: var(--muted); font-size: 12px; margin: 0 0 16px; }
-
-  .tabbar {
-    position: fixed; bottom: 0; left: 0; right: 0;
-    display: flex; background: var(--panel); border-top: 1px solid var(--border);
-    padding-bottom: env(safe-area-inset-bottom);
-  }
-  .tab {
-    flex: 1; text-align: center; padding: 12px 4px 10px; font-size: 12px;
-    color: var(--muted); border-top: 2px solid transparent;
-  }
-  .tab.active { color: var(--gold); border-top-color: var(--gold); }
-  .tab.disabled { opacity: 0.4; }
-
-  main { padding: 0 20px; }
 
   .hero { display:flex; align-items:center; gap: 24px; padding: 12px 0 20px; }
   .hero-number { font-family: 'Fraunces', serif; font-weight: 500; font-size: 64px; line-height:1; color: var(--gold); }
@@ -47,6 +65,16 @@
 
   .divider { height: 1px; background: var(--border); margin: 4px 0 20px; }
   h2 { font-family: 'Fraunces', serif; font-weight: 500; font-size: 16px; margin: 0 0 12px; }
+
+  .detail-btn {
+    display: flex; align-items: center; gap: 6px; width: 100%;
+    background: none; border: none; color: var(--gold);
+    font-size: 13px; font-weight: 500; padding: 14px 0; margin-top: 4px;
+    border-top: 1px solid var(--border);
+  }
+  .detail-btn .chevron { transition: transform 0.15s ease; }
+  .detail-btn[aria-expanded="true"] .chevron { transform: rotate(180deg); }
+  .detail-wrap { padding-top: 4px; }
 
   .factor-row { padding: 12px 0; border-bottom: 1px solid var(--border); }
   .factor-head { display:flex; justify-content:space-between; margin-bottom: 6px; font-size: 13px; }
@@ -77,13 +105,25 @@
 
   .empty { color: var(--muted); font-size: 13px; text-align:center; padding: 60px 20px; }
   .empty a { color: var(--gold); }
-
-  .placeholder { color: var(--muted); font-size: 14px; text-align:center; padding: 80px 20px; }
 </style>
 </head>
 <body>
-<div class="app">
+
+<nav class="tabbar">
+  <button class="tab" data-route="or">Or</button>
+  <button class="tab disabled" disabled>Minières</button>
+  <button class="tab disabled" disabled>Indices</button>
+</nav>
+
+<div id="home" class="home" hidden>
+  <div class="home-wordmark">IA Investment</div>
+  <p class="home-tagline">Analyse macro-fondamentale automatisée, mise à jour en continu.</p>
+  <p class="home-hint">Choisis un module — <span class="gold-word">Or</span> en haut à droite pour commencer.</p>
+</div>
+
+<div id="or" class="screen app" hidden>
   <header>
+    <a href="#home" class="back-link">← IA Investment</a>
     <div class="eyebrow">Analyse — phase 1</div>
     <h1>Or</h1>
     <p class="updated" id="updated"></p>
@@ -93,12 +133,6 @@
     <div class="empty">Chargement…</div>
   </main>
 </div>
-
-<nav class="tabbar">
-  <div class="tab active">Or</div>
-  <div class="tab disabled">Minières</div>
-  <div class="tab disabled">Indices</div>
-</nav>
 
 <script>
 if ('serviceWorker' in navigator) {
@@ -110,6 +144,8 @@ function alertColor(kind) {
   if (kind === 'watch' || kind === 'entree') return 'var(--gold)';
   return 'var(--muted)';
 }
+
+let scoreLoaded = false;
 
 async function loadScore() {
   const content = document.getElementById('content');
@@ -175,8 +211,12 @@ function render(data) {
     <h2>Alertes</h2>
     ${alertsHtml || '<p class="hero-sub">Aucune alerte.</p>'}
 
-    <h2 style="margin-top:24px;">Décomposition par facteur</h2>
-    ${factorsHtml}
+    <button class="detail-btn" id="toggleDetail" type="button" aria-expanded="false">
+      Détail du calcul du rating <span class="chevron">▾</span>
+    </button>
+    <div class="detail-wrap" id="factorsWrap" hidden>
+      ${factorsHtml}
+    </div>
 
     <div class="panel">
       <h2>Repère technique</h2>
@@ -190,9 +230,38 @@ function render(data) {
       ${calendarHtml || '<p class="hero-sub">Aucun événement à venir.</p>'}
     </div>
   `;
+
+  document.getElementById('toggleDetail').addEventListener('click', (e) => {
+    const btn = e.currentTarget;
+    const wrap = document.getElementById('factorsWrap');
+    const open = wrap.hidden;
+    wrap.hidden = !open;
+    btn.setAttribute('aria-expanded', String(open));
+  });
 }
 
-loadScore();
+function currentRoute() {
+  return location.hash === '#or' ? 'or' : 'home';
+}
+
+function renderRoute() {
+  const route = currentRoute();
+  document.getElementById('home').hidden = route !== 'home';
+  document.getElementById('or').hidden = route !== 'or';
+  document.querySelectorAll('.tab[data-route]').forEach(tab => {
+    tab.classList.toggle('active', tab.dataset.route === route);
+  });
+  if (route === 'or' && !scoreLoaded) {
+    scoreLoaded = true;
+    loadScore();
+  }
+}
+
+document.querySelectorAll('.tab[data-route]').forEach(tab => {
+  tab.addEventListener('click', () => { location.hash = '#' + tab.dataset.route; });
+});
+window.addEventListener('hashchange', renderRoute);
+renderRoute();
 </script>
 </body>
 </html>

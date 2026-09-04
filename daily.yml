@@ -1,0 +1,43 @@
+name: Score quotidien Or
+
+on:
+  schedule:
+    # 07:00 UTC = 09:00 à Paris en heure d'été (CEST, UTC+2).
+    # Passe à '0 8 * * *' fin octobre quand la France repasse en heure
+    # d'hiver (CET, UTC+1), si tu veux garder pile 9h00 toute l'année.
+    - cron: "0 7 * * *"
+  workflow_dispatch: {}   # permet de lancer manuellement depuis l'onglet Actions, pour tester
+
+permissions:
+  contents: write   # nécessaire pour que le workflow puisse commit/push les données mises à jour
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Récupérer le dépôt
+        uses: actions/checkout@v4
+
+      - name: Installer Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Installer les dépendances
+        run: pip install -r requirements.txt
+
+      - name: Calculer le score et envoyer l'email
+        run: python3 gold_score.py
+        env:
+          FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+          MAIL_TO: ${{ secrets.MAIL_TO }}
+
+      - name: Publier les données mises à jour sur le site
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add docs/score.json score.json score_history.json dashboard.html
+          git diff --staged --quiet || git commit -m "Mise à jour quotidienne du score"
+          git push

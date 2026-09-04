@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#15161c">
+<title>Analyse Or</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap');
+  :root {
+    --bg: #15161c; --panel: #1b1d25; --border: #2a2d38;
+    --text: #edeef3; --muted: #8a90a3;
+    --gold: #c6a15b; --rust: #b25539;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font-family: 'Inter', sans-serif; min-height: 100%;
+  }
+  .app { max-width: 720px; margin: 0 auto; padding-bottom: 84px; }
+  header { padding: 20px 20px 0; }
+  .eyebrow { color: var(--muted); font-size: 12px; margin-bottom: 4px; }
+  h1 { font-family: 'Fraunces', serif; font-weight: 500; font-size: 24px; margin: 0 0 4px; }
+  .updated { color: var(--muted); font-size: 12px; margin: 0 0 16px; }
+
+  .tabbar {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    display: flex; background: var(--panel); border-top: 1px solid var(--border);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .tab {
+    flex: 1; text-align: center; padding: 12px 4px 10px; font-size: 12px;
+    color: var(--muted); border-top: 2px solid transparent;
+  }
+  .tab.active { color: var(--gold); border-top-color: var(--gold); }
+  .tab.disabled { opacity: 0.4; }
+
+  main { padding: 0 20px; }
+
+  .hero { display:flex; align-items:center; gap: 24px; padding: 12px 0 20px; }
+  .hero-number { font-family: 'Fraunces', serif; font-weight: 500; font-size: 64px; line-height:1; color: var(--gold); }
+  .hero-label { font-size: 16px; font-weight: 500; margin-bottom: 6px; }
+  .hero-sub { color: var(--muted); font-size: 13px; line-height: 1.5; margin: 0; }
+
+  .divider { height: 1px; background: var(--border); margin: 4px 0 20px; }
+  h2 { font-family: 'Fraunces', serif; font-weight: 500; font-size: 16px; margin: 0 0 12px; }
+
+  .factor-row { padding: 12px 0; border-bottom: 1px solid var(--border); }
+  .factor-head { display:flex; justify-content:space-between; margin-bottom: 6px; font-size: 13px; }
+  .factor-name { font-weight: 500; }
+  .factor-weight { color: var(--muted); }
+  .bar-track { position:relative; height:6px; background: var(--border); border-radius: 3px; margin-bottom: 6px; }
+  .bar-center { position:absolute; left:50%; top:-2px; bottom:-2px; width:1px; background: var(--muted); opacity:0.5; }
+  .bar-fill { position:absolute; top:0; bottom:0; border-radius: 3px; }
+  .factor-note { color: var(--muted); font-size: 12px; line-height: 1.5; margin: 0; }
+
+  .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 16px; margin: 20px 0; }
+  .tech-row { display:flex; justify-content:space-between; font-size:13px; padding: 5px 0; }
+  .tech-label { color: var(--muted); }
+  .tech-value { font-weight: 500; }
+
+  .cal-row { display:flex; justify-content:space-between; gap:10px; font-size:12px;
+             padding:8px 0; border-bottom:1px solid var(--border); }
+  .cal-row:last-child { border-bottom: none; }
+  .cal-left { display:flex; flex-direction:column; }
+  .cal-date { color: var(--gold); font-size:12px; }
+  .cal-kind { color: var(--muted); font-size:11px; white-space:nowrap; }
+
+  .alert-row { border-left: 2px solid; padding: 4px 0 10px 12px; margin-bottom: 12px; }
+  .alert-row:last-child { margin-bottom: 0; }
+  .alert-head { display:flex; justify-content:space-between; font-size:13px; font-weight:500; gap:8px; }
+  .alert-date { color: var(--muted); font-weight:400; white-space:nowrap; }
+  .alert-detail { color: var(--muted); font-size:12px; line-height:1.5; margin:4px 0 0; }
+
+  .empty { color: var(--muted); font-size: 13px; text-align:center; padding: 60px 20px; }
+  .empty a { color: var(--gold); }
+
+  .placeholder { color: var(--muted); font-size: 14px; text-align:center; padding: 80px 20px; }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="eyebrow">Analyse — phase 1</div>
+    <h1>Or</h1>
+    <p class="updated" id="updated"></p>
+  </header>
+
+  <main id="content">
+    <div class="empty">Chargement…</div>
+  </main>
+</div>
+
+<nav class="tabbar">
+  <div class="tab active">Or</div>
+  <div class="tab disabled">Minières</div>
+  <div class="tab disabled">Indices</div>
+</nav>
+
+<script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('service-worker.js').catch(() => {});
+}
+
+function alertColor(kind) {
+  if (kind === 'risque') return 'var(--rust)';
+  if (kind === 'watch' || kind === 'entree') return 'var(--gold)';
+  return 'var(--muted)';
+}
+
+async function loadScore() {
+  const content = document.getElementById('content');
+  try {
+    const res = await fetch('score.json?t=' + Date.now());
+    if (!res.ok) throw new Error('score.json introuvable');
+    const data = await res.json();
+    render(data);
+  } catch (e) {
+    content.innerHTML = `<div class="empty">Données indisponibles pour l'instant.<br>${e.message}</div>`;
+  }
+}
+
+function render(data) {
+  document.getElementById('updated').textContent = 'Mis à jour le ' + data.date;
+
+  const factorsHtml = data.factors.map(f => {
+    const pct = Math.min(50, Math.abs(f.score) / 10 * 50);
+    const positive = f.score >= 0;
+    return `
+      <div class="factor-row">
+        <div class="factor-head">
+          <span class="factor-name">${f.name}</span>
+          <span class="factor-weight">${Math.round(f.weight * 100)}%</span>
+        </div>
+        <div class="bar-track">
+          <div class="bar-center"></div>
+          <div class="bar-fill" style="left:${positive ? 50 : 50 - pct}%; width:${pct}%; background:${positive ? 'var(--gold)' : 'var(--rust)'};"></div>
+        </div>
+        <p class="factor-note">${f.raw_value}</p>
+      </div>`;
+  }).join('');
+
+  const t = data.technical || {};
+  const spotStr = t.spot ? `${t.spot.toLocaleString('fr-FR', {maximumFractionDigits:0})} $ / oz` : 'indisponible';
+  const ma200Str = t.ma200 ? `${t.ma200.toLocaleString('fr-FR', {maximumFractionDigits:0})} $ / oz` : 'indisponible';
+
+  const calendarHtml = (data.calendar || []).map(c => `
+    <div class="cal-row">
+      <div class="cal-left">
+        <span class="cal-date">${c.date}</span>
+        <span>${c.label}</span>
+      </div>
+      <span class="cal-kind">${c.kind}</span>
+    </div>`).join('');
+
+  const alertsHtml = (data.alerts || []).map(a => `
+    <div class="alert-row" style="border-left-color:${alertColor(a.kind)};">
+      <div class="alert-head"><span>${a.title}</span><span class="alert-date">${a.date}</span></div>
+      <p class="alert-detail">${a.detail}</p>
+    </div>`).join('');
+
+  document.getElementById('content').innerHTML = `
+    <section class="hero">
+      <div class="hero-number">${data.composite_score > 0 ? '+' : ''}${data.composite_score}</div>
+      <div>
+        <div class="hero-label">${data.interpretation}</div>
+        <p class="hero-sub">Échelle -100 à +100. Entrée envisageable au-dessus de +15, prudence en dessous de -15.</p>
+      </div>
+    </section>
+    <div class="divider"></div>
+
+    <h2>Alertes</h2>
+    ${alertsHtml || '<p class="hero-sub">Aucune alerte.</p>'}
+
+    <h2 style="margin-top:24px;">Décomposition par facteur</h2>
+    ${factorsHtml}
+
+    <div class="panel">
+      <h2>Repère technique</h2>
+      <div class="tech-row"><span class="tech-label">Cours spot</span><span class="tech-value">${spotStr}</span></div>
+      <div class="tech-row"><span class="tech-label">Moyenne mobile 200j</span><span class="tech-value">${ma200Str}</span></div>
+      <p class="hero-sub" style="margin-top:8px;">${t.note || ''}</p>
+    </div>
+
+    <div class="panel">
+      <h2>Calendrier macro</h2>
+      ${calendarHtml || '<p class="hero-sub">Aucun événement à venir.</p>'}
+    </div>
+  `;
+}
+
+loadScore();
+</script>
+</body>
+</html>

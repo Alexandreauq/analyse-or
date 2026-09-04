@@ -1,0 +1,79 @@
+{
+  "date": "2026-09-04",
+  "composite_score": 26.0,
+  "interpretation": "Favorable — en attente d'un déclencheur technique",
+  "factors": [
+    {
+      "name": "Taux réels US 10 ans",
+      "score": -0.9999999999999964,
+      "weight": 0.3,
+      "raw_value": "2.42% (il y a ~45j : 2.37%)"
+    },
+    {
+      "name": "Dollar (DXY)",
+      "score": 8.465003967285156,
+      "weight": 0.15,
+      "raw_value": "99.16 (il y a 2 mois : 100.85)"
+    },
+    {
+      "name": "Anticipations d'inflation",
+      "score": 3.0000000000000107,
+      "weight": 0.15,
+      "raw_value": "2.35% (il y a ~45j : 2.26%)"
+    },
+    {
+      "name": "Ton de la Fed",
+      "score": 5,
+      "weight": 0.15,
+      "raw_value": "+5 (saisie manuelle)"
+    },
+    {
+      "name": "Flux ETF (GLD + IAU)",
+      "score": 3,
+      "weight": 0.1,
+      "raw_value": "+3 (saisie manuelle)"
+    },
+    {
+      "name": "Positionnement CFTC",
+      "score": -2.179487179487178,
+      "weight": 0.1,
+      "raw_value": "61e percentile (3 ans) — position nette 228,124 contrats"
+    },
+    {
+      "name": "Achats banques centrales",
+      "score": 7,
+      "weight": 0.05,
+      "raw_value": "+7 (saisie manuelle)"
+    }
+  ],
+  "technical": {
+    "note": "Cours proche de la MM200 (-1.0%) — zone de décision",
+    "spot": 4477.2001953125,
+    "ma200": 4520.700494384766
+  },
+  "calendar": [
+    {
+      "date": "11/09/2026",
+      "label": "CPI (Indice des prix à la consommation)",
+      "kind": "Donnée"
+    },
+    {
+      "date": "15/09–16/09/2026",
+      "label": "Réunion FOMC",
+      "kind": "Fed"
+    },
+    {
+      "date": "30/09/2026",
+      "label": "PCE (dépenses de consommation des ménages)",
+      "kind": "Donnée"
+    }
+  ],
+  "alerts": [
+    {
+      "kind": "entree",
+      "title": "Conditions d'entrée réunies",
+      "detail": "Score favorable, cours proche d'un support, positionnement non extrême, pas d'événement Fed imminent.",
+      "date": "04/09/2026"
+    }
+  ]
+}

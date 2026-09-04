@@ -53,6 +53,21 @@
   },
   "calendar": [
     {
+      "date": "04/09/2026",
+      "label": "Emploi US (NFP + chômage)",
+      "kind": "Donnée"
+    },
+    {
+      "date": "10/09/2026",
+      "label": "Inscriptions chômage (hebdo)",
+      "kind": "Donnée"
+    },
+    {
+      "date": "10/09/2026",
+      "label": "PPI (prix à la production)",
+      "kind": "Donnée"
+    },
+    {
       "date": "11/09/2026",
       "label": "CPI (Indice des prix à la consommation)",
       "kind": "Donnée"
@@ -63,8 +78,18 @@
       "kind": "Fed"
     },
     {
+      "date": "16/09/2026",
+      "label": "Ventes au détail",
+      "kind": "Donnée"
+    },
+    {
       "date": "30/09/2026",
       "label": "PCE (dépenses de consommation des ménages)",
+      "kind": "Donnée"
+    },
+    {
+      "date": "30/09/2026",
+      "label": "PIB (GDP)",
       "kind": "Donnée"
     }
   ],

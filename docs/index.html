@@ -31,7 +31,10 @@
   .home, #or {
     position: fixed; inset: 0; overflow-y: auto; -webkit-overflow-scrolling: touch;
     background: var(--bg);
+    scrollbar-width: none;      /* Firefox */
+    -ms-overflow-style: none;   /* vieux Edge */
   }
+  .home::-webkit-scrollbar, #or::-webkit-scrollbar { display: none; }
   #or {
     z-index: 2; transform: translateX(100%);
     transition: transform 0.32s cubic-bezier(.4, 0, .2, 1);
@@ -80,15 +83,22 @@
   .divider { height: 1px; background: var(--border); margin: 4px 0 20px; }
   h2 { font-family: 'Fraunces', serif; font-weight: 500; font-size: 16px; margin: 0 0 12px; }
 
-  .detail-btn {
-    display: flex; align-items: center; gap: 6px; width: 100%;
-    background: none; border: none; color: var(--gold);
-    font-size: 13px; font-weight: 500; padding: 14px 0; margin-top: 4px;
-    border-top: 1px solid var(--border);
+  .btn-row { display: flex; gap: 10px; margin: 4px 0 4px; }
+  .toggle-btn {
+    flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px;
+    background: var(--panel); border: 1px solid var(--border); color: var(--text);
+    font-size: 13px; font-weight: 500; padding: 12px 0; border-radius: 10px;
   }
-  .detail-btn .chevron { transition: transform 0.15s ease; }
-  .detail-btn[aria-expanded="true"] .chevron { transform: rotate(180deg); }
-  .detail-wrap { padding-top: 4px; }
+  .toggle-btn[aria-expanded="true"] { color: var(--gold); border-color: var(--gold); }
+  .toggle-btn .chevron { color: var(--muted); transition: transform 0.15s ease; }
+  .toggle-btn[aria-expanded="true"] .chevron { color: var(--gold); transform: rotate(180deg); }
+  .section-wrap { padding-top: 18px; }
+
+  .notice {
+    background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
+    padding: 14px 16px; margin-bottom: 4px; font-size: 12px; line-height: 1.6; color: var(--muted);
+  }
+  .notice strong { color: var(--text); }
 
   .factor-row { padding: 12px 0; border-bottom: 1px solid var(--border); }
   .factor-head { display:flex; justify-content:space-between; margin-bottom: 6px; font-size: 13px; }
@@ -215,42 +225,63 @@ function render(data) {
   document.getElementById('content').innerHTML = `
     <section class="hero">
       <div class="hero-number">${data.composite_score > 0 ? '+' : ''}${data.composite_score}</div>
-      <div>
-        <div class="hero-label">${data.interpretation}</div>
-        <p class="hero-sub">Échelle -100 à +100. Entrée envisageable au-dessus de +15, prudence en dessous de -15.</p>
-      </div>
+      <div class="hero-label">${data.interpretation}</div>
     </section>
     <div class="divider"></div>
 
-    <h2>Alertes</h2>
-    ${alertsHtml || '<p class="hero-sub">Aucune alerte.</p>'}
+    <div class="btn-row">
+      <button class="toggle-btn" id="toggleActu" type="button" aria-expanded="false">
+        Actu <span class="chevron">▾</span>
+      </button>
+      <button class="toggle-btn" id="toggleDetail" type="button" aria-expanded="false">
+        Détail du calcul <span class="chevron">▾</span>
+      </button>
+    </div>
 
-    <button class="detail-btn" id="toggleDetail" type="button" aria-expanded="false">
-      Détail du calcul du rating <span class="chevron">▾</span>
-    </button>
-    <div class="detail-wrap" id="factorsWrap" hidden>
+    <div class="section-wrap" id="actuWrap" hidden>
+      <h2>Alertes</h2>
+      ${alertsHtml || '<p class="hero-sub">Aucune alerte.</p>'}
+
+      <div class="panel">
+        <h2>Repère technique</h2>
+        <div class="tech-row"><span class="tech-label">Cours spot</span><span class="tech-value">${spotStr}</span></div>
+        <div class="tech-row"><span class="tech-label">Moyenne mobile 200j</span><span class="tech-value">${ma200Str}</span></div>
+        <p class="hero-sub" style="margin-top:8px;">${t.note || ''}</p>
+      </div>
+
+      <div class="panel">
+        <h2>Calendrier macro</h2>
+        ${calendarHtml || '<p class="hero-sub">Aucun événement à venir.</p>'}
+      </div>
+    </div>
+
+    <div class="section-wrap" id="detailWrap" hidden>
+      <div class="notice">
+        Chaque facteur est noté de -10 à +10 selon sa propre méthode (niveau,
+        momentum, ou lecture qualitative pour la Fed), puis pondéré par son
+        poids ci-dessous pour former le score composite. Barre à droite
+        (doré) = favorable à l'or, à gauche (rouge) = défavorable — plus
+        elle s'écarte du centre, plus le signal est marqué.
+        <br><br>
+        <strong>Lecture du score composite :</strong> &gt; +50 très favorable
+        · +15 à +50 favorable · -15 à +15 neutre · &lt; -15 défavorable.
+      </div>
       ${factorsHtml}
-    </div>
-
-    <div class="panel">
-      <h2>Repère technique</h2>
-      <div class="tech-row"><span class="tech-label">Cours spot</span><span class="tech-value">${spotStr}</span></div>
-      <div class="tech-row"><span class="tech-label">Moyenne mobile 200j</span><span class="tech-value">${ma200Str}</span></div>
-      <p class="hero-sub" style="margin-top:8px;">${t.note || ''}</p>
-    </div>
-
-    <div class="panel">
-      <h2>Calendrier macro</h2>
-      ${calendarHtml || '<p class="hero-sub">Aucun événement à venir.</p>'}
     </div>
   `;
 
-  document.getElementById('toggleDetail').addEventListener('click', (e) => {
-    const btn = e.currentTarget;
-    const wrap = document.getElementById('factorsWrap');
-    const open = wrap.hidden;
-    wrap.hidden = !open;
-    btn.setAttribute('aria-expanded', String(open));
+  const toggles = [
+    ['toggleActu', 'actuWrap'],
+    ['toggleDetail', 'detailWrap'],
+  ];
+  toggles.forEach(([btnId, wrapId]) => {
+    document.getElementById(btnId).addEventListener('click', (e) => {
+      const btn = e.currentTarget;
+      const wrap = document.getElementById(wrapId);
+      const open = wrap.hidden;
+      wrap.hidden = !open;
+      btn.setAttribute('aria-expanded', String(open));
+    });
   });
 }
 

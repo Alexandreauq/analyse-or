@@ -736,6 +736,13 @@ def send_email(payload, dashboard_path=OUTPUT_HTML_PATH):
 # ---------------------------------------------------------------------------
 
 def main():
+    # Le workflow tourne toutes les 15 min pour rafraîchir le site en quasi
+    # temps réel, mais un seul de ces runs par jour doit compter comme le
+    # "run quotidien" (email + entrée dans l'historique) — sinon l'email
+    # partirait toutes les 15 min et l'historique gonflerait sans distinguer
+    # les franchissements de seuil d'un jour à l'autre de simple bruit intrajournalier.
+    daily_snapshot = os.environ.get("DAILY_SNAPSHOT", "true").lower() != "false"
+
     api_key = os.environ.get("FRED_API_KEY")
     if not api_key:
         print("ERREUR : variable d'environnement FRED_API_KEY absente.")
@@ -798,11 +805,14 @@ def main():
     for a in alerts:
         print(f"  [{a['kind'].upper():<7}] {a['title']} — {a['detail']}")
 
-    append_history({
-        "date": datetime.today().strftime("%Y-%m-%d"),
-        "composite": composite,
-        "cftc_percentile": cftc_percentile,
-    })
+    if daily_snapshot:
+        append_history({
+            "date": datetime.today().strftime("%Y-%m-%d"),
+            "composite": composite,
+            "cftc_percentile": cftc_percentile,
+        })
+    else:
+        print("\n(Run intrajournalier : historique non modifié.)")
 
     payload = {
         "date": datetime.today().strftime("%Y-%m-%d"),
@@ -830,7 +840,10 @@ def main():
     print(f"Tableau de bord généré : {html_path}")
     print("Ouvre ce fichier .html directement dans ton navigateur pour le voir.")
 
-    send_email(payload, html_path)
+    if daily_snapshot:
+        send_email(payload, html_path)
+    else:
+        print("\n(Run intrajournalier : email non envoyé.)")
 
 
 if __name__ == "__main__":

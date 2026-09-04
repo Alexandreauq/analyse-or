@@ -2,11 +2,17 @@ name: Score quotidien Or
 
 on:
   schedule:
-    # 07:00 UTC = 09:00 à Paris en heure d'été (CEST, UTC+2).
-    # Passe à '0 8 * * *' fin octobre quand la France repasse en heure
-    # d'hiver (CET, UTC+1), si tu veux garder pile 9h00 toute l'année.
-    - cron: "0 7 * * *"
+    # Toutes les 15 minutes : recalcule le score et republie le site pour
+    # un suivi quasi temps réel (utile surtout pour le cours de l'or et le
+    # DXY, qui bougent en intraday — les facteurs FRED/CFTC ne changeront
+    # de toute façon qu'au rythme de leur propre publication).
+    - cron: "*/15 * * * *"
   workflow_dispatch: {}   # permet de lancer manuellement depuis l'onglet Actions, pour tester
+
+# Empêche deux exécutions qui se chevauchent de pousser en même temps sur main.
+concurrency:
+  group: score-quotidien
+  cancel-in-progress: false
 
 permissions:
   contents: write   # nécessaire pour que le workflow puisse commit/push les données mises à jour
@@ -26,17 +32,35 @@ jobs:
       - name: Installer les dépendances
         run: pip install -r requirements.txt
 
+      - name: Déterminer si c'est le run quotidien (email + historique)
+        id: daily_slot
+        # Un seul des runs de 15 min de la journée compte comme "run
+        # quotidien" (celui de 07h00-07h14 UTC = ~9h à Paris en heure
+        # d'été — passer "07" à "08" fin octobre à l'heure d'hiver). Un
+        # déclenchement manuel (workflow_dispatch) compte toujours comme
+        # quotidien, pour pouvoir tester l'email facilement.
+        run: |
+          HOUR=$(date -u +%H)
+          MIN=$(date -u +%M)
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] || { [ "$HOUR" = "07" ] && [ "$MIN" -lt 15 ]; }; then
+            echo "is_daily=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "is_daily=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Calculer le score et envoyer l'email
         run: python3 gold_score.py
         env:
           FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
           SMTP_USER: ${{ secrets.SMTP_USER }}
           SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+          DAILY_SNAPSHOT: ${{ steps.daily_slot.outputs.is_daily }}
 
       - name: Publier les données mises à jour sur le site
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add docs/score.json score.json score_history.json dashboard.html
-          git diff --staged --quiet || git commit -m "Mise à jour quotidienne du score"
+          git diff --staged --quiet || git commit -m "Mise à jour du score"
+          git pull --rebase --autostash
           git push

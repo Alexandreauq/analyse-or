@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#15161c">
-<title>Analyse Or</title>
+<title>IA Investment</title>
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icons/icon-192.png">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
@@ -18,27 +18,62 @@
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   html, body {
     margin: 0; background: var(--bg); color: var(--text);
-    font-family: 'Inter', sans-serif; min-height: 100%;
+    font-family: 'Inter', sans-serif; min-height: 100%; overflow-x: hidden;
   }
-  .app { max-width: 720px; margin: 0 auto; padding-bottom: 84px; }
-  header { padding: 20px 20px 0; }
+  button { font: inherit; cursor: pointer; }
+  a { text-decoration: none; }
+  [hidden] { display: none !important; }
+
+  .app { max-width: 720px; margin: 0 auto; }
+
+  /* Les deux écrans occupent tout le viewport et se superposent pendant
+     la transition ; #or glisse par-dessus #home puis repart au retour. */
+  .home, #or {
+    position: fixed; inset: 0; overflow-y: auto; -webkit-overflow-scrolling: touch;
+    background: var(--bg);
+    scrollbar-width: none;      /* Firefox */
+    -ms-overflow-style: none;   /* vieux Edge */
+  }
+  .home::-webkit-scrollbar, #or::-webkit-scrollbar { display: none; }
+  #or {
+    z-index: 2; transform: translateX(100%);
+    transition: transform 0.32s cubic-bezier(.4, 0, .2, 1);
+  }
+  #or.screen-in { transform: translateX(0); }
+  #or.no-anim { transition: none; }
+
+  /* Nav des modules (Or / Minières / Indices), fixe en haut à droite */
+  .tabbar {
+    position: fixed; top: 0; right: 0; z-index: 10;
+    display: flex; gap: 6px;
+    padding: max(14px, env(safe-area-inset-top)) 16px 12px max(12px, env(safe-area-inset-right));
+  }
+  .tab {
+    font-size: 12px; padding: 6px 12px; border-radius: 999px;
+    background: var(--panel); border: 1px solid var(--border); color: var(--muted);
+  }
+  .tab.active { color: var(--gold); border-color: var(--gold); }
+  .tab.disabled { opacity: 0.35; pointer-events: none; }
+
+  /* Écran d'accueil */
+  .home {
+    z-index: 1;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center; text-align: center;
+    padding: 24px; gap: 10px;
+  }
+  .home-wordmark { font-family: 'Fraunces', serif; font-weight: 500; font-size: 34px; letter-spacing: -0.01em; }
+  .home-tagline { color: var(--muted); font-size: 13px; max-width: 280px; line-height: 1.5; margin: 0; }
+  .home-hint { color: var(--muted); font-size: 12px; margin-top: 28px; }
+  .home-hint .gold-word { color: var(--gold); }
+
+  /* Écran d'un module (Or) */
+  .screen main { padding: 0 20px 40px; }
+  header { padding: 64px 20px 0; }
+  .back-link { color: var(--muted); font-size: 12px; display: inline-block; margin-bottom: 10px; }
   .eyebrow { color: var(--muted); font-size: 12px; margin-bottom: 4px; }
   h1 { font-family: 'Fraunces', serif; font-weight: 500; font-size: 24px; margin: 0 0 4px; }
   .updated { color: var(--muted); font-size: 12px; margin: 0 0 16px; }
-
-  .tabbar {
-    position: fixed; bottom: 0; left: 0; right: 0;
-    display: flex; background: var(--panel); border-top: 1px solid var(--border);
-    padding-bottom: env(safe-area-inset-bottom);
-  }
-  .tab {
-    flex: 1; text-align: center; padding: 12px 4px 10px; font-size: 12px;
-    color: var(--muted); border-top: 2px solid transparent;
-  }
-  .tab.active { color: var(--gold); border-top-color: var(--gold); }
-  .tab.disabled { opacity: 0.4; }
-
-  main { padding: 0 20px; }
 
   .hero { display:flex; align-items:center; gap: 24px; padding: 12px 0 20px; }
   .hero-number { font-family: 'Fraunces', serif; font-weight: 500; font-size: 64px; line-height:1; color: var(--gold); }
@@ -47,6 +82,23 @@
 
   .divider { height: 1px; background: var(--border); margin: 4px 0 20px; }
   h2 { font-family: 'Fraunces', serif; font-weight: 500; font-size: 16px; margin: 0 0 12px; }
+
+  .btn-row { display: flex; gap: 10px; margin: 4px 0 4px; }
+  .toggle-btn {
+    flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px;
+    background: var(--panel); border: 1px solid var(--border); color: var(--text);
+    font-size: 13px; font-weight: 500; padding: 12px 0; border-radius: 10px;
+  }
+  .toggle-btn[aria-expanded="true"] { color: var(--gold); border-color: var(--gold); }
+  .toggle-btn .chevron { color: var(--muted); transition: transform 0.15s ease; }
+  .toggle-btn[aria-expanded="true"] .chevron { color: var(--gold); transform: rotate(180deg); }
+  .section-wrap { padding-top: 18px; }
+
+  .notice {
+    background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
+    padding: 14px 16px; margin-bottom: 4px; font-size: 12px; line-height: 1.6; color: var(--muted);
+  }
+  .notice strong { color: var(--text); }
 
   .factor-row { padding: 12px 0; border-bottom: 1px solid var(--border); }
   .factor-head { display:flex; justify-content:space-between; margin-bottom: 6px; font-size: 13px; }
@@ -77,13 +129,25 @@
 
   .empty { color: var(--muted); font-size: 13px; text-align:center; padding: 60px 20px; }
   .empty a { color: var(--gold); }
-
-  .placeholder { color: var(--muted); font-size: 14px; text-align:center; padding: 80px 20px; }
 </style>
 </head>
 <body>
-<div class="app">
+
+<nav class="tabbar">
+  <button class="tab" data-route="or">Or</button>
+  <button class="tab disabled" disabled>Minières</button>
+  <button class="tab disabled" disabled>Indices</button>
+</nav>
+
+<div id="home" class="home">
+  <div class="home-wordmark">IA Investment</div>
+  <p class="home-tagline">Analyse macro-fondamentale automatisée, mise à jour en continu.</p>
+  <p class="home-hint">Choisis un module — <span class="gold-word">Or</span> en haut à droite pour commencer.</p>
+</div>
+
+<div id="or" class="screen app" hidden>
   <header>
+    <a href="#home" class="back-link">← IA Investment</a>
     <div class="eyebrow">Analyse — phase 1</div>
     <h1>Or</h1>
     <p class="updated" id="updated"></p>
@@ -93,12 +157,6 @@
     <div class="empty">Chargement…</div>
   </main>
 </div>
-
-<nav class="tabbar">
-  <div class="tab active">Or</div>
-  <div class="tab disabled">Minières</div>
-  <div class="tab disabled">Indices</div>
-</nav>
 
 <script>
 if ('serviceWorker' in navigator) {
@@ -110,6 +168,8 @@ function alertColor(kind) {
   if (kind === 'watch' || kind === 'entree') return 'var(--gold)';
   return 'var(--muted)';
 }
+
+let scoreLoaded = false;
 
 async function loadScore() {
   const content = document.getElementById('content');
@@ -165,34 +225,118 @@ function render(data) {
   document.getElementById('content').innerHTML = `
     <section class="hero">
       <div class="hero-number">${data.composite_score > 0 ? '+' : ''}${data.composite_score}</div>
-      <div>
-        <div class="hero-label">${data.interpretation}</div>
-        <p class="hero-sub">Échelle -100 à +100. Entrée envisageable au-dessus de +15, prudence en dessous de -15.</p>
-      </div>
+      <div class="hero-label">${data.interpretation}</div>
     </section>
     <div class="divider"></div>
 
-    <h2>Alertes</h2>
-    ${alertsHtml || '<p class="hero-sub">Aucune alerte.</p>'}
-
-    <h2 style="margin-top:24px;">Décomposition par facteur</h2>
-    ${factorsHtml}
-
-    <div class="panel">
-      <h2>Repère technique</h2>
-      <div class="tech-row"><span class="tech-label">Cours spot</span><span class="tech-value">${spotStr}</span></div>
-      <div class="tech-row"><span class="tech-label">Moyenne mobile 200j</span><span class="tech-value">${ma200Str}</span></div>
-      <p class="hero-sub" style="margin-top:8px;">${t.note || ''}</p>
+    <div class="btn-row">
+      <button class="toggle-btn" id="toggleActu" type="button" aria-expanded="false">
+        Actu <span class="chevron">▾</span>
+      </button>
+      <button class="toggle-btn" id="toggleDetail" type="button" aria-expanded="false">
+        Détail du calcul <span class="chevron">▾</span>
+      </button>
     </div>
 
-    <div class="panel">
-      <h2>Calendrier macro</h2>
-      ${calendarHtml || '<p class="hero-sub">Aucun événement à venir.</p>'}
+    <div class="section-wrap" id="actuWrap" hidden>
+      <h2>Alertes</h2>
+      ${alertsHtml || '<p class="hero-sub">Aucune alerte.</p>'}
+
+      <div class="panel">
+        <h2>Repère technique</h2>
+        <div class="tech-row"><span class="tech-label">Cours spot</span><span class="tech-value">${spotStr}</span></div>
+        <div class="tech-row"><span class="tech-label">Moyenne mobile 200j</span><span class="tech-value">${ma200Str}</span></div>
+        <p class="hero-sub" style="margin-top:8px;">${t.note || ''}</p>
+      </div>
+
+      <div class="panel">
+        <h2>Calendrier macro</h2>
+        ${calendarHtml || '<p class="hero-sub">Aucun événement à venir.</p>'}
+      </div>
+    </div>
+
+    <div class="section-wrap" id="detailWrap" hidden>
+      <div class="notice">
+        Chaque facteur est noté de -10 à +10 selon sa propre méthode (niveau,
+        momentum, ou lecture qualitative pour la Fed), puis pondéré par son
+        poids ci-dessous pour former le score composite. Barre à droite
+        (doré) = favorable à l'or, à gauche (rouge) = défavorable — plus
+        elle s'écarte du centre, plus le signal est marqué.
+        <br><br>
+        <strong>Lecture du score composite :</strong> &gt; +50 très favorable
+        · +15 à +50 favorable · -15 à +15 neutre · &lt; -15 défavorable.
+      </div>
+      ${factorsHtml}
     </div>
   `;
+
+  const toggles = [
+    ['toggleActu', 'actuWrap'],
+    ['toggleDetail', 'detailWrap'],
+  ];
+  toggles.forEach(([btnId, wrapId]) => {
+    document.getElementById(btnId).addEventListener('click', (e) => {
+      const btn = e.currentTarget;
+      const wrap = document.getElementById(wrapId);
+      const open = wrap.hidden;
+      wrap.hidden = !open;
+      btn.setAttribute('aria-expanded', String(open));
+    });
+  });
 }
 
-loadScore();
+function currentRoute() {
+  return location.hash === '#or' ? 'or' : 'home';
+}
+
+// #home reste toujours affiché en dessous ; #or glisse par-dessus (et repart)
+// pour donner un effet de transition façon navigation mobile.
+function showOr(animate) {
+  const orEl = document.getElementById('or');
+  orEl.hidden = false;
+  if (!animate) {
+    orEl.classList.add('no-anim');
+    orEl.classList.add('screen-in');
+    requestAnimationFrame(() => orEl.classList.remove('no-anim'));
+  } else {
+    requestAnimationFrame(() => orEl.classList.add('screen-in'));
+  }
+  if (!scoreLoaded) {
+    scoreLoaded = true;
+    loadScore();
+  }
+}
+
+function showHome(animate) {
+  const orEl = document.getElementById('or');
+  if (!animate) {
+    orEl.classList.remove('screen-in');
+    orEl.hidden = true;
+    return;
+  }
+  orEl.classList.remove('screen-in');
+  const onEnd = (e) => {
+    if (e.propertyName !== 'transform') return;
+    orEl.hidden = true;
+    orEl.removeEventListener('transitionend', onEnd);
+  };
+  orEl.addEventListener('transitionend', onEnd);
+}
+
+function renderRoute(animate) {
+  const route = currentRoute();
+  document.querySelectorAll('.tab[data-route]').forEach(tab => {
+    tab.classList.toggle('active', tab.dataset.route === route);
+  });
+  if (route === 'or') showOr(animate);
+  else showHome(animate);
+}
+
+document.querySelectorAll('.tab[data-route]').forEach(tab => {
+  tab.addEventListener('click', () => { location.hash = '#' + tab.dataset.route; });
+});
+window.addEventListener('hashchange', () => renderRoute(true));
+renderRoute(false);
 </script>
 </body>
 </html>

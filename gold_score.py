@@ -254,7 +254,8 @@ def check_technical_trigger(spot: float, ma200: float) -> str:
 
 
 # ---------------------------------------------------------------------------
-# 8. Calendrier macro (FOMC + publications CPI/PCE)
+# 8. Calendrier macro (FOMC + publications susceptibles d'impacter l'or :
+#    inflation, emploi, activité)
 # ---------------------------------------------------------------------------
 
 FRED_RELEASES_URL = "https://api.stlouisfed.org/fred/release/dates"
@@ -275,6 +276,11 @@ FOMC_2026_MEETINGS = [
 FRED_RELEASE_IDS = {
     "cpi": (10, "CPI (Indice des prix à la consommation)"),
     "pce": (54, "PCE (dépenses de consommation des ménages)"),
+    "emploi": (50, "Emploi US (NFP + chômage)"),
+    "claims": (180, "Inscriptions chômage (hebdo)"),
+    "ppi": (46, "PPI (prix à la production)"),
+    "ventes_detail": (9, "Ventes au détail"),
+    "pib": (53, "PIB (GDP)"),
 }
 
 

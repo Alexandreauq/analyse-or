@@ -1,12 +1,12 @@
 {
-  "name": "Analyse Or — Score macro-fondamental",
-  "short_name": "Analyse Or",
+  "name": "IA Investment",
+  "short_name": "IA Invest",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
   "background_color": "#15161c",
   "theme_color": "#15161c",
-  "description": "Score macro-fondamental quotidien de l'or, avec alertes et calendrier macro.",
+  "description": "Analyse macro-fondamentale automatisée — score de l'or, avec alertes et calendrier macro.",
   "icons": [
     { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
     { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }

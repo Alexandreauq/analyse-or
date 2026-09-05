@@ -188,6 +188,49 @@ def test_score_valorisation_at_historical_average_is_neutral():
     assert result.score == 0.0
 
 
+from indices_score import score_dynamique_recente
+
+
+def test_score_dynamique_recente_averages_both_subsignals():
+    # écart MM200 de +10% -> sous-score 5.0 (10/20*10) ; accélération de
+    # +5pt (croissance trim 11% vs tendance 5 ans 6%) -> sous-score 5.0 (5/10*10)
+    result = score_dynamique_recente(
+        ecart_pct_ma200=10.0, quarterly_yoy_growth_ca=11.0, cagr_ca=6.0
+    )
+    assert result.name == "Dynamique récente"
+    assert result.weight == 0.10
+    assert result.score == 5.0
+
+
+def test_score_dynamique_recente_uses_only_price_when_quarterly_unavailable():
+    result = score_dynamique_recente(
+        ecart_pct_ma200=10.0, quarterly_yoy_growth_ca=None, cagr_ca=6.0
+    )
+    assert result.score == 5.0
+
+
+def test_score_dynamique_recente_uses_only_quarterly_when_price_unavailable():
+    result = score_dynamique_recente(
+        ecart_pct_ma200=None, quarterly_yoy_growth_ca=11.0, cagr_ca=6.0
+    )
+    assert result.score == 5.0
+
+
+def test_score_dynamique_recente_neutral_when_no_subsignal_available():
+    result = score_dynamique_recente(
+        ecart_pct_ma200=None, quarterly_yoy_growth_ca=None, cagr_ca=6.0
+    )
+    assert result.score == 0.0
+    assert result.raw_value == "Données insuffisantes"
+
+
+def test_score_dynamique_recente_clamps_extreme_price_deviation():
+    result = score_dynamique_recente(
+        ecart_pct_ma200=100.0, quarterly_yoy_growth_ca=None, cagr_ca=0.0
+    )
+    assert result.score == 10.0
+
+
 from indices_score import compute_composite, interpret, FactorResult
 
 

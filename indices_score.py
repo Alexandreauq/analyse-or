@@ -246,6 +246,38 @@ def score_valorisation(
     )
 
 
+PRICE_MOMENTUM_SCALE = 20.0    # % d'écart vs MM200 pour un score plein
+QUARTERLY_ACCEL_SCALE = 10.0   # points d'écart de croissance pour un score plein
+
+
+def score_dynamique_recente(
+    ecart_pct_ma200: float | None,
+    quarterly_yoy_growth_ca: float | None,
+    cagr_ca: float,
+) -> FactorResult:
+    """Moyenne de 2 sous-signaux (chacun mis à l'échelle -10/+10
+    indépendamment avant moyenne, car unités différentes) : tendance du
+    cours vs MM200, et accélération du dernier trimestre publié vs la
+    tendance 5 ans déjà calculée (cagr_ca). Si un sous-signal manque, la
+    moyenne ne porte que sur celui disponible ; si aucun n'est
+    disponible, score neutre 0.0."""
+    sub_scores = []
+    raw_parts = []
+    if ecart_pct_ma200 is not None:
+        sub_scores.append(_clamp(ecart_pct_ma200 / PRICE_MOMENTUM_SCALE * 10))
+        raw_parts.append(f"Cours {ecart_pct_ma200:+.1f}% vs MM200")
+    if quarterly_yoy_growth_ca is not None:
+        acceleration = quarterly_yoy_growth_ca - cagr_ca
+        sub_scores.append(_clamp(acceleration / QUARTERLY_ACCEL_SCALE * 10))
+        raw_parts.append(
+            f"CA dernier trim. {quarterly_yoy_growth_ca:+.1f}% vs an dernier "
+            f"(tendance 5 ans {cagr_ca:+.1f}%)"
+        )
+    score = sum(sub_scores) / len(sub_scores) if sub_scores else 0.0
+    raw_value = " — ".join(raw_parts) if raw_parts else "Données insuffisantes"
+    return FactorResult("Dynamique récente", score, WEIGHTS["dynamique_recente"], raw_value)
+
+
 def compute_composite(factors: list[FactorResult]) -> float:
     weighted_sum = sum(f.score * f.weight for f in factors)
     return round(weighted_sum * 10, 1)

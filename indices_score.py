@@ -533,7 +533,9 @@ def fetch_news(company_name: str) -> list[dict]:
     items = parse_news_rss(resp.content)
     for item in items:
         article_text = fetch_article_text(item["link"])
-        item["summary"] = summarize_news_item(item["title"], company_name, article_text)
+        result = summarize_news_item(item["title"], company_name, article_text)
+        item["summary"] = result["summary"]
+        item["sentiment"] = result["sentiment"]
     return items
 
 
@@ -653,6 +655,19 @@ def build_company_entry(ticker: str, name: str) -> dict:
     data = fetch_company_financials(ticker)
     sector = data["sector"]
 
+    # Les news sont récupérées avant la construction des facteurs : le
+    # facteur "Actualité récente" dépend du sentiment attaché à chaque
+    # actu par fetch_news. Un échec total du flux RSS dégrade vers
+    # news = [] (voir fetch_news / summarize_news_item, qui ne lèvent
+    # jamais), ce qui fait à son tour retomber score_actualite_recente([])
+    # sur son cas neutre — la dépendance se dégrade proprement de bout
+    # en bout, sans faire perdre le score fondamental déjà calculable.
+    try:
+        news = fetch_news(name)
+    except Exception as e:
+        print(f"Erreur récupération news pour {name} : {e}")
+        news = []
+
     factors = [
         score_rentabilite(data["roce"], data["roe"], COST_OF_CAPITAL_PROXY),
         score_structure_financiere(data["net_debt_ebitda"], data["icr"], sector),
@@ -662,19 +677,12 @@ def build_company_entry(ticker: str, name: str) -> dict:
             data["current_ev_ebitda"], data["avg_ev_ebitda_5y"],
             data["current_pe"], data["avg_pe_5y"], data["cagr_ebitda"],
         ),
+        score_dynamique_recente(
+            data["ecart_pct_ma200"], data["quarterly_yoy_growth_ca"], data["cagr_ca"],
+        ),
+        score_actualite_recente(news),
     ]
     composite = compute_composite(factors)
-
-    # La récupération des news est une donnée secondaire, distincte du score
-    # fondamental (cf. Methodologie_Analyse_Indices.md, "Décisions actées") :
-    # un échec du flux RSS (timeout, format Google modifié, rate limit) ne
-    # doit pas faire perdre toute l'entrée (dont le score) déjà calculée,
-    # même logique que get_gold_spot_and_ma200() dans gold_score.py.
-    try:
-        news = fetch_news(name)
-    except Exception as e:
-        print(f"Erreur récupération news pour {name} : {e}")
-        news = []
 
     return {
         "ticker": ticker,

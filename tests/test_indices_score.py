@@ -766,13 +766,16 @@ def _fake_ratios():
         "avg_ev_ebitda_5y": 10.0,
         "current_pe": 20.0,
         "avg_pe_5y": 20.0,
+        "ecart_pct_ma200": 5.0,
+        "quarterly_yoy_growth_ca": 7.0,
         "sector": "Consumer Defensive",
     }
 
 
 def test_build_company_entry_degrades_gracefully_when_news_fetch_fails(monkeypatch):
     """Une panne du flux RSS (fetch_news) ne doit pas faire perdre le score
-    déjà calculé pour l'entreprise — seule la liste de news doit être vide."""
+    déjà calculé pour l'entreprise — seule la liste de news doit être vide,
+    et le facteur Actualité récente doit rester neutre plutôt que planter."""
     monkeypatch.setattr(indices_score, "fetch_company_financials", lambda ticker: _fake_ratios())
 
     def _raise_news(name):
@@ -786,19 +789,26 @@ def test_build_company_entry_degrades_gracefully_when_news_fetch_fails(monkeypat
     assert entry["ticker"] == "BN.PA"
     assert entry["name"] == "Danone"
     assert isinstance(entry["score"], float)
-    assert len(entry["factors"]) == 5
+    assert len(entry["factors"]) == 7
+    assert entry["factors"][6]["name"] == "Actualité récente"
+    assert entry["factors"][6]["score"] == 0.0
 
 
 def test_build_company_entry_includes_news_when_fetch_succeeds(monkeypatch):
     monkeypatch.setattr(indices_score, "fetch_company_financials", lambda ticker: _fake_ratios())
     monkeypatch.setattr(
         indices_score, "fetch_news",
-        lambda name: [{"title": "Titre", "date": "2026-09-04", "link": "https://example.com"}],
+        lambda name: [
+            {"title": "Titre", "date": "2026-09-04", "link": "https://example.com", "sentiment": 1}
+        ],
     )
 
     entry = indices_score.build_company_entry("BN.PA", "Danone")
 
-    assert entry["news"] == [{"title": "Titre", "date": "2026-09-04", "link": "https://example.com"}]
+    assert entry["news"] == [
+        {"title": "Titre", "date": "2026-09-04", "link": "https://example.com", "sentiment": 1}
+    ]
+    assert entry["factors"][5]["name"] == "Dynamique récente"
 
 
 from indices_score import fetch_news
@@ -838,7 +848,10 @@ def test_fetch_news_attaches_source_and_summary_and_isolates_per_item_failures(m
     )
     monkeypatch.setattr(
         indices_score, "summarize_news_item",
-        lambda title, name, text: f"Résumé pour {title} (article={text})"
+        lambda title, name, text: {
+            "summary": f"Résumé pour {title} (article={text})",
+            "sentiment": 1 if text is None else -1,
+        }
     )
 
     items = fetch_news("Test SA")
@@ -846,5 +859,7 @@ def test_fetch_news_attaches_source_and_summary_and_isolates_per_item_failures(m
     assert len(items) == 2
     assert items[0]["source"] == "Source A"
     assert items[0]["summary"] == "Résumé pour Titre A (article=None)"
+    assert items[0]["sentiment"] == 1
     assert items[1]["source"] == "Source B"
     assert items[1]["summary"] == "Résumé pour Titre B (article=Texte B)"
+    assert items[1]["sentiment"] == -1

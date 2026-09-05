@@ -1,13 +1,13 @@
 {
-  "date": "2026-09-04",
-  "composite_score": 26.0,
+  "date": "2026-09-05",
+  "composite_score": 26.2,
   "interpretation": "Favorable — en attente d'un déclencheur technique",
   "factors": [
     {
       "name": "Taux réels US 10 ans",
-      "score": -0.9999999999999964,
+      "score": -0.5999999999999961,
       "weight": 0.3,
-      "raw_value": "2.42% (il y a ~45j : 2.37%)"
+      "raw_value": "2.42% (il y a ~45j : 2.39%)"
     },
     {
       "name": "Dollar (DXY)",
@@ -17,9 +17,9 @@
     },
     {
       "name": "Anticipations d'inflation",
-      "score": 3.0000000000000107,
+      "score": 2.333333333333343,
       "weight": 0.15,
-      "raw_value": "2.35% (il y a ~45j : 2.26%)"
+      "raw_value": "2.35% (il y a ~45j : 2.28%)"
     },
     {
       "name": "Ton de la Fed",
@@ -52,11 +52,6 @@
     "ma200": 4520.700494384766
   },
   "calendar": [
-    {
-      "date": "04/09/2026",
-      "label": "Emploi US (NFP + chômage)",
-      "kind": "Donnée"
-    },
     {
       "date": "10/09/2026",
       "label": "Inscriptions chômage (hebdo)",
@@ -91,6 +86,11 @@
       "date": "30/09/2026",
       "label": "PIB (GDP)",
       "kind": "Donnée"
+    },
+    {
+      "date": "02/10/2026",
+      "label": "Emploi US (NFP + chômage)",
+      "kind": "Donnée"
     }
   ],
   "alerts": [
@@ -98,7 +98,7 @@
       "kind": "entree",
       "title": "Conditions d'entrée réunies",
       "detail": "Score favorable, cours proche d'un support, positionnement non extrême, pas d'événement Fed imminent.",
-      "date": "04/09/2026"
+      "date": "05/09/2026"
     }
   ]
 }

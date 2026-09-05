@@ -59,3 +59,31 @@ def sector_risk_profile(sector: str | None) -> str:
     """Renvoie 'defensif' / 'standard' / 'cyclique' pour un secteur
     yfinance donné, 'standard' par défaut si secteur inconnu ou absent."""
     return SECTOR_PROFILES.get(sector, "standard")
+
+
+def _clamp(value: float, low: float = -10.0, high: float = 10.0) -> float:
+    return max(low, min(high, value))
+
+
+ROCE_SPREAD_SCALE = 5.0  # points d'écart ROCE - coût du capital pour un score plein
+
+
+def score_rentabilite(roce: float, roe: float, cost_of_capital: float) -> FactorResult:
+    """
+    ROCE = rentabilité économique après IS (Résultat d'exploitation après
+    IS / Actif économique). Le signal principal est l'écart entre le ROCE
+    et le coût du capital (proxy simplifié) : au-dessus, l'entreprise crée
+    de la valeur ; en dessous, elle en détruit. Le ROE est affiché à titre
+    informatif (permet de repérer si la rentabilité des capitaux propres
+    provient surtout de l'effet de levier plutôt que de la performance
+    opérationnelle), sans peser directement sur le score.
+    """
+    spread = roce - cost_of_capital
+    score = _clamp((spread / ROCE_SPREAD_SCALE) * 10)
+    return FactorResult(
+        "Rentabilité / création de valeur",
+        score,
+        WEIGHTS["rentabilite"],
+        f"ROCE {roce:.1f}% vs coût du capital {cost_of_capital:.1f}% "
+        f"(ROE {roe:.1f}%)",
+    )

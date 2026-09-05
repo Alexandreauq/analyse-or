@@ -35,7 +35,7 @@
         },
         {
           "name": "Valorisation relative",
-          "score": -3.724168080502406,
+          "score": -3.724170394358354,
           "weight": 0.1,
           "raw_value": "EV/EBITDA 13.2x (moy. 5 ans 12.7x) — PER 28.8x (moy. 5 ans 24.3x)"
         }
@@ -119,17 +119,17 @@
       ],
       "news": [
         {
+          "title": "Volvo rejoint une coalition comprenant Air Liquide et TotalEnergies pour accélérer sur les camions à hydrogène - Investir Les Echos",
+          "date": "2026-09-03",
+          "link": "https://news.google.com/rss/articles/CBMikAJBVV95cUxQYmU4MElXbXZxN3h1MUYzODNrNEFpSjhXZV9VVl80TkR2TWJJRkt6Q2ZUeW51QkhHendndG5VSklfV3diQ19UT0xTQTgtT0VNRndjdktlNG9rRlNab0tUMkljOWd1YllfbWR1N3FDWTBSNkJIOUFhQzdMN1VmOE8zcVBFZnN3bGRSZ0prWTBXaFVfOXFQbmx0SDltTDk1bGVoNFE4TFNBVkU1TWw0N2V4UVdTLTVzblRFWEswbEJQUS1lX2ZLM1B0NXBoNm5mcnMyVmM2elRLVmg3dXpQdUZPeVNUaWVENEZ4RmlkVGtFQnFJcDNFZjEyWWtBY2N3alpzeno3ZDZTLWlDRUUwXzRuLQ?oc=5",
+          "source": "Investir Les Echos",
+          "summary": ""
+        },
+        {
           "title": "À la raffinerie TotalEnergies de Donges, un feu de végétation et un dysfonctionnement sur une unité de production - Ouest-France",
           "date": "2026-09-05",
           "link": "https://news.google.com/rss/articles/CBMirAJBVV95cUxPNXRaZnRwVVJsTTFzYnlhUmI0eXpvUTA3dnNTNmZFQnJUTy1pUnY1bjBVNGl5Y0xIOFNVaWFHR0VtbFRuWGx5eTN5UE1rUHpaTWVHcXZaYzEtbWdxbmRXakQzb0FDdmI4NjBOTG5pNmJKNmZyeWp2NzVWQXdjOTNoVGJFQzh2YUxoeTBIX1FkSWZWWjRQdF9tUy1fWjlzRU1oMWFTcllDb2xlTzNCUkM4blZ5RlAzSnlIeC1RV05BSEpsVmhuQTNfRm1SblhxRjFsSlhZa1M0OTBvT0JtYmZLVDZWNVdra1o4S2RTZFUwY3YxeDMwWE9QYmppdUFGOXEtS011RzFZYlBBWE1ha25KcjdMMXNLd3V3RG1VV2R3UFlQcjBTamw2Q2c4a1U?oc=5",
           "source": "Ouest-France",
-          "summary": ""
-        },
-        {
-          "title": "TotalEnergies, Accor, Axa, GTT, Aperam, ArcelorMittal, Soitec : toutes les recommandations des analystes - Investir Les Echos",
-          "date": "2026-09-04",
-          "link": "https://news.google.com/rss/articles/CBMijwJBVV95cUxQQ1V0Q3lUY3dVVkI3SWdEbEVFRGVWX0gyeTQwdG1GYUNyLTA2eUZqWWhOMWFtOXNVdFozbEVJSFdPODN2ZUQwTHNKd0w4NzZyRldwWXd1SktBOF9tMENmQzdYdVBMSWlLQVlsNFNJX3RJaDNwck16OU5CZ2c2WDhTODA1ZWhQaVVnSmNfS21UVDJyRlJyeUJuVENnM1oyMElWSnFscEdPWUhJcGlveUwyNE1iVzFIZGdDY0xQb2k2eFRlaWl4VVpPYjB4UnlPd19GNjdNbG5jRjFOenY0NURsRzVqU0JFaFkxTnBnZl9sOEI1MDd5X3VaMndNRXNQZUItMldYdHQzeWRNelBDR1Q4?oc=5",
-          "source": "Investir Les Echos",
           "summary": ""
         },
         {
@@ -189,7 +189,7 @@
         },
         {
           "name": "Valorisation relative",
-          "score": -2.0363783606366814,
+          "score": -2.0363785354253165,
           "weight": 0.1,
           "raw_value": "EV/EBITDA 17.1x (moy. 5 ans 15.2x) — PER 31.2x (moy. 5 ans 26.5x)"
         }
@@ -210,10 +210,10 @@
           "summary": ""
         },
         {
-          "title": "Schneider Electric devrait annoncer la fermeture du site de Chasseneuil-du-Poitou dans la Vienne - Le Revenu",
+          "title": "Schneider Electric devrait annoncer la fermeture du site de Chasseneuil-du-Poitou dans la Vienne - lerevenu.com",
           "date": "2026-09-05",
           "link": "https://news.google.com/rss/articles/CBMiqAFBVV95cUxPS2V4d25kZDg2VW9zNV9sWEhST2FMdDJHWEF0WWtDelp0a2JpZ3FLcDZ5TUotTzFqM2UyTWhJc2M3ZmFSUGxBNXhmeHBGLW1NNkpCVWtxVW5Fd2sxcHJQZlByd3NZZEN0ektrTktLbFl2c2wza01kVGUwaC1NbzlsOW5VS3J5UHNoT0pvR2xjMzVnNk1JV0w4QXhDZzlvYmR6eXF2RUE4X2c?oc=5",
-          "source": "Le Revenu",
+          "source": "lerevenu.com",
           "summary": ""
         },
         {
@@ -350,13 +350,6 @@
       ],
       "news": [
         {
-          "title": "Réduire le gaspillage alimentaire - Danone",
-          "date": "2026-09-02",
-          "link": "https://news.google.com/rss/articles/CBMijwFBVV95cUxOcTVJMGZSTWxpcGlhRnRId3JmN2JYV2ozRk9tUlM1VThHUVA3a2hDYkwxRFlOdThqUnBNSHNsVEUtMXdTclhrbHM4SFY4LVowN2lYanFxaTc4aUdMZTdoOE1PU3ZteU1SMEFFVUszenIwaWlwdXFYT2piQThIbjZtZlJNS2k3OElpbzEtOVBFSQ?oc=5",
-          "source": "Danone",
-          "summary": ""
-        },
-        {
           "title": "Danone finalise le rachat de Huel : quels droits pour les actionnaires, les salariés et les contrats en France - Kohen Avocats",
           "date": "2026-09-05",
           "link": "https://news.google.com/rss/articles/CBMiswFBVV95cUxNNHVONDVpdkZya2wzWHVTemprQWxQOEV4NG9aTXRXOWItWlVLcEpSdjBhbl9DLXVUMnFualpuRVRVU2RXNVVsdWh6OTFHZ3JnbS1WWHhaNmtaLUVubW5qMTN6S2xoN2RDS3FodE9rdFJuVHFRVDk4SEN4bUtkU01lb01NR1BlTVlLY2x2NGlPbUV1LXFrV3lhc3FCck8tVTFaUVlHWC12MEQySnBnMWExN1Q5TQ?oc=5",
@@ -382,6 +375,13 @@
           "date": "2026-09-02",
           "link": "https://news.google.com/rss/articles/CBMiygFBVV95cUxOU0kzR0VwYlpjTVFaM3VjeWNZX1ZkUG91RVV1djRfcnh5cHBUdkJSdGxhWW5JNWRpOUNqeEdNb2ZlaUpFTHB4TGg5YjVSYmRvS0E5amNMQ3JJZHB3MDBMVHZVTjZjMGp1YVRsYjRTZFZWU3ZVYXk3Vjd2UVdpeHEwV0ltV1RUNm94a0I5UW8yZFdVV1BWZWhIa1lVczRRa3Y5dzBKeW4yQ0V3TlVHWXVudFFPejJqaHdCbl9DNzAzQ3cwZjZwaTlvajVn?oc=5",
           "source": "Investir Les Echos",
+          "summary": ""
+        },
+        {
+          "title": "Danone finalise l’acquisition de Huel et étend son portefeuille dans la Nutrition fonctionnelle - GlobeNewswire",
+          "date": "2026-09-04",
+          "link": "https://news.google.com/rss/articles/CBMiggJBVV95cUxNaDVTVmJyckt2UFNjWjUtdC11bWVxS0hXTkh3eFFBUEhKTWhWbHJ2NF9KZ1QtaDZ1X3NLOTk2WF8yd1NOLVpTUUtnaVhvckF4Z0hEdUNvTzV1XzM5Qi03LWZpTmFwS3R6Yktjb2FjdzJMdTk5dW9RbUFwS2RSSWFadEZuRUN6aVF2UXZUeWlKNlZhTW1ENndtOE9jMTg3RVFHSVFDZk5SZ0VocXRyUFRuVm8tbk8wTzA4QzFiTzdJLXZ0N25wY2o0WDJFNlczOWQ4R2g3ZnNPa0x1Z2JibVFUbFFYVWd2c1YwMVRVRjl6Q1ZBczlXdzdDbm9zR2xLOEJWVmc?oc=5",
+          "source": "GlobeNewswire",
           "summary": ""
         }
       ]

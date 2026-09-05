@@ -319,3 +319,54 @@ def test_parse_news_rss_limits_to_five_items():
     ) + b"</channel></rss>"
     items = parse_news_rss(many_items)
     assert len(items) == 5
+
+
+import indices_score
+
+
+def _fake_ratios():
+    return {
+        "roce": 15.0,
+        "roe": 18.0,
+        "net_debt_ebitda": 1.5,
+        "icr": 8.0,
+        "cagr_ca": 6.0,
+        "cagr_ebitda": 6.5,
+        "fcf_conversion": 70.0,
+        "current_ev_ebitda": 10.0,
+        "avg_ev_ebitda_5y": 10.0,
+        "current_pe": 20.0,
+        "avg_pe_5y": 20.0,
+        "sector": "Consumer Defensive",
+    }
+
+
+def test_build_company_entry_degrades_gracefully_when_news_fetch_fails(monkeypatch):
+    """Une panne du flux RSS (fetch_news) ne doit pas faire perdre le score
+    déjà calculé pour l'entreprise — seule la liste de news doit être vide."""
+    monkeypatch.setattr(indices_score, "fetch_company_financials", lambda ticker: _fake_ratios())
+
+    def _raise_news(name):
+        raise RuntimeError("flux RSS indisponible")
+
+    monkeypatch.setattr(indices_score, "fetch_news", _raise_news)
+
+    entry = indices_score.build_company_entry("BN.PA", "Danone")
+
+    assert entry["news"] == []
+    assert entry["ticker"] == "BN.PA"
+    assert entry["name"] == "Danone"
+    assert isinstance(entry["score"], float)
+    assert len(entry["factors"]) == 5
+
+
+def test_build_company_entry_includes_news_when_fetch_succeeds(monkeypatch):
+    monkeypatch.setattr(indices_score, "fetch_company_financials", lambda ticker: _fake_ratios())
+    monkeypatch.setattr(
+        indices_score, "fetch_news",
+        lambda name: [{"title": "Titre", "date": "2026-09-04", "link": "https://example.com"}],
+    )
+
+    entry = indices_score.build_company_entry("BN.PA", "Danone")
+
+    assert entry["news"] == [{"title": "Titre", "date": "2026-09-04", "link": "https://example.com"}]

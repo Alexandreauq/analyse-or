@@ -751,6 +751,29 @@ def estimate_entry_exit_prices(fair_value: float | None, ma200: float | None) ->
     return {"entry": entry, "exit": exit_price}
 
 
+def estimate_valuation_targets(data: dict) -> dict:
+    """Combine DCF, actif net et multiples en une juste valeur, puis en
+    repères d'entrée/sortie. Toujours ces 3 clés en sortie, valeurs à None
+    si non calculables (jamais d'exception)."""
+    dcf_price = estimate_dcf_price(
+        data["fcf"], data["cagr_ebitda"], data["net_debt"], data["shares_outstanding"]
+    )
+    asset_price = estimate_asset_based_price(data["equity"], data["shares_outstanding"])
+    multiple_price = (
+        estimate_multiple_based_price(
+            data["current_price"], data["current_ev_ebitda"], data["avg_ev_ebitda_5y"]
+        )
+        if data["current_price"] is not None else None
+    )
+    fair_value = estimate_fair_value(dcf_price, asset_price, multiple_price)
+    entry_exit = estimate_entry_exit_prices(fair_value, data["ma200"])
+    return {
+        "fair_value": fair_value,
+        "entry_price": entry_exit["entry"],
+        "exit_price": entry_exit["exit"],
+    }
+
+
 def build_company_entry(ticker: str, name: str) -> dict:
     data = fetch_company_financials(ticker)
     sector = data["sector"]
@@ -784,6 +807,8 @@ def build_company_entry(ticker: str, name: str) -> dict:
     ]
     composite = compute_composite(factors)
 
+    valuation_targets = estimate_valuation_targets(data)
+
     return {
         "ticker": ticker,
         "name": name,
@@ -796,6 +821,10 @@ def build_company_entry(ticker: str, name: str) -> dict:
             for f in factors
         ],
         "news": news,
+        "current_price": data["current_price"],
+        "fair_value": valuation_targets["fair_value"],
+        "entry_price": valuation_targets["entry_price"],
+        "exit_price": valuation_targets["exit_price"],
     }
 
 

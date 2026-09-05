@@ -6,38 +6,50 @@
       "name": "LVMH",
       "sector": "Consumer Cyclical",
       "sector_profile": "cyclique",
-      "score": 44.9,
+      "score": 31.9,
       "interpretation": "Solide",
       "factors": [
         {
           "name": "Rentabilité / création de valeur",
           "score": 9.143388988460202,
-          "weight": 0.3,
+          "weight": 0.24,
           "raw_value": "ROCE 12.6% vs coût du capital 8.0% (ROE 16.1%)"
         },
         {
           "name": "Structure financière / solvabilité",
           "score": 7.42682140554481,
-          "weight": 0.25,
+          "weight": 0.2,
           "raw_value": "Dette nette/EBITDA 1.1x (seuil confort 2.1x, profil cyclique) — ICR 16.2x"
         },
         {
           "name": "Croissance",
           "score": 0.5828749649818166,
-          "weight": 0.2,
+          "weight": 0.16,
           "raw_value": "CAGR CA +1.5%/an, CAGR EBITDA -0.3%/an (5 ans)"
         },
         {
           "name": "Génération de cash",
           "score": 0.9903288201160535,
-          "weight": 0.15,
+          "weight": 0.12,
           "raw_value": "Conversion FCF/EBITDA 55%"
         },
         {
           "name": "Valorisation relative",
-          "score": -3.724168080502406,
-          "weight": 0.1,
+          "score": -3.724168009843228,
+          "weight": 0.08,
           "raw_value": "EV/EBITDA 13.2x (moy. 5 ans 12.7x) — PER 28.8x (moy. 5 ans 24.3x)"
+        },
+        {
+          "name": "Dynamique récente",
+          "score": -8.055809297016866,
+          "weight": 0.1,
+          "raw_value": "Cours -16.1% vs MM200"
+        },
+        {
+          "name": "Actualité récente",
+          "score": 4.0,
+          "weight": 0.1,
+          "raw_value": "Ton moyen des 5 actualités récentes : +0.40"
         }
       ],
       "news": [
@@ -46,35 +58,40 @@
           "date": "2026-09-04",
           "link": "https://news.google.com/rss/articles/CBMisgFBVV95cUxNZFNIc0VaTU1fRlVOWHUxbDNLa2FONURKb242NTZibHltRjJHY29DRmxXM1htVUdER0VDcTBwZzlWdWZBVGhweVd3bExXdEhlMkIxTzNzbzV3T0F4eEo5OGhBa2RhQmNzQ2V4OE1fTjBqZjV2ZTQzLW00NzcxbGNDUWFleThtcDVtUmwwV0NPcTR0UzVzMjVib3ZzNG4tVDdlRnVLODVLRVZzZndGZDRpYUFB?oc=5",
           "source": "Le Monde.fr",
-          "summary": "Cet article suggère que Julie Kegels aurait reçu un prix décerné par LVMH ou lié à l'univers de la mode et du groupe."
+          "summary": "Cet article suggère que LVMH aurait décerné un prix à Julie Kegels, probablement en reconnaissance de contributions ou talents dans le domaine de la mode.",
+          "sentiment": 1
         },
         {
           "title": "«Le dernier lauréat a vu son chiffre d’affaires multiplié par six»: dans les coulisses du LVMH Prize, le prix le plus prestigieux de la mode - Le Figaro",
           "date": "2026-09-05",
           "link": "https://news.google.com/rss/articles/CBMihgJBVV95cUxOWkVQTHRCaWthQ1hDT3FmZ1piOWdxNDU4T0NmVmtYTE9Vc0k2R1dXY1VaMXh1QXVBdjdmX2dDbUNucXc1WGV2b0paWU9PTjFOMjFfV2JwYkN6TXRBZ3RkRXI3V3cwMEdZaEpRc2MzLXN4c1dKN3hMRU00UUpaUm5Ia05DQ29vRnA1Nnd4T2ZZNldlRlhmRmhFZ2NrVzA0SU9NNzZSWjBYZ002UVFqMmhqT0FtZ3dzbGNSRUR1cGo4a3VSNXhybXh1TDB0Qmluc2M0Z1RrYzJSUXlYelFTTl80TWNEVWstOW9sY2x1eG05TjJfS1RGR3hhV1ZScFVXc0l2XzI0aVpB?oc=5",
           "source": "Le Figaro",
-          "summary": "Cet article suggère que le LVMH Prize serait un concours de mode prestigieux dont les lauréats bénéficieraient d'une croissance économique remarquable, le dernier gagnant ayant apparemment connu une multiplication significative de son chiffre d'affaires."
+          "summary": "Cet article suggère que le LVMH Prize serait un concours prestigieux de mode dont les lauréats connaîtraient une croissance commerciale remarquable, le dernier gagnant ayant apparemment vu ses revenus augmenter significativement.",
+          "sentiment": 1
         },
         {
           "title": "Julie Kegels remporte le Prix LVMH - FashionNetwork France",
           "date": "2026-09-04",
           "link": "https://news.google.com/rss/articles/CBMiigFBVV95cUxPUEJsSjhBWllBNENBQ1NPd0ZVNkh4RERyQmtkSlI1c2JRRm1YMjZROURNb09OY1lQUEhYQUlfNEZFV2lPRTRHOEd2R2JvalM3bmw0S2dXblVHekVUT3pUX0kwci04c1RWMzhlREowdS0xOXFCNkVTSGs1NXJMSWtFb1JmTzVjM3I1UWc?oc=5",
           "source": "FashionNetwork France",
-          "summary": "Cet article suggère que Julie Kegels aurait remporté un prix décerné conjointement par LVMH et FashionNetwork France, probablement dans un domaine lié à la mode ou au secteur du luxe."
+          "summary": "Cet article suggère que Julie Kegels aurait remporté une distinction décernée par LVMH et FashionNetwork France, ce qui pourrait indiquer une reconnaissance dans le secteur de la mode et du luxe.",
+          "sentiment": 1
         },
         {
           "title": "LVMH : INFORMATION MENSUELLE RELATIVE AU NOMBRE TOTAL DE DROITS DE VOTE ET D’ACTIONS COMPOSANT LE CAPITAL SOCIAL - Yahoo Finance France",
           "date": "2026-09-04",
           "link": "https://news.google.com/rss/articles/CBMimAFBVV95cUxQcFVIYVM4bHhzbVFBVUFMZFc2RW95bWRGTVFJV0VSNVlJN1RnVkFGRTZhdmg0dHo2dWx6Wmw1TkVMZXY3U3VmeTVYaEJMbTBXNHFGQlJqVUl2SHhLR0Y0RVpfdW5KQjlzS0NLNkFVeUNUZ1psN1hfby1Yc19yTHpDVG1nSzFpeXpHSC1BWmp5WjhCbldnOUZydA?oc=5",
           "source": "Yahoo Finance France",
-          "summary": "Cet article suggère que LVMH a publié un document d'information mensuelle détaillant la composition de son capital social en termes de nombre total d'actions et de droits de vote."
+          "summary": "Cet article suggère que LVMH publie une mise à jour réglementaire mensuelle concernant la composition de son capital social et ses droits de vote, ce qui est une obligation de divulgation statutaire standard pour les sociétés cotées.",
+          "sentiment": 0
         },
         {
           "title": "Hermes intl : Bank of America s'inquiète de la reprise pour le secteur du luxe, Hermès, Kering et LVMH souffrent en Bourse - BFM Bourse",
           "date": "2026-09-03",
           "link": "https://news.google.com/rss/articles/CBMinwJBVV95cUxPVmJOazNQQlQ4d3g0d3JXMlRUQ2QzMEhrTUtWUEgtQm50d2tCaE9yOElOZ0F0UzE3VW5qbWk3QWRPUFVzUHhjM1gwbGFKUHd2WkdVSG9UNkc3bTBqTGo3Vkt2bl9Xd3RTRUEtVnBRSF92dFN3UUpOUV96OWlfbUJyZVQ4UVRBVmJTYTdTcFlIMGg5YlRYT09xeEdNazE4WHNEZmFiQlN4MWNqZTMzMm1QX0ZoZnR5Z0J1amUxcUNfZHpWTWY4SHBYU1lRTUJ0eU5tcnVRVDlWQTR0RGlTRUZuYi1qcmYzVlVaTzNvdXlRQ3Nhb1p5cUVESXdKdGlvZGE1LW5oSno3clctSDVETVhRa2lFTlNybHdtaVo2R19Tbw?oc=5",
           "source": "BFM Bourse",
-          "summary": "Cet article suggère que Bank of America aurait exprimé des préoccupations concernant la reprise du secteur du luxe, ce qui pourrait avoir contribué à des baisses boursières pour les groupes Hermès, Kering et LVMH."
+          "summary": "Cet article suggère que Bank of America exprimerait des préoccupations concernant la reprise du secteur du luxe, ce qui pourrait expliquer une baisse des cours de bourse pour Hermès, Kering et LVMH.",
+          "sentiment": -1
         }
       ]
     },
@@ -83,38 +100,50 @@
       "name": "TotalEnergies",
       "sector": "Energy",
       "sector_profile": "cyclique",
-      "score": 9.1,
-      "interpretation": "Neutre",
+      "score": 19.1,
+      "interpretation": "Solide",
       "factors": [
         {
           "name": "Rentabilité / création de valeur",
           "score": 8.874006976034803,
-          "weight": 0.3,
+          "weight": 0.24,
           "raw_value": "ROCE 12.4% vs coût du capital 8.0% (ROE 11.4%)"
         },
         {
           "name": "Structure financière / solvabilité",
           "score": 7.798902852436594,
-          "weight": 0.25,
+          "weight": 0.2,
           "raw_value": "Dette nette/EBITDA 0.9x (seuil confort 2.1x, profil cyclique) — ICR 13.9x"
         },
         {
           "name": "Croissance",
           "score": -10.0,
-          "weight": 0.2,
+          "weight": 0.16,
           "raw_value": "CAGR CA -11.5%/an, CAGR EBITDA -14.1%/an (5 ans)"
         },
         {
           "name": "Génération de cash",
           "score": -4.651773305193802,
-          "weight": 0.15,
+          "weight": 0.12,
           "raw_value": "Conversion FCF/EBITDA 27%"
         },
         {
           "name": "Valorisation relative",
           "score": -10.0,
-          "weight": 0.1,
+          "weight": 0.08,
           "raw_value": "EV/EBITDA 4.0x (moy. 5 ans 3.0x) — PER 9.2x (moy. 5 ans 6.7x)"
+        },
+        {
+          "name": "Dynamique récente",
+          "score": 7.836360137680838,
+          "weight": 0.1,
+          "raw_value": "Cours +11.3% vs MM200 — CA dernier trim. +27.8% vs an dernier (tendance 5 ans -11.5%)"
+        },
+        {
+          "name": "Actualité récente",
+          "score": 4.0,
+          "weight": 0.1,
+          "raw_value": "Ton moyen des 5 actualités récentes : +0.40"
         }
       ],
       "news": [
@@ -123,35 +152,40 @@
           "date": "2026-09-03",
           "link": "https://news.google.com/rss/articles/CBMikAJBVV95cUxQYmU4MElXbXZxN3h1MUYzODNrNEFpSjhXZV9VVl80TkR2TWJJRkt6Q2ZUeW51QkhHendndG5VSklfV3diQ19UT0xTQTgtT0VNRndjdktlNG9rRlNab0tUMkljOWd1YllfbWR1N3FDWTBSNkJIOUFhQzdMN1VmOE8zcVBFZnN3bGRSZ0prWTBXaFVfOXFQbmx0SDltTDk1bGVoNFE4TFNBVkU1TWw0N2V4UVdTLTVzblRFWEswbEJQUS1lX2ZLM1B0NXBoNm5mcnMyVmM2elRLVmg3dXpQdUZPeVNUaWVENEZ4RmlkVGtFQnFJcDNFZjEyWWtBY2N3alpzeno3ZDZTLWlDRUUwXzRuLQ?oc=5",
           "source": "Investir Les Echos",
-          "summary": "Cet article suggère que Volvo, Air Liquide et TotalEnergies collaboreraient dans une coalition visant à développer et déployer des solutions de camions fonctionnant à l'hydrogène."
+          "summary": "Cet article suggère que Volvo s'associerait à TotalEnergies et Air Liquide pour développer conjointement des solutions de mobilité par hydrogène dans le secteur des camions.",
+          "sentiment": 1
         },
         {
           "title": "À la raffinerie TotalEnergies de Donges, un feu de végétation et un dysfonctionnement sur une unité de production - Ouest-France",
           "date": "2026-09-05",
           "link": "https://news.google.com/rss/articles/CBMirAJBVV95cUxPNXRaZnRwVVJsTTFzYnlhUmI0eXpvUTA3dnNTNmZFQnJUTy1pUnY1bjBVNGl5Y0xIOFNVaWFHR0VtbFRuWGx5eTN5UE1rUHpaTWVHcXZaYzEtbWdxbmRXakQzb0FDdmI4NjBOTG5pNmJKNmZyeWp2NzVWQXdjOTNoVGJFQzh2YUxoeTBIX1FkSWZWWjRQdF9tUy1fWjlzRU1oMWFTcllDb2xlTzNCUkM4blZ5RlAzSnlIeC1RV05BSEpsVmhuQTNfRm1SblhxRjFsSlhZa1M0OTBvT0JtYmZLVDZWNVdra1o4S2RTZFUwY3YxeDMwWE9QYmppdUFGOXEtS011RzFZYlBBWE1ha25KcjdMMXNLd3V3RG1VV2R3UFlQcjBTamw2Q2c4a1U?oc=5",
           "source": "Ouest-France",
-          "summary": "Cet article suggère qu'un incident impliquant un incendie de végétation et une défaillance technique aurait pu affecter les opérations de la raffinerie TotalEnergies située à Donges."
+          "summary": "Cet article suggère qu'un incident environnemental et technique aurait affecté les installations de la raffinerie TotalEnergies de Donges, combinant un feu de végétation et un problème de fonctionnement sur une unité de production.",
+          "sentiment": -1
         },
         {
           "title": "Transfert: Nicolas Breuillard va quitter la TotalEnergies... pour une WorldTour ! - Cyclism'Actu",
           "date": "2026-09-04",
           "link": "https://news.google.com/rss/articles/CBMiywFBVV95cUxQV0JDRXNzcG5SSFJWNTlmRnZMUTZHbjd1Yi1jVEdnNmhld2Z4UmExTkg5NDl0ZnlwMXpnQWpGajRVNXU3R3k5Y191bHBBS29VS0piZEt4Si01SGlnWHZTdTNhVlpUM05oWXl3N2pnTGhhLW5jMzctYUp4XzRuQXJUUWd3RmxVOXBiWVRjNE5hZkVLT18zSVMxUk9CaDNHZDh0TUwyZnQ1eG5PbDN2aHZxV29PTXJuak5LdU1HQlJ3dTl0b1psOHpvVkt4ONIBXEFVX3lxTE1JWWhkNHIwdzBJSW5INm45ak9GRWhXSld5Nkd1V1pYdmwtQjFzWklqQUIyOTJYYUFGeUVKelowSzM1ckRBZ21BQ2NhRHdBVExWcUwxbXR0dVpyNzlT?oc=5",
           "source": "Cyclism'Actu",
-          "summary": "Cet article suggère que Nicolas Breuillard, qui travaillait pour TotalEnergies, pourrait quitter l'entreprise pour rejoindre une équipe cycliste participant à une WorldTour."
+          "summary": "Cet article suggère qu'un employé nommé Nicolas Breuillard quitterait TotalEnergies pour participer à une compétition cycliste de type WorldTour.",
+          "sentiment": 0
         },
         {
           "title": "TotalEnergies officiellement opérateur de la découverte géante Mopane - Boursier.com",
           "date": "2026-09-03",
           "link": "https://news.google.com/rss/articles/CBMiygFBVV95cUxOWEJHbmo0aVk4Q0JZMUw5ZjdTc0hDQzljOHZmeGJ3MnBZa2pkc3JPc2lxMW1PS3dHM0dsUGhjQWRicmVVbG80cTdTeHlmYVZmSGkteGlCMXNUR09xNk52Qk5GdFFhLUlSVUF1WXhWYlZBdVJ5ZjRwV1FiNlRRSEJQMldndHluQU9Da0RhTnpwajU0dHdEckRyT2ZQYmhCWUZ6RDZNTzBxeWt5aElGRU1iWWVXc2lpN2RFbkl5OTk0aHl0NGFad1RIMG93?oc=5",
           "source": "Boursier.com",
-          "summary": "Cet article suggère que TotalEnergies aurait obtenu le statut officiel d'opérateur pour un gisement pétrolier ou gazier d'importance majeure nommé Mopane, vraisemblablement situé en Afrique australe."
+          "summary": "Cet article suggère que TotalEnergies aurait été officiellement désignée comme opérateur d'un projet pétrolier ou gazier de grande ampleur appelé Mopane, ce qui pourrait représenter une opportunité d'exploitation majeure pour le groupe.",
+          "sentiment": 1
         },
         {
           "title": "Namibie : TotalEnergies finalise son entrée comme opérateur - TotalEnergies.com",
           "date": "2026-09-03",
           "link": "https://news.google.com/rss/articles/CBMi8AFBVV95cUxNUnRQb3pPVDVEZ3V3XzMycExnYVBqb3hmTW9raUpseDU5TGJiYnpKemU2UzgtWWVNcG00RFJhS1YzUDZzNTBxSnhPQnlOZlpDUUNYbGlvaDZwem5sX0xCQWNwaW85YUtZS190Zm95NnB0Tl9NU3pjbWR1STBBUGpzTF81bVNqN0tiYUM5S1lXaE4tZmk1SmNCNXB0T2RfWENmd2RKQzNtR2wzTWtCdzFmcEc5WTMxTjhQN0lwWDBjQU80NXh1a3ZpQTQzdjJuOFVMMmVBY1JvczFkYW0zVzhvRkFwUjFmYS1Sc0dIeE5RdGQ?oc=5",
           "source": "TotalEnergies.com",
-          "summary": "Cet article suggère que TotalEnergies aurait complété les démarches nécessaires pour devenir l'opérateur responsable d'un projet pétrolier ou gazier en Namibie."
+          "summary": "Cet article suggère que TotalEnergies aurait récemment acquis ou confirmé un rôle d'opérateur pour un projet pétrolier ou gazier en Namibie.",
+          "sentiment": 1
         }
       ]
     },
@@ -160,38 +194,50 @@
       "name": "Schneider Electric",
       "sector": "Industrials",
       "sector_profile": "standard",
-      "score": 61.4,
+      "score": 58.7,
       "interpretation": "Profil fondamental très solide",
       "factors": [
         {
           "name": "Rentabilité / création de valeur",
           "score": 10.0,
-          "weight": 0.3,
+          "weight": 0.24,
           "raw_value": "ROCE 13.7% vs coût du capital 8.0% (ROE 17.2%)"
         },
         {
           "name": "Structure financière / solvabilité",
           "score": 7.363035515209428,
-          "weight": 0.25,
+          "weight": 0.2,
           "raw_value": "Dette nette/EBITDA 1.6x (seuil confort 3.0x, profil standard) — ICR 12.5x"
         },
         {
           "name": "Croissance",
           "score": 6.780153441163539,
-          "weight": 0.2,
+          "weight": 0.16,
           "raw_value": "CAGR CA +4.6%/an, CAGR EBITDA +8.9%/an (5 ans)"
         },
         {
           "name": "Génération de cash",
           "score": 0.9603440038222644,
-          "weight": 0.15,
+          "weight": 0.12,
           "raw_value": "Conversion FCF/EBITDA 55%"
         },
         {
           "name": "Valorisation relative",
-          "score": -2.0363788398771616,
-          "weight": 0.1,
+          "score": -2.0363783606366814,
+          "weight": 0.08,
           "raw_value": "EV/EBITDA 17.1x (moy. 5 ans 15.2x) — PER 31.2x (moy. 5 ans 26.5x)"
+        },
+        {
+          "name": "Dynamique récente",
+          "score": 5.55643832336532,
+          "weight": 0.1,
+          "raw_value": "Cours +11.1% vs MM200"
+        },
+        {
+          "name": "Actualité récente",
+          "score": 4.0,
+          "weight": 0.1,
+          "raw_value": "Ton moyen des 5 actualités récentes : +0.40"
         }
       ],
       "news": [
@@ -200,35 +246,40 @@
           "date": "2026-09-03",
           "link": "https://news.google.com/rss/articles/CBMixAFBVV95cUxOZi05b0l0MFdxQ296dGcwT2FiU2hLMkwyWUh2TkdYb3h2UFV2OWNWLUdkSmFxM1R0Mk5kZnZRUzN2UnJWelo1aFQycWJLSDFObDRycXBuMk1zcmhxV28ydkllM2lMekctUlBrRk16TlRyTUNjQTR5cTQ3U01ZZXduZFI2RHV0UWxsZGkxVXhpazBsZDU2LTdpS3lqNmtiMnRnU2xfX3NuZnFUS2ExTDAwcmRqaEtUTEMxY3Q4Y3RRZkdNem5C?oc=5",
           "source": "Investir Les Echos",
-          "summary": "Cet article suggère que Schneider Electric serait en train de retrouver une position de leader ou d'excellence dans son secteur après une période de sous-performance relative."
+          "summary": "Cet article suggère que Schneider Electric pourrait retrouver une position de leader ou d'excellence dans son secteur après une période antérieure moins favorable.",
+          "sentiment": 1
         },
         {
           "title": "Schneider Electric finit en légère hausse - Boursier.com",
           "date": "2026-09-03",
           "link": "https://news.google.com/rss/articles/CBMikwFBVV95cUxNVzUzbkx6U1VkV2RqWkQxY1NWVm1VVHJBVjVhNmxhUzZkN2VkQjB3TVFLaVpZdy1tanBJZHlxOE9rZXZXcXYzX2kwUjhVU2dEcExmX2c5ekx0bmRySFBoUzdReUJBa2VqQkRIbmdaZWNKNFlybTkzNkNqNVlqNVNQODJMTm82aENBbldFQnR5OXhyVFE?oc=5",
           "source": "Boursier.com",
-          "summary": "Cet article suggère que les actions de Schneider Electric auraient enregistré une légère progression de cours à la clôture d'une séance de bourse, sans que l'on puisse déterminer les causes précises de cette évolution à partir du seul titre."
+          "summary": "Cet article suggère que le titre des actions de Schneider Electric aurait connu une légère progression à la clôture d'une séance boursière.",
+          "sentiment": 1
         },
         {
           "title": "Schneider Electric devrait annoncer la fermeture du site de Chasseneuil-du-Poitou dans la Vienne - Le Revenu",
           "date": "2026-09-05",
           "link": "https://news.google.com/rss/articles/CBMiqAFBVV95cUxPS2V4d25kZDg2VW9zNV9sWEhST2FMdDJHWEF0WWtDelp0a2JpZ3FLcDZ5TUotTzFqM2UyTWhJc2M3ZmFSUGxBNXhmeHBGLW1NNkpCVWtxVW5Fd2sxcHJQZlByd3NZZEN0ektrTktLbFl2c2wza01kVGUwaC1NbzlsOW5VS3J5UHNoT0pvR2xjMzVnNk1JV0w4QXhDZzlvYmR6eXF2RUE4X2c?oc=5",
           "source": "Le Revenu",
-          "summary": "Cet article suggère que Schneider Electric envisagerait ou s'apprêterait à fermer son établissement situé à Chasseneuil-du-Poitou en Vienne."
+          "summary": "Cet article suggère que Schneider Electric pourrait annoncer prochainement la fermeture de son site de production ou d'activité situé à Chasseneuil-du-Poitou en Vienne.",
+          "sentiment": -1
         },
         {
           "title": "Schneider Electric poursuit à marche forcée la reconfiguration de son parc industriel - La Lettre",
           "date": "2026-09-04",
           "link": "https://news.google.com/rss/articles/CBMihAJBVV95cUxNRHdXM3hxdzMxWHRVVTJLNGZ1OTF2Tm5KZWY2NHI1aUNnQll3Y3JJUElRUjJ4bkw2TDRQT3cyVUpKbUxsM0RTRlA4OEk2VmdydTljOTZjdTlHdVJBdHVQWGF3OWxRMFd1LXMzQ3ExQXlETmF3bElLbGhmalpoNTE3ZWtxTG5WenRlNjZoLUYtdF9zZlRSMjhSY2Yxak1ibDhYNnJCSHFJQjFOS2ttcENaVHZUTVVINTNOWWhNc1gxNHo0azRaNW5oWUpVcWotRmZCZHpzYThXYVRZcThPR25mUDBYU28xRkk3UVg2MGNtd2N3Y1ZpaGI1Y2xCZkxvazlfZlFnUA?oc=5",
           "source": "La Lettre",
-          "summary": "Cet article suggère que Schneider Electric mettrait en œuvre un programme significatif de restructuration ou de modernisation de ses installations de production, sans que le titre seul ne précise la nature exacte de ces changements ni leurs enjeux."
+          "summary": "Cet article suggère que Schneider Electric procède à des transformations importantes et rapides de ses installations de production, ce qui pourrait indiquer une stratégie de modernisation ou de réorganisation structurelle.",
+          "sentiment": 0
         },
         {
-          "title": "Expleo & Schneider Electric: un partenariat qui dure - aerocontact.com",
+          "title": "Expleo & Schneider Electric: un partenariat qui dure - Aerocontact.com",
           "date": "2026-09-01",
           "link": "https://news.google.com/rss/articles/CBMimwFBVV95cUxQSzZOZjVBWDhUQjZoXzh5LVdsMEx0UTVKeXJSY1diU1M4bnFDN1VGMHpxODlxT2M3VWFyQ1U5QXBkYTZEVTREdnQ5RnE0OXczdVY4dU03RmNvNlAwUjE5aG5zZHFsdXprS0hXeDVGQndRODhrZEhJYTd3RHF6dWVxNWhBVWhfei1OT1JLVW9Nd0VxakFUZDBFVW13VQ?oc=5",
-          "source": "aerocontact.com",
-          "summary": "Cet article suggère que Schneider Electric et Expleo maintiendraient une collaboration durable, probablement dans un domaine lié à l'aéronautique ou aux services techniques spécialisés."
+          "source": "Aerocontact.com",
+          "summary": "Cet article suggère que Schneider Electric maintient une collaboration de long terme avec Expleo, ce qui pourrait indiquer une relation commerciale stable et durable entre les deux entreprises.",
+          "sentiment": 1
         }
       ]
     },
@@ -237,38 +288,50 @@
       "name": "Sanofi",
       "sector": "Healthcare",
       "sector_profile": "defensif",
-      "score": 13.2,
+      "score": 11.6,
       "interpretation": "Neutre",
       "factors": [
         {
           "name": "Rentabilité / création de valeur",
           "score": -2.5499155411193595,
-          "weight": 0.3,
+          "weight": 0.24,
           "raw_value": "ROCE 6.7% vs coût du capital 8.0% (ROE 10.9%)"
         },
         {
           "name": "Structure financière / solvabilité",
           "score": 8.698120534806167,
-          "weight": 0.25,
+          "weight": 0.2,
           "raw_value": "Dette nette/EBITDA 1.0x (seuil confort 3.9x, profil defensif) — ICR 11.2x"
         },
         {
           "name": "Croissance",
           "score": -3.342728793737501,
-          "weight": 0.2,
+          "weight": 0.16,
           "raw_value": "CAGR CA +3.9%/an, CAGR EBITDA -4.6%/an (5 ans)"
         },
         {
           "name": "Génération de cash",
           "score": 1.558618479044796,
-          "weight": 0.15,
+          "weight": 0.12,
           "raw_value": "Conversion FCF/EBITDA 58%"
         },
         {
           "name": "Valorisation relative",
-          "score": 3.472698895862625,
-          "weight": 0.1,
+          "score": 3.47269946225543,
+          "weight": 0.08,
           "raw_value": "EV/EBITDA 8.5x (moy. 5 ans 8.8x) — PER 12.0x (moy. 5 ans 14.6x)"
+        },
+        {
+          "name": "Dynamique récente",
+          "score": 5.017839527017651,
+          "weight": 0.1,
+          "raw_value": "Cours +0.1% vs MM200 — CA dernier trim. +14.6% vs an dernier (tendance 5 ans +3.9%)"
+        },
+        {
+          "name": "Actualité récente",
+          "score": -4.0,
+          "weight": 0.1,
+          "raw_value": "Ton moyen des 5 actualités récentes : -0.40"
         }
       ],
       "news": [
@@ -277,35 +340,40 @@
           "date": "2026-09-02",
           "link": "https://news.google.com/rss/articles/CBMivAFBVV95cUxNaU41WnRFZHJlTzlOVG9rVXpwekN2RHlGeXJaZjFkSE9xVEF1ZU83aVd6ekxLcmhfTHBxd0NtWTMtLTFBOVh0bTZqUE1RVTFuUUU0cGx5MG5wcDlPakFETmhJS1czYWN0ZXpLUFgwV2NTVVBhVWl2ajM0S0dRbWRjRlV6LUlsUFRpWkJXRm8tY3ZKcldFUi00Rk44NDZGNlRhdUxNTEFJVV91NWNzSk5PVEluUXBGdy1lQmxMOQ?oc=5",
           "source": "Investir Les Echos",
-          "summary": "Cet article suggère que Sanofi connaît une situation financière ou opérationnelle globalement positive, mais doit faire face à des obstacles ou des problématiques spécifiques qu'elle devra surmonter."
+          "summary": "Cet article suggère que Sanofi maintient une situation financière et opérationnelle satisfaisante, mais fait face à des obstacles ou des problématiques qu'elle devra surmonter pour poursuivre sa croissance.",
+          "sentiment": 0
         },
         {
           "title": "Enquête sur les Français et l’innovation thérapeutique - Sanofi",
           "date": "2026-09-02",
           "link": "https://news.google.com/rss/articles/CBMirwFBVV95cUxNdDltdy15T3hMUFBqVjhlRjJ6OEdBbUtyb1RmQWhVRXpQcnhDZ2xNMnFjR0c0aTdFZTBuRlRQTk0tZ1RxVEVtNHllc3lXeWx5U1dxbHVqM0FoX2FCaEN3QW44ZzlYMDZaTnRkLTk3YnU3TzVfQ2NKV1VXMTRqRk5JQ1I1cjVYRGU5bU5kd2o0VlRRYjN4QUpHTER6Z1F5WjVyREEzVVFXWlFteWx3eDJV?oc=5",
           "source": "Sanofi",
-          "summary": "Cet article suggère que Sanofi aurait commandé ou participé à une enquête destinée à comprendre la perception et les attentes des Français vis-à-vis des innovations dans le domaine thérapeutique."
+          "summary": "Cet article suggère que Sanofi aurait commandité ou participé à une enquête explorant les perceptions et attitudes des Français vis-à-vis de l'innovation dans le domaine thérapeutique.",
+          "sentiment": 0
         },
         {
           "title": "Maladie de Pompe : comment les choix de Sanofi menacent l’accès à un traitement vital - L'Humanité",
           "date": "2026-08-31",
           "link": "https://news.google.com/rss/articles/CBMi7wFBVV95cUxOTTNMbFMwZHZRNnNWZTZfN1VKaGdJZE5CVURLWTNXLWd0NllUZmQzOWFUdGYxQ3dSbWZSUlBwV1Bkb3pNb1hPcWl3dHBQZVpuOTBJbFdVS0dJUkFqdFphdlpXaTJtNGJ5UWM3V3VNQ2JJaHZ0bmpQUmc0clZ5WE5pdThCcXRUWXloamtGNFB0NXg4MF94b3FPdFl0SFRQS1BJS3pNeXVnb19aNXdFZXptTlBCYWJ4MkJfTVNSX1I1bGVLWFRYVHVadUxyUWEzMXlPclZaWnhYS256TWpUaVlpclp1MVhyWG5MNVJ5YnhBUQ?oc=5",
           "source": "L'Humanité",
-          "summary": "Cet article suggère que certaines décisions stratégiques de Sanofi concernant un traitement de la maladie de Pompe pourraient potentiellement compliquer l'accès des patients à ce médicament."
+          "summary": "Cet article suggère que certaines décisions stratégiques de Sanofi pourraient potentiellement compromettre l'accessibilité aux traitements destinés aux patients atteints de la maladie de Pompe.",
+          "sentiment": -1
         },
         {
           "title": "Sanofi lâche 1,15% - Boursier.com",
           "date": "2026-09-03",
           "link": "https://news.google.com/rss/articles/CBMihAFBVV95cUxORW9LbE1oaExMWVB4Zy1rekxnLVAxQXQwbFBhbVFvM3hBMWo3aHJWcF9xbXRQLV9MRFJxSGJsVi1WZEl4NEtvNl9WVzZtblFJSFV4S1pDNmNNTzZHUnhFazhIQ0kwckVySG1vQkg1WXFyS1B2NS1VMEEycmpSaUI4dDc1V00?oc=5",
           "source": "Boursier.com",
-          "summary": "Cet article suggère que l'action Sanofi a connu une baisse de cours d'environ 1,15% lors d'une séance de bourse, sans que le titre seul ne permette d'identifier les raisons précises de cette évolution."
+          "summary": "Cet article suggère que le cours de l'action Sanofi aurait connu une baisse modérée d'environ 1,15% lors d'une séance de bourse.",
+          "sentiment": -1
         },
         {
           "title": "L’ELYSEE, VIGINUM, SANOFI, SPORE.BIO, CAILABS : les mouvements clés de la semaine - frenchweb.fr",
           "date": "2026-09-04",
           "link": "https://news.google.com/rss/articles/CBMiqgFBVV95cUxPbE9OSnpUWW5EaGV3MlFBaS02VTFiTmQxTlFNZEtnQmYyX01DSTRqOUJ1czJqRko2anB3LW1qQjFyTUw2eWpLb0J5UVNrYmVNOWlhejF1RHY4dTlqbnNaNW5EamhpM3U0RzBhcE9WUEU2d3BUYS10LXVJMF96bmxuTHBReFExb0p3NTNVU092enEySUhsRlFKZUhuU3d5OGplQkZnQm9LTGJmQQ?oc=5",
           "source": "frenchweb.fr",
-          "summary": "Cet article suggère que Sanofi aurait été impliquée dans des développements ou des annonces notables au cours d'une semaine donnée, aux côtés d'autres acteurs clés du secteur français (institutions publiques, entreprises de biotech ou de technologie)."
+          "summary": "Cet article suggère que Sanofi aurait connu un mouvement ou une actualité notable durant la semaine en question, potentiellement en lien avec des acteurs publics ou des entreprises du secteur biotech français.",
+          "sentiment": 0
         }
       ]
     },
@@ -314,75 +382,92 @@
       "name": "Danone",
       "sector": "Consumer Defensive",
       "sector_profile": "defensif",
-      "score": 18.3,
-      "interpretation": "Solide",
+      "score": 11.2,
+      "interpretation": "Neutre",
       "factors": [
         {
           "name": "Rentabilité / création de valeur",
           "score": -1.3633687653311526,
-          "weight": 0.3,
+          "weight": 0.24,
           "raw_value": "ROCE 7.3% vs coût du capital 8.0% (ROE 10.8%)"
         },
         {
           "name": "Structure financière / solvabilité",
           "score": 6.367667420299,
-          "weight": 0.25,
+          "weight": 0.2,
           "raw_value": "Dette nette/EBITDA 2.8x (seuil confort 3.9x, profil defensif) — ICR 7.0x"
         },
         {
           "name": "Croissance",
           "score": 2.0872210288764848,
-          "weight": 0.2,
+          "weight": 0.16,
           "raw_value": "CAGR CA -0.4%/an, CAGR EBITDA +4.6%/an (5 ans)"
         },
         {
           "name": "Génération de cash",
           "score": 2.4128503075871492,
-          "weight": 0.15,
+          "weight": 0.12,
           "raw_value": "Conversion FCF/EBITDA 62%"
         },
         {
           "name": "Valorisation relative",
-          "score": -1.3696333458368346,
-          "weight": 0.1,
+          "score": -1.3696339869244398,
+          "weight": 0.08,
           "raw_value": "EV/EBITDA 13.7x (moy. 5 ans 11.8x) — PER 26.2x (moy. 5 ans 28.4x)"
+        },
+        {
+          "name": "Dynamique récente",
+          "score": -3.388346335275157,
+          "weight": 0.1,
+          "raw_value": "Cours -6.8% vs MM200"
+        },
+        {
+          "name": "Actualité récente",
+          "score": 0.0,
+          "weight": 0.1,
+          "raw_value": "Ton moyen des 5 actualités récentes : +0.00"
         }
       ],
       "news": [
         {
-          "title": "Danone finalise le rachat de Huel : quels droits pour les actionnaires, les salariés et les contrats en France - Kohen Avocats",
-          "date": "2026-09-05",
-          "link": "https://news.google.com/rss/articles/CBMiswFBVV95cUxNNHVONDVpdkZya2wzWHVTemprQWxQOEV4NG9aTXRXOWItWlVLcEpSdjBhbl9DLXVUMnFualpuRVRVU2RXNVVsdWh6OTFHZ3JnbS1WWHhaNmtaLUVubW5qMTN6S2xoN2RDS3FodE9rdFJuVHFRVDk4SEN4bUtkU01lb01NR1BlTVlLY2x2NGlPbUV1LXFrV3lhc3FCck8tVTFaUVlHWC12MEQySnBnMWExN1Q5TQ?oc=5",
-          "source": "Kohen Avocats",
-          "summary": "Cet article suggère que Danone aurait finalisé l'acquisition de Huel et examinerait les implications juridiques de cette opération pour les différentes parties prenantes en France."
+          "title": "Réduire le gaspillage alimentaire - Danone",
+          "date": "2026-09-02",
+          "link": "https://news.google.com/rss/articles/CBMijwFBVV95cUxOcTVJMGZSTWxpcGlhRnRId3JmN2JYV2ozRk9tUlM1VThHUVA3a2hDYkwxRFlOdThqUnBNSHNsVEUtMXdTclhrbHM4SFY4LVowN2lYanFxaTc4aUdMZTdoOE1PU3ZteU1SMEFFVUszenIwaWlwdXFYT2piQThIbjZtZlJNS2k3OElpbzEtOVBFSQ?oc=5",
+          "source": "Danone",
+          "summary": "Cet article suggère que Danone pourrait communiquer sur des initiatives ou des engagements visant à réduire le gaspillage alimentaire dans ses opérations ou ses produits.",
+          "sentiment": 1
         },
         {
           "title": "Danone cède 1,03% - Boursier.com",
           "date": "2026-09-03",
           "link": "https://news.google.com/rss/articles/CBMigwFBVV95cUxQb3FRUkNxcmFXb1FObWltWHEtVndjckEtODBUM2F6R3BsVDhYTnQ1VzhZVmdlZXAwY1I0NmtvSktSd3RoNEpRaHlkakVhV05wbUc5VGlpalUxTjVBcVM4X1FqSEpVT1pFMTQyRUdGZ1l3S0JvczRwWTNMQ29KdVA3aWt0OA?oc=5",
           "source": "Boursier.com",
-          "summary": "Cet article suggère que le cours de l'action Danone aurait enregistré une baisse modérée d'environ 1% au moment de la publication, sans que le titre seul ne permette d'identifier les raisons précises de cette variation."
+          "summary": "Cet article suggère que le titre de Danone aurait connu une baisse de valeur d'environ 1,03% à la bourse, sans que le contenu disponible ne permette d'identifier les raisons précises de cette évolution.",
+          "sentiment": -1
+        },
+        {
+          "title": "Danone finalise le rachat de Huel : quels droits pour les actionnaires, les salariés et les contrats en France - Kohen Avocats",
+          "date": "2026-09-05",
+          "link": "https://news.google.com/rss/articles/CBMiswFBVV95cUxNNHVONDVpdkZya2wzWHVTemprQWxQOEV4NG9aTXRXOWItWlVLcEpSdjBhbl9DLXVUMnFualpuRVRVU2RXNVVsdWh6OTFHZ3JnbS1WWHhaNmtaLUVubW5qMTN6S2xoN2RDS3FodE9rdFJuVHFRVDk4SEN4bUtkU01lb01NR1BlTVlLY2x2NGlPbUV1LXFrV3lhc3FCck8tVTFaUVlHWC12MEQySnBnMWExN1Q5TQ?oc=5",
+          "source": "Kohen Avocats",
+          "summary": "Cet article suggère que Danone aurait finalisé l'acquisition de Huel et examinerait les implications juridiques pour les différentes parties prenantes en France.",
+          "sentiment": 0
         },
         {
           "title": "Danone finalise l'acquisition de Huel - Zonebourse",
           "date": "2026-09-04",
           "link": "https://news.google.com/rss/articles/CBMinwFBVV95cUxPUUFmUFAzUkNkYTZoUFF0aEdOVjVWZXd0ZDZoa0IwaENnUTk2cjVyMGJhX2taenVkbVYwQjhaTEFoa21oMWJ6emw0T0dYWTB0S1JxRnhoXzl5RGZ5SnFya3ZpMmx3TlVUMFFidmdIX2s2TmJXZE8xckliMlJYR3d2SjRCZmIzM2NHa05WRGpQWVRmUXZJcjBNZ1NEMkt4aWs?oc=5",
           "source": "Zonebourse",
-          "summary": "Cet article suggère que Danone aurait finalisé le rachat de Huel, une entreprise probablement active dans le secteur de l'alimentation ou de la nutrition."
+          "summary": "Cet article suggère que le groupe Danone aurait finalisé le rachat de la marque Huel, potentiellement pour renforcer sa présence dans le segment des produits de nutrition innovants et pratiques.",
+          "sentiment": 1
         },
         {
           "title": "Danone doit de nouveau convaincre que la croissance tient - Investir Les Echos",
           "date": "2026-09-02",
           "link": "https://news.google.com/rss/articles/CBMiygFBVV95cUxOU0kzR0VwYlpjTVFaM3VjeWNZX1ZkUG91RVV1djRfcnh5cHBUdkJSdGxhWW5JNWRpOUNqeEdNb2ZlaUpFTHB4TGg5YjVSYmRvS0E5amNMQ3JJZHB3MDBMVHZVTjZjMGp1YVRsYjRTZFZWU3ZVYXk3Vjd2UVdpeHEwV0ltV1RUNm94a0I5UW8yZFdVV1BWZWhIa1lVczRRa3Y5dzBKeW4yQ0V3TlVHWXVudFFPejJqaHdCbl9DNzAzQ3cwZjZwaTlvajVn?oc=5",
           "source": "Investir Les Echos",
-          "summary": "Cet article suggère que Danone fait face à des doutes récurrents de la part des investisseurs quant à sa capacité à démontrer une croissance soutenable et convaincante."
-        },
-        {
-          "title": "Danone finalise l’acquisition de Huel et étend son portefeuille dans la Nutrition fonctionnelle - GlobeNewswire",
-          "date": "2026-09-04",
-          "link": "https://news.google.com/rss/articles/CBMiggJBVV95cUxNaDVTVmJyckt2UFNjWjUtdC11bWVxS0hXTkh3eFFBUEhKTWhWbHJ2NF9KZ1QtaDZ1X3NLOTk2WF8yd1NOLVpTUUtnaVhvckF4Z0hEdUNvTzV1XzM5Qi03LWZpTmFwS3R6Yktjb2FjdzJMdTk5dW9RbUFwS2RSSWFadEZuRUN6aVF2UXZUeWlKNlZhTW1ENndtOE9jMTg3RVFHSVFDZk5SZ0VocXRyUFRuVm8tbk8wTzA4QzFiTzdJLXZ0N25wY2o0WDJFNlczOWQ4R2g3ZnNPa0x1Z2JibVFUbFFYVWd2c1YwMVRVRjl6Q1ZBczlXdzdDbm9zR2xLOEJWVmc?oc=5",
-          "source": "GlobeNewswire",
-          "summary": "Cet article suggère que Danone aurait finalisé l'acquisition de la marque Huel pour renforcer sa présence dans le secteur de la nutrition fonctionnelle."
+          "summary": "Cet article suggère que Danone pourrait faire face à des questionnements ou des défis concernant sa capacité à démontrer une croissance soutenue et convaincante à ses investisseurs.",
+          "sentiment": -1
         }
       ]
     }

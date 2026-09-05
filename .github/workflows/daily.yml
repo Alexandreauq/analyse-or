@@ -2,11 +2,14 @@ name: Score quotidien Or
 
 on:
   schedule:
-    # Toutes les 15 minutes : recalcule le score et republie le site pour
-    # un suivi quasi temps réel (utile surtout pour le cours de l'or et le
+    # Toutes les heures : recalcule le score et republie le site pour un
+    # suivi quasi temps réel (utile surtout pour le cours de l'or et le
     # DXY, qui bougent en intraday — les facteurs FRED/CFTC ne changeront
     # de toute façon qu'au rythme de leur propre publication).
-    - cron: "*/15 * * * *"
+    # NB : un cron toutes les 15 min a été testé mais GitHub Actions ne le
+    # respecte pas de façon fiable (observé : ~4h d'écart réel au lieu de
+    # 15 min) — un cron horaire est beaucoup mieux honoré en pratique.
+    - cron: "0 * * * *"
   workflow_dispatch: {}   # permet de lancer manuellement depuis l'onglet Actions, pour tester
 
 # Empêche deux exécutions qui se chevauchent de pousser en même temps sur main.
@@ -34,15 +37,14 @@ jobs:
 
       - name: Déterminer si c'est le run quotidien (email + historique)
         id: daily_slot
-        # Un seul des runs de 15 min de la journée compte comme "run
-        # quotidien" (celui de 07h00-07h14 UTC = ~9h à Paris en heure
-        # d'été — passer "07" à "08" fin octobre à l'heure d'hiver). Un
+        # Un seul des runs horaires de la journée compte comme "run
+        # quotidien" (celui de 07h00 UTC = ~9h à Paris en heure d'été —
+        # passer "07" à "08" fin octobre à l'heure d'hiver). Un
         # déclenchement manuel (workflow_dispatch) compte toujours comme
         # quotidien, pour pouvoir tester l'email facilement.
         run: |
           HOUR=$(date -u +%H)
-          MIN=$(date -u +%M)
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ] || { [ "$HOUR" = "07" ] && [ "$MIN" -lt 15 ]; }; then
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] || [ "$HOUR" = "07" ]; then
             echo "is_daily=true" >> "$GITHUB_OUTPUT"
           else
             echo "is_daily=false" >> "$GITHUB_OUTPUT"

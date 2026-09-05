@@ -446,6 +446,9 @@ def extract_ratios(financials, balance_sheet, cashflow, closes_by_year, shares_o
         "avg_ev_ebitda_5y": avg_ev_ebitda_5y,
         "current_pe": current_pe,
         "avg_pe_5y": avg_pe_5y,
+        "fcf": fcf,
+        "net_debt": net_debt_latest,
+        "equity": equity[latest],
     }
 
 

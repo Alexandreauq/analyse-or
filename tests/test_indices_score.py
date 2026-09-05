@@ -370,7 +370,7 @@ def test_extract_ratios_computes_expected_keys():
     for key in [
         "roce", "roe", "net_debt_ebitda", "icr", "cagr_ca", "cagr_ebitda",
         "fcf_conversion", "current_ev_ebitda", "avg_ev_ebitda_5y",
-        "current_pe", "avg_pe_5y",
+        "current_pe", "avg_pe_5y", "fcf", "net_debt", "equity",
     ]:
         assert key in ratios, f"clé manquante : {key}"
     # Revenu croît régulièrement de 800 à 1000 sur 5 ans ; CAGR lissé

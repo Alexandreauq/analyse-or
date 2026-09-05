@@ -185,3 +185,29 @@ def test_score_valorisation_at_historical_average_is_neutral():
         cagr_ebitda=5.0,
     )
     assert result.score == 0.0
+
+
+from indices_score import compute_composite, interpret, FactorResult
+
+
+def test_compute_composite_all_max_positive():
+    factors = [
+        FactorResult("A", 10.0, 0.30, ""),
+        FactorResult("B", 10.0, 0.25, ""),
+        FactorResult("C", 10.0, 0.20, ""),
+        FactorResult("D", 10.0, 0.15, ""),
+        FactorResult("E", 10.0, 0.10, ""),
+    ]
+    assert compute_composite(factors) == 100.0
+
+
+def test_compute_composite_all_zero_is_neutral():
+    factors = [FactorResult("A", 0.0, 1.0, "")]
+    assert compute_composite(factors) == 0.0
+
+
+def test_interpret_bands():
+    assert interpret(60.0) == "Profil fondamental très solide"
+    assert interpret(20.0) == "Solide"
+    assert interpret(0.0) == "Neutre"
+    assert interpret(-30.0) == "Fragile"

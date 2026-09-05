@@ -218,3 +218,18 @@ def score_valorisation(
         f"EV/EBITDA {current_ev_ebitda:.1f}x (moy. 5 ans {avg_ev_ebitda_5y:.1f}x) — "
         f"PER {current_pe:.1f}x (moy. 5 ans {avg_pe_5y:.1f}x)",
     )
+
+
+def compute_composite(factors: list[FactorResult]) -> float:
+    weighted_sum = sum(f.score * f.weight for f in factors)
+    return round(weighted_sum * 10, 1)
+
+
+def interpret(composite: float) -> str:
+    if composite > 50:
+        return "Profil fondamental très solide"
+    if composite > 15:
+        return "Solide"
+    if composite > -15:
+        return "Neutre"
+    return "Fragile"

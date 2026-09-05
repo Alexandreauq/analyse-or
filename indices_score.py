@@ -30,11 +30,13 @@ import trafilatura
 
 
 WEIGHTS = {
-    "rentabilite": 0.30,
-    "structure_financiere": 0.25,
-    "croissance": 0.20,
-    "generation_cash": 0.15,
-    "valorisation": 0.10,
+    "rentabilite": 0.24,
+    "structure_financiere": 0.20,
+    "croissance": 0.16,
+    "generation_cash": 0.12,
+    "valorisation": 0.08,
+    "dynamique_recente": 0.10,
+    "actualite_recente": 0.10,
 }
 
 COMPANIES = [

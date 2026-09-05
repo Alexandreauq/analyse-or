@@ -51,7 +51,7 @@ ci-dessous sont exprimés pour le profil **Standard** et ajustés
 Score composite pondéré sur l'échelle **-100/+100** (même échelle que
 l'or), chaque facteur noté **-10/+10**.
 
-### 1. Rentabilité / création de valeur — poids 30%
+### 1. Rentabilité / création de valeur — poids 24%
 
 - **ROCE** (rentabilité économique, *Re*) = Résultat d'exploitation ×
   (1 − taux d'IS apparent) / Actif économique, décomposé en **marge
@@ -78,7 +78,7 @@ l'or), chaque facteur noté **-10/+10**.
 > pour la phase pilote (5 entreprises), à revoir si le périmètre
 > s'étend au-delà.
 
-### 2. Structure financière / solvabilité — poids 25%
+### 2. Structure financière / solvabilité — poids 20%
 
 Seuils de base (profil Standard), ajustés par profil sectoriel :
 
@@ -95,7 +95,7 @@ Défensif, le seuil "confortable" de dette nette/EBITDA passe de 3 à
 - **Levier financier (gearing)** = Dette nette / Capitaux propres —
   facteur secondaire de lecture, non seuillé au v1.
 
-### 3. Croissance — poids 20%
+### 3. Croissance — poids 16%
 
 - CAGR chiffre d'affaires sur 5 ans
 - CAGR EBITDA sur 5 ans
@@ -116,7 +116,7 @@ Défensif, le seuil "confortable" de dette nette/EBITDA passe de 3 à
 > année exceptionnelle proche d'une des deux bornes garde un poids
 > important dans la moyenne à 2 ans qui la contient.
 
-### 4. Génération de cash — poids 15%
+### 4. Génération de cash — poids 12%
 
 - **Flux de trésorerie disponible (FCF)** = EBITDA − IS théorique sur
   le résultat d'exploitation − variation du BFR − investissements
@@ -136,7 +136,7 @@ Défensif, le seuil "confortable" de dette nette/EBITDA passe de 3 à
   élevée mais un FCF durablement négatif ou faible est un signal
   d'alerte : BFR ou capex qui consomment tout le cash généré).
 
-### 5. Valorisation relative — poids 10%
+### 5. Valorisation relative — poids 8%
 
 - Multiples **EV/EBITDA** et **P/E (PER)** actuels comparés à la
   moyenne des 5 dernières années de l'entreprise elle-même (pas de
@@ -148,6 +148,42 @@ Défensif, le seuil "confortable" de dette nette/EBITDA passe de 3 à
   ne pénalise donc un multiple élevé que modérément, et seulement en
   combinaison avec un ralentissement de la croissance (facteur 3) qui
   rendrait ce multiple difficile à justifier.
+
+### 6. Dynamique récente — poids 10%
+
+- **Tendance du cours** : écart entre le cours actuel et sa moyenne
+  mobile 200 jours (%), même logique déjà utilisée pour l'or dans
+  gold_score.py — un cours durablement au-dessus de sa MM200 signale une
+  tendance de marché haussière, en dessous une tendance baissière.
+- **Accélération des résultats** : croissance du chiffre d'affaires du
+  dernier trimestre publié par rapport au même trimestre l'an dernier,
+  comparée au CAGR 5 ans déjà calculé (facteur Croissance) — un trimestre
+  qui croît plus vite que la tendance de fond signale une accélération,
+  plus lentement une décélération.
+- Les deux sous-signaux sont mis à l'échelle indépendamment puis
+  moyennés (unités différentes : un écart de cours en %, un écart de
+  croissance en points). Si l'un des deux est indisponible (ex : moins
+  de 5 trimestres publiés chez yfinance), le score ne porte que sur le
+  sous-signal disponible ; si aucun n'est disponible, le facteur est
+  neutre.
+
+### 7. Actualité récente — poids 10%
+
+- Moyenne du sentiment (favorable/neutre/défavorable pour l'entreprise)
+  des actualités publiées dans les 14 derniers jours, tel que classé par
+  Claude au moment de la génération du résumé de chaque actu (sous-projet
+  "actus enrichies") — pas d'appel IA supplémentaire.
+- Neutre par défaut si aucune actualité récente n'est disponible ou
+  exploitable, plutôt qu'un biais optimiste ou pessimiste implicite.
+
+> **Limite héritée (sous-projet actus enrichies).** Le sentiment est
+> classé à partir du titre de l'actu (et du résumé "titre seul" déjà
+> généré dans la majorité des cas) plutôt que du contenu réel de
+> l'article — le scraping réel des liens Google News a été tenté puis
+> abandonné (écran de consentement RGPD suivi d'une résolution d'URL
+> côté JavaScript, cf. `specs/2026-09-05-actus-resume-ia-design.md`). La
+> précision du signal de sentiment hérite donc de cette même limite,
+> déjà actée.
 
 ## Interprétation du score composite
 

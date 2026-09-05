@@ -736,10 +736,10 @@ def send_email(payload, dashboard_path=OUTPUT_HTML_PATH):
 # ---------------------------------------------------------------------------
 
 def main():
-    # Le workflow tourne toutes les 15 min pour rafraîchir le site en quasi
+    # Le workflow tourne toutes les heures pour rafraîchir le site en quasi
     # temps réel, mais un seul de ces runs par jour doit compter comme le
     # "run quotidien" (email + entrée dans l'historique) — sinon l'email
-    # partirait toutes les 15 min et l'historique gonflerait sans distinguer
+    # partirait à chaque run et l'historique gonflerait sans distinguer
     # les franchissements de seuil d'un jour à l'autre de simple bruit intrajournalier.
     daily_snapshot = os.environ.get("DAILY_SNAPSHOT", "true").lower() != "false"
 

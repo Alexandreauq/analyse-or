@@ -26,21 +26,21 @@
 
   .app { max-width: 720px; margin: 0 auto; }
 
-  /* Les deux écrans occupent tout le viewport et se superposent pendant
-     la transition ; #or glisse par-dessus #home puis repart au retour. */
-  .home, #or {
+  /* Les écrans occupent tout le viewport et se superposent pendant
+     la transition ; #or / #indices glissent par-dessus #home puis repartent au retour. */
+  .home, #or, #indices {
     position: fixed; inset: 0; overflow-y: auto; -webkit-overflow-scrolling: touch;
     background: var(--bg);
     scrollbar-width: none;      /* Firefox */
     -ms-overflow-style: none;   /* vieux Edge */
   }
-  .home::-webkit-scrollbar, #or::-webkit-scrollbar { display: none; }
-  #or {
+  .home::-webkit-scrollbar, #or::-webkit-scrollbar, #indices::-webkit-scrollbar { display: none; }
+  #or, #indices {
     z-index: 2; transform: translateX(100%);
     transition: transform 0.32s cubic-bezier(.4, 0, .2, 1);
   }
-  #or.screen-in { transform: translateX(0); }
-  #or.no-anim { transition: none; }
+  #or.screen-in, #indices.screen-in { transform: translateX(0); }
+  #or.no-anim, #indices.no-anim { transition: none; }
 
   /* Nav des modules (Or / Minières / Indices), fixe en haut à droite */
   .tabbar {
@@ -121,6 +121,17 @@
   .cal-date { color: var(--gold); font-size:12px; }
   .cal-kind { color: var(--muted); font-size:11px; white-space:nowrap; }
 
+  .company-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 12px 0; border-bottom: 1px solid var(--border);
+    color: var(--text);
+  }
+  .company-row:last-child { border-bottom: none; }
+  .company-row-left { display: flex; flex-direction: column; }
+  .company-name { font-weight: 500; font-size: 14px; }
+  .company-ticker { color: var(--muted); font-size: 12px; }
+  .company-score { font-family: 'Fraunces', serif; font-size: 20px; }
+
   .alert-row { border-left: 2px solid; padding: 4px 0 10px 12px; margin-bottom: 12px; }
   .alert-row:last-child { margin-bottom: 0; }
   .alert-head { display:flex; justify-content:space-between; font-size:13px; font-weight:500; gap:8px; }
@@ -136,7 +147,7 @@
 <nav class="tabbar">
   <button class="tab" data-route="or">Or</button>
   <button class="tab disabled" disabled>Minières</button>
-  <button class="tab disabled" disabled>Indices</button>
+  <button class="tab" data-route="indices">Indices</button>
 </nav>
 
 <div id="home" class="home">
@@ -154,6 +165,19 @@
   </header>
 
   <main id="content">
+    <div class="empty">Chargement…</div>
+  </main>
+</div>
+
+<div id="indices" class="screen app" hidden>
+  <header>
+    <a href="#home" class="back-link">← IA Investment</a>
+    <div class="eyebrow">Analyse — phase pilote</div>
+    <h1>Indices</h1>
+    <p class="updated" id="indicesUpdated"></p>
+  </header>
+
+  <main id="indicesContent">
     <div class="empty">Chargement…</div>
   </main>
 </div>
@@ -291,51 +315,186 @@ function render(data) {
   });
 }
 
-function currentRoute() {
-  return location.hash === '#or' ? 'or' : 'home';
-}
+const SLIDING_PANES = ['or', 'indices'];
+let indicesLoaded = false;
+let indicesData = null;
 
-// #home reste toujours affiché en dessous ; #or glisse par-dessus (et repart)
-// pour donner un effet de transition façon navigation mobile.
-function showOr(animate) {
-  const orEl = document.getElementById('or');
-  orEl.hidden = false;
-  if (!animate) {
-    orEl.classList.add('no-anim');
-    orEl.classList.add('screen-in');
-    requestAnimationFrame(() => orEl.classList.remove('no-anim'));
+async function loadIndices(ticker) {
+  const content = document.getElementById('indicesContent');
+  if (!indicesData) {
+    try {
+      const res = await fetch('indices.json?t=' + Date.now());
+      if (!res.ok) throw new Error('indices.json introuvable');
+      indicesData = await res.json();
+    } catch (e) {
+      content.innerHTML = `<div class="empty">Données indisponibles pour l'instant.<br>${e.message}</div>`;
+      return;
+    }
+  }
+  document.getElementById('indicesUpdated').textContent = 'Mis à jour le ' + indicesData.updated;
+
+  if (!ticker) {
+    renderIndicesList(indicesData.companies);
   } else {
-    requestAnimationFrame(() => orEl.classList.add('screen-in'));
-  }
-  if (!scoreLoaded) {
-    scoreLoaded = true;
-    loadScore();
+    const company = indicesData.companies.find(c => c.ticker === ticker);
+    if (!company) {
+      content.innerHTML = `<div class="empty">Entreprise inconnue : ${ticker}</div>`;
+      return;
+    }
+    renderCompanyDetail(company);
   }
 }
 
-function showHome(animate) {
-  const orEl = document.getElementById('or');
+function renderIndicesList(companies) {
+  const rows = companies.map(c => `
+    <a class="company-row" href="#indices/${c.ticker}">
+      <div class="company-row-left">
+        <span class="company-name">${c.name}</span>
+        <span class="company-ticker">${c.ticker}</span>
+      </div>
+      <span class="company-score" style="color:${c.score >= 0 ? 'var(--gold)' : 'var(--rust)'};">
+        ${c.score > 0 ? '+' : ''}${c.score}
+      </span>
+    </a>`).join('');
+  document.getElementById('indicesContent').innerHTML = `
+    <div class="panel">${rows}</div>
+  `;
+}
+
+function renderCompanyDetail(company) {
+  const factorsHtml = company.factors.map(f => {
+    const pct = Math.min(50, Math.abs(f.score) / 10 * 50);
+    const positive = f.score >= 0;
+    return `
+      <div class="factor-row">
+        <div class="factor-head">
+          <span class="factor-name">${f.name}</span>
+          <span class="factor-weight">${Math.round(f.weight * 100)}%</span>
+        </div>
+        <div class="bar-track">
+          <div class="bar-center"></div>
+          <div class="bar-fill" style="left:${positive ? 50 : 50 - pct}%; width:${pct}%; background:${positive ? 'var(--gold)' : 'var(--rust)'};"></div>
+        </div>
+        <p class="factor-note">${f.raw_value}</p>
+      </div>`;
+  }).join('');
+
+  const newsHtml = (company.news || []).map(n => `
+    <div class="cal-row">
+      <div class="cal-left">
+        <span class="cal-date">${n.date}</span>
+        <a href="${n.link}" target="_blank" rel="noopener">${n.title}</a>
+      </div>
+    </div>`).join('');
+
+  document.getElementById('indicesContent').innerHTML = `
+    <a href="#indices" class="back-link">← Indices</a>
+    <section class="hero">
+      <div class="hero-number">${company.score > 0 ? '+' : ''}${company.score}</div>
+      <div class="hero-label">${company.name} — ${company.interpretation}</div>
+    </section>
+    <div class="divider"></div>
+
+    <div class="btn-row">
+      <button class="toggle-btn" id="toggleCompanyActu" type="button" aria-expanded="false">
+        Actu <span class="chevron">▾</span>
+      </button>
+      <button class="toggle-btn" id="toggleCompanyDetail" type="button" aria-expanded="false">
+        Détail du calcul <span class="chevron">▾</span>
+      </button>
+    </div>
+
+    <div class="section-wrap" id="companyActuWrap" hidden>
+      <h2>Actualités récentes</h2>
+      ${newsHtml || '<p class="hero-sub">Aucune actualité récente.</p>'}
+    </div>
+
+    <div class="section-wrap" id="companyDetailWrap" hidden>
+      <div class="notice">
+        Score composite sur l'échelle -100/+100, construit à partir de 5
+        facteurs pondérés (rentabilité, structure financière, croissance,
+        génération de cash, valorisation), chacun noté de -10 à +10.
+        Profil sectoriel : ${company.sector_profile} (${company.sector}).
+      </div>
+      ${factorsHtml}
+    </div>
+  `;
+
+  const toggles = [
+    ['toggleCompanyActu', 'companyActuWrap'],
+    ['toggleCompanyDetail', 'companyDetailWrap'],
+  ];
+  toggles.forEach(([btnId, wrapId]) => {
+    document.getElementById(btnId).addEventListener('click', (e) => {
+      const btn = e.currentTarget;
+      const wrap = document.getElementById(wrapId);
+      const open = wrap.hidden;
+      toggles.forEach(([otherBtnId, otherWrapId]) => {
+        if (otherWrapId === wrapId) return;
+        document.getElementById(otherWrapId).hidden = true;
+        document.getElementById(otherBtnId).setAttribute('aria-expanded', 'false');
+      });
+      wrap.hidden = !open;
+      btn.setAttribute('aria-expanded', String(open));
+    });
+  });
+}
+
+function parseRoute() {
+  const hash = location.hash.slice(1);
+  if (hash === 'or') return { screen: 'or' };
+  if (hash === 'indices') return { screen: 'indices', ticker: null };
+  if (hash.startsWith('indices/')) return { screen: 'indices', ticker: hash.slice('indices/'.length) };
+  return { screen: 'home' };
+}
+
+function showPane(id, animate) {
+  const el = document.getElementById(id);
+  const alreadyVisible = !el.hidden && el.classList.contains('screen-in');
+  el.hidden = false;
+  if (alreadyVisible) return;
   if (!animate) {
-    orEl.classList.remove('screen-in');
-    orEl.hidden = true;
+    el.classList.add('no-anim');
+    el.classList.add('screen-in');
+    requestAnimationFrame(() => el.classList.remove('no-anim'));
+  } else {
+    requestAnimationFrame(() => el.classList.add('screen-in'));
+  }
+}
+
+function hidePane(id, animate) {
+  const el = document.getElementById(id);
+  if (el.hidden) return;
+  if (!animate) {
+    el.classList.remove('screen-in');
+    el.hidden = true;
     return;
   }
-  orEl.classList.remove('screen-in');
+  el.classList.remove('screen-in');
   const onEnd = (e) => {
     if (e.propertyName !== 'transform') return;
-    orEl.hidden = true;
-    orEl.removeEventListener('transitionend', onEnd);
+    el.hidden = true;
+    el.removeEventListener('transitionend', onEnd);
   };
-  orEl.addEventListener('transitionend', onEnd);
+  el.addEventListener('transitionend', onEnd);
 }
 
 function renderRoute(animate) {
-  const route = currentRoute();
+  const route = parseRoute();
   document.querySelectorAll('.tab[data-route]').forEach(tab => {
-    tab.classList.toggle('active', tab.dataset.route === route);
+    tab.classList.toggle('active', tab.dataset.route === route.screen);
   });
-  if (route === 'or') showOr(animate);
-  else showHome(animate);
+  SLIDING_PANES.forEach(id => {
+    if (id === route.screen) showPane(id, animate);
+    else hidePane(id, animate);
+  });
+  if (route.screen === 'or' && !scoreLoaded) {
+    scoreLoaded = true;
+    loadScore();
+  }
+  if (route.screen === 'indices') {
+    loadIndices(route.ticker);
+  }
 }
 
 document.querySelectorAll('.tab[data-route]').forEach(tab => {

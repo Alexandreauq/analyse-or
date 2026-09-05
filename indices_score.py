@@ -505,6 +505,9 @@ def fetch_company_financials(ticker: str) -> dict:
     ratios["sector"] = info.get("sector")
     ratios["ecart_pct_ma200"] = ecart_pct_ma200
     ratios["quarterly_yoy_growth_ca"] = extract_quarterly_growth(quarterly_financials)
+    ratios["current_price"] = current_price
+    ratios["ma200"] = ma200
+    ratios["shares_outstanding"] = shares_outstanding
     return ratios
 
 

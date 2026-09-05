@@ -450,6 +450,7 @@ def fetch_company_financials(ticker: str) -> dict:
     financials = t.financials
     balance_sheet = t.balance_sheet
     cashflow = t.cashflow
+    quarterly_financials = t.quarterly_financials
     info = t.info
 
     shares_outstanding = info.get("sharesOutstanding") or 0.0
@@ -461,8 +462,17 @@ def fetch_company_financials(ticker: str) -> dict:
         if len(window):
             closes_by_year[col] = float(window.iloc[-1])
 
+    current_price = float(history.iloc[-1]) if len(history) else None
+    ma200 = float(history.tail(200).mean()) if len(history) else None
+    ecart_pct_ma200 = (
+        (current_price - ma200) / ma200 * 100
+        if current_price is not None and ma200 else None
+    )
+
     ratios = extract_ratios(financials, balance_sheet, cashflow, closes_by_year, shares_outstanding)
     ratios["sector"] = info.get("sector")
+    ratios["ecart_pct_ma200"] = ecart_pct_ma200
+    ratios["quarterly_yoy_growth_ca"] = extract_quarterly_growth(quarterly_financials)
     return ratios
 
 

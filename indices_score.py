@@ -727,6 +727,30 @@ def estimate_fair_value(
     return sum(prices) / len(prices) if prices else None
 
 
+VALUATION_MARGIN_OF_SAFETY = 0.30   # ±30%, cohérent avec le seuil de prime/décote
+                                     # significative déjà utilisé dans score_valorisation
+TECHNICAL_EXIT_MARGIN = 0.20        # +20% au-dessus de la MM200, cohérent avec
+                                     # PRICE_MOMENTUM_SCALE de score_dynamique_recente
+
+
+def estimate_entry_exit_prices(fair_value: float | None, ma200: float | None) -> dict:
+    """Combine repère de valorisation (juste valeur ± 30%) et repère
+    technique (MM200 / MM200 × 1,20) en moyennant ceux disponibles.
+    Renvoie {"entry": float | None, "exit": float | None} — None des deux
+    côtés si ni la valorisation ni la MM200 ne sont disponibles."""
+    entry_candidates = []
+    exit_candidates = []
+    if fair_value is not None:
+        entry_candidates.append(fair_value * (1 - VALUATION_MARGIN_OF_SAFETY))
+        exit_candidates.append(fair_value * (1 + VALUATION_MARGIN_OF_SAFETY))
+    if ma200 is not None:
+        entry_candidates.append(ma200)
+        exit_candidates.append(ma200 * (1 + TECHNICAL_EXIT_MARGIN))
+    entry = sum(entry_candidates) / len(entry_candidates) if entry_candidates else None
+    exit_price = sum(exit_candidates) / len(exit_candidates) if exit_candidates else None
+    return {"entry": entry, "exit": exit_price}
+
+
 def build_company_entry(ticker: str, name: str) -> dict:
     data = fetch_company_financials(ticker)
     sector = data["sector"]

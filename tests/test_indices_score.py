@@ -939,3 +939,26 @@ def test_estimate_fair_value_averages_available_methods_when_one_is_missing():
 
 def test_estimate_fair_value_returns_none_when_no_method_is_available():
     assert estimate_fair_value(dcf_price=None, asset_price=None, multiple_price=None) is None
+
+
+from indices_score import estimate_entry_exit_prices
+
+
+def test_estimate_entry_exit_prices_combines_valuation_and_technical():
+    result = estimate_entry_exit_prices(fair_value=100.0, ma200=90.0)
+    assert result == {"entry": 80.0, "exit": 119.0}
+
+
+def test_estimate_entry_exit_prices_uses_only_valuation_when_ma200_missing():
+    result = estimate_entry_exit_prices(fair_value=100.0, ma200=None)
+    assert result == {"entry": 70.0, "exit": 130.0}
+
+
+def test_estimate_entry_exit_prices_uses_only_technical_when_fair_value_missing():
+    result = estimate_entry_exit_prices(fair_value=None, ma200=90.0)
+    assert result == {"entry": 90.0, "exit": 108.0}
+
+
+def test_estimate_entry_exit_prices_returns_none_for_both_when_nothing_available():
+    result = estimate_entry_exit_prices(fair_value=None, ma200=None)
+    assert result == {"entry": None, "exit": None}

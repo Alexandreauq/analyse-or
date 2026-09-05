@@ -175,3 +175,46 @@ def score_generation_cash(fcf_conversion: float) -> FactorResult:
         WEIGHTS["generation_cash"],
         f"Conversion FCF/EBITDA {fcf_conversion:.0f}%",
     )
+
+
+VALUATION_PREMIUM_SCALE = 3.0       # % d'écart au multiple historique pour 1 point de score
+VALUATION_GROWTH_DAMPENING_CAGR = 5.0   # au-dessus de ce CAGR EBITDA, une prime est jugée justifiée
+VALUATION_GROWTH_DAMPENING_FACTOR = 0.4  # atténuation de la pénalité si croissance forte
+
+
+def _premium_score(current: float, avg_5y: float, cagr_ebitda: float) -> float:
+    """Décote vs moyenne 5 ans -> score positif (favorable) ; prime -> score
+    négatif, mais atténué si la croissance de l'EBITDA justifie une prime."""
+    if avg_5y == 0:
+        return 0.0
+    premium_pct = (current / avg_5y - 1.0) * 100
+    if premium_pct <= 0:
+        return _clamp(-premium_pct / VALUATION_PREMIUM_SCALE, 0.0, 10.0)
+    dampening = (
+        VALUATION_GROWTH_DAMPENING_FACTOR
+        if cagr_ebitda >= VALUATION_GROWTH_DAMPENING_CAGR
+        else 1.0
+    )
+    penalty = _clamp(premium_pct / VALUATION_PREMIUM_SCALE, 0.0, 10.0) * dampening
+    return -penalty
+
+
+def score_valorisation(
+    current_ev_ebitda: float, avg_ev_ebitda_5y: float,
+    current_pe: float, avg_pe_5y: float,
+    cagr_ebitda: float,
+) -> FactorResult:
+    """Multiples EV/EBITDA et P/E actuels comparés à la moyenne 5 ans de
+    l'entreprise elle-même (pas de comparaison à des pairs au v1). Une
+    prime n'est pénalisée que modérément et seulement si elle n'est pas
+    soutenue par la croissance de l'EBITDA (cf. Méthodologie section 5)."""
+    ev_ebitda_score = _premium_score(current_ev_ebitda, avg_ev_ebitda_5y, cagr_ebitda)
+    pe_score = _premium_score(current_pe, avg_pe_5y, cagr_ebitda)
+    score = _clamp((ev_ebitda_score + pe_score) / 2)
+    return FactorResult(
+        "Valorisation relative",
+        score,
+        WEIGHTS["valorisation"],
+        f"EV/EBITDA {current_ev_ebitda:.1f}x (moy. 5 ans {avg_ev_ebitda_5y:.1f}x) — "
+        f"PER {current_pe:.1f}x (moy. 5 ans {avg_pe_5y:.1f}x)",
+    )

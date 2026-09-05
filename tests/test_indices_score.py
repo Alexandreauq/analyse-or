@@ -138,3 +138,50 @@ def test_score_generation_cash_neutral_at_fifty_percent():
 def test_score_generation_cash_negative_conversion_floors_at_minus_ten():
     result = score_generation_cash(fcf_conversion=-20.0)
     assert result.score == -10.0
+
+
+from indices_score import score_valorisation
+
+
+def test_score_valorisation_trading_at_discount_is_positive():
+    # EV/EBITDA et PER tous deux 30% sous leur moyenne 5 ans -> décote favorable
+    result = score_valorisation(
+        current_ev_ebitda=7.0, avg_ev_ebitda_5y=10.0,
+        current_pe=10.5, avg_pe_5y=15.0,
+        cagr_ebitda=5.0,
+    )
+    assert result.name == "Valorisation relative"
+    assert result.weight == 0.10
+    assert result.score > 0
+
+
+def test_score_valorisation_premium_with_weak_growth_is_penalized():
+    result = score_valorisation(
+        current_ev_ebitda=13.0, avg_ev_ebitda_5y=10.0,
+        current_pe=19.5, avg_pe_5y=15.0,
+        cagr_ebitda=1.0,  # croissance faible -> la prime n'est pas justifiée
+    )
+    assert result.score < 0
+
+
+def test_score_valorisation_premium_with_strong_growth_is_dampened():
+    weak_growth = score_valorisation(
+        current_ev_ebitda=13.0, avg_ev_ebitda_5y=10.0,
+        current_pe=19.5, avg_pe_5y=15.0,
+        cagr_ebitda=1.0,
+    )
+    strong_growth = score_valorisation(
+        current_ev_ebitda=13.0, avg_ev_ebitda_5y=10.0,
+        current_pe=19.5, avg_pe_5y=15.0,
+        cagr_ebitda=12.0,  # même prime, mais croissance forte -> pénalité atténuée
+    )
+    assert strong_growth.score > weak_growth.score
+
+
+def test_score_valorisation_at_historical_average_is_neutral():
+    result = score_valorisation(
+        current_ev_ebitda=10.0, avg_ev_ebitda_5y=10.0,
+        current_pe=15.0, avg_pe_5y=15.0,
+        cagr_ebitda=5.0,
+    )
+    assert result.score == 0.0

@@ -17,7 +17,7 @@ import math
 import os
 import xml.etree.ElementTree as ET
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timedelta
 from email.utils import parsedate_to_datetime
 
 try:
@@ -276,6 +276,35 @@ def score_dynamique_recente(
     score = sum(sub_scores) / len(sub_scores) if sub_scores else 0.0
     raw_value = " — ".join(raw_parts) if raw_parts else "Données insuffisantes"
     return FactorResult("Dynamique récente", score, WEIGHTS["dynamique_recente"], raw_value)
+
+
+NEWS_SENTIMENT_WINDOW_DAYS = 14
+
+
+def score_actualite_recente(news_items: list[dict]) -> FactorResult:
+    """Moyenne du sentiment des actus datées de moins de 14 jours, mise à
+    l'échelle -10/+10. Neutre (0.0) si aucune actu récente exploitable —
+    ni erreur, ni biais optimiste/pessimiste par défaut."""
+    cutoff = datetime.now() - timedelta(days=NEWS_SENTIMENT_WINDOW_DAYS)
+    recent_sentiments = []
+    for item in news_items:
+        try:
+            item_date = datetime.strptime(item["date"], "%Y-%m-%d")
+        except (ValueError, TypeError, KeyError):
+            continue
+        if item_date >= cutoff:
+            recent_sentiments.append(item.get("sentiment", 0))
+    if not recent_sentiments:
+        return FactorResult(
+            "Actualité récente", 0.0, WEIGHTS["actualite_recente"],
+            "Aucune actualité récente exploitable",
+        )
+    avg_sentiment = sum(recent_sentiments) / len(recent_sentiments)
+    score = _clamp(avg_sentiment * 10)
+    return FactorResult(
+        "Actualité récente", score, WEIGHTS["actualite_recente"],
+        f"Ton moyen des {len(recent_sentiments)} actualités récentes : {avg_sentiment:+.2f}",
+    )
 
 
 def compute_composite(factors: list[FactorResult]) -> float:

@@ -797,6 +797,12 @@ def _fake_ratios():
         "avg_pe_5y": 20.0,
         "ecart_pct_ma200": 5.0,
         "quarterly_yoy_growth_ca": 7.0,
+        "fcf": 50.0,
+        "net_debt": 100.0,
+        "equity": 200.0,
+        "current_price": 120.0,
+        "ma200": 110.0,
+        "shares_outstanding": 10.0,
         "sector": "Consumer Defensive",
     }
 
@@ -821,6 +827,11 @@ def test_build_company_entry_degrades_gracefully_when_news_fetch_fails(monkeypat
     assert len(entry["factors"]) == 7
     assert entry["factors"][6]["name"] == "Actualité récente"
     assert entry["factors"][6]["score"] == 0.0
+    assert entry["current_price"] == 120.0
+    assert entry["fair_value"] is not None
+    assert entry["entry_price"] is not None
+    assert entry["exit_price"] is not None
+    assert entry["entry_price"] < entry["exit_price"]
 
 
 def test_build_company_entry_includes_news_when_fetch_succeeds(monkeypatch):

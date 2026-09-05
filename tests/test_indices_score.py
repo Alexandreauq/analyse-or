@@ -280,7 +280,9 @@ def test_extract_ratios_computes_expected_keys():
         "current_pe", "avg_pe_5y",
     ]:
         assert key in ratios, f"clé manquante : {key}"
-    # Revenu passe de 800 à 1000 sur 4 intervalles annuels -> CAGR ~ 5.7%
+    # Revenu croît régulièrement de 800 à 1000 sur 5 ans ; CAGR lissé
+    # (moyenne des 2 exercices récents vs moyenne des 2 plus anciens,
+    # cf. test dédié ci-dessous) ~ 5.7%/an sur cette série linéaire.
     assert 5.0 < ratios["cagr_ca"] < 6.5
 
 
@@ -296,11 +298,63 @@ def test_cagr_returns_neutral_zero_when_latest_value_is_missing():
     assert _cagr(800.0, float("nan"), 4) == 0.0
 
 
+def test_extract_ratios_smooths_cagr_over_two_year_windows():
+    """Reproduit le cas TotalEnergies 2022 : un pic isolé sur l'exercice le
+    plus ancien disponible ne doit pas, seul, déterminer tout le CAGR — le
+    calcul doit moyenner 2 exercices de chaque côté plutôt qu'un point à
+    point. Avec seulement 4 exercices dispo (limite yfinance), le résultat
+    lissé (-31.9%) doit différer nettement du point-à-point naïf qu'il
+    remplace (-21.9%) : ce test échoue si quelqu'un revient à l'ancienne
+    formule point à point."""
+    years = ["2025-12-31", "2024-12-31", "2023-12-31", "2022-12-31"]
+    financials = pd.DataFrame(
+        {
+            years[0]: [100, 40, 30, 20, 0.25],
+            years[1]: [90, 35, 25, 18, 0.25],
+            years[2]: [200, 80, 60, 40, 0.25],
+            years[3]: [210, 85, 65, 45, 0.25],
+        },
+        index=["Total Revenue", "EBITDA", "EBIT", "Net Income", "Tax Rate For Calcs"],
+    )
+    balance_sheet = pd.DataFrame(
+        {
+            years[0]: [100, 200],
+            years[1]: [100, 200],
+            years[2]: [100, 200],
+            years[3]: [100, 200],
+        },
+        index=["Total Debt", "Stockholders Equity"],
+    )
+    balance_sheet.loc["Cash And Cash Equivalents"] = [20, 20, 20, 20]
+    cashflow = pd.DataFrame(
+        {
+            years[0]: [30, -10],
+            years[1]: [28, -9],
+            years[2]: [60, -20],
+            years[3]: [65, -22],
+        },
+        index=["Operating Cash Flow", "Capital Expenditure"],
+    )
+    closes_by_year = {y: 100.0 for y in years}
+
+    ratios = extract_ratios(
+        financials, balance_sheet, cashflow, closes_by_year, shares_outstanding=10.0
+    )
+
+    # moyenne(100,90)=95 vs moyenne(200,210)=205, sur 2 ans -> -31.9%
+    assert -33.0 < ratios["cagr_ca"] < -30.5
+    # le point-à-point naïf (210 -> 100 sur 3 ans) donnerait -21.9% :
+    # s'assurer qu'on ne l'a pas retrouvé par erreur.
+    assert not (-23.0 < ratios["cagr_ca"] < -20.0)
+
+
 def test_extract_ratios_ignores_years_with_missing_ebitda_or_net_income():
     """yfinance ne garantit pas 5 années pleines pour chaque poste : une
     année (souvent la plus ancienne) peut manquer de valeur pour EBITDA ou
-    Net Income. Ces trous ne doivent pas produire de NaN dans cagr_ca,
-    cagr_ebitda, avg_ev_ebitda_5y ou avg_pe_5y."""
+    Net Income. Le CAGR étant lissé sur une fenêtre de 2 exercices, un seul
+    exercice manquant dans cette fenêtre ne doit pas produire de NaN : la
+    moyenne se recalcule sur le seul exercice restant. Ces trous ne
+    doivent pas non plus produire de NaN dans avg_ev_ebitda_5y/avg_pe_5y."""
     financials, balance_sheet, cashflow, closes_by_year = _make_fixture_statements()
     oldest_year = list(financials.columns)[-1]
     financials.loc["Total Revenue", oldest_year] = float("nan")
@@ -311,10 +365,28 @@ def test_extract_ratios_ignores_years_with_missing_ebitda_or_net_income():
         financials, balance_sheet, cashflow, closes_by_year, shares_outstanding=10.0
     )
 
-    assert ratios["cagr_ca"] == 0.0
-    assert ratios["cagr_ebitda"] == 0.0
+    assert not math.isnan(ratios["cagr_ca"])
+    assert not math.isnan(ratios["cagr_ebitda"])
     assert not math.isnan(ratios["avg_ev_ebitda_5y"])
     assert not math.isnan(ratios["avg_pe_5y"])
+
+
+def test_extract_ratios_cagr_is_neutral_zero_when_whole_old_window_is_missing():
+    """Si les 2 exercices les plus anciens (toute la fenêtre de lissage)
+    manquent de valeur, aucune moyenne n'est calculable -> repli neutre
+    0.0, plutôt qu'un NaN ou une valeur fabriquée."""
+    financials, balance_sheet, cashflow, closes_by_year = _make_fixture_statements()
+    years = list(financials.columns)
+    for y in years[-2:]:
+        financials.loc["Total Revenue", y] = float("nan")
+        financials.loc["EBITDA", y] = float("nan")
+
+    ratios = extract_ratios(
+        financials, balance_sheet, cashflow, closes_by_year, shares_outstanding=10.0
+    )
+
+    assert ratios["cagr_ca"] == 0.0
+    assert ratios["cagr_ebitda"] == 0.0
 
 
 from indices_score import parse_news_rss

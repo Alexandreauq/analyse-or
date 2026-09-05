@@ -284,6 +284,13 @@ def _cagr(first_value: float, last_value: float, years: int) -> float:
     return ((last_value / first_value) ** (1 / years) - 1) * 100
 
 
+def _window_average(row, cols: list) -> float:
+    """Moyenne d'une ligne yfinance sur un sous-ensemble de colonnes
+    (années), en ignorant les valeurs manquantes (NaN)."""
+    values = [row[c] for c in cols if not _is_missing(row[c])]
+    return sum(values) / len(values) if values else float("nan")
+
+
 def extract_ratios(financials, balance_sheet, cashflow, closes_by_year, shares_outstanding: float) -> dict:
     """
     Calcule les ratios bruts nécessaires aux fonctions de score à partir des
@@ -293,7 +300,7 @@ def extract_ratios(financials, balance_sheet, cashflow, closes_by_year, shares_o
     """
     years_cols = list(financials.columns)  # plus récent en premier
     n_years = len(years_cols)
-    latest, oldest = years_cols[0], years_cols[-1]
+    latest = years_cols[0]
 
     revenue = get_row(financials, "Total Revenue", "Operating Revenue")
     ebitda = get_row(financials, "EBITDA", "Normalized EBITDA")
@@ -316,8 +323,20 @@ def extract_ratios(financials, balance_sheet, cashflow, closes_by_year, shares_o
     net_debt_ebitda = net_debt_latest / ebitda[latest] if ebitda[latest] else 0.0
     icr = ebit[latest] / (total_debt[latest] * 0.03) if total_debt[latest] else 10.0  # proxy frais financiers si non isolés
 
-    cagr_ca = _cagr(revenue[oldest], revenue[latest], n_years - 1)
-    cagr_ebitda = _cagr(ebitda[oldest], ebitda[latest], n_years - 1)
+    # CAGR lissé sur les 2 exercices les plus récents vs les 2 plus anciens
+    # (plutôt qu'un simple point à point) pour réduire la sensibilité à une
+    # année isolée atypique (ex : pic des prix de l'énergie en 2022 pour les
+    # pétrolières) — voir Methodologie_Analyse_Indices.md §3.
+    smoothing_window = 2 if n_years >= 4 else 1
+    recent_cols = years_cols[:smoothing_window]
+    old_cols = years_cols[-smoothing_window:]
+    cagr_span = n_years - smoothing_window
+    cagr_ca = _cagr(
+        _window_average(revenue, old_cols), _window_average(revenue, recent_cols), cagr_span
+    )
+    cagr_ebitda = _cagr(
+        _window_average(ebitda, old_cols), _window_average(ebitda, recent_cols), cagr_span
+    )
 
     # FCF = Flux de trésorerie opérationnel - |Capex| (proxy OCF standard),
     # et non le montage "EBITDA - IS théorique - ΔBFR - investissements" décrit

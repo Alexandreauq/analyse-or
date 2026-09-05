@@ -1,3 +1,4 @@
+import pytest
 from indices_score import sector_risk_profile, score_rentabilite
 
 
@@ -387,6 +388,65 @@ def test_extract_ratios_cagr_is_neutral_zero_when_whole_old_window_is_missing():
 
     assert ratios["cagr_ca"] == 0.0
     assert ratios["cagr_ebitda"] == 0.0
+
+
+from indices_score import extract_quarterly_growth
+
+
+def test_extract_quarterly_growth_computes_yoy_growth_with_five_quarters():
+    quarterly_financials = pd.DataFrame(
+        {
+            "2026-06-30": [110],
+            "2026-03-31": [100],
+            "2025-12-31": [95],
+            "2025-09-30": [90],
+            "2025-06-30": [100],  # même trimestre il y a un an (cols[4])
+        },
+        index=["Total Revenue"],
+    )
+    result = extract_quarterly_growth(quarterly_financials)
+    assert result == pytest.approx(10.0)  # (110/100 - 1) * 100
+
+
+def test_extract_quarterly_growth_returns_none_with_fewer_than_five_quarters():
+    quarterly_financials = pd.DataFrame(
+        {
+            "2026-06-30": [110],
+            "2026-03-31": [100],
+            "2025-12-31": [95],
+            "2025-09-30": [90],
+        },
+        index=["Total Revenue"],
+    )
+    assert extract_quarterly_growth(quarterly_financials) is None
+
+
+def test_extract_quarterly_growth_returns_none_when_year_ago_value_missing():
+    quarterly_financials = pd.DataFrame(
+        {
+            "2026-06-30": [110],
+            "2026-03-31": [100],
+            "2025-12-31": [95],
+            "2025-09-30": [90],
+            "2025-06-30": [float("nan")],
+        },
+        index=["Total Revenue"],
+    )
+    assert extract_quarterly_growth(quarterly_financials) is None
+
+
+def test_extract_quarterly_growth_returns_none_when_year_ago_value_is_zero_or_negative():
+    quarterly_financials = pd.DataFrame(
+        {
+            "2026-06-30": [110],
+            "2026-03-31": [100],
+            "2025-12-31": [95],
+            "2025-09-30": [90],
+            "2025-06-30": [0.0],
+        },
+        index=["Total Revenue"],
+    )
+    assert extract_quarterly_growth(quarterly_financials) is None
 
 
 from indices_score import parse_news_rss

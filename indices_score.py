@@ -656,6 +656,41 @@ OUTPUT_JSON_PATH = os.path.join(
 # de la méthodologie.
 COST_OF_CAPITAL_PROXY = 8.0  # %
 
+DCF_PROJECTION_YEARS = 5
+DCF_GROWTH_FLOOR = -5.0      # % croissance FCF minimum projetée
+DCF_GROWTH_CAP = 15.0        # % croissance FCF maximum projetée
+DCF_TERMINAL_GROWTH = 2.0    # % croissance perpétuelle (valeur terminale)
+
+
+def estimate_dcf_price(
+    fcf: float, cagr_ebitda: float, net_debt: float, shares_outstanding: float
+) -> float | None:
+    """Prix par action implicite d'un DCF simplifié : projette le FCF actuel
+    sur 5 ans au taux de croissance historique de l'EBITDA (plafonné entre
+    -5% et +15%/an pour éviter d'extrapoler un chiffre bruité de façon
+    absurde), actualise au coût du capital (COST_OF_CAPITAL_PROXY), ajoute
+    une valeur terminale à croissance perpétuelle de 2%. None si le FCF de
+    départ n'est pas positif (DCF non pertinent) ou si le nombre d'actions
+    est nul/inconnu."""
+    if fcf <= 0 or not shares_outstanding:
+        return None
+    growth = _clamp(cagr_ebitda, DCF_GROWTH_FLOOR, DCF_GROWTH_CAP) / 100
+    discount_rate = COST_OF_CAPITAL_PROXY / 100
+    terminal_growth = DCF_TERMINAL_GROWTH / 100
+
+    pv_fcf = 0.0
+    fcf_t = fcf
+    for year in range(1, DCF_PROJECTION_YEARS + 1):
+        fcf_t = fcf_t * (1 + growth)
+        pv_fcf += fcf_t / (1 + discount_rate) ** year
+
+    terminal_value = fcf_t * (1 + terminal_growth) / (discount_rate - terminal_growth)
+    pv_terminal = terminal_value / (1 + discount_rate) ** DCF_PROJECTION_YEARS
+
+    enterprise_value = pv_fcf + pv_terminal
+    equity_value = enterprise_value - net_debt
+    return equity_value / shares_outstanding
+
 
 def build_company_entry(ticker: str, name: str) -> dict:
     data = fetch_company_financials(ticker)

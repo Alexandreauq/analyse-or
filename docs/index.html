@@ -121,6 +121,12 @@
   .cal-date { color: var(--gold); font-size:12px; }
   .cal-kind { color: var(--muted); font-size:11px; white-space:nowrap; }
 
+  .news-item { padding: 10px 0; border-bottom: 1px solid var(--border); }
+  .news-item:last-child { border-bottom: none; }
+  .news-title { color: var(--gold); font-size: 13px; font-weight: 500; line-height: 1.4; }
+  .news-meta { color: var(--muted); font-size: 11px; margin-top: 2px; }
+  .news-summary { color: var(--muted); font-size: 12px; line-height: 1.5; margin: 4px 0 0; }
+
   .company-row {
     display: flex; justify-content: space-between; align-items: center;
     padding: 12px 0; border-bottom: 1px solid var(--border);
@@ -386,11 +392,10 @@ function renderCompanyDetail(company) {
   }).join('');
 
   const newsHtml = (company.news || []).map(n => `
-    <div class="cal-row">
-      <div class="cal-left">
-        <span class="cal-date">${n.date}</span>
-        <a href="${n.link}" target="_blank" rel="noopener">${n.title}</a>
-      </div>
+    <div class="news-item">
+      <a class="news-title" href="${n.link}" target="_blank" rel="noopener">${n.title}</a>
+      <div class="news-meta">${[n.source, n.date].filter(Boolean).join(' · ')}</div>
+      ${n.summary ? `<p class="news-summary">${n.summary}</p>` : ''}
     </div>`).join('');
 
   document.getElementById('indicesContent').innerHTML = `

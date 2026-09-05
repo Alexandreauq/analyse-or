@@ -922,3 +922,20 @@ def test_estimate_multiple_based_price_returns_none_when_current_multiple_is_zer
         current_price=100.0, current_ev_ebitda=0.0, avg_ev_ebitda_5y=8.0
     )
     assert result is None
+
+
+from indices_score import estimate_fair_value
+
+
+def test_estimate_fair_value_averages_all_three_methods():
+    result = estimate_fair_value(dcf_price=40.0, asset_price=50.0, multiple_price=60.0)
+    assert result == 50.0
+
+
+def test_estimate_fair_value_averages_available_methods_when_one_is_missing():
+    result = estimate_fair_value(dcf_price=40.0, asset_price=None, multiple_price=60.0)
+    assert result == 50.0
+
+
+def test_estimate_fair_value_returns_none_when_no_method_is_available():
+    assert estimate_fair_value(dcf_price=None, asset_price=None, multiple_price=None) is None

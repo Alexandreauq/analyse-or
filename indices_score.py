@@ -717,6 +717,16 @@ def estimate_multiple_based_price(
     return current_price * (avg_ev_ebitda_5y / current_ev_ebitda)
 
 
+def estimate_fair_value(
+    dcf_price: float | None, asset_price: float | None, multiple_price: float | None
+) -> float | None:
+    """Moyenne des méthodes de valorisation disponibles (DCF, actif net,
+    multiples) — ignore celles indisponibles (None) ; None si aucune des
+    3 n'est calculable."""
+    prices = [p for p in (dcf_price, asset_price, multiple_price) if p is not None]
+    return sum(prices) / len(prices) if prices else None
+
+
 def build_company_entry(ticker: str, name: str) -> dict:
     data = fetch_company_financials(ticker)
     sector = data["sector"]

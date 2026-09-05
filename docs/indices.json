@@ -6,8 +6,8 @@
       "name": "LVMH",
       "sector": "Consumer Cyclical",
       "sector_profile": "cyclique",
-      "score": 57.5,
-      "interpretation": "Profil fondamental très solide",
+      "score": 43.8,
+      "interpretation": "Solide",
       "factors": [
         {
           "name": "Rentabilité / création de valeur",
@@ -23,9 +23,9 @@
         },
         {
           "name": "Croissance",
-          "score": 10.0,
+          "score": 0.0,
           "weight": 0.2,
-          "raw_value": "CAGR CA +nan%/an, CAGR EBITDA +nan%/an (5 ans)"
+          "raw_value": "CAGR CA +0.0%/an, CAGR EBITDA +0.0%/an (5 ans)"
         },
         {
           "name": "Génération de cash",
@@ -35,9 +35,9 @@
         },
         {
           "name": "Valorisation relative",
-          "score": -10.0,
+          "score": -3.724168009843228,
           "weight": 0.1,
-          "raw_value": "EV/EBITDA 13.2x (moy. 5 ans nanx) — PER 28.8x (moy. 5 ans nanx)"
+          "raw_value": "EV/EBITDA 13.2x (moy. 5 ans 12.7x) — PER 28.8x (moy. 5 ans 24.3x)"
         }
       ],
       "news": [
@@ -114,12 +114,12 @@
           "link": "https://news.google.com/rss/articles/CBMijwJBVV95cUxQQ1V0Q3lUY3dVVkI3SWdEbEVFRGVWX0gyeTQwdG1GYUNyLTA2eUZqWWhOMWFtOXNVdFozbEVJSFdPODN2ZUQwTHNKd0w4NzZyRldwWXd1SktBOF9tMENmQzdYdVBMSWlLQVlsNFNJX3RJaDNwck16OU5CZ2c2WDhTODA1ZWhQaVVnSmNfS21UVDJyRlJyeUJuVENnM1oyMElWSnFscEdPWUhJcGlveUwyNE1iVzFIZGdDY0xQb2k2eFRlaWl4VVpPYjB4UnlPd19GNjdNbG5jRjFOenY0NURsRzVqU0JFaFkxTnBnZl9sOEI1MDd5X3VaMndNRXNQZUItMldYdHQzeWRNelBDR1Q4?oc=5"
         },
         {
-          "title": "Transfert: Nicolas Breuillard va quitter la TotalEnergies... pour une WorldTour ! - Cyclism'Actu",
+          "title": "Transfert: Nicolas Breuillard va quitter la TotalEnergies... pour une WorldTour ! - cyclismactu.net",
           "date": "2026-09-04",
           "link": "https://news.google.com/rss/articles/CBMiywFBVV95cUxQV0JDRXNzcG5SSFJWNTlmRnZMUTZHbjd1Yi1jVEdnNmhld2Z4UmExTkg5NDl0ZnlwMXpnQWpGajRVNXU3R3k5Y191bHBBS29VS0piZEt4Si01SGlnWHZTdTNhVlpUM05oWXl3N2pnTGhhLW5jMzctYUp4XzRuQXJUUWd3RmxVOXBiWVRjNE5hZkVLT18zSVMxUk9CaDNHZDh0TUwyZnQ1eG5PbDN2aHZxV29PTXJuak5LdU1HQlJ3dTl0b1psOHpvVkt4ONIBXEFVX3lxTE1JWWhkNHIwdzBJSW5INm45ak9GRWhXSld5Nkd1V1pYdmwtQjFzWklqQUIyOTJYYUFGeUVKelowSzM1ckRBZ21BQ2NhRHdBVExWcUwxbXR0dVpyNzlT?oc=5"
         },
         {
-          "title": "Prix de l'essence : TotalEnergies menace de mettre fin au plafonnement des prix en cas de taxe sur les superprofits - europe1.fr",
+          "title": "Prix de l'essence : TotalEnergies menace de mettre fin au plafonnement des prix en cas de taxe sur les superprofits - Europe 1",
           "date": "2026-09-02",
           "link": "https://news.google.com/rss/articles/CBMi5wFBVV95cUxQUUNsYkZqMTVwbWRmenNfeFpjZ0xFWVRWdVk3Y0lkU1F4cmFmTlB6T2g5cFJKN2pxZDEzZWRudlBGT2NhdVp1RUk3U1BBZ0xWRGNrS01iTmhLaEFTS2JHeUtOZm5xM2dVR19RUkpfblBiQWJuSUZuTHBXMmJteERDRE92elBuNThIcWp1b0dWYy0xb0Nzd013NWZrUlVoRUlvbm9DNlBVTkZiVVhkOHI5QVZnWm9yUGNJNjhfbTc1UTZuU3NCdXY3cUpYRDZHbElpMjVoc05Waks3amxRbUVLT0VUODhvRDDSAewBQVVfeXFMTzhDYUN4dVBwdGRyZVBwRUpVWkYweE5ka0xGZ0NXclZyUjhPeGFObXQ0Yi1JT1l1cWZVdHZydXlfV2YydVExT0pCc3p6XzJjYlpCZjdDaGhxQ2JvcW9MVWItU3FLdkgxR2plMGV0dEpJa3dWdjBoMWw3VU8tc2Y2MjhZNWpqWmFRTkQ0UnlsVjNOcl9xQW4zMWlEMzJ2ZnFpaGstM0p0TktRdHBDVFlTU3hMcjJHcDVQMWdlQkpvdnAxeXJiZ2R2Y0RpMUQzTkNWZWRlOGVGWEtRMWp5MDA0WndabDhKZHh2NmdzVFQ?oc=5"
         },
@@ -140,8 +140,8 @@
       "name": "Schneider Electric",
       "sector": "Industrials",
       "sector_profile": "standard",
-      "score": 59.8,
-      "interpretation": "Profil fondamental très solide",
+      "score": 44.8,
+      "interpretation": "Solide",
       "factors": [
         {
           "name": "Rentabilité / création de valeur",
@@ -157,9 +157,9 @@
         },
         {
           "name": "Croissance",
-          "score": 10.0,
+          "score": 0.0,
           "weight": 0.2,
-          "raw_value": "CAGR CA +nan%/an, CAGR EBITDA +nan%/an (5 ans)"
+          "raw_value": "CAGR CA +0.0%/an, CAGR EBITDA +0.0%/an (5 ans)"
         },
         {
           "name": "Génération de cash",
@@ -169,9 +169,9 @@
         },
         {
           "name": "Valorisation relative",
-          "score": -10.0,
+          "score": -5.090945901591704,
           "weight": 0.1,
-          "raw_value": "EV/EBITDA 17.1x (moy. 5 ans nanx) — PER 31.2x (moy. 5 ans nanx)"
+          "raw_value": "EV/EBITDA 17.1x (moy. 5 ans 15.2x) — PER 31.2x (moy. 5 ans 26.5x)"
         }
       ],
       "news": [
@@ -203,12 +203,79 @@
       ]
     },
     {
+      "ticker": "SAN.PA",
+      "name": "Sanofi",
+      "sector": "Healthcare",
+      "sector_profile": "defensif",
+      "score": 19.9,
+      "interpretation": "Solide",
+      "factors": [
+        {
+          "name": "Rentabilité / création de valeur",
+          "score": -2.5499155411193595,
+          "weight": 0.3,
+          "raw_value": "ROCE 6.7% vs coût du capital 8.0% (ROE 10.9%)"
+        },
+        {
+          "name": "Structure financière / solvabilité",
+          "score": 8.698120534806167,
+          "weight": 0.25,
+          "raw_value": "Dette nette/EBITDA 1.0x (seuil confort 3.9x, profil defensif) — ICR 11.2x"
+        },
+        {
+          "name": "Croissance",
+          "score": 0.0,
+          "weight": 0.2,
+          "raw_value": "CAGR CA +0.0%/an, CAGR EBITDA +0.0%/an (5 ans)"
+        },
+        {
+          "name": "Génération de cash",
+          "score": 1.558618479044796,
+          "weight": 0.15,
+          "raw_value": "Conversion FCF/EBITDA 58%"
+        },
+        {
+          "name": "Valorisation relative",
+          "score": 3.472698895862625,
+          "weight": 0.1,
+          "raw_value": "EV/EBITDA 8.5x (moy. 5 ans 8.8x) — PER 12.0x (moy. 5 ans 14.6x)"
+        }
+      ],
+      "news": [
+        {
+          "title": "SANOFI Cours Action SAN, Cotation Bourse Euronext Paris - Boursorama",
+          "date": "2026-09-03",
+          "link": "https://news.google.com/rss/articles/CBMiUkFVX3lxTE5hSGE4Q2NUclVldnpENmJnbGVFY2NVS21LRzFPUW9qc25NOVhEQkxwcnV6RXRwQUFrd3c4S2RiTDlnNFdrb3hVSWYtdHZoeVlQaWc?oc=5"
+        },
+        {
+          "title": "Sanofi se porte bien, mais a des défis à relever - Investir Les Echos",
+          "date": "2026-09-02",
+          "link": "https://news.google.com/rss/articles/CBMivAFBVV95cUxNaU41WnRFZHJlTzlOVG9rVXpwekN2RHlGeXJaZjFkSE9xVEF1ZU83aVd6ekxLcmhfTHBxd0NtWTMtLTFBOVh0bTZqUE1RVTFuUUU0cGx5MG5wcDlPakFETmhJS1czYWN0ZXpLUFgwV2NTVVBhVWl2ajM0S0dRbWRjRlV6LUlsUFRpWkJXRm8tY3ZKcldFUi00Rk44NDZGNlRhdUxNTEFJVV91NWNzSk5PVEluUXBGdy1lQmxMOQ?oc=5"
+        },
+        {
+          "title": "Enquête sur les Français et l’innovation thérapeutique - Sanofi",
+          "date": "2026-09-02",
+          "link": "https://news.google.com/rss/articles/CBMirwFBVV95cUxNdDltdy15T3hMUFBqVjhlRjJ6OEdBbUtyb1RmQWhVRXpQcnhDZ2xNMnFjR0c0aTdFZTBuRlRQTk0tZ1RxVEVtNHllc3lXeWx5U1dxbHVqM0FoX2FCaEN3QW44ZzlYMDZaTnRkLTk3YnU3TzVfQ2NKV1VXMTRqRk5JQ1I1cjVYRGU5bU5kd2o0VlRRYjN4QUpHTER6Z1F5WjVyREEzVVFXWlFteWx3eDJV?oc=5"
+        },
+        {
+          "title": "Maladie de Pompe : comment les choix de Sanofi menacent l’accès à un traitement vital - L'Humanité",
+          "date": "2026-08-31",
+          "link": "https://news.google.com/rss/articles/CBMi7wFBVV95cUxOTTNMbFMwZHZRNnNWZTZfN1VKaGdJZE5CVURLWTNXLWd0NllUZmQzOWFUdGYxQ3dSbWZSUlBwV1Bkb3pNb1hPcWl3dHBQZVpuOTBJbFdVS0dJUkFqdFphdlpXaTJtNGJ5UWM3V3VNQ2JJaHZ0bmpQUmc0clZ5WE5pdThCcXRUWXloamtGNFB0NXg4MF94b3FPdFl0SFRQS1BJS3pNeXVnb19aNXdFZXptTlBCYWJ4MkJfTVNSX1I1bGVLWFRYVHVadUxyUWEzMXlPclZaWnhYS256TWpUaVlpclp1MVhyWG5MNVJ5YnhBUQ?oc=5"
+        },
+        {
+          "title": "Sanofi abandonne 0,57% - Boursier.com",
+          "date": "2026-08-31",
+          "link": "https://news.google.com/rss/articles/CBMiigFBVV95cUxPdHRJMkhZZkF4TzdDSzA1aVgxWXUySlA1SFFrd0JldUZQZVB6ZUhrZFJ5azRRaG1HMHIwUGFHZFh5eGRCaEc5NHBJcDlsYjRYSk9qbmdPVDRqWjlzUXBnZjFRWlViVEk3UGR6c0tWRG1jTW1KU1dGYUlBQkNDdGZvbjlPZ3VjdjlaVEE?oc=5"
+        }
+      ]
+    },
+    {
       "ticker": "BN.PA",
       "name": "Danone",
       "sector": "Consumer Defensive",
       "sector_profile": "defensif",
-      "score": 25.4,
-      "interpretation": "Solide",
+      "score": 14.1,
+      "interpretation": "Neutre",
       "factors": [
         {
           "name": "Rentabilité / création de valeur",
@@ -224,9 +291,9 @@
         },
         {
           "name": "Croissance",
-          "score": 10.0,
+          "score": 0.0,
           "weight": 0.2,
-          "raw_value": "CAGR CA +nan%/an, CAGR EBITDA +nan%/an (5 ans)"
+          "raw_value": "CAGR CA +0.0%/an, CAGR EBITDA +0.0%/an (5 ans)"
         },
         {
           "name": "Génération de cash",
@@ -236,9 +303,9 @@
         },
         {
           "name": "Valorisation relative",
-          "score": -10.0,
+          "score": -1.3696333458368346,
           "weight": 0.1,
-          "raw_value": "EV/EBITDA 13.7x (moy. 5 ans nanx) — PER 26.2x (moy. 5 ans nanx)"
+          "raw_value": "EV/EBITDA 13.7x (moy. 5 ans 11.8x) — PER 26.2x (moy. 5 ans 28.4x)"
         }
       ],
       "news": [
@@ -246,11 +313,6 @@
           "title": "DANONE Cours Action BN, Cotation Bourse Euronext Paris - Boursorama",
           "date": "2026-09-03",
           "link": "https://news.google.com/rss/articles/CBMiUEFVX3lxTE1oMFc5d0lZMmZIRGlUcE12WENWbi1WQkpSZlZIWVlYR3VKc0hxQmpDWS1fanlJamFPcEhmcFpvRFJUZXdlUHYtYVBQV0JRckdx?oc=5"
-        },
-        {
-          "title": "Réduire le gaspillage alimentaire - Danone",
-          "date": "2026-09-02",
-          "link": "https://news.google.com/rss/articles/CBMijwFBVV95cUxOcTVJMGZSTWxpcGlhRnRId3JmN2JYV2ozRk9tUlM1VThHUVA3a2hDYkwxRFlOdThqUnBNSHNsVEUtMXdTclhrbHM4SFY4LVowN2lYanFxaTc4aUdMZTdoOE1PU3ZteU1SMEFFVUszenIwaWlwdXFYT2piQThIbjZtZlJNS2k3OElpbzEtOVBFSQ?oc=5"
         },
         {
           "title": "Danone finalise le rachat de Huel : quels droits pour les actionnaires, les salariés et les contrats en France - Kohen Avocats",
@@ -266,6 +328,11 @@
           "title": "Danone finalise l'acquisition de Huel - Zonebourse",
           "date": "2026-09-04",
           "link": "https://news.google.com/rss/articles/CBMinwFBVV95cUxPUUFmUFAzUkNkYTZoUFF0aEdOVjVWZXd0ZDZoa0IwaENnUTk2cjVyMGJhX2taenVkbVYwQjhaTEFoa21oMWJ6emw0T0dYWTB0S1JxRnhoXzl5RGZ5SnFya3ZpMmx3TlVUMFFidmdIX2s2TmJXZE8xckliMlJYR3d2SjRCZmIzM2NHa05WRGpQWVRmUXZJcjBNZ1NEMkt4aWs?oc=5"
+        },
+        {
+          "title": "Danone doit de nouveau convaincre que la croissance tient - Investir Les Echos",
+          "date": "2026-09-02",
+          "link": "https://news.google.com/rss/articles/CBMiygFBVV95cUxOU0kzR0VwYlpjTVFaM3VjeWNZX1ZkUG91RVV1djRfcnh5cHBUdkJSdGxhWW5JNWRpOUNqeEdNb2ZlaUpFTHB4TGg5YjVSYmRvS0E5amNMQ3JJZHB3MDBMVHZVTjZjMGp1YVRsYjRTZFZWU3ZVYXk3Vjd2UVdpeHEwV0ltV1RUNm94a0I5UW8yZFdVV1BWZWhIa1lVczRRa3Y5dzBKeW4yQ0V3TlVHWXVudFFPejJqaHdCbl9DNzAzQ3cwZjZwaTlvajVn?oc=5"
         }
       ]
     }

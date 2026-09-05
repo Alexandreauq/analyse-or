@@ -83,3 +83,11 @@ def test_score_structure_financiere_cyclique_profile_stricter():
     standard = score_structure_financiere(net_debt_ebitda=2.5, icr=3.0, sector="Industrials")
     assert cyclique.score < standard.score
     assert "cyclique" in cyclique.raw_value
+
+
+def test_score_structure_financiere_net_cash_position_leverage_capped():
+    # Position de cash net (net_debt_ebitda négatif) : le sous-score de levier
+    # ne doit jamais dépasser +10 avant d'être moyenné avec la couverture,
+    # sinon le résultat est faussé (5.0 au lieu de ~1.67 dans ce cas précis).
+    result = score_structure_financiere(net_debt_ebitda=-2.0, icr=1.0, sector="Industrials")
+    assert result.score < 2.0

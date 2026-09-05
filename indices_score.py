@@ -97,7 +97,7 @@ ICR_CRITICAL = 3.0                  # seuil Standard, ajusté par profil sectori
 def _score_leverage(ratio: float, comfortable: float, risky: float) -> float:
     """+10 à ratio nul, 0 au seuil confortable, -10 au seuil risqué et au-delà."""
     if ratio <= comfortable:
-        return 10.0 - 10.0 * (ratio / comfortable)
+        return _clamp(10.0 - 10.0 * (ratio / comfortable))
     if ratio <= risky:
         return -10.0 * (ratio - comfortable) / (risky - comfortable)
     return -10.0

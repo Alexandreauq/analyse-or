@@ -492,6 +492,76 @@ def test_fetch_article_text_returns_none_when_extraction_is_empty(monkeypatch):
 
 
 import indices_score
+from indices_score import summarize_news_item
+
+
+class _FakeAnthropicResponse:
+    def __init__(self, payload):
+        self._payload = payload
+
+    def raise_for_status(self):
+        pass
+
+    def json(self):
+        return self._payload
+
+
+def test_summarize_news_item_returns_empty_when_api_key_missing(monkeypatch):
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+
+    def fail_if_called(*a, **k):
+        raise AssertionError("no network call expected without an API key")
+
+    monkeypatch.setattr(indices_score.requests, "post", fail_if_called)
+    assert summarize_news_item("Titre", "LVMH", "Texte de l'article") == ""
+
+
+def test_summarize_news_item_uses_article_text_when_available(monkeypatch):
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-test")
+    captured = {}
+
+    def fake_post(url, headers, json, timeout):
+        captured["json"] = json
+        return _FakeAnthropicResponse({"content": [{"text": "Résumé généré."}]})
+
+    monkeypatch.setattr(indices_score.requests, "post", fake_post)
+    result = summarize_news_item("Titre", "LVMH", "Contenu réel de l'article")
+    assert result == "Résumé généré."
+    assert "Contenu réel de l'article" in captured["json"]["messages"][0]["content"]
+    assert captured["json"]["model"] == "claude-haiku-4-5-20251001"
+
+
+def test_summarize_news_item_uses_headline_only_prompt_when_article_text_missing(monkeypatch):
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-test")
+    captured = {}
+
+    def fake_post(url, headers, json, timeout):
+        captured["json"] = json
+        return _FakeAnthropicResponse({"content": [{"text": "Contexte prudent."}]})
+
+    monkeypatch.setattr(indices_score.requests, "post", fake_post)
+    result = summarize_news_item("Titre", "LVMH", None)
+    assert result == "Contexte prudent."
+    assert "suggère" in captured["json"]["messages"][0]["content"]
+
+
+def test_summarize_news_item_returns_empty_on_http_failure(monkeypatch):
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-test")
+
+    def fake_post(*a, **k):
+        raise requests.RequestException("boom")
+
+    monkeypatch.setattr(indices_score.requests, "post", fake_post)
+    assert summarize_news_item("Titre", "LVMH", "texte") == ""
+
+
+def test_summarize_news_item_returns_empty_on_malformed_response(monkeypatch):
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-test")
+    monkeypatch.setattr(
+        indices_score.requests, "post",
+        lambda *a, **k: _FakeAnthropicResponse({"unexpected": "shape"})
+    )
+    assert summarize_news_item("Titre", "LVMH", "texte") == ""
 
 
 def _fake_ratios():

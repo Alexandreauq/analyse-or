@@ -464,6 +464,61 @@ def fetch_article_text(url: str) -> str | None:
     return text[:ARTICLE_TEXT_MAX_CHARS]
 
 
+ANTHROPIC_API_URL = "https://api.anthropic.com/v1/messages"
+ANTHROPIC_MODEL = "claude-haiku-4-5-20251001"
+
+
+def summarize_news_item(title: str, company_name: str, article_text: str | None) -> str:
+    """Génère un résumé/contexte en français (1-2 phrases) via l'API
+    Anthropic. Renvoie "" sur tout échec (clé API absente, erreur réseau,
+    réponse HTTP non-200, réponse malformée) — ne lève jamais, même
+    justification que fetch_article_text (dialogue avec un service tiers
+    dont on ne peut pas énumérer précisément tous les modes d'échec)."""
+    api_key = os.environ.get("ANTHROPIC_API_KEY")
+    if not api_key:
+        return ""
+
+    if article_text:
+        prompt = (
+            f"Voici un article de presse concernant l'entreprise {company_name}, "
+            f"titré « {title} ».\n\nContenu de l'article :\n{article_text}\n\n"
+            "En 1 à 2 phrases en français, résume le contexte et l'enjeu "
+            "principal de cet article pour cette entreprise. Sois factuel et "
+            "neutre, sans donner de conseil d'investissement."
+        )
+    else:
+        prompt = (
+            f"Voici uniquement le titre d'un article de presse concernant "
+            f"l'entreprise {company_name} : « {title} ».\n\n"
+            "Le contenu de l'article n'est pas disponible. En 1 phrase en "
+            "français, propose un contexte prudent et hypothétique à partir "
+            "de ce titre seul (formule-le comme une supposition, par exemple "
+            "« Cet article suggère que... », sans jamais affirmer de faits "
+            "que le titre seul ne permet pas de confirmer)."
+        )
+
+    try:
+        resp = requests.post(
+            ANTHROPIC_API_URL,
+            headers={
+                "x-api-key": api_key,
+                "anthropic-version": "2023-06-01",
+                "content-type": "application/json",
+            },
+            json={
+                "model": ANTHROPIC_MODEL,
+                "max_tokens": 150,
+                "messages": [{"role": "user", "content": prompt}],
+            },
+            timeout=20,
+        )
+        resp.raise_for_status()
+        data = resp.json()
+        return data["content"][0]["text"].strip()
+    except Exception:
+        return ""
+
+
 OUTPUT_JSON_PATH = os.path.join(
     os.path.dirname(os.path.abspath(__file__)), "docs", "indices.json"
 )

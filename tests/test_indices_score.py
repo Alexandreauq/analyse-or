@@ -426,6 +426,28 @@ def test_parse_news_rss_limits_to_five_items():
     assert len(items) == 5
 
 
+SAMPLE_RSS_WITH_SOURCE = b"""<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0"><channel>
+<item>
+  <title>LVMH annonce une hausse de ses ventes</title>
+  <link>https://example.com/article1</link>
+  <pubDate>Thu, 04 Sep 2026 10:00:00 GMT</pubDate>
+  <source url="https://www.lemonde.fr">Le Monde.fr</source>
+</item>
+</channel></rss>
+"""
+
+
+def test_parse_news_rss_extracts_source():
+    items = parse_news_rss(SAMPLE_RSS_WITH_SOURCE)
+    assert items[0]["source"] == "Le Monde.fr"
+
+
+def test_parse_news_rss_defaults_source_to_empty_string_when_absent():
+    items = parse_news_rss(SAMPLE_RSS)  # fixture existante, sans tag <source>
+    assert items[0]["source"] == ""
+
+
 import indices_score
 
 

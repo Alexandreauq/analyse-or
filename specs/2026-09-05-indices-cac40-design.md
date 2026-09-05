@@ -20,10 +20,16 @@ locale, lue mais jamais redistribuée.
 ## Périmètre du v1 ("premier rating")
 
 - **5 entreprises pilotes**, pas les 40 : LVMH (`MC.PA`), TotalEnergies
-  (`TTE.PA`), BNP Paribas (`BNP.PA`), Schneider Electric (`SU.PA`),
-  Sanofi (`SAN.PA`) — panel volontairement diversifié par secteur pour
+  (`TTE.PA`), Schneider Electric (`SU.PA`), Sanofi (`SAN.PA`), Danone
+  (`BN.PA`) — panel diversifié couvrant les 3 profils de risque
+  sectoriel définis ci-dessous (Cyclique, Standard, Défensif), pour
   valider la méthodologie et le pipeline de données avant d'étendre aux
   40 valeurs du CAC 40.
+- Les banques et sociétés financières (ex. BNP Paribas, envisagée
+  initialement) sont exclues du pilote : leur bilan ne comporte pas
+  d'EBITDA et se lit avec des ratios réglementaires (CET1, cost/income)
+  incompatibles avec cette grille — une grille dédiée sera construite
+  séparément dans une phase ultérieure.
 - Objectif explicite : valider que yfinance fournit des données
   exploitables et que la grille de scoring produit des résultats
   cohérents, avant de généraliser.
@@ -70,26 +76,40 @@ locale, lue mais jamais redistribuée.
 | `.github/workflows/indices.yml` | Workflow GitHub Actions : cron quotidien + déclenchement manuel |
 | `specs/2026-09-05-indices-cac40-design.md` | Ce document |
 
-### Grille de scoring (squelette provisoire — à affiner avec le Vernimmen)
+### Grille de scoring (finalisée — voir `Methodologie_Analyse_Indices.md`)
 
 Score composite pondéré sur l'échelle **-100/+100** (même échelle que
-l'or, pour la cohérence mentale de l'utilisateur), chaque facteur noté
-**-10/+10** :
+l'or), chaque facteur noté **-10/+10** :
 
-| Facteur | Poids (provisoire) | Ce qu'il mesure |
+| Facteur | Poids | Ce qu'il mesure |
 |---|---|---|
-| Rentabilité / création de valeur | 30% | ROE, ROCE vs coût du capital (WACC), tendance sur 5 ans |
-| Structure financière / solvabilité | 25% | Dette nette/EBITDA, couverture des intérêts (EBIT/frais financiers) |
+| Rentabilité / création de valeur | 30% | ROE, ROCE (décomposé en marge × rotation), effet de levier, vs coût du capital |
+| Structure financière / solvabilité | 25% | Dette nette/EBITDA, couverture des intérêts — seuils **ajustés par profil de risque sectoriel** (voir ci-dessous) |
 | Croissance | 20% | CAGR chiffre d'affaires et EBITDA sur 5 ans |
-| Génération de cash | 15% | Conversion FCF (FCF/EBITDA), intensité des capex |
+| Génération de cash | 15% | Flux de trésorerie disponible, conversion FCF/EBITDA |
 | Valorisation relative | 10% | P/E et EV/EBITDA actuels vs moyenne 5 ans de l'entreprise elle-même |
 
-Ces poids et ratios sont un point de départ standard de l'analyse
-fondamentale à la Vernimmen (décomposition de la rentabilité, structure
-financière, génération de cash, valorisation) — à ajuster avec le
-fichier fourni par l'utilisateur avant l'implémentation du calcul, comme
-`Methodologie_Analyse_Or.md` l'a été avant `gold_score.py`. Cette étape
-ne bloque pas le reste de l'architecture.
+Détail complet des formules et seuils dans
+`Methodologie_Analyse_Indices.md`, rédigé après lecture des chapitres
+pertinents du Vernimmen (rentabilité comptable, analyse du financement,
+coût du capital, pratique de l'évaluation, choix de structure
+financière).
+
+**Ajustement sectoriel (ajouté après retour utilisateur)** : les seuils
+de la structure financière/solvabilité varient selon le profil de
+risque du secteur (champ `sector` yfinance) :
+
+| Profil | Secteurs | Ajustement des seuils |
+|---|---|---|
+| Défensif | Utilities, Consumer Defensive, Healthcare, Real Estate | × 1,3 (plus tolérant) |
+| Standard | Industrials, Communication Services | × 1,0 (seuils de base) |
+| Cyclique | Energy, Basic Materials, Consumer Cyclical, Technology | × 0,7 (plus strict) |
+
+Raison : un même niveau d'endettement ne représente pas le même risque
+selon la stabilité des flux de trésorerie du secteur (le Vernimmen le
+souligne explicitement — les prêteurs tolèrent plus de dette dans les
+secteurs à flux stables comme les infrastructures que dans les secteurs
+cycliques).
 
 ### Format de `docs/indices.json`
 
@@ -167,6 +187,8 @@ ne bloque pas le reste de l'architecture.
   (lignes comptables manquantes ou étiquetées différemment selon
   l'entreprise) — à traiter au cas par cas, pas de solution générique
   attendue avant d'avoir vu les données réelles.
-- Le Vernimmen n'a pas encore été lu au moment de la rédaction de ce
-  spec — la grille de scoring ci-dessus est un point de départ standard,
-  pas une version finale.
+- La taxonomie sectorielle yfinance (`sector`) n'a pas pu être vérifiée
+  en direct sur les 5 pilotes (souci SSL local sans rapport avec le
+  projet — non bloquant, à revérifier dès l'implémentation) ; les
+  libellés de secteur utilisés dans la grille sont ceux, standards, de
+  la classification yfinance/GICS.

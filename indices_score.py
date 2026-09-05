@@ -14,6 +14,11 @@ Installation :
 
 from dataclasses import dataclass
 
+try:
+    import yfinance as yf
+except ImportError:
+    yf = None
+
 
 WEIGHTS = {
     "rentabilite": 0.30,
@@ -321,3 +326,26 @@ def extract_ratios(financials, balance_sheet, cashflow, closes_by_year, shares_o
         "current_pe": current_pe,
         "avg_pe_5y": avg_pe_5y,
     }
+
+
+def fetch_company_financials(ticker: str) -> dict:
+    if yf is None:
+        raise RuntimeError("yfinance n'est pas installé (pip install yfinance)")
+    t = yf.Ticker(ticker)
+    financials = t.financials
+    balance_sheet = t.balance_sheet
+    cashflow = t.cashflow
+    info = t.info
+
+    shares_outstanding = info.get("sharesOutstanding") or 0.0
+    history = t.history(period="6y")["Close"]
+    closes_by_year = {}
+    for col in financials.columns:
+        target_date = col.date() if hasattr(col, "date") else col
+        window = history[history.index.date <= target_date] if hasattr(history.index, "date") else history
+        if len(window):
+            closes_by_year[col] = float(window.iloc[-1])
+
+    ratios = extract_ratios(financials, balance_sheet, cashflow, closes_by_year, shares_outstanding)
+    ratios["sector"] = info.get("sector")
+    return ratios

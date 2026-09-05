@@ -189,7 +189,7 @@
         },
         {
           "name": "Valorisation relative",
-          "score": -2.0363788398771616,
+          "score": -2.0363783606366814,
           "weight": 0.1,
           "raw_value": "EV/EBITDA 17.1x (moy. 5 ans 15.2x) — PER 31.2x (moy. 5 ans 26.5x)"
         }
@@ -203,17 +203,17 @@
           "summary": ""
         },
         {
-          "title": "Schneider Electric : vers la fermeture de l'usine de Chasseneuil-du-Poitou ? - Boursier.com",
-          "date": "2026-09-04",
-          "link": "https://news.google.com/rss/articles/CBMizgFBVV95cUxOLWpRbC1fT1dYeHVqWlhSRUtvQ21qRV83UlY5Nk40eFQ0QkhGLVhoajFWS0tNZ0ZGTnR3cnhFMnhPWGVuV0haVkd4ZDNFZVdzRlBnUDVQdE1JYUFzLVljYjNjZkVjMDlHRzdnQWwxS3BScms5OVdYMjd0QVlqUkFjZ3BHQUxWVTRRd2lzeFk4aTFJa2NxeUs3OFNyalc0REtpVmxRLWlMVGp0UDBqdjNJNnJrWkZ3dGxOcUJTZ01XU2txVkxVdnRtTzdpVW1xUQ?oc=5",
+          "title": "Schneider Electric finit en légère hausse - Boursier.com",
+          "date": "2026-09-03",
+          "link": "https://news.google.com/rss/articles/CBMikwFBVV95cUxNVzUzbkx6U1VkV2RqWkQxY1NWVm1VVHJBVjVhNmxhUzZkN2VkQjB3TVFLaVpZdy1tanBJZHlxOE9rZXZXcXYzX2kwUjhVU2dEcExmX2c5ekx0bmRySFBoUzdReUJBa2VqQkRIbmdaZWNKNFlybTkzNkNqNVlqNVNQODJMTm82aENBbldFQnR5OXhyVFE?oc=5",
           "source": "Boursier.com",
           "summary": ""
         },
         {
-          "title": "Schneider Electric devrait annoncer la fermeture du site de Chasseneuil-du-Poitou dans la Vienne - lerevenu.com",
+          "title": "Schneider Electric devrait annoncer la fermeture du site de Chasseneuil-du-Poitou dans la Vienne - Le Revenu",
           "date": "2026-09-05",
           "link": "https://news.google.com/rss/articles/CBMiqAFBVV95cUxPS2V4d25kZDg2VW9zNV9sWEhST2FMdDJHWEF0WWtDelp0a2JpZ3FLcDZ5TUotTzFqM2UyTWhJc2M3ZmFSUGxBNXhmeHBGLW1NNkpCVWtxVW5Fd2sxcHJQZlByd3NZZEN0ektrTktLbFl2c2wza01kVGUwaC1NbzlsOW5VS3J5UHNoT0pvR2xjMzVnNk1JV0w4QXhDZzlvYmR6eXF2RUE4X2c?oc=5",
-          "source": "lerevenu.com",
+          "source": "Le Revenu",
           "summary": ""
         },
         {
@@ -266,7 +266,7 @@
         },
         {
           "name": "Valorisation relative",
-          "score": 3.47269946225543,
+          "score": 3.472698895862625,
           "weight": 0.1,
           "raw_value": "EV/EBITDA 8.5x (moy. 5 ans 8.8x) — PER 12.0x (moy. 5 ans 14.6x)"
         }
@@ -350,6 +350,13 @@
       ],
       "news": [
         {
+          "title": "Réduire le gaspillage alimentaire - Danone",
+          "date": "2026-09-02",
+          "link": "https://news.google.com/rss/articles/CBMijwFBVV95cUxOcTVJMGZSTWxpcGlhRnRId3JmN2JYV2ozRk9tUlM1VThHUVA3a2hDYkwxRFlOdThqUnBNSHNsVEUtMXdTclhrbHM4SFY4LVowN2lYanFxaTc4aUdMZTdoOE1PU3ZteU1SMEFFVUszenIwaWlwdXFYT2piQThIbjZtZlJNS2k3OElpbzEtOVBFSQ?oc=5",
+          "source": "Danone",
+          "summary": ""
+        },
+        {
           "title": "Danone finalise le rachat de Huel : quels droits pour les actionnaires, les salariés et les contrats en France - Kohen Avocats",
           "date": "2026-09-05",
           "link": "https://news.google.com/rss/articles/CBMiswFBVV95cUxNNHVONDVpdkZya2wzWHVTemprQWxQOEV4NG9aTXRXOWItWlVLcEpSdjBhbl9DLXVUMnFualpuRVRVU2RXNVVsdWh6OTFHZ3JnbS1WWHhaNmtaLUVubW5qMTN6S2xoN2RDS3FodE9rdFJuVHFRVDk4SEN4bUtkU01lb01NR1BlTVlLY2x2NGlPbUV1LXFrV3lhc3FCck8tVTFaUVlHWC12MEQySnBnMWExN1Q5TQ?oc=5",
@@ -375,13 +382,6 @@
           "date": "2026-09-02",
           "link": "https://news.google.com/rss/articles/CBMiygFBVV95cUxOU0kzR0VwYlpjTVFaM3VjeWNZX1ZkUG91RVV1djRfcnh5cHBUdkJSdGxhWW5JNWRpOUNqeEdNb2ZlaUpFTHB4TGg5YjVSYmRvS0E5amNMQ3JJZHB3MDBMVHZVTjZjMGp1YVRsYjRTZFZWU3ZVYXk3Vjd2UVdpeHEwV0ltV1RUNm94a0I5UW8yZFdVV1BWZWhIa1lVczRRa3Y5dzBKeW4yQ0V3TlVHWXVudFFPejJqaHdCbl9DNzAzQ3cwZjZwaTlvajVn?oc=5",
           "source": "Investir Les Echos",
-          "summary": ""
-        },
-        {
-          "title": "Danone finalise l’acquisition de Huel et étend son portefeuille dans la Nutrition fonctionnelle - GlobeNewswire",
-          "date": "2026-09-04",
-          "link": "https://news.google.com/rss/articles/CBMiggJBVV95cUxNaDVTVmJyckt2UFNjWjUtdC11bWVxS0hXTkh3eFFBUEhKTWhWbHJ2NF9KZ1QtaDZ1X3NLOTk2WF8yd1NOLVpTUUtnaVhvckF4Z0hEdUNvTzV1XzM5Qi03LWZpTmFwS3R6Yktjb2FjdzJMdTk5dW9RbUFwS2RSSWFadEZuRUN6aVF2UXZUeWlKNlZhTW1ENndtOE9jMTg3RVFHSVFDZk5SZ0VocXRyUFRuVm8tbk8wTzA4QzFiTzdJLXZ0N25wY2o0WDJFNlczOWQ4R2g3ZnNPa0x1Z2JibVFUbFFYVWd2c1YwMVRVRjl6Q1ZBczlXdzdDbm9zR2xLOEJWVmc?oc=5",
-          "source": "GlobeNewswire",
           "summary": ""
         }
       ]

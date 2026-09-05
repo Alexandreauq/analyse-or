@@ -448,6 +448,49 @@ def test_parse_news_rss_defaults_source_to_empty_string_when_absent():
     assert items[0]["source"] == ""
 
 
+import requests
+import indices_score
+from indices_score import fetch_article_text
+
+
+def test_fetch_article_text_returns_extracted_text_on_success(monkeypatch):
+    class FakeResponse:
+        text = "<html><body><p>Contenu de l'article.</p></body></html>"
+        def raise_for_status(self):
+            pass
+    monkeypatch.setattr(indices_score.requests, "get", lambda *a, **k: FakeResponse())
+    monkeypatch.setattr(indices_score.trafilatura, "extract", lambda html: "Contenu de l'article.")
+    assert fetch_article_text("https://example.com/article") == "Contenu de l'article."
+
+
+def test_fetch_article_text_truncates_to_4000_chars(monkeypatch):
+    class FakeResponse:
+        text = "<html></html>"
+        def raise_for_status(self):
+            pass
+    monkeypatch.setattr(indices_score.requests, "get", lambda *a, **k: FakeResponse())
+    monkeypatch.setattr(indices_score.trafilatura, "extract", lambda html: "a" * 5000)
+    result = fetch_article_text("https://example.com/article")
+    assert len(result) == 4000
+
+
+def test_fetch_article_text_returns_none_on_http_error(monkeypatch):
+    def raise_error(*a, **k):
+        raise requests.RequestException("boom")
+    monkeypatch.setattr(indices_score.requests, "get", raise_error)
+    assert fetch_article_text("https://example.com/article") is None
+
+
+def test_fetch_article_text_returns_none_when_extraction_is_empty(monkeypatch):
+    class FakeResponse:
+        text = "<html></html>"
+        def raise_for_status(self):
+            pass
+    monkeypatch.setattr(indices_score.requests, "get", lambda *a, **k: FakeResponse())
+    monkeypatch.setattr(indices_score.trafilatura, "extract", lambda html: None)
+    assert fetch_article_text("https://example.com/article") is None
+
+
 import indices_score
 
 

@@ -87,3 +87,53 @@ def score_rentabilite(roce: float, roe: float, cost_of_capital: float) -> Factor
         f"ROCE {roce:.1f}% vs coût du capital {cost_of_capital:.1f}% "
         f"(ROE {roe:.1f}%)",
     )
+
+
+NET_DEBT_EBITDA_COMFORTABLE = 3.0   # seuil Standard, ajusté par profil sectoriel
+NET_DEBT_EBITDA_RISKY = 5.5         # seuil Standard, ajusté par profil sectoriel
+ICR_CRITICAL = 3.0                  # seuil Standard, ajusté par profil sectoriel
+
+
+def _score_leverage(ratio: float, comfortable: float, risky: float) -> float:
+    """+10 à ratio nul, 0 au seuil confortable, -10 au seuil risqué et au-delà."""
+    if ratio <= comfortable:
+        return 10.0 - 10.0 * (ratio / comfortable)
+    if ratio <= risky:
+        return -10.0 * (ratio - comfortable) / (risky - comfortable)
+    return -10.0
+
+
+def _score_coverage(icr: float, critical: float) -> float:
+    """-10 à ICR nul ou négatif, 0 au seuil critique, +10 au double du seuil critique."""
+    if icr <= 0:
+        return -10.0
+    if icr <= critical:
+        return -10.0 + 10.0 * (icr / critical)
+    return _clamp(10.0 * (icr - critical) / critical, -10.0, 10.0)
+
+
+def score_structure_financiere(net_debt_ebitda: float, icr: float, sector: str | None) -> FactorResult:
+    """
+    Dette nette/EBITDA et couverture des intérêts (ICR = EBIT / frais
+    financiers nets), seuils Vernimmen ajustés par profil de risque
+    sectoriel : un même niveau d'endettement ne représente pas le même
+    risque selon la stabilité des flux de trésorerie du secteur.
+    """
+    profile = sector_risk_profile(sector)
+    adjustment = SECTOR_ADJUSTMENT[profile]
+
+    comfortable = NET_DEBT_EBITDA_COMFORTABLE * adjustment
+    risky = NET_DEBT_EBITDA_RISKY * adjustment
+    critical_icr = ICR_CRITICAL / adjustment
+
+    leverage_score = _score_leverage(net_debt_ebitda, comfortable, risky)
+    coverage_score = _score_coverage(icr, critical_icr)
+    score = _clamp((leverage_score + coverage_score) / 2)
+
+    return FactorResult(
+        "Structure financière / solvabilité",
+        score,
+        WEIGHTS["structure_financiere"],
+        f"Dette nette/EBITDA {net_debt_ebitda:.1f}x (seuil confort "
+        f"{comfortable:.1f}x, profil {profile}) — ICR {icr:.1f}x",
+    )

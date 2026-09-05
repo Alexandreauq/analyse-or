@@ -282,3 +282,40 @@ def test_extract_ratios_computes_expected_keys():
         assert key in ratios, f"clé manquante : {key}"
     # Revenu passe de 800 à 1000 sur 4 intervalles annuels -> CAGR ~ 5.7%
     assert 5.0 < ratios["cagr_ca"] < 6.5
+
+
+from indices_score import parse_news_rss
+
+SAMPLE_RSS = b"""<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0"><channel>
+<title>Google News</title>
+<item>
+  <title>LVMH annonce une hausse de ses ventes</title>
+  <link>https://example.com/article1</link>
+  <pubDate>Thu, 04 Sep 2026 10:00:00 GMT</pubDate>
+</item>
+<item>
+  <title>LVMH ouvre un nouveau magasin</title>
+  <link>https://example.com/article2</link>
+  <pubDate>Wed, 03 Sep 2026 08:00:00 GMT</pubDate>
+</item>
+</channel></rss>
+"""
+
+
+def test_parse_news_rss_extracts_title_date_link():
+    items = parse_news_rss(SAMPLE_RSS)
+    assert len(items) == 2
+    assert items[0]["title"] == "LVMH annonce une hausse de ses ventes"
+    assert items[0]["link"] == "https://example.com/article1"
+    assert items[0]["date"] == "2026-09-04"
+
+
+def test_parse_news_rss_limits_to_five_items():
+    many_items = b"<rss><channel>" + b"".join(
+        f"<item><title>Titre {i}</title><link>https://example.com/{i}</link>"
+        f"<pubDate>Thu, 04 Sep 2026 10:00:00 GMT</pubDate></item>".encode()
+        for i in range(10)
+    ) + b"</channel></rss>"
+    items = parse_news_rss(many_items)
+    assert len(items) == 5

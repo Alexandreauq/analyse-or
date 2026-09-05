@@ -12,12 +12,16 @@ Installation :
     pip install requests yfinance pandas
 """
 
+import xml.etree.ElementTree as ET
 from dataclasses import dataclass
+from email.utils import parsedate_to_datetime
 
 try:
     import yfinance as yf
 except ImportError:
     yf = None
+
+import requests
 
 
 WEIGHTS = {
@@ -349,3 +353,30 @@ def fetch_company_financials(ticker: str) -> dict:
     ratios = extract_ratios(financials, balance_sheet, cashflow, closes_by_year, shares_outstanding)
     ratios["sector"] = info.get("sector")
     return ratios
+
+
+NEWS_RSS_URL = "https://news.google.com/rss/search"
+NEWS_MAX_ITEMS = 5
+
+
+def parse_news_rss(xml_bytes: bytes) -> list[dict]:
+    """Extrait titre/date/lien des N premiers <item> d'un flux RSS Google News."""
+    root = ET.fromstring(xml_bytes)
+    items = []
+    for item in root.findall(".//item")[:NEWS_MAX_ITEMS]:
+        title = item.findtext("title", default="")
+        link = item.findtext("link", default="")
+        pub_date_raw = item.findtext("pubDate", default="")
+        try:
+            date_str = parsedate_to_datetime(pub_date_raw).strftime("%Y-%m-%d")
+        except (TypeError, ValueError):
+            date_str = ""
+        items.append({"title": title, "date": date_str, "link": link})
+    return items
+
+
+def fetch_news(company_name: str) -> list[dict]:
+    params = {"q": company_name, "hl": "fr", "gl": "FR", "ceid": "FR:fr"}
+    resp = requests.get(NEWS_RSS_URL, params=params, timeout=15)
+    resp.raise_for_status()
+    return parse_news_rss(resp.content)

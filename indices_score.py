@@ -158,3 +158,20 @@ def score_croissance(cagr_ca: float, cagr_ebitda: float) -> FactorResult:
         WEIGHTS["croissance"],
         f"CAGR CA {cagr_ca:+.1f}%/an, CAGR EBITDA {cagr_ebitda:+.1f}%/an (5 ans)",
     )
+
+
+FCF_CONVERSION_NEUTRAL = 50.0   # % de conversion FCF/EBITDA jugé neutre
+FCF_CONVERSION_SCALE = 5.0      # points de conversion % pour 1 point de score
+
+
+def score_generation_cash(fcf_conversion: float) -> FactorResult:
+    """Conversion FCF/EBITDA (%) : au-dessus de 50%, la rentabilité comptable
+    se traduit bien en cash réel ; en dessous, le BFR ou les capex absorbent
+    l'essentiel de la génération de cash."""
+    score = _clamp((fcf_conversion - FCF_CONVERSION_NEUTRAL) / FCF_CONVERSION_SCALE)
+    return FactorResult(
+        "Génération de cash",
+        score,
+        WEIGHTS["generation_cash"],
+        f"Conversion FCF/EBITDA {fcf_conversion:.0f}%",
+    )

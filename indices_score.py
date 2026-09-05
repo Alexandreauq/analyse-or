@@ -233,3 +233,91 @@ def interpret(composite: float) -> str:
     if composite > -15:
         return "Neutre"
     return "Fragile"
+
+
+def get_row(df, *aliases):
+    """Renvoie la première ligne du DataFrame dont le libellé correspond à
+    l'un des alias fournis. Les libellés de lignes yfinance varient parfois
+    d'une entreprise à l'autre (ex: 'Total Debt' absent chez certaines) —
+    d'où la liste d'alias plutôt qu'un seul nom fixe."""
+    for alias in aliases:
+        if alias in df.index:
+            return df.loc[alias]
+    raise KeyError(
+        f"Aucune des lignes {aliases} trouvée (lignes disponibles : {list(df.index)})"
+    )
+
+
+def _cagr(first_value: float, last_value: float, years: int) -> float:
+    """CAGR en % entre la valeur la plus ancienne et la plus récente."""
+    if first_value <= 0 or years <= 0:
+        return 0.0
+    return ((last_value / first_value) ** (1 / years) - 1) * 100
+
+
+def extract_ratios(financials, balance_sheet, cashflow, closes_by_year, shares_outstanding: float) -> dict:
+    """
+    Calcule les ratios bruts nécessaires aux fonctions de score à partir des
+    états financiers yfinance (financials, balance_sheet, cashflow — colonnes
+    = dates d'exercice, la plus récente en premier) et des cours de clôture
+    par date d'exercice (closes_by_year, même clés que les colonnes).
+    """
+    years_cols = list(financials.columns)  # plus récent en premier
+    n_years = len(years_cols)
+    latest, oldest = years_cols[0], years_cols[-1]
+
+    revenue = get_row(financials, "Total Revenue", "Operating Revenue")
+    ebitda = get_row(financials, "EBITDA", "Normalized EBITDA")
+    ebit = get_row(financials, "EBIT", "Operating Income", "Total Operating Income As Reported")
+    net_income = get_row(financials, "Net Income", "Net Income Common Stockholders")
+    tax_rate = get_row(financials, "Tax Rate For Calcs")
+
+    total_debt = get_row(balance_sheet, "Total Debt")
+    cash = get_row(balance_sheet, "Cash And Cash Equivalents", "Cash Cash Equivalents And Short Term Investments")
+    equity = get_row(balance_sheet, "Stockholders Equity", "Common Stock Equity")
+
+    op_cash_flow = get_row(cashflow, "Operating Cash Flow")
+    capex = get_row(cashflow, "Capital Expenditure")
+
+    net_debt_latest = total_debt[latest] - cash[latest]
+    economic_assets_latest = equity[latest] + net_debt_latest
+    roce = (ebit[latest] * (1 - tax_rate[latest]) / economic_assets_latest) * 100 if economic_assets_latest else 0.0
+    roe = (net_income[latest] / equity[latest]) * 100 if equity[latest] else 0.0
+
+    net_debt_ebitda = net_debt_latest / ebitda[latest] if ebitda[latest] else 0.0
+    icr = ebit[latest] / (total_debt[latest] * 0.03) if total_debt[latest] else 10.0  # proxy frais financiers si non isolés
+
+    cagr_ca = _cagr(revenue[oldest], revenue[latest], n_years - 1)
+    cagr_ebitda = _cagr(ebitda[oldest], ebitda[latest], n_years - 1)
+
+    fcf = op_cash_flow[latest] + capex[latest]  # capex déjà négatif dans yfinance
+    fcf_conversion = (fcf / ebitda[latest]) * 100 if ebitda[latest] else 0.0
+
+    ev_ebitda_by_year, pe_by_year = [], []
+    for col in years_cols:
+        price = closes_by_year.get(col)
+        if price is None or not ebitda[col] or not net_income[col]:
+            continue
+        market_cap = price * shares_outstanding
+        net_debt_year = total_debt[col] - cash[col]
+        ev_ebitda_by_year.append((market_cap + net_debt_year) / ebitda[col])
+        pe_by_year.append(market_cap / net_income[col])
+
+    current_ev_ebitda = ev_ebitda_by_year[0] if ev_ebitda_by_year else 0.0
+    avg_ev_ebitda_5y = sum(ev_ebitda_by_year) / len(ev_ebitda_by_year) if ev_ebitda_by_year else 0.0
+    current_pe = pe_by_year[0] if pe_by_year else 0.0
+    avg_pe_5y = sum(pe_by_year) / len(pe_by_year) if pe_by_year else 0.0
+
+    return {
+        "roce": roce,
+        "roe": roe,
+        "net_debt_ebitda": net_debt_ebitda,
+        "icr": icr,
+        "cagr_ca": cagr_ca,
+        "cagr_ebitda": cagr_ebitda,
+        "fcf_conversion": fcf_conversion,
+        "current_ev_ebitda": current_ev_ebitda,
+        "avg_ev_ebitda_5y": avg_ev_ebitda_5y,
+        "current_pe": current_pe,
+        "avg_pe_5y": avg_pe_5y,
+    }

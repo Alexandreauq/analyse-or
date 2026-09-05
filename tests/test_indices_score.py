@@ -211,3 +211,74 @@ def test_interpret_bands():
     assert interpret(20.0) == "Solide"
     assert interpret(0.0) == "Neutre"
     assert interpret(-30.0) == "Fragile"
+
+
+import pandas as pd
+from indices_score import get_row, extract_ratios
+
+
+def test_get_row_returns_first_matching_alias():
+    df = pd.DataFrame({"2025-12-31": [100.0]}, index=["Total Debt"])
+    row = get_row(df, "Net Debt", "Total Debt")
+    assert row.iloc[0] == 100.0
+
+
+def test_get_row_raises_when_no_alias_matches():
+    df = pd.DataFrame({"2025-12-31": [100.0]}, index=["Something Else"])
+    try:
+        get_row(df, "Net Debt", "Total Debt")
+        assert False, "expected KeyError"
+    except KeyError:
+        pass
+
+
+def _make_fixture_statements():
+    years = ["2025-12-31", "2024-12-31", "2023-12-31", "2022-12-31", "2021-12-31"]
+    financials = pd.DataFrame(
+        {
+            years[0]: [1000, 200, 150, 140, 0.25],
+            years[1]: [950, 185, 138, 130, 0.25],
+            years[2]: [900, 170, 128, 120, 0.25],
+            years[3]: [850, 155, 116, 108, 0.25],
+            years[4]: [800, 140, 104, 96, 0.25],
+        },
+        index=["Total Revenue", "EBITDA", "EBIT", "Net Income", "Tax Rate For Calcs"],
+    )
+    balance_sheet = pd.DataFrame(
+        {
+            years[0]: [300, 50],
+            years[1]: [320, 45],
+            years[2]: [340, 40],
+            years[3]: [360, 35],
+            years[4]: [380, 30],
+        },
+        index=["Total Debt", "Stockholders Equity"],
+    )
+    balance_sheet.loc["Cash And Cash Equivalents"] = [50, 45, 40, 35, 30]
+    cashflow = pd.DataFrame(
+        {
+            years[0]: [120, -30],
+            years[1]: [110, -28],
+            years[2]: [100, -26],
+            years[3]: [90, -24],
+            years[4]: [80, -22],
+        },
+        index=["Operating Cash Flow", "Capital Expenditure"],
+    )
+    closes_by_year = {y: 100.0 for y in years}
+    return financials, balance_sheet, cashflow, closes_by_year
+
+
+def test_extract_ratios_computes_expected_keys():
+    financials, balance_sheet, cashflow, closes_by_year = _make_fixture_statements()
+    ratios = extract_ratios(
+        financials, balance_sheet, cashflow, closes_by_year, shares_outstanding=10.0
+    )
+    for key in [
+        "roce", "roe", "net_debt_ebitda", "icr", "cagr_ca", "cagr_ebitda",
+        "fcf_conversion", "current_ev_ebitda", "avg_ev_ebitda_5y",
+        "current_pe", "avg_pe_5y",
+    ]:
+        assert key in ratios, f"clé manquante : {key}"
+    # Revenu passe de 800 à 1000 sur 4 intervalles annuels -> CAGR ~ 5.7%
+    assert 5.0 < ratios["cagr_ca"] < 6.5

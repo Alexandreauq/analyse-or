@@ -26,6 +26,7 @@ except ImportError:
     yf = None
 
 import requests
+import trafilatura
 
 
 WEIGHTS = {
@@ -434,6 +435,33 @@ def fetch_news(company_name: str) -> list[dict]:
     resp = requests.get(NEWS_RSS_URL, params=params, timeout=15)
     resp.raise_for_status()
     return parse_news_rss(resp.content)
+
+
+ARTICLE_TEXT_MAX_CHARS = 4000
+
+
+def fetch_article_text(url: str) -> str | None:
+    """Récupère la page d'un article (la redirection Google News est suivie
+    automatiquement par requests) et en extrait le texte principal via
+    trafilatura. Renvoie None sur tout échec — statut HTTP, erreur réseau,
+    page bloquée (paywall/anti-bot), extraction vide.
+
+    Utilise un `except Exception` volontairement large : contrairement au
+    reste du fichier, cette fonction dialogue avec des pages web tierces
+    dont les modes d'échec (HTML malformé, timeout, blocage) ne sont pas un
+    contrat stable qu'on peut énumérer précisément — le contrat de cette
+    fonction est justement de ne jamais lever, quoi qu'il arrive côté page
+    externe.
+    """
+    try:
+        resp = requests.get(url, timeout=10, headers={"User-Agent": "Mozilla/5.0"})
+        resp.raise_for_status()
+        text = trafilatura.extract(resp.text)
+    except Exception:
+        return None
+    if not text:
+        return None
+    return text[:ARTICLE_TEXT_MAX_CHARS]
 
 
 OUTPUT_JSON_PATH = os.path.join(

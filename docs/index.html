@@ -270,6 +270,7 @@ function render(data) {
     </div>
   `;
 
+  // Accordéon : ouvrir l'un ferme l'autre, un seul panneau visible à la fois.
   const toggles = [
     ['toggleActu', 'actuWrap'],
     ['toggleDetail', 'detailWrap'],
@@ -278,9 +279,14 @@ function render(data) {
     document.getElementById(btnId).addEventListener('click', (e) => {
       const btn = e.currentTarget;
       const wrap = document.getElementById(wrapId);
-      const open = wrap.hidden;
-      wrap.hidden = !open;
-      btn.setAttribute('aria-expanded', String(open));
+      const opening = wrap.hidden;
+      toggles.forEach(([otherBtnId, otherWrapId]) => {
+        if (otherWrapId === wrapId) return;
+        document.getElementById(otherWrapId).hidden = true;
+        document.getElementById(otherBtnId).setAttribute('aria-expanded', 'false');
+      });
+      wrap.hidden = !opening;
+      btn.setAttribute('aria-expanded', String(opening));
     });
   });
 }

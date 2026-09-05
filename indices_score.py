@@ -413,18 +413,19 @@ NEWS_MAX_ITEMS = 5
 
 
 def parse_news_rss(xml_bytes: bytes) -> list[dict]:
-    """Extrait titre/date/lien des N premiers <item> d'un flux RSS Google News."""
+    """Extrait titre/date/lien/source des N premiers <item> d'un flux RSS Google News."""
     root = ET.fromstring(xml_bytes)
     items = []
     for item in root.findall(".//item")[:NEWS_MAX_ITEMS]:
         title = item.findtext("title", default="")
         link = item.findtext("link", default="")
         pub_date_raw = item.findtext("pubDate", default="")
+        source = item.findtext("source", default="")
         try:
             date_str = parsedate_to_datetime(pub_date_raw).strftime("%Y-%m-%d")
         except (TypeError, ValueError):
             date_str = ""
-        items.append({"title": title, "date": date_str, "link": link})
+        items.append({"title": title, "date": date_str, "link": link, "source": source})
     return items
 
 

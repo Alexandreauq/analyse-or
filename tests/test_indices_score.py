@@ -1,4 +1,5 @@
 import pytest
+from datetime import datetime
 from indices_score import sector_risk_profile, score_rentabilite
 
 
@@ -229,6 +230,54 @@ def test_score_dynamique_recente_clamps_extreme_price_deviation():
         ecart_pct_ma200=100.0, quarterly_yoy_growth_ca=None, cagr_ca=0.0
     )
     assert result.score == 10.0
+
+
+from indices_score import score_actualite_recente
+from datetime import timedelta
+
+
+def _days_ago(n):
+    return (datetime.now() - timedelta(days=n)).strftime("%Y-%m-%d")
+
+
+def test_score_actualite_recente_averages_recent_sentiments():
+    news = [
+        {"date": _days_ago(1), "sentiment": 1},
+        {"date": _days_ago(2), "sentiment": 1},
+        {"date": _days_ago(3), "sentiment": -1},
+    ]
+    result = score_actualite_recente(news)
+    assert result.name == "Actualité récente"
+    assert result.weight == 0.10
+    # moyenne (1+1-1)/3 = 0.333... -> score 3.33...
+    assert 3.0 < result.score < 3.5
+
+
+def test_score_actualite_recente_ignores_old_news():
+    news = [
+        {"date": _days_ago(1), "sentiment": 1},
+        {"date": _days_ago(30), "sentiment": -1},  # hors fenêtre de 14 jours
+    ]
+    result = score_actualite_recente(news)
+    assert result.score == 10.0  # seule l'actu récente (sentiment 1) compte
+
+
+def test_score_actualite_recente_neutral_when_no_news():
+    result = score_actualite_recente([])
+    assert result.score == 0.0
+    assert result.raw_value == "Aucune actualité récente exploitable"
+
+
+def test_score_actualite_recente_neutral_when_all_news_are_old():
+    news = [{"date": _days_ago(30), "sentiment": 1}]
+    result = score_actualite_recente(news)
+    assert result.score == 0.0
+
+
+def test_score_actualite_recente_handles_missing_sentiment_key_as_neutral():
+    news = [{"date": _days_ago(1)}]  # pas de clé "sentiment"
+    result = score_actualite_recente(news)
+    assert result.score == 0.0
 
 
 from indices_score import compute_composite, interpret, FactorResult

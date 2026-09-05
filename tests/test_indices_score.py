@@ -26,7 +26,7 @@ def test_sector_risk_profile_defaults_to_standard_when_unknown():
 def test_score_rentabilite_above_cost_of_capital_is_positive():
     result = score_rentabilite(roce=13.0, roe=15.0, cost_of_capital=8.0)
     assert result.name == "Rentabilité / création de valeur"
-    assert result.weight == 0.30
+    assert result.weight == 0.24
     assert result.score == 10.0  # spread of +5pp caps the score at +10
     assert "13.0" in result.raw_value
     assert "8.0" in result.raw_value
@@ -54,7 +54,7 @@ def test_score_structure_financiere_comfortable_standard_profile():
     # net_debt_ebitda=0 -> +10 sub-score ; icr très élevé -> +10 sub-score
     result = score_structure_financiere(net_debt_ebitda=0.0, icr=10.0, sector="Industrials")
     assert result.name == "Structure financière / solvabilité"
-    assert result.weight == 0.25
+    assert result.weight == 0.20
     assert result.score == 10.0
 
 
@@ -99,7 +99,7 @@ from indices_score import score_croissance
 def test_score_croissance_strong_aligned_growth():
     result = score_croissance(cagr_ca=12.0, cagr_ebitda=12.0)
     assert result.name == "Croissance"
-    assert result.weight == 0.20
+    assert result.weight == 0.16
     assert result.score == 10.0  # moyenne 12% / échelle 10% -> plafonné à +10
 
 
@@ -126,7 +126,7 @@ from indices_score import score_generation_cash
 def test_score_generation_cash_full_conversion():
     result = score_generation_cash(fcf_conversion=100.0)
     assert result.name == "Génération de cash"
-    assert result.weight == 0.15
+    assert result.weight == 0.12
     assert result.score == 10.0
 
 
@@ -151,7 +151,7 @@ def test_score_valorisation_trading_at_discount_is_positive():
         cagr_ebitda=5.0,
     )
     assert result.name == "Valorisation relative"
-    assert result.weight == 0.10
+    assert result.weight == 0.08
     assert result.score > 0
 
 

@@ -130,10 +130,24 @@ fichier acceptés) :
 
 ## Risques connus
 
-- Beaucoup de sites de presse bloquent le scraping (paywall, anti-bot) —
-  taux d'échec de l'extraction attendu significatif. Accepté : dans ce
-  cas le résumé retombe sur la variante "titre seul", qui reste
-  informative même si moins précise.
+- **Décision actée après vérification en production (2026-09-05) : le
+  scraping réel des liens Google News échoue systématiquement (~100%),
+  pas seulement de façon ponctuelle sur certains sites.** Deux obstacles
+  cumulés en sont la cause : (1) le lien Google News redirige d'abord vers
+  un écran de consentement cookies RGPD (`consent.google.com`) —
+  contournable par un cookie `CONSENT` pré-rempli, mais (2) le lien qui
+  suit (`news.google.com/rss/articles/...`) n'est pas une redirection HTTP
+  ni une redirection meta-refresh : c'est une mini-application JavaScript
+  qui résout l'URL réelle de l'article côté client après exécution du JS,
+  ce que `requests` ne peut pas faire. Contourner ce second obstacle
+  nécessiterait un navigateur headless (Playwright), jugé disproportionné
+  pour ce pipeline (poids/temps CI, et le gain resterait incertain :
+  toujours soumis ensuite aux paywalls/anti-bot du site de presse une fois
+  la vraie URL atteinte). **Décision : ne pas poursuivre le contournement.**
+  Le résumé "titre seul" (formulé en hypothèse prudente, cf. §3 du
+  pipeline) est donc la variante systématiquement utilisée en pratique, et
+  non un simple repli occasionnel — il reste informatif, comme observé
+  sur les premières générations réelles.
 - Coût API : ~25 résumés/jour max (5 entreprises × 5 actus), modèle
   économique (Haiku), coût négligeable (largement sous 1$/mois).
 - `trafilatura` peut échouer silencieusement à isoler le bon contenu sur

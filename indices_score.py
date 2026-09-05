@@ -692,6 +692,31 @@ def estimate_dcf_price(
     return equity_value / shares_outstanding
 
 
+def estimate_asset_based_price(equity: float, shares_outstanding: float) -> float | None:
+    """Valeur comptable par action (capitaux propres / actions en
+    circulation) — approche patrimoniale simplifiée, sans réévaluation des
+    actifs à la valeur de marché (hors périmètre v1). None si les capitaux
+    propres sont négatifs ou nuls (base non significative comme plancher
+    de valorisation) ou si le nombre d'actions est nul/inconnu."""
+    if not shares_outstanding or equity <= 0:
+        return None
+    return equity / shares_outstanding
+
+
+def estimate_multiple_based_price(
+    current_price: float, current_ev_ebitda: float, avg_ev_ebitda_5y: float
+) -> float | None:
+    """Prix impliqué par un retour du multiple EV/EBITDA actuel à sa
+    moyenne 5 ans, en supposant que le prix varie proportionnellement au
+    multiple — approximation qui ignore l'effet de la dette nette fixe,
+    documentée comme telle (cf. Methodologie_Analyse_Indices.md), plutôt
+    que de reconstruire précisément EV et capitalisation. None si le
+    multiple actuel est nul/absent."""
+    if not current_ev_ebitda:
+        return None
+    return current_price * (avg_ev_ebitda_5y / current_ev_ebitda)
+
+
 def build_company_entry(ticker: str, name: str) -> dict:
     data = fetch_company_financials(ticker)
     sector = data["sector"]

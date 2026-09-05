@@ -892,3 +892,33 @@ def test_fetch_news_attaches_source_and_summary_and_isolates_per_item_failures(m
     assert items[1]["source"] == "Source B"
     assert items[1]["summary"] == "Résumé pour Titre B (article=Texte B)"
     assert items[1]["sentiment"] == -1
+
+
+from indices_score import estimate_asset_based_price, estimate_multiple_based_price
+
+
+def test_estimate_asset_based_price_nominal_case():
+    assert estimate_asset_based_price(equity=200.0, shares_outstanding=50.0) == 4.0
+
+
+def test_estimate_asset_based_price_returns_none_when_equity_not_positive():
+    assert estimate_asset_based_price(equity=0.0, shares_outstanding=50.0) is None
+    assert estimate_asset_based_price(equity=-10.0, shares_outstanding=50.0) is None
+
+
+def test_estimate_asset_based_price_returns_none_when_shares_outstanding_is_zero():
+    assert estimate_asset_based_price(equity=200.0, shares_outstanding=0.0) is None
+
+
+def test_estimate_multiple_based_price_nominal_case():
+    result = estimate_multiple_based_price(
+        current_price=100.0, current_ev_ebitda=10.0, avg_ev_ebitda_5y=8.0
+    )
+    assert result == 80.0
+
+
+def test_estimate_multiple_based_price_returns_none_when_current_multiple_is_zero():
+    result = estimate_multiple_based_price(
+        current_price=100.0, current_ev_ebitda=0.0, avg_ev_ebitda_5y=8.0
+    )
+    assert result is None

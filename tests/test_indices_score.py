@@ -616,7 +616,7 @@ def test_summarize_news_item_returns_empty_when_api_key_missing(monkeypatch):
         raise AssertionError("no network call expected without an API key")
 
     monkeypatch.setattr(indices_score.requests, "post", fail_if_called)
-    assert summarize_news_item("Titre", "LVMH", "Texte de l'article") == ""
+    assert summarize_news_item("Titre", "LVMH", "Texte de l'article") == {"summary": "", "sentiment": 0}
 
 
 def test_summarize_news_item_uses_article_text_when_available(monkeypatch):
@@ -625,11 +625,13 @@ def test_summarize_news_item_uses_article_text_when_available(monkeypatch):
 
     def fake_post(url, headers, json, timeout):
         captured["json"] = json
-        return _FakeAnthropicResponse({"content": [{"text": "Résumé généré."}]})
+        return _FakeAnthropicResponse(
+            {"content": [{"text": '{"summary": "Résumé généré.", "sentiment": 1}'}]}
+        )
 
     monkeypatch.setattr(indices_score.requests, "post", fake_post)
     result = summarize_news_item("Titre", "LVMH", "Contenu réel de l'article")
-    assert result == "Résumé généré."
+    assert result == {"summary": "Résumé généré.", "sentiment": 1}
     assert "Contenu réel de l'article" in captured["json"]["messages"][0]["content"]
     assert captured["json"]["model"] == "claude-haiku-4-5-20251001"
 
@@ -640,11 +642,13 @@ def test_summarize_news_item_uses_headline_only_prompt_when_article_text_missing
 
     def fake_post(url, headers, json, timeout):
         captured["json"] = json
-        return _FakeAnthropicResponse({"content": [{"text": "Contexte prudent."}]})
+        return _FakeAnthropicResponse(
+            {"content": [{"text": '{"summary": "Contexte prudent.", "sentiment": 0}'}]}
+        )
 
     monkeypatch.setattr(indices_score.requests, "post", fake_post)
     result = summarize_news_item("Titre", "LVMH", None)
-    assert result == "Contexte prudent."
+    assert result == {"summary": "Contexte prudent.", "sentiment": 0}
     assert "suggère" in captured["json"]["messages"][0]["content"]
 
 
@@ -655,7 +659,7 @@ def test_summarize_news_item_returns_empty_on_http_failure(monkeypatch):
         raise requests.RequestException("boom")
 
     monkeypatch.setattr(indices_score.requests, "post", fake_post)
-    assert summarize_news_item("Titre", "LVMH", "texte") == ""
+    assert summarize_news_item("Titre", "LVMH", "texte") == {"summary": "", "sentiment": 0}
 
 
 def test_summarize_news_item_returns_empty_on_malformed_response(monkeypatch):
@@ -664,7 +668,40 @@ def test_summarize_news_item_returns_empty_on_malformed_response(monkeypatch):
         indices_score.requests, "post",
         lambda *a, **k: _FakeAnthropicResponse({"unexpected": "shape"})
     )
-    assert summarize_news_item("Titre", "LVMH", "texte") == ""
+    assert summarize_news_item("Titre", "LVMH", "texte") == {"summary": "", "sentiment": 0}
+
+
+def test_summarize_news_item_strips_markdown_code_fences_before_parsing(monkeypatch):
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-test")
+    monkeypatch.setattr(
+        indices_score.requests, "post",
+        lambda *a, **k: _FakeAnthropicResponse(
+            {"content": [{"text": '```json\n{"summary": "Texte.", "sentiment": -1}\n```'}]}
+        )
+    )
+    result = summarize_news_item("Titre", "LVMH", "texte")
+    assert result == {"summary": "Texte.", "sentiment": -1}
+
+
+def test_summarize_news_item_returns_empty_when_response_is_not_valid_json(monkeypatch):
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-test")
+    monkeypatch.setattr(
+        indices_score.requests, "post",
+        lambda *a, **k: _FakeAnthropicResponse({"content": [{"text": "Ceci n'est pas du JSON."}]})
+    )
+    assert summarize_news_item("Titre", "LVMH", "texte") == {"summary": "", "sentiment": 0}
+
+
+def test_summarize_news_item_defaults_invalid_sentiment_value_to_zero(monkeypatch):
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-test")
+    monkeypatch.setattr(
+        indices_score.requests, "post",
+        lambda *a, **k: _FakeAnthropicResponse(
+            {"content": [{"text": '{"summary": "Texte.", "sentiment": 5}'}]}
+        )
+    )
+    result = summarize_news_item("Titre", "LVMH", "texte")
+    assert result == {"summary": "Texte.", "sentiment": 0}
 
 
 def _fake_ratios():

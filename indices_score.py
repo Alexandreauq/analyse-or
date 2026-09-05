@@ -539,15 +539,17 @@ ANTHROPIC_API_URL = "https://api.anthropic.com/v1/messages"
 ANTHROPIC_MODEL = "claude-haiku-4-5-20251001"
 
 
-def summarize_news_item(title: str, company_name: str, article_text: str | None) -> str:
-    """Génère un résumé/contexte en français (1-2 phrases) via l'API
-    Anthropic. Renvoie "" sur tout échec (clé API absente, erreur réseau,
-    réponse HTTP non-200, réponse malformée) — ne lève jamais, même
-    justification que fetch_article_text (dialogue avec un service tiers
-    dont on ne peut pas énumérer précisément tous les modes d'échec)."""
+def summarize_news_item(title: str, company_name: str, article_text: str | None) -> dict:
+    """Génère un résumé/contexte (1-2 phrases en français) et une
+    classification de sentiment pour l'entreprise via l'API Anthropic, en
+    un seul appel. Renvoie {"summary": "", "sentiment": 0} sur tout échec
+    (clé API absente, erreur réseau, réponse HTTP non-200, JSON malformé)
+    — ne lève jamais, même justification que fetch_article_text (dialogue
+    avec un service tiers dont on ne peut pas énumérer précisément tous
+    les modes d'échec)."""
     api_key = os.environ.get("ANTHROPIC_API_KEY")
     if not api_key:
-        return ""
+        return {"summary": "", "sentiment": 0}
 
     if article_text:
         prompt = (
@@ -568,6 +570,14 @@ def summarize_news_item(title: str, company_name: str, article_text: str | None)
             "que le titre seul ne permet pas de confirmer)."
         )
 
+    prompt += (
+        "\n\nRéponds uniquement avec un objet JSON valide, sans texte "
+        "autour, de la forme : "
+        '{"summary": "...", "sentiment": -1|0|1} '
+        "où sentiment vaut -1 si l'actu est plutôt défavorable pour "
+        "l'entreprise, 0 si neutre ou mixte, 1 si plutôt favorable."
+    )
+
     try:
         resp = requests.post(
             ANTHROPIC_API_URL,
@@ -585,9 +595,19 @@ def summarize_news_item(title: str, company_name: str, article_text: str | None)
         )
         resp.raise_for_status()
         data = resp.json()
-        return data["content"][0]["text"].strip()
+        text = data["content"][0]["text"].strip()
+        if text.startswith("```"):
+            text = text.strip("`")
+            if "\n" in text:
+                text = text.split("\n", 1)[1]
+        parsed = json.loads(text)
+        summary = str(parsed.get("summary", "")).strip()
+        sentiment = parsed.get("sentiment", 0)
+        if sentiment not in (-1, 0, 1):
+            sentiment = 0
+        return {"summary": summary, "sentiment": sentiment}
     except Exception:
-        return ""
+        return {"summary": "", "sentiment": 0}
 
 
 OUTPUT_JSON_PATH = os.path.join(

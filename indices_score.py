@@ -12,8 +12,11 @@ Installation :
     pip install requests yfinance pandas
 """
 
+import json
+import os
 import xml.etree.ElementTree as ET
 from dataclasses import dataclass
+from datetime import datetime
 from email.utils import parsedate_to_datetime
 
 try:
@@ -380,3 +383,71 @@ def fetch_news(company_name: str) -> list[dict]:
     resp = requests.get(NEWS_RSS_URL, params=params, timeout=15)
     resp.raise_for_status()
     return parse_news_rss(resp.content)
+
+
+OUTPUT_JSON_PATH = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "docs", "indices.json"
+)
+
+# Approximation simplifiée du coût du capital (pas de calcul de bêta désendetté
+# au v1) : taux sans risque + prime de risque marché, cf. section "hors périmètre"
+# de la méthodologie.
+COST_OF_CAPITAL_PROXY = 8.0  # %
+
+
+def build_company_entry(ticker: str, name: str) -> dict:
+    data = fetch_company_financials(ticker)
+    sector = data["sector"]
+
+    factors = [
+        score_rentabilite(data["roce"], data["roe"], COST_OF_CAPITAL_PROXY),
+        score_structure_financiere(data["net_debt_ebitda"], data["icr"], sector),
+        score_croissance(data["cagr_ca"], data["cagr_ebitda"]),
+        score_generation_cash(data["fcf_conversion"]),
+        score_valorisation(
+            data["current_ev_ebitda"], data["avg_ev_ebitda_5y"],
+            data["current_pe"], data["avg_pe_5y"], data["cagr_ebitda"],
+        ),
+    ]
+    composite = compute_composite(factors)
+    news = fetch_news(name)
+
+    return {
+        "ticker": ticker,
+        "name": name,
+        "sector": sector,
+        "sector_profile": sector_risk_profile(sector),
+        "score": composite,
+        "interpretation": interpret(composite),
+        "factors": [
+            {"name": f.name, "score": f.score, "weight": f.weight, "raw_value": f.raw_value}
+            for f in factors
+        ],
+        "news": news,
+    }
+
+
+def main():
+    companies = []
+    for company in COMPANIES:
+        try:
+            companies.append(build_company_entry(company["ticker"], company["name"]))
+        except Exception as e:
+            print(f"Erreur pour {company['ticker']} ({company['name']}) : {e}")
+
+    payload = {
+        "updated": datetime.today().strftime("%Y-%m-%d"),
+        "companies": companies,
+    }
+
+    os.makedirs(os.path.dirname(OUTPUT_JSON_PATH), exist_ok=True)
+    with open(OUTPUT_JSON_PATH, "w", encoding="utf-8") as fh:
+        json.dump(payload, fh, ensure_ascii=False, indent=2)
+
+    print(f"Données exportées vers : {OUTPUT_JSON_PATH}")
+    for c in companies:
+        print(f"  {c['ticker']:<8} {c['name']:<20} score {c['score']:+.1f}  ({c['interpretation']})")
+
+
+if __name__ == "__main__":
+    main()

@@ -434,7 +434,11 @@ def fetch_news(company_name: str) -> list[dict]:
     params = {"q": company_name, "hl": "fr", "gl": "FR", "ceid": "FR:fr"}
     resp = requests.get(NEWS_RSS_URL, params=params, timeout=15)
     resp.raise_for_status()
-    return parse_news_rss(resp.content)
+    items = parse_news_rss(resp.content)
+    for item in items:
+        article_text = fetch_article_text(item["link"])
+        item["summary"] = summarize_news_item(item["title"], company_name, article_text)
+    return items
 
 
 ARTICLE_TEXT_MAX_CHARS = 4000

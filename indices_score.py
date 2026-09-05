@@ -13,6 +13,7 @@ Installation :
 """
 
 import json
+import math
 import os
 import xml.etree.ElementTree as ET
 from dataclasses import dataclass
@@ -75,6 +76,16 @@ def sector_risk_profile(sector: str | None) -> str:
 
 def _clamp(value: float, low: float = -10.0, high: float = 10.0) -> float:
     return max(low, min(high, value))
+
+
+def _is_missing(value) -> bool:
+    """True si une valeur numérique issue de yfinance est absente ou NaN —
+    yfinance ne garantit pas que chaque poste soit renseigné pour les 5
+    années demandées."""
+    try:
+        return math.isnan(value)
+    except TypeError:
+        return value is None
 
 
 ROCE_SPREAD_SCALE = 5.0  # points d'écart ROCE - coût du capital pour un score plein
@@ -261,8 +272,14 @@ def get_row(df, *aliases):
 
 
 def _cagr(first_value: float, last_value: float, years: int) -> float:
-    """CAGR en % entre la valeur la plus ancienne et la plus récente."""
-    if first_value <= 0 or years <= 0:
+    """CAGR en % entre la valeur la plus ancienne et la plus récente.
+
+    Renvoie 0.0 (neutre) si une valeur est manquante (NaN) — yfinance ne
+    fournit pas toujours 5 années pleines pour chaque poste — plutôt que de
+    laisser un NaN se propager jusqu'à _clamp, qui le traiterait comme un
+    score maximal (+10) au lieu d'une absence de donnée.
+    """
+    if years <= 0 or _is_missing(first_value) or _is_missing(last_value) or first_value <= 0:
         return 0.0
     return ((last_value / first_value) ** (1 / years) - 1) * 100
 
@@ -314,7 +331,15 @@ def extract_ratios(financials, balance_sheet, cashflow, closes_by_year, shares_o
     ev_ebitda_by_year, pe_by_year = [], []
     for col in years_cols:
         price = closes_by_year.get(col)
-        if price is None or not ebitda[col] or not net_income[col]:
+        if (
+            price is None
+            or not ebitda[col]
+            or not net_income[col]
+            or _is_missing(ebitda[col])
+            or _is_missing(net_income[col])
+            or _is_missing(total_debt[col])
+            or _is_missing(cash[col])
+        ):
             continue
         market_cap = price * shares_outstanding
         net_debt_year = total_debt[col] - cash[col]

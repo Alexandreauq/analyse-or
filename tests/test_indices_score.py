@@ -284,6 +284,39 @@ def test_extract_ratios_computes_expected_keys():
     assert 5.0 < ratios["cagr_ca"] < 6.5
 
 
+import math
+from indices_score import _cagr
+
+
+def test_cagr_returns_neutral_zero_when_oldest_value_is_missing():
+    assert _cagr(float("nan"), 1000.0, 4) == 0.0
+
+
+def test_cagr_returns_neutral_zero_when_latest_value_is_missing():
+    assert _cagr(800.0, float("nan"), 4) == 0.0
+
+
+def test_extract_ratios_ignores_years_with_missing_ebitda_or_net_income():
+    """yfinance ne garantit pas 5 années pleines pour chaque poste : une
+    année (souvent la plus ancienne) peut manquer de valeur pour EBITDA ou
+    Net Income. Ces trous ne doivent pas produire de NaN dans cagr_ca,
+    cagr_ebitda, avg_ev_ebitda_5y ou avg_pe_5y."""
+    financials, balance_sheet, cashflow, closes_by_year = _make_fixture_statements()
+    oldest_year = list(financials.columns)[-1]
+    financials.loc["Total Revenue", oldest_year] = float("nan")
+    financials.loc["EBITDA", oldest_year] = float("nan")
+    financials.loc["Net Income", oldest_year] = float("nan")
+
+    ratios = extract_ratios(
+        financials, balance_sheet, cashflow, closes_by_year, shares_outstanding=10.0
+    )
+
+    assert ratios["cagr_ca"] == 0.0
+    assert ratios["cagr_ebitda"] == 0.0
+    assert not math.isnan(ratios["avg_ev_ebitda_5y"])
+    assert not math.isnan(ratios["avg_pe_5y"])
+
+
 from indices_score import parse_news_rss
 
 SAMPLE_RSS = b"""<?xml version="1.0" encoding="UTF-8"?>

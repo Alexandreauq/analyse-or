@@ -103,6 +103,19 @@ Défensif, le seuil "confortable" de dette nette/EBITDA passe de 3 à
   EBITDA (une croissance du CA sans croissance de l'EBITDA signale une
   dégradation de la rentabilité).
 
+> **Lissage v1 (implémentation).** yfinance ne fournit en pratique que 4
+> exercices annuels (pas 5) pour la plupart des postes. Un CAGR point à
+> point (exercice le plus ancien dispo vs le plus récent) est très sensible
+> à une année isolée atypique — ex : le pic des prix de l'énergie en 2022
+> a fait apparaître une "décroissance" chez les pétrolières alors que leur
+> activité sous-jacente n'a pas reculé sur le fond. `extract_ratios`
+> calcule donc le CAGR entre la moyenne des 2 exercices les plus récents et
+> la moyenne des 2 plus anciens (repli sur un calcul point à point si moins
+> de 4 exercices sont disponibles), plutôt qu'un simple point à point. Ce
+> lissage reste limité par la profondeur réelle des données (4 ans) : une
+> année exceptionnelle proche d'une des deux bornes garde un poids
+> important dans la moyenne à 2 ans qui la contient.
+
 ### 4. Génération de cash — poids 15%
 
 - **Flux de trésorerie disponible (FCF)** = EBITDA − IS théorique sur

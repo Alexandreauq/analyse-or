@@ -137,3 +137,24 @@ def score_structure_financiere(net_debt_ebitda: float, icr: float, sector: str |
         f"Dette nette/EBITDA {net_debt_ebitda:.1f}x (seuil confort "
         f"{comfortable:.1f}x, profil {profile}) — ICR {icr:.1f}x",
     )
+
+
+GROWTH_SCALE = 10.0          # % de CAGR moyen pour un score plein
+GROWTH_DIVERGENCE_MARGIN = 5.0   # points d'écart CA/EBITDA tolérés avant pénalité
+GROWTH_DIVERGENCE_PENALTY = 3.0
+
+
+def score_croissance(cagr_ca: float, cagr_ebitda: float) -> FactorResult:
+    """
+    CAGR chiffre d'affaires et EBITDA sur 5 ans. Une croissance du CA non
+    suivie par l'EBITDA signale une dégradation de la rentabilité -> pénalité.
+    """
+    base = _clamp(((cagr_ca + cagr_ebitda) / 2) / GROWTH_SCALE * 10)
+    if cagr_ebitda < cagr_ca - GROWTH_DIVERGENCE_MARGIN:
+        base = _clamp(base - GROWTH_DIVERGENCE_PENALTY)
+    return FactorResult(
+        "Croissance",
+        base,
+        WEIGHTS["croissance"],
+        f"CAGR CA {cagr_ca:+.1f}%/an, CAGR EBITDA {cagr_ebitda:+.1f}%/an (5 ans)",
+    )

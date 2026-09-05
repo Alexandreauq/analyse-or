@@ -1,4 +1,273 @@
 {
   "updated": "2026-09-05",
-  "companies": []
+  "companies": [
+    {
+      "ticker": "MC.PA",
+      "name": "LVMH",
+      "sector": "Consumer Cyclical",
+      "sector_profile": "cyclique",
+      "score": 57.5,
+      "interpretation": "Profil fondamental très solide",
+      "factors": [
+        {
+          "name": "Rentabilité / création de valeur",
+          "score": 9.143388988460202,
+          "weight": 0.3,
+          "raw_value": "ROCE 12.6% vs coût du capital 8.0% (ROE 16.1%)"
+        },
+        {
+          "name": "Structure financière / solvabilité",
+          "score": 7.42682140554481,
+          "weight": 0.25,
+          "raw_value": "Dette nette/EBITDA 1.1x (seuil confort 2.1x, profil cyclique) — ICR 16.2x"
+        },
+        {
+          "name": "Croissance",
+          "score": 10.0,
+          "weight": 0.2,
+          "raw_value": "CAGR CA +nan%/an, CAGR EBITDA +nan%/an (5 ans)"
+        },
+        {
+          "name": "Génération de cash",
+          "score": 0.9903288201160535,
+          "weight": 0.15,
+          "raw_value": "Conversion FCF/EBITDA 55%"
+        },
+        {
+          "name": "Valorisation relative",
+          "score": -10.0,
+          "weight": 0.1,
+          "raw_value": "EV/EBITDA 13.2x (moy. 5 ans nanx) — PER 28.8x (moy. 5 ans nanx)"
+        }
+      ],
+      "news": [
+        {
+          "title": "Mode : le prix LVMH décerné à Julie Kegels - Le Monde.fr",
+          "date": "2026-09-04",
+          "link": "https://news.google.com/rss/articles/CBMisgFBVV95cUxNZFNIc0VaTU1fRlVOWHUxbDNLa2FONURKb242NTZibHltRjJHY29DRmxXM1htVUdER0VDcTBwZzlWdWZBVGhweVd3bExXdEhlMkIxTzNzbzV3T0F4eEo5OGhBa2RhQmNzQ2V4OE1fTjBqZjV2ZTQzLW00NzcxbGNDUWFleThtcDVtUmwwV0NPcTR0UzVzMjVib3ZzNG4tVDdlRnVLODVLRVZzZndGZDRpYUFB?oc=5"
+        },
+        {
+          "title": "LVMH : INFORMATION MENSUELLE RELATIVE AU NOMBRE TOTAL DE DROITS DE VOTE ET D’ACTIONS COMPOSANT LE CAPITAL SOCIAL - fr.finance.yahoo.com",
+          "date": "2026-09-04",
+          "link": "https://news.google.com/rss/articles/CBMimAFBVV95cUxQcFVIYVM4bHhzbVFBVUFMZFc2RW95bWRGTVFJV0VSNVlJN1RnVkFGRTZhdmg0dHo2dWx6Wmw1TkVMZXY3U3VmeTVYaEJMbTBXNHFGQlJqVUl2SHhLR0Y0RVpfdW5KQjlzS0NLNkFVeUNUZ1psN1hfby1Yc19yTHpDVG1nSzFpeXpHSC1BWmp5WjhCbldnOUZydA?oc=5"
+        },
+        {
+          "title": "Hermes intl : Bank of America s'inquiète de la reprise pour le secteur du luxe, Hermès, Kering et LVMH souffrent en Bourse - BFM Bourse",
+          "date": "2026-09-03",
+          "link": "https://news.google.com/rss/articles/CBMinwJBVV95cUxPVmJOazNQQlQ4d3g0d3JXMlRUQ2QzMEhrTUtWUEgtQm50d2tCaE9yOElOZ0F0UzE3VW5qbWk3QWRPUFVzUHhjM1gwbGFKUHd2WkdVSG9UNkc3bTBqTGo3Vkt2bl9Xd3RTRUEtVnBRSF92dFN3UUpOUV96OWlfbUJyZVQ4UVRBVmJTYTdTcFlIMGg5YlRYT09xeEdNazE4WHNEZmFiQlN4MWNqZTMzMm1QX0ZoZnR5Z0J1amUxcUNfZHpWTWY4SHBYU1lRTUJ0eU5tcnVRVDlWQTR0RGlTRUZuYi1qcmYzVlVaTzNvdXlRQ3Nhb1p5cUVESXdKdGlvZGE1LW5oSno3clctSDVETVhRa2lFTlNybHdtaVo2R19Tbw?oc=5"
+        },
+        {
+          "title": "LVMH : alerte à la baisse sous 443 EUR - Boursorama",
+          "date": "2026-09-03",
+          "link": "https://news.google.com/rss/articles/CBMitAFBVV95cUxPMGVXdnJZQnhkZWV1b1gtMk9ISWNBSm1VWm81bXZSWXltZmNWbGMwRmNLMDhzWWg2emFxMGRTRHFNcXZVNXBjX2kwSnBSdTdaanVwMHFqRzFiV1ZNaElLRVRHREhkMk1WcmVsTlRiTnFzczdYakZON2VmeGtxZXF5VC1GdjIyZHRfeXlfNFhxNWw5TUtFRHQ3VkdTTk5mTDhQNmxxX1FuNFBveW9maDRudFlnUWbSAboBQVVfeXFMT3g5MUVxRVZTTnVPM0FPQnV1YTVqUmZ2dTdESUZFZkRNVG12ODVQUFg1M1Q4VE53SERnMFBZaWs2ZGpKY2JxdEdKZmE5cGQ3cDJHbWVSdW91OHQxcTlRUnpmS3N2cjdCZFdDeGEyRkR4Rk1kaTk3RW9idGpoeU1hV3lFeEcwMWlydTJxdDlqZmV4Njc1eUlreFVHRFR1b0h6NmcxanJHNEJrNmlnMGJ5NXZjTkNWYURzWmpB?oc=5"
+        },
+        {
+          "title": "Pourquoi l’action LVMH chute-t-elle aujourd’hui ? - Investing.com France",
+          "date": "2026-09-03",
+          "link": "https://news.google.com/rss/articles/CBMiqAFBVV95cUxNME9YZWhZNUVKUVh6b1hOU3lSODVlSjhFMmNPcDNYVmRrN0ktTWhBa0FMaFVzay1fRVRVWkZDU0pYS2plcGxfXzl6M3ZDcnNXbzE4X1FnZzBIR3Rwcm5acVpPempYR0NsRTR5Y245Q1JIT096Mmc2YmcxaHRIdmxDa2E0UlA2MmpCelBTai1JVHpZMEFkaHEya2E4M2JMZ2sxdVVyTkRLWUM?oc=5"
+        }
+      ]
+    },
+    {
+      "ticker": "TTE.PA",
+      "name": "TotalEnergies",
+      "sector": "Energy",
+      "sector_profile": "cyclique",
+      "score": 9.1,
+      "interpretation": "Neutre",
+      "factors": [
+        {
+          "name": "Rentabilité / création de valeur",
+          "score": 8.874006976034803,
+          "weight": 0.3,
+          "raw_value": "ROCE 12.4% vs coût du capital 8.0% (ROE 11.4%)"
+        },
+        {
+          "name": "Structure financière / solvabilité",
+          "score": 7.798902852436594,
+          "weight": 0.25,
+          "raw_value": "Dette nette/EBITDA 0.9x (seuil confort 2.1x, profil cyclique) — ICR 13.9x"
+        },
+        {
+          "name": "Croissance",
+          "score": -10.0,
+          "weight": 0.2,
+          "raw_value": "CAGR CA -11.5%/an, CAGR EBITDA -13.0%/an (5 ans)"
+        },
+        {
+          "name": "Génération de cash",
+          "score": -4.651773305193802,
+          "weight": 0.15,
+          "raw_value": "Conversion FCF/EBITDA 27%"
+        },
+        {
+          "name": "Valorisation relative",
+          "score": -10.0,
+          "weight": 0.1,
+          "raw_value": "EV/EBITDA 4.0x (moy. 5 ans 3.0x) — PER 9.2x (moy. 5 ans 6.7x)"
+        }
+      ],
+      "news": [
+        {
+          "title": "TotalEnergies, Accor, Axa, GTT, Aperam, ArcelorMittal, Soitec : toutes les recommandations des analystes - Investir Les Echos",
+          "date": "2026-09-04",
+          "link": "https://news.google.com/rss/articles/CBMijwJBVV95cUxQQ1V0Q3lUY3dVVkI3SWdEbEVFRGVWX0gyeTQwdG1GYUNyLTA2eUZqWWhOMWFtOXNVdFozbEVJSFdPODN2ZUQwTHNKd0w4NzZyRldwWXd1SktBOF9tMENmQzdYdVBMSWlLQVlsNFNJX3RJaDNwck16OU5CZ2c2WDhTODA1ZWhQaVVnSmNfS21UVDJyRlJyeUJuVENnM1oyMElWSnFscEdPWUhJcGlveUwyNE1iVzFIZGdDY0xQb2k2eFRlaWl4VVpPYjB4UnlPd19GNjdNbG5jRjFOenY0NURsRzVqU0JFaFkxTnBnZl9sOEI1MDd5X3VaMndNRXNQZUItMldYdHQzeWRNelBDR1Q4?oc=5"
+        },
+        {
+          "title": "Transfert: Nicolas Breuillard va quitter la TotalEnergies... pour une WorldTour ! - Cyclism'Actu",
+          "date": "2026-09-04",
+          "link": "https://news.google.com/rss/articles/CBMiywFBVV95cUxQV0JDRXNzcG5SSFJWNTlmRnZMUTZHbjd1Yi1jVEdnNmhld2Z4UmExTkg5NDl0ZnlwMXpnQWpGajRVNXU3R3k5Y191bHBBS29VS0piZEt4Si01SGlnWHZTdTNhVlpUM05oWXl3N2pnTGhhLW5jMzctYUp4XzRuQXJUUWd3RmxVOXBiWVRjNE5hZkVLT18zSVMxUk9CaDNHZDh0TUwyZnQ1eG5PbDN2aHZxV29PTXJuak5LdU1HQlJ3dTl0b1psOHpvVkt4ONIBXEFVX3lxTE1JWWhkNHIwdzBJSW5INm45ak9GRWhXSld5Nkd1V1pYdmwtQjFzWklqQUIyOTJYYUFGeUVKelowSzM1ckRBZ21BQ2NhRHdBVExWcUwxbXR0dVpyNzlT?oc=5"
+        },
+        {
+          "title": "Prix de l'essence : TotalEnergies menace de mettre fin au plafonnement des prix en cas de taxe sur les superprofits - europe1.fr",
+          "date": "2026-09-02",
+          "link": "https://news.google.com/rss/articles/CBMi5wFBVV95cUxQUUNsYkZqMTVwbWRmenNfeFpjZ0xFWVRWdVk3Y0lkU1F4cmFmTlB6T2g5cFJKN2pxZDEzZWRudlBGT2NhdVp1RUk3U1BBZ0xWRGNrS01iTmhLaEFTS2JHeUtOZm5xM2dVR19RUkpfblBiQWJuSUZuTHBXMmJteERDRE92elBuNThIcWp1b0dWYy0xb0Nzd013NWZrUlVoRUlvbm9DNlBVTkZiVVhkOHI5QVZnWm9yUGNJNjhfbTc1UTZuU3NCdXY3cUpYRDZHbElpMjVoc05Waks3amxRbUVLT0VUODhvRDDSAewBQVVfeXFMTzhDYUN4dVBwdGRyZVBwRUpVWkYweE5ka0xGZ0NXclZyUjhPeGFObXQ0Yi1JT1l1cWZVdHZydXlfV2YydVExT0pCc3p6XzJjYlpCZjdDaGhxQ2JvcW9MVWItU3FLdkgxR2plMGV0dEpJa3dWdjBoMWw3VU8tc2Y2MjhZNWpqWmFRTkQ0UnlsVjNOcl9xQW4zMWlEMzJ2ZnFpaGstM0p0TktRdHBDVFlTU3hMcjJHcDVQMWdlQkpvdnAxeXJiZ2R2Y0RpMUQzTkNWZWRlOGVGWEtRMWp5MDA0WndabDhKZHh2NmdzVFQ?oc=5"
+        },
+        {
+          "title": "Cyclisme. Quatrième victoire de la saison pour l’équipe vendéenne TotalEnergies, grâce à Baptiste Vadic en Turquie - Ouest-France",
+          "date": "2026-09-03",
+          "link": "https://news.google.com/rss/articles/CBMirgJBVV95cUxNLUllX0VGWm9MMkdianNLOXZpNE9tM3Nxd1BGc25DOWpUblFaTEczaWt1WDZNam5ZU19hczBvSGpFUjYyTkpjRzMxbDZOcEpLRDNhaGhvU0xsMnB1X3dXdHdTWDdrOW1nUjhiOHdWVzQxcU9YU3BITi1UUU4zR0lfVnJJYnA5TXJjRWRVcjZsT2NtNF80bDJQcksxNTRCSEdxQ0M2TGQxeDI1dVRBcEtvRk9CLUJsMlB3X2dRZF9nQXBrTTdBSXVTYnRuVG5RMmpIM29KSEhhSEhTVHViTmRxY01MNzR0RUJhenl5eWtCWFRCT25iNElaTzMwQUxPNU9GVE1ybGFRcWZieDcxM2U5Y1hrb2NGcTJJNG1qRFF1a0w0ZWcxRlNCUnVlUnUxQQ?oc=5"
+        },
+        {
+          "title": "TotalEnergies officiellement opérateur de la découverte géante Mopane - Boursier.com",
+          "date": "2026-09-03",
+          "link": "https://news.google.com/rss/articles/CBMiygFBVV95cUxOWEJHbmo0aVk4Q0JZMUw5ZjdTc0hDQzljOHZmeGJ3MnBZa2pkc3JPc2lxMW1PS3dHM0dsUGhjQWRicmVVbG80cTdTeHlmYVZmSGkteGlCMXNUR09xNk52Qk5GdFFhLUlSVUF1WXhWYlZBdVJ5ZjRwV1FiNlRRSEJQMldndHluQU9Da0RhTnpwajU0dHdEckRyT2ZQYmhCWUZ6RDZNTzBxeWt5aElGRU1iWWVXc2lpN2RFbkl5OTk0aHl0NGFad1RIMG93?oc=5"
+        }
+      ]
+    },
+    {
+      "ticker": "SU.PA",
+      "name": "Schneider Electric",
+      "sector": "Industrials",
+      "sector_profile": "standard",
+      "score": 59.8,
+      "interpretation": "Profil fondamental très solide",
+      "factors": [
+        {
+          "name": "Rentabilité / création de valeur",
+          "score": 10.0,
+          "weight": 0.3,
+          "raw_value": "ROCE 13.7% vs coût du capital 8.0% (ROE 17.2%)"
+        },
+        {
+          "name": "Structure financière / solvabilité",
+          "score": 7.363035515209428,
+          "weight": 0.25,
+          "raw_value": "Dette nette/EBITDA 1.6x (seuil confort 3.0x, profil standard) — ICR 12.5x"
+        },
+        {
+          "name": "Croissance",
+          "score": 10.0,
+          "weight": 0.2,
+          "raw_value": "CAGR CA +nan%/an, CAGR EBITDA +nan%/an (5 ans)"
+        },
+        {
+          "name": "Génération de cash",
+          "score": 0.9603440038222644,
+          "weight": 0.15,
+          "raw_value": "Conversion FCF/EBITDA 55%"
+        },
+        {
+          "name": "Valorisation relative",
+          "score": -10.0,
+          "weight": 0.1,
+          "raw_value": "EV/EBITDA 17.1x (moy. 5 ans nanx) — PER 31.2x (moy. 5 ans nanx)"
+        }
+      ],
+      "news": [
+        {
+          "title": "Schneider Electric devrait annoncer la fermeture du site de Chasseneuil-du-Poitou dans la Vienne - Le Revenu",
+          "date": "2026-09-05",
+          "link": "https://news.google.com/rss/articles/CBMiqAFBVV95cUxPS2V4d25kZDg2VW9zNV9sWEhST2FMdDJHWEF0WWtDelp0a2JpZ3FLcDZ5TUotTzFqM2UyTWhJc2M3ZmFSUGxBNXhmeHBGLW1NNkpCVWtxVW5Fd2sxcHJQZlByd3NZZEN0ektrTktLbFl2c2wza01kVGUwaC1NbzlsOW5VS3J5UHNoT0pvR2xjMzVnNk1JV0w4QXhDZzlvYmR6eXF2RUE4X2c?oc=5"
+        },
+        {
+          "title": "Schneider Electric, le retour du meilleur de la classe - Investir Les Echos",
+          "date": "2026-09-03",
+          "link": "https://news.google.com/rss/articles/CBMixAFBVV95cUxOZi05b0l0MFdxQ296dGcwT2FiU2hLMkwyWUh2TkdYb3h2UFV2OWNWLUdkSmFxM1R0Mk5kZnZRUzN2UnJWelo1aFQycWJLSDFObDRycXBuMk1zcmhxV28ydkllM2lMekctUlBrRk16TlRyTUNjQTR5cTQ3U01ZZXduZFI2RHV0UWxsZGkxVXhpazBsZDU2LTdpS3lqNmtiMnRnU2xfX3NuZnFUS2ExTDAwcmRqaEtUTEMxY3Q4Y3RRZkdNem5C?oc=5"
+        },
+        {
+          "title": "Schneider Electric finit en légère hausse - Boursier.com",
+          "date": "2026-09-03",
+          "link": "https://news.google.com/rss/articles/CBMikwFBVV95cUxNVzUzbkx6U1VkV2RqWkQxY1NWVm1VVHJBVjVhNmxhUzZkN2VkQjB3TVFLaVpZdy1tanBJZHlxOE9rZXZXcXYzX2kwUjhVU2dEcExmX2c5ekx0bmRySFBoUzdReUJBa2VqQkRIbmdaZWNKNFlybTkzNkNqNVlqNVNQODJMTm82aENBbldFQnR5OXhyVFE?oc=5"
+        },
+        {
+          "title": "Schneider Electric poursuit à marche forcée la reconfiguration de son parc industriel - La Lettre",
+          "date": "2026-09-04",
+          "link": "https://news.google.com/rss/articles/CBMihAJBVV95cUxNRHdXM3hxdzMxWHRVVTJLNGZ1OTF2Tm5KZWY2NHI1aUNnQll3Y3JJUElRUjJ4bkw2TDRQT3cyVUpKbUxsM0RTRlA4OEk2VmdydTljOTZjdTlHdVJBdHVQWGF3OWxRMFd1LXMzQ3ExQXlETmF3bElLbGhmalpoNTE3ZWtxTG5WenRlNjZoLUYtdF9zZlRSMjhSY2Yxak1ibDhYNnJCSHFJQjFOS2ttcENaVHZUTVVINTNOWWhNc1gxNHo0azRaNW5oWUpVcWotRmZCZHpzYThXYVRZcThPR25mUDBYU28xRkk3UVg2MGNtd2N3Y1ZpaGI1Y2xCZkxvazlfZlFnUA?oc=5"
+        },
+        {
+          "title": "Expleo & Schneider Electric: un partenariat qui dure - Aerocontact.com",
+          "date": "2026-09-01",
+          "link": "https://news.google.com/rss/articles/CBMimwFBVV95cUxQSzZOZjVBWDhUQjZoXzh5LVdsMEx0UTVKeXJSY1diU1M4bnFDN1VGMHpxODlxT2M3VWFyQ1U5QXBkYTZEVTREdnQ5RnE0OXczdVY4dU03RmNvNlAwUjE5aG5zZHFsdXprS0hXeDVGQndRODhrZEhJYTd3RHF6dWVxNWhBVWhfei1OT1JLVW9Nd0VxakFUZDBFVW13VQ?oc=5"
+        }
+      ]
+    },
+    {
+      "ticker": "BN.PA",
+      "name": "Danone",
+      "sector": "Consumer Defensive",
+      "sector_profile": "defensif",
+      "score": 25.4,
+      "interpretation": "Solide",
+      "factors": [
+        {
+          "name": "Rentabilité / création de valeur",
+          "score": -1.3633687653311526,
+          "weight": 0.3,
+          "raw_value": "ROCE 7.3% vs coût du capital 8.0% (ROE 10.8%)"
+        },
+        {
+          "name": "Structure financière / solvabilité",
+          "score": 6.367667420299,
+          "weight": 0.25,
+          "raw_value": "Dette nette/EBITDA 2.8x (seuil confort 3.9x, profil defensif) — ICR 7.0x"
+        },
+        {
+          "name": "Croissance",
+          "score": 10.0,
+          "weight": 0.2,
+          "raw_value": "CAGR CA +nan%/an, CAGR EBITDA +nan%/an (5 ans)"
+        },
+        {
+          "name": "Génération de cash",
+          "score": 2.4128503075871492,
+          "weight": 0.15,
+          "raw_value": "Conversion FCF/EBITDA 62%"
+        },
+        {
+          "name": "Valorisation relative",
+          "score": -10.0,
+          "weight": 0.1,
+          "raw_value": "EV/EBITDA 13.7x (moy. 5 ans nanx) — PER 26.2x (moy. 5 ans nanx)"
+        }
+      ],
+      "news": [
+        {
+          "title": "DANONE Cours Action BN, Cotation Bourse Euronext Paris - Boursorama",
+          "date": "2026-09-03",
+          "link": "https://news.google.com/rss/articles/CBMiUEFVX3lxTE1oMFc5d0lZMmZIRGlUcE12WENWbi1WQkpSZlZIWVlYR3VKc0hxQmpDWS1fanlJamFPcEhmcFpvRFJUZXdlUHYtYVBQV0JRckdx?oc=5"
+        },
+        {
+          "title": "Réduire le gaspillage alimentaire - Danone",
+          "date": "2026-09-02",
+          "link": "https://news.google.com/rss/articles/CBMijwFBVV95cUxOcTVJMGZSTWxpcGlhRnRId3JmN2JYV2ozRk9tUlM1VThHUVA3a2hDYkwxRFlOdThqUnBNSHNsVEUtMXdTclhrbHM4SFY4LVowN2lYanFxaTc4aUdMZTdoOE1PU3ZteU1SMEFFVUszenIwaWlwdXFYT2piQThIbjZtZlJNS2k3OElpbzEtOVBFSQ?oc=5"
+        },
+        {
+          "title": "Danone finalise le rachat de Huel : quels droits pour les actionnaires, les salariés et les contrats en France - Kohen Avocats",
+          "date": "2026-09-05",
+          "link": "https://news.google.com/rss/articles/CBMiswFBVV95cUxNNHVONDVpdkZya2wzWHVTemprQWxQOEV4NG9aTXRXOWItWlVLcEpSdjBhbl9DLXVUMnFualpuRVRVU2RXNVVsdWh6OTFHZ3JnbS1WWHhaNmtaLUVubW5qMTN6S2xoN2RDS3FodE9rdFJuVHFRVDk4SEN4bUtkU01lb01NR1BlTVlLY2x2NGlPbUV1LXFrV3lhc3FCck8tVTFaUVlHWC12MEQySnBnMWExN1Q5TQ?oc=5"
+        },
+        {
+          "title": "Danone a finalisé l'acquisition de Huel - Boursier.com",
+          "date": "2026-09-04",
+          "link": "https://news.google.com/rss/articles/CBMiogFBVV95cUxNMzV5SmdiYl81c2JyMDB4ajVpY0JZeElKaXVkN2FvVlBEa3FDY2dyQXh6RDc4N3o2RFVsOHpLUHprOUk5M0w2ZXRHYktDXzd4UldGNjYyTWJ1OVBKLUdxdXluQ1VTTGQtMEdHdGxuQklYMzlJYVJsMWpZZERmOWVRV2ZrSlNzSnJhUDJDNEprT2E2dzk0N2U2ck9WZVh1WTRFVnc?oc=5"
+        },
+        {
+          "title": "Danone finalise l'acquisition de Huel - Zonebourse",
+          "date": "2026-09-04",
+          "link": "https://news.google.com/rss/articles/CBMinwFBVV95cUxPUUFmUFAzUkNkYTZoUFF0aEdOVjVWZXd0ZDZoa0IwaENnUTk2cjVyMGJhX2taenVkbVYwQjhaTEFoa21oMWJ6emw0T0dYWTB0S1JxRnhoXzl5RGZ5SnFya3ZpMmx3TlVUMFFidmdIX2s2TmJXZE8xckliMlJYR3d2SjRCZmIzM2NHa05WRGpQWVRmUXZJcjBNZ1NEMkt4aWs?oc=5"
+        }
+      ]
+    }
+  ]
 }

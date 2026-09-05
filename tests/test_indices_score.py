@@ -610,3 +610,52 @@ def test_build_company_entry_includes_news_when_fetch_succeeds(monkeypatch):
     entry = indices_score.build_company_entry("BN.PA", "Danone")
 
     assert entry["news"] == [{"title": "Titre", "date": "2026-09-04", "link": "https://example.com"}]
+
+
+from indices_score import fetch_news
+
+
+def test_fetch_news_attaches_source_and_summary_and_isolates_per_item_failures(monkeypatch):
+    xml_two_items = b"""<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0"><channel>
+<item>
+  <title>Titre A</title>
+  <link>https://example.com/a</link>
+  <pubDate>Thu, 04 Sep 2026 10:00:00 GMT</pubDate>
+  <source url="https://a.example.com">Source A</source>
+</item>
+<item>
+  <title>Titre B</title>
+  <link>https://example.com/b</link>
+  <pubDate>Wed, 03 Sep 2026 08:00:00 GMT</pubDate>
+  <source url="https://b.example.com">Source B</source>
+</item>
+</channel></rss>
+"""
+
+    class FakeRssResponse:
+        content = xml_two_items
+
+        def raise_for_status(self):
+            pass
+
+    monkeypatch.setattr(indices_score.requests, "get", lambda *a, **k: FakeRssResponse())
+    # Simule un échec d'extraction sur l'article A (fetch_article_text
+    # renvoie None, comme sur un vrai paywall) et un succès sur B — sans
+    # jamais lever, conformément au contrat de fetch_article_text.
+    monkeypatch.setattr(
+        indices_score, "fetch_article_text",
+        lambda url: None if url == "https://example.com/a" else "Texte B"
+    )
+    monkeypatch.setattr(
+        indices_score, "summarize_news_item",
+        lambda title, name, text: f"Résumé pour {title} (article={text})"
+    )
+
+    items = fetch_news("Test SA")
+
+    assert len(items) == 2
+    assert items[0]["source"] == "Source A"
+    assert items[0]["summary"] == "Résumé pour Titre A (article=None)"
+    assert items[1]["source"] == "Source B"
+    assert items[1]["summary"] == "Résumé pour Titre B (article=Texte B)"

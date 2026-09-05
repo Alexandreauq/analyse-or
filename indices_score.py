@@ -302,6 +302,12 @@ def extract_ratios(financials, balance_sheet, cashflow, closes_by_year, shares_o
     cagr_ca = _cagr(revenue[oldest], revenue[latest], n_years - 1)
     cagr_ebitda = _cagr(ebitda[oldest], ebitda[latest], n_years - 1)
 
+    # FCF = Flux de trésorerie opérationnel - |Capex| (proxy OCF standard),
+    # et non le montage "EBITDA - IS théorique - ΔBFR - investissements" décrit
+    # dans Methodologie_Analyse_Indices.md §4 : le flux de trésorerie
+    # opérationnel yfinance embarque déjà l'impôt effectivement payé et les
+    # variations de BFR, ce qui est plus robuste que de les reconstruire à la
+    # main sur 5 entreprises aux données hétérogènes.
     fcf = op_cash_flow[latest] + capex[latest]  # capex déjà négatif dans yfinance
     fcf_conversion = (fcf / ebitda[latest]) * 100 if ebitda[latest] else 0.0
 
@@ -410,7 +416,17 @@ def build_company_entry(ticker: str, name: str) -> dict:
         ),
     ]
     composite = compute_composite(factors)
-    news = fetch_news(name)
+
+    # La récupération des news est une donnée secondaire, distincte du score
+    # fondamental (cf. Methodologie_Analyse_Indices.md, "Décisions actées") :
+    # un échec du flux RSS (timeout, format Google modifié, rate limit) ne
+    # doit pas faire perdre toute l'entrée (dont le score) déjà calculée,
+    # même logique que get_gold_spot_and_ma200() dans gold_score.py.
+    try:
+        news = fetch_news(name)
+    except Exception as e:
+        print(f"Erreur récupération news pour {name} : {e}")
+        news = []
 
     return {
         "ticker": ticker,

@@ -69,6 +69,15 @@ l'or), chaque facteur noté **-10/+10**.
   risque actions, sans calcul de bêta complet au v1), et si la
   tendance sur 5 ans est stable ou croissante.
 
+> **Simplification v1 (implémentation).** `score_rentabilite` /
+> `extract_ratios` ne calculent le ROCE et le ROE que sur le dernier
+> exercice publié ; il n'y a pas de vérification de tendance ROCE sur 5
+> ans. Une entreprise avec un ROCE ponctuel élevé mais une tendance
+> dégradée sur 5 ans obtient donc le même score qu'une entreprise
+> réellement stable ou croissante. C'est une simplification acceptée
+> pour la phase pilote (5 entreprises), à revoir si le périmètre
+> s'étend au-delà.
+
 ### 2. Structure financière / solvabilité — poids 25%
 
 Seuils de base (profil Standard), ajustés par profil sectoriel :
@@ -99,6 +108,16 @@ Défensif, le seuil "confortable" de dette nette/EBITDA passe de 3 à
 - **Flux de trésorerie disponible (FCF)** = EBITDA − IS théorique sur
   le résultat d'exploitation − variation du BFR − investissements
   nets des désinvestissements.
+
+> **Simplification v1 (implémentation).** `extract_ratios` calcule le
+> FCF comme Flux de trésorerie opérationnel (yfinance) − |Capex|,
+> plutôt que la formule ci-dessus. Ce proxy embarque déjà l'IS
+> effectivement payé et la variation du BFR via la ligne de flux
+> opérationnel yfinance, et s'est révélé plus robuste que de
+> reconstruire un ΔBFR propre sur 5 entreprises aux données
+> hétérogènes. Voir le commentaire au-dessus de `fcf = ...` dans
+> `indices_score.py`.
+
 - **Conversion FCF/EBITDA** : plus ce ratio est élevé, plus la
   rentabilité comptable se traduit réellement en cash (une rentabilité
   élevée mais un FCF durablement négatif ou faible est un signal

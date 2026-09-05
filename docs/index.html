@@ -346,6 +346,12 @@ async function loadIndices(ticker) {
 }
 
 function renderIndicesList(companies) {
+  if (!companies.length) {
+    document.getElementById('indicesContent').innerHTML = `
+      <div class="empty">Aucune entreprise pour l'instant.<br>Le premier calcul quotidien n'a pas encore été publié.</div>
+    `;
+    return;
+  }
   const rows = companies.map(c => `
     <a class="company-row" href="#indices/${c.ticker}">
       <div class="company-row-left">

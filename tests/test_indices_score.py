@@ -118,3 +118,23 @@ def test_score_croissance_penalizes_ebitda_divergence():
     aligned = score_croissance(cagr_ca=6.0, cagr_ebitda=6.0)
     diverging = score_croissance(cagr_ca=6.0, cagr_ebitda=-2.0)
     assert diverging.score < aligned.score
+
+
+from indices_score import score_generation_cash
+
+
+def test_score_generation_cash_full_conversion():
+    result = score_generation_cash(fcf_conversion=100.0)
+    assert result.name == "Génération de cash"
+    assert result.weight == 0.15
+    assert result.score == 10.0
+
+
+def test_score_generation_cash_neutral_at_fifty_percent():
+    result = score_generation_cash(fcf_conversion=50.0)
+    assert result.score == 0.0
+
+
+def test_score_generation_cash_negative_conversion_floors_at_minus_ten():
+    result = score_generation_cash(fcf_conversion=-20.0)
+    assert result.score == -10.0

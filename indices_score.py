@@ -519,12 +519,7 @@ def summarize_news_item(title: str, company_name: str, article_text: str | None)
         resp.raise_for_status()
         data = resp.json()
         return data["content"][0]["text"].strip()
-    except requests.HTTPError as e:
-        body = e.response.text[:500] if e.response is not None else "?"
-        print(f"Erreur résumé IA pour « {title} » : {e} — réponse API : {body}")
-        return ""
-    except Exception as e:
-        print(f"Erreur résumé IA pour « {title} » : {e}")
+    except Exception:
         return ""
 
 

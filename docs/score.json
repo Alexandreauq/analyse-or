@@ -11,7 +11,7 @@
     },
     {
       "name": "Dollar (DXY)",
-      "score": 8.465003967285156,
+      "score": 8.449974060058594,
       "weight": 0.15,
       "raw_value": "99.16 (il y a 2 mois : 100.85)"
     },
@@ -47,9 +47,9 @@
     }
   ],
   "technical": {
-    "note": "Cours proche de la MM200 (-1.0%) — zone de décision",
-    "spot": 4477.2001953125,
-    "ma200": 4520.700494384766
+    "note": "Cours en-dessous de la MM200 (-2.0%) — tendance baissière",
+    "spot": 4429.7998046875,
+    "ma200": 4520.463492431641
   },
   "calendar": [
     {
@@ -95,9 +95,9 @@
   ],
   "alerts": [
     {
-      "kind": "entree",
-      "title": "Conditions d'entrée réunies",
-      "detail": "Score favorable, cours proche d'un support, positionnement non extrême, pas d'événement Fed imminent.",
+      "kind": "info",
+      "title": "Pas de signal actif",
+      "detail": "Aucune des conditions de veille, d'entrée ou de risque n'est réunie aujourd'hui.",
       "date": "05/09/2026"
     }
   ]

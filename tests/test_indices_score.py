@@ -91,3 +91,30 @@ def test_score_structure_financiere_net_cash_position_leverage_capped():
     # sinon le résultat est faussé (5.0 au lieu de ~1.67 dans ce cas précis).
     result = score_structure_financiere(net_debt_ebitda=-2.0, icr=1.0, sector="Industrials")
     assert result.score < 2.0
+
+
+from indices_score import score_croissance
+
+
+def test_score_croissance_strong_aligned_growth():
+    result = score_croissance(cagr_ca=12.0, cagr_ebitda=12.0)
+    assert result.name == "Croissance"
+    assert result.weight == 0.20
+    assert result.score == 10.0  # moyenne 12% / échelle 10% -> plafonné à +10
+
+
+def test_score_croissance_no_growth_is_neutral():
+    result = score_croissance(cagr_ca=0.0, cagr_ebitda=0.0)
+    assert result.score == 0.0
+
+
+def test_score_croissance_decline_is_negative():
+    result = score_croissance(cagr_ca=-10.0, cagr_ebitda=-10.0)
+    assert result.score == -10.0
+
+
+def test_score_croissance_penalizes_ebitda_divergence():
+    # CA croît bien, mais l'EBITDA décroche largement (dégradation de la rentabilité)
+    aligned = score_croissance(cagr_ca=6.0, cagr_ebitda=6.0)
+    diverging = score_croissance(cagr_ca=6.0, cagr_ebitda=-2.0)
+    assert diverging.score < aligned.score

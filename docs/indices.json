@@ -6,7 +6,7 @@
       "name": "LVMH",
       "sector": "Consumer Cyclical",
       "sector_profile": "cyclique",
-      "score": 43.8,
+      "score": 44.9,
       "interpretation": "Solide",
       "factors": [
         {
@@ -23,9 +23,9 @@
         },
         {
           "name": "Croissance",
-          "score": 0.0,
+          "score": 0.5828749649818166,
           "weight": 0.2,
-          "raw_value": "CAGR CA +0.0%/an, CAGR EBITDA +0.0%/an (5 ans)"
+          "raw_value": "CAGR CA +1.5%/an, CAGR EBITDA -0.3%/an (5 ans)"
         },
         {
           "name": "Génération de cash",
@@ -57,7 +57,7 @@
           "link": "https://news.google.com/rss/articles/CBMinwJBVV95cUxPVmJOazNQQlQ4d3g0d3JXMlRUQ2QzMEhrTUtWUEgtQm50d2tCaE9yOElOZ0F0UzE3VW5qbWk3QWRPUFVzUHhjM1gwbGFKUHd2WkdVSG9UNkc3bTBqTGo3Vkt2bl9Xd3RTRUEtVnBRSF92dFN3UUpOUV96OWlfbUJyZVQ4UVRBVmJTYTdTcFlIMGg5YlRYT09xeEdNazE4WHNEZmFiQlN4MWNqZTMzMm1QX0ZoZnR5Z0J1amUxcUNfZHpWTWY4SHBYU1lRTUJ0eU5tcnVRVDlWQTR0RGlTRUZuYi1qcmYzVlVaTzNvdXlRQ3Nhb1p5cUVESXdKdGlvZGE1LW5oSno3clctSDVETVhRa2lFTlNybHdtaVo2R19Tbw?oc=5"
         },
         {
-          "title": "LVMH : alerte à la baisse sous 443 EUR - Boursorama",
+          "title": "LVMH : alerte à la baisse sous 443 EUR - boursorama.com",
           "date": "2026-09-03",
           "link": "https://news.google.com/rss/articles/CBMitAFBVV95cUxPMGVXdnJZQnhkZWV1b1gtMk9ISWNBSm1VWm81bXZSWXltZmNWbGMwRmNLMDhzWWg2emFxMGRTRHFNcXZVNXBjX2kwSnBSdTdaanVwMHFqRzFiV1ZNaElLRVRHREhkMk1WcmVsTlRiTnFzczdYakZON2VmeGtxZXF5VC1GdjIyZHRfeXlfNFhxNWw5TUtFRHQ3VkdTTk5mTDhQNmxxX1FuNFBveW9maDRudFlnUWbSAboBQVVfeXFMT3g5MUVxRVZTTnVPM0FPQnV1YTVqUmZ2dTdESUZFZkRNVG12ODVQUFg1M1Q4VE53SERnMFBZaWs2ZGpKY2JxdEdKZmE5cGQ3cDJHbWVSdW91OHQxcTlRUnpmS3N2cjdCZFdDeGEyRkR4Rk1kaTk3RW9idGpoeU1hV3lFeEcwMWlydTJxdDlqZmV4Njc1eUlreFVHRFR1b0h6NmcxanJHNEJrNmlnMGJ5NXZjTkNWYURzWmpB?oc=5"
         },
@@ -92,7 +92,7 @@
           "name": "Croissance",
           "score": -10.0,
           "weight": 0.2,
-          "raw_value": "CAGR CA -11.5%/an, CAGR EBITDA -13.0%/an (5 ans)"
+          "raw_value": "CAGR CA -11.5%/an, CAGR EBITDA -14.1%/an (5 ans)"
         },
         {
           "name": "Génération de cash",
@@ -119,7 +119,7 @@
           "link": "https://news.google.com/rss/articles/CBMiywFBVV95cUxQV0JDRXNzcG5SSFJWNTlmRnZMUTZHbjd1Yi1jVEdnNmhld2Z4UmExTkg5NDl0ZnlwMXpnQWpGajRVNXU3R3k5Y191bHBBS29VS0piZEt4Si01SGlnWHZTdTNhVlpUM05oWXl3N2pnTGhhLW5jMzctYUp4XzRuQXJUUWd3RmxVOXBiWVRjNE5hZkVLT18zSVMxUk9CaDNHZDh0TUwyZnQ1eG5PbDN2aHZxV29PTXJuak5LdU1HQlJ3dTl0b1psOHpvVkt4ONIBXEFVX3lxTE1JWWhkNHIwdzBJSW5INm45ak9GRWhXSld5Nkd1V1pYdmwtQjFzWklqQUIyOTJYYUFGeUVKelowSzM1ckRBZ21BQ2NhRHdBVExWcUwxbXR0dVpyNzlT?oc=5"
         },
         {
-          "title": "Prix de l'essence : TotalEnergies menace de mettre fin au plafonnement des prix en cas de taxe sur les superprofits - Europe 1",
+          "title": "Prix de l'essence : TotalEnergies menace de mettre fin au plafonnement des prix en cas de taxe sur les superprofits - europe1.fr",
           "date": "2026-09-02",
           "link": "https://news.google.com/rss/articles/CBMi5wFBVV95cUxQUUNsYkZqMTVwbWRmenNfeFpjZ0xFWVRWdVk3Y0lkU1F4cmFmTlB6T2g5cFJKN2pxZDEzZWRudlBGT2NhdVp1RUk3U1BBZ0xWRGNrS01iTmhLaEFTS2JHeUtOZm5xM2dVR19RUkpfblBiQWJuSUZuTHBXMmJteERDRE92elBuNThIcWp1b0dWYy0xb0Nzd013NWZrUlVoRUlvbm9DNlBVTkZiVVhkOHI5QVZnWm9yUGNJNjhfbTc1UTZuU3NCdXY3cUpYRDZHbElpMjVoc05Waks3amxRbUVLT0VUODhvRDDSAewBQVVfeXFMTzhDYUN4dVBwdGRyZVBwRUpVWkYweE5ka0xGZ0NXclZyUjhPeGFObXQ0Yi1JT1l1cWZVdHZydXlfV2YydVExT0pCc3p6XzJjYlpCZjdDaGhxQ2JvcW9MVWItU3FLdkgxR2plMGV0dEpJa3dWdjBoMWw3VU8tc2Y2MjhZNWpqWmFRTkQ0UnlsVjNOcl9xQW4zMWlEMzJ2ZnFpaGstM0p0TktRdHBDVFlTU3hMcjJHcDVQMWdlQkpvdnAxeXJiZ2R2Y0RpMUQzTkNWZWRlOGVGWEtRMWp5MDA0WndabDhKZHh2NmdzVFQ?oc=5"
         },
@@ -129,9 +129,9 @@
           "link": "https://news.google.com/rss/articles/CBMirgJBVV95cUxNLUllX0VGWm9MMkdianNLOXZpNE9tM3Nxd1BGc25DOWpUblFaTEczaWt1WDZNam5ZU19hczBvSGpFUjYyTkpjRzMxbDZOcEpLRDNhaGhvU0xsMnB1X3dXdHdTWDdrOW1nUjhiOHdWVzQxcU9YU3BITi1UUU4zR0lfVnJJYnA5TXJjRWRVcjZsT2NtNF80bDJQcksxNTRCSEdxQ0M2TGQxeDI1dVRBcEtvRk9CLUJsMlB3X2dRZF9nQXBrTTdBSXVTYnRuVG5RMmpIM29KSEhhSEhTVHViTmRxY01MNzR0RUJhenl5eWtCWFRCT25iNElaTzMwQUxPNU9GVE1ybGFRcWZieDcxM2U5Y1hrb2NGcTJJNG1qRFF1a0w0ZWcxRlNCUnVlUnUxQQ?oc=5"
         },
         {
-          "title": "TotalEnergies officiellement opérateur de la découverte géante Mopane - Boursier.com",
+          "title": "Namibie : TotalEnergies finalise son entrée comme opérateur - TotalEnergies.com",
           "date": "2026-09-03",
-          "link": "https://news.google.com/rss/articles/CBMiygFBVV95cUxOWEJHbmo0aVk4Q0JZMUw5ZjdTc0hDQzljOHZmeGJ3MnBZa2pkc3JPc2lxMW1PS3dHM0dsUGhjQWRicmVVbG80cTdTeHlmYVZmSGkteGlCMXNUR09xNk52Qk5GdFFhLUlSVUF1WXhWYlZBdVJ5ZjRwV1FiNlRRSEJQMldndHluQU9Da0RhTnpwajU0dHdEckRyT2ZQYmhCWUZ6RDZNTzBxeWt5aElGRU1iWWVXc2lpN2RFbkl5OTk0aHl0NGFad1RIMG93?oc=5"
+          "link": "https://news.google.com/rss/articles/CBMi8AFBVV95cUxNUnRQb3pPVDVEZ3V3XzMycExnYVBqb3hmTW9raUpseDU5TGJiYnpKemU2UzgtWWVNcG00RFJhS1YzUDZzNTBxSnhPQnlOZlpDUUNYbGlvaDZwem5sX0xCQWNwaW85YUtZS190Zm95NnB0Tl9NU3pjbWR1STBBUGpzTF81bVNqN0tiYUM5S1lXaE4tZmk1SmNCNXB0T2RfWENmd2RKQzNtR2wzTWtCdzFmcEc5WTMxTjhQN0lwWDBjQU80NXh1a3ZpQTQzdjJuOFVMMmVBY1JvczFkYW0zVzhvRkFwUjFmYS1Sc0dIeE5RdGQ?oc=5"
         }
       ]
     },
@@ -140,8 +140,8 @@
       "name": "Schneider Electric",
       "sector": "Industrials",
       "sector_profile": "standard",
-      "score": 44.8,
-      "interpretation": "Solide",
+      "score": 61.4,
+      "interpretation": "Profil fondamental très solide",
       "factors": [
         {
           "name": "Rentabilité / création de valeur",
@@ -157,9 +157,9 @@
         },
         {
           "name": "Croissance",
-          "score": 0.0,
+          "score": 6.780153441163539,
           "weight": 0.2,
-          "raw_value": "CAGR CA +0.0%/an, CAGR EBITDA +0.0%/an (5 ans)"
+          "raw_value": "CAGR CA +4.6%/an, CAGR EBITDA +8.9%/an (5 ans)"
         },
         {
           "name": "Génération de cash",
@@ -169,7 +169,7 @@
         },
         {
           "name": "Valorisation relative",
-          "score": -5.090945901591704,
+          "score": -2.0363783606366814,
           "weight": 0.1,
           "raw_value": "EV/EBITDA 17.1x (moy. 5 ans 15.2x) — PER 31.2x (moy. 5 ans 26.5x)"
         }
@@ -207,8 +207,8 @@
       "name": "Sanofi",
       "sector": "Healthcare",
       "sector_profile": "defensif",
-      "score": 19.9,
-      "interpretation": "Solide",
+      "score": 13.2,
+      "interpretation": "Neutre",
       "factors": [
         {
           "name": "Rentabilité / création de valeur",
@@ -224,9 +224,9 @@
         },
         {
           "name": "Croissance",
-          "score": 0.0,
+          "score": -3.342728793737501,
           "weight": 0.2,
-          "raw_value": "CAGR CA +0.0%/an, CAGR EBITDA +0.0%/an (5 ans)"
+          "raw_value": "CAGR CA +3.9%/an, CAGR EBITDA -4.6%/an (5 ans)"
         },
         {
           "name": "Génération de cash",
@@ -243,7 +243,7 @@
       ],
       "news": [
         {
-          "title": "SANOFI Cours Action SAN, Cotation Bourse Euronext Paris - Boursorama",
+          "title": "SANOFI Cours Action SAN, Cotation Bourse Euronext Paris - boursorama.com",
           "date": "2026-09-03",
           "link": "https://news.google.com/rss/articles/CBMiUkFVX3lxTE5hSGE4Q2NUclVldnpENmJnbGVFY2NVS21LRzFPUW9qc25NOVhEQkxwcnV6RXRwQUFrd3c4S2RiTDlnNFdrb3hVSWYtdHZoeVlQaWc?oc=5"
         },
@@ -274,8 +274,8 @@
       "name": "Danone",
       "sector": "Consumer Defensive",
       "sector_profile": "defensif",
-      "score": 14.1,
-      "interpretation": "Neutre",
+      "score": 18.3,
+      "interpretation": "Solide",
       "factors": [
         {
           "name": "Rentabilité / création de valeur",
@@ -291,9 +291,9 @@
         },
         {
           "name": "Croissance",
-          "score": 0.0,
+          "score": 2.0872210288764848,
           "weight": 0.2,
-          "raw_value": "CAGR CA +0.0%/an, CAGR EBITDA +0.0%/an (5 ans)"
+          "raw_value": "CAGR CA -0.4%/an, CAGR EBITDA +4.6%/an (5 ans)"
         },
         {
           "name": "Génération de cash",
@@ -303,16 +303,21 @@
         },
         {
           "name": "Valorisation relative",
-          "score": -1.3696333458368346,
+          "score": -1.3696333892584995,
           "weight": 0.1,
           "raw_value": "EV/EBITDA 13.7x (moy. 5 ans 11.8x) — PER 26.2x (moy. 5 ans 28.4x)"
         }
       ],
       "news": [
         {
-          "title": "DANONE Cours Action BN, Cotation Bourse Euronext Paris - Boursorama",
+          "title": "DANONE Cours Action BN, Cotation Bourse Euronext Paris - boursorama.com",
           "date": "2026-09-03",
           "link": "https://news.google.com/rss/articles/CBMiUEFVX3lxTE1oMFc5d0lZMmZIRGlUcE12WENWbi1WQkpSZlZIWVlYR3VKc0hxQmpDWS1fanlJamFPcEhmcFpvRFJUZXdlUHYtYVBQV0JRckdx?oc=5"
+        },
+        {
+          "title": "Réduire le gaspillage alimentaire - Danone",
+          "date": "2026-09-02",
+          "link": "https://news.google.com/rss/articles/CBMijwFBVV95cUxOcTVJMGZSTWxpcGlhRnRId3JmN2JYV2ozRk9tUlM1VThHUVA3a2hDYkwxRFlOdThqUnBNSHNsVEUtMXdTclhrbHM4SFY4LVowN2lYanFxaTc4aUdMZTdoOE1PU3ZteU1SMEFFVUszenIwaWlwdXFYT2piQThIbjZtZlJNS2k3OElpbzEtOVBFSQ?oc=5"
         },
         {
           "title": "Danone finalise le rachat de Huel : quels droits pour les actionnaires, les salariés et les contrats en France - Kohen Avocats",
@@ -328,11 +333,6 @@
           "title": "Danone finalise l'acquisition de Huel - Zonebourse",
           "date": "2026-09-04",
           "link": "https://news.google.com/rss/articles/CBMinwFBVV95cUxPUUFmUFAzUkNkYTZoUFF0aEdOVjVWZXd0ZDZoa0IwaENnUTk2cjVyMGJhX2taenVkbVYwQjhaTEFoa21oMWJ6emw0T0dYWTB0S1JxRnhoXzl5RGZ5SnFya3ZpMmx3TlVUMFFidmdIX2s2TmJXZE8xckliMlJYR3d2SjRCZmIzM2NHa05WRGpQWVRmUXZJcjBNZ1NEMkt4aWs?oc=5"
-        },
-        {
-          "title": "Danone doit de nouveau convaincre que la croissance tient - Investir Les Echos",
-          "date": "2026-09-02",
-          "link": "https://news.google.com/rss/articles/CBMiygFBVV95cUxOU0kzR0VwYlpjTVFaM3VjeWNZX1ZkUG91RVV1djRfcnh5cHBUdkJSdGxhWW5JNWRpOUNqeEdNb2ZlaUpFTHB4TGg5YjVSYmRvS0E5amNMQ3JJZHB3MDBMVHZVTjZjMGp1YVRsYjRTZFZWU3ZVYXk3Vjd2UVdpeHEwV0ltV1RUNm94a0I5UW8yZFdVV1BWZWhIa1lVczRRa3Y5dzBKeW4yQ0V3TlVHWXVudFFPejJqaHdCbl9DNzAzQ3cwZjZwaTlvajVn?oc=5"
         }
       ]
     }

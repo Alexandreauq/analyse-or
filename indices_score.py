@@ -388,6 +388,29 @@ def extract_ratios(financials, balance_sheet, cashflow, closes_by_year, shares_o
     }
 
 
+def extract_quarterly_growth(quarterly_financials) -> float | None:
+    """CA du dernier trimestre publié vs le même trimestre il y a un an
+    (%). None si moins de 5 trimestres sont disponibles (yfinance
+    n'expose généralement que les 4-5 derniers) ou si une des deux
+    valeurs est manquante/NaN/nulle ou négative.
+
+    Simplification assumée : `cols[4]` est traité comme "le même
+    trimestre il y a un an" en supposant une cadence trimestrielle
+    régulière sans trou. Si le calendrier fiscal d'une entreprise est
+    irrégulier, `cols[4]` pourrait être un trimestre différent —
+    dégradation silencieuse vers une comparaison légèrement inexacte,
+    jugé acceptable pour un signal secondaire à 10% de poids.
+    """
+    cols = list(quarterly_financials.columns)
+    if len(cols) < 5:
+        return None
+    revenue = get_row(quarterly_financials, "Total Revenue", "Operating Revenue")
+    latest, year_ago = revenue[cols[0]], revenue[cols[4]]
+    if _is_missing(latest) or _is_missing(year_ago) or year_ago <= 0:
+        return None
+    return (latest / year_ago - 1) * 100
+
+
 def fetch_company_financials(ticker: str) -> dict:
     if yf is None:
         raise RuntimeError("yfinance n'est pas installé (pip install yfinance)")

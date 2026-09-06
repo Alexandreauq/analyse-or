@@ -65,7 +65,7 @@ COMPANIES = [
     {"ticker": "SGO.PA", "name": "Saint-Gobain"},
     {"ticker": "HO.PA", "name": "Thales"},
     {"ticker": "VIE.PA", "name": "Veolia Environnement"},
-    {"ticker": "ML.PA", "name": "Michelin"},
+    {"ticker": "KER.PA", "name": "Kering"},
     {"ticker": "CAP.PA", "name": "Capgemini"},
     {"ticker": "RI.PA", "name": "Pernod Ricard"},
     {"ticker": "RNO.PA", "name": "Renault"},

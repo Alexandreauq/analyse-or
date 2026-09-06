@@ -1,6 +1,6 @@
 {
   "date": "2026-09-06",
-  "composite_score": 28.6,
+  "composite_score": 28.7,
   "interpretation": "Favorable — en attente d'un déclencheur technique",
   "factors": [
     {
@@ -11,9 +11,9 @@
     },
     {
       "name": "Dollar (DXY)",
-      "score": 8.449974060058594,
+      "score": 8.504981994628906,
       "weight": 0.15,
-      "raw_value": "99.16 (il y a 2 mois : 100.85)"
+      "raw_value": "99.15 (il y a 2 mois : 100.85)"
     },
     {
       "name": "Anticipations d'inflation",
@@ -47,9 +47,9 @@
     }
   ],
   "technical": {
-    "note": "Cours proche de la MM200 (-1.0%) — zone de décision",
+    "note": "Cours en-dessous de la MM200 (-1.0%) — tendance baissière",
     "spot": 4476.60009765625,
-    "ma200": 4520.697493896484
+    "ma200": 4522.539992675781
   },
   "calendar": [
     {
@@ -95,9 +95,9 @@
   ],
   "alerts": [
     {
-      "kind": "entree",
-      "title": "Conditions d'entrée réunies",
-      "detail": "Score favorable, cours proche d'un support, positionnement non extrême, pas d'événement Fed imminent.",
+      "kind": "info",
+      "title": "Pas de signal actif",
+      "detail": "Aucune des conditions de veille, d'entrée ou de risque n'est réunie aujourd'hui.",
       "date": "06/09/2026"
     }
   ]

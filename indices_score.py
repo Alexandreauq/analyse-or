@@ -446,6 +446,9 @@ def extract_ratios(financials, balance_sheet, cashflow, closes_by_year, shares_o
         "avg_ev_ebitda_5y": avg_ev_ebitda_5y,
         "current_pe": current_pe,
         "avg_pe_5y": avg_pe_5y,
+        "fcf": fcf,
+        "net_debt": net_debt_latest,
+        "equity": equity[latest],
     }
 
 
@@ -502,6 +505,9 @@ def fetch_company_financials(ticker: str) -> dict:
     ratios["sector"] = info.get("sector")
     ratios["ecart_pct_ma200"] = ecart_pct_ma200
     ratios["quarterly_yoy_growth_ca"] = extract_quarterly_growth(quarterly_financials)
+    ratios["current_price"] = current_price
+    ratios["ma200"] = ma200
+    ratios["shares_outstanding"] = shares_outstanding
     return ratios
 
 
@@ -650,6 +656,123 @@ OUTPUT_JSON_PATH = os.path.join(
 # de la méthodologie.
 COST_OF_CAPITAL_PROXY = 8.0  # %
 
+DCF_PROJECTION_YEARS = 5
+DCF_GROWTH_FLOOR = -5.0      # % croissance FCF minimum projetée
+DCF_GROWTH_CAP = 15.0        # % croissance FCF maximum projetée
+DCF_TERMINAL_GROWTH = 2.0    # % croissance perpétuelle (valeur terminale)
+
+
+def estimate_dcf_price(
+    fcf: float, cagr_ebitda: float, net_debt: float, shares_outstanding: float
+) -> float | None:
+    """Prix par action implicite d'un DCF simplifié : projette le FCF actuel
+    sur 5 ans au taux de croissance historique de l'EBITDA (plafonné entre
+    -5% et +15%/an pour éviter d'extrapoler un chiffre bruité de façon
+    absurde), actualise au coût du capital (COST_OF_CAPITAL_PROXY), ajoute
+    une valeur terminale à croissance perpétuelle de 2%. None si le FCF de
+    départ n'est pas positif (DCF non pertinent) ou si le nombre d'actions
+    est nul/inconnu."""
+    if _is_missing(fcf) or fcf <= 0 or not shares_outstanding or _is_missing(net_debt):
+        return None
+    growth = _clamp(cagr_ebitda, DCF_GROWTH_FLOOR, DCF_GROWTH_CAP) / 100
+    discount_rate = COST_OF_CAPITAL_PROXY / 100
+    terminal_growth = DCF_TERMINAL_GROWTH / 100
+
+    pv_fcf = 0.0
+    fcf_t = fcf
+    for year in range(1, DCF_PROJECTION_YEARS + 1):
+        fcf_t = fcf_t * (1 + growth)
+        pv_fcf += fcf_t / (1 + discount_rate) ** year
+
+    terminal_value = fcf_t * (1 + terminal_growth) / (discount_rate - terminal_growth)
+    pv_terminal = terminal_value / (1 + discount_rate) ** DCF_PROJECTION_YEARS
+
+    enterprise_value = pv_fcf + pv_terminal
+    equity_value = enterprise_value - net_debt
+    return equity_value / shares_outstanding
+
+
+def estimate_asset_based_price(equity: float, shares_outstanding: float) -> float | None:
+    """Valeur comptable par action (capitaux propres / actions en
+    circulation) — approche patrimoniale simplifiée, sans réévaluation des
+    actifs à la valeur de marché (hors périmètre v1). None si les capitaux
+    propres sont négatifs ou nuls (base non significative comme plancher
+    de valorisation) ou si le nombre d'actions est nul/inconnu."""
+    if not shares_outstanding or _is_missing(equity) or equity <= 0:
+        return None
+    return equity / shares_outstanding
+
+
+def estimate_multiple_based_price(
+    current_price: float, current_ev_ebitda: float, avg_ev_ebitda_5y: float
+) -> float | None:
+    """Prix impliqué par un retour du multiple EV/EBITDA actuel à sa
+    moyenne 5 ans, en supposant que le prix varie proportionnellement au
+    multiple — approximation qui ignore l'effet de la dette nette fixe,
+    documentée comme telle (cf. Methodologie_Analyse_Indices.md), plutôt
+    que de reconstruire précisément EV et capitalisation. None si le
+    multiple actuel est nul/absent."""
+    if not current_ev_ebitda or _is_missing(current_ev_ebitda) or _is_missing(current_price) or _is_missing(avg_ev_ebitda_5y):
+        return None
+    return current_price * (avg_ev_ebitda_5y / current_ev_ebitda)
+
+
+def estimate_fair_value(
+    dcf_price: float | None, asset_price: float | None, multiple_price: float | None
+) -> float | None:
+    """Moyenne des méthodes de valorisation disponibles (DCF, actif net,
+    multiples) — ignore celles indisponibles (None) ; None si aucune des
+    3 n'est calculable."""
+    prices = [p for p in (dcf_price, asset_price, multiple_price) if p is not None]
+    return sum(prices) / len(prices) if prices else None
+
+
+VALUATION_MARGIN_OF_SAFETY = 0.30   # ±30%, cohérent avec le seuil de prime/décote
+                                     # significative déjà utilisé dans score_valorisation
+TECHNICAL_EXIT_MARGIN = 0.20        # +20% au-dessus de la MM200, cohérent avec
+                                     # PRICE_MOMENTUM_SCALE de score_dynamique_recente
+
+
+def estimate_entry_exit_prices(fair_value: float | None, ma200: float | None) -> dict:
+    """Combine repère de valorisation (juste valeur ± 30%) et repère
+    technique (MM200 / MM200 × 1,20) en moyennant ceux disponibles.
+    Renvoie {"entry": float | None, "exit": float | None} — None des deux
+    côtés si ni la valorisation ni la MM200 ne sont disponibles."""
+    entry_candidates = []
+    exit_candidates = []
+    if fair_value is not None:
+        entry_candidates.append(fair_value * (1 - VALUATION_MARGIN_OF_SAFETY))
+        exit_candidates.append(fair_value * (1 + VALUATION_MARGIN_OF_SAFETY))
+    if ma200 is not None and not _is_missing(ma200):
+        entry_candidates.append(ma200)
+        exit_candidates.append(ma200 * (1 + TECHNICAL_EXIT_MARGIN))
+    entry = sum(entry_candidates) / len(entry_candidates) if entry_candidates else None
+    exit_price = sum(exit_candidates) / len(exit_candidates) if exit_candidates else None
+    return {"entry": entry, "exit": exit_price}
+
+
+def estimate_valuation_targets(data: dict) -> dict:
+    """Combine DCF, actif net et multiples en une juste valeur, puis en
+    repères d'entrée/sortie. Toujours ces 3 clés en sortie, valeurs à None
+    si non calculables (jamais d'exception)."""
+    dcf_price = estimate_dcf_price(
+        data["fcf"], data["cagr_ebitda"], data["net_debt"], data["shares_outstanding"]
+    )
+    asset_price = estimate_asset_based_price(data["equity"], data["shares_outstanding"])
+    multiple_price = (
+        estimate_multiple_based_price(
+            data["current_price"], data["current_ev_ebitda"], data["avg_ev_ebitda_5y"]
+        )
+        if data["current_price"] is not None else None
+    )
+    fair_value = estimate_fair_value(dcf_price, asset_price, multiple_price)
+    entry_exit = estimate_entry_exit_prices(fair_value, data["ma200"])
+    return {
+        "fair_value": fair_value,
+        "entry_price": entry_exit["entry"],
+        "exit_price": entry_exit["exit"],
+    }
+
 
 def build_company_entry(ticker: str, name: str) -> dict:
     data = fetch_company_financials(ticker)
@@ -684,6 +807,8 @@ def build_company_entry(ticker: str, name: str) -> dict:
     ]
     composite = compute_composite(factors)
 
+    valuation_targets = estimate_valuation_targets(data)
+
     return {
         "ticker": ticker,
         "name": name,
@@ -696,6 +821,10 @@ def build_company_entry(ticker: str, name: str) -> dict:
             for f in factors
         ],
         "news": news,
+        "current_price": data["current_price"],
+        "fair_value": valuation_targets["fair_value"],
+        "entry_price": valuation_targets["entry_price"],
+        "exit_price": valuation_targets["exit_price"],
     }
 
 

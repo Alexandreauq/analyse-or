@@ -672,7 +672,7 @@ def estimate_dcf_price(
     une valeur terminale à croissance perpétuelle de 2%. None si le FCF de
     départ n'est pas positif (DCF non pertinent) ou si le nombre d'actions
     est nul/inconnu."""
-    if fcf <= 0 or not shares_outstanding:
+    if _is_missing(fcf) or fcf <= 0 or not shares_outstanding or _is_missing(net_debt):
         return None
     growth = _clamp(cagr_ebitda, DCF_GROWTH_FLOOR, DCF_GROWTH_CAP) / 100
     discount_rate = COST_OF_CAPITAL_PROXY / 100
@@ -698,7 +698,7 @@ def estimate_asset_based_price(equity: float, shares_outstanding: float) -> floa
     actifs à la valeur de marché (hors périmètre v1). None si les capitaux
     propres sont négatifs ou nuls (base non significative comme plancher
     de valorisation) ou si le nombre d'actions est nul/inconnu."""
-    if not shares_outstanding or equity <= 0:
+    if not shares_outstanding or _is_missing(equity) or equity <= 0:
         return None
     return equity / shares_outstanding
 
@@ -712,7 +712,7 @@ def estimate_multiple_based_price(
     documentée comme telle (cf. Methodologie_Analyse_Indices.md), plutôt
     que de reconstruire précisément EV et capitalisation. None si le
     multiple actuel est nul/absent."""
-    if not current_ev_ebitda:
+    if not current_ev_ebitda or _is_missing(current_ev_ebitda) or _is_missing(current_price) or _is_missing(avg_ev_ebitda_5y):
         return None
     return current_price * (avg_ev_ebitda_5y / current_ev_ebitda)
 
@@ -743,7 +743,7 @@ def estimate_entry_exit_prices(fair_value: float | None, ma200: float | None) ->
     if fair_value is not None:
         entry_candidates.append(fair_value * (1 - VALUATION_MARGIN_OF_SAFETY))
         exit_candidates.append(fair_value * (1 + VALUATION_MARGIN_OF_SAFETY))
-    if ma200 is not None:
+    if ma200 is not None and not _is_missing(ma200):
         entry_candidates.append(ma200)
         exit_candidates.append(ma200 * (1 + TECHNICAL_EXIT_MARGIN))
     entry = sum(entry_candidates) / len(entry_candidates) if entry_candidates else None

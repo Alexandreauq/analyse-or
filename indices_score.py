@@ -70,6 +70,18 @@ COMPANIES = [
     {"ticker": "RI.PA", "name": "Pernod Ricard"},
     {"ticker": "RNO.PA", "name": "Renault"},
     {"ticker": "ERF.PA", "name": "Eurofins Scientific"},
+    # Lot 3 d'extension CAC 40 (9 entreprises) — complète la liste des
+    # non-financières du CAC 40 (hors Air Liquide/Michelin, mis de côté
+    # temporairement : relevé annuel yfinance quasi vide pour ces 2-là).
+    {"ticker": "EL.PA", "name": "EssilorLuxottica"},
+    {"ticker": "PUB.PA", "name": "Publicis Groupe"},
+    {"ticker": "DSY.PA", "name": "Dassault Systèmes"},
+    {"ticker": "URW.PA", "name": "Unibail-Rodamco-Westfield"},
+    {"ticker": "ENX.PA", "name": "Euronext"},
+    {"ticker": "FGR.PA", "name": "Eiffage"},
+    {"ticker": "BVI.PA", "name": "Bureau Veritas"},
+    {"ticker": "EN.PA", "name": "Bouygues"},
+    {"ticker": "AC.PA", "name": "Accor"},
 ]
 
 SECTOR_PROFILES = {

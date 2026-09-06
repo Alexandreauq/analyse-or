@@ -80,13 +80,19 @@ COMPANIES = [
     {"ticker": "FGR.PA", "name": "Eiffage"},
     {"ticker": "BVI.PA", "name": "Bureau Veritas"},
     {"ticker": "EN.PA", "name": "Bouygues"},
-    {"ticker": "AC.PA", "name": "Accor"},
-    # Air Liquide et Michelin, remises après le correctif
-    # _fetch_statement_with_retry (leur échec n'était pas un vrai trou
-    # de données mais le même symptôme transitoire qu'Accor).
-    {"ticker": "AI.PA", "name": "Air Liquide"},
-    {"ticker": "ML.PA", "name": "Michelin"},
 ]
+
+# Non couvertes en pratique, malgré plusieurs tentatives : Air Liquide
+# (AI.PA), Michelin (ML.PA), Accor (AC.PA). Un diagnostic isolé a confirmé
+# que yfinance a bien leurs données complètes (pas un vrai trou), mais un
+# relevé dégradé revient systématiquement quand elles sont récupérées
+# dans la boucle des ~36 entreprises — même avec un mécanisme de retry
+# (_fetch_statement_with_retry). Cause exacte non identifiée (rate-
+# limiting Yahoo au-delà d'une simple pause de quelques secondes, ou état
+# interne du processus plutôt que de l'objet Ticker). Accepté tel quel :
+# 33 entreprises non-financières sur 36 couvertes, le reste de ce fichier
+# (retry, alias de repli, correction de secteur) reste en place au cas où
+# ça aide d'autres tickers à l'avenir.
 
 SECTOR_PROFILES = {
     "Utilities": "defensif",

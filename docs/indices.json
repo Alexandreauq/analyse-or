@@ -35,13 +35,13 @@
         },
         {
           "name": "Valorisation relative",
-          "score": -3.724168828234631,
+          "score": -3.7241687575754487,
           "weight": 0.08,
           "raw_value": "EV/EBITDA 13.2x (moy. 5 ans 12.7x) — PER 28.8x (moy. 5 ans 24.3x)"
         },
         {
           "name": "Dynamique récente",
-          "score": -8.055809297016866,
+          "score": -8.055809246967895,
           "weight": 0.1,
           "raw_value": "Cours -16.1% vs MM200"
         },
@@ -58,7 +58,7 @@
           "date": "2026-09-06",
           "link": "https://news.google.com/rss/articles/CBMi4AFBVV95cUxQdFZtbXhrbC16QjR5NG5xN3N0d1lPelpCV1ZUNzk4eWY5VE50ZS1XSzhyM3ZUeS1ScHlQaWEweW1STzVULUNRcDNkQkpBQndTTUU0UmEtU01zVllkZ2sxV0VtdkNYOE1QM0pZQUVyQmhXMVJWU3QxTWJHaDBwdGJQR1hyS2VlY0hjdmdvN29ibUV4cnVlN3NBRnZIRnJERlZJajh4V1pHT3I1enZNNGNVaXJGeVRqMW1Ca25tQmlUVVNJbl9hRElWMGxaRUhLZmc5TEVjSk5LUWstQmNUVWtELQ?oc=5",
           "source": "Le Figaro Bourse",
-          "summary": "Cet article suggère que Louis Vuitton pourrait faire face à une controverse en Chine dont l'analyste UBS évalue les impacts potentiels sur la performance de l'action LVMH.",
+          "summary": "Cet article suggère que Louis Vuitton fait face à une controverse en Chine qui pourrait avoir des implications négatives sur la valorisation de l'action LVMH selon l'analyse d'UBS.",
           "sentiment": -1
         },
         {
@@ -66,7 +66,7 @@
           "date": "2026-09-05",
           "link": "https://news.google.com/rss/articles/CBMihgJBVV95cUxOWkVQTHRCaWthQ1hDT3FmZ1piOWdxNDU4T0NmVmtYTE9Vc0k2R1dXY1VaMXh1QXVBdjdmX2dDbUNucXc1WGV2b0paWU9PTjFOMjFfV2JwYkN6TXRBZ3RkRXI3V3cwMEdZaEpRc2MzLXN4c1dKN3hMRU00UUpaUm5Ia05DQ29vRnA1Nnd4T2ZZNldlRlhmRmhFZ2NrVzA0SU9NNzZSWjBYZ002UVFqMmhqT0FtZ3dzbGNSRUR1cGo4a3VSNXhybXh1TDB0Qmluc2M0Z1RrYzJSUXlYelFTTl80TWNEVWstOW9sY2x1eG05TjJfS1RGR3hhV1ZScFVXc0l2XzI0aVpB?oc=5",
           "source": "Le Figaro",
-          "summary": "Cet article suggère que le LVMH Prize est un prix de mode très prestigieux qui aurait un impact économique significatif sur les créateurs récompensés, le dernier lauréat ayant apparemment connu une croissance commerciale remarquable.",
+          "summary": "Cet article suggère que le LVMH Prize serait un concours de mode prestigieux capable de transformer significativement les entreprises lauréates, le dernier gagnant ayant apparemment connu une croissance commerciale remarquable.",
           "sentiment": 1
         },
         {
@@ -74,7 +74,7 @@
           "date": "2026-09-04",
           "link": "https://news.google.com/rss/articles/CBMisgFBVV95cUxNZFNIc0VaTU1fRlVOWHUxbDNLa2FONURKb242NTZibHltRjJHY29DRmxXM1htVUdER0VDcTBwZzlWdWZBVGhweVd3bExXdEhlMkIxTzNzbzV3T0F4eEo5OGhBa2RhQmNzQ2V4OE1fTjBqZjV2ZTQzLW00NzcxbGNDUWFleThtcDVtUmwwV0NPcTR0UzVzMjVib3ZzNG4tVDdlRnVLODVLRVZzZndGZDRpYUFB?oc=5",
           "source": "Le Monde.fr",
-          "summary": "Cet article suggère que LVMH aurait décerné un prix dans le domaine de la mode à une personne nommée Julie Kegels, ce qui pourrait indiquer une reconnaissance ou une distinction accordée par le groupe.",
+          "summary": "Cet article suggère que LVMH aurait décerné un prix lié à la mode à une personne nommée Julie Kegels, ce qui pourrait correspondre à une récompense ou une reconnaissance dans le secteur du luxe et de la création.",
           "sentiment": 1
         },
         {
@@ -82,7 +82,7 @@
           "date": "2026-09-04",
           "link": "https://news.google.com/rss/articles/CBMiigFBVV95cUxPUEJsSjhBWllBNENBQ1NPd0ZVNkh4RERyQmtkSlI1c2JRRm1YMjZROURNb09OY1lQUEhYQUlfNEZFV2lPRTRHOEd2R2JvalM3bmw0S2dXblVHekVUT3pUX0kwci04c1RWMzhlREowdS0xOXFCNkVTSGs1NXJMSWtFb1JmTzVjM3I1UWc?oc=5",
           "source": "fr.fashionnetwork.com",
-          "summary": "Cet article suggère que Julie Kegels aurait remporté un prix décerné par LVMH, ce qui pourrait concerner une récompense dans les domaines de la création, de l'innovation ou de l'entrepreneuriat liés au groupe de luxe.",
+          "summary": "Cet article suggère que Julie Kegels a remporté un prix décerné par LVMH, ce qui pourrait indiquer une reconnaissance de talent ou d'innovation dans un domaine pertinent pour le groupe.",
           "sentiment": 1
         },
         {
@@ -90,17 +90,21 @@
           "date": "2026-09-03",
           "link": "https://news.google.com/rss/articles/CBMinwJBVV95cUxPVmJOazNQQlQ4d3g0d3JXMlRUQ2QzMEhrTUtWUEgtQm50d2tCaE9yOElOZ0F0UzE3VW5qbWk3QWRPUFVzUHhjM1gwbGFKUHd2WkdVSG9UNkc3bTBqTGo3Vkt2bl9Xd3RTRUEtVnBRSF92dFN3UUpOUV96OWlfbUJyZVQ4UVRBVmJTYTdTcFlIMGg5YlRYT09xeEdNazE4WHNEZmFiQlN4MWNqZTMzMm1QX0ZoZnR5Z0J1amUxcUNfZHpWTWY4SHBYU1lRTUJ0eU5tcnVRVDlWQTR0RGlTRUZuYi1qcmYzVlVaTzNvdXlRQ3Nhb1p5cUVESXdKdGlvZGE1LW5oSno3clctSDVETVhRa2lFTlNybHdtaVo2R19Tbw?oc=5",
           "source": "BFM Bourse",
-          "summary": "Cet article suggère que Bank of America exprimerait des préoccupations concernant la reprise du secteur du luxe, ce qui pourrait expliquer les baisses observées en Bourse pour les acteurs majeurs comme Hermès, Kering et LVMH.",
+          "summary": "Cet article suggère que Bank of America exprimerait des préoccupations concernant la reprise économique dans le secteur du luxe, ce qui pourrait expliquer une baisse des cours de bourse pour Hermès, Kering et LVMH.",
           "sentiment": -1
         }
-      ]
+      ],
+      "current_price": 429.1000061035156,
+      "fair_value": 311.5179508473261,
+      "entry_price": 364.78780020684246,
+      "exit_price": 509.39448894309595
     },
     {
       "ticker": "TTE.PA",
       "name": "TotalEnergies",
       "sector": "Energy",
       "sector_profile": "cyclique",
-      "score": 15.1,
+      "score": 17.1,
       "interpretation": "Solide",
       "factors": [
         {
@@ -135,15 +139,15 @@
         },
         {
           "name": "Dynamique récente",
-          "score": 7.8363601143757045,
+          "score": 7.836360137680838,
           "weight": 0.1,
           "raw_value": "Cours +11.3% vs MM200 — CA dernier trim. +27.8% vs an dernier (tendance 5 ans -11.5%)"
         },
         {
           "name": "Actualité récente",
-          "score": 0.0,
+          "score": 2.0,
           "weight": 0.1,
-          "raw_value": "Ton moyen des 5 actualités récentes : +0.00"
+          "raw_value": "Ton moyen des 5 actualités récentes : +0.20"
         }
       ],
       "news": [
@@ -152,23 +156,23 @@
           "date": "2026-09-05",
           "link": "https://news.google.com/rss/articles/CBMirAJBVV95cUxPNXRaZnRwVVJsTTFzYnlhUmI0eXpvUTA3dnNTNmZFQnJUTy1pUnY1bjBVNGl5Y0xIOFNVaWFHR0VtbFRuWGx5eTN5UE1rUHpaTWVHcXZaYzEtbWdxbmRXakQzb0FDdmI4NjBOTG5pNmJKNmZyeWp2NzVWQXdjOTNoVGJFQzh2YUxoeTBIX1FkSWZWWjRQdF9tUy1fWjlzRU1oMWFTcllDb2xlTzNCUkM4blZ5RlAzSnlIeC1RV05BSEpsVmhuQTNfRm1SblhxRjFsSlhZa1M0OTBvT0JtYmZLVDZWNVdra1o4S2RTZFUwY3YxeDMwWE9QYmppdUFGOXEtS011RzFZYlBBWE1ha25KcjdMMXNLd3V3RG1VV2R3UFlQcjBTamw2Q2c4a1U?oc=5",
           "source": "Ouest-France",
-          "summary": "Cet article suggère qu'un incident impliquant un feu de végétation et un problème technique sur une unité de production aurait pu affecter le fonctionnement de la raffinerie TotalEnergies de Donges.",
+          "summary": "Cet article suggère qu'un incident impliquant un feu de végétation et un dysfonctionnement technique se serait produit sur le site de raffinage de TotalEnergies à Donges.",
           "sentiment": -1
         },
         {
-          "title": "TotalEnergies, Accor, Axa, GTT, Aperam, ArcelorMittal, Soitec : toutes les recommandations des analystes - Investir Les Echos",
+          "title": "TotalEnergies, Accor, Axa, GTT, Aperam, ArcelorMittal, Soitec : toutes les recommandations des analystes - investir.lesechos.fr",
           "date": "2026-09-04",
           "link": "https://news.google.com/rss/articles/CBMijwJBVV95cUxQQ1V0Q3lUY3dVVkI3SWdEbEVFRGVWX0gyeTQwdG1GYUNyLTA2eUZqWWhOMWFtOXNVdFozbEVJSFdPODN2ZUQwTHNKd0w4NzZyRldwWXd1SktBOF9tMENmQzdYdVBMSWlLQVlsNFNJX3RJaDNwck16OU5CZ2c2WDhTODA1ZWhQaVVnSmNfS21UVDJyRlJyeUJuVENnM1oyMElWSnFscEdPWUhJcGlveUwyNE1iVzFIZGdDY0xQb2k2eFRlaWl4VVpPYjB4UnlPd19GNjdNbG5jRjFOenY0NURsRzVqU0JFaFkxTnBnZl9sOEI1MDd5X3VaMndNRXNQZUItMldYdHQzeWRNelBDR1Q4?oc=5",
-          "source": "Investir Les Echos",
-          "summary": "Cet article suggère que des analystes financiers ont émis des recommandations d'investissement sur TotalEnergies aux côtés d'autres grandes entreprises françaises.",
+          "source": "investir.lesechos.fr",
+          "summary": "Cet article suggère que des analystes financiers auraient émis des recommandations d'investissement concernant TotalEnergies ainsi que plusieurs autres grandes entreprises françaises.",
           "sentiment": 0
         },
         {
-          "title": "Transfert: Nicolas Breuillard va quitter la TotalEnergies... pour une WorldTour ! - cyclismactu.net",
+          "title": "Transfert: Nicolas Breuillard va quitter la TotalEnergies... pour une WorldTour ! - Cyclism'Actu",
           "date": "2026-09-04",
           "link": "https://news.google.com/rss/articles/CBMiywFBVV95cUxQV0JDRXNzcG5SSFJWNTlmRnZMUTZHbjd1Yi1jVEdnNmhld2Z4UmExTkg5NDl0ZnlwMXpnQWpGajRVNXU3R3k5Y191bHBBS29VS0piZEt4Si01SGlnWHZTdTNhVlpUM05oWXl3N2pnTGhhLW5jMzctYUp4XzRuQXJUUWd3RmxVOXBiWVRjNE5hZkVLT18zSVMxUk9CaDNHZDh0TUwyZnQ1eG5PbDN2aHZxV29PTXJuak5LdU1HQlJ3dTl0b1psOHpvVkt4ONIBXEFVX3lxTE1JWWhkNHIwdzBJSW5INm45ak9GRWhXSld5Nkd1V1pYdmwtQjFzWklqQUIyOTJYYUFGeUVKelowSzM1ckRBZ21BQ2NhRHdBVExWcUwxbXR0dVpyNzlT?oc=5",
-          "source": "cyclismactu.net",
-          "summary": "Cet article suggère que Nicolas Breuillard, probablement un employé ou une personne associée à TotalEnergies, quitterait l'entreprise pour participer à une compétition cycliste de type WorldTour.",
+          "source": "Cyclism'Actu",
+          "summary": "Cet article suggère qu'un employé nommé Nicolas Breuillard quitterait TotalEnergies pour participer à une compétition cycliste de type WorldTour.",
           "sentiment": 0
         },
         {
@@ -176,18 +180,22 @@
           "date": "2026-09-04",
           "link": "https://news.google.com/rss/articles/CBMi1wFBVV95cUxQZnFsMDlNNjdOUWg3ekdqb3BPVGttT2Q5bENwZ2Z5SGNFSFg5azR1TmphNmhNZWFrQk1HYnJTenoyeXBIVTBZdE5WR0xoYW9faEhyRjBGUm5BN1RVZTZseUM1T3BvSE9EbEhDa0hGWm5QTDFqeWY5V2JRU2lWSVdPOUZCUWlYRHRzUnBVcnMxb3ExdXRjZjdReUFXSXJtY1NTOS12dF9JWTM5eDZIU3BQblVSUXhEVVZlSnA1dHp5WnRFSENrZnZ0eThxZER3YTN5cjltcjFLTQ?oc=5",
           "source": "cafonline.com",
-          "summary": "Cet article suggère que TotalEnergies pourrait être un sponsor ou un partenaire officiel de la Coupe d'Afrique des Nations 2027, avec une couverture médiatique concernant le calendrier des premières journées des éliminatoires.",
-          "sentiment": 0
+          "summary": "Cet article suggère que TotalEnergies pourrait être impliquée en tant que sponsor ou partenaire officiel de la Coupe d'Afrique des Nations 2027 (CAF CAN), avec la publication du calendrier des phases éliminatoires.",
+          "sentiment": 1
         },
         {
           "title": "TotalEnergies officiellement opérateur de la découverte géante Mopane - Boursier.com",
           "date": "2026-09-03",
           "link": "https://news.google.com/rss/articles/CBMiygFBVV95cUxOWEJHbmo0aVk4Q0JZMUw5ZjdTc0hDQzljOHZmeGJ3MnBZa2pkc3JPc2lxMW1PS3dHM0dsUGhjQWRicmVVbG80cTdTeHlmYVZmSGkteGlCMXNUR09xNk52Qk5GdFFhLUlSVUF1WXhWYlZBdVJ5ZjRwV1FiNlRRSEJQMldndHluQU9Da0RhTnpwajU0dHdEckRyT2ZQYmhCWUZ6RDZNTzBxeWt5aElGRU1iWWVXc2lpN2RFbkl5OTk0aHl0NGFad1RIMG93?oc=5",
           "source": "Boursier.com",
-          "summary": "Cet article suggère que TotalEnergies aurait obtenu officiellement le rôle d'opérateur pour une découverte pétrolière ou gazière importante appelée Mopane.",
+          "summary": "Cet article suggère que TotalEnergies aurait été officiellement désignée comme opérateur d'un projet pétrolier ou gazier de grande envergure appelé Mopane, ce qui pourrait représenter une acquisition significative de droits d'exploitation pour le groupe.",
           "sentiment": 1
         }
-      ]
+      ],
+      "current_price": 76.0999984741211,
+      "fair_value": 50.38872223882658,
+      "entry_price": 51.80898258553022,
+      "exit_price": 73.76018521756637
     },
     {
       "ticker": "SU.PA",
@@ -223,7 +231,7 @@
         },
         {
           "name": "Valorisation relative",
-          "score": -2.0363783606366814,
+          "score": -2.0363785354253165,
           "weight": 0.08,
           "raw_value": "EV/EBITDA 17.1x (moy. 5 ans 15.2x) — PER 31.2x (moy. 5 ans 26.5x)"
         },
@@ -242,11 +250,11 @@
       ],
       "news": [
         {
-          "title": "Schneider Electric, le retour du meilleur de la classe - Investir Les Echos",
+          "title": "Schneider Electric, le retour du meilleur de la classe - investir.lesechos.fr",
           "date": "2026-09-03",
           "link": "https://news.google.com/rss/articles/CBMixAFBVV95cUxOZi05b0l0MFdxQ296dGcwT2FiU2hLMkwyWUh2TkdYb3h2UFV2OWNWLUdkSmFxM1R0Mk5kZnZRUzN2UnJWelo1aFQycWJLSDFObDRycXBuMk1zcmhxV28ydkllM2lMekctUlBrRk16TlRyTUNjQTR5cTQ3U01ZZXduZFI2RHV0UWxsZGkxVXhpazBsZDU2LTdpS3lqNmtiMnRnU2xfX3NuZnFUS2ExTDAwcmRqaEtUTEMxY3Q4Y3RRZkdNem5C?oc=5",
-          "source": "Investir Les Echos",
-          "summary": "Cet article suggère que Schneider Electric pourrait avoir retrouvé une position de leader ou d'excellence dans son secteur après une période antérieure moins favorable.",
+          "source": "investir.lesechos.fr",
+          "summary": "Cet article suggère que Schneider Electric aurait retrouvé une position de leader ou d'excellence au sein de son secteur d'activité, possiblement après une période de sous-performance.",
           "sentiment": 1
         },
         {
@@ -254,7 +262,7 @@
           "date": "2026-09-03",
           "link": "https://news.google.com/rss/articles/CBMikwFBVV95cUxNVzUzbkx6U1VkV2RqWkQxY1NWVm1VVHJBVjVhNmxhUzZkN2VkQjB3TVFLaVpZdy1tanBJZHlxOE9rZXZXcXYzX2kwUjhVU2dEcExmX2c5ekx0bmRySFBoUzdReUJBa2VqQkRIbmdaZWNKNFlybTkzNkNqNVlqNVNQODJMTm82aENBbldFQnR5OXhyVFE?oc=5",
           "source": "Boursier.com",
-          "summary": "Cet article suggère que l'action Schneider Electric aurait connu une légère performance positive à la clôture d'une séance boursière.",
+          "summary": "Cet article suggère que le titre des actions de Schneider Electric aurait connu une évolution positive mais modérée lors d'une séance de bourse.",
           "sentiment": 1
         },
         {
@@ -262,15 +270,15 @@
           "date": "2026-09-05",
           "link": "https://news.google.com/rss/articles/CBMiqAFBVV95cUxPS2V4d25kZDg2VW9zNV9sWEhST2FMdDJHWEF0WWtDelp0a2JpZ3FLcDZ5TUotTzFqM2UyTWhJc2M3ZmFSUGxBNXhmeHBGLW1NNkpCVWtxVW5Fd2sxcHJQZlByd3NZZEN0ektrTktLbFl2c2wza01kVGUwaC1NbzlsOW5VS3J5UHNoT0pvR2xjMzVnNk1JV0w4QXhDZzlvYmR6eXF2RUE4X2c?oc=5",
           "source": "Le Revenu",
-          "summary": "Cet article suggère que Schneider Electric envisagerait de fermer son site de production ou d'activité situé à Chasseneuil-du-Poitou en Vienne, ce qui pourrait impliquer des suppressions d'emplois locaux.",
+          "summary": "Cet article suggère que Schneider Electric pourrait annoncer la fermeture de son site de production ou ses activités situé à Chasseneuil-du-Poitou en Vienne.",
           "sentiment": -1
         },
         {
-          "title": "Schneider Electric poursuit à marche forcée la reconfiguration de son parc industriel - lalettre.fr",
+          "title": "Schneider Electric poursuit à marche forcée la reconfiguration de son parc industriel - La Lettre",
           "date": "2026-09-04",
           "link": "https://news.google.com/rss/articles/CBMihAJBVV95cUxNRHdXM3hxdzMxWHRVVTJLNGZ1OTF2Tm5KZWY2NHI1aUNnQll3Y3JJUElRUjJ4bkw2TDRQT3cyVUpKbUxsM0RTRlA4OEk2VmdydTljOTZjdTlHdVJBdHVQWGF3OWxRMFd1LXMzQ3ExQXlETmF3bElLbGhmalpoNTE3ZWtxTG5WenRlNjZoLUYtdF9zZlRSMjhSY2Yxak1ibDhYNnJCSHFJQjFOS2ttcENaVHZUTVVINTNOWWhNc1gxNHo0azRaNW5oWUpVcWotRmZCZHpzYThXYVRZcThPR25mUDBYU28xRkk3UVg2MGNtd2N3Y1ZpaGI1Y2xCZkxvazlfZlFnUA?oc=5",
-          "source": "lalettre.fr",
-          "summary": "Cet article suggère que Schneider Electric procède à des transformations importantes et rapides de ses installations de production, ce qui pourrait indiquer une stratégie de modernisation, de réorganisation ou d'optimisation de ses capacités industrielles.",
+          "source": "La Lettre",
+          "summary": "Cet article suggère que Schneider Electric pourrait être engagée dans un processus actif de modernisation ou de réorganisation de ses installations de production.",
           "sentiment": 0
         },
         {
@@ -278,17 +286,21 @@
           "date": "2026-09-01",
           "link": "https://news.google.com/rss/articles/CBMimwFBVV95cUxQSzZOZjVBWDhUQjZoXzh5LVdsMEx0UTVKeXJSY1diU1M4bnFDN1VGMHpxODlxT2M3VWFyQ1U5QXBkYTZEVTREdnQ5RnE0OXczdVY4dU03RmNvNlAwUjE5aG5zZHFsdXprS0hXeDVGQndRODhrZEhJYTd3RHF6dWVxNWhBVWhfei1OT1JLVW9Nd0VxakFUZDBFVW13VQ?oc=5",
           "source": "Aerocontact.com",
-          "summary": "Cet article suggère que Schneider Electric entretient une collaboration durable avec Expleo, potentiellement dans les domaines de l'ingénierie ou des services techniques.",
+          "summary": "Cet article suggère qu'Expleo et Schneider Electric maintiendraient une collaboration de long terme, ce qui pourrait indiquer une relation commerciale stable entre les deux entités.",
           "sentiment": 1
         }
-      ]
+      ],
+      "current_price": 288.0,
+      "fair_value": 153.92405825238436,
+      "entry_price": 183.47136110030962,
+      "exit_price": 255.56816671841995
     },
     {
       "ticker": "SAN.PA",
       "name": "Sanofi",
       "sector": "Healthcare",
       "sector_profile": "defensif",
-      "score": 13.6,
+      "score": 11.6,
       "interpretation": "Neutre",
       "factors": [
         {
@@ -329,9 +341,9 @@
         },
         {
           "name": "Actualité récente",
-          "score": -2.0,
+          "score": -4.0,
           "weight": 0.1,
-          "raw_value": "Ton moyen des 5 actualités récentes : -0.20"
+          "raw_value": "Ton moyen des 5 actualités récentes : -0.40"
         }
       ],
       "news": [
@@ -340,31 +352,31 @@
           "date": "2026-09-04",
           "link": "https://news.google.com/rss/articles/CBMiUkFVX3lxTE5hSGE4Q2NUclVldnpENmJnbGVFY2NVS21LRzFPUW9qc25NOVhEQkxwcnV6RXRwQUFrd3c4S2RiTDlnNFdrb3hVSWYtdHZoeVlQaWc?oc=5",
           "source": "Boursorama",
-          "summary": "Cet article suggère que Sanofi fait l'objet d'une couverture informative sur sa cotation boursière à Euronext Paris, sans que le titre seul ne permette de déterminer si l'information concerne une évolution positive, négative ou simplement factuelle du cours de l'action.",
+          "summary": "Cet article suggère qu'il s'agit d'une page d'information sur la cotation boursière de Sanofi (ticker SAN) sur le marché Euronext Paris, sans que le titre seul ne permette d'inférer une actualité positive ou négative spécifique.",
           "sentiment": 0
         },
         {
-          "title": "Sanofi se porte bien, mais a des défis à relever - Investir Les Echos",
+          "title": "Sanofi se porte bien, mais a des défis à relever - investir.lesechos.fr",
           "date": "2026-09-02",
           "link": "https://news.google.com/rss/articles/CBMivAFBVV95cUxNaU41WnRFZHJlTzlOVG9rVXpwekN2RHlGeXJaZjFkSE9xVEF1ZU83aVd6ekxLcmhfTHBxd0NtWTMtLTFBOVh0bTZqUE1RVTFuUUU0cGx5MG5wcDlPakFETmhJS1czYWN0ZXpLUFgwV2NTVVBhVWl2ajM0S0dRbWRjRlV6LUlsUFRpWkJXRm8tY3ZKcldFUi00Rk44NDZGNlRhdUxNTEFJVV91NWNzSk5PVEluUXBGdy1lQmxMOQ?oc=5",
-          "source": "Investir Les Echos",
-          "summary": "Cet article suggère que Sanofi connaît actuellement une situation financière ou opérationnelle satisfaisante, mais fait face à des obstacles ou des enjeux stratégiques importants qu'elle devra surmonter.",
+          "source": "investir.lesechos.fr",
+          "summary": "Cet article suggère que Sanofi maintient une situation financière ou opérationnelle satisfaisante, mais fait face à des obstacles ou des enjeux stratégiques qui pourraient nécessiter des actions correctives ou des ajustements.",
           "sentiment": 0
         },
         {
-          "title": "Enquête sur les Français et l’innovation thérapeutique - sanofi.fr",
+          "title": "Enquête sur les Français et l’innovation thérapeutique - Sanofi",
           "date": "2026-09-02",
           "link": "https://news.google.com/rss/articles/CBMirwFBVV95cUxNdDltdy15T3hMUFBqVjhlRjJ6OEdBbUtyb1RmQWhVRXpQcnhDZ2xNMnFjR0c0aTdFZTBuRlRQTk0tZ1RxVEVtNHllc3lXeWx5U1dxbHVqM0FoX2FCaEN3QW44ZzlYMDZaTnRkLTk3YnU3TzVfQ2NKV1VXMTRqRk5JQ1I1cjVYRGU5bU5kd2o0VlRRYjN4QUpHTER6Z1F5WjVyREEzVVFXWlFteWx3eDJV?oc=5",
-          "source": "sanofi.fr",
-          "summary": "Cet article suggère que Sanofi aurait commandité une enquête pour mesurer la perception et l'acceptation des Français concernant les avancées en matière d'innovation thérapeutique.",
-          "sentiment": 1
+          "source": "Sanofi",
+          "summary": "Cet article suggère que Sanofi pourrait avoir commandité ou participé à une enquête visant à explorer les perceptions et attentes des Français concernant l'innovation dans le domaine thérapeutique.",
+          "sentiment": 0
         },
         {
           "title": "Sanofi lâche 1,15% - Boursier.com",
           "date": "2026-09-03",
           "link": "https://news.google.com/rss/articles/CBMihAFBVV95cUxORW9LbE1oaExMWVB4Zy1rekxnLVAxQXQwbFBhbVFvM3hBMWo3aHJWcF9xbXRQLV9MRFJxSGJsVi1WZEl4NEtvNl9WVzZtblFJSFV4S1pDNmNNTzZHUnhFazhIQ0kwckVySG1vQkg1WXFyS1B2NS1VMEEycmpSaUI4dDc1V00?oc=5",
           "source": "Boursier.com",
-          "summary": "Cet article suggère que le titre de Sanofi aurait connu une baisse de valeur d'environ 1,15% lors d'une séance de bourse, sans que le contexte précis de cette évolution soit déterminable à partir du seul titre.",
+          "summary": "Cet article suggère que le cours de l'action Sanofi aurait connu une baisse de 1,15% au cours d'une séance boursière, sans que le titre seul ne permette d'identifier les raisons précises de cette évolution.",
           "sentiment": -1
         },
         {
@@ -372,10 +384,14 @@
           "date": "2026-09-04",
           "link": "https://news.google.com/rss/articles/CBMivgFBVV95cUxNQlJ2eEZuTDR5ZW9TcjN0TUhkY3p1Nk8xRXZQNXhuUTRhNFNlT2kxM1BTaUZJSnhySmNpdXd2ZFhocmo2d2JaUUtqajliU3J5UFpOc2NOOHE2WUFQdXdOVHVELTZUeVZBOFlKOVAzUmVkcEVERUQtTklBanpyc1F4QjctR0F2bmh2el9WT3BPWU1FQldEQXotVkw0TGpWQWd6N1lfQ0JRM1FsR21SUWhuWTF4eFlhLWRncVhhSmxB?oc=5",
           "source": "Idéal Investisseur",
-          "summary": "Cet article suggère que le titre de Sanofi aurait connu une baisse significative d'environ 28% sur douze mois et approcherait potentiellement des niveaux techniques considérés comme survendus.",
+          "summary": "Cet article suggère que le titre de Sanofi aurait connu une baisse significative d'environ 28 % sur un an et s'approcherait potentiellement d'une zone de survente selon les indicateurs techniques.",
           "sentiment": -1
         }
-      ]
+      ],
+      "current_price": 76.26000213623047,
+      "fair_value": 67.91993697007264,
+      "entry_price": 61.874789562145054,
+      "exit_price": 89.87133297769077
     },
     {
       "ticker": "BN.PA",
@@ -411,7 +427,7 @@
         },
         {
           "name": "Valorisation relative",
-          "score": -1.3696333892584995,
+          "score": -1.3696339869244398,
           "weight": 0.08,
           "raw_value": "EV/EBITDA 13.7x (moy. 5 ans 11.8x) — PER 26.2x (moy. 5 ans 28.4x)"
         },
@@ -434,7 +450,7 @@
           "date": "2026-09-04",
           "link": "https://news.google.com/rss/articles/CBMiUEFVX3lxTE1oMFc5d0lZMmZIRGlUcE12WENWbi1WQkpSZlZIWVlYR3VKc0hxQmpDWS1fanlJamFPcEhmcFpvRFJUZXdlUHYtYVBQV0JRckdx?oc=5",
           "source": "Boursorama",
-          "summary": "Cet article suggère qu'il s'agit d'une page d'information sur le cours de bourse de Danone cotée sur Euronext Paris, sans indication du contenu spécifique ou de la direction du cours.",
+          "summary": "Cet article suggère qu'il s'agit d'une page d'information financière standard concernant le cours de bourse et la cotation de Danone sur Euronext Paris, sans indication claire du contenu éditorial réel.",
           "sentiment": 0
         },
         {
@@ -442,7 +458,7 @@
           "date": "2026-09-03",
           "link": "https://news.google.com/rss/articles/CBMigwFBVV95cUxQb3FRUkNxcmFXb1FObWltWHEtVndjckEtODBUM2F6R3BsVDhYTnQ1VzhZVmdlZXAwY1I0NmtvSktSd3RoNEpRaHlkakVhV05wbUc5VGlpalUxTjVBcVM4X1FqSEpVT1pFMTQyRUdGZ1l3S0JvczRwWTNMQ29KdVA3aWt0OA?oc=5",
           "source": "Boursier.com",
-          "summary": "Cet article suggère que le titre des actions de Danone aurait enregistré une baisse modérée de 1,03% lors d'une séance boursière, sans que le contenu disponible ne permette d'en connaître les raisons précises.",
+          "summary": "Cet article suggère que le cours de l'action Danone aurait connu une baisse modérée d'environ 1% lors d'une séance boursière, sans que le titre seul ne permette d'identifier la cause précise de ce mouvement.",
           "sentiment": -1
         },
         {
@@ -450,15 +466,15 @@
           "date": "2026-09-04",
           "link": "https://news.google.com/rss/articles/CBMikAFBVV95cUxQZkQ3WlVUWVdacUVuQ2JzUWlyYVRlSmNGOVBSbUszMmV4UTNhNGg1N3I1MDkwSTNFYWVlT0ZOczc1NHBacEJxLXdvbkxpY0xoZnNTeWRZVVZVU3kzQXhFcURtcXV2bDFIaHctTXZkdmJmRnJKck9qMTFyTUh3UjBOSnNHcnZKOTJ0dHJzY0JlSUnSAZABQVVfeXFMUGZEN1pVVFlXWnFFbkNic1FpcmFUZUpjRjlQUm1LMzJleFEzYTRoNTdyNTA5MEkzRWFlZU9GTnM3NTRwWnBCcS13b25MaWNMaGZzU3lkWVVWVVN5M0F4RXFEbXF1dmwxSGh3LU12ZHZiZkZySnJPajExck1Id1IwTkpzR3J2SjkydHRyc2NCZUlJ?oc=5",
           "source": "Fortuneo",
-          "summary": "Cet article suggère que Danone aurait finalisé l'acquisition de Huel, une entreprise probablement active dans le secteur de l'alimentation ou de la nutrition.",
+          "summary": "Cet article suggère que le groupe Danone aurait finalisé le rachat de la marque Huel, potentiellement pour renforcer sa présence dans le secteur des produits nutritionnels innovants.",
           "sentiment": 1
         },
         {
-          "title": "Danone doit de nouveau convaincre que la croissance tient - Investir Les Echos",
+          "title": "Danone doit de nouveau convaincre que la croissance tient - investir.lesechos.fr",
           "date": "2026-09-02",
           "link": "https://news.google.com/rss/articles/CBMiygFBVV95cUxOU0kzR0VwYlpjTVFaM3VjeWNZX1ZkUG91RVV1djRfcnh5cHBUdkJSdGxhWW5JNWRpOUNqeEdNb2ZlaUpFTHB4TGg5YjVSYmRvS0E5amNMQ3JJZHB3MDBMVHZVTjZjMGp1YVRsYjRTZFZWU3ZVYXk3Vjd2UVdpeHEwV0ltV1RUNm94a0I5UW8yZFdVV1BWZWhIa1lVczRRa3Y5dzBKeW4yQ0V3TlVHWXVudFFPejJqaHdCbl9DNzAzQ3cwZjZwaTlvajVn?oc=5",
-          "source": "Investir Les Echos",
-          "summary": "Cet article suggère que Danone fait face à des doutes récurrents concernant sa capacité à démontrer une croissance durable, ce qui implique possiblement des défis de performance ou de crédibilité auprès des investisseurs.",
+          "source": "investir.lesechos.fr",
+          "summary": "Cet article suggère que Danone doit démontrer à nouveau sa capacité à générer une croissance durable, ce qui pourrait indiquer des préoccupations antérieures quant à ses performances ou perspectives de développement.",
           "sentiment": -1
         },
         {
@@ -466,10 +482,14 @@
           "date": "2026-09-04",
           "link": "https://news.google.com/rss/articles/CBMiggJBVV95cUxNaDVTVmJyckt2UFNjWjUtdC11bWVxS0hXTkh3eFFBUEhKTWhWbHJ2NF9KZ1QtaDZ1X3NLOTk2WF8yd1NOLVpTUUtnaVhvckF4Z0hEdUNvTzV1XzM5Qi03LWZpTmFwS3R6Yktjb2FjdzJMdTk5dW9RbUFwS2RSSWFadEZuRUN6aVF2UXZUeWlKNlZhTW1ENndtOE9jMTg3RVFHSVFDZk5SZ0VocXRyUFRuVm8tbk8wTzA4QzFiTzdJLXZ0N25wY2o0WDJFNlczOWQ4R2g3ZnNPa0x1Z2JibVFUbFFYVWd2c1YwMVRVRjl6Q1ZBczlXdzdDbm9zR2xLOEJWVmc?oc=5",
           "source": "GlobeNewswire",
-          "summary": "Cet article suggère que Danone aurait finalisé l'acquisition de la marque Huel, ce qui pourrait représenter une stratégie d'expansion dans le secteur de la nutrition fonctionnelle.",
+          "summary": "Cet article suggère que Danone aurait complété l'acquisition de la marque Huel pour renforcer sa présence dans le secteur des produits de nutrition fonctionnelle.",
           "sentiment": 1
         }
-      ]
+      ],
+      "current_price": 63.720001220703125,
+      "fair_value": 47.44224331007165,
+      "entry_price": 50.78078848112639,
+      "exit_price": 71.84866213866816
     }
   ]
 }

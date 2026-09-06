@@ -118,6 +118,11 @@ def score_rentabilite(roce: float, roe: float, cost_of_capital: float) -> Factor
 NET_DEBT_EBITDA_COMFORTABLE = 3.0   # seuil Standard, ajusté par profil sectoriel
 NET_DEBT_EBITDA_RISKY = 5.5         # seuil Standard, ajusté par profil sectoriel
 ICR_CRITICAL = 3.0                  # seuil Standard, ajusté par profil sectoriel
+DEBT_INTEREST_RATE_PROXY = 3.0      # % taux d'intérêt proxy sur la dette totale
+                                     # (frais financiers non fiablement isolés
+                                     # chez ces entreprises) — utilisé pour l'ICR
+                                     # et repris tel quel pour le coût de la
+                                     # dette dans le calcul du WACC (Task 4).
 
 
 def _score_leverage(ratio: float, comfortable: float, risky: float) -> float:
@@ -385,7 +390,10 @@ def extract_ratios(financials, balance_sheet, cashflow, closes_by_year, shares_o
     roe = (net_income[latest] / equity[latest]) * 100 if equity[latest] else 0.0
 
     net_debt_ebitda = net_debt_latest / ebitda[latest] if ebitda[latest] else 0.0
-    icr = ebit[latest] / (total_debt[latest] * 0.03) if total_debt[latest] else 10.0  # proxy frais financiers si non isolés
+    icr = (
+        ebit[latest] / (total_debt[latest] * DEBT_INTEREST_RATE_PROXY / 100)
+        if total_debt[latest] else 10.0
+    )  # proxy frais financiers si non isolés (DEBT_INTEREST_RATE_PROXY)
 
     # CAGR lissé sur les 2 exercices les plus récents vs les 2 plus anciens
     # (plutôt qu'un simple point à point) pour réduire la sensibilité à une
@@ -449,6 +457,8 @@ def extract_ratios(financials, balance_sheet, cashflow, closes_by_year, shares_o
         "fcf": fcf,
         "net_debt": net_debt_latest,
         "equity": equity[latest],
+        "tax_rate": tax_rate[latest],
+        "total_debt": total_debt[latest],
     }
 
 

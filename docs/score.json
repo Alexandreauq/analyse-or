@@ -47,9 +47,9 @@
     }
   ],
   "technical": {
-    "note": "Cours en-dessous de la MM200 (-2.0%) — tendance baissière",
-    "spot": 4429.7998046875,
-    "ma200": 4520.463492431641
+    "note": "Cours proche de la MM200 (-1.0%) — zone de décision",
+    "spot": 4476.60009765625,
+    "ma200": 4520.697493896484
   },
   "calendar": [
     {
@@ -95,9 +95,9 @@
   ],
   "alerts": [
     {
-      "kind": "info",
-      "title": "Pas de signal actif",
-      "detail": "Aucune des conditions de veille, d'entrée ou de risque n'est réunie aujourd'hui.",
+      "kind": "entree",
+      "title": "Conditions d'entrée réunies",
+      "detail": "Score favorable, cours proche d'un support, positionnement non extrême, pas d'événement Fed imminent.",
       "date": "06/09/2026"
     }
   ]

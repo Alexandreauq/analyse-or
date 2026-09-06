@@ -526,12 +526,13 @@ def build_financial_narrative_context(
             f"dette nette {_fmt(net_debt)}, FCF {_fmt(fcf)}"
         )
 
-    quarterly_revenue = get_row(quarterly_financials, "Total Revenue", "Operating Revenue")
     lines.append("\nDerniers trimestres publiés (le plus récent en premier) :")
-    for col in quarterly_financials.columns:
-        lines.append(
-            f"- {col.date() if hasattr(col, 'date') else col} : CA {_fmt(quarterly_revenue[col])}"
-        )
+    if len(quarterly_financials.columns):
+        quarterly_revenue = get_row(quarterly_financials, "Total Revenue", "Operating Revenue")
+        for col in quarterly_financials.columns:
+            lines.append(
+                f"- {col.date() if hasattr(col, 'date') else col} : CA {_fmt(quarterly_revenue[col])}"
+            )
 
     return "\n".join(lines)
 
@@ -771,7 +772,7 @@ def generate_financial_analysis(
             },
             json={
                 "model": ANTHROPIC_MODEL_ANALYSIS,
-                "max_tokens": 8000,
+                "max_tokens": 16000,
                 "system": FINANCIAL_ANALYSIS_SYSTEM_PROMPT,
                 "thinking": {"type": "adaptive"},
                 "output_config": {"effort": "high"},
@@ -1160,6 +1161,7 @@ def load_previous_company_analyses() -> dict:
                 "financial_analysis_quarter": c.get("financial_analysis_quarter"),
             }
             for c in previous.get("companies", [])
+            if c.get("ticker")
         }
     except Exception:
         return {}
@@ -1182,13 +1184,17 @@ def build_company_entry(
 
     previous = previous_analyses.get(ticker, {})
     current_quarter = data["latest_quarter_date"]
-    if (
+    quarter_unchanged = (
         current_quarter is not None
         and current_quarter == previous.get("financial_analysis_quarter")
-        and previous.get("financial_analysis_html")
-    ):
+    )
+    if (quarter_unchanged or current_quarter is None) and previous.get("financial_analysis_html"):
+        # Trimestre inchangé, ou date de trimestre indisponible ce run (panne
+        # yfinance sur le trimestriel) : on garde l'analyse existante plutôt
+        # que de la régénérer (coût quotidien illimité si la panne persiste)
+        # ou de la remplacer par rien.
         financial_analysis_html = previous["financial_analysis_html"]
-        financial_analysis_quarter = previous["financial_analysis_quarter"]
+        financial_analysis_quarter = previous.get("financial_analysis_quarter")
     else:
         ratios_summary = (
             f"ROCE {data['roce']:.1f}%, ROE {data['roe']:.1f}%, "
@@ -1198,10 +1204,20 @@ def build_company_entry(
             f"conversion FCF/EBITDA {data['fcf_conversion']:.0f}%, "
             f"coût du capital {cost_of_capital:.1f}%"
         )
-        financial_analysis_html = generate_financial_analysis(
+        generated = generate_financial_analysis(
             name, data["financial_context"], ratios_summary
         )
-        financial_analysis_quarter = current_quarter
+        if generated is not None:
+            financial_analysis_html = generated
+            financial_analysis_quarter = current_quarter
+        elif previous.get("financial_analysis_html"):
+            # Échec de génération (clé API absente, panne réseau/API) : garder
+            # l'ancienne analyse valide plutôt que l'écraser par None.
+            financial_analysis_html = previous["financial_analysis_html"]
+            financial_analysis_quarter = previous.get("financial_analysis_quarter")
+        else:
+            financial_analysis_html = None
+            financial_analysis_quarter = current_quarter
 
     # Les news sont récupérées avant la construction des facteurs : le
     # facteur "Actualité récente" dépend du sentiment attaché à chaque

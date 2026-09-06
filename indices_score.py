@@ -870,9 +870,18 @@ def estimate_valuation_targets(data: dict, cost_of_capital: float) -> dict:
     }
 
 
-def build_company_entry(ticker: str, name: str) -> dict:
+def build_company_entry(ticker: str, name: str, risk_free_rate: float | None) -> dict:
     data = fetch_company_financials(ticker)
     sector = data["sector"]
+
+    market_cap = (
+        data["current_price"] * data["shares_outstanding"]
+        if data["current_price"] is not None else None
+    )
+    wacc = estimate_wacc(
+        risk_free_rate, data["beta"], market_cap, data["total_debt"], data["tax_rate"]
+    )
+    cost_of_capital = wacc if wacc is not None else COST_OF_CAPITAL_PROXY
 
     # Les news sont récupérées avant la construction des facteurs : le
     # facteur "Actualité récente" dépend du sentiment attaché à chaque
@@ -888,7 +897,7 @@ def build_company_entry(ticker: str, name: str) -> dict:
         news = []
 
     factors = [
-        score_rentabilite(data["roce"], data["roe"], COST_OF_CAPITAL_PROXY),
+        score_rentabilite(data["roce"], data["roe"], cost_of_capital),
         score_structure_financiere(data["net_debt_ebitda"], data["icr"], sector),
         score_croissance(data["cagr_ca"], data["cagr_ebitda"]),
         score_generation_cash(data["fcf_conversion"]),
@@ -903,7 +912,7 @@ def build_company_entry(ticker: str, name: str) -> dict:
     ]
     composite = compute_composite(factors)
 
-    valuation_targets = estimate_valuation_targets(data)
+    valuation_targets = estimate_valuation_targets(data, cost_of_capital)
 
     return {
         "ticker": ticker,
@@ -921,14 +930,18 @@ def build_company_entry(ticker: str, name: str) -> dict:
         "fair_value": valuation_targets["fair_value"],
         "entry_price": valuation_targets["entry_price"],
         "exit_price": valuation_targets["exit_price"],
+        "wacc": cost_of_capital,
     }
 
 
 def main():
+    risk_free_rate = fetch_risk_free_rate()
     companies = []
     for company in COMPANIES:
         try:
-            companies.append(build_company_entry(company["ticker"], company["name"]))
+            companies.append(
+                build_company_entry(company["ticker"], company["name"], risk_free_rate)
+            )
         except Exception as e:
             print(f"Erreur pour {company['ticker']} ({company['name']}) : {e}")
 

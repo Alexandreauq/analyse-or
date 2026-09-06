@@ -1,7 +1,7 @@
 import pytest
 import requests
 from datetime import datetime
-from indices_score import sector_risk_profile, score_rentabilite
+from indices_score import sector_risk_profile, score_rentabilite, COST_OF_CAPITAL_PROXY
 
 
 def test_sector_risk_profile_defensif():
@@ -847,6 +847,9 @@ def _fake_ratios():
         "current_price": 120.0,
         "ma200": 110.0,
         "shares_outstanding": 10.0,
+        "tax_rate": 0.25,
+        "total_debt": 150.0,
+        "beta": 1.1,
         "sector": "Consumer Defensive",
     }
 
@@ -862,7 +865,7 @@ def test_build_company_entry_degrades_gracefully_when_news_fetch_fails(monkeypat
 
     monkeypatch.setattr(indices_score, "fetch_news", _raise_news)
 
-    entry = indices_score.build_company_entry("BN.PA", "Danone")
+    entry = indices_score.build_company_entry("BN.PA", "Danone", risk_free_rate=3.68)
 
     assert entry["news"] == []
     assert entry["ticker"] == "BN.PA"
@@ -876,6 +879,8 @@ def test_build_company_entry_degrades_gracefully_when_news_fetch_fails(monkeypat
     assert entry["entry_price"] is not None
     assert entry["exit_price"] is not None
     assert entry["entry_price"] < entry["exit_price"]
+    assert entry["wacc"] is not None
+    assert entry["wacc"] != COST_OF_CAPITAL_PROXY  # WACC réel calculable avec _fake_ratios()
 
 
 def test_build_company_entry_includes_news_when_fetch_succeeds(monkeypatch):
@@ -887,12 +892,38 @@ def test_build_company_entry_includes_news_when_fetch_succeeds(monkeypatch):
         ],
     )
 
-    entry = indices_score.build_company_entry("BN.PA", "Danone")
+    entry = indices_score.build_company_entry("BN.PA", "Danone", risk_free_rate=3.68)
 
     assert entry["news"] == [
         {"title": "Titre", "date": "2026-09-04", "link": "https://example.com", "sentiment": 1}
     ]
     assert entry["factors"][5]["name"] == "Dynamique récente"
+
+
+def test_build_company_entry_falls_back_to_proxy_wacc_when_beta_missing(monkeypatch):
+    """Si le bêta manque (yfinance ne le fournit pas toujours), le WACC ne
+    doit pas être calculé partiellement — repli sur COST_OF_CAPITAL_PROXY
+    pour cette entreprise, jamais d'exception."""
+    ratios = _fake_ratios()
+    ratios["beta"] = None
+    monkeypatch.setattr(indices_score, "fetch_company_financials", lambda ticker: ratios)
+    monkeypatch.setattr(indices_score, "fetch_news", lambda name: [])
+
+    entry = indices_score.build_company_entry("BN.PA", "Danone", risk_free_rate=3.68)
+
+    assert entry["wacc"] == COST_OF_CAPITAL_PROXY
+
+
+def test_build_company_entry_falls_back_to_proxy_wacc_when_risk_free_rate_missing(monkeypatch):
+    """Si le taux sans risque n'a pas pu être récupéré pour tout le run
+    (ex : FRED_API_KEY absente, panne réseau), repli sur
+    COST_OF_CAPITAL_PROXY pour chaque entreprise."""
+    monkeypatch.setattr(indices_score, "fetch_company_financials", lambda ticker: _fake_ratios())
+    monkeypatch.setattr(indices_score, "fetch_news", lambda name: [])
+
+    entry = indices_score.build_company_entry("BN.PA", "Danone", risk_free_rate=None)
+
+    assert entry["wacc"] == COST_OF_CAPITAL_PROXY
 
 
 from indices_score import fetch_news

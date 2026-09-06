@@ -91,6 +91,18 @@ def _is_missing(value) -> bool:
         return value is None
 
 
+def _safe_value(series, col):
+    """Valeur de `series` à la date `col`, ou NaN si cette date est absente
+    de son index. Les 3 relevés annuels yfinance (financials/balance_sheet/
+    cashflow) n'ont pas toujours exactement les mêmes colonnes de dates
+    pour une entreprise donnée (observé en production sur SAN.PA/BN.PA :
+    `financials` remonte à 2021-12-31 mais `balance_sheet`/`cashflow` non)
+    — indexer par une date qui vient d'un autre relevé (`years_cols`,
+    dérivé de `financials.columns`) lève sinon `KeyError` plutôt que de
+    dégrader vers une valeur manquante comme le reste de ce pipeline."""
+    return series[col] if col in series.index else float("nan")
+
+
 ROCE_SPREAD_SCALE = 5.0  # points d'écart ROCE - coût du capital pour un score plein
 
 
@@ -425,18 +437,20 @@ def extract_ratios(financials, balance_sheet, cashflow, closes_by_year, shares_o
     ev_ebitda_by_year, pe_by_year = [], []
     for col in years_cols:
         price = closes_by_year.get(col)
+        total_debt_value = _safe_value(total_debt, col)
+        cash_value = _safe_value(cash, col)
         if (
             price is None
             or not ebitda[col]
             or not net_income[col]
             or _is_missing(ebitda[col])
             or _is_missing(net_income[col])
-            or _is_missing(total_debt[col])
-            or _is_missing(cash[col])
+            or _is_missing(total_debt_value)
+            or _is_missing(cash_value)
         ):
             continue
         market_cap = price * shares_outstanding
-        net_debt_year = total_debt[col] - cash[col]
+        net_debt_year = total_debt_value - cash_value
         ev_ebitda_by_year.append((market_cap + net_debt_year) / ebitda[col])
         pe_by_year.append(market_cap / net_income[col])
 
@@ -511,18 +525,23 @@ def build_financial_narrative_context(
 
     lines = ["Comptes annuels (le plus récent en premier) :"]
     for col in financials.columns:
+        equity_value = _safe_value(equity, col)
+        total_debt_value = _safe_value(total_debt, col)
+        cash_value = _safe_value(cash, col)
+        op_cash_flow_value = _safe_value(op_cash_flow, col)
+        capex_value = _safe_value(capex, col)
         net_debt = (
-            total_debt[col] - cash[col]
-            if not _is_missing(total_debt[col]) and not _is_missing(cash[col]) else None
+            total_debt_value - cash_value
+            if not _is_missing(total_debt_value) and not _is_missing(cash_value) else None
         )
         fcf = (
-            op_cash_flow[col] + capex[col]
-            if not _is_missing(op_cash_flow[col]) and not _is_missing(capex[col]) else None
+            op_cash_flow_value + capex_value
+            if not _is_missing(op_cash_flow_value) and not _is_missing(capex_value) else None
         )
         lines.append(
             f"- {col.date() if hasattr(col, 'date') else col} : CA {_fmt(revenue[col])}, "
             f"EBITDA {_fmt(ebitda[col])}, EBIT {_fmt(ebit[col])}, "
-            f"résultat net {_fmt(net_income[col])}, capitaux propres {_fmt(equity[col])}, "
+            f"résultat net {_fmt(net_income[col])}, capitaux propres {_fmt(equity_value)}, "
             f"dette nette {_fmt(net_debt)}, FCF {_fmt(fcf)}"
         )
 

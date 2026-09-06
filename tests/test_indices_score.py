@@ -888,6 +888,17 @@ def _fake_ratios():
         "total_debt": 150.0,
         "beta": 1.1,
         "sector": "Consumer Defensive",
+        "financial_context": "Comptes annuels (le plus récent en premier) :\n- ...",
+        "latest_quarter_date": "2026-06-30",
+    }
+
+
+def _carried_forward_analysis():
+    return {
+        "BN.PA": {
+            "financial_analysis_html": "<p>Analyse existante.</p>",
+            "financial_analysis_quarter": "2026-06-30",
+        }
     }
 
 
@@ -902,7 +913,9 @@ def test_build_company_entry_degrades_gracefully_when_news_fetch_fails(monkeypat
 
     monkeypatch.setattr(indices_score, "fetch_news", _raise_news)
 
-    entry = indices_score.build_company_entry("BN.PA", "Danone", risk_free_rate=3.68)
+    entry = indices_score.build_company_entry(
+        "BN.PA", "Danone", risk_free_rate=3.68, previous_analyses=_carried_forward_analysis(),
+    )
 
     assert entry["news"] == []
     assert entry["ticker"] == "BN.PA"
@@ -931,6 +944,8 @@ def test_build_company_entry_degrades_gracefully_when_news_fetch_fails(monkeypat
         _fake_ratios(), indices_score.COST_OF_CAPITAL_PROXY
     )["fair_value"]
     assert entry["fair_value"] != fair_value_with_proxy
+    assert entry["financial_analysis_html"] == "<p>Analyse existante.</p>"
+    assert entry["financial_analysis_quarter"] == "2026-06-30"
 
 
 def test_build_company_entry_includes_news_when_fetch_succeeds(monkeypatch):
@@ -942,7 +957,9 @@ def test_build_company_entry_includes_news_when_fetch_succeeds(monkeypatch):
         ],
     )
 
-    entry = indices_score.build_company_entry("BN.PA", "Danone", risk_free_rate=3.68)
+    entry = indices_score.build_company_entry(
+        "BN.PA", "Danone", risk_free_rate=3.68, previous_analyses=_carried_forward_analysis(),
+    )
 
     assert entry["news"] == [
         {"title": "Titre", "date": "2026-09-04", "link": "https://example.com", "sentiment": 1}
@@ -959,7 +976,9 @@ def test_build_company_entry_falls_back_to_proxy_wacc_when_beta_missing(monkeypa
     monkeypatch.setattr(indices_score, "fetch_company_financials", lambda ticker: ratios)
     monkeypatch.setattr(indices_score, "fetch_news", lambda name: [])
 
-    entry = indices_score.build_company_entry("BN.PA", "Danone", risk_free_rate=3.68)
+    entry = indices_score.build_company_entry(
+        "BN.PA", "Danone", risk_free_rate=3.68, previous_analyses=_carried_forward_analysis(),
+    )
 
     assert entry["wacc"] == COST_OF_CAPITAL_PROXY
 
@@ -971,7 +990,9 @@ def test_build_company_entry_falls_back_to_proxy_wacc_when_risk_free_rate_missin
     monkeypatch.setattr(indices_score, "fetch_company_financials", lambda ticker: _fake_ratios())
     monkeypatch.setattr(indices_score, "fetch_news", lambda name: [])
 
-    entry = indices_score.build_company_entry("BN.PA", "Danone", risk_free_rate=None)
+    entry = indices_score.build_company_entry(
+        "BN.PA", "Danone", risk_free_rate=None, previous_analyses=_carried_forward_analysis(),
+    )
 
     assert entry["wacc"] == COST_OF_CAPITAL_PROXY
 
@@ -1605,7 +1626,7 @@ def test_main_writes_alerts_key_for_every_company(monkeypatch, tmp_path):
     monkeypatch.setattr(indices_score, "fetch_risk_free_rate", lambda: 3.68)
     monkeypatch.setattr(
         indices_score, "build_company_entry",
-        lambda ticker, name, risk_free_rate: {
+        lambda ticker, name, risk_free_rate, previous_analyses: {
             "ticker": ticker, "name": name, "score": 20.0,
             "interpretation": "Solide",
             "current_price": 100.0, "entry_price": 100.0,
@@ -1764,3 +1785,73 @@ def test_generate_financial_analysis_returns_none_on_request_exception(monkeypat
 
     monkeypatch.setattr(indices_score.requests, "post", raise_error)
     assert indices_score.generate_financial_analysis("Danone", "contexte", "ratios") is None
+
+
+import json
+
+
+def test_load_previous_company_analyses_returns_empty_dict_when_file_absent(monkeypatch, tmp_path):
+    monkeypatch.setattr(indices_score, "OUTPUT_JSON_PATH", str(tmp_path / "does_not_exist.json"))
+    assert indices_score.load_previous_company_analyses() == {}
+
+
+def test_load_previous_company_analyses_returns_empty_dict_on_corrupted_json(monkeypatch, tmp_path):
+    path = tmp_path / "corrupted.json"
+    path.write_text("{not valid json", encoding="utf-8")
+    monkeypatch.setattr(indices_score, "OUTPUT_JSON_PATH", str(path))
+    assert indices_score.load_previous_company_analyses() == {}
+
+
+def test_load_previous_company_analyses_indexes_by_ticker(monkeypatch, tmp_path):
+    path = tmp_path / "indices.json"
+    path.write_text(json.dumps({
+        "companies": [
+            {"ticker": "BN.PA", "financial_analysis_html": "<p>A</p>", "financial_analysis_quarter": "2026-06-30"},
+            {"ticker": "MC.PA", "financial_analysis_html": "<p>B</p>", "financial_analysis_quarter": "2026-03-31"},
+        ]
+    }), encoding="utf-8")
+    monkeypatch.setattr(indices_score, "OUTPUT_JSON_PATH", str(path))
+    result = indices_score.load_previous_company_analyses()
+    assert result["BN.PA"] == {"financial_analysis_html": "<p>A</p>", "financial_analysis_quarter": "2026-06-30"}
+    assert result["MC.PA"] == {"financial_analysis_html": "<p>B</p>", "financial_analysis_quarter": "2026-03-31"}
+
+
+def test_build_company_entry_carries_forward_analysis_when_quarter_unchanged(monkeypatch):
+    monkeypatch.setattr(indices_score, "fetch_company_financials", lambda ticker: _fake_ratios())
+    monkeypatch.setattr(indices_score, "fetch_news", lambda name: [])
+
+    def fail_if_called(*a, **k):
+        raise AssertionError("generate_financial_analysis ne doit pas être appelée si le trimestre est inchangé")
+
+    monkeypatch.setattr(indices_score, "generate_financial_analysis", fail_if_called)
+
+    entry = indices_score.build_company_entry(
+        "BN.PA", "Danone", risk_free_rate=3.68,
+        previous_analyses={"BN.PA": {
+            "financial_analysis_html": "<p>Analyse existante.</p>",
+            "financial_analysis_quarter": "2026-06-30",  # identique à _fake_ratios()
+        }},
+    )
+
+    assert entry["financial_analysis_html"] == "<p>Analyse existante.</p>"
+    assert entry["financial_analysis_quarter"] == "2026-06-30"
+
+
+def test_build_company_entry_regenerates_analysis_when_quarter_changed(monkeypatch):
+    monkeypatch.setattr(indices_score, "fetch_company_financials", lambda ticker: _fake_ratios())
+    monkeypatch.setattr(indices_score, "fetch_news", lambda name: [])
+    monkeypatch.setattr(
+        indices_score, "generate_financial_analysis",
+        lambda company_name, financial_context, ratios_summary: "<p>Nouvelle analyse.</p>",
+    )
+
+    entry = indices_score.build_company_entry(
+        "BN.PA", "Danone", risk_free_rate=3.68,
+        previous_analyses={"BN.PA": {
+            "financial_analysis_html": "<p>Ancienne analyse.</p>",
+            "financial_analysis_quarter": "2026-03-31",  # différent de _fake_ratios() (2026-06-30)
+        }},
+    )
+
+    assert entry["financial_analysis_html"] == "<p>Nouvelle analyse.</p>"
+    assert entry["financial_analysis_quarter"] == "2026-06-30"

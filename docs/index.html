@@ -438,7 +438,7 @@ const SLIDING_PANES = ['or', 'indices'];
 let indicesLoaded = false;
 let indicesData = null;
 
-async function loadIndices(ticker) {
+async function loadIndices(ticker, view) {
   const content = document.getElementById('indicesContent');
   if (!indicesData) {
     try {
@@ -460,7 +460,11 @@ async function loadIndices(ticker) {
       content.innerHTML = `<div class="empty">Entreprise inconnue : ${ticker}</div>`;
       return;
     }
-    renderCompanyDetail(company);
+    if (view === 'analyse') {
+      renderCompanyAnalysis(company);
+    } else {
+      renderCompanyDetail(company);
+    }
   }
 }
 
@@ -561,6 +565,11 @@ function renderCompanyDetail(company) {
             Détail du calcul <span class="chevron">▾</span>
           </button>
         </div>
+        <div class="btn-row">
+          <button class="toggle-btn" id="goToAnalysis" type="button">
+            Analyse financière complète →
+          </button>
+        </div>
 
         <div class="section-wrap" id="companyActuWrap" hidden>
           <h2>Actualités récentes</h2>
@@ -608,13 +617,32 @@ function renderCompanyDetail(company) {
       btn.setAttribute('aria-expanded', String(open));
     });
   });
+
+  document.getElementById('goToAnalysis').addEventListener('click', () => {
+    location.hash = '#indices/' + encodeURIComponent(company.ticker) + '/analyse';
+  });
+}
+
+function renderCompanyAnalysis(company) {
+  const html = company.financial_analysis_html;
+  document.getElementById('indicesContent').innerHTML = `
+    <a href="#indices/${encodeURIComponent(company.ticker)}" class="back-link">← ${company.name}</a>
+    <h2>Analyse financière complète</h2>
+    ${html || '<p class="hero-sub">Analyse non disponible pour le moment.</p>'}
+  `;
 }
 
 function parseRoute() {
   const hash = location.hash.slice(1);
   if (hash === 'or') return { screen: 'or' };
   if (hash === 'indices') return { screen: 'indices', ticker: null };
-  if (hash.startsWith('indices/')) return { screen: 'indices', ticker: hash.slice('indices/'.length) };
+  if (hash.startsWith('indices/')) {
+    const rest = hash.slice('indices/'.length);
+    if (rest.endsWith('/analyse')) {
+      return { screen: 'indices', ticker: decodeURIComponent(rest.slice(0, -'/analyse'.length)), view: 'analyse' };
+    }
+    return { screen: 'indices', ticker: decodeURIComponent(rest), view: 'detail' };
+  }
   return { screen: 'home' };
 }
 
@@ -666,7 +694,7 @@ function renderRoute(animate) {
     loadScalpChart();
   }
   if (route.screen === 'indices') {
-    loadIndices(route.ticker);
+    loadIndices(route.ticker, route.view);
   }
 }
 

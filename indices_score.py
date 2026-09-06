@@ -1060,6 +1060,31 @@ def build_company_entry(ticker: str, name: str, risk_free_rate: float | None) ->
     }
 
 
+def _attach_alerts_and_update_history(companies: list[dict]) -> None:
+    """Calcule les alertes de chaque entreprise à partir de son historique
+    et enregistre le score du jour. Dégrade vers alerts=[] pour toutes les
+    entreprises si l'historique est illisible/inscriptible — ne doit
+    jamais faire échouer la publication du score déjà calculé."""
+    for company in companies:
+        company["alerts"] = []
+    try:
+        history = load_indices_history()
+        today_str = datetime.today().strftime("%Y-%m-%d")
+        new_entries = []
+        for company in companies:
+            ticker_history = [e for e in history if e["ticker"] == company["ticker"]]
+            company["alerts"] = compute_company_alerts(
+                company["ticker"], company["score"], company["current_price"],
+                company["entry_price"], ticker_history,
+            )
+            new_entries.append({
+                "date": today_str, "ticker": company["ticker"], "composite": company["score"],
+            })
+        append_indices_history(new_entries)
+    except Exception as e:
+        print(f"Erreur historique/alertes Indices : {e}")
+
+
 def main():
     risk_free_rate = fetch_risk_free_rate()
     companies = []
@@ -1070,6 +1095,8 @@ def main():
             )
         except Exception as e:
             print(f"Erreur pour {company['ticker']} ({company['name']}) : {e}")
+
+    _attach_alerts_and_update_history(companies)
 
     payload = {
         "updated": datetime.today().strftime("%Y-%m-%d"),

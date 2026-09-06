@@ -1510,3 +1510,22 @@ def test_compute_company_alerts_handles_missing_current_or_entry_price():
     )
     assert isinstance(alerts, list)
     assert len(alerts) >= 1
+
+
+def test_compute_company_alerts_ignores_malformed_dates():
+    """Ne doit jamais lever sur une date malformée dans previous_history.
+    Doit ignorer silencieusement l'entrée malformée et continuer le calcul."""
+    from datetime import datetime, timedelta
+    recent_date = (datetime.today() - timedelta(days=2)).strftime("%Y-%m-%d")
+    previous_history = [
+        {"date": "pas-une-date", "ticker": "BN.PA", "composite": 40.0},  # malformed
+        {"date": recent_date, "ticker": "BN.PA", "composite": 40.0},      # valid
+    ]
+    # Ne doit pas lever, et doit détecter la chute de 40->15 en ignorant l'entrée malformée
+    alerts = indices_score.compute_company_alerts(
+        "BN.PA", composite=15.0, current_price=100.0, entry_price=50.0,
+        previous_history=previous_history,
+    )
+    kinds = [a["kind"] for a in alerts]
+    # Doit encore détecter "risque" car l'entrée valide est récente et trigger le seuil
+    assert "risque" in kinds

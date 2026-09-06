@@ -727,10 +727,15 @@ def compute_company_alerts(
         })
 
     cutoff = datetime.today().date() - timedelta(days=RAPID_DROP_DAYS)
-    recent = [
-        e for e in previous_history
-        if datetime.strptime(e["date"], "%Y-%m-%d").date() >= cutoff
-    ]
+    recent = []
+    for e in previous_history:
+        try:
+            entry_date = datetime.strptime(e["date"], "%Y-%m-%d").date()
+            if entry_date >= cutoff:
+                recent.append(e)
+        except (ValueError, KeyError, TypeError):
+            # Ignore entries with malformed dates or missing "date" key
+            pass
     if recent:
         max_recent = max(e["composite"] for e in recent)
         drop = composite - max_recent

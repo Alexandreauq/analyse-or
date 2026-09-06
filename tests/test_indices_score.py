@@ -1593,3 +1593,33 @@ def test_attach_alerts_and_update_history_degrades_gracefully_on_failure(monkeyp
     indices_score._attach_alerts_and_update_history(companies)  # ne doit pas lever
 
     assert companies[0]["alerts"] == []
+
+
+def test_main_writes_alerts_key_for_every_company(monkeypatch, tmp_path):
+    """Preuve que main() câble réellement _attach_alerts_and_update_history
+    et écrit le résultat dans le JSON — pas seulement que la fonction
+    existe en isolation. Si l'appel à _attach_alerts_and_update_history
+    était supprimé de main(), ce test doit échouer."""
+    import json
+
+    monkeypatch.setattr(indices_score, "fetch_risk_free_rate", lambda: 3.68)
+    monkeypatch.setattr(
+        indices_score, "build_company_entry",
+        lambda ticker, name, risk_free_rate: {
+            "ticker": ticker, "name": name, "score": 20.0,
+            "interpretation": "Solide",
+            "current_price": 100.0, "entry_price": 100.0,
+        },
+    )
+    monkeypatch.setattr(indices_score, "load_indices_history", lambda: [])
+    monkeypatch.setattr(indices_score, "append_indices_history", lambda entries: entries)
+    output_path = tmp_path / "indices.json"
+    monkeypatch.setattr(indices_score, "OUTPUT_JSON_PATH", str(output_path))
+
+    indices_score.main()
+
+    written = json.loads(output_path.read_text(encoding="utf-8"))
+    assert len(written["companies"]) == len(indices_score.COMPANIES)
+    for company in written["companies"]:
+        assert isinstance(company["alerts"], list)
+        assert len(company["alerts"]) >= 1

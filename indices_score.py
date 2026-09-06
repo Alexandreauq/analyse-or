@@ -75,6 +75,16 @@ SECTOR_PROFILES = {
 
 SECTOR_ADJUSTMENT = {"defensif": 1.3, "standard": 1.0, "cyclique": 0.7}
 
+# Correction manuelle par ticker : certaines entreprises n'ont pas de
+# "sector" renseigné du tout chez yfinance (info.get("sector") vaut None),
+# ce qui les fait retomber sur le profil "standard" par défaut plutôt que
+# leur vrai profil de risque — pas un secteur mal classé dans
+# SECTOR_PROFILES, une vraie absence de donnée à la source. Complété au
+# fil des cas rencontrés en production, pas une liste exhaustive à priori.
+SECTOR_OVERRIDE_BY_TICKER = {
+    "MT.PA": "Basic Materials",  # ArcelorMittal (sidérurgie, cyclique)
+}
+
 
 @dataclass
 class FactorResult:
@@ -660,7 +670,7 @@ def fetch_company_financials(ticker: str) -> dict:
     )
 
     ratios = extract_ratios(financials, balance_sheet, cashflow, closes_by_year, shares_outstanding)
-    ratios["sector"] = info.get("sector")
+    ratios["sector"] = SECTOR_OVERRIDE_BY_TICKER.get(ticker) or info.get("sector")
     ratios["ecart_pct_ma200"] = ecart_pct_ma200
     ratios["quarterly_yoy_growth_ca"] = extract_quarterly_growth(quarterly_financials)
     ratios["financial_context"] = build_financial_narrative_context(

@@ -1215,7 +1215,7 @@ def test_estimate_valuation_targets_computes_all_three_output_keys():
         "avg_ev_ebitda_5y": 10.0,
         "ma200": 110.0,
     }
-    result = estimate_valuation_targets(data)
+    result = estimate_valuation_targets(data, cost_of_capital=8.0)
     assert set(result.keys()) == {"fair_value", "entry_price", "exit_price"}
     assert result["fair_value"] is not None
     assert result["entry_price"] is not None
@@ -1239,7 +1239,7 @@ def test_estimate_valuation_targets_degrades_to_none_with_nan_inputs():
         "avg_ev_ebitda_5y": 10.0,
         "ma200": float("nan"),
     }
-    result = estimate_valuation_targets(data)
+    result = estimate_valuation_targets(data, cost_of_capital=8.0)
     assert result["fair_value"] is None
     assert result["entry_price"] is None
     assert result["exit_price"] is None

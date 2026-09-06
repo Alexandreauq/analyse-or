@@ -844,12 +844,15 @@ def estimate_wacc(
     return equity_weight * cost_of_equity + debt_weight * cost_of_debt_after_tax
 
 
-def estimate_valuation_targets(data: dict) -> dict:
+def estimate_valuation_targets(data: dict, cost_of_capital: float) -> dict:
     """Combine DCF, actif net et multiples en une juste valeur, puis en
     repères d'entrée/sortie. Toujours ces 3 clés en sortie, valeurs à None
-    si non calculables (jamais d'exception)."""
+    si non calculables (jamais d'exception). `cost_of_capital` est le taux
+    d'actualisation du DCF (WACC de l'entreprise, ou COST_OF_CAPITAL_PROXY
+    en repli — résolu par l'appelant)."""
     dcf_price = estimate_dcf_price(
-        data["fcf"], data["cagr_ebitda"], data["net_debt"], data["shares_outstanding"]
+        data["fcf"], data["cagr_ebitda"], data["net_debt"], data["shares_outstanding"],
+        cost_of_capital,
     )
     asset_price = estimate_asset_based_price(data["equity"], data["shares_outstanding"])
     multiple_price = (

@@ -2122,3 +2122,87 @@ def test_compute_health_summary_detects_missing_ticker():
     assert result["expected"] == len(all_tickers)
     assert result["returned"] == len(all_tickers) - 1
     assert result["missing_tickers"] == [all_tickers[0]]
+
+
+def _fake_statement_with_row_count(n_rows: int) -> pd.DataFrame:
+    cols = [pd.Timestamp("2025-12-31")]
+    rows = {f"Row{i}": [float(i)] for i in range(n_rows)}
+    return _fake_annual_df(rows, cols)
+
+
+def test_fetch_statement_with_retry_returns_immediately_when_healthy(monkeypatch):
+    healthy = _fake_statement_with_row_count(20)
+    call_count = {"n": 0}
+
+    class _FakeTicker:
+        def __init__(self, ticker):
+            call_count["n"] += 1
+
+        @property
+        def financials(self):
+            return healthy
+
+    monkeypatch.setattr(indices_score.yf, "Ticker", _FakeTicker)
+    sleeps = []
+    monkeypatch.setattr(indices_score.time, "sleep", lambda s: sleeps.append(s))
+
+    result = indices_score._fetch_statement_with_retry("XX.PA", "financials")
+
+    assert result is healthy
+    assert call_count["n"] == 1
+    assert sleeps == []
+
+
+def test_fetch_statement_with_retry_retries_on_degraded_result(monkeypatch):
+    """Reproduit le motif observé en production (Air Liquide, Michelin,
+    Accor) : un relevé dégradé (quasi vide) sans exception sur les
+    premières tentatives, données complètes ensuite — un diagnostic
+    isolé sur ces mêmes tickers avait confirmé que les données existent
+    bien, juste pas toujours au premier appel dans une longue boucle."""
+    degraded = _fake_statement_with_row_count(2)
+    healthy = _fake_statement_with_row_count(20)
+    results = [degraded, degraded, healthy]
+
+    class _FakeTicker:
+        def __init__(self, ticker):
+            pass
+
+        @property
+        def financials(self):
+            return results.pop(0)
+
+    monkeypatch.setattr(indices_score.yf, "Ticker", _FakeTicker)
+    sleeps = []
+    monkeypatch.setattr(indices_score.time, "sleep", lambda s: sleeps.append(s))
+
+    result = indices_score._fetch_statement_with_retry("XX.PA", "financials")
+
+    assert result is healthy
+    assert len(sleeps) == 2  # 2 tentatives dégradées avant la bonne
+
+
+def test_fetch_statement_with_retry_gives_up_after_max_attempts(monkeypatch):
+    """Ne doit jamais boucler indéfiniment : après FETCH_RETRY_ATTEMPTS,
+    renvoie le dernier résultat obtenu (même dégradé) plutôt que de
+    bloquer le run pour toujours."""
+    degraded = _fake_statement_with_row_count(2)
+
+    class _FakeTicker:
+        def __init__(self, ticker):
+            pass
+
+        @property
+        def financials(self):
+            return degraded
+
+    monkeypatch.setattr(indices_score.yf, "Ticker", _FakeTicker)
+    sleep_calls = {"n": 0}
+    monkeypatch.setattr(
+        indices_score.time, "sleep",
+        lambda s: sleep_calls.__setitem__("n", sleep_calls["n"] + 1),
+    )
+
+    result = indices_score._fetch_statement_with_retry("XX.PA", "financials")
+
+    assert result is degraded
+    assert sleep_calls["n"] == indices_score.FETCH_RETRY_ATTEMPTS - 1

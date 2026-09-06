@@ -15,6 +15,7 @@ Installation :
 import json
 import math
 import os
+import time
 import xml.etree.ElementTree as ET
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -70,9 +71,7 @@ COMPANIES = [
     {"ticker": "RI.PA", "name": "Pernod Ricard"},
     {"ticker": "RNO.PA", "name": "Renault"},
     {"ticker": "ERF.PA", "name": "Eurofins Scientific"},
-    # Lot 3 d'extension CAC 40 (9 entreprises) — complète la liste des
-    # non-financières du CAC 40 (hors Air Liquide/Michelin, mis de côté
-    # temporairement : relevé annuel yfinance quasi vide pour ces 2-là).
+    # Lot 3 d'extension CAC 40 (9 entreprises).
     {"ticker": "EL.PA", "name": "EssilorLuxottica"},
     {"ticker": "PUB.PA", "name": "Publicis Groupe"},
     {"ticker": "DSY.PA", "name": "Dassault Systèmes"},
@@ -82,6 +81,11 @@ COMPANIES = [
     {"ticker": "BVI.PA", "name": "Bureau Veritas"},
     {"ticker": "EN.PA", "name": "Bouygues"},
     {"ticker": "AC.PA", "name": "Accor"},
+    # Air Liquide et Michelin, remises après le correctif
+    # _fetch_statement_with_retry (leur échec n'était pas un vrai trou
+    # de données mais le même symptôme transitoire qu'Accor).
+    {"ticker": "AI.PA", "name": "Air Liquide"},
+    {"ticker": "ML.PA", "name": "Michelin"},
 ]
 
 SECTOR_PROFILES = {
@@ -677,13 +681,41 @@ def _resolve_financial_analysis_date(quarterly_financials, financials) -> str | 
     return _column_date_iso(annual_cols[0]) if annual_cols else None
 
 
+MIN_STATEMENT_ROWS = 10       # un relevé annuel sain a ~40-50 lignes ; un
+                              # relevé dégradé (observé en production sur
+                              # Air Liquide/Michelin/Accor) n'en a que 2
+                              # ('Diluted/Basic Average Shares'), sans
+                              # lever d'exception
+FETCH_RETRY_ATTEMPTS = 3
+FETCH_RETRY_DELAY_SECONDS = 2.0
+
+
+def _fetch_statement_with_retry(ticker: str, attribute_name: str):
+    """Certains appels yfinance renvoient occasionnellement un relevé
+    dégradé (quasi vide) sans lever d'exception, plutôt vu sur les
+    tickers traités plus tard dans la boucle des entreprises (rate-
+    limiting probable de Yahoo) — un diagnostic isolé sur ces mêmes
+    tickers, hors de la boucle complète, renvoyait les données
+    complètes : pas un vrai trou de données à la source. Un nouveau
+    `yf.Ticker(...)` à chaque tentative (pas le même objet réutilisé)
+    pour éviter de retomber sur un résultat mis en cache par yfinance."""
+    statement = None
+    for attempt in range(FETCH_RETRY_ATTEMPTS):
+        statement = getattr(yf.Ticker(ticker), attribute_name)
+        if len(statement.index) >= MIN_STATEMENT_ROWS:
+            return statement
+        if attempt < FETCH_RETRY_ATTEMPTS - 1:
+            time.sleep(FETCH_RETRY_DELAY_SECONDS)
+    return statement
+
+
 def fetch_company_financials(ticker: str) -> dict:
     if yf is None:
         raise RuntimeError("yfinance n'est pas installé (pip install yfinance)")
     t = yf.Ticker(ticker)
-    financials = t.financials
-    balance_sheet = t.balance_sheet
-    cashflow = t.cashflow
+    financials = _fetch_statement_with_retry(ticker, "financials")
+    balance_sheet = _fetch_statement_with_retry(ticker, "balance_sheet")
+    cashflow = _fetch_statement_with_retry(ticker, "cashflow")
     quarterly_financials = t.quarterly_financials
     info = t.info
 

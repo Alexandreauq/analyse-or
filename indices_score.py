@@ -396,15 +396,41 @@ def extract_ratios(financials, balance_sheet, cashflow, closes_by_year, shares_o
     op_cash_flow = get_row(cashflow, "Operating Cash Flow")
     capex = get_row(cashflow, "Capital Expenditure")
 
-    net_debt_latest = total_debt[latest] - cash[latest]
-    economic_assets_latest = equity[latest] + net_debt_latest
-    roce = (ebit[latest] * (1 - tax_rate[latest]) / economic_assets_latest) * 100 if economic_assets_latest else 0.0
-    roe = (net_income[latest] / equity[latest]) * 100 if equity[latest] else 0.0
+    # _safe_value (pas un accès direct [latest]) : total_debt/cash/equity
+    # viennent de balance_sheet, dont les colonnes ne correspondent pas
+    # toujours exactement à celles de financials pour une entreprise donnée
+    # (observé en production : financials remonte à une date que
+    # balance_sheet/cashflow n'ont pas) — indexer par une date qui vient
+    # d'un autre relevé lève sinon KeyError.
+    total_debt_latest = _safe_value(total_debt, latest)
+    cash_latest = _safe_value(cash, latest)
+    equity_latest = _safe_value(equity, latest)
 
-    net_debt_ebitda = net_debt_latest / ebitda[latest] if ebitda[latest] else 0.0
+    net_debt_latest = (
+        total_debt_latest - cash_latest
+        if not _is_missing(total_debt_latest) and not _is_missing(cash_latest) else 0.0
+    )
+    economic_assets_latest = equity_latest + net_debt_latest
+    # `if X else default` seul ne suffit pas à écarter un NaN (bool(nan) est
+    # True en Python) — d'où le `and not _is_missing(X)` en plus du test de
+    # vérité déjà présent, pour ne jamais laisser un NaN se propager dans un
+    # score final via une division silencieusement invalide.
+    roce = (
+        (ebit[latest] * (1 - tax_rate[latest]) / economic_assets_latest) * 100
+        if economic_assets_latest and not _is_missing(economic_assets_latest) else 0.0
+    )
+    roe = (
+        (net_income[latest] / equity_latest) * 100
+        if equity_latest and not _is_missing(equity_latest) else 0.0
+    )
+
+    net_debt_ebitda = (
+        net_debt_latest / ebitda[latest]
+        if ebitda[latest] and not _is_missing(ebitda[latest]) else 0.0
+    )
     icr = (
-        ebit[latest] / (total_debt[latest] * (DEBT_INTEREST_RATE_PROXY / 100))
-        if total_debt[latest] else 10.0
+        ebit[latest] / (total_debt_latest * (DEBT_INTEREST_RATE_PROXY / 100))
+        if total_debt_latest and not _is_missing(total_debt_latest) else 10.0
     )  # proxy frais financiers si non isolés (DEBT_INTEREST_RATE_PROXY) — parenthèses
     # nécessaires pour rester strictement identique à l'ancien littéral `* 0.03`
     # (l'associativité par défaut donnait `(total_debt * 3.0) / 100`, qui diffère
@@ -431,8 +457,16 @@ def extract_ratios(financials, balance_sheet, cashflow, closes_by_year, shares_o
     # opérationnel yfinance embarque déjà l'impôt effectivement payé et les
     # variations de BFR, ce qui est plus robuste que de les reconstruire à la
     # main sur 5 entreprises aux données hétérogènes.
-    fcf = op_cash_flow[latest] + capex[latest]  # capex déjà négatif dans yfinance
-    fcf_conversion = (fcf / ebitda[latest]) * 100 if ebitda[latest] else 0.0
+    op_cash_flow_latest = _safe_value(op_cash_flow, latest)
+    capex_latest = _safe_value(capex, latest)  # capex déjà négatif dans yfinance
+    fcf = (
+        op_cash_flow_latest + capex_latest
+        if not _is_missing(op_cash_flow_latest) and not _is_missing(capex_latest) else 0.0
+    )
+    fcf_conversion = (
+        (fcf / ebitda[latest]) * 100
+        if ebitda[latest] and not _is_missing(ebitda[latest]) else 0.0
+    )
 
     ev_ebitda_by_year, pe_by_year = [], []
     for col in years_cols:
@@ -473,9 +507,9 @@ def extract_ratios(financials, balance_sheet, cashflow, closes_by_year, shares_o
         "avg_pe_5y": avg_pe_5y,
         "fcf": fcf,
         "net_debt": net_debt_latest,
-        "equity": equity[latest],
+        "equity": equity_latest,
         "tax_rate": tax_rate[latest],
-        "total_debt": total_debt[latest],
+        "total_debt": total_debt_latest,
     }
 
 

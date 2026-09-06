@@ -45,6 +45,19 @@ COMPANIES = [
     {"ticker": "SU.PA", "name": "Schneider Electric"},
     {"ticker": "SAN.PA", "name": "Sanofi"},
     {"ticker": "BN.PA", "name": "Danone"},
+    # Lot 1 d'extension CAC 40 (10 entreprises, tickers Yahoo Finance
+    # vérifiés individuellement — plusieurs diffèrent du mnémonique
+    # Euronext naïf + suffixe .PA, ex : STMicroelectronics/Stellantis).
+    {"ticker": "AIR.PA", "name": "Airbus"},
+    {"ticker": "AI.PA", "name": "Air Liquide"},
+    {"ticker": "OR.PA", "name": "L'Oréal"},
+    {"ticker": "DG.PA", "name": "Vinci"},
+    {"ticker": "RMS.PA", "name": "Hermès International"},
+    {"ticker": "ENGI.PA", "name": "Engie"},
+    {"ticker": "ORA.PA", "name": "Orange"},
+    {"ticker": "STMPA.PA", "name": "STMicroelectronics"},
+    {"ticker": "STLAP.PA", "name": "Stellantis"},
+    {"ticker": "CA.PA", "name": "Carrefour"},
 ]
 
 SECTOR_PROFILES = {

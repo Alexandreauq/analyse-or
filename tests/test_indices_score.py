@@ -1529,3 +1529,67 @@ def test_compute_company_alerts_ignores_malformed_dates():
     kinds = [a["kind"] for a in alerts]
     # Doit encore détecter "risque" car l'entrée valide est récente et trigger le seuil
     assert "risque" in kinds
+
+
+def test_attach_alerts_and_update_history_sets_alerts_key(monkeypatch):
+    companies = [
+        {"ticker": "BN.PA", "score": 20.0, "current_price": 102.0, "entry_price": 100.0},
+        {"ticker": "MC.PA", "score": 5.0, "current_price": 200.0, "entry_price": 150.0},
+    ]
+    monkeypatch.setattr(indices_score, "load_indices_history", lambda: [])
+    recorded = {}
+    monkeypatch.setattr(
+        indices_score, "append_indices_history",
+        lambda entries: recorded.setdefault("entries", entries),
+    )
+
+    indices_score._attach_alerts_and_update_history(companies)
+
+    assert isinstance(companies[0]["alerts"], list)
+    assert len(companies[0]["alerts"]) >= 1
+    assert isinstance(companies[1]["alerts"], list)
+    assert recorded["entries"] == [
+        {"date": recorded["entries"][0]["date"], "ticker": "BN.PA", "composite": 20.0},
+        {"date": recorded["entries"][1]["date"], "ticker": "MC.PA", "composite": 5.0},
+    ]
+
+
+def test_attach_alerts_and_update_history_filters_history_per_ticker(monkeypatch):
+    """L'historique passé à compute_company_alerts pour une entreprise ne
+    doit contenir que les entrées de son propre ticker."""
+    companies = [{"ticker": "BN.PA", "score": 20.0, "current_price": 102.0, "entry_price": 100.0}]
+    mixed_history = [
+        {"date": "2026-09-01", "ticker": "MC.PA", "composite": 99.0},
+        {"date": "2026-09-01", "ticker": "BN.PA", "composite": 10.0},
+    ]
+    monkeypatch.setattr(indices_score, "load_indices_history", lambda: mixed_history)
+    monkeypatch.setattr(indices_score, "append_indices_history", lambda entries: entries)
+
+    captured = {}
+    original = indices_score.compute_company_alerts
+
+    def _spy(ticker, composite, current_price, entry_price, previous_history):
+        captured["previous_history"] = previous_history
+        return original(ticker, composite, current_price, entry_price, previous_history)
+
+    monkeypatch.setattr(indices_score, "compute_company_alerts", _spy)
+
+    indices_score._attach_alerts_and_update_history(companies)
+
+    assert captured["previous_history"] == [{"date": "2026-09-01", "ticker": "BN.PA", "composite": 10.0}]
+
+
+def test_attach_alerts_and_update_history_degrades_gracefully_on_failure(monkeypatch):
+    """Une panne de lecture/écriture de l'historique (disque plein,
+    permissions...) ne doit jamais faire lever d'exception ni empêcher la
+    publication du score déjà calculé pour chaque entreprise."""
+    companies = [{"ticker": "BN.PA", "score": 20.0, "current_price": 102.0, "entry_price": 100.0}]
+
+    def _raise():
+        raise OSError("disque plein")
+
+    monkeypatch.setattr(indices_score, "load_indices_history", _raise)
+
+    indices_score._attach_alerts_and_update_history(companies)  # ne doit pas lever
+
+    assert companies[0]["alerts"] == []

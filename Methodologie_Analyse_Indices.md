@@ -228,6 +228,30 @@ Sans déclencheur, une alerte neutre ("Pas de signal actif") est affichée.
 Pas d'email pour ces alertes (affichage web uniquement), contrairement au
 volet Or.
 
+## Analyse financière complète (Vernimmen)
+
+Une page dédiée par entreprise (accessible par un bouton sur sa fiche)
+propose une analyse financière écrite, structurée selon la synthèse du
+diagnostic financier Vernimmen : diagnostic global, structure
+financière et solvabilité, rentabilité économique et financière,
+analyse de la trésorerie et du free cash-flow, dynamique récente
+(dernier trimestre vs tendance), synthèse.
+
+Générée par Claude Opus 5 à partir des comptes annuels (jusqu'à ~4 ans)
+et des derniers trimestres publiés, ainsi que des ratios déjà calculés
+par ailleurs (ROCE, ROE, dette nette/EBITDA, ICR, CAGR, conversion FCF,
+coût du capital) — le modèle interprète, il ne recalcule pas ces
+chiffres.
+
+**Régénérée uniquement quand un nouveau trimestre est publié** (pas
+quotidiennement) : le run compare la date du dernier trimestre connu à
+celle stockée la veille et ne régénère que si elle a changé, sinon
+recopie l'analyse existante. Ce choix est délibéré : les comptes ne
+changent que quelques fois par an, contrairement au score composite qui
+réagit chaque jour au cours et aux actus — régénérer quotidiennement
+coûterait ~90x plus cher pour un résultat identique la plupart du
+temps.
+
 ## Hors périmètre (v1)
 
 - Extension aux 40 valeurs du CAC 40 et aux valeurs financières

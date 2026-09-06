@@ -1623,3 +1623,72 @@ def test_main_writes_alerts_key_for_every_company(monkeypatch, tmp_path):
     for company in written["companies"]:
         assert isinstance(company["alerts"], list)
         assert len(company["alerts"]) >= 1
+
+
+import pandas as pd
+
+
+def _fake_annual_df(rows: dict, cols: list) -> pd.DataFrame:
+    return pd.DataFrame(rows, index=cols).T
+
+
+def test_build_financial_narrative_context_formats_years_and_quarters():
+    cols = [pd.Timestamp("2025-12-31"), pd.Timestamp("2024-12-31")]
+    financials = _fake_annual_df(
+        {"Total Revenue": [1000.0, 900.0], "EBITDA": [200.0, 180.0],
+         "EBIT": [150.0, 130.0], "Net Income": [90.0, 80.0]}, cols,
+    )
+    balance_sheet = _fake_annual_df(
+        {"Stockholders Equity": [500.0, 450.0], "Total Debt": [300.0, 280.0],
+         "Cash And Cash Equivalents": [50.0, 40.0]}, cols,
+    )
+    cashflow = _fake_annual_df(
+        {"Operating Cash Flow": [180.0, 160.0], "Capital Expenditure": [-60.0, -55.0]}, cols,
+    )
+    q_cols = [pd.Timestamp("2025-09-30"), pd.Timestamp("2025-06-30")]
+    quarterly_financials = _fake_annual_df({"Total Revenue": [260.0, 250.0]}, q_cols)
+
+    result = indices_score.build_financial_narrative_context(
+        financials, balance_sheet, cashflow, quarterly_financials
+    )
+
+    assert "Comptes annuels" in result
+    assert "2025-12-31" in result
+    assert "CA 1,000" in result
+    assert "dette nette 250" in result  # 300 - 50
+    assert "FCF 120" in result  # 180 + (-60)
+    assert "Derniers trimestres publiés" in result
+    assert "2025-09-30" in result
+
+
+def test_build_financial_narrative_context_handles_missing_values():
+    cols = [pd.Timestamp("2025-12-31")]
+    financials = _fake_annual_df(
+        {"Total Revenue": [1000.0], "EBITDA": [float("nan")],
+         "EBIT": [150.0], "Net Income": [90.0]}, cols,
+    )
+    balance_sheet = _fake_annual_df(
+        {"Stockholders Equity": [500.0], "Total Debt": [300.0],
+         "Cash And Cash Equivalents": [50.0]}, cols,
+    )
+    cashflow = _fake_annual_df(
+        {"Operating Cash Flow": [180.0], "Capital Expenditure": [-60.0]}, cols,
+    )
+    quarterly_financials = _fake_annual_df({"Total Revenue": [260.0]}, cols)
+
+    result = indices_score.build_financial_narrative_context(
+        financials, balance_sheet, cashflow, quarterly_financials
+    )
+
+    assert "EBITDA non disponible" in result
+
+
+def test_latest_quarter_date_returns_iso_string():
+    cols = [pd.Timestamp("2025-09-30"), pd.Timestamp("2025-06-30")]
+    quarterly_financials = _fake_annual_df({"Total Revenue": [260.0, 250.0]}, cols)
+    assert indices_score.latest_quarter_date(quarterly_financials) == "2025-09-30"
+
+
+def test_latest_quarter_date_returns_none_when_no_columns():
+    quarterly_financials = pd.DataFrame()
+    assert indices_score.latest_quarter_date(quarterly_financials) is None

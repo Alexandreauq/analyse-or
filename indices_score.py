@@ -488,6 +488,64 @@ def extract_quarterly_growth(quarterly_financials) -> float | None:
     return (latest / year_ago - 1) * 100
 
 
+def build_financial_narrative_context(
+    financials, balance_sheet, cashflow, quarterly_financials,
+) -> str:
+    """Formate les séries annuelles (jusqu'à ~4 ans, le plus récent en
+    premier) et les derniers trimestres en un texte structuré, destiné à
+    être injecté dans le prompt Claude — pas de calcul ici, seulement de
+    la mise en forme brute. Une ligne 'non disponible' remplace toute
+    valeur manquante plutôt que de faire échouer le formatage."""
+    revenue = get_row(financials, "Total Revenue", "Operating Revenue")
+    ebitda = get_row(financials, "EBITDA", "Normalized EBITDA")
+    ebit = get_row(financials, "EBIT", "Operating Income", "Total Operating Income As Reported")
+    net_income = get_row(financials, "Net Income", "Net Income Common Stockholders")
+    equity = get_row(balance_sheet, "Stockholders Equity", "Common Stock Equity")
+    total_debt = get_row(balance_sheet, "Total Debt")
+    cash = get_row(balance_sheet, "Cash And Cash Equivalents", "Cash Cash Equivalents And Short Term Investments")
+    op_cash_flow = get_row(cashflow, "Operating Cash Flow")
+    capex = get_row(cashflow, "Capital Expenditure")
+
+    def _fmt(value) -> str:
+        return "non disponible" if _is_missing(value) else f"{value:,.0f}"
+
+    lines = ["Comptes annuels (le plus récent en premier) :"]
+    for col in financials.columns:
+        net_debt = (
+            total_debt[col] - cash[col]
+            if not _is_missing(total_debt[col]) and not _is_missing(cash[col]) else None
+        )
+        fcf = (
+            op_cash_flow[col] + capex[col]
+            if not _is_missing(op_cash_flow[col]) and not _is_missing(capex[col]) else None
+        )
+        lines.append(
+            f"- {col.date() if hasattr(col, 'date') else col} : CA {_fmt(revenue[col])}, "
+            f"EBITDA {_fmt(ebitda[col])}, EBIT {_fmt(ebit[col])}, "
+            f"résultat net {_fmt(net_income[col])}, capitaux propres {_fmt(equity[col])}, "
+            f"dette nette {_fmt(net_debt)}, FCF {_fmt(fcf)}"
+        )
+
+    quarterly_revenue = get_row(quarterly_financials, "Total Revenue", "Operating Revenue")
+    lines.append("\nDerniers trimestres publiés (le plus récent en premier) :")
+    for col in quarterly_financials.columns:
+        lines.append(
+            f"- {col.date() if hasattr(col, 'date') else col} : CA {_fmt(quarterly_revenue[col])}"
+        )
+
+    return "\n".join(lines)
+
+
+def latest_quarter_date(quarterly_financials) -> str | None:
+    """Date du trimestre le plus récent publié, format ISO (YYYY-MM-DD).
+    None si aucune colonne (yfinance en panne pour ce ticker)."""
+    cols = list(quarterly_financials.columns)
+    if not cols:
+        return None
+    col = cols[0]
+    return col.date().isoformat() if hasattr(col, "date") else str(col)
+
+
 def fetch_company_financials(ticker: str) -> dict:
     if yf is None:
         raise RuntimeError("yfinance n'est pas installé (pip install yfinance)")
@@ -518,6 +576,10 @@ def fetch_company_financials(ticker: str) -> dict:
     ratios["sector"] = info.get("sector")
     ratios["ecart_pct_ma200"] = ecart_pct_ma200
     ratios["quarterly_yoy_growth_ca"] = extract_quarterly_growth(quarterly_financials)
+    ratios["financial_context"] = build_financial_narrative_context(
+        financials, balance_sheet, cashflow, quarterly_financials
+    )
+    ratios["latest_quarter_date"] = latest_quarter_date(quarterly_financials)
     ratios["current_price"] = current_price
     ratios["ma200"] = ma200
     ratios["shares_outstanding"] = shares_outstanding

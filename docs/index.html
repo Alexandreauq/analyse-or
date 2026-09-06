@@ -408,6 +408,12 @@ function renderCompanyDetail(company) {
       ${n.summary ? `<p class="news-summary">${n.summary}</p>` : ''}
     </div>`).join('');
 
+  const alertsHtml = (company.alerts || []).map(a => `
+    <div class="alert-row" style="border-left-color:${alertColor(a.kind)};">
+      <div class="alert-head"><span>${a.title}</span><span class="alert-date">${a.date}</span></div>
+      <p class="alert-detail">${a.detail}</p>
+    </div>`).join('');
+
   document.getElementById('indicesContent').innerHTML = `
     <a href="#indices" class="back-link">← Indices</a>
     <section class="hero">
@@ -432,6 +438,10 @@ function renderCompanyDetail(company) {
         historique (DCF, actif net, multiples) et la tendance technique —
         pas un conseil d'investissement.</p>
     </div>
+
+    <h2>Alertes</h2>
+    ${alertsHtml || '<p class="hero-sub">Aucune alerte.</p>'}
+
     <div class="divider"></div>
 
     <div class="btn-row">

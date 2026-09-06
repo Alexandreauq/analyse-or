@@ -443,6 +443,22 @@ def test_extract_ratios_smooths_cagr_over_two_year_windows():
     assert not (-23.0 < ratios["cagr_ca"] < -20.0)
 
 
+def test_extract_ratios_uses_net_ppe_purchase_and_sale_as_capex_fallback():
+    """Reproduit un cas observé en production (Veolia Environnement) : pas
+    de ligne 'Capital Expenditure' isolée chez yfinance pour cette
+    entreprise, seulement 'Net PPE Purchase And Sale' — doit être
+    utilisée comme repli plutôt que de faire lever KeyError sur toute
+    l'entreprise (même convention de signe négatif)."""
+    financials, balance_sheet, cashflow, closes_by_year = _make_fixture_statements()
+    cashflow = cashflow.rename(index={"Capital Expenditure": "Net PPE Purchase And Sale"})
+
+    ratios = extract_ratios(
+        financials, balance_sheet, cashflow, closes_by_year, shares_outstanding=10.0
+    )  # ne doit pas lever KeyError
+
+    assert ratios["fcf"] == 120.0 + (-30.0)  # OCF + proxy capex, exercice le plus récent
+
+
 def test_extract_ratios_ignores_years_with_missing_ebitda_or_net_income():
     """yfinance ne garantit pas 5 années pleines pour chaque poste : une
     année (souvent la plus ancienne) peut manquer de valeur pour EBITDA ou

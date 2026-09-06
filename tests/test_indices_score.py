@@ -1,4 +1,5 @@
 import pytest
+import requests
 from datetime import datetime
 from indices_score import sector_risk_profile, score_rentabilite
 
@@ -966,6 +967,78 @@ def test_estimate_multiple_based_price_returns_none_when_current_ev_ebitda_is_na
         current_price=100.0, current_ev_ebitda=float("nan"), avg_ev_ebitda_5y=8.0
     )
     assert result is None
+
+
+import indices_score
+from indices_score import fetch_risk_free_rate
+
+
+class _FakeFredResponse:
+    def __init__(self, payload):
+        self._payload = payload
+
+    def raise_for_status(self):
+        pass
+
+    def json(self):
+        return self._payload
+
+
+def test_fetch_risk_free_rate_returns_none_when_api_key_missing(monkeypatch):
+    monkeypatch.delenv("FRED_API_KEY", raising=False)
+
+    def fail_if_called(*a, **k):
+        raise AssertionError("no network call expected without an API key")
+
+    monkeypatch.setattr(indices_score.requests, "get", fail_if_called)
+    assert fetch_risk_free_rate() is None
+
+
+def test_fetch_risk_free_rate_returns_latest_observation(monkeypatch):
+    monkeypatch.setenv("FRED_API_KEY", "fred-test-key")
+    monkeypatch.setattr(
+        indices_score.requests, "get",
+        lambda *a, **k: _FakeFredResponse({
+            "observations": [
+                {"value": "3.60"},
+                {"value": "3.68"},
+            ]
+        })
+    )
+    assert fetch_risk_free_rate() == 3.68
+
+
+def test_fetch_risk_free_rate_ignores_missing_observations(monkeypatch):
+    monkeypatch.setenv("FRED_API_KEY", "fred-test-key")
+    monkeypatch.setattr(
+        indices_score.requests, "get",
+        lambda *a, **k: _FakeFredResponse({
+            "observations": [
+                {"value": "3.60"},
+                {"value": "."},
+            ]
+        })
+    )
+    assert fetch_risk_free_rate() == 3.60
+
+
+def test_fetch_risk_free_rate_returns_none_on_empty_observations(monkeypatch):
+    monkeypatch.setenv("FRED_API_KEY", "fred-test-key")
+    monkeypatch.setattr(
+        indices_score.requests, "get",
+        lambda *a, **k: _FakeFredResponse({"observations": []})
+    )
+    assert fetch_risk_free_rate() is None
+
+
+def test_fetch_risk_free_rate_returns_none_on_request_exception(monkeypatch):
+    monkeypatch.setenv("FRED_API_KEY", "fred-test-key")
+
+    def raise_error(*a, **k):
+        raise requests.RequestException("boom")
+
+    monkeypatch.setattr(indices_score.requests, "get", raise_error)
+    assert fetch_risk_free_rate() is None
 
 
 from indices_score import estimate_fair_value

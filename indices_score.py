@@ -762,6 +762,39 @@ def estimate_entry_exit_prices(fair_value: float | None, ma200: float | None) ->
     return {"entry": entry, "exit": exit_price}
 
 
+FRED_RISK_FREE_SERIES = "IRLTLT01FRM156N"  # OAT 10 ans (France), FRED/OCDE, mensuel
+
+
+def fetch_risk_free_rate() -> float | None:
+    """Dernier taux OAT 10 ans publié (FRED, série IRLTLT01FRM156N,
+    mensuelle avec ~1-2 mois de décalage) — taux sans risque pour le
+    CAPM. None si la clé API FRED est absente (aucun appel réseau dans ce
+    cas) ou en cas d'échec réseau/API : toutes les entreprises retombent
+    alors sur COST_OF_CAPITAL_PROXY pour ce run."""
+    api_key = os.environ.get("FRED_API_KEY")
+    if not api_key:
+        return None
+    try:
+        start = (datetime.today() - timedelta(days=120)).strftime("%Y-%m-%d")
+        resp = requests.get(
+            "https://api.stlouisfed.org/fred/series/observations",
+            params={
+                "series_id": FRED_RISK_FREE_SERIES,
+                "api_key": api_key,
+                "file_type": "json",
+                "observation_start": start,
+            },
+            timeout=15,
+        )
+        resp.raise_for_status()
+        obs = [o for o in resp.json()["observations"] if o["value"] != "."]
+        if not obs:
+            return None
+        return float(obs[-1]["value"])
+    except Exception:
+        return None
+
+
 def estimate_valuation_targets(data: dict) -> dict:
     """Combine DCF, actif net et multiples en une juste valeur, puis en
     repères d'entrée/sortie. Toujours ces 3 clés en sortie, valeurs à None

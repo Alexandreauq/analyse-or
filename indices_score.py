@@ -674,19 +674,21 @@ DCF_TERMINAL_GROWTH = 2.0    # % croissance perpétuelle (valeur terminale)
 
 
 def estimate_dcf_price(
-    fcf: float, cagr_ebitda: float, net_debt: float, shares_outstanding: float
+    fcf: float, cagr_ebitda: float, net_debt: float, shares_outstanding: float,
+    discount_rate_pct: float,
 ) -> float | None:
     """Prix par action implicite d'un DCF simplifié : projette le FCF actuel
     sur 5 ans au taux de croissance historique de l'EBITDA (plafonné entre
     -5% et +15%/an pour éviter d'extrapoler un chiffre bruité de façon
-    absurde), actualise au coût du capital (COST_OF_CAPITAL_PROXY), ajoute
-    une valeur terminale à croissance perpétuelle de 2%. None si le FCF de
-    départ n'est pas positif (DCF non pertinent) ou si le nombre d'actions
-    est nul/inconnu."""
+    absurde), actualise au coût du capital fourni par l'appelant (WACC de
+    l'entreprise, ou COST_OF_CAPITAL_PROXY en repli), ajoute une valeur
+    terminale à croissance perpétuelle de 2%. None si le FCF de départ
+    n'est pas positif (DCF non pertinent) ou si le nombre d'actions est
+    nul/inconnu."""
     if _is_missing(fcf) or fcf <= 0 or not shares_outstanding or _is_missing(net_debt):
         return None
     growth = _clamp(cagr_ebitda, DCF_GROWTH_FLOOR, DCF_GROWTH_CAP) / 100
-    discount_rate = COST_OF_CAPITAL_PROXY / 100
+    discount_rate = discount_rate_pct / 100
     terminal_growth = DCF_TERMINAL_GROWTH / 100
 
     pv_fcf = 0.0

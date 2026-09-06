@@ -110,6 +110,10 @@
   .factor-note { color: var(--muted); font-size: 12px; line-height: 1.5; margin: 0; }
 
   .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 16px; margin: 20px 0; }
+  .scalp-panel { margin: 16px 0 8px; }
+  .scalp-panel h2 { margin: 0 0 10px; }
+  .scalp-chart-box { border: 1px solid var(--border); border-radius: 10px; overflow: hidden; height: 500px; }
+  .scalp-note { color: var(--muted); font-size: 11px; line-height: 1.5; margin: 8px 0 0; }
   .tech-row { display:flex; justify-content:space-between; font-size:13px; padding: 5px 0; }
   .tech-label { color: var(--muted); }
   .tech-value { font-weight: 500; }
@@ -176,6 +180,17 @@
     <p class="updated" id="updated"></p>
   </header>
 
+  <div class="scalp-panel">
+    <h2>Graphique temps réel</h2>
+    <div class="scalp-chart-box">
+      <div id="tv-scalping-chart" style="height:100%;"></div>
+    </div>
+    <p class="scalp-note">Or spot (OANDA:XAUUSD), bougies 1 minute — widget
+      TradingView, outils de dessin et indicateurs disponibles. Ce
+      graphique n'affecte pas le score macro ci-dessous ; aucun point
+      d'entrée n'est calculé automatiquement pour l'instant.</p>
+  </div>
+
   <main id="content">
     <div class="empty">Chargement…</div>
   </main>
@@ -206,6 +221,35 @@ function alertColor(kind) {
 }
 
 let scoreLoaded = false;
+let scalpChartLoaded = false;
+
+function loadScalpChart() {
+  // Chargé une seule fois, à la demande (pas au chargement de la page) :
+  // évite d'initialiser le widget TradingView pendant que l'onglet Or est
+  // encore `hidden` (dimensions nulles) et évite de charger le script
+  // externe pour un visiteur qui ne visite jamais cet onglet.
+  if (scalpChartLoaded) return;
+  scalpChartLoaded = true;
+  const script = document.createElement('script');
+  script.src = 'https://s3.tradingview.com/tv.js';
+  script.onload = () => {
+    new TradingView.widget({
+      autosize: true,
+      symbol: 'OANDA:XAUUSD',
+      interval: '1',
+      timezone: 'Etc/UTC',
+      theme: 'dark',
+      style: '1',
+      locale: 'fr',
+      toolbar_bg: '#1b1d25',
+      enable_publishing: false,
+      allow_symbol_change: false,
+      withdateranges: true,
+      container_id: 'tv-scalping-chart',
+    });
+  };
+  document.body.appendChild(script);
+}
 
 async function loadScore() {
   const content = document.getElementById('content');
@@ -540,6 +584,9 @@ function renderRoute(animate) {
   if (route.screen === 'or' && !scoreLoaded) {
     scoreLoaded = true;
     loadScore();
+  }
+  if (route.screen === 'or') {
+    loadScalpChart();
   }
   if (route.screen === 'indices') {
     loadIndices(route.ticker);

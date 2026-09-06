@@ -484,6 +484,61 @@ def test_extract_ratios_cagr_is_neutral_zero_when_whole_old_window_is_missing():
     assert ratios["cagr_ebitda"] == 0.0
 
 
+def test_extract_ratios_degrades_gracefully_when_latest_year_has_nan_balance_sheet_values():
+    """Un NaN sur l'exercice le plus récent (total_debt/cash/equity) ne
+    doit jamais se propager dans roce/roe/icr/net_debt_ebitda — `if X else
+    default` seul ne suffit pas (bool(nan) est True en Python), d'où le
+    garde-fou _is_missing ajouté en plus du test de vérité déjà présent."""
+    financials, balance_sheet, cashflow, closes_by_year = _make_fixture_statements()
+    latest_year = list(financials.columns)[0]
+    balance_sheet.loc["Total Debt", latest_year] = float("nan")
+    balance_sheet.loc["Stockholders Equity", latest_year] = float("nan")
+    balance_sheet.loc["Cash And Cash Equivalents", latest_year] = float("nan")
+
+    ratios = extract_ratios(
+        financials, balance_sheet, cashflow, closes_by_year, shares_outstanding=10.0
+    )
+
+    assert ratios["roce"] == 0.0
+    assert ratios["roe"] == 0.0
+    assert ratios["icr"] == 10.0  # repli documenté quand total_debt est absent/invalide
+    assert ratios["net_debt_ebitda"] == 0.0
+
+
+def test_extract_ratios_handles_latest_year_missing_from_balance_sheet_and_cashflow():
+    """Reproduit le bug SAN.PA/BN.PA (colonnes désalignées entre relevés
+    annuels), mais sur l'exercice le plus récent plutôt qu'un ancien : ne
+    doit jamais lever KeyError, doit dégrader vers les replis documentés
+    plutôt que de planter tout le calcul."""
+    years = ["2025-12-31", "2024-12-31"]
+    financials = pd.DataFrame(
+        {
+            years[0]: [1000, 200, 150, 140, 0.25],
+            years[1]: [950, 185, 138, 130, 0.25],
+        },
+        index=["Total Revenue", "EBITDA", "EBIT", "Net Income", "Tax Rate For Calcs"],
+    )
+    # balance_sheet/cashflow n'ont QUE l'exercice le plus ancien — le plus
+    # récent (years[0]) leur manque entièrement.
+    balance_sheet = pd.DataFrame(
+        {years[1]: [320, 45]}, index=["Total Debt", "Stockholders Equity"],
+    )
+    balance_sheet.loc["Cash And Cash Equivalents"] = [45]
+    cashflow = pd.DataFrame(
+        {years[1]: [110, -28]}, index=["Operating Cash Flow", "Capital Expenditure"],
+    )
+    closes_by_year = {y: 100.0 for y in years}
+
+    ratios = extract_ratios(
+        financials, balance_sheet, cashflow, closes_by_year, shares_outstanding=10.0
+    )  # ne doit pas lever KeyError
+
+    assert ratios["icr"] == 10.0
+    assert ratios["roce"] == 0.0
+    assert ratios["roe"] == 0.0
+    assert ratios["fcf"] == 0.0
+
+
 from indices_score import extract_quarterly_growth
 
 

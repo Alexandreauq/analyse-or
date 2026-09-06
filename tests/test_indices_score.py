@@ -826,6 +826,43 @@ def test_estimate_dcf_price_returns_none_when_net_debt_is_nan():
     assert result is None
 
 
+def test_estimate_dcf_price_varies_with_discount_rate():
+    """Preuve que `discount_rate_pct` est réellement pris en compte (et pas
+    silencieusement ignoré au profit d'une constante interne) : deux taux
+    différents doivent produire des prix différents."""
+    at_8 = estimate_dcf_price(
+        fcf=100.0, cagr_ebitda=10.0, net_debt=200.0, shares_outstanding=50.0,
+        discount_rate_pct=8.0,
+    )
+    at_10 = estimate_dcf_price(
+        fcf=100.0, cagr_ebitda=10.0, net_debt=200.0, shares_outstanding=50.0,
+        discount_rate_pct=10.0,
+    )
+    assert at_8 is not None and at_10 is not None
+    assert at_8 != at_10
+
+
+def test_estimate_dcf_price_returns_none_when_discount_rate_too_close_to_terminal_growth():
+    """Un WACC calculé peut, dans un régime de taux bas (ex : taux OAT
+    français négatif comme en 2020, bêta faible), tomber trop près voire
+    en dessous de la croissance terminale (2%) : la valeur terminale de
+    Gordon dégénère alors (dénominateur proche de 0 ou négatif). Doit
+    dégrader vers None plutôt que produire un prix négatif ou lever
+    ZeroDivisionError."""
+    assert estimate_dcf_price(
+        fcf=100.0, cagr_ebitda=10.0, net_debt=200.0, shares_outstanding=50.0,
+        discount_rate_pct=2.0,  # == DCF_TERMINAL_GROWTH : dénominateur nul
+    ) is None
+    assert estimate_dcf_price(
+        fcf=100.0, cagr_ebitda=10.0, net_debt=200.0, shares_outstanding=50.0,
+        discount_rate_pct=1.65,  # < DCF_TERMINAL_GROWTH : dénominateur négatif
+    ) is None
+    assert estimate_dcf_price(
+        fcf=100.0, cagr_ebitda=10.0, net_debt=200.0, shares_outstanding=50.0,
+        discount_rate_pct=2.5,  # écart < DCF_MIN_DISCOUNT_SPREAD (1.0 pt)
+    ) is None
+
+
 def _fake_ratios():
     return {
         "roce": 15.0,
@@ -881,6 +918,19 @@ def test_build_company_entry_degrades_gracefully_when_news_fetch_fails(monkeypat
     assert entry["entry_price"] < entry["exit_price"]
     assert entry["wacc"] is not None
     assert entry["wacc"] != COST_OF_CAPITAL_PROXY  # WACC réel calculable avec _fake_ratios()
+    # Le WACC calculé doit réellement atteindre le facteur Rentabilité (pas
+    # seulement la clé de sortie `wacc`) : preuve que build_company_entry ne
+    # calcule pas cost_of_capital pour rien en le laissant de côté au moment
+    # d'appeler score_rentabilite.
+    assert f"coût du capital {entry['wacc']:.1f}%" in entry["factors"][0]["raw_value"]
+    # Le WACC calculé doit aussi réellement atteindre estimate_valuation_targets
+    # (pas seulement score_rentabilite) : si build_company_entry retombait sur
+    # COST_OF_CAPITAL_PROXY pour ce seul appel, le fair_value serait celui
+    # ci-dessous plutôt que celui obtenu avec le vrai WACC.
+    fair_value_with_proxy = indices_score.estimate_valuation_targets(
+        _fake_ratios(), indices_score.COST_OF_CAPITAL_PROXY
+    )["fair_value"]
+    assert entry["fair_value"] != fair_value_with_proxy
 
 
 def test_build_company_entry_includes_news_when_fetch_succeeds(monkeypatch):
@@ -1183,6 +1233,17 @@ def test_estimate_wacc_returns_none_when_any_input_is_nan():
     ) is None
 
 
+def test_estimate_wacc_returns_none_when_beta_is_non_numeric():
+    """yfinance renvoie `info` comme un dict non typé — un bêta remonté sous
+    une forme inattendue (ex : chaîne de caractères) ne doit pas faire
+    lever d'exception (`_is_missing` ne détecte que None/NaN, pas les
+    types incompatibles avec l'arithmétique)."""
+    assert estimate_wacc(
+        risk_free_rate=3.68, beta="1.2", market_cap=100_000_000_000,
+        total_debt=50_000_000_000, tax_rate=0.25,
+    ) is None
+
+
 from indices_score import estimate_fair_value
 
 
@@ -1252,6 +1313,26 @@ def test_estimate_valuation_targets_computes_all_three_output_keys():
     assert result["entry_price"] is not None
     assert result["exit_price"] is not None
     assert result["entry_price"] < result["exit_price"]
+
+
+def test_estimate_valuation_targets_varies_with_cost_of_capital():
+    """Preuve que `cost_of_capital` est réellement transmis à la composante
+    DCF (et pas silencieusement remplacé par une constante interne) : deux
+    taux différents doivent produire des juste valeurs différentes."""
+    data = {
+        "fcf": 50.0,
+        "cagr_ebitda": 6.5,
+        "net_debt": 100.0,
+        "shares_outstanding": 10.0,
+        "equity": 200.0,
+        "current_price": 120.0,
+        "current_ev_ebitda": 10.0,
+        "avg_ev_ebitda_5y": 10.0,
+        "ma200": 110.0,
+    }
+    at_8 = estimate_valuation_targets(data, cost_of_capital=8.0)
+    at_10 = estimate_valuation_targets(data, cost_of_capital=10.0)
+    assert at_8["fair_value"] != at_10["fair_value"]
 
 
 def test_estimate_valuation_targets_degrades_to_none_with_nan_inputs():

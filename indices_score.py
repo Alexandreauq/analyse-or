@@ -391,9 +391,12 @@ def extract_ratios(financials, balance_sheet, cashflow, closes_by_year, shares_o
 
     net_debt_ebitda = net_debt_latest / ebitda[latest] if ebitda[latest] else 0.0
     icr = (
-        ebit[latest] / (total_debt[latest] * DEBT_INTEREST_RATE_PROXY / 100)
+        ebit[latest] / (total_debt[latest] * (DEBT_INTEREST_RATE_PROXY / 100))
         if total_debt[latest] else 10.0
-    )  # proxy frais financiers si non isolés (DEBT_INTEREST_RATE_PROXY)
+    )  # proxy frais financiers si non isolés (DEBT_INTEREST_RATE_PROXY) — parenthèses
+    # nécessaires pour rester strictement identique à l'ancien littéral `* 0.03`
+    # (l'associativité par défaut donnait `(total_debt * 3.0) / 100`, qui diffère
+    # de `total_debt * 0.03` d'1 ULP sur ~35% des valeurs)
 
     # CAGR lissé sur les 2 exercices les plus récents vs les 2 plus anciens
     # (plutôt qu'un simple point à point) pour réduire la sensibilité à une
@@ -662,15 +665,23 @@ OUTPUT_JSON_PATH = os.path.join(
     os.path.dirname(os.path.abspath(__file__)), "docs", "indices.json"
 )
 
-# Approximation simplifiée du coût du capital (pas de calcul de bêta désendetté
-# au v1) : taux sans risque + prime de risque marché, cf. section "hors périmètre"
-# de la méthodologie.
+# Repli utilisé quand le WACC réel de l'entreprise (estimate_wacc, plus bas)
+# n'a pas pu être calculé pour un run donné (donnée manquante : bêta, taux
+# sans risque...). Voir Methodologie_Analyse_Indices.md, section
+# "Coût du capital réel par entreprise (WACC)".
 COST_OF_CAPITAL_PROXY = 8.0  # %
 
 DCF_PROJECTION_YEARS = 5
 DCF_GROWTH_FLOOR = -5.0      # % croissance FCF minimum projetée
 DCF_GROWTH_CAP = 15.0        # % croissance FCF maximum projetée
 DCF_TERMINAL_GROWTH = 2.0    # % croissance perpétuelle (valeur terminale)
+DCF_MIN_DISCOUNT_SPREAD = 1.0  # points d'écart minimum entre le taux
+                               # d'actualisation et DCF_TERMINAL_GROWTH, pour
+                               # éviter une valeur terminale de Gordon
+                               # dégénérée (négative ou déraisonnablement
+                               # grande) quand un WACC calculé se retrouve
+                               # trop bas (ex : taux sans risque français
+                               # négatif comme en 2020, bêta faible/négatif).
 
 
 def estimate_dcf_price(
@@ -683,9 +694,15 @@ def estimate_dcf_price(
     absurde), actualise au coût du capital fourni par l'appelant (WACC de
     l'entreprise, ou COST_OF_CAPITAL_PROXY en repli), ajoute une valeur
     terminale à croissance perpétuelle de 2%. None si le FCF de départ
-    n'est pas positif (DCF non pertinent) ou si le nombre d'actions est
-    nul/inconnu."""
-    if _is_missing(fcf) or fcf <= 0 or not shares_outstanding or _is_missing(net_debt):
+    n'est pas positif (DCF non pertinent), si le nombre d'actions est
+    nul/inconnu, ou si le taux d'actualisation est trop proche/inférieur à
+    la croissance terminale (Gordon growth dégénère vers une valeur
+    négative ou déraisonnablement grande — voir DCF_MIN_DISCOUNT_SPREAD)."""
+    if (
+        _is_missing(fcf) or fcf <= 0 or not shares_outstanding or _is_missing(net_debt)
+        or _is_missing(discount_rate_pct)
+        or discount_rate_pct - DCF_TERMINAL_GROWTH < DCF_MIN_DISCOUNT_SPREAD
+    ):
         return None
     growth = _clamp(cagr_ebitda, DCF_GROWTH_FLOOR, DCF_GROWTH_CAP) / 100
     discount_rate = discount_rate_pct / 100
@@ -827,7 +844,9 @@ def estimate_wacc(
 ) -> float | None:
     """WACC par entreprise (CAPM + prime de taille, Vernimmen). None si une
     donnée nécessaire manque/est invalide — le repli sur
-    COST_OF_CAPITAL_PROXY se fait chez l'appelant, pas ici."""
+    COST_OF_CAPITAL_PROXY se fait chez l'appelant, pas ici. Ne lève jamais
+    d'exception, même si une donnée yfinance est d'un type inattendu
+    (ex : bêta remonté comme chaîne de caractères)."""
     if (
         risk_free_rate is None or _is_missing(risk_free_rate)
         or beta is None or _is_missing(beta)
@@ -836,12 +855,15 @@ def estimate_wacc(
         or tax_rate is None or _is_missing(tax_rate)
     ):
         return None
-    cost_of_equity = risk_free_rate + beta * MARKET_RISK_PREMIUM + _size_premium(market_cap)
-    cost_of_debt_after_tax = DEBT_INTEREST_RATE_PROXY * (1 - tax_rate)
-    total_capital = market_cap + total_debt
-    equity_weight = market_cap / total_capital
-    debt_weight = total_debt / total_capital
-    return equity_weight * cost_of_equity + debt_weight * cost_of_debt_after_tax
+    try:
+        cost_of_equity = risk_free_rate + beta * MARKET_RISK_PREMIUM + _size_premium(market_cap)
+        cost_of_debt_after_tax = DEBT_INTEREST_RATE_PROXY * (1 - tax_rate)
+        total_capital = market_cap + total_debt
+        equity_weight = market_cap / total_capital
+        debt_weight = total_debt / total_capital
+        return equity_weight * cost_of_equity + debt_weight * cost_of_debt_after_tax
+    except (TypeError, ValueError, ZeroDivisionError):
+        return None
 
 
 def estimate_valuation_targets(data: dict, cost_of_capital: float) -> dict:

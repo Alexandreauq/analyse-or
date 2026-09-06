@@ -158,6 +158,9 @@
   .company-ticker { color: var(--muted); font-size: 12px; }
   .company-score { font-family: 'Fraunces', serif; font-size: 20px; }
 
+  .health-banner { color: var(--muted); font-size: 12px; margin: 0 0 12px; }
+  .health-banner-warn { color: var(--rust); font-weight: 500; }
+
   .alert-row { border-left: 2px solid; padding: 4px 0 10px 12px; margin-bottom: 12px; }
   .alert-row:last-child { margin-bottom: 0; }
   .alert-head { display:flex; justify-content:space-between; font-size:13px; font-weight:500; gap:8px; }
@@ -475,6 +478,12 @@ function renderIndicesList(companies) {
     `;
     return;
   }
+  const health = indicesData.health;
+  const healthHtml = health ? (
+    health.missing_tickers.length
+      ? `<p class="health-banner health-banner-warn">⚠ ${health.returned}/${health.expected} entreprises à jour — manquantes : ${health.missing_tickers.join(', ')}</p>`
+      : `<p class="health-banner">${health.returned}/${health.expected} entreprises à jour</p>`
+  ) : '';
   const rows = companies.map(c => `
     <a class="company-row" href="#indices/${c.ticker}">
       <div class="company-row-left">
@@ -486,6 +495,7 @@ function renderIndicesList(companies) {
       </span>
     </a>`).join('');
   document.getElementById('indicesContent').innerHTML = `
+    ${healthHtml}
     <div class="panel">${rows}</div>
   `;
 }

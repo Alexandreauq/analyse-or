@@ -210,6 +210,24 @@ Mêmes bornes que pour l'or, pour la cohérence de lecture dans l'app :
 - **-15 à +15** : neutre
 - **< -15** : fragile
 
+## Historique de score & alertes
+
+Chaque entreprise conserve un historique quotidien de son score composite
+(`indices_history.json`, ~2 ans de profondeur, indépendant par ticker),
+utilisé pour dériver 3 types d'alertes affichées sur sa page détail :
+
+- **Veille** — le score vient de franchir +15 à la hausse.
+- **Risque, chute rapide** — chute de 20 points ou plus en moins de 5
+  jours (mêmes seuils que le volet Or).
+- **Entrée, conditions réunies** — score > +15 et cours actuel à moins de
+  5% du repère d'entrée (seuil propre à Indices : le repère d'entrée est
+  déjà une moyenne valorisation/technique avec ±30% de marge, contrairement
+  à la MM200 de l'Or qui est un niveau technique dur).
+
+Sans déclencheur, une alerte neutre ("Pas de signal actif") est affichée.
+Pas d'email pour ces alertes (affichage web uniquement), contrairement au
+volet Or.
+
 ## Hors périmètre (v1)
 
 - Extension aux 40 valeurs du CAC 40 et aux valeurs financières
@@ -218,5 +236,3 @@ Mêmes bornes que pour l'or, pour la cohérence de lecture dans l'app :
   entreprise (nécessiterait un échantillon de comparables) — le WACC
   utilise le bêta yfinance brut
 - Comparaison à un échantillon de pairs sectoriels pour la valorisation
-- Historique de score / alertes de franchissement de seuil par
-  entreprise

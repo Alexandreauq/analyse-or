@@ -1738,6 +1738,68 @@ def test_build_financial_narrative_context_handles_empty_quarterly_frame():
     assert "Comptes annuels" in result
 
 
+def test_build_financial_narrative_context_handles_column_mismatch_across_statements():
+    """Reproduit un bug observé en production sur SAN.PA/BN.PA : `financials`
+    remonte à une date que `balance_sheet`/`cashflow` n'ont pas (les 3
+    relevés annuels yfinance n'ont pas toujours exactement les mêmes
+    colonnes) — ne doit jamais lever KeyError, doit dégrader vers 'non
+    disponible' pour l'année sans données de bilan/trésorerie."""
+    cols = [pd.Timestamp("2025-12-31"), pd.Timestamp("2021-12-31")]
+    financials = _fake_annual_df(
+        {"Total Revenue": [1000.0, 800.0], "EBITDA": [200.0, 150.0],
+         "EBIT": [150.0, 110.0], "Net Income": [90.0, 70.0]}, cols,
+    )
+    # balance_sheet/cashflow n'ont QUE la colonne récente — 2021-12-31 absent
+    recent_only = [cols[0]]
+    balance_sheet = _fake_annual_df(
+        {"Stockholders Equity": [500.0], "Total Debt": [300.0],
+         "Cash And Cash Equivalents": [50.0]}, recent_only,
+    )
+    cashflow = _fake_annual_df(
+        {"Operating Cash Flow": [180.0], "Capital Expenditure": [-60.0]}, recent_only,
+    )
+    quarterly_financials = _fake_annual_df({"Total Revenue": [260.0]}, recent_only)
+
+    result = indices_score.build_financial_narrative_context(
+        financials, balance_sheet, cashflow, quarterly_financials
+    )  # ne doit pas lever KeyError
+
+    assert "2021-12-31" in result
+    assert "dette nette non disponible" in result
+    assert "FCF non disponible" in result
+    assert "capitaux propres non disponible" in result
+
+
+def test_extract_ratios_handles_column_mismatch_across_statements():
+    """Même bug de production que ci-dessus, mais pour la boucle EV/EBITDA
+    d'extract_ratios (`total_debt[col]`/`cash[col]` indexés par une date
+    qui vient de `financials.columns`, pas forcément présente dans
+    `balance_sheet`) — ne doit jamais lever KeyError."""
+    cols = [pd.Timestamp("2025-12-31"), pd.Timestamp("2021-12-31")]
+    financials = _fake_annual_df(
+        {
+            "Total Revenue": [1000.0, 800.0], "EBITDA": [200.0, 150.0],
+            "EBIT": [150.0, 110.0], "Net Income": [90.0, 70.0],
+            "Tax Rate For Calcs": [0.25, 0.25],
+        }, cols,
+    )
+    recent_only = [cols[0]]
+    balance_sheet = _fake_annual_df(
+        {"Stockholders Equity": [500.0], "Total Debt": [300.0],
+         "Cash And Cash Equivalents": [50.0]}, recent_only,
+    )
+    cashflow = _fake_annual_df(
+        {"Operating Cash Flow": [180.0], "Capital Expenditure": [-60.0]}, recent_only,
+    )
+    closes_by_year = {cols[0]: 100.0, cols[1]: 90.0}
+
+    result = indices_score.extract_ratios(
+        financials, balance_sheet, cashflow, closes_by_year, shares_outstanding=10.0
+    )  # ne doit pas lever KeyError
+
+    assert isinstance(result["current_ev_ebitda"], float)
+
+
 def test_latest_quarter_date_returns_iso_string():
     cols = [pd.Timestamp("2025-09-30"), pd.Timestamp("2025-06-30")]
     quarterly_financials = _fake_annual_df({"Total Revenue": [260.0, 250.0]}, cols)

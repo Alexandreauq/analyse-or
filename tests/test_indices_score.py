@@ -1623,15 +1623,26 @@ def test_main_writes_alerts_key_for_every_company(monkeypatch, tmp_path):
     était supprimé de main(), ce test doit échouer."""
     import json
 
+    sentinel_previous_analyses = {"__sentinel__": True}
     monkeypatch.setattr(indices_score, "fetch_risk_free_rate", lambda: 3.68)
     monkeypatch.setattr(
-        indices_score, "build_company_entry",
-        lambda ticker, name, risk_free_rate, previous_analyses: {
+        indices_score, "load_previous_company_analyses", lambda: sentinel_previous_analyses,
+    )
+
+    def _fake_build_company_entry(ticker, name, risk_free_rate, previous_analyses):
+        assert previous_analyses is sentinel_previous_analyses, (
+            "main() doit transmettre le previous_analyses réellement chargé "
+            "par load_previous_company_analyses(), pas un dict vide/différent "
+            "— sans ça, le mécanisme de carry-forward (contrôle des coûts) "
+            "est silencieusement désactivé en production."
+        )
+        return {
             "ticker": ticker, "name": name, "score": 20.0,
             "interpretation": "Solide",
             "current_price": 100.0, "entry_price": 100.0,
-        },
-    )
+        }
+
+    monkeypatch.setattr(indices_score, "build_company_entry", _fake_build_company_entry)
     monkeypatch.setattr(indices_score, "load_indices_history", lambda: [])
     monkeypatch.setattr(indices_score, "append_indices_history", lambda entries: entries)
     output_path = tmp_path / "indices.json"
@@ -1702,6 +1713,29 @@ def test_build_financial_narrative_context_handles_missing_values():
     )
 
     assert "EBITDA non disponible" in result
+
+
+def test_build_financial_narrative_context_handles_empty_quarterly_frame():
+    cols = [pd.Timestamp("2025-12-31")]
+    financials = _fake_annual_df(
+        {"Total Revenue": [1000.0], "EBITDA": [200.0],
+         "EBIT": [150.0], "Net Income": [90.0]}, cols,
+    )
+    balance_sheet = _fake_annual_df(
+        {"Stockholders Equity": [500.0], "Total Debt": [300.0],
+         "Cash And Cash Equivalents": [50.0]}, cols,
+    )
+    cashflow = _fake_annual_df(
+        {"Operating Cash Flow": [180.0], "Capital Expenditure": [-60.0]}, cols,
+    )
+    empty_quarterly = pd.DataFrame()
+
+    result = indices_score.build_financial_narrative_context(
+        financials, balance_sheet, cashflow, empty_quarterly
+    )
+
+    assert "Derniers trimestres publiés" in result
+    assert "Comptes annuels" in result
 
 
 def test_latest_quarter_date_returns_iso_string():
@@ -1855,3 +1889,48 @@ def test_build_company_entry_regenerates_analysis_when_quarter_changed(monkeypat
 
     assert entry["financial_analysis_html"] == "<p>Nouvelle analyse.</p>"
     assert entry["financial_analysis_quarter"] == "2026-06-30"
+
+
+def test_build_company_entry_carries_forward_when_latest_quarter_date_is_none(monkeypatch):
+    """Si latest_quarter_date est None (panne yfinance sur le trimestriel),
+    ne doit pas régénérer à chaque run — coût illimité sinon."""
+    ratios = _fake_ratios()
+    ratios["latest_quarter_date"] = None
+    monkeypatch.setattr(indices_score, "fetch_company_financials", lambda ticker: ratios)
+    monkeypatch.setattr(indices_score, "fetch_news", lambda name: [])
+
+    def fail_if_called(*a, **k):
+        raise AssertionError("generate_financial_analysis ne doit pas être appelée si latest_quarter_date est None et qu'une analyse précédente existe")
+
+    monkeypatch.setattr(indices_score, "generate_financial_analysis", fail_if_called)
+
+    entry = indices_score.build_company_entry(
+        "BN.PA", "Danone", risk_free_rate=3.68,
+        previous_analyses={"BN.PA": {
+            "financial_analysis_html": "<p>Analyse existante.</p>",
+            "financial_analysis_quarter": "2026-06-30",
+        }},
+    )
+
+    assert entry["financial_analysis_html"] == "<p>Analyse existante.</p>"
+
+
+def test_build_company_entry_keeps_previous_analysis_when_generation_fails(monkeypatch):
+    """Si le trimestre a changé mais que generate_financial_analysis échoue
+    (None), garder l'ancienne analyse valide plutôt que la remplacer par None."""
+    monkeypatch.setattr(indices_score, "fetch_company_financials", lambda ticker: _fake_ratios())
+    monkeypatch.setattr(indices_score, "fetch_news", lambda name: [])
+    monkeypatch.setattr(
+        indices_score, "generate_financial_analysis",
+        lambda company_name, financial_context, ratios_summary: None,
+    )
+
+    entry = indices_score.build_company_entry(
+        "BN.PA", "Danone", risk_free_rate=3.68,
+        previous_analyses={"BN.PA": {
+            "financial_analysis_html": "<p>Ancienne analyse valide.</p>",
+            "financial_analysis_quarter": "2026-03-31",  # différent de _fake_ratios() (2026-06-30)
+        }},
+    )
+
+    assert entry["financial_analysis_html"] == "<p>Ancienne analyse valide.</p>"

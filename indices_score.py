@@ -58,6 +58,18 @@ COMPANIES = [
     {"ticker": "STMPA.PA", "name": "STMicroelectronics"},
     {"ticker": "STLAP.PA", "name": "Stellantis"},
     {"ticker": "CA.PA", "name": "Carrefour"},
+    # Lot 2 d'extension CAC 40 (10 entreprises), tickers Yahoo Finance
+    # vérifiés individuellement comme le lot 1.
+    {"ticker": "SAF.PA", "name": "Safran"},
+    {"ticker": "LR.PA", "name": "Legrand"},
+    {"ticker": "SGO.PA", "name": "Saint-Gobain"},
+    {"ticker": "HO.PA", "name": "Thales"},
+    {"ticker": "VIE.PA", "name": "Veolia Environnement"},
+    {"ticker": "ML.PA", "name": "Michelin"},
+    {"ticker": "CAP.PA", "name": "Capgemini"},
+    {"ticker": "RI.PA", "name": "Pernod Ricard"},
+    {"ticker": "RNO.PA", "name": "Renault"},
+    {"ticker": "ERF.PA", "name": "Eurofins Scientific"},
 ]
 
 SECTOR_PROFILES = {

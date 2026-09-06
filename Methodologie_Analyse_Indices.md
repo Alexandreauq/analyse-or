@@ -64,10 +64,26 @@ l'or), chaque facteur noté **-10/+10**.
   Sert à vérifier que la rentabilité des capitaux propres provient
   d'une vraie performance opérationnelle (ROCE) et non uniquement de
   l'endettement.
-- Score favorable si le ROCE dépasse durablement une estimation
-  simplifiée du coût du capital (proxy : taux sans risque + prime de
-  risque actions, sans calcul de bêta complet au v1), et si la
-  tendance sur 5 ans est stable ou croissante.
+- Score favorable si le ROCE dépasse durablement le coût du capital de
+  l'entreprise (WACC calculé — voir ci-dessous), et si la tendance sur 5
+  ans est stable ou croissante.
+
+> **Coût du capital réel par entreprise (WACC).** `Re = Rf_France + β ×
+> prime_marché + prime_taille(capitalisation)` (CAPM), `WACC =
+> capitalisation/(capitalisation+dette) × Re + dette/(capitalisation+dette)
+> × Rd_après_IS`. `Rf_France` = dernier taux OAT 10 ans publié (FRED,
+> série `IRLTLT01FRM156N`, mensuelle) — pas le taux américain, une
+> entreprise du CAC 40 valorisée en euros s'actualise avec un taux sans
+> risque en euros. `β` = bêta yfinance brut (endetté) — pas un bêta
+> désendetté puis réendetté à la structure financière de l'entreprise
+> comme le recommanderait une analyse plus poussée, faute d'échantillon
+> de comparables disponible ici. Prime de risque marché fixe à 5,0%.
+> Prime de taille par bandes de capitalisation (de +0% au-delà de 50 Md€
+> à +3,0 pts en dessous de 2 Md€). `Rd` reprend le même taux proxy que
+> l'ICR (3,0%, charges financières non fiablement isolées chez ces
+> entreprises). Si une donnée manque pour une entreprise (bêta absent,
+> taux sans risque non récupéré...), repli sur un coût du capital fixe de
+> 8% pour cette entreprise seulement.
 
 > **Simplification v1 (implémentation).** `score_rentabilite` /
 > `extract_ratios` ne calculent le ROCE et le ROE que sur le dernier
@@ -198,8 +214,9 @@ Mêmes bornes que pour l'or, pour la cohérence de lecture dans l'app :
 
 - Extension aux 40 valeurs du CAC 40 et aux valeurs financières
   (grille dédiée à construire séparément)
-- Calcul complet du coût du capital (bêta désendetté, prime de risque
-  de marché) — proxy simplifié au v1
+- Bêta désendetté puis réendetté à la structure financière de chaque
+  entreprise (nécessiterait un échantillon de comparables) — le WACC
+  utilise le bêta yfinance brut
 - Comparaison à un échantillon de pairs sectoriels pour la valorisation
 - Historique de score / alertes de franchissement de seuil par
   entreprise

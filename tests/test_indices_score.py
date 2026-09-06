@@ -1357,3 +1357,64 @@ def test_estimate_valuation_targets_degrades_to_none_with_nan_inputs():
     assert result["exit_price"] is None
     for value in result.values():
         assert value is None or not (isinstance(value, float) and math.isnan(value))
+
+
+def test_load_indices_history_returns_empty_list_when_file_absent(tmp_path):
+    missing_path = tmp_path / "does_not_exist.json"
+    assert indices_score.load_indices_history(path=str(missing_path)) == []
+
+
+def test_load_indices_history_returns_empty_list_on_corrupted_json(tmp_path):
+    corrupted_path = tmp_path / "corrupted.json"
+    corrupted_path.write_text("{not valid json", encoding="utf-8")
+    assert indices_score.load_indices_history(path=str(corrupted_path)) == []
+
+
+def test_append_indices_history_adds_new_entries(tmp_path):
+    path = tmp_path / "history.json"
+    result = indices_score.append_indices_history(
+        [{"date": "2026-09-06", "ticker": "MC.PA", "composite": 42.0}],
+        path=str(path),
+    )
+    assert result == [{"date": "2026-09-06", "ticker": "MC.PA", "composite": 42.0}]
+    assert indices_score.load_indices_history(path=str(path)) == result
+
+
+def test_append_indices_history_trims_independently_per_ticker(tmp_path):
+    """Ajouter une entrée au ticker A ne doit jamais tronquer l'historique
+    du ticker B — chaque ticker garde sa propre fenêtre de rétention."""
+    import json
+    path = tmp_path / "history.json"
+    existing = (
+        [{"date": f"2020-01-{i:02d}", "ticker": "MC.PA", "composite": float(i)} for i in range(1, 10)]
+        + [{"date": f"2020-01-{i:02d}", "ticker": "TTE.PA", "composite": float(i)} for i in range(1, 5)]
+    )
+    path.write_text(json.dumps(existing), encoding="utf-8")
+
+    result = indices_score.append_indices_history(
+        [{"date": "2026-09-06", "ticker": "MC.PA", "composite": 99.0}],
+        path=str(path),
+    )
+    tte_entries = [e for e in result if e["ticker"] == "TTE.PA"]
+    mc_entries = [e for e in result if e["ticker"] == "MC.PA"]
+    assert len(tte_entries) == 4  # inchangé
+    assert len(mc_entries) == 10  # 9 existantes + 1 nouvelle
+    assert mc_entries[-1] == {"date": "2026-09-06", "ticker": "MC.PA", "composite": 99.0}
+
+
+def test_append_indices_history_retains_only_last_730_entries_per_ticker(tmp_path):
+    import json
+    path = tmp_path / "history.json"
+    existing = [
+        {"date": f"2020-{(i % 12) + 1:02d}-01", "ticker": "MC.PA", "composite": float(i)}
+        for i in range(735)
+    ]
+    path.write_text(json.dumps(existing), encoding="utf-8")
+
+    result = indices_score.append_indices_history(
+        [{"date": "2026-09-06", "ticker": "MC.PA", "composite": 42.0}],
+        path=str(path),
+    )
+    mc_entries = [e for e in result if e["ticker"] == "MC.PA"]
+    assert len(mc_entries) == 730
+    assert mc_entries[-1]["composite"] == 42.0

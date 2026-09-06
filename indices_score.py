@@ -665,6 +665,40 @@ OUTPUT_JSON_PATH = os.path.join(
     os.path.dirname(os.path.abspath(__file__)), "docs", "indices.json"
 )
 
+INDICES_HISTORY_PATH = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "indices_history.json"
+)
+HISTORY_RETENTION_PER_TICKER = 730  # ~2 ans, une entrée par jour et par ticker
+
+
+def load_indices_history(path=INDICES_HISTORY_PATH) -> list[dict]:
+    """Historique quotidien du score composite par entreprise. []  si le
+    fichier n'existe pas encore ou est corrompu — jamais d'exception."""
+    if not os.path.exists(path):
+        return []
+    with open(path, encoding="utf-8") as fh:
+        try:
+            return json.load(fh)
+        except json.JSONDecodeError:
+            return []
+
+
+def append_indices_history(entries: list[dict], path=INDICES_HISTORY_PATH) -> list[dict]:
+    """Ajoute les entrées du jour (une par entreprise) et retrimme chaque
+    ticker indépendamment à HISTORY_RETENTION_PER_TICKER, pour que l'ajout
+    d'une entreprise ne tronque jamais l'historique d'une autre."""
+    history = load_indices_history(path)
+    history.extend(entries)
+    by_ticker: dict[str, list[dict]] = {}
+    for entry in history:
+        by_ticker.setdefault(entry["ticker"], []).append(entry)
+    trimmed = []
+    for ticker_entries in by_ticker.values():
+        trimmed.extend(ticker_entries[-HISTORY_RETENTION_PER_TICKER:])
+    with open(path, "w", encoding="utf-8") as fh:
+        json.dump(trimmed, fh, ensure_ascii=False, indent=2)
+    return trimmed
+
 # Repli utilisé quand le WACC réel de l'entreprise (estimate_wacc, plus bas)
 # n'a pas pu être calculé pour un run donné (donnée manquante : bêta, taux
 # sans risque...). Voir Methodologie_Analyse_Indices.md, section

@@ -6,7 +6,7 @@
       "name": "LVMH",
       "sector": "Consumer Cyclical",
       "sector_profile": "cyclique",
-      "score": 27.9,
+      "score": 31.9,
       "interpretation": "Solide",
       "factors": [
         {
@@ -35,7 +35,7 @@
         },
         {
           "name": "Valorisation relative",
-          "score": -3.7241695759668847,
+          "score": -3.724169646626067,
           "weight": 0.08,
           "raw_value": "EV/EBITDA 13.2x (moy. 5 ans 12.7x) — PER 28.8x (moy. 5 ans 24.3x)"
         },
@@ -47,9 +47,9 @@
         },
         {
           "name": "Actualité récente",
-          "score": -2.0,
+          "score": 2.0,
           "weight": 0.1,
-          "raw_value": "Ton moyen des 5 actualités récentes : -0.20"
+          "raw_value": "Ton moyen des 5 actualités récentes : +0.20"
         }
       ],
       "news": [
@@ -58,8 +58,16 @@
           "date": "2026-09-06",
           "link": "https://news.google.com/rss/articles/CBMi4AFBVV95cUxQdFZtbXhrbC16QjR5NG5xN3N0d1lPelpCV1ZUNzk4eWY5VE50ZS1XSzhyM3ZUeS1ScHlQaWEweW1STzVULUNRcDNkQkpBQndTTUU0UmEtU01zVllkZ2sxV0VtdkNYOE1QM0pZQUVyQmhXMVJWU3QxTWJHaDBwdGJQR1hyS2VlY0hjdmdvN29ibUV4cnVlN3NBRnZIRnJERlZJajh4V1pHT3I1enZNNGNVaXJGeVRqMW1Ca25tQmlUVVNJbl9hRElWMGxaRUhLZmc5TEVjSk5LUWstQmNUVWtELQ?oc=5",
           "source": "Le Figaro Bourse",
-          "summary": "Cet article suggère que Louis Vuitton fait face à une controverse en Chine qui pourrait avoir des répercussions négatives sur la valorisation de l'action LVMH selon l'analyse d'UBS.",
+          "summary": "Cet article suggère que Louis Vuitton pourrait être confrontée à une controverse en Chine ayant potentiellement des répercussions négatives sur la valorisation de l'action LVMH selon l'analyse d'UBS.",
           "sentiment": -1
+        },
+        {
+          "title": "«Le dernier lauréat a vu son chiffre d’affaires multiplié par six»: dans les coulisses du LVMH Prize, le prix le plus prestigieux de la mode - Le Figaro",
+          "date": "2026-09-05",
+          "link": "https://news.google.com/rss/articles/CBMihgJBVV95cUxOWkVQTHRCaWthQ1hDT3FmZ1piOWdxNDU4T0NmVmtYTE9Vc0k2R1dXY1VaMXh1QXVBdjdmX2dDbUNucXc1WGV2b0paWU9PTjFOMjFfV2JwYkN6TXRBZ3RkRXI3V3cwMEdZaEpRc2MzLXN4c1dKN3hMRU00UUpaUm5Ia05DQ29vRnA1Nnd4T2ZZNldlRlhmRmhFZ2NrVzA0SU9NNzZSWjBYZ002UVFqMmhqT0FtZ3dzbGNSRUR1cGo4a3VSNXhybXh1TDB0Qmluc2M0Z1RrYzJSUXlYelFTTl80TWNEVWstOW9sY2x1eG05TjJfS1RGR3hhV1ZScFVXc0l2XzI0aVpB?oc=5",
+          "source": "Le Figaro",
+          "summary": "Cet article suggère que le LVMH Prize serait un concours de mode très influent dont les lauréats connaîtraient une croissance commerciale remarquable, le dernier gagnant ayant apparemment vu son chiffre d'affaires augmenter significativement.",
+          "sentiment": 1
         },
         {
           "title": "Mode : le prix LVMH décerné à Julie Kegels - Le Monde.fr",
@@ -70,34 +78,26 @@
           "sentiment": 1
         },
         {
-          "title": "Challenges, Sciences et Avenir : la fuite des journalistes coûte une fortune à LVMH - l'Informé",
-          "date": "2026-09-04",
-          "link": "https://news.google.com/rss/articles/CBMi1AFBVV95cUxNcGQ3T25qbXRfQTJlTnN4Y2xqTzJXaW1sOWY3OFZfWnZzV2NRU1I1TDhrNHJZN0RjcUZWSWQyeUlJNmttUklhTnJxajRraVc4Y2lQalhHSVIzQlM2d1FkYWJwdGtxVTZTMndSUlVsOVhCY3VEcktqNlp0TktaUHBmVm5jUzNxTG5FdjhudExCMzd2RDJQZFBXanI0cGdfS2pFc0FvQzM0V01VVjFCZ3UwRWd4RHlzMzBBdi1LaE9NMUFFNjBqTl9meGt1Q3ppNXIzWUhUWg?oc=5",
-          "source": "l'Informé",
-          "summary": "Cet article suggère que LVMH aurait subi des pertes financières significatives en raison du départ de journalistes des titres de presse Challenges et Sciences et Avenir, potentiellement liés à des fuites d'informations.",
-          "sentiment": -1
-        },
-        {
-          "title": "Hermes intl : Bank of America s'inquiète de la reprise pour le secteur du luxe, Hermès, Kering et LVMH souffrent en Bourse - BFM Bourse",
-          "date": "2026-09-03",
-          "link": "https://news.google.com/rss/articles/CBMinwJBVV95cUxPVmJOazNQQlQ4d3g0d3JXMlRUQ2QzMEhrTUtWUEgtQm50d2tCaE9yOElOZ0F0UzE3VW5qbWk3QWRPUFVzUHhjM1gwbGFKUHd2WkdVSG9UNkc3bTBqTGo3Vkt2bl9Xd3RTRUEtVnBRSF92dFN3UUpOUV96OWlfbUJyZVQ4UVRBVmJTYTdTcFlIMGg5YlRYT09xeEdNazE4WHNEZmFiQlN4MWNqZTMzMm1QX0ZoZnR5Z0J1amUxcUNfZHpWTWY4SHBYU1lRTUJ0eU5tcnVRVDlWQTR0RGlTRUZuYi1qcmYzVlVaTzNvdXlRQ3Nhb1p5cUVESXdKdGlvZGE1LW5oSno3clctSDVETVhRa2lFTlNybHdtaVo2R19Tbw?oc=5",
-          "source": "BFM Bourse",
-          "summary": "Cet article suggère que Bank of America exprimerait des préoccupations concernant la reprise du secteur du luxe, ce qui pourrait expliquer les pertes boursières observées pour Hermès, Kering et LVMH.",
-          "sentiment": -1
-        },
-        {
           "title": "Julie Kegels remporte le Prix LVMH - FashionNetwork France",
           "date": "2026-09-04",
           "link": "https://news.google.com/rss/articles/CBMiigFBVV95cUxPUEJsSjhBWllBNENBQ1NPd0ZVNkh4RERyQmtkSlI1c2JRRm1YMjZROURNb09OY1lQUEhYQUlfNEZFV2lPRTRHOEd2R2JvalM3bmw0S2dXblVHekVUT3pUX0kwci04c1RWMzhlREowdS0xOXFCNkVTSGs1NXJMSWtFb1JmTzVjM3I1UWc?oc=5",
           "source": "FashionNetwork France",
-          "summary": "Cet article suggère que Julie Kegels aurait reçu un prix décerné conjointement par LVMH et FashionNetwork France, ce qui pourrait indiquer une reconnaissance dans le domaine de la mode ou du luxe.",
+          "summary": "Cet article suggère que Julie Kegels aurait remporté un prix décerné par LVMH en partenariat avec FashionNetwork France, ce qui pourrait indiquer une reconnaissance dans le secteur de la mode ou du luxe.",
           "sentiment": 1
+        },
+        {
+          "title": "Challenges, Sciences et Avenir : la fuite des journalistes coûte une fortune à LVMH - l'Informé",
+          "date": "2026-09-04",
+          "link": "https://news.google.com/rss/articles/CBMi1AFBVV95cUxNcGQ3T25qbXRfQTJlTnN4Y2xqTzJXaW1sOWY3OFZfWnZzV2NRU1I1TDhrNHJZN0RjcUZWSWQyeUlJNmttUklhTnJxajRraVc4Y2lQalhHSVIzQlM2d1FkYWJwdGtxVTZTMndSUlVsOVhCY3VEcktqNlp0TktaUHBmVm5jUzNxTG5FdjhudExCMzd2RDJQZFBXanI0cGdfS2pFc0FvQzM0V01VVjFCZ3UwRWd4RHlzMzBBdi1LaE9NMUFFNjBqTl9meGt1Q3ppNXIzWUhUWg?oc=5",
+          "source": "l'Informé",
+          "summary": "Cet article suggère que LVMH aurait subi des pertes financières significatives en raison du départ de journalistes des médias Challenges et Sciences et Avenir qu'il contrôle.",
+          "sentiment": -1
         }
       ],
       "current_price": 429.1000061035156,
-      "fair_value": 340.684972026484,
-      "entry_price": 374.9962576195477,
-      "exit_price": 528.3530527095486,
+      "fair_value": 340.6849717131343,
+      "entry_price": 374.9962575098753,
+      "exit_price": 528.3530525058713,
       "wacc": 6.999626771308545,
       "financial_analysis_html": "<h3>Diagnostic global</h3><p>LVMH présente le profil d'un groupe très rentable et solidement capitalisé, mais entré dans une phase de normalisation : le chiffre d'affaires recule de 84,7 Md€ à 80,8 Md€ entre 2024 et 2025 (-4,6 %) et le résultat net passe de 15,2 Md€ en 2023 à 10,9 Md€ en 2025, soit une contraction de près de 30 % en deux ans. La rentabilité économique (ROCE 12,6 %) demeure toutefois nettement supérieure au coût du capital estimé (7,0 %), et la structure financière (dette nette/EBITDA 1,1x, ICR 16,2x) reste très confortable. Le point de résistance est la génération de trésorerie, en progression malgré la baisse des résultats.</p><h3>Structure financière et solvabilité</h3><p>Les capitaux propres s'établissent à 67,5 Md€ fin 2025, stables par rapport à 2024 (67,5 Md€) après une progression continue depuis 2022 (55,1 Md€). La dette nette recule de 31,6 Md€ à 27,9 Md€, soit un désendettement de 3,6 Md€ sur l'exercice, ramenant le gearing (dette nette/capitaux propres) d'environ 47 % à 41 %.</p><ul><li><strong>Levier</strong> : dette nette/EBITDA de 1,1x, très en deçà des seuils d'alerte usuels (2,5x-3,0x) pour un groupe de cette taille et de cette régularité de cash-flows.</li><li><strong>Couverture des frais financiers</strong> : ICR de 16,2x, qui traduit un poids des charges financières marginal au regard du résultat d'exploitation (17,8 Md€) et laisse une marge de manœuvre importante en cas de nouvelle dégradation des marges.</li><li><strong>Flexibilité</strong> : la capacité de remboursement théorique (dette nette couverte par un peu plus d'une année d'EBITDA) confère au groupe une capacité d'acquisition ou de résistance conjoncturelle élevée, sans contrainte visible de solvabilité.</li></ul><p>La stagnation des capitaux propres en 2025, malgré un résultat net de 10,9 Md€, suggère un taux de distribution élevé et/ou des rachats d'actions et effets de change négatifs, la totalité du résultat n'étant pas mise en réserve.</p><h3>Rentabilité économique et financière</h3><p>Le ROCE de 12,6 % dégage un <strong>spread positif de 5,6 points</strong> par rapport au coût du capital de 7,0 % : le groupe crée de la valeur sur des capitaux engagés de l'ordre de 95 Md€ (capitaux propres + dette nette), ce qui représente une création de valeur annuelle substantielle. Le ROE de 16,1 %, supérieur au ROCE, confirme un <strong>effet de levier financier favorable</strong>, la rentabilité économique après impôt excédant le coût de la dette, dont le poids reste par ailleurs modéré.</p><p>La dynamique des marges est en revanche clairement descendante :</p><ul><li><strong>Marge d'EBITDA</strong> : 33,7 % (2022), 34,6 % (2023), 32,0 % (2024), 32,0 % (2025) — érosion d'environ 2,6 points depuis le pic de 2023.</li><li><strong>Marge d'EBIT</strong> : 25,9 % (2022), 26,2 % (2023), 22,8 % (2024), 22,1 % (2025) — recul de plus de 4 points en deux ans, signe d'un effet de ciseaux entre baisse des volumes et charges fixes (réseau de distribution, communication, amortissements).</li><li><strong>Marge nette</strong> : de 17,6 % en 2023 à 13,5 % en 2025.</li></ul><p>La croissance moyenne du chiffre d'affaires (+1,5 %/an) et la légère érosion de l'EBITDA (-0,3 %/an) traduisent une phase de plateau après le rebond post-pandémique, avec une pression sur le levier opérationnel plus marquée sur le résultat que sur les revenus.</p><h3>Analyse de la trésorerie et du free cash-flow</h3><p>C'est le point le plus favorable du diagnostic : le free cash-flow progresse de 10,6 Md€ (2023) à 13,4 Md€ (2024) puis <strong>14,2 Md€ (2025)</strong>, soit une hausse de 6 % sur le dernier exercice alors même que l'EBITDA recule de 4,6 %. Le taux de conversion FCF/EBITDA atteint 55 %, niveau élevé qui témoigne d'une bonne maîtrise du besoin en fonds de roulement (vraisemblablement un allègement des stocks après la phase de reconstitution) et d'une discipline sur les investissements.</p><p>Le FCF de 14,2 Md€ couvre 1,3 fois le résultat net, ce qui indique une qualité comptable satisfaisante des résultats. Il a permis de financer simultanément le désendettement (-3,6 Md€) et les distributions aux actionnaires, sans recours à des ressources externes. Le cash-flow libre excède également nettement le service de la dette (charges financières implicites de l'ordre de 1,1 Md€ au regard de l'ICR).</p><h3>Dynamique récente</h3><p>Aucune publication trimestrielle n'est fournie dans les données transmises ; l'analyse de la dynamique récente repose donc exclusivement sur l'exercice 2025 comparé à la tendance pluriannuelle. Celui-ci confirme la séquence engagée en 2024 : deuxième année consécutive de baisse du chiffre d'affaires (86,2 Md€ en 2023, 84,7 Md€ en 2024, 80,8 Md€ en 2025), poursuite de la compression du résultat d'exploitation (-7,5 % en 2025 après -14,6 % en 2024) et du résultat net (-13,3 % après -17,3 %). Le rythme de dégradation ralentit toutefois sur le bas du compte de résultat, et la marge d'EBITDA se stabilise à 32,0 % pour la deuxième année. Parallèlement, le bilan se renforce (dette nette au plus bas des trois derniers exercices, gearing en repli) et le cash-flow libre atteint son plus haut niveau de la période observée.</p><h3>Synthèse</h3><ul><li><strong>Solvabilité</strong> : très solide — levier de 1,1x, couverture des intérêts de 16,2x, gearing en amélioration à 41 %.</li><li><strong>Rentabilité</strong> : créatrice de valeur (ROCE 12,6 % vs coût du capital 7,0 %, spread de +5,6 pts) et ROE de 16,1 % amplifié par un levier maîtrisé, mais en repli continu depuis 2023 sous l'effet de l'érosion des marges.</li><li><strong>Trésorerie</strong> : point fort du dossier — FCF de 14,2 Md€ en hausse et conversion de 55 % de l'EBITDA, permettant à la fois désendettement et distribution.</li><li><strong>Point de vigilance</strong> : la contraction simultanée du chiffre d'affaires (-4,6 % en 2025) et des marges opérationnelles (-4,1 pts d'EBIT depuis 2023) ; une poursuite de cette tendance rapprocherait mécaniquement le ROCE du coût du capital, la marge de sécurité actuelle restant néanmoins confortable.</li></ul><p>Au total, le profil financier est celui d'un groupe en phase de décélération de son cycle d'activité, mais dont la structure financière et la génération de trésorerie absorbent sans tension la baisse des résultats.</p><p><em>Cette analyse est fournie à titre informatif et ne constitue ni un conseil en investissement, ni une recommandation d'achat ou de vente.</em></p>",
       "financial_analysis_quarter": "2025-12-31",
@@ -150,7 +150,7 @@
         },
         {
           "name": "Dynamique récente",
-          "score": 7.836360091070571,
+          "score": 7.8363601454492136,
           "weight": 0.1,
           "raw_value": "Cours +11.3% vs MM200 — CA dernier trim. +27.8% vs an dernier (tendance 5 ans -11.5%)"
         },
@@ -167,7 +167,7 @@
           "date": "2026-09-05",
           "link": "https://news.google.com/rss/articles/CBMiqgJBVV95cUxNQWhubWR5bkVzWWZURXpYUk51ZW4xbFRJZ0pUNXd3eC1hZW1jMGZwS1c1ejJHMHVpODd5VmJ3OXpxVW02aXQ3RC1wUC1qR0Q0eEZHRWY2M2tqUjVfTnJTR3Q1bUtvYWN0TnpJbTU0dFRRMHVkcGNOeWQtMm5FcjNXb0lQWjBiYW14NEV3ODFVaC1ONmdDMUxrQ3RiSHcxQllwODVKRUVPd1BlVmVyMzJ3a2w5N3lJSkwwYVVMenNOY3VsZHBiOEhDYlg0aDZzNWkzWUZENDBnRURuSDVEYy05dEVhb05STkRCNnpqeEUya0UtTUhrcnNEc3UxWkZEZklXYWVhYUwtWWFKeGFEOVkzSnhZaDloenpUeXU5MUlkRG5ISkZ3SWJqOU5n?oc=5",
           "source": "L'Équipe",
-          "summary": "Cet article suggère que TotalEnergies pourrait cesser son partenariat avec la formation cycliste de Jean-René Bernaudeau, ce qui poserait des défis importants pour le financement et la continuité du cyclisme français.",
+          "summary": "Cet article suggère que TotalEnergies pourrait être un sponsor important pour l'équipe cycliste Arkea-Samsic et que son départ potentiel poserait des défis significatifs au financement et à la continuité du cyclisme français.",
           "sentiment": -1
         },
         {
@@ -175,7 +175,7 @@
           "date": "2026-09-06",
           "link": "https://news.google.com/rss/articles/CBMijgJBVV95cUxQZTlCUVZsTC1nTkFCQ0ltdGVuMFZnR21yMUJ0NUFrTFJIdlBESk5xVlc1cWNzaVEzNzdqMUFrT200YWR0TFhCLWZiaVdWRkIzWi1mNnNIMjIwZ080MW0tM09JczBIX3RxUVk0SUVLSS13a1ZwaktIcksxV0EyVlVKSE5OOFNGVmdRSTVqQ1pFTGtsUEs0SHZGbG9fWi1pQkdPTjhjeGtaOXo0RjFqNnZhSjZCdEpvcmY3Ny11QzF3YllWazBYRUJXdTczTVBuYndKYUtHR0RCZlJ4bV9WanVwMXJZSEtveXp2RVhVUWx5Q2syd0l1NG8tU0tUb0M0c3ZjVDBkbUVTRF9DQTJxeVE?oc=5",
           "source": "Ouest-France",
-          "summary": "Cet article suggère que Baptiste Vadic, coureur professionnel de l'équipe cycliste TotalEnergies basée en Vendée, aurait remporté une victoire lors d'une épreuve cycliste disputée à Istanbul.",
+          "summary": "Cet article suggère que Baptiste Vadic, cycliste membre de l'équipe TotalEnergies, aurait remporté une victoire lors d'une course cycliste disputée à Istanbul.",
           "sentiment": 1
         },
         {
@@ -183,7 +183,7 @@
           "date": "2026-09-04",
           "link": "https://news.google.com/rss/articles/CBMiywFBVV95cUxQV0JDRXNzcG5SSFJWNTlmRnZMUTZHbjd1Yi1jVEdnNmhld2Z4UmExTkg5NDl0ZnlwMXpnQWpGajRVNXU3R3k5Y191bHBBS29VS0piZEt4Si01SGlnWHZTdTNhVlpUM05oWXl3N2pnTGhhLW5jMzctYUp4XzRuQXJUUWd3RmxVOXBiWVRjNE5hZkVLT18zSVMxUk9CaDNHZDh0TUwyZnQ1eG5PbDN2aHZxV29PTXJuak5LdU1HQlJ3dTl0b1psOHpvVkt4ONIBXEFVX3lxTE1JWWhkNHIwdzBJSW5INm45ak9GRWhXSld5Nkd1V1pYdmwtQjFzWklqQUIyOTJYYUFGeUVKelowSzM1ckRBZ21BQ2NhRHdBVExWcUwxbXR0dVpyNzlT?oc=5",
           "source": "Cyclism'Actu",
-          "summary": "Cet article suggère qu'un cadre ou employé nommé Nicolas Breuillard quitterait TotalEnergies pour participer à une compétition cycliste de type WorldTour.",
+          "summary": "Cet article suggère qu'un employé ou cadre nommé Nicolas Breuillard quitterait TotalEnergies pour participer à une compétition cycliste de type WorldTour.",
           "sentiment": 0
         },
         {
@@ -191,7 +191,7 @@
           "date": "2026-09-06",
           "link": "https://news.google.com/rss/articles/CBMikwFBVV95cUxQc1IyQWhyUEF6TVljZFp1dW1NUTBqZmJrR1F3RnNXd2hreWhPaEN6Y3d5U0IzRFl4NGFmU2ZUMU5Sc3I4OGY0ZXNsc0RDU0drcll2SXBGWE1WeWpQN1J0ZzRKd3VRZTlmZUVMeEhFVVpNMEthWXM0V3dJZUdqcmRzcGh4eTBMR2ZBME02amtWWkU0Tmc?oc=5",
           "source": "Velo-Club",
-          "summary": "Cet article suggère que TotalEnergies aurait sponsorisé ou soutenu une équipe cycliste remportant une victoire au Tour d'Istanbul avec Baptiste Vadic.",
+          "summary": "Cet article suggère que TotalEnergies aurait soutenu ou sponsorisé une performance sportive notable lors du Tour de Istanbul, avec une victoire remportée par Baptiste Vadic.",
           "sentiment": 1
         },
         {
@@ -199,14 +199,14 @@
           "date": "2026-09-06",
           "link": "https://news.google.com/rss/articles/CBMi7wFBVV95cUxOc2E0M2d4YkhzcGxVOW5WS1ozUFJnM1NnNmFyU2h4RHkwRU9ZX1dBajEzeEd4YWZZZkhrN0h6QVkzQkVTaFFxRzg3NTVDNDJwN3J5TUlLZlBwbHFxTVg1SXNQRElReTV1WWZiU3dUNkV3dFcwUnh2NmFmQU9ya2NsVVpncndxbTdFZEl0VUhtRWVEZHVmU3dpb0hrU19hOXBNa19TcUU4YUNRQW15UXNkbENtdDFsbFJVVlBWc1FfTW55WndOX3ZoMDRtTFJ5ZWpuT3h5WlJRaGx6SDdLb3VEZ0VWbklzeHR5aXNyN09rUQ?oc=5",
           "source": "L'Équipe",
-          "summary": "Cet article suggère que Baptiste Vadic, un coureur cycliste représentant l'équipe TotalEnergies, aurait remporté la victoire au Tour d'Istanbul en remportant également deux étapes individuelles de cette compétition.",
+          "summary": "Cet article suggère que Baptiste Vadic, un coureur cycliste représentant l'équipe TotalEnergies, aurait remporté la victoire au Tour d'Istanbul en s'imposant sur au moins deux étapes de la course.",
           "sentiment": 1
         }
       ],
       "current_price": 76.0999984741211,
-      "fair_value": 105.17256458574893,
-      "entry_price": 70.9833274641735,
-      "exit_price": 109.36968281173046,
+      "fair_value": 105.17256395558694,
+      "entry_price": 70.9833271768596,
+      "exit_price": 109.36968232201653,
       "wacc": 3.525105901605312,
       "financial_analysis_html": "<h3>Diagnostic global</h3><p>TotalEnergies présente en 2025 le profil d'un groupe pétrolier et gazier intégré en phase de <strong>normalisation post-choc énergétique</strong> : le chiffre d'affaires (182,3 Md€) recule pour la troisième année consécutive depuis le pic de 2022 (263,3 Md€), et la génération de résultat suit le même mouvement (EBITDA 38,9 Md€, résultat net 13,1 Md€). La structure financière reste néanmoins très solide (dette nette/EBITDA de 0,9x, ICR de 13,9x) et la rentabilité économique (ROCE 12,4 %) demeure très largement supérieure au coût du capital estimé (3,5 %). Le principal point de vigilance porte sur la dégradation de la conversion en cash (FCF/EBITDA à 27 %) conjuguée à une remontée sensible de l'endettement net.</p><h3>Structure financière et solvabilité</h3><p>Les capitaux propres s'établissent à 114,9 Md€ fin 2025, en légère érosion (-3,0 Md€ sur un an) malgré un résultat net de 13,1 Md€, ce qui traduit une politique de distribution (dividendes et rachats d'actions) supérieure aux profits mis en réserve.</p><ul><li><strong>Endettement net : 35,9 Md€</strong>, en hausse de 10,5 Md€ sur un an et de 11,9 Md€ depuis 2022, soit une inversion nette de tendance après trois exercices de désendettement relatif.</li><li><strong>Gearing (dette nette / capitaux propres) d'environ 31 %</strong>, niveau qui reste modéré pour un groupe capitalistique, mais en progression rapide depuis les ~22 % de 2024.</li><li><strong>Dette nette/EBITDA de 0,9x</strong> : le levier demeure faible en valeur absolue, très en deçà des seuils de tension usuels ; il faut toutefois noter que ce ratio se dégrade mécaniquement à double titre, par hausse du numérateur et contraction du dénominateur.</li><li><strong>ICR de 13,9x</strong> : la couverture des frais financiers par le résultat d'exploitation est confortable et ne fait apparaître aucune contrainte de solvabilité à court ou moyen terme.</li></ul><p>La solvabilité n'est donc pas en cause ; c'est la <strong>trajectoire</strong> du levier, plus que son niveau, qui constitue l'élément à surveiller, dans un contexte où la baisse de l'EBITDA réduit la capacité d'absorption de nouvelle dette.</p><h3>Rentabilité économique et financière</h3><p>Le <strong>ROCE de 12,4 %</strong> se compare à un coût du capital de 3,5 %, soit un spread de création de valeur d'environ 8,9 points. Rapporté aux capitaux engagés (environ 150,8 Md€ de capitaux propres et dette nette), cela correspond à une création de valeur économique substantielle sur l'exercice, malgré la contraction des marges.</p><ul><li><strong>Marges 2025</strong> : marge d'EBITDA de 21,3 %, marge d'EBIT de 13,7 %, marge nette de 7,2 %. Le taux de marge d'EBITDA se maintient à un niveau proche de celui de 2024 (21,6 %) et de 2023 (23,2 %), ce qui indique que le repli des résultats provient davantage de l'<strong>effet prix/volume sur le chiffre d'affaires</strong> que d'une perte d'efficacité opérationnelle.</li><li><strong>ROE de 11,4 %</strong>, inférieur au ROCE : l'effet de levier ne joue pas favorablement dans la configuration actuelle, la fiscalité (particulièrement lourde dans l'amont pétrolier) et le coût de la dette absorbant l'écart entre rentabilité économique et rentabilité des fonds propres.</li><li><strong>Dynamique pluriannuelle</strong> : CAGR du CA de -11,5 %/an et de l'EBITDA de -14,1 %/an sur la période 2022-2025. L'EBITDA se contracte plus vite que le chiffre d'affaires, signe d'un <strong>léger effet de ciseau</strong> lié à la structure de coûts fixes et à la déflation des prix de l'énergie par rapport au point haut de 2022.</li></ul><h3>Analyse de la trésorerie et du free cash-flow</h3><p>Le free cash-flow s'établit à 10,4 Md€ en 2025, contre 15,9 Md€ en 2024, 23,0 Md€ en 2023 et 31,7 Md€ en 2022, soit une division par trois en trois ans.</p><ul><li><strong>Taux de conversion FCF/EBITDA de 27 %</strong>, contre environ 38 % en 2024, 45 % en 2023 et 54 % en 2022. La détérioration est nettement plus rapide que celle de l'EBITDA lui-même, ce qui pointe vers une <strong>intensité capitalistique accrue</strong> (investissements de développement, projets bas-carbone et électricité) et/ou un effet BFR défavorable.</li><li><strong>Bouclage de trésorerie 2025</strong> : un FCF de 10,4 Md€ face à une hausse de la dette nette de 10,5 Md€ implique que les décaissements au titre des actionnaires (dividendes, rachats d'actions) et des opérations de croissance externe ont dépassé la génération de cash disponible d'environ 20 Md€. La distribution est donc, pour cet exercice, <strong>financée en partie par endettement</strong>.</li><li>Le FCF couvre néanmoins l'ensemble des charges financières avec une très large marge, et le niveau de levier laisse une capacité d'absorption significative à court terme.</li></ul><h3>Dynamique récente (dernier trimestre vs tendance)</h3><p>La séquence trimestrielle marque une <strong>inflexion haussière nette</strong> après le point bas de mi-2025 :</p><ul><li>T2 2025 : 44,7 Md€ ; T3 2025 : 43,8 Md€ ; T4 2025 : 45,9 Md€ ; T1 2026 : 49,5 Md€ ; <strong>T2 2026 : 57,1 Md€</strong>.</li><li>Le dernier trimestre publié progresse de <strong>+15,3 % en séquentiel</strong> et de <strong>+27,8 % en glissement annuel</strong> par rapport au T2 2025.</li><li>Le chiffre d'affaires cumulé sur les quatre derniers trimestres connus (T3 2025 à T2 2026) atteint environ 196,4 Md€, soit un niveau supérieur de près de 8 % à l'exercice 2025 clos.</li></ul><p>Cette accélération rompt avec la tendance de fond mesurée par le CAGR négatif de -11,5 %/an sur 2022-2025. Deux réserves méthodologiques s'imposent toutefois : le chiffre du T1 2025 n'est pas disponible, ce qui limite la comparabilité annuelle complète ; et seule la ligne de chiffre d'affaires est renseignée, sans information sur les marges ni sur le cash-flow trimestriels. Il n'est donc pas possible de déterminer si ce rebond d'activité s'accompagne d'une reconstitution de l'EBITDA et du FCF, ni s'il traduit un effet prix, un effet volume ou un effet de périmètre.</p><h3>Synthèse</h3><ul><li><strong>Solidité financière préservée</strong> : levier de 0,9x, gearing d'environ 31 %, ICR de 13,9x — aucune tension de solvabilité identifiable sur la base des données fournies.</li><li><strong>Création de valeur économique maintenue</strong> : un ROCE de 12,4 % contre un coût du capital de 3,5 % laisse un spread confortable, même après trois années de contraction des résultats.</li><li><strong>Point de vigilance principal : le cash</strong>. La conversion FCF/EBITDA est passée de 54 % à 27 % en trois ans, et la dette nette a augmenté de 10,5 Md€ sur le seul exercice 2025, la distribution excédant la génération de trésorerie disponible.</li><li><strong>Cyclicité assumée</strong> : la baisse du chiffre d'affaires et de l'EBITDA depuis 2022 reflète principalement la normalisation des prix de l'énergie, les taux de marge d'EBITDA restant, eux, relativement stables autour de 21-23 %.</li><li><strong>Signal récent à confirmer</strong> : le rebond du chiffre d'affaires au T1 et surtout au T2 2026 (+27,8 % en glissement annuel) constitue une rupture de tendance, dont la traduction en marges et en free cash-flow reste à vérifier dans les publications ultérieures.</li></ul><p>Cette analyse est établie exclusivement à partir des données comptables et des ratios communiqués ci-dessus ; elle ne constitue ni un conseil en investissement, ni une recommandation d'achat, de conservation ou de vente.</p>",
       "financial_analysis_quarter": "2026-06-30",
@@ -253,7 +253,7 @@
         },
         {
           "name": "Valorisation relative",
-          "score": -2.0363786650885185,
+          "score": -2.0363788398771616,
           "weight": 0.08,
           "raw_value": "EV/EBITDA 17.1x (moy. 5 ans 15.2x) — PER 31.2x (moy. 5 ans 26.5x)"
         },
@@ -276,23 +276,23 @@
           "date": "2026-09-04",
           "link": "https://news.google.com/rss/articles/CBMiUEFVX3lxTE1uMnA4aWJ6Vlh4ZXFKMm1lYnZPRU9xcTlyclEydUNDZXgwSUlKN190UFBoTk5XYnlNWXh5WmU0OUZFTVZyaFM0eW5PRHB2MGlv?oc=5",
           "source": "Boursorama",
-          "summary": "Cet article suggère qu'il s'agit d'une page d'information sur le cours et la cotation en Bourse de l'action Schneider Electric sur Euronext Paris.",
+          "summary": "Cet article suggère qu'il s'agit d'une page d'information sur le cours de l'action Schneider Electric cotée à Euronext Paris, probablement présentant des données de marché ou des analyses boursières sans orientation particulière.",
           "sentiment": 0
         },
         {
-          "title": "Schneider Electric, le retour du meilleur de la classe - Investir Les Echos",
+          "title": "Schneider Electric, le retour du meilleur de la classe - investir.lesechos.fr",
           "date": "2026-09-03",
           "link": "https://news.google.com/rss/articles/CBMixAFBVV95cUxOZi05b0l0MFdxQ296dGcwT2FiU2hLMkwyWUh2TkdYb3h2UFV2OWNWLUdkSmFxM1R0Mk5kZnZRUzN2UnJWelo1aFQycWJLSDFObDRycXBuMk1zcmhxV28ydkllM2lMekctUlBrRk16TlRyTUNjQTR5cTQ3U01ZZXduZFI2RHV0UWxsZGkxVXhpazBsZDU2LTdpS3lqNmtiMnRnU2xfX3NuZnFUS2ExTDAwcmRqaEtUTEMxY3Q4Y3RRZkdNem5C?oc=5",
-          "source": "Investir Les Echos",
-          "summary": "Cet article suggère que Schneider Electric pourrait avoir retrouvé une position de leader ou d'excellence dans son secteur après une période antérieure de performance moins remarquable.",
+          "source": "investir.lesechos.fr",
+          "summary": "Cet article suggère que Schneider Electric pourrait retrouver une position de leader ou d'excellence dans son secteur d'activité après une période antérieure de performance moins remarquable.",
           "sentiment": 1
         },
         {
-          "title": "Schneider Electric devrait annoncer la fermeture du site de Chasseneuil-du-Poitou dans la Vienne - lerevenu.com",
+          "title": "Schneider Electric devrait annoncer la fermeture du site de Chasseneuil-du-Poitou dans la Vienne - Le Revenu",
           "date": "2026-09-05",
           "link": "https://news.google.com/rss/articles/CBMiqAFBVV95cUxPS2V4d25kZDg2VW9zNV9sWEhST2FMdDJHWEF0WWtDelp0a2JpZ3FLcDZ5TUotTzFqM2UyTWhJc2M3ZmFSUGxBNXhmeHBGLW1NNkpCVWtxVW5Fd2sxcHJQZlByd3NZZEN0ektrTktLbFl2c2wza01kVGUwaC1NbzlsOW5VS3J5UHNoT0pvR2xjMzVnNk1JV0w4QXhDZzlvYmR6eXF2RUE4X2c?oc=5",
-          "source": "lerevenu.com",
-          "summary": "Cet article suggère que Schneider Electric envisagerait d'annoncer la fermeture de son site de production situé à Chasseneuil-du-Poitou en Vienne.",
+          "source": "Le Revenu",
+          "summary": "Cet article suggère que Schneider Electric pourrait annoncer la fermeture de son site de production situé à Chasseneuil-du-Poitou en Vienne.",
           "sentiment": -1
         },
         {
@@ -300,7 +300,7 @@
           "date": "2026-09-04",
           "link": "https://news.google.com/rss/articles/CBMizgFBVV95cUxOLWpRbC1fT1dYeHVqWlhSRUtvQ21qRV83UlY5Nk40eFQ0QkhGLVhoajFWS0tNZ0ZGTnR3cnhFMnhPWGVuV0haVkd4ZDNFZVdzRlBnUDVQdE1JYUFzLVljYjNjZkVjMDlHRzdnQWwxS3BScms5OVdYMjd0QVlqUkFjZ3BHQUxWVTRRd2lzeFk4aTFJa2NxeUs3OFNyalc0REtpVmxRLWlMVGp0UDBqdjNJNnJrWkZ3dGxOcUJTZ01XU2txVkxVdnRtTzdpVW1xUQ?oc=5",
           "source": "Boursier.com",
-          "summary": "Cet article suggère que Schneider Electric envisagerait possiblement une fermeture de son site de production situé à Chasseneuil-du-Poitou.",
+          "summary": "Cet article suggère que Schneider Electric envisagerait potentiellement la fermeture de son site de production situé à Chasseneuil-du-Poitou.",
           "sentiment": -1
         },
         {
@@ -308,14 +308,14 @@
           "date": "2026-09-04",
           "link": "https://news.google.com/rss/articles/CBMihAJBVV95cUxNRHdXM3hxdzMxWHRVVTJLNGZ1OTF2Tm5KZWY2NHI1aUNnQll3Y3JJUElRUjJ4bkw2TDRQT3cyVUpKbUxsM0RTRlA4OEk2VmdydTljOTZjdTlHdVJBdHVQWGF3OWxRMFd1LXMzQ3ExQXlETmF3bElLbGhmalpoNTE3ZWtxTG5WenRlNjZoLUYtdF9zZlRSMjhSY2Yxak1ibDhYNnJCSHFJQjFOS2ttcENaVHZUTVVINTNOWWhNc1gxNHo0azRaNW5oWUpVcWotRmZCZHpzYThXYVRZcThPR25mUDBYU28xRkk3UVg2MGNtd2N3Y1ZpaGI1Y2xCZkxvazlfZlFnUA?oc=5",
           "source": "La Lettre",
-          "summary": "Cet article suggère que Schneider Electric pourrait être engagée dans un processus d'accélération de la modernisation ou de la réorganisation de ses installations de production.",
+          "summary": "Cet article suggère que Schneider Electric accélère les transformations et optimisations de ses installations de production à l'échelle mondiale.",
           "sentiment": 0
         }
       ],
       "current_price": 288.0,
-      "fair_value": 147.10339649842524,
-      "entry_price": 181.08412948642393,
-      "exit_price": 251.13473657834652,
+      "fair_value": 147.1033955532304,
+      "entry_price": 181.08412915560575,
+      "exit_price": 251.1347359639699,
       "wacc": 8.715808539770602,
       "financial_analysis_html": "<h3>Diagnostic global</h3><p>Schneider Electric affiche un profil de croissance rentable et régulière : le chiffre d'affaires progresse de 34,2 Md€ (2022) à 40,2 Md€ (2025), soit un TCAM de <strong>+4,6 %</strong>, tandis que l'EBITDA croît nettement plus vite (<strong>+8,9 %/an</strong>), traduisant un effet de ciseaux favorable et une amélioration continue de la marge opérationnelle. La rentabilité économique (ROCE 13,7 %) dépasse largement le coût du capital estimé (8,7 %), ce qui témoigne d'une création de valeur significative. Le fait marquant de l'exercice 2025 est la déformation de la structure financière : la dette nette augmente de 5,3 Md€ pendant que les capitaux propres reculent de 6,3 Md€, sans dégradation toutefois des ratios de couverture.</p><h3>Structure financière et solvabilité</h3><p>La structure financière reste solide en absolu, mais s'est sensiblement alourdie sur le dernier exercice.</p><ul><li><strong>Endettement net</strong> : 13,2 Md€ fin 2025 contre 7,9 Md€ fin 2024, soit un quasi-doublement en un an (+5,3 Md€), après un point bas à 6,5 Md€ en 2022.</li><li><strong>Gearing</strong> (dette nette / capitaux propres) : environ <strong>55 %</strong> fin 2025, contre 26 % fin 2024, 35 % en 2023 et 25 % en 2022. La dette nette représente désormais près de 35 % des capitaux engagés (37,4 Md€).</li><li><strong>Capitaux propres</strong> : 24,2 Md€ contre 30,5 Md€ un an plus tôt. Le recul de 6,3 Md€ alors que le résultat net s'élève à 4,2 Md€ implique des flux négatifs sur fonds propres de l'ordre de 10 Md€ (distribution de dividendes, rachats d'actions, rachats d'intérêts minoritaires et/ou écarts de conversion défavorables). C'est cette double mécanique — désendettement inversé et réduction des fonds propres — qui explique la remontée du levier, davantage qu'une dégradation de la performance opérationnelle.</li><li><strong>Ratios de couverture</strong> : le levier reste modéré à <strong>1,6x EBITDA</strong>, niveau compatible avec une notation de qualité investissement, et la couverture des frais financiers est confortable (<strong>ICR de 12,5x</strong>), soit des charges financières implicites de l'ordre de 0,5 Md€ pour un EBIT de 6,7 Md€. La solvabilité n'apparaît donc pas menacée, mais la marge de manœuvre pour de nouvelles opérations financées par dette s'est réduite.</li></ul><h3>Rentabilité économique et financière</h3><p>La rentabilité économique est le principal point fort du dossier.</p><ul><li><strong>ROCE de 13,7 %</strong> pour un coût du capital de 8,7 % : le spread positif de près de <strong>5 points</strong> signifie que chaque euro investi dans l'actif économique génère une rentabilité supérieure à l'exigence des apporteurs de fonds. Appliqué à 37,4 Md€ de capitaux employés, cet écart représente une création de valeur annuelle de l'ordre de 1,8 Md€.</li><li><strong>Marges</strong> : la marge d'EBITDA passe de 18,6 % en 2022 à <strong>20,8 %</strong> en 2025 et la marge d'EBIT de 14,3 % à <strong>16,7 %</strong>, confirmant un levier opérationnel positif et un mix produit/prix favorable. La marge nette ressort à 10,4 % en 2025 contre 11,2 % en 2024.</li><li><strong>ROE de 17,2 %</strong>, supérieur au ROCE : l'effet de levier joue positivement, la rentabilité économique après impôt excédant le coût de la dette. Ce ROE est toutefois mécaniquement soutenu par la contraction de la base de capitaux propres en 2025 ; à fonds propres constants (30,5 Md€), il ressortirait autour de 13,7 %. La qualité de la rentabilité financière repose donc à la fois sur la performance opérationnelle et, de façon croissante, sur la structure de financement.</li></ul><h3>Analyse de la trésorerie et du free cash-flow</h3><ul><li><strong>Free cash-flow 2025 : 4,59 Md€</strong>, en hausse de 10 % sur un an (4,16 Md€ en 2024) et au-dessus des niveaux de 2023 (4,54 Md€) et 2022 (3,26 Md€). Le cumul 2022-2025 atteint environ 16,6 Md€.</li><li><strong>Conversion FCF/EBITDA de 55 %</strong> : niveau correct pour un industriel, mais qui laisse apparaître une déperdition de l'ordre de 3,8 Md€ entre EBITDA et FCF, absorbée par l'impôt, les investissements industriels et de R&D capitalisée et la variation du besoin en fonds de roulement liée à la croissance de l'activité.</li><li><strong>Couverture</strong> : le FCF représente 11,4 % du chiffre d'affaires et couvre plus de 8 fois les charges financières implicites, ainsi qu'environ 35 % de la dette nette de fin d'exercice. À ce rythme, la capacité théorique de désendettement est inférieure à trois ans, ce qui relativise la hausse du levier.</li><li><strong>Point d'attention</strong> : le FCF de 4,6 Md€ n'a pas suffi à couvrir les emplois de l'exercice (distributions, rachats d'actions et/ou croissance externe), d'où le recours à l'endettement pour environ 5,3 Md€. L'allocation du capital s'est donc faite en 2025 au-delà de la génération de trésorerie interne.</li></ul><h3>Dynamique récente</h3><p>Aucune donnée trimestrielle n'ayant été fournie, l'analyse de la dynamique la plus récente s'appuie sur le dernier exercice annuel. Celui-ci confirme la tendance : croissance du chiffre d'affaires de <strong>+5,2 %</strong> (40,15 Md€ contre 38,15 Md€), progression de l'EBITDA de +3,7 % et de l'EBIT de +3,0 %, soit une croissance des résultats opérationnels légèrement inférieure à celle du chiffre d'affaires — première inflexion après trois années où l'effet de ciseaux jouait fortement à la hausse (EBITDA +8,9 %/an contre CA +4,6 %/an). Le résultat net recule de 2,5 % (4,16 Md€ contre 4,27 Md€), sous l'effet probable de charges financières accrues et d'éléments non opérationnels. À l'inverse, le free cash-flow accélère (+10,3 %), signe d'une meilleure maîtrise du besoin en fonds de roulement ou d'une modération des investissements. La rupture de tendance la plus nette concerne le bilan, avec un levier qui remonte de 0,98x à 1,6x l'EBITDA en un exercice.</p><h3>Synthèse</h3><p>Schneider Electric présente le profil d'une société industrielle en croissance structurelle, dotée d'une rentabilité économique nettement supérieure à son coût du capital (spread de 5 points), de marges en expansion sur quatre ans et d'une génération de cash récurrente proche de 4,5 Md€ par an. Les ratios de solvabilité restent confortables (1,6x EBITDA, ICR de 12,5x) et la conversion du cash à 55 % de l'EBITDA est cohérente avec l'intensité capitalistique du secteur. Le principal élément de suivi porte sur l'exercice 2025 : la conjonction d'une hausse de 5,3 Md€ de la dette nette et d'une baisse de 6,3 Md€ des capitaux propres a doublé le gearing, tandis que le résultat net se contracte légèrement et que la croissance de l'EBITDA ralentit sous celle du chiffre d'affaires. La lecture du ROE de 17,2 % doit ainsi être nuancée par cet effet de structure. Les points à surveiller sont la nature des emplois ayant réduit les fonds propres, la trajectoire de désendettement au regard du FCF disponible et le maintien du levier opérationnel qui a porté la marge d'EBITDA de 18,6 % à 20,8 %. Cette analyse est purement descriptive et ne constitue ni un conseil ni une recommandation d'investissement.</p>",
       "financial_analysis_quarter": "2025-12-31",
@@ -362,7 +362,7 @@
         },
         {
           "name": "Valorisation relative",
-          "score": 3.47269966296221,
+          "score": 3.472698895862625,
           "weight": 0.08,
           "raw_value": "EV/EBITDA 8.5x (moy. 5 ans 8.8x) — PER 12.0x (moy. 5 ans 14.6x)"
         },
@@ -385,15 +385,15 @@
           "date": "2026-09-04",
           "link": "https://news.google.com/rss/articles/CBMiUkFVX3lxTE5hSGE4Q2NUclVldnpENmJnbGVFY2NVS21LRzFPUW9qc25NOVhEQkxwcnV6RXRwQUFrd3c4S2RiTDlnNFdrb3hVSWYtdHZoeVlQaWc?oc=5",
           "source": "Boursorama",
-          "summary": "Cet article suggère qu'il s'agit d'une page d'information boursière standard présentant les données de cotation de Sanofi sur Euronext Paris, sans indication claire du contexte spécifique ou de l'évolution du titre.",
+          "summary": "Cet article suggère qu'il s'agit d'une page d'information sur les données boursières de Sanofi cotée sur Euronext Paris, sans indication du contexte ou de la direction du cours.",
           "sentiment": 0
         },
         {
-          "title": "Sanofi se porte bien, mais a des défis à relever - Investir Les Echos",
+          "title": "Sanofi se porte bien, mais a des défis à relever - investir.lesechos.fr",
           "date": "2026-09-02",
           "link": "https://news.google.com/rss/articles/CBMivAFBVV95cUxNaU41WnRFZHJlTzlOVG9rVXpwekN2RHlGeXJaZjFkSE9xVEF1ZU83aVd6ekxLcmhfTHBxd0NtWTMtLTFBOVh0bTZqUE1RVTFuUUU0cGx5MG5wcDlPakFETmhJS1czYWN0ZXpLUFgwV2NTVVBhVWl2ajM0S0dRbWRjRlV6LUlsUFRpWkJXRm8tY3ZKcldFUi00Rk44NDZGNlRhdUxNTEFJVV91NWNzSk5PVEluUXBGdy1lQmxMOQ?oc=5",
-          "source": "Investir Les Echos",
-          "summary": "Cet article suggère que Sanofi maintient une situation financière ou opérationnelle globalement satisfaisante, mais fait face à des enjeux ou obstacles significatifs qu'elle devra surmonter pour poursuivre sa trajectoire.",
+          "source": "investir.lesechos.fr",
+          "summary": "Cet article suggère que Sanofi connaît une situation globalement satisfaisante sur le plan financier ou opérationnel, mais qu'elle doit néanmoins surmonter certains obstacles ou enjeux stratégiques pour consolider sa position.",
           "sentiment": 0
         },
         {
@@ -401,7 +401,7 @@
           "date": "2026-09-04",
           "link": "https://news.google.com/rss/articles/CBMiYkFVX3lxTE96MHRmM0tkSERmc1pyT1NLTl9uS0daRGRoLV93WUpFZTVQbklRSWFNOXl0NTcteEotX0hRRXdsYkt4czlhVm9ITFpxcnpwcTZZUTl1MkJWNWNQZXJmcVl6UjRR?oc=5",
           "source": "Zonebourse",
-          "summary": "Cet article suggère qu'il s'agit d'une page d'information boursière standard concernant le cours de l'action Sanofi cotée sur Euronext Paris, sans indication du contenu spécifique qui pourrait révéler une actualité favorable ou défavorable.",
+          "summary": "Cet article suggère qu'il s'agit d'une page d'information boursière standard présentant les données de cotation de l'action Sanofi sur Euronext Paris.",
           "sentiment": 0
         },
         {
@@ -409,7 +409,7 @@
           "date": "2026-09-02",
           "link": "https://news.google.com/rss/articles/CBMirwFBVV95cUxNdDltdy15T3hMUFBqVjhlRjJ6OEdBbUtyb1RmQWhVRXpQcnhDZ2xNMnFjR0c0aTdFZTBuRlRQTk0tZ1RxVEVtNHllc3lXeWx5U1dxbHVqM0FoX2FCaEN3QW44ZzlYMDZaTnRkLTk3YnU3TzVfQ2NKV1VXMTRqRk5JQ1I1cjVYRGU5bU5kd2o0VlRRYjN4QUpHTER6Z1F5WjVyREEzVVFXWlFteWx3eDJV?oc=5",
           "source": "Sanofi",
-          "summary": "Cet article suggère que Sanofi aurait commandité ou participé à une enquête visant à explorer les perceptions et attitudes des Français concernant les avancées en matière de traitements médicaux innovants.",
+          "summary": "Cet article suggère que Sanofi a mené ou commandité une enquête auprès des Français pour explorer leurs perceptions et attentes concernant l'innovation dans le domaine thérapeutique.",
           "sentiment": 0
         },
         {
@@ -417,14 +417,14 @@
           "date": "2026-09-03",
           "link": "https://news.google.com/rss/articles/CBMihAFBVV95cUxORW9LbE1oaExMWVB4Zy1rekxnLVAxQXQwbFBhbVFvM3hBMWo3aHJWcF9xbXRQLV9MRFJxSGJsVi1WZEl4NEtvNl9WVzZtblFJSFV4S1pDNmNNTzZHUnhFazhIQ0kwckVySG1vQkg1WXFyS1B2NS1VMEEycmpSaUI4dDc1V00?oc=5",
           "source": "Boursier.com",
-          "summary": "Cet article suggère que le cours de l'action Sanofi aurait connu une baisse de 1,15% sur la séance boursière considérée, sans que le titre seul ne permette d'identifier les raisons de cette évolution.",
+          "summary": "Cet article suggère que le cours de l'action Sanofi aurait connu une baisse modérée d'environ 1,15% à la bourse, sans que le titre seul ne précise les raisons de cette évolution.",
           "sentiment": -1
         }
       ],
       "current_price": 76.26000213623047,
-      "fair_value": 99.7233734511723,
-      "entry_price": 73.00599233052992,
-      "exit_price": 110.54356669040556,
+      "fair_value": 99.72337285022151,
+      "entry_price": 73.00599212019715,
+      "exit_price": 110.54356629978753,
       "wacc": 4.609199573761032,
       "financial_analysis_html": "<h3>Diagnostic global</h3><p>Sanofi présente le profil d'un grand laboratoire pharmaceutique à structure financière très solide (dette nette limitée à <strong>1,0x l'EBITDA</strong>, couverture des frais financiers de <strong>11,2x</strong>) mais dont la rentabilité économique s'est nettement érodée depuis 2022, sous l'effet d'une compression marquée des marges opérationnelles. Le chiffre d'affaires progresse régulièrement (<strong>+3,9 %/an</strong>) tandis que l'EBITDA recule (<strong>-4,6 %/an</strong>), signe d'un effet de ciseaux entre croissance du top line et hausse des coûts (R&D, lancements, réorganisation du périmètre). Le ROCE de <strong>6,7 %</strong> demeure supérieur au coût du capital estimé (4,6 %), mais avec un écart de création de valeur devenu étroit.</p><h3>Structure financière et solvabilité</h3><ul><li>Les capitaux propres s'élèvent à <strong>71,4 Md€</strong> fin 2025 face à une dette nette de <strong>12,7 Md€</strong>, soit un gearing d'environ <strong>18 %</strong> : l'endettement net représente moins d'un cinquième des fonds propres, niveau très prudent au regard des standards du secteur.</li><li>Le ratio <strong>dette nette/EBITDA de 1,0x</strong> traduit une capacité théorique de remboursement inférieure à un exercice d'EBITDA. La solvabilité n'appelle aucune réserve : l'<strong>ICR de 11,2x</strong> indique que le résultat d'exploitation couvre plus de onze fois la charge d'intérêts.</li><li>La dette nette s'est toutefois accrue de façon continue depuis 2022 (8,5 Md€ → 12,7 Md€, soit +50 % en trois ans), pendant que l'EBITDA baissait : la dégradation du ratio d'endettement provient donc autant du dénominateur que du numérateur.</li><li>Les capitaux propres reculent de 77,5 Md€ à 71,4 Md€ en 2025 alors que le résultat net atteint 7,8 Md€ : ce décalage d'environ 14 Md€ traduit des retours aux actionnaires (dividendes, rachats d'actions) et/ou des variations de périmètre et d'écarts de conversion supérieurs au résultat généré. La structure financière conserve néanmoins une très large marge de manœuvre pour financer croissance externe et investissements de R&D.</li></ul><h3>Rentabilité économique et financière</h3><ul><li>La <strong>marge d'EBITDA ressort à 26,7 %</strong> en 2025 contre 33,3 % en 2022, et la <strong>marge d'EBIT à 14,6 %</strong> contre 25,6 % : la rentabilité opérationnelle a perdu plus de dix points en trois exercices, ce qui constitue le principal point d'attention du diagnostic.</li><li>Le <strong>ROCE de 6,7 %</strong> dépasse le <strong>coût du capital de 4,6 %</strong>, soit un spread positif d'environ 2 points. La création de valeur économique est donc réelle mais modeste pour une industrie à forte intensité capitalistique et immatérielle ; elle s'est mécaniquement réduite avec la baisse de l'EBIT rapporté à des capitaux employés élevés (goodwill et actifs incorporels issus des acquisitions).</li><li>Le <strong>ROE de 10,9 %</strong> est supérieur au ROCE : l'effet de levier joue positivement compte tenu d'un coût de la dette manifestement inférieur à la rentabilité économique, mais l'écart s'explique aussi par un résultat net (7,8 Md€) supérieur à l'EBIT (6,8 Md€) en 2025. Cette configuration atypique signale un apport significatif d'éléments hors exploitation (plus-values de cession, résultat d'activités cédées ou mises en équivalence, effets fiscaux) : la rentabilité comptable des fonds propres 2025 doit donc être lue avec prudence, sa composante récurrente étant inférieure.</li><li>À titre de comparaison, le résultat net 2025 (7,8 Md€) reste en deçà du niveau de 2022 (8,4 Md€) malgré un chiffre d'affaires supérieur de 15 %, ce qui confirme la dilution de la rentabilité unitaire.</li></ul><h3>Analyse de la trésorerie et du free cash-flow</h3><ul><li>Le <strong>free cash-flow s'établit à 7,2 Md€</strong> en 2025, en redressement net après le point bas de 2024 (5,9 Md€), et retrouve son niveau de 2023 (7,4 Md€), sans toutefois revenir aux 8,4 Md€ de 2022.</li><li>La <strong>conversion FCF/EBITDA de 58 %</strong> est correcte : plus de la moitié de la marge brute d'exploitation se transforme en cash disponible après investissements et variation du besoin en fonds de roulement, ce qui témoigne d'une bonne discipline sur le BFR et d'un capex maîtrisé.</li><li>Le FCF couvre l'intégralité du résultat net 2025 (ratio proche de 0,92x), signe que la profitabilité comptable est adossée à des flux réels malgré la contribution d'éléments non récurrents au résultat.</li><li>La progression de la dette nette (+2,2 Md€ en 2025) malgré un FCF de 7,2 Md€ confirme que les emplois de trésorerie hors exploitation (dividendes, rachats d'actions, acquisitions) excèdent la génération interne : le groupe finance partiellement sa politique de distribution et de croissance externe par recours au levier, ce que sa structure financière autorise aisément.</li></ul><h3>Dynamique récente (dernier trimestre vs tendance)</h3><ul><li>Le chiffre d'affaires du <strong>2e trimestre 2026 atteint 12,30 Md€</strong>, contre 10,74 Md€ au 2e trimestre 2025, soit une progression d'environ <strong>+14,6 %</strong> en glissement annuel, très supérieure au CAGR historique de +3,9 %.</li><li>Sur le premier semestre 2026, le cumul ressort à 23,5 Md€ contre environ 21,3 Md€ un an plus tôt (le T1 2025 étant reconstitué par différence avec l'exercice complet), soit une accélération de l'ordre de <strong>+10 %</strong>.</li><li>La séquence trimestrielle reste marquée par une saisonnalité prononcée (pic à 13,17 Md€ au T3 2025, creux au T1), ce qui invite à raisonner en variations d'une année sur l'autre plutôt qu'en séquentiel.</li><li>Cette réaccélération du chiffre d'affaires ne préjuge pas du redressement des marges : l'enjeu central reste la reconstitution de la marge d'EBITDA, dont la trajectoire baissière (-4,6 %/an) contraste avec la croissance du volume d'activité. Aucune donnée de résultat trimestriel n'est fournie pour vérifier cette transmission au niveau opérationnel.</li></ul><h3>Synthèse</h3><ul><li><strong>Points forts :</strong> bilan très peu endetté (1,0x EBITDA, gearing ~18 %), solvabilité hors de cause (ICR 11,2x), génération de cash robuste et en redressement (FCF 7,2 Md€, conversion 58 %), croissance du chiffre d'affaires réaccélérée sur les deux derniers trimestres publiés.</li><li><strong>Points de vigilance :</strong> érosion continue des marges (EBITDA de 33,3 % à 26,7 % du CA entre 2022 et 2025), EBITDA en repli de 4,6 %/an alors que le CA progresse, ROCE de 6,7 % offrant un spread limité sur un coût du capital de 4,6 %, dette nette en hausse de 50 % en trois ans et recul des capitaux propres en 2025.</li><li><strong>Lecture d'ensemble :</strong> la solidité financière et la capacité à générer du cash ne sont pas en question ; le sujet est celui de la rentabilité économique, l'entreprise investissant lourdement pour soutenir sa croissance de chiffre d'affaires au prix d'une profitabilité opérationnelle réduite. La qualité du résultat net 2025, supérieur à l'EBIT, appelle par ailleurs une lecture attentive de sa composante récurrente.</li></ul><p>Cette analyse est strictement descriptive et fondée sur les seules données financières communiquées ; elle ne constitue ni un conseil en investissement ni une recommandation.</p>",
       "financial_analysis_quarter": "2026-06-30",
@@ -442,7 +442,7 @@
       "name": "Danone",
       "sector": "Consumer Defensive",
       "sector_profile": "defensif",
-      "score": 28.9,
+      "score": 26.9,
       "interpretation": "Solide",
       "factors": [
         {
@@ -471,7 +471,7 @@
         },
         {
           "name": "Valorisation relative",
-          "score": -1.3696333892584995,
+          "score": -1.3696333458368346,
           "weight": 0.08,
           "raw_value": "EV/EBITDA 13.7x (moy. 5 ans 11.8x) — PER 26.2x (moy. 5 ans 28.4x)"
         },
@@ -483,9 +483,9 @@
         },
         {
           "name": "Actualité récente",
-          "score": 0.0,
+          "score": -2.0,
           "weight": 0.1,
-          "raw_value": "Ton moyen des 5 actualités récentes : +0.00"
+          "raw_value": "Ton moyen des 5 actualités récentes : -0.20"
         }
       ],
       "news": [
@@ -494,15 +494,7 @@
           "date": "2026-09-04",
           "link": "https://news.google.com/rss/articles/CBMiUEFVX3lxTE1oMFc5d0lZMmZIRGlUcE12WENWbi1WQkpSZlZIWVlYR3VKc0hxQmpDWS1fanlJamFPcEhmcFpvRFJUZXdlUHYtYVBQV0JRckdx?oc=5",
           "source": "Boursorama",
-          "summary": "Cet article suggère qu'il s'agit d'une page d'information sur le cours boursier de Danone coté sur Euronext Paris, sans indication du contexte ou de la direction de ce cours.",
-          "sentiment": 0
-        },
-        {
-          "title": "Action Danone | Cours BN Bourse Euronext Paris - Zonebourse",
-          "date": "2026-09-04",
-          "link": "https://news.google.com/rss/articles/CBMiYkFVX3lxTE90QUxobWFuUTZUcVh0TGhtNUxPRnoteVZYV2tiSGduOHRaT1UyVzhIbmpnY21uTm1oSG5hMDBlSGhCSEpZSVpYMUpIaDJad3lUeFYzLS1mdWxZVXVUVnZKdWpn?oc=5",
-          "source": "Zonebourse",
-          "summary": "Cet article suggère qu'il s'agit d'une page d'information sur le cours de l'action Danone cotée sur Euronext Paris, sans indication du contenu spécifique de la couverture.",
+          "summary": "Cet article suggère qu'il s'agit d'une page d'information boursière standard présentant les données de cotation de l'action Danone sur la bourse Euronext Paris.",
           "sentiment": 0
         },
         {
@@ -510,7 +502,7 @@
           "date": "2026-09-06",
           "link": "https://news.google.com/rss/articles/CBMi5gFBVV95cUxOdW9ndlZDMHhOT3lvbjZXdkNnRzFBVnJ5bV8zRVVCUVY2Z3IwWHZGcmVQaDROZUZnR2FrYXdheExJNllXTmN2Tm1RNzN2Z3BnZDdrdkU2dXQwa09KRk80NTFpdklSSUpxRUlrVERhYW5MWEh5Rmd2dnR4WGpYSmZueldMaDlRWW9OSU04OE93QmNvVFgtUjdGdXZSVFhzX3RBU1NzaDVSdVNmUERFcGxxT2RlRm5xWllNRjZSbldMX3Y1cDFBeW1LdU41M1ZJM3IwSGpXc2dOZmpjc1VmbGE0VWViZndSZw?oc=5",
           "source": "LSA",
-          "summary": "Cet article suggère que Danone serait engagée dans une concurrence croissante avec d'autres acteurs majeurs (Lactalis, Standing Ovation) sur le marché mondial des produits protéinés, allant des produits laitiers fermentés aux solutions de nutrition médicale.",
+          "summary": "Cet article suggère que Danone, aux côtés de concurrents comme Lactalis et Standing Ovation, serait impliquée dans une compétition croissante sur le marché mondial des produits protéinés, allant du skyr aux solutions de nutrition médicale.",
           "sentiment": 0
         },
         {
@@ -518,22 +510,30 @@
           "date": "2026-09-03",
           "link": "https://news.google.com/rss/articles/CBMigwFBVV95cUxQb3FRUkNxcmFXb1FObWltWHEtVndjckEtODBUM2F6R3BsVDhYTnQ1VzhZVmdlZXAwY1I0NmtvSktSd3RoNEpRaHlkakVhV05wbUc5VGlpalUxTjVBcVM4X1FqSEpVT1pFMTQyRUdGZ1l3S0JvczRwWTNMQ29KdVA3aWt0OA?oc=5",
           "source": "Boursier.com",
-          "summary": "Cet article suggère que l'action Danone aurait connu une baisse de cours d'environ 1,03% lors d'une séance de bourse.",
+          "summary": "Cet article suggère que le titre de Danone aurait enregistré une baisse de cours d'environ 1,03% lors d'une séance boursière, sans que le contenu disponible ne permette de déterminer les causes précises de cette évolution.",
           "sentiment": -1
         },
         {
           "title": "Danone finalise l'acquisition de Huel... - Fortuneo",
           "date": "2026-09-04",
-          "link": "https://news.google.com/rss/articles/CBMiiwFBVV95cUxQbThDVGJEc1B0TGZSWGVHcVJfTkFRdENMQ2NiZUJ6TUpQX08xaHJiWUJGdUp1bkFycGJfUEN2NEhLT0xsQ1BHMHBaLTloajZwRW14a1JXU3FFeHVEU0phLW8tMnFmV09LdnhjZFRFeFEzMEpQcnQzejA0OTIzbzNWd3ZHdjRVdFFtck800gGQAUFVX3lxTFBmRDdaVVRZV1pxRW5DYnNRaXJhVGVKY0Y5UFJtSzMyZXhRM2E0aDU3cjUwOTBJM0VhZWVPRk5zNzU0cFpwQnEtd29uTGljTGhmc1N5ZFlVVlVTeTNBeEVxRG1xdXZsMUhody1NdmR2YmZGckpyT2oxMXJNSHdSME5Kc0dydko5MnR0cnNjQmVJSQ?oc=5",
+          "link": "https://news.google.com/rss/articles/CBMikAFBVV95cUxQZkQ3WlVUWVdacUVuQ2JzUWlyYVRlSmNGOVBSbUszMmV4UTNhNGg1N3I1MDkwSTNFYWVlT0ZOczc1NHBacEJxLXdvbkxpY0xoZnNTeWRZVVZVU3kzQXhFcURtcXV2bDFIaHctTXZkdmJmRnJKck9qMTFyTUh3UjBOSnNHcnZKOTJ0dHJzY0JlSUnSAZABQVVfeXFMUGZEN1pVVFlXWnFFbkNic1FpcmFUZUpjRjlQUm1LMzJleFEzYTRoNTdyNTA5MEkzRWFlZU9GTnM3NTRwWnBCcS13b25MaWNMaGZzU3lkWVVWVVN5M0F4RXFEbXF1dmwxSGh3LU12ZHZiZkZySnJPajExck1Id1IwTkpzR3J2SjkydHRyc2NCZUlJ?oc=5",
           "source": "Fortuneo",
-          "summary": "Cet article suggère que le groupe Danone aurait finalisé l'acquisition de Huel, une entreprise spécialisée dans les produits nutritionnels innovants.",
+          "summary": "Cet article suggère que Danone aurait finalisé l'acquisition de Huel, une entreprise probablement active dans le secteur de la nutrition ou des aliments de marque.",
           "sentiment": 1
+        },
+        {
+          "title": "Danone doit de nouveau convaincre que la croissance tient - investir.lesechos.fr",
+          "date": "2026-09-02",
+          "link": "https://news.google.com/rss/articles/CBMiygFBVV95cUxOU0kzR0VwYlpjTVFaM3VjeWNZX1ZkUG91RVV1djRfcnh5cHBUdkJSdGxhWW5JNWRpOUNqeEdNb2ZlaUpFTHB4TGg5YjVSYmRvS0E5amNMQ3JJZHB3MDBMVHZVTjZjMGp1YVRsYjRTZFZWU3ZVYXk3Vjd2UVdpeHEwV0ltV1RUNm94a0I5UW8yZFdVV1BWZWhIa1lVczRRa3Y5dzBKeW4yQ0V3TlVHWXVudFFPejJqaHdCbl9DNzAzQ3cwZjZwaTlvajVn?oc=5",
+          "source": "investir.lesechos.fr",
+          "summary": "Cet article suggère que Danone pourrait faire face à des doutes ou des défis concernant sa capacité à démontrer une croissance durable, ce qui impliquerait une pression accrue sur l'entreprise pour rassurer ses investisseurs.",
+          "sentiment": -1
         }
       ],
       "current_price": 63.720001220703125,
-      "fair_value": 90.62490499384454,
-      "entry_price": 65.89472007044691,
-      "exit_price": 99.91739223312054,
+      "fair_value": 90.62490500587732,
+      "entry_price": 65.89472007465838,
+      "exit_price": 99.91739224094184,
       "wacc": 4.315221283205522,
       "financial_analysis_html": "<h3>Diagnostic global</h3><p>Danone présente le profil financier typique d'un grand groupe agroalimentaire mature : un chiffre d'affaires stable autour de 27,3-27,7 Md€ (CAGR de <strong>-0,4 %/an</strong> sur la période 2022-2025), une rentabilité économique modérée mais supérieure au coût du capital, et une structure financière solide bien qu'assez endettée en valeur absolue. L'exercice 2025 marque toutefois un net repli des soldes intermédiaires (EBITDA -7,9 %, EBIT -15,7 %, résultat net -9,7 % par rapport à 2024), après un exercice 2024 qui constituait un point haut. La génération de trésorerie reste le point fort du dossier, avec un free cash-flow de 2,7 Md€ qui excède largement le résultat net.</p><h3>Structure financière et solvabilité</h3><p>La dette nette s'établit à <strong>12,4 Md€</strong> fin 2025, en réduction progressive et régulière depuis 2023 (13,2 Md€), pour des capitaux propres de 16,9 Md€.</p><ul><li><strong>Gearing</strong> (dette nette / capitaux propres) : environ 74 %, un niveau stable sur quatre ans (73 % en 2022, 82 % en 2023, 71 % en 2024), qui traduit un recours au levier significatif mais maîtrisé et non dérivant.</li><li><strong>Dette nette / EBITDA de 2,8x</strong> : ratio conforme aux standards d'un émetteur \"investment grade\" du secteur des biens de consommation, sans être confortable. Il convient de noter que ce ratio s'est mécaniquement dégradé en 2025 sous l'effet de la baisse de l'EBITDA (2,7x sur la base de l'EBITDA 2024), et non d'une hausse de l'endettement, qui recule de 281 M€ sur l'exercice.</li><li><strong>Couverture des frais financiers (ICR) de 7,0x</strong> : l'EBIT couvre sept fois les charges financières nettes (soit de l'ordre de 430 M€), ce qui place le risque de défaillance à court terme à un niveau faible et laisse une marge de sécurité substantielle en cas de nouvelle contraction du résultat d'exploitation.</li><li>Les capitaux propres se contractent de 4,9 % en 2025 (17,8 Md€ à 16,9 Md€) alors que le résultat net est positif : cela suppose des distributions et/ou des éléments comptabilisés directement en capitaux propres (écarts de conversion, rachats d'actions) supérieurs au résultat conservé, un point à surveiller pour la trajectoire du gearing.</li></ul><h3>Rentabilité économique et financière</h3><p>Les capitaux engagés (capitaux propres + dette nette) atteignent environ 29,4 Md€ fin 2025, une base d'actifs lourde caractéristique d'un groupe ayant beaucoup acquis (goodwills et marques).</p><ul><li><strong>ROCE de 7,3 %</strong>, à comparer à un <strong>coût du capital de 4,3 %</strong> : le spread positif d'environ <strong>+3,0 points</strong> signifie que le groupe crée de la valeur économique, la rentabilité des capitaux investis dépassant l'exigence de rémunération des apporteurs de fonds. Appliqué aux 29,4 Md€ de capitaux engagés, ce spread représente de l'ordre de 0,9 Md€ de création de valeur annuelle.</li><li><strong>ROE de 10,8 %</strong> : l'écart favorable entre ROE et ROCE (+3,5 points) illustre un <strong>effet de levier positif</strong> — le coût après impôt de la dette reste inférieur à la rentabilité économique, si bien que l'endettement amplifie la rentabilité des actionnaires sans dégrader le profil de risque de façon excessive au vu de l'ICR.</li><li>Le niveau de marge s'est nettement redressé sur la période avant de refluer : la marge d'EBITDA passe de 14,5 % (2022) à 13,8 % (2023), 17,4 % (2024) puis 16,1 % (2025), et la marge d'EBIT de 7,7 % à 13,1 % avant de retomber à 11,1 %. C'est bien l'amélioration des marges, et non la croissance du volume d'affaires, qui explique le <strong>CAGR d'EBITDA de +4,6 %/an</strong> en regard d'un chiffre d'affaires en légère érosion.</li><li>La marge nette (6,7 % en 2025) reste inférieure à celle de 2024 (7,4 %) mais très supérieure aux exercices 2022-2023 (3,5 % et 3,2 %), ces derniers ayant vraisemblablement été affectés par des dépréciations ou éléments non récurrents pesant sur l'écart entre EBITDA et EBIT.</li></ul><h3>Analyse de la trésorerie et du free cash-flow</h3><p>La génération de trésorerie constitue le principal point d'appui du profil financier.</p><ul><li><strong>FCF de 2 724 M€</strong> en 2025, en progression continue sur la période (2 091 M€ en 2022, 2 595 M€ en 2023, 2 908 M€ en 2024), soit une trajectoire nettement plus favorable que celle du chiffre d'affaires. Le repli de 2025 (-6,3 %) reste plus limité que celui de l'EBITDA (-7,9 %) et surtout de l'EBIT (-15,7 %).</li><li><strong>Conversion FCF/EBITDA de 62 %</strong> : un taux élevé pour l'industrie agroalimentaire, qui traduit une intensité capitalistique contenue (les décaissements d'investissements et la variation de besoin en fonds de roulement absorbent moins de 40 % de l'excédent d'exploitation) et une bonne discipline sur le besoin en fonds de roulement.</li><li>Le FCF (2,7 Md€) représente près de <strong>1,5 fois le résultat net</strong>, confirmant que le résultat comptable est pénalisé par des charges non décaissées (amortissements de 1,36 Md€ d'écart entre EBITDA et EBIT en 2025).</li><li>Ce niveau de FCF permet théoriquement de rembourser la dette nette en un peu plus de 4,5 ans, mais il est largement absorbé par la distribution aux actionnaires : le désendettement effectif n'est que de 281 M€ en 2025, ce qui indique qu'environ 2,4 Md€ de trésorerie ont été affectés aux dividendes, rachats d'actions et opérations de croissance externe.</li></ul><h3>Dynamique récente</h3><p><strong>Aucune publication trimestrielle n'est fournie dans les données transmises</strong> ; l'analyse de la dynamique récente repose donc exclusivement sur la comparaison des exercices annuels.</p><ul><li>L'exercice 2025 marque une <strong>inflexion par rapport à la tendance de redressement 2023-2024</strong> : le chiffre d'affaires recule marginalement (-0,3 %), mais la contraction est bien plus marquée en bas du compte de résultat, avec un effet de ciseau défavorable (EBITDA -378 M€, EBIT -565 M€).</li><li>L'écart entre la baisse de l'EBITDA (-378 M€) et celle de l'EBIT (-565 M€) implique une hausse des dotations aux amortissements et dépréciations d'environ 190 M€, qui peut refléter des investissements récents entrés en exploitation ou des dépréciations d'actifs.</li><li>Les points de résistance sont la <strong>poursuite du désendettement</strong> et le maintien d'un FCF supérieur à 2,7 Md€, qui préservent la solvabilité malgré la dégradation des marges.</li><li>En l'absence de données infra-annuelles et de décomposition volume/prix/périmètre/change, il n'est pas possible de déterminer si le repli de 2025 relève d'un effet de change défavorable, de cessions d'activités, d'une normalisation après un exercice 2024 exceptionnellement élevé, ou d'une dégradation opérationnelle structurelle.</li></ul><h3>Synthèse</h3><p>Danone affiche un <strong>profil financier équilibré</strong> : un endettement significatif mais stabilisé et bien couvert (2,8x l'EBITDA, ICR de 7,0x), une rentabilité économique de 7,3 % supérieure de trois points au coût du capital, un effet de levier financier positif portant le ROE à 10,8 %, et une conversion en trésorerie remarquable (62 % de l'EBITDA).</p><p>Les <strong>points d'attention</strong> tiennent à l'absence de croissance du chiffre d'affaires sur quatre ans (CAGR -0,4 %), qui fait reposer l'intégralité de la progression des résultats sur les marges, et au repli marqué de ces dernières en 2025, qui interrompt la trajectoire de redressement observée en 2024. La contraction simultanée des capitaux propres, du résultat et de l'EBITDA réduit mécaniquement la marge de manœuvre sur les ratios de levier, même si la solvabilité n'est aucunement mise en cause à ce stade. La question centrale du dossier est celle de la <strong>soutenabilité du niveau de marge de 2024-2025</strong> et de la capacité du groupe à retrouver une croissance organique du chiffre d'affaires, condition d'une amélioration durable du ROCE au-delà de son niveau actuel.</p><p><em>Cette analyse est purement descriptive et ne constitue ni un conseil en investissement, ni une recommandation d'achat ou de vente.</em></p>",
       "financial_analysis_quarter": "2025-12-31",
@@ -580,7 +580,7 @@
         },
         {
           "name": "Valorisation relative",
-          "score": -2.197663475318083,
+          "score": -2.197663253096834,
           "weight": 0.08,
           "raw_value": "EV/EBITDA 14.7x (moy. 5 ans 12.3x) — PER 29.5x (moy. 5 ans 26.0x)"
         },
@@ -603,7 +603,7 @@
           "date": "2026-09-06",
           "link": "https://news.google.com/rss/articles/CBMi4wFBVV95cUxPZDB0UlZYQlk2QVFDWHRiaUFocUhEOUhTOWZMNFp5MUJVNE84QlBrQzVxbUFmcjNFS2NqODNGM2NFQWZMeHhSVUJmMXZ3MnFWOEdBMGpQN2h3ZUtaYUpXZ0VNUGVMZFpBWE9IcUZHVVRST2ttN0dvNDg4OXZiclcxdEZqTnZTek1IamYwbDEtX2FHM2pjVTM2OWlwb0lURkYyRnJlWHIzM0hxVm0zX21aMnlPWUpXWk42VDg5aFY3ck9GVDl2UW5YRjEzYVdPWURCQ2pSMXM3eW1INUdBMVI0bVZmMA?oc=5",
           "source": "Science et vie",
-          "summary": "Cet article suggère qu'Airbus aurait réalisé un test ou une démonstration impliquant un aéronef capable de planer sur une longue distance sans moteurs actifs.",
+          "summary": "Cet article suggère qu'Airbus aurait réalisé un vol expérimental au cours duquel un aéronef aurait plané sans moteurs sur une distance significative au-dessus de l'Atlantique.",
           "sentiment": 1
         },
         {
@@ -611,7 +611,7 @@
           "date": "2026-09-06",
           "link": "https://news.google.com/rss/articles/CBMi9gFBVV95cUxQbUpWS1IzeHl6UDdOeWphUWltaEpTdWZoNWdwUUM0MFA2UG5hUUtFX0JmMm9rcUkwUWpnSkVCYTUzSnFGa2NKZXNBaERZTTRBRUpEeWNOUXZRRnFkc1BqWjF0Sl9WaWE1WU5UVTZTY1ZOd2hHUkxodmhqd1VtQ1JWVzEtVlJyV01aQUdVTWc3U0JKZUo1SWFJbTk3aFFpSEFNYWlvaHY5ZUdrUUxxVHBJZ3lfczVUY0dwdGlvQ2JWSjk1aDNISWhSd2QtMVp6a3NMTXpDVXpTSEI4VkRod3pBekJGVmVjcXE2YWxMaDQzZGxZTVNsY1E?oc=5",
           "source": "Ouest-France",
-          "summary": "Cet article suggère qu'Airbus dispose d'installations spécialisées de haute technologie pour la fabrication de satellites, et que Ouest-France propose un accès privilégié aux coulisses de ce processus de production.",
+          "summary": "Cet article suggère qu'Airbus dispose d'installations spécialisées et de processus de fabrication contrôlés pour assembler ses satellites, ce qui pourrait illustrer son expertise technologique dans ce secteur.",
           "sentiment": 1
         },
         {
@@ -619,15 +619,15 @@
           "date": "2026-09-05",
           "link": "https://news.google.com/rss/articles/CBMiygFBVV95cUxPRmlQZXEzNWo2aFhkWUdXU09vVER2bG9FT01fWThFczE0REkxdC02NVJaU1hpTEFEcmVHaTI0a1kxeTRpT2pDRkx3SWtXamFGdWt2Mk9lOTJNc3VPRmpnUDlBOHA1Wm1GVVozNnF1OG51ek01X01hd2hiUnM1MloxWWdZZEdSQWdrSnFZMW1NUVNSSFAtNFI3QXJCcUdGVl80eUJqNkxYeFFiQm82cFBuWW52UENnTTFodUUzZHBsYWxkRjdybWlVMHh3?oc=5",
           "source": "Air Journal",
-          "summary": "Cet article suggère qu'une grève aurait eu lieu chez Airbus en Espagne et qu'un accord de principe aurait pu être négocié avec plusieurs organisations syndicales.",
+          "summary": "Cet article suggère qu'une grève chez Airbus en Espagne aurait pu être résolue par un accord de principe conclu avec quatre syndicats.",
           "sentiment": 0
         },
         {
-          "title": "La France et la Suède coopèrent dans la défense, la grève chez Airbus s’enlise en Espagne, Bull décroche un contrat à 388 millions d’euros en Finlande... Les cinq articles les plus lus - L'Usine Nouvelle",
+          "title": "La France et la Suède coopèrent dans la défense, la grève chez Airbus s’enlise en Espagne, Bull décroche un contrat à 388 millions d’euros en Finlande... Les cinq articles les plus lus - usinenouvelle.com",
           "date": "2026-09-05",
           "link": "https://news.google.com/rss/articles/CBMimgNBVV95cUxOaF9RUUgtVnpIa0J0X21Rc1FBQ19KaGQxSm11SnFhR3pVOEZORXRYcE5DTWF6NFF4SkxuU0ZlZFRJdEN3bjgyLXFaTEFidzlJRDZLMnBfcldyMVlfc1ktNnBQUzMwcVNzNkNjLTF6UjNPRy01bUJEMjRDUmZfU1lGU1dtXy0zOFNJUHIwcGhRTmVNSXFJYjRRN2NLeEoxU1Q4U0pUV0xOTDhhSFZWZTRIeWpNXzRwbTVEdlZlLV9HWTJfQ1pMMXEzdGNkSmxpRFhGaU9QdDNieXdsTWdFem9rYVd0OUhxZjIxOEFkeHVzeVBYVWRkMEN5dE93dWJsYXNqTmU1Y3hSVDh3dm1Cb1NxaGg0WUlycVYyU1hMSWVCcTBJVTMxSzhkNW01QkNodjdtVU1NRjVINjB5VS0zMHdaOTFaMVd1dGo2ampBWl93Z2FNa2N3SmtEc3VlNUNCR3QwZHpnc2NwajluT21EajRfTFlHWk9SZlgxUXV5R1Y3UW9SV1lMSWJEQnhHd2sxRHJOcDJZM1FfLUMzUQ?oc=5",
-          "source": "L'Usine Nouvelle",
-          "summary": "Cet article suggère qu'Airbus pourrait faire face à des défis opérationnels en Espagne avec une grève qui s'enlise, tandis que d'autres acteurs du secteur de la défense et de l'aérospatiale remportent des succès commerciaux.",
+          "source": "usinenouvelle.com",
+          "summary": "Cet article suggère qu'Airbus pourrait faire face à des défis opérationnels, notamment une grève en Espagne qui s'enliserait, tandis que d'autres acteurs du secteur de la défense et de l'industrie remportent des contrats significatifs.",
           "sentiment": -1
         },
         {
@@ -635,14 +635,14 @@
           "date": "2026-09-04",
           "link": "https://news.google.com/rss/articles/CBMi4gFBVV95cUxPSzBlYkxZUmFnY2JnVWU0NWFfaWFqQ3ZiTHo5QVhUZ0Z3ZjQzc3lqZ1pXd3d0UVV5dmJaRkRjdjlCd21KZG1LOHg1X3pMeEF5QVRpdHNWV2N4M3I5aUYxVF9oUXo3SFVERWNwZUxLclBObGpvZ0JNUDdyR1hsLVlNMDI5T2NkOTZQdVhSUDh2a0pYMlZEUC1HRW1BUGFKanpnTlZsS29Rb1JheHlFSkYyNU9MTjludG5oR0QtSXc1c1h5dE4xckp5ODRiemZkUzRVazZFNFpoUVVBMkYzcGRFSzNn?oc=5",
           "source": "ladepeche.fr",
-          "summary": "Cet article suggère qu'une action de grève affecterait les salariés d'Airbus en Espagne et que les autorités gouvernementales espagnoles interviendraient pour tenter de résoudre ce conflit social.",
+          "summary": "Cet article suggère qu'une action de grève aurait lieu chez les salariés d'Airbus en Espagne, situation suffisamment préoccupante pour nécessiter une intervention médiatrice du gouvernement espagnol.",
           "sentiment": -1
         }
       ],
       "current_price": 198.9600067138672,
-      "fair_value": 111.17802855965772,
-      "entry_price": 132.98052891372689,
-      "exit_price": 185.14758126519354,
+      "fair_value": 111.17802938797786,
+      "entry_price": 132.98052920363892,
+      "exit_price": 185.1475818036016,
       "wacc": 7.695339861417706,
       "financial_analysis_html": "<h3>Diagnostic global</h3><p>Airbus présente le profil financier d'une entreprise en phase de redressement opérationnel confirmé : croissance du chiffre d'affaires de <strong>+7,2 % par an</strong> depuis 2022, croissance de l'EBITDA plus rapide encore (<strong>+10,3 % par an</strong>), et une rentabilité économique (ROCE 24,2 %) très supérieure au coût du capital estimé (7,7 %). La structure financière est atypique et très confortable, avec une <strong>trésorerie nette positive</strong> (dette nette de -3,1 Md€) et des capitaux propres qui ont doublé en trois ans. Le principal point de vigilance porte sur la conversion du résultat en cash, en repli tendanciel (39 % de l'EBITDA en 2025).</p><h3>Structure financière et solvabilité</h3><p>Le bilan est en situation de <strong>trésorerie nette excédentaire</strong> : la dette nette ressort à -3,1 Md€ fin 2025, soit un ratio dette nette/EBITDA de <strong>-0,3x</strong> et un gearing négatif d'environ -12 %. L'entreprise n'est donc pas endettée au sens économique du terme : ses placements et liquidités excèdent ses dettes financières.</p><ul><li>La couverture des frais financiers est très élevée (<strong>ICR de 21,5x</strong>), ce qui rend le risque de défaillance financière quasi théorique au niveau consolidé.</li><li>Les capitaux propres progressent de 12,95 Md€ (2022) à <strong>26,10 Md€</strong> (2025), soit un doublement en trois exercices, alimenté par une mise en réserve significative des résultats (5,2 Md€ de résultat net en 2025).</li><li>La position de trésorerie nette s'est toutefois réduite en valeur absolue depuis 2023 (-5,15 Md€ puis -3,73 Md€ et -3,11 Md€), signe que les distributions aux actionnaires et les emplois hors exploitation absorbent plus que le free cash-flow généré, sans que cela remette en cause la solvabilité.</li><li>Cette structure de bilan doit être lue en tenant compte de la nature du secteur : les avances et acomptes clients constituent une ressource de financement structurelle qui gonfle mécaniquement la trésorerie et rend le ratio dette nette/EBITDA moins représentatif du risque réel qu'il ne l'est dans l'industrie classique.</li></ul><h3>Rentabilité économique et financière</h3><p>La rentabilité économique est le point fort du dossier. Avec un <strong>ROCE de 24,2 %</strong> face à un coût du capital de 7,7 %, le spread de création de valeur atteint <strong>+16,5 points</strong>, ce qui traduit une rente économique substantielle sur les capitaux employés (de l'ordre de 23 Md€ en tenant compte de la trésorerie nette).</p><ul><li>Les marges se redressent régulièrement : marge d'EBIT de 8,4 % en 2023, 9,1 % en 2024 et <strong>9,7 % en 2025</strong> ; la marge d'EBITDA repasse à 14,0 %, retrouvant son niveau de 2022 sur une base de chiffre d'affaires supérieure de 25 %.</li><li>La croissance de l'EBITDA (+10,3 % par an) supérieure à celle du chiffre d'affaires (+7,2 % par an) confirme un <strong>effet de levier opérationnel positif</strong> : la montée en cadence des livraisons dilue les coûts fixes.</li><li>Le <strong>ROE de 20,0 %</strong> est inférieur au ROCE : la situation de trésorerie nette produit un effet de levier financier négatif, les liquidités étant rémunérées à un taux très inférieur à la rentabilité économique de l'activité. Ce phénomène est amplifié par la forte reconstitution des capitaux propres, qui élargit le dénominateur plus vite que le résultat net ne progresse.</li><li>Le résultat net (5,22 Md€, soit 7,1 % du chiffre d'affaires) progresse de +23 % en 2025, plus vite que l'EBIT (+12,6 %), ce qui suggère une contribution positive des éléments financiers et/ou une charge d'impôt allégée.</li></ul><h3>Analyse de la trésorerie et du free cash-flow</h3><p>Le free cash-flow s'établit à <strong>4,03 Md€</strong> en 2025, en progression continue depuis 2023 (3,20 Md€ puis 3,73 Md€), mais le taux de conversion se dégrade tendanciellement.</p><ul><li>La <strong>conversion FCF/EBITDA de 39 %</strong> est faible en valeur absolue et en recul régulier : environ 47 % en 2022, 41 % en 2023, 41 % en 2024, 39 % en 2025. Autrement dit, plus de 60 % de l'EBITDA est absorbé par les investissements, la variation de besoin en fonds de roulement et l'impôt.</li><li>Ce décalage est cohérent avec une phase de montée en cadence industrielle : les stocks et en-cours augmentent avec les volumes, ce qui immobilise du BFR, tandis que les capex et la R&D restent soutenus. L'écart entre le CAGR de l'EBITDA (+10,3 %) et la quasi-stagnation du FCF entre 2022 (3,82 Md€) et 2025 (4,03 Md€) matérialise ce phénomène.</li><li>Rapporté au résultat net, le FCF représente environ 77 %, ce qui reste un niveau de qualité comptable acceptable, sans signal d'alerte sur la nature des profits.</li><li>Le FCF couvre largement le service de la dette (ICR de 21,5x) et laisse une marge de manœuvre importante pour les distributions et les investissements de capacité.</li></ul><h3>Dynamique récente</h3><p>Les publications trimestrielles confirment la poursuite de la croissance, avec une forte saisonnalité caractéristique du secteur (concentration des livraisons en fin d'exercice : 25,98 Md€ au quatrième trimestre 2025, soit 35 % de l'année).</p><ul><li>Le deuxième trimestre 2026 ressort à <strong>20,53 Md€</strong>, contre 16,07 Md€ un an plus tôt, soit une progression de l'ordre de <strong>+28 %</strong>, la plus forte séquence trimestrielle hors quatrième trimestre observée sur la période.</li><li>Le premier trimestre 2026 (12,65 Md€) était en revanche en léger repli par rapport au premier trimestre 2025 estimé (environ 13,5 Md€), soit environ -7 %, ce qui illustre la volatilité du calendrier de livraisons plus qu'une inflexion de tendance.</li><li>Sur le premier semestre 2026, le chiffre d'affaires cumulé atteint environ <strong>33,2 Md€ contre 29,6 Md€</strong> au premier semestre 2025, soit une croissance d'environ <strong>+12 %</strong>, supérieure au CAGR de +7,2 % constaté sur 2022-2025.</li><li>La lecture trimestrielle doit rester prudente en l'absence de données de marge et de cash-flow infra-annuelles : l'accélération du chiffre d'affaires ne préjuge pas de la trajectoire de conversion en trésorerie, qui constitue le point de suivi principal.</li></ul><h3>Synthèse</h3><p>Airbus combine une <strong>rentabilité économique élevée et créatrice de valeur</strong> (ROCE 24,2 % contre un coût du capital de 7,7 %), une <strong>structure financière sans risque apparent de solvabilité</strong> (trésorerie nette, ICR de 21,5x, capitaux propres doublés en trois ans) et une <strong>dynamique de croissance qui s'accélère</strong> au premier semestre 2026 (+12 % contre +7,2 % en moyenne annuelle depuis 2022).</p><p>Les deux zones d'attention identifiées par l'analyse sont, d'une part, la <strong>dégradation continue de la conversion du free cash-flow</strong> (de 47 % à 39 % de l'EBITDA entre 2022 et 2025), qui traduit un besoin en fonds de roulement et des investissements croissants liés à la montée en cadence ; d'autre part, l'<strong>écart entre ROE (20,0 %) et ROCE (24,2 %)</strong>, conséquence mécanique d'une trésorerie nette abondante peu rémunérée et d'une base de fonds propres en forte expansion, qui pose la question de l'allocation du capital excédentaire. La saisonnalité marquée du chiffre d'affaires impose par ailleurs de raisonner en cumul annuel plutôt qu'en variations trimestrielles isolées.</p>",
       "financial_analysis_quarter": "2026-06-30",
@@ -658,9 +658,9 @@
     {
       "ticker": "MT.PA",
       "name": "ArcelorMittal",
-      "sector": null,
-      "sector_profile": "standard",
-      "score": -11.7,
+      "sector": "Basic Materials",
+      "sector_profile": "cyclique",
+      "score": -13.3,
       "interpretation": "Neutre",
       "factors": [
         {
@@ -671,9 +671,9 @@
         },
         {
           "name": "Structure financière / solvabilité",
-          "score": 8.124181171626427,
+          "score": 7.320258816609181,
           "weight": 0.2,
-          "raw_value": "Dette nette/EBITDA 1.1x (seuil confort 3.0x, profil standard) — ICR 10.4x"
+          "raw_value": "Dette nette/EBITDA 1.1x (seuil confort 2.1x, profil cyclique) — ICR 10.4x"
         },
         {
           "name": "Croissance",
@@ -712,15 +712,15 @@
           "date": "2026-09-04",
           "link": "https://news.google.com/rss/articles/CBMijgFBVV95cUxNM3ZhOHNITEx1YXRzVThUUUN0U2c0WUh0cUc4allDbVZ1QkNMLThZd1JFazFRUFl0Q1NobzRlZ3ZqS3J0UXlwcUtzQlBOOEd3OVg4VXpFT3lBdmYzZnZKLTBkTlFTdWdDRG1IUFY5U1pWTEJ1WVNZYTZmWi0wcE5RWnUtOEh5RUE5bHVWN2hR?oc=5",
           "source": "Boursier.com",
-          "summary": "Cet article suggère que le titre de l'action ArcelorMittal aurait enregistré une hausse de 2,71% lors d'une séance de trading, sans que le contenu disponible ne permette de connaître les raisons précises de cette évolution.",
+          "summary": "Cet article suggère que le titre de l'action ArcelorMittal aurait enregistré une hausse de 2,71% à la bourse, sans que le contenu disponible ne permette de déterminer les raisons précises de cette évolution.",
           "sentiment": 1
         },
         {
-          "title": "TotalEnergies, Accor, Axa, GTT, Aperam, ArcelorMittal, Soitec : toutes les recommandations des analystes - Investir Les Echos",
+          "title": "TotalEnergies, Accor, Axa, GTT, Aperam, ArcelorMittal, Soitec : toutes les recommandations des analystes - investir.lesechos.fr",
           "date": "2026-09-04",
           "link": "https://news.google.com/rss/articles/CBMijwJBVV95cUxQQ1V0Q3lUY3dVVkI3SWdEbEVFRGVWX0gyeTQwdG1GYUNyLTA2eUZqWWhOMWFtOXNVdFozbEVJSFdPODN2ZUQwTHNKd0w4NzZyRldwWXd1SktBOF9tMENmQzdYdVBMSWlLQVlsNFNJX3RJaDNwck16OU5CZ2c2WDhTODA1ZWhQaVVnSmNfS21UVDJyRlJyeUJuVENnM1oyMElWSnFscEdPWUhJcGlveUwyNE1iVzFIZGdDY0xQb2k2eFRlaWl4VVpPYjB4UnlPd19GNjdNbG5jRjFOenY0NURsRzVqU0JFaFkxTnBnZl9sOEI1MDd5X3VaMndNRXNQZUItMldYdHQzeWRNelBDR1Q4?oc=5",
-          "source": "Investir Les Echos",
-          "summary": "Cet article suggère que des analystes financiers ont publié des recommandations d'investissement sur ArcelorMittal aux côtés d'autres grandes entreprises cotées.",
+          "source": "investir.lesechos.fr",
+          "summary": "Cet article suggère qu'ArcelorMittal fait partie d'un groupe d'entreprises majeures pour lesquelles des analystes ont formulé des recommandations d'investissement.",
           "sentiment": 0
         },
         {
@@ -728,15 +728,15 @@
           "date": "2026-09-01",
           "link": "https://news.google.com/rss/articles/CBMizAFBVV95cUxNd3YzNjVrMkZ0MTU3aHZXQ1d3cGdXRWxidTNiVC03S18tYnFQYTRkbE5ueExMZTVCOXJuSC1hTkE4MFAwZ1lIT1ZKSThPOHpxSTN4SHRxSnc4cFBkNzBuSTdsUjhxYm5GeGREVWRQaU9fc0d6Y29OcUFiZ2V5cXNxVE5ZRFJsTktLUjAzcnUwTnM2bkNaZTBxSl95NXQ1UjI4MktkSV9FR0gwc3ZBRGpWeTRNVlZqY1hKTmZWWGJ4aUJ6a2hTbDUtRThhS0U?oc=5",
           "source": "La Voix du Nord",
-          "summary": "Cet article suggère qu'ArcelorMittal aurait connu plusieurs incidents sur son site de Dunkerque, mais que la direction minimiserait les conséquences opérationnelles de ces problèmes.",
+          "summary": "Cet article suggère qu'ArcelorMittal aurait connu plusieurs incidents successifs sur son site de Dunkerque, mais que la direction minimiserait leurs conséquences sur les opérations.",
           "sentiment": -1
         },
         {
-          "title": "FDJ, ArcelorMittal, Quadient, Veolia : éligibles au PEA-PME ? - lerevenu.com",
+          "title": "FDJ, ArcelorMittal, Quadient, Veolia : éligibles au PEA-PME ? - Le Revenu",
           "date": "2026-09-04",
           "link": "https://news.google.com/rss/articles/CBMinwFBVV95cUxQU193VzZMMnl1TlUwa2pVOUU5RUFnNU1OS05kbHlrSEdlUzVRLWprLVFhRHJ6U1hGOE5vekR4TVlYbUNnZjlkRnVXWTNLZlpXdktmQ3BYRjFpTlE0bWV6WHNObTdMSy1tYmVjd29UaUc4cmxOQ0Q1cFlXcTJqaHQ1aXVRQ3p0OXQ5RE83MDV5aEl4YWpzNWgwdFlkbjlmY0E?oc=5",
-          "source": "lerevenu.com",
-          "summary": "Cet article suggère que ArcelorMittal pourrait être examinée sous l'angle de son éligibilité aux dispositifs d'investissement PEA-PME, ce qui impliquerait une analyse de son statut réglementaire ou fiscal.",
+          "source": "Le Revenu",
+          "summary": "Cet article suggère qu'ArcelorMittal pourrait potentiellement répondre aux critères d'éligibilité du dispositif fiscal PEA-PME aux côtés d'autres grandes entreprises françaises.",
           "sentiment": 0
         },
         {
@@ -744,7 +744,7 @@
           "date": "2026-09-02",
           "link": "https://news.google.com/rss/articles/CBMiywFBVV95cUxQazNLVW1vZHlmVkVIWEhIYm5rU2lqWUpwQ1hTMDVfdzZQM3FOSEhjRTBzQjZMaUQ0eWM1ZDFTODhSbU5BVXprMzNPeF9NTTRPMk9hT0FMZkw1TjNaMWJMeWk2NEhXUVRqaXpxUzZQanRHOFprRzFCX3dzOS1YTjBSUHdrSjREV091QlhETE1fVUtfZHdnTFRvUEwwOHc1eGR5TkY3TmgwRGUwaC1WbEhTZTdoVXZCZ3hpc05EaHF1UHVwQ1BBTi1adXJXSQ?oc=5",
           "source": "L'Humanité",
-          "summary": "Cet article suggère que le groupe ArcelorMittal pourrait ne pas être pleinement engagé dans la décarbonation de ses installations en Europe, en questionnant la sincérité de ses intentions.",
+          "summary": "Cet article suggère que le groupe ArcelorMittal pourrait ne pas être pleinement engagé ou sincère dans sa stratégie de décarbonation de ses installations en Europe.",
           "sentiment": -1
         }
       ],
@@ -798,9 +798,9 @@
         },
         {
           "name": "Valorisation relative",
-          "score": 0.8998323708795561,
+          "score": 0.8998876987716568,
           "weight": 0.08,
-          "raw_value": "EV/EBITDA 18.1x (moy. 5 ans 19.2x) — PER 31.3x (moy. 5 ans 31.1x)"
+          "raw_value": "EV/EBITDA 18.1x (moy. 5 ans 19.2x) — PER 31.2x (moy. 5 ans 31.1x)"
         },
         {
           "name": "Dynamique récente",
@@ -821,7 +821,7 @@
           "date": "2026-09-03",
           "link": "https://news.google.com/rss/articles/CBMiiAJBVV95cUxPTnl0bmliNWNpcUd2RTFPekpVR25LZWpNSFpFaWhrZEw1NEJiakJRZ3hJVURXRXhWdU9zd25TOXpEZWNxa0QtYmxUdHNkZHFuR0FrY1dfbVZBdWdPT0RzSndSYlMybG4yMWVscDRkU2d2Q1NqY0haZ3BKX0R2UlBWTWlrb0M5R0hMSl8yNW9WbE5MSzVLR05rNjlwZzdVUXZQMnBzcGZKemdJRW9MTDZiNkNaMmlTbk9xTlJScWJOOEloSWZkRHlEOVh3Z3ZxYWNXS19jc3BDRndjUGhIWFIyajRKaURZdmN5SF9FQVlMdTFYTmtDaVp2RkxhTEJ0ZkNuaVltTVFYVlU?oc=5",
           "source": "Sortir à Paris",
-          "summary": "Cet article suggère que L'Oréal ouvrira ou présentera son siège parisien historique appelé « le Visionnaire » au public lors des Journées du Patrimoine 2026.",
+          "summary": "Cet article suggère que L'Oréal ouvrira probablement son siège historique parisien, appelé « le Visionnaire », au public lors des Journées du Patrimoine 2026.",
           "sentiment": 1
         },
         {
@@ -829,15 +829,15 @@
           "date": "2026-09-02",
           "link": "https://news.google.com/rss/articles/CBMikgFBVV95cUxPeUhCd3h2M0pKdjY1eWZ0azNjX3hRMURvU0gyeEF0bXVxYndMRWNiQ3hVdGNsYXk4aVFoYU8xdXdCTng0YmpVd2M5NGU0aGRjcGJZNjE0VWV0ZDlPeE5ZeHBKSGpidXludHNPdUx5cGE1MmZBZlU5R0RyaWxPX1N5eVRHQkR2RlhkMTZpSVVDX0lsZw?oc=5",
           "source": "Boursier.com",
-          "summary": "Cet article suggère que L'Oréal pourrait bénéficier d'un renforcement analytique ou d'une couverture accrue de la part d'analystes financiers.",
+          "summary": "Cet article suggère que L'Oréal pourrait faire l'objet d'une couverture analytique renforcée, possiblement en raison d'évolutions notables dans sa situation financière ou stratégique.",
           "sentiment": 0
         },
         {
-          "title": "Riche de nouvelles marques, dans un marché dynamique, L'Oréal n'est plus qu'à un cheveu des 50 milliards de chiffre d'affaires - Investir Les Echos",
+          "title": "Riche de nouvelles marques, dans un marché dynamique, L'Oréal n'est plus qu'à un cheveu des 50 milliards de chiffre d'affaires - investir.lesechos.fr",
           "date": "2026-09-02",
           "link": "https://news.google.com/rss/articles/CBMingJBVV95cUxOMzAwdzV4M0RJOEFJNUY3SFVKODREWXdLR3Qtc2FWY3lETi1BNTlhb3RFZUNMU1hfdlVmSUdFWV91cldmTE5BNEdueTU3T0trYkpjeHhlRVByTjFkbTZOSDBISGg4VlNRekRXYjdvbFMwMF80MFoxZVcyQ25BVGt1WlBwcVNvTk0wNkF5Vmc3bS02ZlV1eFNyNkhRVVZRcVlJbkFKVGp0TEFBRC1SWl9YQjExVUxJSklxUVZQSGtnTTMwNGhTX1h2Rk9hSEJEUlMtNzVOVDdkTTdZNE5lSjdNTTh0aEdaQzhTZjI2VlZHOFNzNFJUM2JFc1FSekxEc3RsaGhqWnpuWWxhaFYwZHRmaG81eVptQWZUUEY0Z1JR?oc=5",
-          "source": "Investir Les Echos",
-          "summary": "Cet article suggère que L'Oréal, grâce à l'acquisition ou au développement de nouvelles marques dans un contexte de marché favorable, s'approcherait d'un chiffre d'affaires de 50 milliards d'euros.",
+          "source": "investir.lesechos.fr",
+          "summary": "Cet article suggère que L'Oréal, grâce à l'acquisition ou l'intégration de nouvelles marques et à un marché en croissance, s'approcherait d'un seuil de 50 milliards d'euros de chiffre d'affaires.",
           "sentiment": 1
         },
         {
@@ -845,7 +845,7 @@
           "date": "2026-09-04",
           "link": "https://news.google.com/rss/articles/CBMiqgFBVV95cUxPcnZzY0xMd3RDenRsZlB3Y3hCdkpYNWpJWWEwQnRGVVMtQmVNeWVyalNTNWRWQ0RwbWhUblBHQmdNVGJxcFFVOWltUERCT1kyUlByT2F2ZThEaDRXODMxVk9iWV84OU9fRjUwamVIVHk2QVpXVTE5bkxsX0FqTXVzd3VrMUk4N3doczh0clZ6WGRYbTFRclRrUkVMYmZKQm5VeEc3aEdRUlFwZw?oc=5",
           "source": "PR Newswire",
-          "summary": "Cet article suggère que L'Oréal participerait aux Journées européennes du patrimoine 2026 en ouvrant cinq sites au public et en positionnant la science cosmétique comme un élément du patrimoine culturel français.",
+          "summary": "Cet article suggère que L'Oréal participerait aux Journées européennes du patrimoine 2026 en ouvrant cinq sites au public et en positionnant son savoir-faire cosmétique comme un élément du patrimoine culturel français.",
           "sentiment": 1
         },
         {
@@ -853,15 +853,15 @@
           "date": "2026-07-10",
           "link": "https://news.google.com/rss/articles/CBMitAFBVV95cUxQV3R6U290SnBXODA2cmJHc3NRcDFXcDdDZURYMEF2WGNjdmNjckh1Y0RJUDd1VkdGdnJJbUg5UDhsZjM2R1Niei12ZmtSbFQxdHVQWVg0OFNfczV2MzBKTkRPeDRtMmxKWEk1ODBLV3VlQnE3WXQ3Qlp0ekR5cEhYZUlTbjhpM1FieDRVZ1Zxa1hRT2ZiV3ZEOHVEX2VxbFRTdVBQUldlMU15c2QtblQyTkZPVHA?oc=5",
           "source": "L'Oréal",
-          "summary": "Cet article suggère que L'Oréal aurait conclu un partenariat stratégique en tant que partenaire beauté exclusif de la Plenitude Arena, ce qui pourrait indiquer une expansion de ses activités commerciales et de sa visibilité.",
+          "summary": "Cet article suggère que L'Oréal aurait conclu un partenariat exclusif de sponsoring beauté avec la Plenitude Arena, ce qui pourrait représenter une opportunité de visibilité et d'association de marque pour le groupe.",
           "sentiment": 1
         }
       ],
       "current_price": 383.8999938964844,
-      "fair_value": 245.8445650205896,
-      "entry_price": 271.5608895052533,
-      "exit_price": 382.4173173610395,
-      "wacc": 7.80737378168337,
+      "fair_value": 245.89924207419276,
+      "entry_price": 271.58002647401435,
+      "exit_price": 382.45285744588153,
+      "wacc": 7.807230281880305,
       "financial_analysis_html": "<h3>Diagnostic global</h3><p>L'Oréal présente le profil financier d'une entreprise mature à forte rentabilité et à structure financière très peu endettée : une croissance du chiffre d'affaires de <strong>+4,6 % par an</strong> en moyenne sur la période observée, des marges stables autour de <strong>20 % d'EBIT</strong> et un ROCE de <strong>18,2 %</strong> largement supérieur au coût du capital estimé (7,8 %). L'exercice 2025 marque toutefois une inflexion de rythme : le chiffre d'affaires ne progresse plus que de <strong>+1,3 %</strong> et le résultat net recule de <strong>-4,4 %</strong>, alors que la génération de trésorerie continue de s'améliorer et que la dette nette est divisée par plus de deux.</p><h3>Structure financière et solvabilité</h3><p>La structure financière est celle d'un groupe pratiquement désendetté, ce qui constitue une caractéristique historique du modèle.</p><ul><li><strong>Dette nette de 2 051 M€</strong> fin 2025, contre 4 443 M€ fin 2024 et 4 404 M€ fin 2023 : la position d'endettement a été réduite de près de 2,4 Md€ en un an.</li><li><strong>Gearing</strong> (dette nette / capitaux propres) ramené à environ <strong>5,9 %</strong>, contre 13,4 % un an plus tôt : les capitaux propres (34 953 M€) financent l'essentiel des capitaux employés (environ 37 Md€).</li><li><strong>Dette nette / EBITDA de 0,2x</strong> : un niveau très inférieur aux seuils d'alerte usuels (2,5x-3x), qui traduit une capacité de remboursement théorique en quelques mois d'EBITDA.</li><li><strong>Couverture des frais financiers (ICR) de 24,8x</strong> : les charges financières implicites (de l'ordre de 350 M€) sont marginales au regard d'un EBIT de 8 877 M€. Le risque de solvabilité est, en l'état des données, non significatif.</li></ul><p>Cette sous-utilisation délibérée du levier financier préserve une flexibilité importante (capacité d'acquisition, résistance aux chocs de cycle), au prix d'un moindre effet de levier sur la rentabilité des capitaux propres.</p><h3>Rentabilité économique et financière</h3><p>La rentabilité économique est le principal moteur de création de valeur du groupe.</p><ul><li><strong>ROCE de 18,2 %</strong> pour un coût du capital de <strong>7,8 %</strong>, soit un écart (spread) de l'ordre de <strong>+10,4 points</strong>. Chaque euro de capital employé crée de la valeur, ce qui est cohérent avec un modèle fondé sur des actifs immatériels (marques) à forte marge et une intensité capitalistique maîtrisée.</li><li><strong>Marges très stables</strong> : marge d'EBITDA de 24,3 % en 2025 (24,5 % en 2024, 24,2 % en 2023), marge d'EBIT de 20,2 % (20,3 % en 2024, 20,0 % en 2023). La stabilité sur quatre exercices indique un pouvoir de fixation des prix préservé et une structure de coûts pilotée.</li><li><strong>ROE de 17,5 %</strong>, en repli par rapport aux 19,3 % implicites de 2024 (6 409 M€ / 33 133 M€). Ce ROE est très légèrement inférieur au ROCE, situation logique lorsque la dette est quasi nulle : l'effet de levier ne joue pratiquement pas, et la rentabilité des capitaux propres se confond avec la rentabilité économique après impôt, diluée par la croissance des fonds propres (+1 820 M€ en 2025).</li><li>Le <strong>recul du résultat net en 2025</strong> (6 127 M€ contre 6 409 M€) alors que l'EBIT progresse légèrement (+0,7 %) suggère une dégradation d'origine non opérationnelle (résultat financier, fiscalité ou contributions hors exploitation). La marge nette passe de 14,7 % à 13,9 %.</li></ul><h3>Analyse de la trésorerie et du free cash-flow</h3><ul><li><strong>FCF de 7 162 M€ en 2025</strong>, en progression de <strong>+7,8 %</strong> sur un an et de <strong>+45 %</strong> depuis 2022 (4 935 M€) : la trajectoire de trésorerie est nettement plus dynamique que celle du chiffre d'affaires.</li><li><strong>Conversion FCF / EBITDA de 67 %</strong> : un taux solide, qui témoigne d'une faible intensité en investissements et d'un besoin en fonds de roulement maîtrisé. Le FCF représente environ <strong>16,3 % du chiffre d'affaires</strong>.</li><li>Point notable : en 2025, le <strong>FCF (7 162 M€) dépasse le résultat net (6 127 M€)</strong>, avec un ratio de conversion supérieur à 115 %, signe d'une qualité comptable satisfaisante des résultats (amortissements supérieurs aux investissements de renouvellement, absence de dérive du BFR apparente).</li><li>L'écart entre le FCF généré (7 162 M€) et la réduction de dette nette (-2 392 M€) implique une <strong>affectation d'environ 4,8 Md€ aux actionnaires et/ou à des opérations de croissance externe</strong> sur l'exercice, sans recours à l'endettement.</li></ul><h3>Dynamique récente</h3><p><strong>Aucune publication trimestrielle n'est disponible dans les données fournies</strong> : l'analyse de la dynamique de court terme repose donc uniquement sur la comparaison des exercices annuels, ce qui limite la finesse du diagnostic sur les tendances les plus récentes.</p><ul><li><strong>Décélération marquée du chiffre d'affaires</strong> : +7,6 % en 2023, +5,6 % en 2024, puis <strong>+1,3 % en 2025</strong>, contre une moyenne de +4,6 % par an sur la période. Le CAGR de l'EBITDA (+5,0 %) reste supérieur à celui du chiffre d'affaires, ce qui traduit un léger effet de ciseau favorable sur l'ensemble de la période, mais l'EBITDA 2025 est quasi stable (+0,2 %).</li><li><strong>Marges maintenues mais plus de levier opérationnel</strong> : la marge d'EBITDA cède 0,2 point en 2025, la marge nette 0,8 point.</li><li><strong>Contraste avec la trésorerie</strong> : c'est l'année où la croissance ralentit le plus que le FCF progresse le plus vite (+7,8 %) et que la dette nette est réduite de moitié, ce qui peut refléter un pilotage plus serré du BFR et des investissements dans un contexte de moindre croissance.</li></ul><h3>Synthèse</h3><p>Le diagnostic financier fait ressortir une entreprise en situation de <strong>création de valeur structurelle</strong> (ROCE 18,2 % vs coût du capital 7,8 %), dotée d'un <strong>bilan quasi désendetté</strong> (0,2x l'EBITDA, ICR de 24,8x) et d'une <strong>génération de trésorerie robuste et croissante</strong> (FCF 7,2 Md€, conversion de 67 % de l'EBITDA). Les points de vigilance identifiés dans les données sont la <strong>décélération de la croissance</strong> (+1,3 % en 2025 après +5,6 % et +7,6 %), le <strong>repli du résultat net et de la marge nette</strong> malgré un EBIT stable, et la <strong>baisse du ROE</strong> (17,5 % contre 19,3 % implicite en 2024), liée à la fois à ce recul du résultat et à l'accumulation de fonds propres non compensée par un effet de levier. Le profil de risque financier reste faible ; l'enjeu se déplace du bilan vers la capacité à réaccélérer la croissance rentable et à employer une capacité financière largement disponible. Cette analyse est purement descriptive et ne constitue pas un conseil en investissement.</p>",
       "financial_analysis_quarter": "2025-12-31",
       "alerts": [
@@ -907,7 +907,7 @@
         },
         {
           "name": "Valorisation relative",
-          "score": -1.2159462548090056,
+          "score": -1.2159459754957394,
           "weight": 0.08,
           "raw_value": "EV/EBITDA 6.2x (moy. 5 ans 6.0x) — PER 13.2x (moy. 5 ans 11.5x)"
         },
@@ -930,7 +930,7 @@
           "date": "2026-09-04",
           "link": "https://news.google.com/rss/articles/CBMiUEFVX3lxTE9oX1NuMnp3Q1Ezd2xRVlIzdFlYNm1xSS1JYVB4YWhHSlBKSUpGZ0stcTF3MEhfWnpVTW52TjhLSlpfYWsxRVdIUzFZSlFIa2Jz?oc=5",
           "source": "Boursorama",
-          "summary": "Cet article suggère qu'il s'agit d'une page d'information financière standard présentant les données de cotation et les cours de l'action VINCI sur le marché Euronext Paris.",
+          "summary": "Cet article suggère qu'il s'agit d'une page d'information sur le cours de bourse de VINCI cotée à Euronext Paris, sans que le titre seul ne permette de déterminer si l'évolution est favorable ou défavorable.",
           "sentiment": 0
         },
         {
@@ -938,7 +938,7 @@
           "date": "2026-09-06",
           "link": "https://news.google.com/rss/articles/CBMingFBVV95cUxQdEJoQWJpTmNyWk02N1RpZ3ZfazExb08zeXBaNlp5SXFFTW5kTEE5VHFqX3R6WTZZZGladlA5aFNzdHpvQWZKYWtXY1Z3ZFFfMUhNU1E5bW0xVWtTTm5pV2hLSU5CX2gyZk8xMlFEUGZTQkFpMWprWEZWQlJGd0pNN3BmQ25aTkpnbFdVWEoyNVFLWnQwejRvNTNLdk1jZw?oc=5",
           "source": "Radio VINCI Autoroutes",
-          "summary": "Cet article suggère que la sortie n°13 de l'autoroute A10 en direction d'Orléans à Artenay serait temporairement fermée, ce qui pourrait indiquer des travaux, un incident ou une perturbation du trafic gérée par VINCI Autoroutes.",
+          "summary": "Cet article suggère qu'une fermeture de sortie d'autoroute est signalée sur l'A10 à Artenay, probablement en raison de travaux, d'un incident ou de conditions de circulation difficiles gérés par VINCI Autoroutes.",
           "sentiment": -1
         },
         {
@@ -946,7 +946,7 @@
           "date": "2026-09-06",
           "link": "https://news.google.com/rss/articles/CBMiowFBVV95cUxNenNwd3c4WWNZMm9Jb1pyd2tNdlJBc2ladlBOZkd4NURHd2ptcElDLXh3SVBiUE9QMFVXdjFhMUd2cVRNR2xKZHhxQ3ZiX1NHSTY1VjNoWUVmVHl0cF9CVHM2XzdvNE9nVHdpUXRKRjJ6LWZpb1cxaGRVYnl6LUp3YVBLalliLXB2cmhUUnNrSTEyTVhPUlduN3BXZTE5UHZTWjBR?oc=5",
           "source": "epochtimes.fr",
-          "summary": "Cet article suggère que le titre pourrait concerner une analyse ou une enquête sur la célèbre peinture 'La Vierge au fuseau' attribuée à Léonard de Vinci, bien que le lien avec l'entreprise VINCI reste indéterminé sans accès au contenu.",
+          "summary": "Cet article suggère que le titre pourrait concerner une analyse ou une enquête sur la célèbre peinture « La Vierge au fuseau » de Léonard de Vinci, bien que le lien avec l'entreprise Vinci ne soit pas clairement établi par le seul titre.",
           "sentiment": 0
         },
         {
@@ -954,7 +954,7 @@
           "date": "2026-09-04",
           "link": "https://news.google.com/rss/articles/CBMiYEFVX3lxTE1wTlFiVUU0SzIwMjg0V0c1bUFTUy1DemlQX21JcjdlTVdrZW1BZTF6cEs0RWpfRTRBRnh1X082WXNPYmhYOElteVRoc2dqbUxZWE1qS0pVY2szdXk0SkxnVg?oc=5",
           "source": "Zonebourse",
-          "summary": "Cet article suggère qu'il pourrait s'agir d'une page de suivi ou de données boursières concernant le cours de l'action VINCI cotée sur Euronext Paris.",
+          "summary": "Cet article suggère qu'il s'agit d'une page d'information sur le cours de l'action VINCI cotée sur Euronext Paris, probablement destinée à suivre les données boursières de l'entreprise.",
           "sentiment": 0
         },
         {
@@ -962,14 +962,14 @@
           "date": "2026-09-04",
           "link": "https://news.google.com/rss/articles/CBMigwFBVV95cUxPdjF5S3BXMUVmQzBENHVHZjRfajBLTy1NVk8zeTM1ZFYwUHBlWi1aVkZhTHNLNkRtc2xDd1R5MkphRERHS3FRbHRTMngwR2NfMWd4WXdsNW1VYldvZnl0VFQtU3BOVmV4U3R4bUFNNFRBbXcxSU10NDJEZS1zNUtaeHd2OA?oc=5",
           "source": "Boursier.com",
-          "summary": "Cet article suggère que le titre de Vinci aurait enregistré une hausse modérée de 0,71% à la bourse, sans que le contenu disponible ne permette d'identifier les raisons précises de cette évolution.",
+          "summary": "Cet article suggère que le titre de Vinci aurait enregistré une légère hausse de cours de 0,71% à la bourse, sans que le contenu disponible ne permette de confirmer les raisons ou le contexte de cette évolution.",
           "sentiment": 1
         }
       ],
       "current_price": 113.94999694824219,
-      "fair_value": 234.2242699490499,
-      "entry_price": 143.5862751294453,
-      "exit_price": 226.17511224361584,
+      "fair_value": 234.22427055814865,
+      "entry_price": 143.58627534262985,
+      "exit_price": 226.17511263953003,
       "wacc": 5.3225799755183205,
       "financial_analysis_html": "<h3>Diagnostic global</h3><p>Vinci présente le profil financier caractéristique d'un groupe intégré concessions-contracting&nbsp;: une croissance soutenue du chiffre d'affaires (+5,9&nbsp;%/an entre 2022 et 2025, à 75,7&nbsp;Md€), une expansion des marges plus rapide que celle de l'activité (EBITDA +7,7&nbsp;%/an) et une génération de trésorerie abondante et régulière (8,0&nbsp;Md€ de free cash-flow en 2025). La rentabilité économique après impôt (ROCE 12,0&nbsp;%) dépasse nettement le coût du capital estimé (5,3&nbsp;%), ce qui traduit une création de valeur significative, tandis que l'endettement reste contenu au regard de la capacité bénéficiaire (dette nette/EBITDA 1,5x, ICR 8,4x). Le point d'attention porte moins sur la solvabilité que sur l'intensité capitalistique du modèle et sur le rythme de restitution aux actionnaires, qui absorbe l'essentiel du cash-flow disponible.</p><h3>Structure financière et solvabilité</h3><p>Les capitaux engagés reconstitués (capitaux propres 30,8&nbsp;Md€ + dette nette 20,4&nbsp;Md€) s'élèvent à environ 51&nbsp;Md€ fin 2025, reflet d'un modèle très capitalistique où les concessions immobilisent des actifs de longue durée financés par dette adossée à des flux contractuels.</p><ul><li><strong>Levier</strong>&nbsp;: la dette nette recule légèrement de 21,1&nbsp;Md€ à 20,4&nbsp;Md€ en 2025. Le gearing (dette nette/capitaux propres) s'établit à environ 66&nbsp;%, contre 70&nbsp;% en 2024, 56&nbsp;% en 2023 et 71&nbsp;% en 2022&nbsp;: la trajectoire est celle d'une oscillation autour de 60-70&nbsp;%, rythmée par les opérations de croissance externe plutôt que par une dérive structurelle.</li><li><strong>Capacité de remboursement</strong>&nbsp;: à 1,5x l'EBITDA, l'endettement net représente environ dix-huit mois de résultat brut d'exploitation, un niveau bas pour un opérateur d'infrastructures et très en deçà des seuils usuels de tension (au-delà de 3x).</li><li><strong>Couverture des frais financiers</strong>&nbsp;: un ICR de 8,4x implique des charges financières nettes de l'ordre de 1,1&nbsp;Md€ pour 9,4&nbsp;Md€ de résultat d'exploitation. La marge de sécurité face à une remontée du coût de la dette est donc confortable, d'autant que le refinancement des concessions s'opère traditionnellement à échéances longues.</li><li><strong>Séquence 2023-2024</strong>&nbsp;: la remontée de la dette nette de 15,8&nbsp;Md€ à 21,1&nbsp;Md€ en 2024 (+5,3&nbsp;Md€) alors que le FCF s'élevait à 7,7&nbsp;Md€ signale un exercice marqué par des investissements de croissance et des distributions supérieurs aux flux générés&nbsp;; 2025 marque un retour à une légère désendettement.</li></ul><h3>Rentabilité économique et financière</h3><p>La rentabilité économique constitue le point fort du diagnostic.</p><ul><li><strong>ROCE de 12,0&nbsp;%</strong> pour un coût du capital de 5,3&nbsp;%&nbsp;: le spread de 6,7&nbsp;points appliqué à ~51&nbsp;Md€ de capitaux engagés correspond à une création de valeur annuelle de l'ordre de 3,4&nbsp;Md€. Le rendement du capital est donc largement supérieur à sa rémunération exigée, ce qui justifie économiquement la poursuite des investissements dans le périmètre concessif.</li><li><strong>Marges en amélioration continue</strong>&nbsp;: la marge d'EBITDA passe de 16,9&nbsp;% en 2022 à 17,2&nbsp;% (2023), 17,6&nbsp;% (2024) et 18,0&nbsp;% en 2025&nbsp;; la marge d'EBIT progresse de 11,1&nbsp;% à 12,5&nbsp;% sur la même période. L'effet de ciseaux est favorable&nbsp;: les charges progressent moins vite que les revenus, signe d'un mix produit qui se déplace vers les activités à forte marge (concessions, énergie) et d'une bonne discipline sur le contracting.</li><li><strong>ROE de 15,9&nbsp;%</strong>, supérieur de près de 4&nbsp;points au ROCE&nbsp;: l'effet de levier joue positivement, la rentabilité économique après impôt excédant le coût de la dette après impôt. Ce levier reste toutefois modéré et n'est pas la source principale de la performance actionnariale.</li><li><strong>Fuite de rentabilité au niveau du résultat net</strong>&nbsp;: la marge nette stagne autour de 6,5-6,8&nbsp;% (4,90&nbsp;Md€ en 2025 contre 4,86&nbsp;Md€ en 2024, soit +0,8&nbsp;%) alors que l'EBIT progresse de 7,5&nbsp;%. L'écart entre EBIT et résultat net (9,45&nbsp;Md€ vs 4,90&nbsp;Md€) s'explique par les charges financières, la fiscalité et les intérêts minoritaires&nbsp;; le taux d'imposition implicite ressort élevé, de l'ordre de 35&nbsp;% sur la base du NOPAT reconstitué.</li></ul><h3>Analyse de la trésorerie et du free cash-flow</h3><p>La qualité des flux est le second pilier du profil financier.</p><ul><li><strong>Conversion FCF/EBITDA de 59&nbsp;%</strong>&nbsp;: un niveau élevé pour un groupe aussi capitalistique, qui témoigne d'un besoin en fonds de roulement structurellement négatif (avances et acomptes clients dans le contracting) et d'une bonne maîtrise des investissements de maintenance.</li><li><strong>Progression régulière du FCF</strong>&nbsp;: 5,9&nbsp;Md€ (2022), 7,2&nbsp;Md€ (2023), 7,7&nbsp;Md€ (2024), 8,0&nbsp;Md€ (2025), soit une croissance annuelle moyenne d'environ 11&nbsp;%, supérieure à celle du chiffre d'affaires et de l'EBITDA. Le FCF couvre 1,6 fois le résultat net, ce qui confirme que les amortissements des infrastructures concédées excèdent largement les décaissements d'investissement de renouvellement.</li><li><strong>Emploi du cash-flow</strong>&nbsp;: en 2025, un FCF de 8,0&nbsp;Md€ n'a réduit la dette nette que de 0,6&nbsp;Md€, et les capitaux propres n'ont progressé que de 0,8&nbsp;Md€ pour un résultat net de 4,9&nbsp;Md€. L'écart traduit un retour aux actionnaires élevé (dividendes et rachats d'actions) combiné à des investissements de croissance. Le groupe arbitre donc en faveur de la distribution plutôt que du désendettement, choix soutenable tant que le levier reste à 1,5x et que le ROCE excède le coût du capital.</li><li><strong>Rendement du cash-flow sur capitaux engagés</strong>&nbsp;: environ 16&nbsp;% (8,0&nbsp;Md€ / 51&nbsp;Md€), ce qui confère au groupe une capacité d'autofinancement de nouveaux projets sans recours structurel au marché.</li></ul><h3>Dynamique récente</h3><p><strong>Aucune publication trimestrielle n'est fournie dans les données transmises</strong>, et l'exercice 2021 est indisponible&nbsp;: l'analyse de la dynamique la plus fine possible repose donc sur la comparaison de l'exercice 2025 avec les trois précédents.</p><ul><li>Le dernier exercice confirme la tendance sans l'accélérer&nbsp;: chiffre d'affaires +4,0&nbsp;% (75,7&nbsp;Md€ contre 72,8&nbsp;Md€), soit un rythme inférieur au CAGR de 5,9&nbsp;% observé depuis 2022 — la normalisation post-inflation de la croissance nominale du contracting est perceptible.</li><li>À l'inverse, l'EBITDA progresse de 6,8&nbsp;% et l'EBIT de 7,5&nbsp;%, soit nettement plus vite que le chiffre d'affaires&nbsp;: la dynamique est désormais portée par les marges plus que par les volumes.</li><li>Le résultat net est quasi stable (+0,8&nbsp;%), ce qui suggère une pression au niveau des éléments sous l'EBIT (charges financières, fiscalité, minoritaires) qui neutralise une partie du gain opérationnel.</li><li>Le bilan se stabilise&nbsp;: première baisse de la dette nette depuis 2023, gearing en repli de 4&nbsp;points, FCF en nouvelle hausse. La phase d'expansion du bilan de 2024 semble digérée.</li></ul><h3>Synthèse</h3><p>Vinci combine les trois attributs recherchés dans un diagnostic à la Vernimmen&nbsp;: une <strong>rentabilité économique durablement supérieure au coût du capital</strong> (spread de 6,7&nbsp;points), une <strong>structure financière solide</strong> (1,5x l'EBITDA, ICR 8,4x, gearing 66&nbsp;%) et une <strong>conversion du résultat en trésorerie élevée</strong> (59&nbsp;% de l'EBITDA). L'amélioration continue des marges depuis 2022 suggère un renforcement du poids des activités concessives et de services, structurellement plus rentables que le contracting.</p><p>Les points de vigilance identifiables à partir des données&nbsp;: (i) le décrochage entre la croissance de l'EBIT (+7,5&nbsp;% en 2025) et celle du résultat net (+0,8&nbsp;%), qui appelle un examen du coût de la dette, de la charge fiscale et de la part des minoritaires&nbsp;; (ii) le ralentissement de la croissance du chiffre d'affaires en 2025 par rapport à la moyenne triennale&nbsp;; (iii) l'affectation du free cash-flow, très largement orientée vers la distribution et la croissance externe, qui laisse la dette nette à un niveau proche de 20&nbsp;Md€ malgré 8&nbsp;Md€ de flux annuels&nbsp;; (iv) l'absence de données infra-annuelles dans le jeu fourni, qui empêche toute lecture de l'inflexion la plus récente (carnet de commandes, trafic autoroutier et aéroportuaire, saisonnalité du BFR).</p><p><em>Ce document constitue une analyse factuelle des états financiers communiqués et ne comporte aucune recommandation d'investissement.</em></p>",
       "financial_analysis_quarter": "2025-12-31",
@@ -1016,7 +1016,7 @@
         },
         {
           "name": "Valorisation relative",
-          "score": 0.3046084549244943,
+          "score": 0.3046089347258707,
           "weight": 0.08,
           "raw_value": "EV/EBITDA 27.1x (moy. 5 ans 27.9x) — PER 48.6x (moy. 5 ans 47.2x)"
         },
@@ -1039,7 +1039,7 @@
           "date": "2026-09-03",
           "link": "https://news.google.com/rss/articles/CBMinwJBVV95cUxPVmJOazNQQlQ4d3g0d3JXMlRUQ2QzMEhrTUtWUEgtQm50d2tCaE9yOElOZ0F0UzE3VW5qbWk3QWRPUFVzUHhjM1gwbGFKUHd2WkdVSG9UNkc3bTBqTGo3Vkt2bl9Xd3RTRUEtVnBRSF92dFN3UUpOUV96OWlfbUJyZVQ4UVRBVmJTYTdTcFlIMGg5YlRYT09xeEdNazE4WHNEZmFiQlN4MWNqZTMzMm1QX0ZoZnR5Z0J1amUxcUNfZHpWTWY4SHBYU1lRTUJ0eU5tcnVRVDlWQTR0RGlTRUZuYi1qcmYzVlVaTzNvdXlRQ3Nhb1p5cUVESXdKdGlvZGE1LW5oSno3clctSDVETVhRa2lFTlNybHdtaVo2R19Tbw?oc=5",
           "source": "BFM Bourse",
-          "summary": "Cet article suggère que Bank of America exprimerait des inquiétudes concernant la reprise du secteur du luxe, ce qui pourrait avoir un impact négatif sur les cours de bourse d'Hermès, Kering et LVMH.",
+          "summary": "Cet article suggère que Bank of America exprimerait des préoccupations concernant la reprise du secteur du luxe, ce qui pourrait avoir pesé négativement sur les cours de bourse d'Hermès, Kering et LVMH.",
           "sentiment": -1
         },
         {
@@ -1047,15 +1047,15 @@
           "date": "2026-08-25",
           "link": "https://news.google.com/rss/articles/CBMijAFBVV95cUxPcG5MaVZQSS1pYm1qeG5WZkxiUTVCZG12VUF5ZmNwVXRuSXJtbmZIY1c0SF8tZmtycHZRb2ZqNGpvU0pYcFBUMjZxbTFQNF94ejF0VHFaMTdydllwWWExaEQ4b21vZWJEak1oc185blRaTy1qNzNCSlpSOURaV05KZUY0bkhfcENFMmdSaA?oc=5",
           "source": "CB News",
-          "summary": "Cet article suggère qu'Hermès aurait développé une innovation concernant son célèbre foulard carré en créant apparemment un nouveau format combinant deux carrés.",
+          "summary": "Cet article suggère qu'Hermès aurait développé une innovation concernant son foulard emblématique en combinant deux carrés, ce qui pourrait représenter une évolution de ce produit iconique.",
           "sentiment": 1
         },
         {
-          "title": "Les clients d'Hermès International plus fidèles que la Bourse - Investir Les Echos",
+          "title": "Les clients d'Hermès International plus fidèles que la Bourse - investir.lesechos.fr",
           "date": "2026-09-01",
           "link": "https://news.google.com/rss/articles/CBMizgFBVV95cUxNR3RWODBZbW5KTldVNjhmRnlEUGtfeTBWWWxzZnlDajdOem1CV3V2MUVEdG00NFZaVzNoNlpHWFNoLU9uTXJTMFFYb1htMkptNFVkc1FmWHF4SkxQMmxvUENhZzY3YXF6LUtKcmp1c2FxVm5oekU4UkVnRnNZSE9uc2FVYUI0a09qMXc1QnZQNkVJZk43RU9qa2JwUi1uTWNqYjhvWUJhTFUyeUltbW1rR3k0UkhiY25JUTBUWkNSS2RMU21MWWxsLW9MXzljQQ?oc=5",
-          "source": "Investir Les Echos",
-          "summary": "Cet article suggère que la clientèle d'Hermès International démontrerait une fidélité supérieure à la volatilité du cours de l'action en Bourse.",
+          "source": "investir.lesechos.fr",
+          "summary": "Cet article suggère que la clientèle d'Hermès International manifesterait une attachement à la marque plus constant que la performance volatile de son titre boursier.",
           "sentiment": 1
         },
         {
@@ -1063,7 +1063,7 @@
           "date": "2026-08-07",
           "link": "https://news.google.com/rss/articles/CBMizgFBVV95cUxPSjFjWWJtaENZVVBGMnpCbmx0SjNsdHRfenZrb3NJOF9mT3JTTU04R3VMVnd1cll1UEhhdnhBazdQc3Vndm9EeDFMbVpyY2dJVDl4OVRDUTN2WXlqWGhlenBFT0R4a1NoSU5mX3QxZGxyak52QkIwdy0tdEpzNXU2ME5FOWNtd2hnd1VmU2x4dkVBNF8ySlVwWHp5bHJhOFJ1TS00UkN4TDdzUWN3N0pvdWZBa0ZReXpOTkZTTUE5MTRvaVJCYmMwRzZaWlRMUQ?oc=5",
           "source": "Investing.com France",
-          "summary": "Cet article suggère qu'Hermès aurait connu une hausse de cours de 5%, mais que l'analyste considère que sept autres actions du CAC 40 présenteraient un potentiel de rendement supérieur à moyen ou long terme.",
+          "summary": "Cet article suggère qu'Hermès aurait enregistré une hausse de cours de 5%, mais que d'autres valeurs du CAC 40 pourraient offrir des opportunités d'investissement comparables ou supérieures selon l'analyste.",
           "sentiment": 0
         },
         {
@@ -1071,14 +1071,14 @@
           "date": "2026-08-18",
           "link": "https://news.google.com/rss/articles/CBMi2gFBVV95cUxQQTFQN3R2Zzl0WHpzdEFTdW41RFVvakNfU3VhMnpyR3pCc19BS0V5OURsQ3JYUGNIaUJEOUdfaE95Q295MGdjcU5LT2hLT2VZZVNoQlNSaDAtZUc1RGFMQzdRUTlDaGlQMFdkc2pkYjVoaXdtVkdXMTRDZjZCM29ZUndwSVItbVFyeVZ6WTVtUDFHRHcyRXJJQnJfVWE5VFRBVzRWQTBPU2Y4NkdSa1FKcVczS1pzTHgtdlVEbG4xa3FxWllVV3lidFc0bGoycTZLcENDQ0UzUUpqUdIB3wFBVV95cUxNYjFEZFpnb3Z2M3RwRjhwd1NiR0xqejBONFJuZ2w5ZVJOY3d0OF9Ua2RRNXltRUNYNWJGSXphR0VUOUZXTllTaW1vMlBoUG1Rd3N6NHBQWDJwQ2xmWDVTcTJSUVFad2JIMkNFRkpiay1Xd1lGQkw1MnVQWHJVU1k2UGtmSzBBWGw2c2N1RElHWTN5WE1CWXE1LWdkUTV0UVgtZlh2b3BoTmo2ZFM1N0J3VHNXSmtwUFdXaUtNOVBHRm1LREhsZjNYOWpFYkoyVUszQXFjS055cGdRMng5X0pF?oc=5",
           "source": "Boursorama",
-          "summary": "Cet article suggère que le cours de bourse d'Hermès pourrait revenir à des niveaux antérieurs suite à une dégradation de notation de la part de RBC Capital Markets.",
+          "summary": "Cet article suggère que le cours de l'action Hermès pourrait revenir à des niveaux antérieurs suite à une dégradation de notation par l'agence RBC.",
           "sentiment": -1
         }
       ],
       "current_price": 1457.0,
-      "fair_value": 905.0294526344272,
-      "entry_price": 1218.0983464469518,
-      "exit_price": 1669.8747898422603,
+      "fair_value": 905.029463224912,
+      "entry_price": 1218.0983501536216,
+      "exit_price": 1669.8747967260756,
       "wacc": 8.583759390447216,
       "financial_analysis_html": "<h3>Diagnostic global</h3><p>Hermès International présente le profil financier d'une entreprise à très forte rentabilité structurelle, en croissance soutenue (CAGR du chiffre d'affaires de +10,3 %/an et de l'EBITDA de +11,7 %/an sur la période observée) et dotée d'une structure financière atypique caractérisée par une trésorerie nette largement excédentaire (dette nette de -9,9 Md€). Le ROCE de 50,8 % excède le coût du capital estimé à 8,6 % d'environ 42 points, ce qui traduit une création de valeur économique très significative. Le seul point d'inflexion notable est le ralentissement de la croissance en 2025 (+5,5 % de chiffre d'affaires) et un résultat net en léger repli, alors que le résultat d'exploitation continue de progresser.</p><h3>Structure financière et solvabilité</h3><p>La structure financière est en situation de trésorerie nette positive sur l'ensemble des exercices renseignés, avec un excédent qui s'accroît régulièrement : -7,3 Md€ de dette nette en 2022, -8,6 Md€ en 2023, -9,5 Md€ en 2024 et -9,9 Md€ en 2025. Rapporté à l'EBITDA, ce solde ressort à -1,3x, soit l'équivalent de plus d'un an d'excédent brut d'exploitation disponible en trésorerie nette.</p><ul><li>Les capitaux propres progressent de 12,4 Md€ (2022) à 18,8 Md€ (2025), soit une hausse d'environ 51 % en trois ans, alimentée par la mise en réserve d'une part importante des résultats.</li><li>Le ratio de couverture des frais financiers (ICR) de 97,0x rend la notion de risque de crédit largement théorique : la charge d'intérêts est marginale au regard du résultat d'exploitation, et l'entreprise est vraisemblablement prêteuse nette.</li><li>La solvabilité ne constitue donc pas une contrainte : l'endettement net négatif confère une flexibilité financière intégrale (financement des investissements, des acquisitions éventuelles et de la distribution sans recours aux marchés).</li><li>Le corollaire, au sens du Vernimmen, est l'absence de levier financier positif : l'effet de levier joue ici à la baisse sur le ROE, la trésorerie excédentaire étant rémunérée à un taux nettement inférieur à la rentabilité économique.</li></ul><h3>Rentabilité économique et financière</h3><p>La rentabilité économique est le point saillant du diagnostic. Le ROCE de 50,8 % s'appuie sur une double performance : des marges d'exploitation très élevées et une intensité capitalistique contenue au regard du chiffre d'affaires.</p><ul><li><strong>Marges</strong> : la marge d'EBITDA ressort à 48,5 % en 2025 (48,4 % en 2024, 49,7 % en 2023, 46,6 % en 2022) et la marge d'EBIT à 42,7 % (42,8 % en 2024, 43,9 % en 2023, 40,3 % en 2022). Le niveau atteint en 2023 constitue le point haut ; 2024 et 2025 affichent une légère érosion, mais la marge reste stabilisée à un plateau très élevé.</li><li><strong>Spread de rentabilité</strong> : avec un ROCE de 50,8 % contre un coût du capital de 8,6 %, chaque euro de capitaux engagés génère un rendement plus de cinq fois supérieur à son coût, ce qui explique la valeur créée par la croissance des capitaux investis.</li><li><strong>Rentabilité financière</strong> : le ROE de 24,0 % est inférieur de plus de 26 points au ROCE. Cet écart, contre-intuitif dans une lecture classique du levier, s'explique par le poids de la trésorerie nette (9,9 Md€, soit plus de la moitié des capitaux propres) qui dilue la rentabilité des fonds propres, et par le fait que le ROE est calculé sur une base de capitaux propres en forte croissance.</li><li><strong>Résultat net</strong> : à 4 524 M€ en 2025 contre 4 603 M€ en 2024, il recule de 1,7 % alors que l'EBIT progresse de 5,2 %. L'écart provient donc d'éléments situés sous le résultat d'exploitation (charge d'impôt, résultat financier, éléments non récurrents ou effets de change), et la marge nette passe de 30,3 % à 28,3 %.</li></ul><h3>Analyse de la trésorerie et du free cash-flow</h3><p>Le free cash-flow progresse de 3 666 M€ (2022) à 4 213 M€ (2025), soit +3,5 % sur le seul exercice 2025 après +17,4 % en 2024. Il représente 26,3 % du chiffre d'affaires 2025, un niveau de génération de liquidités très élevé en valeur absolue comme en relatif.</p><ul><li>Le taux de conversion FCF/EBITDA de 54 % est en revanche modéré pour une entreprise affichant de telles marges. L'écart de près de 3,5 Md€ entre EBITDA et FCF s'explique mécaniquement par la charge d'impôt (significative compte tenu du niveau de résultat), par les investissements industriels et commerciaux (extension des capacités de production et du réseau de distribution) et par la variation du besoin en fonds de roulement, structurellement consommatrice de trésorerie dans un modèle à stocks élevés et croissance soutenue.</li><li>Cette conversion est néanmoins stable dans le temps et compatible avec un autofinancement intégral de la croissance : le FCF couvre largement les besoins d'investissement et permet une accumulation continue de trésorerie nette, malgré les distributions aux actionnaires.</li><li>La progression du FCF (+3,5 %) est inférieure à celle de l'EBITDA (+5,7 % en 2025), signe d'un léger accroissement des emplois de trésorerie (investissements ou BFR) sur le dernier exercice.</li></ul><h3>Dynamique récente</h3><p>Aucune publication trimestrielle n'est fournie dans les données transmises ; l'analyse de la dynamique récente repose donc exclusivement sur la comparaison de l'exercice 2025 avec la tendance pluriannuelle.</p><ul><li><strong>Décélération de la croissance</strong> : +5,5 % de chiffre d'affaires en 2025 contre +13,0 % en 2024 et +15,7 % en 2023, soit un rythme désormais nettement inférieur au CAGR de +10,3 %/an. Il s'agit de l'inflexion la plus notable du diagnostic.</li><li><strong>Résistance des marges</strong> : l'EBITDA croît plus vite que le chiffre d'affaires (+5,7 %), et la marge d'EBIT ne recule que de 0,1 point, ce qui indique que le ralentissement de l'activité n'a pas dégradé le modèle d'exploitation.</li><li><strong>Décrochage du résultat net</strong> : premier repli de la période (-1,7 %), à surveiller quant à sa nature récurrente ou ponctuelle.</li><li><strong>Poursuite du renforcement du bilan</strong> : capitaux propres +8,7 % et trésorerie nette en hausse de 425 M€ sur l'exercice, confirmant la logique d'accumulation.</li></ul><h3>Synthèse</h3><p>Le diagnostic financier fait apparaître une entreprise dont la rentabilité économique (ROCE 50,8 %) domine très largement le coût du capital (8,6 %), avec des marges d'exploitation supérieures à 42 % et une génération de free cash-flow de 4,2 Md€ suffisante pour autofinancer intégralement la croissance. La structure financière est en trésorerie nette de 9,9 Md€ (-1,3x l'EBITDA) et l'ICR de 97,0x écarte toute problématique de solvabilité ; ce surdimensionnement des fonds propres explique cependant l'écart entre le ROCE et un ROE de 24,0 %, l'absence de levier financier bridant mécaniquement la rentabilité des capitaux propres. Les points d'attention identifiés à partir des données disponibles sont le ralentissement marqué de la croissance en 2025 (+5,5 % contre un CAGR de +10,3 %), le premier recul du résultat net de la période malgré un EBIT en progression, et un taux de conversion FCF/EBITDA de 54 % qui reflète le poids conjugué de la fiscalité, des investissements et du besoin en fonds de roulement. Cette analyse est strictement descriptive et ne constitue ni un conseil d'investissement ni une recommandation.</p>",
       "financial_analysis_quarter": "2025-12-31",
@@ -1125,7 +1125,7 @@
         },
         {
           "name": "Valorisation relative",
-          "score": 3.2373721255130876,
+          "score": 3.2373721821130745,
           "weight": 0.08,
           "raw_value": "EV/EBITDA 6.5x (moy. 5 ans 5.2x) — PER 14.2x (moy. 5 ans 37.9x)"
         },
@@ -1148,15 +1148,23 @@
           "date": "2026-09-06",
           "link": "https://news.google.com/rss/articles/CBMilAFBVV95cUxOTnZtQmZ2Tk9kbnk0X1BCbU5wQkIyOHE3Vjk5RGV3cUhNSUZVMFJFTW1qckozVWJWUE44M1Bic012by10c1FsOUJOcUZyZ0tXMkx4ZnlFUzFxQXc2Sk9pU2VyYkFUOWhsckZkSE5nRGdacnpCOWd6WEE5Umh0ejVrTjA5UEZqNzZmX3MzRDc5QVcxRy0x?oc=5",
           "source": "journaldunet.com",
-          "summary": "Cet article suggère que certains clients d'EDF, Engie et Total pourraient recevoir des factures supplémentaires exceptionnelles tandis que d'autres bénéficieraient de remboursements, probablement en lien avec des ajustements tarifaires ou des régularisations de leurs contrats énergétiques.",
+          "summary": "Cet article suggère que certains clients d'EDF, Engie et Total pourraient recevoir une facturation exceptionnelle tandis que d'autres bénéficieraient de remboursements, sans qu'on puisse déterminer du titre seul les raisons ou l'ampleur de ces ajustements.",
           "sentiment": -1
         },
         {
-          "title": "Engie intégré à l'indice Euro Stoxx 50, le 21 septembre - Investir Les Echos",
+          "title": "Engie intégré à l'indice Euro Stoxx 50, le 21 septembre - investir.lesechos.fr",
           "date": "2026-09-04",
           "link": "https://news.google.com/rss/articles/CBMixAFBVV95cUxNbVVYUjBJZm1jUzAzOTJPX1R6TmZzalU1VERueHl5LUNFdzRwVU5ONkxuTmU1VHY0N0tPalphMEJBSXp2aTdPN29YS3ZGaW12dUdjREdmWWMyUmJ1eEVVZVVWQkZQeERTTm9zamdRb2tHNk5tRllhRmJZRl9SVEdieGVqc2piNkg3ajkwSDBkTWY0ZnlvVG0xUmwwYXNOQ3l5Zm1SX3J1Uk1JVnUyeFRzSVpBTjlOM0tBTzE1NDJBU1hWVlZI?oc=5",
-          "source": "Investir Les Echos",
-          "summary": "Cet article suggère qu'Engie aurait été intégré à l'indice de référence Euro Stoxx 50 à partir du 21 septembre, ce qui constituerait généralement une reconnaissance de son statut parmi les plus grandes capitalisations boursières européennes.",
+          "source": "investir.lesechos.fr",
+          "summary": "Cet article suggère qu'Engie aurait été sélectionnée pour intégrer l'indice Euro Stoxx 50 à partir du 21 septembre, ce qui constituerait généralement une reconnaissance de son statut parmi les plus grandes entreprises européennes.",
+          "sentiment": 1
+        },
+        {
+          "title": "Engie : franchit le cap des 10 GW de capacité de stockage dans le monde - Boursier.com",
+          "date": "2026-09-04",
+          "link": "https://news.google.com/rss/articles/CBMiygFBVV95cUxNWjB2aDczdWJKYThfRUd3cUZ0c0F0eEVfTXNkMUpFbThsbk45WlRzSG02R0gyZFUyUUtHbzNmSjdXR0NmQl9CaTdnX2NUUzhLUnNnWFpTZnFoYUdOQTY1V3hSUDE1dVBJaVlzSlp3dXliTGVMWWt1THgxTWl4WXhVRlZJb25jTjlxQkp2NVNmakNjSUNTdW5nRGhkTldmSmVhcmYzTEFQZ21uZVBVc2h5OHFXN2d1WUplZ0NrdUpKelk1N2t6YVR1dEp3?oc=5",
+          "source": "Boursier.com",
+          "summary": "Cet article suggère qu'Engie aurait atteint un jalon significatif en dépassant les 10 gigawatts de capacité de stockage d'énergie à l'échelle mondiale.",
           "sentiment": 1
         },
         {
@@ -1164,15 +1172,7 @@
           "date": "2026-09-04",
           "link": "https://news.google.com/rss/articles/CBMiggJBVV95cUxPelJaN25oRmFzRC1RUm9ad1BiejVINmlZMk9oeXR1eGhaV1NNZGhqU19Qb0R6bzB1ZFo2SmNyekhUX1p6YXFyRnBkekxpcmtSWC1GYUlJQ2FkVnR2SjJTbWlTbVpDUnZLcjd0VXFPY0FXMVZaWnRCbVR5VW51R19sNXB5dW5BWTVOYzROeE9WTmN4LWxNd2UxcTJHWXlhSnQwV3lxSXM4Z3czeWVNOXR5cmdiVEk0ZjdhdVdCYmswWWFRdlJRSWl5YUFtbE95aGZ3VkRyR0JocWd4ZWw1MDlkclo2N1Rzcnp2WTRKcmo3Zy1TLUppOHJiUHZaUGNTWUxrb3c?oc=5",
           "source": "Challenges",
-          "summary": "Cet article suggère qu'Engie augmenterait ses investissements et acquisitions dans le secteur du stockage d'électricité, en lançant notamment son premier projet français dans ce domaine.",
-          "sentiment": 1
-        },
-        {
-          "title": "Stockage des énergies renouvelables : Engie accélère dans les batteries électriques - La Tribune",
-          "date": "2026-09-04",
-          "link": "https://news.google.com/rss/articles/CBMimAJBVV95cUxQU1hEdGVRazIyRnpDaDBtdTFveUhOUHJEYjZkVDlLa1IwajF6ZVlhNmJXdzdOOHBxaHpzcjcxLWk1OXZWX3JqZmNIa3Y4dlduTzFYNnRnbmxRTFh2ZlNQOUo2Y0FMYVRnN2ZNeHg5YmJhRi1xMWNPSmMxOFE1a3NtU3BCVmgzVl8yRWZyYWNRcFdxRWI3TEU1SVlDRTFOZ1kyZEpxXzFVR2laSUFFaU94OVpTY3VyQlFmYTZiTHMwbThtb2JtWlpTVmZzZXRhU2NjaE0tazVfWTNmeHpsdTJ2NFdFWWZIMDFYSVpnM0lZcFdLWjExMTZvSEFraUl4WlB2cTFUckFRUWZCYzU3a2Nkc3F1Y3RPZm1X?oc=5",
-          "source": "La Tribune",
-          "summary": "Cet article suggère qu'Engie augmente ses investissements ou ses activités dans le domaine du stockage d'énergie par batteries électriques pour accompagner le développement des énergies renouvelables.",
+          "summary": "Cet article suggère qu'Engie investirait stratégiquement dans le secteur du stockage d'électricité en France, notamment à travers un premier projet national et plusieurs acquisitions successives.",
           "sentiment": 1
         },
         {
@@ -1180,14 +1180,14 @@
           "date": "2026-09-04",
           "link": "https://news.google.com/rss/articles/CBMi9wFBVV95cUxQTnJKSWwteHBjWHQ1cXp3ck14SDAzSGhNSklGRnpmcWxFYWw2X0trTEFGVjRKYXQybHREVkd2ekhVd2VXaC1tajc0clNyS1lGTWo5Tmp0TWRLUmd0MTdDRm13MnNFaDhiVWJWbFpObGE0enNsUFktb1FGd0pkX1UxbHRaVGNZVWdmUjAwdzQ1ajdSMWZBd0RYZm1xMWJ1dGxxVUw0bmVBc1NEUHM1c25TS0JmSUE0cVBSeFhJUTdGSzVFWkFZNzRCSmVSM0l4dWtucW1LdlJsSUNGZlZYQ0Y2dFJUYmJ3UURKM1BTampTMlpvbG14ZFpN?oc=5",
           "source": "La Lettre",
-          "summary": "Cet article suggère que Catherine MacGregor pourrait être impliquée dans des changements ou des mouvements au sein du département des ressources humaines d'Engie, possiblement liés à des restructurations ou des nominations.",
+          "summary": "Cet article suggère que Catherine MacGregor pourrait être impliquée dans des changements ou des mouvements au sein du département des ressources humaines d'Engie.",
           "sentiment": 0
         }
       ],
       "current_price": 24.010000228881836,
-      "fair_value": 15.979032158960752,
-      "entry_price": 18.22704907778745,
-      "exit_price": 25.54763628990591,
+      "fair_value": 15.979032222714363,
+      "entry_price": 18.227049100101212,
+      "exit_price": 25.547636331345757,
       "wacc": 4.457203735001589,
       "financial_analysis_html": "<h3>Diagnostic global</h3><p>Engie présente en 2025 un profil de <strong>utility capitalistique en phase d'investissement intensif</strong> : la rentabilité économique (ROCE 9,1 %) demeure nettement supérieure au coût du capital (4,5 %), ce qui traduit une création de valeur significative, tandis que la structure financière se tend avec une dette nette portée à 40,1 Md€ et un free cash-flow fortement négatif (-8,7 Md€). Le chiffre d'affaires et l'EBITDA se normalisent après le pic des prix de l'énergie de 2022-2023, sans que les marges ne se dégradent en proportion (marge d'EBITDA encore proche de 20 %). Le point de vigilance central n'est donc pas la rentabilité, mais le <strong>financement de la croissance et la conversion des résultats en trésorerie</strong>.</p><h3>Structure financière et solvabilité</h3><p>La dette nette progresse de manière continue sur la période observée : 25,0 Md€ en 2022, 30,7 Md€ en 2023, 35,1 Md€ en 2024 et 40,1 Md€ en 2025, soit une hausse de 60 % en trois ans. Dans le même temps, les capitaux propres se replient légèrement à 32,95 Md€ (contre 34,56 Md€ en 2024), sous l'effet conjugué des distributions et d'éléments de variation de situation nette.</p><ul><li><strong>Gearing</strong> : le rapport dette nette / capitaux propres passe d'environ 73 % en 2022 à près de 122 % en 2025, marquant un basculement du poids relatif des ressources vers l'endettement.</li><li><strong>Levier</strong> : le ratio dette nette / EBITDA de 2,8x reste dans une zone habituellement considérée comme soutenable pour un opérateur d'infrastructures énergétiques à flux réglementés ou contractualisés, mais il se dégrade mécaniquement puisque la dette croît alors que l'EBITDA recule (14,4 Md€ contre 17,4 Md€ en 2023).</li><li><strong>Couverture des frais financiers</strong> : un ICR de 5,4x indique que le résultat d'exploitation couvre plus de cinq fois la charge d'intérêts (soit un coût de la dette implicite de l'ordre de 1,6 Md€), ce qui constitue une marge de sécurité confortable à court terme.</li></ul><p>Au total, la solvabilité n'est pas remise en cause à l'horizon immédiat, mais la <strong>capacité d'absorption d'un nouveau choc</strong> (baisse d'EBITDA, hausse des taux de refinancement) se réduit à mesure que le gearing progresse.</p><h3>Rentabilité économique et financière</h3><p>Sur des capitaux engagés d'environ 73 Md€ (capitaux propres + dette nette), le ROCE ressort à 9,1 %, contre un coût du capital de 4,5 %. Le <strong>spread de rentabilité, de l'ordre de +4,6 points</strong>, signifie que chaque euro investi rémunère les apporteurs de fonds au-delà de leur exigence : l'activité est, selon la logique du Vernimmen, créatrice de valeur.</p><ul><li><strong>Marges</strong> : la marge d'EBITDA s'établit à 20,0 % en 2025, contre 21,9 % en 2024 et 21,1 % en 2023, après un point bas atypique de 8,5 % en 2022. La marge d'exploitation atteint 12,4 % (13,8 % en 2024), et la marge nette 5,3 %.</li><li><strong>ROE</strong> : à 11,6 %, la rentabilité des capitaux propres est supérieure au ROCE, ce qui traduit un <strong>effet de levier financier positif</strong> : le coût de la dette après impôt reste inférieur à la rentabilité économique, et l'endettement amplifie donc la rentabilité pour l'actionnaire — au prix d'une sensibilité accrue au cycle.</li><li><strong>Trajectoire</strong> : le résultat net recule à 3,83 Md€ (contre 4,11 Md€ en 2024) mais demeure très supérieur aux 2,21 Md€ de 2023 et aux 0,22 Md€ de 2022, année marquée par des effets de valorisation et de couverture exceptionnels.</li></ul><h3>Analyse de la trésorerie et du free cash-flow</h3><p>C'est le principal point de rupture de l'exercice. Le free cash-flow passe de <strong>+3,76 Md€ en 2024 à -8,74 Md€ en 2025</strong>, soit une variation défavorable de 12,5 Md€, alors même que l'EBITDA ne recule que de 1,7 Md€. La conversion FCF / EBITDA s'établit à -61 %, contre des niveaux positifs en 2022 (2,21 Md€), 2023 (5,79 Md€) et 2024.</p><ul><li>Un tel écart entre résultat et trésorerie ne s'explique pas par la profitabilité opérationnelle, mais par les <strong>emplois de trésorerie hors exploitation courante</strong> : intensité des investissements (capacités renouvelables, réseaux, stockage), variations du besoin en fonds de roulement et mouvements de collatéraux/appels de marge liés aux activités de trading énergétique, très volatils d'un exercice à l'autre.</li><li>Un élément de nuance mérite d'être relevé : la dette nette n'augmente que de 5,0 Md€ sur l'exercice (35,1 → 40,1 Md€) alors que le FCF est négatif de 8,7 Md€. Cet écart suggère l'existence de ressources compensatrices (cessions d'actifs, hybrides, variations de périmètre) ou une définition du FCF intégrant des flux d'investissement financiers, et invite à ne pas extrapoler mécaniquement le chiffre de -8,7 Md€ en besoin de financement structurel récurrent.</li><li>Dans tous les cas, la <strong>couverture du dividende et du service de la dette par les flux internes n'est pas assurée en 2025</strong>, ce qui explique la progression continue de l'endettement net.</li></ul><h3>Dynamique récente</h3><p>Aucune publication trimestrielle n'est fournie ; l'analyse de la dynamique récente repose donc exclusivement sur les données annuelles, et la lecture infra-annuelle du cycle (saisonnalité du BFR énergétique, effets prix) ne peut être documentée.</p><ul><li>Les indicateurs de croissance calculés sur la période sont trompeurs pris isolément : le <strong>CAGR de chiffre d'affaires de -8,1 %/an</strong> reflète la normalisation des prix de gros après le pic de 2022 (93,9 Md€ de CA) et non une perte de parts de marché ; le <strong>CAGR d'EBITDA de +24,3 %/an</strong> est artificiellement flatté par une base 2022 exceptionnellement basse (7,96 Md€).</li><li>Corrigée de cet effet de base, la tendance récente est <strong>baissière</strong> : l'EBITDA recule de 17,4 Md€ (2023) à 16,1 Md€ (2024) puis 14,4 Md€ (2025), soit environ -9 %/an sur deux ans, et le résultat net s'inscrit en repli de 6,8 % en 2025.</li><li>La combinaison sur le dernier exercice — EBITDA en baisse, dette nette en hausse de 5,0 Md€, FCF négatif, capitaux propres en repli — constitue une <strong>inflexion nette par rapport à 2023-2024</strong>, années de désendettement relatif et de forte génération de trésorerie.</li></ul><h3>Synthèse</h3><p>Engie combine une <strong>rentabilité économique solide et créatrice de valeur</strong> (ROCE 9,1 % contre 4,5 % de coût du capital, ROE 11,6 % amplifié par un levier financier favorable) avec des marges qui résistent malgré la normalisation post-crise énergétique. La structure financière reste dans les standards du secteur (dette nette / EBITDA à 2,8x, ICR à 5,4x), mais elle se tend de façon continue : le gearing dépasse désormais 120 % et l'endettement net a progressé de 60 % en trois ans.</p><p>Le principal élément à surveiller est la <strong>dissociation entre résultat comptable et flux de trésorerie</strong> : avec une conversion FCF/EBITDA de -61 % en 2025, l'exercice a été financé par recours accru aux ressources externes. La question déterminante pour les exercices suivants est de savoir si ce free cash-flow négatif relève d'un pic d'investissement et d'effets de BFR/collatéraux réversibles, ou d'une consommation structurelle de trésorerie ; dans le second cas, la conjonction d'un EBITDA en repli et d'un levier croissant réduirait progressivement les marges de manœuvre financières. L'absence de données trimestrielles ne permet pas d'affiner ce diagnostic à ce stade.</p>",
       "financial_analysis_quarter": "2025-12-31",
@@ -1205,7 +1205,7 @@
       "name": "Orange",
       "sector": "Communication Services",
       "sector_profile": "standard",
-      "score": 32.9,
+      "score": 30.9,
       "interpretation": "Solide",
       "factors": [
         {
@@ -1246,9 +1246,9 @@
         },
         {
           "name": "Actualité récente",
-          "score": 0.0,
+          "score": -2.0,
           "weight": 0.1,
-          "raw_value": "Ton moyen des 5 actualités récentes : +0.00"
+          "raw_value": "Ton moyen des 5 actualités récentes : -0.20"
         }
       ],
       "news": [
@@ -1257,31 +1257,31 @@
           "date": "2026-09-06",
           "link": "https://news.google.com/rss/articles/CBMixgFBVV95cUxQSUFMTVNITE9NZW1NMXlLQjdDRGlwalo2akUxSWxsQkxxVTNQeFowSzhhMTVjU1I3TVkxY1B6azJ5YklDYXdzTTJTNWp5YTB0NUFIR09TTFVwX2w0WlFfbGdKZjdpdTcxUzNLYTlSY0s3NmJRMlgxZy03QmxDZUMxb3dFazFTMURjck50UTNPRjBaVkZpSnd2elFLa3NGSERmZW4ycjdzbnRad3B0Nm9vZVFZOVVpUEllTWxmWGp0Rk5STEpHcFE?oc=5",
           "source": "BFM",
-          "summary": "Cet article suggère que Météo-France aurait placé six départements en vigilance orange en raison d'une période de canicule, ce qui pourrait impacter les infrastructures et services d'Orange dans ces zones.",
-          "sentiment": -1
+          "summary": "Cet article suggère que Météo-France aurait émis une alerte canicule affectant six départements français, ce qui pourrait être sans rapport direct avec l'entreprise Orange mentionnée uniquement dans la source de l'information.",
+          "sentiment": 0
         },
         {
           "title": "The Voice Kids 2026 - Nova chante \"L'orange\" (Audition à l'aveugle) - TF1+",
           "date": "2026-09-05",
           "link": "https://news.google.com/rss/articles/CBMiugFBVV95cUxOQ0MxTDJZWl85MzZvMGtwV3NkeTluN0tOZnJWajJHNzNZMm9QajJVRXdLZFF4XzFBMG1YN2hVMlFBMm5iZEsta0lKS2lFYkhUOFYyTTlhZmFCNjhrcnM1NXVicTNXTTlEeGZDajR3ajFWQ0x0RUEzdks3ekpIYi0wWGZZYmRPcXF5clk3bDdfS1ZLVHhDSEdEOTh0c3hNMnB4eDl0RmVHZS14Q3NocDdQOUFSWVlSS3owOGc?oc=5",
           "source": "TF1+",
-          "summary": "Cet article suggère que la marque Orange pourrait avoir bénéficié d'une visibilité télévisée lors d'une audition du programme The Voice Kids 2026 sur TF1+, où une candidate nommée Nova aurait interprété une chanson portant ce titre.",
-          "sentiment": 1
+          "summary": "Cet article suggère que la marque Orange pourrait être associée à une participation ou un parrainage du programme « The Voice Kids 2026 » sur TF1+, possiblement en lien avec une performance musicale d'une candidate.",
+          "sentiment": 0
         },
         {
           "title": "Canicule : six départements toujours en vigilance orange ce dimanche, un épisode « inédit pour un mois de septembre » - Ouest-France",
           "date": "2026-09-06",
           "link": "https://news.google.com/rss/articles/CBMi3wFBVV95cUxOYk1mM0JSUzFZZVdjYmJMaXdXaUVDSGpEa0IyYnQ2bmhNaFdTOTlTMDBCcldLckxLNTd2OFNwdmZOV2JVY0dQNmlPaUhmQzhPYUJvcTl4S2tGSzdSUTJhRWJfczBJZ2hUd3pIVzd0UDJDR1NQbnlBeHozQnFISmJUVzNrUWROUmF2MDJYN2JCR093X0Y1UG5udk9FdmVPeWZ4Z0Z6WWd1blZNd2dHaFNfOUhzd19nV1pDVTBkM2RnNnFoVFlFel9GME9TNDcyMTZnUi0yT3dMY24wYUl3V1dF?oc=5",
           "source": "Ouest-France",
-          "summary": "Cet article suggère que six départements français connaîtraient une situation météorologique exceptionnelle de canicule en septembre, ce qui pourrait potentiellement concerner les infrastructures ou services d'Orange dans ces régions.",
-          "sentiment": 0
+          "summary": "Cet article suggère qu'une vague de chaleur exceptionnelle pour septembre affecte plusieurs régions françaises, ce qui pourrait potentiellement impacter les services et infrastructures d'Orange dans ces zones.",
+          "sentiment": -1
         },
         {
-          "title": "Allemagne : victoire électorale historique de l'extrême droite en Saxe-Anhalt - Orange Actualités",
+          "title": "Allemagne : victoire électorale historique de l'extrême droite en Saxe-Anhalt - actu.orange.fr",
           "date": "2026-09-06",
           "link": "https://news.google.com/rss/articles/CBMiwgFBVV95cUxOZkZIYWFjS3JhNW0tMVlrYTFueVVtc1lhT3d0aWxlOW9IMTc2OFBVTmxraE5vTlFSZFFHcFktQnBKb25tOFl4NkdoYkczQkRzcHVrTEo1eXZtNEJFVmxQN2h1ZkM5VWEycVpGY0kxbDFqcC1CVGtjbXljenQyVXBjZ01kekppQUtUX1ZLY2VVWWFWNXRDS3pyVl9qeXRONzFwMEtLcndyVExkaVpvd294WF8wUEVsdnJnWGd1UlpuMnNzdw?oc=5",
-          "source": "Orange Actualités",
-          "summary": "Cet article suggère que Orange Actualités rapporte un résultat électoral en Allemagne concernant l'extrême droite, sans lien apparent direct avec l'activité de l'entreprise Orange.",
+          "source": "actu.orange.fr",
+          "summary": "Cet article suggère que Orange rapporte une information politique concernant un résultat électoral en Allemagne, sans lien apparent direct avec l'entreprise elle-même.",
           "sentiment": 0
         },
         {
@@ -1289,14 +1289,14 @@
           "date": "2026-09-06",
           "link": "https://news.google.com/rss/articles/CBMi9gFBVV95cUxNWjRTMUI3cGVtNlZBYUJIdGVjSjJ6eXJOajFaS2x3dHppc0RPN2N2ZHFpcVIwRFh3TlN4cF9TQnotcTMwZXhDNjlLWjFqNlVPd3M1SE41emFRbnFtOC1tc3U3aGFTYUMwdnpqQTg5T2Rqc01mcXVXeUs1eWV6ajRmMHhaUGJvU3lrd0xoNXl4NUxnTXNmdE8tQXNSUUNOcjloMm1mXy00VGZXVklOSDJjWEJpX0szeEVZOFdJWFlFRFJFR2xEVlByTFNwaUZfejZxZEFFWm92ZHZRUUk3b0JqSmFkc1M0LTlVdkV1Tk81MmRkMW1sNXc?oc=5",
           "source": "Top Santé",
-          "summary": "Cet article suggère qu'un produit de jus d'orange obtient une bonne notation sur l'application Yuka, bien que le titre ne permette pas de confirmer s'il s'agit d'un produit de la marque Orange ou d'une autre marque.",
+          "summary": "Cet article suggère qu'un jus d'orange bénéficierait d'une bonne notation sur l'application Yuka, bien que le titre seul ne permette pas de confirmer s'il s'agit d'un produit de la marque Orange ou d'une autre marque.",
           "sentiment": 0
         }
       ],
       "current_price": 15.34000015258789,
-      "fair_value": 20.435947702126168,
-      "entry_price": 15.216175829598072,
-      "exit_price": 22.959678967006703,
+      "fair_value": 20.435947476683182,
+      "entry_price": 15.216175750693026,
+      "exit_price": 22.959678820468767,
       "wacc": 4.896692543998999,
       "financial_analysis_html": "<h3>Diagnostic global</h3><p>Orange présente le profil classique d'un opérateur télécom mature : un chiffre d'affaires quasi stable autour de 40 Md€ (+1,0 %/an en moyenne), une structure financière assainie au point d'afficher une position de trésorerie nette, mais une rentabilité en net repli sur l'exercice 2025 (EBITDA -9,3 %, EBIT -34,6 %, résultat net divisé par plus de quatre). Le décalage marqué entre une rentabilité économique satisfaisante (ROCE 10,5 % contre un coût du capital de 4,9 %) et une rentabilité des capitaux propres très faible (ROE 1,8 %) constitue le point saillant du diagnostic et suggère un exercice affecté par des éléments pesant sur le bas du compte de résultat.</p><h3>Structure financière et solvabilité</h3><p>La structure financière est le point fort du dossier. La dette nette, positive à 2,95 Md€ fin 2023, s'est progressivement inversée pour atteindre <strong>-4,65 Md€ fin 2025</strong>, soit une position de trésorerie nette selon la convention retenue ici, correspondant à un ratio dette nette/EBITDA de <strong>-0,4x</strong>. Cette convention de signe mérite d'être soulignée : elle traduit une capacité de désendettement mécaniquement sans objet et, en tout état de cause, l'absence de contrainte de levier au sens du Vernimmen.</p><ul><li><strong>Couverture des frais financiers</strong> : un ICR de 15,5x place l'entreprise très au-dessus des seuils de vigilance usuels (3x à 4x), confirmant que le service de la dette ne pèse pas sur la flexibilité financière.</li><li><strong>Capitaux propres</strong> : ils reculent de 31,77 Md€ à 29,74 Md€ (-2,03 Md€) alors que le résultat net s'établit à +0,54 Md€. L'écart, de l'ordre de 2,6 Md€, s'explique nécessairement par des distributions aux actionnaires et aux minoritaires et/ou des variations enregistrées directement en capitaux propres (écarts de conversion, réévaluations, opérations sur périmètre).</li><li><strong>Solvabilité</strong> : la combinaison d'une base de fonds propres proche de 30 Md€, d'une trésorerie nette et d'un EBITDA supérieur à 12 Md€ place le risque de solvabilité à un niveau faible.</li></ul><h3>Rentabilité économique et financière</h3><p>Le <strong>ROCE de 10,5 %</strong> se compare à un <strong>coût du capital de 4,9 %</strong>, soit un spread positif de près de 5,6 points : au niveau de l'actif économique, l'entreprise crée de la valeur. Rapporté au ROCE, l'EBIT 2025 de 3,51 Md€ correspond à des capitaux employés de l'ordre de 33 Md€, cohérent avec l'intensité capitalistique du secteur.</p><p>Le contraste avec le <strong>ROE de 1,8 %</strong> est frappant et constitue une anomalie apparente au regard de la logique de l'effet de levier : avec une trésorerie nette, le levier financier est nul voire négatif, si bien que le ROE ne peut être tiré vers le haut par l'endettement ; mais un écart de plus de 8 points ne s'explique pas par ce seul mécanisme. Il renvoie à la déformation du compte de résultat en 2025 :</p><ul><li>la <strong>marge d'EBITDA</strong> passe de 33,0 % (2024) à 29,8 % (2025), soit -3,2 points ;</li><li>la <strong>marge d'EBIT</strong> chute de 13,3 % à 8,7 %, une dégradation plus forte que celle de l'EBITDA, signe d'une hausse des dotations aux amortissements et/ou de dépréciations d'actifs ;</li><li>l'écart entre EBIT (3,51 Md€) et résultat net (0,54 Md€) est particulièrement large : compte tenu d'un ICR élevé, les charges financières nettes ne l'expliquent pas ; la charge d'impôt, les résultats des sociétés mises en équivalence, les éléments non récurrents et la part des minoritaires en sont les vecteurs probables.</li></ul><p>Sur la durée, l'<strong>effet ciseaux</strong> est net : un CA en croissance de +1,0 %/an contre un EBITDA en recul de -1,7 %/an traduit une progression des charges d'exploitation plus rapide que celle des revenus, donc une érosion structurelle de la marge opérationnelle.</p><h3>Analyse de la trésorerie et du free cash-flow</h3><p>Le free cash-flow s'établit à <strong>3,31 Md€ en 2025</strong>, en progression de +4,6 % par rapport à 2024 (3,17 Md€), mais en retrait par rapport au point haut de 2023 (4,09 Md€). Sur quatre exercices, le FCF cumulé approche 13 Md€, ce qui explique le désendettement observé.</p><ul><li><strong>Conversion FCF/EBITDA de 27 %</strong> : ce niveau, faible en absolu, est caractéristique d'un secteur à forte intensité capitalistique (déploiement fibre et réseaux mobiles), où l'essentiel de l'EBITDA est absorbé par les investissements corporels et incorporels ainsi que par l'impôt.</li><li><strong>Qualité du résultat</strong> : le FCF (3,31 Md€) est plus de six fois supérieur au résultat net (0,54 Md€), ce qui conforte l'hypothèse d'éléments non décaissables (amortissements, dépréciations) à l'origine de la contraction du résultat comptable. La capacité de génération de cash apparaît nettement plus résiliente que la rentabilité comptable.</li><li><strong>Marge de FCF</strong> : environ 8,2 % du chiffre d'affaires, stable d'un exercice sur l'autre.</li><li>Ce FCF doit toutefois être mis en regard des sorties de trésorerie non retracées ici (dividendes, coupons hybrides, minoritaires), qui expliquent que la baisse des capitaux propres coexiste avec l'amélioration de la position de trésorerie nette.</li></ul><h3>Dynamique récente</h3><p>Les publications trimestrielles disponibles montrent une réaccélération du chiffre d'affaires :</p><ul><li><strong>T2 2026 : 10,85 Md€</strong> contre 9,94 Md€ au T2 2025, soit <strong>+9,2 %</strong> en glissement annuel ;</li><li><strong>T1 2026 : 10,10 Md€</strong> contre 9,91 Md€ au T1 2025, soit +1,9 % ;</li><li>sur le premier semestre 2026, le cumul ressort à 20,95 Md€ contre 19,85 Md€ un an plus tôt, soit <strong>+5,5 %</strong>.</li></ul><p>Cette dynamique tranche avec la croissance historique de +1,0 %/an et, si elle se confirmait, marquerait une inflexion. Deux réserves s'imposent toutefois : d'une part, l'accélération est concentrée sur un seul trimestre et pourrait refléter un effet de périmètre, de change ou de saisonnalité plutôt qu'une croissance purement organique ; d'autre part, les données du T3 2025 et du T4 2024 ne sont pas disponibles, ce qui empêche de reconstituer une série homogène. Enfin, aucune information de marge n'est fournie au niveau trimestriel : rien ne permet de dire à ce stade si la reprise du chiffre d'affaires s'accompagne d'un redressement de l'EBITDA, dont la trajectoire annuelle reste orientée à la baisse.</p><h3>Synthèse</h3><p>Le diagnostic financier fait ressortir une entreprise <strong>très solide sur le plan de la structure financière et de la solvabilité</strong> (trésorerie nette, ICR de 15,5x, fonds propres proches de 30 Md€) et <strong>créatrice de valeur au niveau économique</strong> (ROCE de 10,5 % contre un coût du capital de 4,9 %), mais confrontée à une <strong>érosion de sa profitabilité opérationnelle</strong> : effet ciseaux entre un CA quasi stable et un EBITDA en recul, marge d'EBITDA en baisse de 3,2 points en un an, marge d'EBIT réduite à 8,7 %.</p><p>Le point de tension est le passage de la rentabilité économique à la rentabilité des capitaux propres : un ROE de 1,8 %, inférieur au coût du capital, traduit sur l'exercice 2025 une absence de rémunération satisfaisante des actionnaires au sens comptable. La robustesse du free cash-flow (3,31 Md€, en légère hausse) relativise ce constat et suggère que la dégradation du résultat net est en grande partie d'origine non cash. Les éléments à surveiller sont la confirmation de l'accélération du chiffre d'affaires observée au T2 2026, la stabilisation de la marge d'EBITDA, la nature des charges ayant pesé sur le résultat 2025 et l'usage de la trésorerie nette dégagée. Le niveau élevé du capex, implicite dans une conversion FCF/EBITDA de 27 %, reste le principal déterminant de la trajectoire de cash.</p><p><em>Analyse établie à partir des seules données fournies, à des fins d'information ; elle ne constitue ni un conseil en investissement ni une recommandation.</em></p>",
       "financial_analysis_quarter": "2026-06-30",
@@ -1349,7 +1349,7 @@
         },
         {
           "name": "Dynamique récente",
-          "score": 8.435634817694394,
+          "score": 8.43563487965305,
           "weight": 0.1,
           "raw_value": "Cours +13.7% vs MM200 — CA dernier trim. +26.1% vs an dernier (tendance 5 ans -8.1%)"
         },
@@ -1366,23 +1366,23 @@
           "date": "2026-09-04",
           "link": "https://news.google.com/rss/articles/CBMiVEFVX3lxTE50aEdVR1RKdDMyaW5mbzVJUlVoSWhzU0d2VUZCZHZkRjdjVlVzQkptT0FVdkp4MVFwUzNwSXFMRS1SNThZSXFkTkxtVDRISkV0Tkh3Ng?oc=5",
           "source": "Boursorama",
-          "summary": "Cet article suggère que le titre concerne simplement l'information sur le cours et la cotation de l'action STMicroelectronics sur le marché Euronext Paris, sans indication claire du contenu éditorial.",
+          "summary": "Cet article suggère qu'il s'agit d'une page d'information boursière standard présentant les données de cotation de STMicroelectronics sur Euronext Paris, sans indication claire du contenu spécifique ou de l'orientation de la nouvelle.",
           "sentiment": 0
         },
         {
-          "title": "STMicroelectronics continue de tirer profit de l'équipement des centres de données dédiés à l'IA - Investir Les Echos",
+          "title": "STMicroelectronics continue de tirer profit de l'équipement des centres de données dédiés à l'IA - investir.lesechos.fr",
           "date": "2026-09-02",
           "link": "https://news.google.com/rss/articles/CBMi-wFBVV95cUxPMTdYa3dENG83emh1MDJCZWJ3QzM0bzZqX1VCSEVUYldfZ0JSVURlN2JXbE5idDJTdEt5TzJiVUh6Sl9ESl9RRk1uNEkzR1RhOEFIeHZXMnRTV2h0TGlSWHlrY1ZQTWdhYnl0bHZ3OUY5VWRIczFKcE96SDhqT3lVN1VMT1NVWGpDc2J6c0FMcmlOdlpEWTZ5TTFaSXR0SzdFdU94ODFwSG0tVGlvU3A4eGhsak0wb2lzc29oTGI5MllGTFNjUTUxZDIwLUFuYWNEM282NEo4R0xCdFhJamdrRnROeVpMajAwdTM1LXNZN1pSUnNQZlVJSWdVVQ?oc=5",
-          "source": "Investir Les Echos",
-          "summary": "Cet article suggère que STMicroelectronics pourrait bénéficier commercialement de la demande croissante en équipements et composants pour les centres de données spécialisés dans l'intelligence artificielle.",
+          "source": "investir.lesechos.fr",
+          "summary": "Cet article suggère que STMicroelectronics bénéficierait de la demande croissante en équipements pour les centres de données spécialisés dans l'intelligence artificielle.",
           "sentiment": 1
         },
         {
-          "title": "Sylvie Gellida, l’ingénieure de STMicroelectronics derrière le méga-contrat avec Amazon - L'Usine Nouvelle",
+          "title": "Sylvie Gellida, l’ingénieure de STMicroelectronics derrière le méga-contrat avec Amazon - usinenouvelle.com",
           "date": "2026-08-31",
           "link": "https://news.google.com/rss/articles/CBMimwJBVV95cUxQQ2FuT21IN2pna1hmZDNRSU5vLWZiUVpOVldsZF9tUEJtaGZjUVpKWXhPME5POHZtVjA5dGdZcEJraHlLVmc5NFItdkNuZk1CbWhqU2hjdkR3b1ZVbkZURGRVeHByaUVmR1RjVzNqYmg3bHM4azN2akVhaU1QdnZyR2R4N3RMVW1iVzR3Sm8xNXFkZGRWVC1wZlBqWXg1amtMNkt3UlhSeTN3S3l3c2pyTnlIS1lSUS1Ndy1mSU8zQWdIZWxNY1R3TmViNkFQMU9jeG4tYXBJaFR1dmhma2NtNVJPOTNNUkJqY2Y3XzFwemdwNTVTeWI4ZUFYWnB0VUt1OFc5YTdkVXY2ZUZGU2VjS05lM3BieVYwOTBZ?oc=5",
-          "source": "L'Usine Nouvelle",
-          "summary": "Cet article suggère que Sylvie Gellida, une ingénieure de STMicroelectronics, aurait joué un rôle clé dans la signature d'un important contrat commercial entre l'entreprise et Amazon.",
+          "source": "usinenouvelle.com",
+          "summary": "Cet article suggère que Sylvie Gellida, une ingénieure de STMicroelectronics, aurait joué un rôle clé dans la négociation ou la conclusion d'un contrat majeur entre l'entreprise et Amazon.",
           "sentiment": 1
         },
         {
@@ -1390,7 +1390,7 @@
           "date": "2026-09-04",
           "link": "https://news.google.com/rss/articles/CBMixAFBVV95cUxOOTZnWU5aajRuMUY5VXpPb0tKZENIak5EQUt6dTZFQlBYRmU4S0I5dGxMUkxseGlBUU9JMjlQaDRBekxFTDFXci1HZ0ZGdHUzendRVHBWNWVjOGpOdVFBdmY4NnZ3dnJJRGxkLUVZR0Y0VHc3cHdBeW9xYUNPbnlOVFFrTWJDRG84V1h0bUVxYXphUk1rQ1BmTDBiQzlNc3Vaa1VpVXdPTkhoZi05QUdEUi1icWxiUU1Ma2lENDVmZFhrLTk2?oc=5",
           "source": "Idéal Investisseur",
-          "summary": "Cet article suggère que le titre de STMicroelectronics aurait connu une hausse de 2,5% en raison d'une dynamique positive du secteur des semi-conducteurs, sans que le contenu disponible ne permette de confirmer les causes précises ou l'ampleur réelle de ce mouvement.",
+          "summary": "Cet article suggère que le cours de STMicroelectronics aurait connu une hausse de 2,5 % en raison d'une dynamique positive du secteur des semi-conducteurs.",
           "sentiment": 1
         },
         {
@@ -1398,15 +1398,15 @@
           "date": "2026-09-02",
           "link": "https://news.google.com/rss/articles/CBMi8AFBVV95cUxQaG9wazJzM0lxVUlLRlU2NzFLb1FoMmdsRWtpSGdFMF9kT21KRFo3c0RjNHVDWnJDSGFEc2MyODFwejJUTFgyRTFHMUpYSzQ2eTlCclhlXzh5Z2ROb3U1ZHluTm45bWotZVktTngwY3FSZ1IxLTl4S1lRdF9LY1VPN1RKMzR5cmlyX0t6c2U5YjNVWV9sdlBYS2V3WTExT2xGbmxzaDNsWWtVelVSYXdkMml0Rmc0d3E2Q21SY25RUUZBcnVxNTNFel9Fd0ZpSlJfR0dfM2pOanpvSEZJZTlQem1QM0t5cEZSMkZPdHNBYms?oc=5",
           "source": "BFM Bourse",
-          "summary": "Cet article suggère que des analystes auraient formulé des recommandations concernant STMicroelectronics aux côtés d'autres grandes entreprises, sans que l'on puisse déterminer la nature positive ou négative de ces recommandations à partir du seul titre.",
+          "summary": "Cet article suggère que les analystes financiers auraient publié des recommandations d'investissement concernant STMicroelectronics et trois autres sociétés, sans que le contenu précis de ces recommandations puisse être déterminé à partir du titre seul.",
           "sentiment": 0
         }
       ],
       "current_price": 44.80500030517578,
-      "fair_value": 26.87945054588745,
-      "entry_price": 29.103605143987245,
-      "exit_price": 41.106599798338806,
-      "wacc": 11.230163106767256,
+      "fair_value": 26.877949866903368,
+      "entry_price": 29.103079863427467,
+      "exit_price": 41.10562430550074,
+      "wacc": 11.23023336383968,
       "financial_analysis_html": "<h3>Diagnostic global</h3><p>STMicroelectronics traverse un creux cyclique marqué : le chiffre d'affaires est passé de 17,3 Md€ en 2023 à 11,8 Md€ en 2025 (CAGR de -8,1 %/an sur la période observée), avec un effondrement bien plus violent des résultats (CAGR EBITDA de -19,2 %/an) qui traduit un fort levier opérationnel dans une industrie très capitalistique. La rentabilité économique (ROCE 2,2 %) est très inférieure au coût du capital (11,2 %), signe d'une destruction de valeur conjoncturelle, alors même que la structure financière reste exceptionnellement solide (trésorerie nette de 483 M€, capitaux propres de 17,8 Md€). Les derniers trimestres publiés montrent toutefois une inflexion nette à la hausse de l'activité.</p>\n\n<h3>Structure financière et solvabilité</h3><p>Le bilan constitue le point fort du dossier et ne présente aucun risque de solvabilité identifiable à partir des données fournies.</p><ul><li><strong>Endettement net négatif</strong> : -483 M€ en 2025, soit une position de trésorerie nette, contre une dette nette de 885 M€ en 2024 et une position quasi nulle en 2023 (-49 M€). Le ratio dette nette/EBITDA de -0,2x confirme l'absence de levier financier.</li><li><strong>Capitaux propres en croissance continue</strong> : 12,7 Md€ en 2022, 16,7 Md€ en 2023, 17,4 Md€ en 2024, 17,8 Md€ en 2025. Le groupe a continué de renforcer ses fonds propres malgré la chute des résultats, ce qui suppose une politique de distribution modérée au regard des bénéfices accumulés.</li><li><strong>Couverture des frais financiers</strong> : l'ICR de 6,4x demeure confortable, mais il faut noter qu'il s'est mécaniquement dégradé avec l'EBIT (455 M€ en 2025 contre 4 818 M€ en 2023) ; à ce niveau, il repose sur un résultat d'exploitation très faible et non sur une charge d'intérêts élevée.</li></ul><p>Au sens du Vernimmen, l'entreprise dispose d'une structure financière « sur-liquide » qui lui donne une capacité d'absorption du cycle et de financement de ses investissements sans recours au marché — au prix, en contrepartie, d'un capital employé important faiblement rémunéré en bas de cycle.</p>\n\n<h3>Rentabilité économique et financière</h3><p>C'est le principal point de faiblesse actuel.</p><ul><li><strong>Effet ciseau sur les marges</strong> : la marge d'EBITDA passe de 35,4 % (2022) et 36,9 % (2023) à 28,1 % (2024) puis 19,6 % (2025) ; la marge d'EBIT s'effondre de 27,9 % (2023) à 14,8 % (2024) et 3,9 % (2025). L'écart croissant entre EBITDA et EBIT (1 854 M€ de dotations implicites en 2025 contre 1 561 M€ en 2023) illustre le poids d'un outil industriel amorti sur une base de chiffre d'affaires en repli.</li><li><strong>ROCE de 2,2 % contre un coût du capital de 11,2 %</strong> : le spread négatif d'environ 9 points signifie que, sur l'exercice 2025, l'activité ne couvre pas la rémunération exigée par les apporteurs de fonds. Rapporté à des capitaux employés de l'ordre de 17,3 Md€ (capitaux propres nets de la trésorerie excédentaire), l'écart correspond à une destruction de valeur significative sur l'exercice.</li><li><strong>ROE de 0,9 %</strong> : le résultat net tombe à 166 M€ en 2025 (marge nette 1,4 %) contre 4 211 M€ en 2023 (24,4 %). Le ROE est ici inférieur au ROCE, ce qui est logique en présence d'une trésorerie nette : l'absence de levier financier ne permet pas d'amplifier la rentabilité économique, et la trésorerie excédentaire dilue le rendement des capitaux propres.</li></ul>\n\n<h3>Analyse de la trésorerie et du free cash-flow</h3><p>Le FCF n'est disponible que pour 2022 (1 566 M€, soit une conversion FCF/EBITDA d'environ 27 % — niveau cohérent avec un secteur en phase d'investissement lourd). La conversion affichée de 0 % pour l'exercice le plus récent reflète l'indisponibilité de la donnée et ne doit pas être interprétée comme un free cash-flow nul avéré. Deux éléments d'appréciation indirecte ressortent néanmoins :</p><ul><li>La <strong>variation de la dette nette</strong> constitue le meilleur indicateur de substitution : le passage de +885 M€ de dette nette fin 2024 à -483 M€ fin 2025 traduit une amélioration de la position de trésorerie nette de près de 1,4 Md€ sur l'exercice, ce qui suggère une génération de liquidités positive (ou des cessions/opérations de financement) malgré la faiblesse du résultat.</li><li>Avec un EBITDA de 2 309 M€ et un EBIT de seulement 455 M€, l'écart d'environ 1,85 Md€ d'amortissements donne la mesure des <strong>investissements historiques</strong> ; le maintien d'un niveau de capex élevé dans un contexte de repli de la demande est la principale variable qui pèse sur le free cash-flow d'un semi-conducteurs en bas de cycle.</li></ul>\n\n<h3>Dynamique récente (dernier trimestre vs tendance)</h3><ul><li>La séquence trimestrielle est nettement orientée à la hausse : 2 766 M€, puis 3 187 M€, 3 330 M€, 3 095 M€ et enfin <strong>3 487 M€ au dernier trimestre publié</strong>.</li><li>Sur un an, la comparaison est très favorable : 3 487 M€ contre 2 766 M€ un an plus tôt, soit une progression d'environ <strong>+26 %</strong>. Séquentiellement, la hausse est d'environ +12,7 % par rapport au trimestre précédent, après le creux saisonnier de début d'exercice.</li><li>Le dernier trimestre est le plus élevé de la séquence observée et, annualisé, il ressort à un rythme d'environ 14 Md€, supérieur au chiffre d'affaires annuel 2025 (11,8 Md€) et proche du niveau 2024 (13,3 Md€).</li><li>Compte tenu du levier opérationnel constaté à la baisse (division par plus de dix de l'EBIT entre 2023 et 2025 pour une baisse de 32 % du chiffre d'affaires), un redressement du volume devrait mécaniquement produire un effet amplificateur sur les marges — sans que les données fournies permettent d'en mesurer l'ampleur, aucun résultat trimestriel n'étant communiqué.</li></ul>\n\n<h3>Synthèse</h3><p>Le diagnostic financier fait apparaître un contraste classique entre un <strong>bilan très robuste</strong> (trésorerie nette, dette nette/EBITDA de -0,2x, capitaux propres de 17,8 Md€ en progression) et une <strong>rentabilité économique temporairement dégradée</strong> (ROCE 2,2 % contre un coût du capital de 11,2 %, ROE 0,9 %). La contraction du chiffre d'affaires (-8,1 %/an) s'est traduite par une érosion bien plus rapide de la profitabilité (-19,2 %/an sur l'EBITDA), caractéristique d'une structure de coûts fixes lourde. Les points de vigilance portent sur la durée du bas de cycle, le poids des amortissements sur l'EBIT et l'absence de visibilité sur le free cash-flow récent, non renseigné. Le point d'appui est double : une solvabilité qui ne pose pas question à l'horizon des données disponibles, et une reprise séquentielle de l'activité au cours des derniers trimestres, le dernier trimestre publié affichant le plus haut niveau de la période observée. La question centrale reste la capacité du groupe à ramener son ROCE au-dessus de son coût du capital à mesure que le volume se redresse.</p>",
       "financial_analysis_quarter": "2026-06-30",
       "alerts": [
@@ -1475,7 +1475,7 @@
           "date": "2026-09-06",
           "link": "https://news.google.com/rss/articles/CBMi6gFBVV95cUxPN01aOEpkenY2d0tSRkhMTHBQMHE0c2p3SThrQy1FYnV5WVp4TFRRU3MtWEVHN1Vmcy1ISlYxZElscnlLSXcwUWNpTl9XbV90TmpCUDh5a28yMFpJOEI3SldnZkpQMmZwUUpMUmJXVUZMYTh3cS1Pc281TURoSGhvemlIaVdrTUc2cFBjcUFhaVJGSmdCSDN3R0N5aGl5X0czaHY1bXJsdHQyUDAtdEJfUHB5ZlBadnM0enBONVZkNk5lWHZPN1pjU2p2M0prOVphcnhEb2VvRDFETUstdjN4cFRoVFI3RTRaM1E?oc=5",
           "source": "Futura, le média qui explore le monde",
-          "summary": "Cet article suggère que Stellantis pourrait être en phase de test routier d'une technologie de batterie solide, ce qui représenterait une avancée potentielle dans le développement de ses véhicules électriques.",
+          "summary": "Cet article suggère que Stellantis procède à des tests en conditions réelles d'une technologie de batterie solide, ce qui pourrait représenter une avancée significative dans son développement de véhicules électriques.",
           "sentiment": 1
         },
         {
@@ -1483,23 +1483,23 @@
           "date": "2026-09-06",
           "link": "https://news.google.com/rss/articles/CBMiiwJBVV95cUxOVC1POGlHX2Uxc2FCWVVDVDdsWU5lOC13aE5nd2hJaXJYWXFFYzRRUHhDNXRmcmh2dDRpazlMZ2hDNU1XVmlNN0xXRDFHckNJYjh3NHN4U3BlekhiQ2tCR2otZ0x2Zzl0Sm0tZ0NGVTNRc09TWEgycDZoRjA1UldrTjdJNTFvMFp2MEVtTy1VY3FmdTBNWnBnZ0NiVTNxaTMtLTROWTNva3pRRDRobkNXekpVVmlVUHJUYkRjM3ZueXgxTVgzVFpBLTZvMnFFc3NFM3lQVnpEc2tYTWhnWGRlcjVNSUZvb2xkUEJmSU9CbGEtelJzVXVWSGZlVzhUdFhmcEplSVBKOGR0dk0?oc=5",
           "source": "Ouest-France",
-          "summary": "Cet article suggère que l'usine Stellantis de La Janais près de Rennes a accueilli un événement sportif ou de bien-être réunissant environ 1 800 participants dans ses installations.",
+          "summary": "Cet article suggère qu'un événement sportif ou de bien-être rassemblant environ 1 800 participants a eu lieu dans les installations de l'usine Stellantis de La Janais en Bretagne.",
           "sentiment": 1
         },
         {
-          "title": "Stellantis, sans doute l'achat le plus risqué parmi les sociétés du Cac 40 - Investir Les Echos",
+          "title": "Stellantis, sans doute l'achat le plus risqué parmi les sociétés du Cac 40 - investir.lesechos.fr",
           "date": "2026-09-03",
           "link": "https://news.google.com/rss/articles/CBMi3gFBVV95cUxQa0MwcS0yNFMyejZHYjJ5NTRBSVpoUlNLZlpMZWhEdHM2RnpuLVBHZG1uUnlvV1dOOTI3T19UX2xjSkNXNXo3aGVHY1RYZmhqakpsMFluekdjdm9UQW5ueEM2OXVldF9SRE56ZE9ESGMycEJIWC1oSXZ3eDY1SjlxQUIwRnEwcDZLVDB3OUxvRHR0SlB0OE1JaUNnejM3RmdQTURScGd2OVB3YVprYzlaeGNjMzMxTzRKeXJBU1hYYTFYYU5RejlMS054ZWprWEwwcXlDVVc3TE5UNk9YLWc?oc=5",
-          "source": "Investir Les Echos",
-          "summary": "Cet article suggère que Stellantis pourrait présenter des risques d'investissement particulièrement élevés comparé à d'autres grandes entreprises du CAC 40.",
+          "source": "investir.lesechos.fr",
+          "summary": "Cet article suggère que Stellantis pourrait présenter un profil de risque plus élevé comparé à d'autres entreprises du CAC 40, ce qui pourrait interpeller les investisseurs quant à la pertinence de l'investissement dans ce titre.",
           "sentiment": -1
         },
         {
-          "title": "Le pionnier français des batteries ACC (Total Energies, Stellantis, Mercedes) vise l’équilibre financier en 2028, pas avant - Auto Infos",
+          "title": "Le pionnier français des batteries ACC (Total Energies, Stellantis, Mercedes) vise l’équilibre financier en 2028, pas avant - auto-infos.fr",
           "date": "2026-09-03",
           "link": "https://news.google.com/rss/articles/CBMi8AFBVV95cUxORlNCdXVIMGpmNnVKb2NzOE1jVnZEcFpWOWtxYndjb05zNWphSXg5ZTNDUDlYN1M1YkpCNjI2UGxpQUo1WVpfbHNpMGJlTnR6bkpycFhlQkRSSFJIYmtNTTFYck8wOWRlUW4zRlp2SWVkalc0YzRNeGo3YmlpV283UjhBR0ZmTVgxQnNlUUNuVUJ4cGIwemtCMERzbDRCRzUyRmRjcU5EX0szNVZrMDRNMDRyemY5c214RExRR0xYUi1ZMmQ4ZWowaDFYZE9tQjh0YTBkRmN1QXJ4WDZxQUVvRkNVSEgwWTNzdlJvNEItbjA?oc=5",
-          "source": "Auto Infos",
-          "summary": "Cet article suggère que la coentreprise ACC (associant Total Energies, Stellantis et Mercedes) pourrait ne pas atteindre l'équilibre financier avant 2028, ce qui indiquerait un calendrier de rentabilité plus long que prévu pour ce projet stratégique de batterie.",
+          "source": "auto-infos.fr",
+          "summary": "Cet article suggère que la coentreprise française ACC, regroupant Total Energies, Stellantis et Mercedes pour la production de batteries, ne prévoyrait d'atteindre l'équilibre financier qu'à l'horizon 2028.",
           "sentiment": -1
         },
         {
@@ -1507,7 +1507,7 @@
           "date": "2026-09-04",
           "link": "https://news.google.com/rss/articles/CBMi8AFBVV95cUxOdk1NRWd1TmRtZHVPcThaUnBpREFmbXBoS0RGUmFYQ05ZNkxtN2k0OXdYTjJsSXBZZ08xSDZkQlR3dDcwdlJiN01LUjk1RjJWanlsTnRUV3JZRkoxMnh6N05sU2tOLVc4MDhuWXVBOXh1c2hhSEdoM3FSM2FhOElxVUszWlRqN2owTVdUZlhycmpPQ0ZNOWtKb3drOElXeVFOektuQ1REOTRyTzFDa3FjRUhyamR2ajVLLS0zYV9PU3NySGMxWUlqbXMyUWFXRHFqZGVfb2g2WmtEdHBWc0p4djJrWjY4YU5FcDZfSU9Ub1U?oc=5",
           "source": "Zonebourse Suisse",
-          "summary": "Cet article suggère que Stellantis pourrait explorer un partenariat stratégique avec les entreprises chinoises Huawei et JAC en relation avec la marque de luxe Maserati.",
+          "summary": "Cet article suggère que Stellantis explorerait un partenariat potentiel impliquant la marque Maserati avec les entreprises chinoises Huawei et JAC Motors.",
           "sentiment": 0
         }
       ],
@@ -1532,8 +1532,8 @@
       "name": "Carrefour",
       "sector": "Consumer Defensive",
       "sector_profile": "defensif",
-      "score": 50.9,
-      "interpretation": "Profil fondamental très solide",
+      "score": 48.9,
+      "interpretation": "Solide",
       "factors": [
         {
           "name": "Rentabilité / création de valeur",
@@ -1561,21 +1561,21 @@
         },
         {
           "name": "Valorisation relative",
-          "score": -1.8840627505913798,
+          "score": -1.884063008383881,
           "weight": 0.08,
           "raw_value": "EV/EBITDA 1.8x (moy. 5 ans 2.2x) — PER 29.4x (moy. 5 ans 13.3x)"
         },
         {
           "name": "Dynamique récente",
-          "score": 5.330006497798477,
+          "score": 5.330006284235226,
           "weight": 0.1,
           "raw_value": "Cours +10.7% vs MM200"
         },
         {
           "name": "Actualité récente",
-          "score": 4.0,
+          "score": 2.0,
           "weight": 0.1,
-          "raw_value": "Ton moyen des 5 actualités récentes : +0.40"
+          "raw_value": "Ton moyen des 5 actualités récentes : +0.20"
         }
       ],
       "news": [
@@ -1584,15 +1584,15 @@
           "date": "2026-09-06",
           "link": "https://news.google.com/rss/articles/CBMikAFBVV95cUxPMVNlSWxhdk5OeG44eU5hYlpaUGFvYmFDeFNEd2tRZkZtY2h3TWlDeTF3S0U3cU1WUlNVTENxcUtnU0prOTh3WUJMSndoaXhZSnI3SmJfeXJvdUp5ZmNLaVJ4Y3ZjQ1NZWnJycnczc2JWbGJYQzQ1SmpxNDdNNkNOTE5BY0V1MVE2TjVuWDRXSlE?oc=5",
           "source": "Olivier Dauvers",
-          "summary": "Cet article suggère que Carrefour pourrait être en train d'explorer une expansion ou une redéfinition de son offre de produits via son service de drive, soulevant des questions sur l'étendue de cette stratégie.",
-          "sentiment": 0
+          "summary": "Cet article suggère que Carrefour pourrait être interrogé sur les limites et l'évolution de sa stratégie d'assortiment dans le canal drive, potentiellement dans une perspective critique.",
+          "sentiment": -1
         },
         {
           "title": "Qui est Jérémy Smith, le nouveau directeur de Carrefour Croix-Dampierre à Châlons-en-Champagne ? - L'Union",
           "date": "2026-09-05",
           "link": "https://news.google.com/rss/articles/CBMixwFBVV95cUxQQnVieno2dUZXOWlmZFdCUlBnM01Gd1B1MzllOFFuYnlaNFdPMHdyUEIyZmpoWk1vTkdOZGRpc1hab3JlRHJwejg0bWlwMGRRa0ItbG5ZVHFRYTFiZXk2UWhFcHFjblNJQ0pPa3VWYTZETklpVWF0ODRpZ0RuSFBRaFB3RG9yaHAwQzNqaTY5djUxUFpuMlZqRFZfNUdueGJhQ1FINkhpMHAtcUx4Rnc3Q1Fxd0c1V2VzRnkyRzFNcFhteGlNdVNr?oc=5",
           "source": "L'Union",
-          "summary": "Cet article suggère que Jérémy Smith a récemment été nommé à la direction du magasin Carrefour situé à Châlons-en-Champagne.",
+          "summary": "Cet article suggère que Jérémy Smith a été nommé à un poste de direction au sein du magasin Carrefour de Châlons-en-Champagne, ce qui pourrait indiquer une évolution organisationnelle ou un changement de leadership local.",
           "sentiment": 0
         },
         {
@@ -1600,7 +1600,7 @@
           "date": "2026-09-05",
           "link": "https://news.google.com/rss/articles/CBMirgJBVV95cUxPSGhmb2Zrb0xJV0xEbWNvSHNZX2tQMUNIZGVYeG5tVThWSDVPeXNScDcwSmVnNU0wel9uUHU1MzVxd2ZNeUhEV0xaWS1VVlBQNUNCd3gycjIzSHFzamJxbmgyS0dzU2NabGF0ZlJ0RS1hanNhNG9EU0dhUktGY0p2ZjVBRy1STG1MUV9DdjJqYjFaTTRjeWJyS3c3ZXBSYlBvVWc5b3NMTnBMcE53SUM0MC14b3FwMjRCa3dwMnZiS2taNzc5T1I5Tlg2MDU2YXBma2JVNlI4OERmTDBoVmJieTl5ZmNUVlBjRVpCSHROTUIwN1A3dkRZZEV1dzFIMGJtX0JsVUgtZXpyOXVHbDhsUGZYazJ3RzBjcTQ0TGEzLXRnM3FDRE4wNzZHbU50dw?oc=5",
           "source": "Le Parisien",
-          "summary": "Cet article suggère que Carrefour pourrait proposer une sélection de shampoings anti-poux adaptés à la période de rentrée scolaire.",
+          "summary": "Cet article suggère que Carrefour propose une sélection de shampoings contre les poux adaptés à la période de rentrée scolaire, positionnant l'enseigne comme une solution pratique pour les familles face à ce problème saisonnier courant.",
           "sentiment": 1
         },
         {
@@ -1608,7 +1608,7 @@
           "date": "2026-09-05",
           "link": "https://news.google.com/rss/articles/CBMisgJBVV95cUxQLWlEeWtMa1lnQ2NXcEFBb21XSk16UE1qVDJyWXpPcWZ4bnZQcXhUcUE2V05COU9LbXlkdkMzdnpMS2F2ZGhDR2lMaGs1bkREOUQ1OWdON3FoLUNwRU85MTQyam83NWY4ZTlYY0JDZGFXRDBnZFJQbEhLdVFneWVKNWsxWTl2WmRlajMwUzdaNTJUZ1FmOFFiQVhxMXNMakhEWHRxcXN6OUtHZVQ2bUFoUm1UNTFLLTNLR2d2WHkzd3dBN3dzTXhuS0NkRXVkU0p3Z3dIUHBwTmFZME5HdzFZZkpKRUgyaUxIUWdfbkx1Ym1Ba1Z4cGtmTGZrTXlIblI1N2V2WWRqbGxCT05PQ2hZMDJMRWFwRk5yaEFRanZHTkUwRmEwSGZHVmp5SjFZenQwWEE?oc=5",
           "source": "Le Télégramme",
-          "summary": "Cet article suggère que l'événement annuel « Carrefour des associations » à Landerneau aurait connu un succès d'affluence à sa 40e édition, avec une forte demande de participation.",
+          "summary": "Cet article suggère qu'un événement communautaire appelé « Carrefour des associations » aurait célébré sa 40e édition à Landerneau et aurait connu une forte affluence, bien que les places disponibles semblent avoir été limitées.",
           "sentiment": 1
         },
         {
@@ -1616,14 +1616,14 @@
           "date": "2026-09-04",
           "link": "https://news.google.com/rss/articles/CBMipAJBVV95cUxNOUxQdGdHbkN2emRMQXRVOF9DYVFQMWhiOU1pdzRfZG1xWW5IV1FUT2NJMjhPQ0w0TUoteWhjWHprWGl2Z25TRkhZTHNkV1ZRdDN5c1E2OHRqQzc4aDdPZUVINUdSNmcwWE00M0M4T1pjVU1SVElvb0lzVzkzN1lFQnlyakVUUElYSWNGRlNGZTVSS0FVOWt1TjF4RTBSTjlLcjVRSWUweldMMTFGTUxtWlRpaGdCN1RnWWlIU1hGejNpc2dnM2JnNmNMcnQzMEZHRUt0SVowTWVnVlFDUndxQ01XVU5aNFl5ZEVqWG1BRVA2c25qenBjSWNFS1JtTWFUZWR0dm5oSXk3Rmd4dXpqU29mNk1lUU9ybnpKM18xMVVMNlBT?oc=5",
           "source": "BFM",
-          "summary": "Cet article suggère que Carrefour, après un retrait du marché indien il y a 12 ans, envisagerait un retour en ouvrant un nouvel hypermarché, ce qui pourrait indiquer une nouvelle stratégie ou une confiance renouvelée dans ce marché.",
+          "summary": "Cet article suggère que Carrefour pourrait tenter un retour sur le marché indien après un précédent échec, ce qui pourrait indiquer soit une nouvelle stratégie mieux adaptée, soit un pari risqué compte tenu de l'expérience antérieure.",
           "sentiment": 0
         }
       ],
       "current_price": 16.405000686645508,
-      "fair_value": 39.33643389333519,
-      "entry_price": 21.180095419548266,
-      "exit_price": 34.46349429892501,
+      "fair_value": 39.336433765382715,
+      "entry_price": 21.18009540337513,
+      "exit_price": 34.46349425008818,
       "wacc": 5.591224039943306,
       "financial_analysis_html": "<h3>Diagnostic global</h3><p>Carrefour présente le profil financier classique d'un distributeur alimentaire : un chiffre d'affaires très élevé (84,0 Md€ en 2025) associé à des marges structurellement étroites (EBITDA 5,6 % du CA, EBIT 2,8 %), mais une rotation des actifs suffisamment rapide pour dégager un ROCE de 15,5 %, très supérieur au coût du capital estimé à 5,6 %. Le paradoxe du dossier tient à l'écart entre cette rentabilité économique solide et une rentabilité comptable des capitaux propres réduite à 2,9 %, conséquence de l'effondrement du résultat net (319 M€ en 2025 contre 1 659 M€ en 2023). La structure financière, telle que présentée par les données fournies, apparaît en position de trésorerie nette positive, ce qui écarte à court terme toute problématique de solvabilité.</p><h3>Structure financière et solvabilité</h3><p>La dette nette ressort à -920 M€ en 2025, soit une trésorerie nette excédentaire, prolongeant une situation observée depuis 2023 (-1 389 M€) et 2024 (-1 495 M€). Le ratio dette nette/EBITDA de -0,2x traduit mécaniquement une absence d'endettement financier net au sens de l'agrégat retenu.</p><ul><li><strong>Rupture méthodologique à souligner</strong> : le passage d'une dette nette de +8 871 M€ en 2022 à -1 389 M€ en 2023 ne peut résulter d'un désendettement opérationnel de cette ampleur sur un exercice ; il traduit très probablement un changement de périmètre de l'agrégat (traitement des dettes de loyers IFRS 16, des financements de l'activité bancaire ou des passifs détenus en vue de la vente). L'analyse de la solvabilité doit donc être conduite avec prudence : le levier économique réel, incluant les engagements locatifs, est nécessairement supérieur à celui affiché.</li><li><strong>Couverture des frais financiers</strong> : l'ICR de 14,7x indique que le résultat d'exploitation couvre très largement la charge d'intérêts nette, signal de confort en matière de service de la dette.</li><li><strong>Capitaux propres</strong> : stables autour de 10,8-11,5 Md€ sur quatre exercices (10 976 M€ en 2025), malgré la faiblesse du résultat net. Cette stabilité, alors que le résultat 2025 ne couvre qu'une fraction du dividende habituel, suggère que les capitaux propres sont soutenus par d'autres éléments (écarts de conversion, réserves) autant qu'ils sont ponctionnés par les distributions et rachats d'actions.</li><li><strong>Le fonds de roulement négatif</strong>, propre à la grande distribution (encaissement comptant, paiement fournisseurs à terme), constitue une ressource permanente de financement qui explique en grande partie la capacité du groupe à opérer sans endettement net apparent.</li></ul><h3>Rentabilité économique et financière</h3><p>Le ROCE de 15,5 % dégage un écart de près de 10 points avec le coût du capital de 5,6 %. Sur le plan de la création de valeur au sens du Vernimmen, l'activité rémunère donc largement les capitaux engagés : la faiblesse des marges est compensée par un coefficient de rotation des actifs élevé, typique d'un modèle de distribution à faible intensité capitalistique nette (grâce au besoin en fonds de roulement négatif).</p><ul><li><strong>Décrochage ROE/ROCE</strong> : un ROE de 2,9 % très inférieur au ROCE de 15,5 % est une configuration atypique. En l'absence de dette nette, l'effet de levier est nul, voire légèrement négatif ; l'écart s'explique donc essentiellement par la fiscalité, les intérêts minoritaires et surtout par des <strong>éléments non récurrents négatifs</strong> (dépréciations d'actifs, coûts de restructuration, moins-values de cession liées aux sorties de périmètre) qui pèsent sur le résultat net sans affecter le résultat opérationnel courant retenu au numérateur du ROCE.</li><li><strong>Trajectoire du résultat net</strong> : 1 348 M€ (2022), 1 659 M€ (2023), 723 M€ (2024), 319 M€ (2025). La division par cinq en deux ans est le point de vigilance majeur du diagnostic, d'autant qu'elle intervient alors que l'EBIT progresse (2 042 M€ en 2023 à 2 323 M€ en 2025). Le résultat opérationnel s'améliore, le résultat net se dégrade : la valeur est détruite en dessous de la ligne d'exploitation.</li><li><strong>Marges</strong> : la marge d'EBITDA s'est redressée de 5,1 % (2023) à 5,6 % (2025), sans retrouver le niveau de 2022 (5,8 %). La marge nette tombe à 0,4 %, contre 2,0 % en 2023.</li></ul><h3>Analyse de la trésorerie et du free cash-flow</h3><p>Le free cash-flow s'établit à 2 425 M€ en 2025, en ligne avec les trois exercices précédents (2 337 M€, 2 676 M€, 2 462 M€) : la génération de liquidités est remarquablement stable et déconnectée de la volatilité du résultat comptable.</p><ul><li><strong>Taux de conversion FCF/EBITDA de 52 %</strong> : niveau satisfaisant pour un distributeur, qui confirme que les charges ayant pesé sur le résultat net sont majoritairement <strong>non décaissées</strong> (amortissements accélérés, dépréciations, provisions). L'écart EBITDA-EBIT de 2 349 M€ en 2025 illustre le poids des dotations aux amortissements, incluant l'amortissement des droits d'utilisation.</li><li>Le FCF (2 425 M€) est plus de sept fois supérieur au résultat net (319 M€), ce qui constitue le principal élément rassurant du dossier : la capacité à financer investissements, dividendes et rachats d'actions repose sur les flux, non sur le résultat publié.</li><li>La trésorerie nette positive et le FCF récurrent supérieur à 2,4 Md€ confèrent au groupe une marge de manœuvre pour absorber les coûts de transformation en cours sans recourir au marché.</li></ul><h3>Dynamique récente</h3><p><strong>Aucune donnée trimestrielle n'a été fournie</strong> ; l'analyse de la dynamique récente s'appuie donc exclusivement sur l'exercice 2025 comparé à la tendance pluriannuelle.</p><ul><li><strong>Croissance atone</strong> : CAGR du chiffre d'affaires de +0,3 %/an sur la période, avec un CA 2025 (84,0 Md€) encore inférieur à celui de 2023 (84,9 Md€). En termes réels, compte tenu de l'inflation alimentaire de la période, cela traduit un recul des volumes et/ou des effets de périmètre et de change défavorables (sorties de marchés).</li><li><strong>CAGR de l'EBITDA de -1,9 %/an</strong>, inférieur à celui du CA : la profitabilité absolue s'érode sur la durée, même si 2025 marque un rebond séquentiel de l'EBITDA (+7,1 % vs 2024) et de l'EBIT (+9,5 %).</li><li><strong>Signal contrasté sur 2025</strong> : amélioration opérationnelle réelle (EBITDA, EBIT, marges) mais nouvelle dégradation du résultat net et légère remontée de la dette nette (de -1 495 M€ à -920 M€, soit une consommation nette de 575 M€ de trésorerie malgré un FCF de 2 425 M€, ce qui implique des distributions, rachats d'actions et/ou acquisitions supérieurs au FCF).</li></ul><h3>Synthèse</h3><p>Le diagnostic financier de Carrefour fait apparaître trois constats principaux. Premièrement, une <strong>structure financière saine en apparence</strong> (trésorerie nette positive, ICR de 14,7x), dont la lecture doit toutefois être nuancée par la discontinuité manifeste de l'agrégat de dette nette entre 2022 et 2023 et par les engagements locatifs propres au secteur. Deuxièmement, une <strong>rentabilité économique créatrice de valeur</strong> (ROCE de 15,5 % contre un coût du capital de 5,6 %) qui contraste violemment avec un ROE de 2,9 %, écart imputable à des éléments non récurrents et non à un effet de levier défavorable. Troisièmement, une <strong>génération de cash-flow robuste et stable</strong> (2,4 Md€, 52 % de l'EBITDA) qui constitue le véritable amortisseur du dossier face à la volatilité du résultat comptable.</p><p>Les points de vigilance portent sur l'absence de croissance du chiffre d'affaires (+0,3 %/an), l'érosion tendancielle de l'EBITDA (-1,9 %/an) malgré le rebond de 2025, et la répétition d'éléments négatifs sous la ligne d'exploitation qui interroge sur leur caractère réellement exceptionnel. La soutenabilité du couple distribution/rachats d'actions, supérieur au FCF en 2025, mérite un suivi. Cette analyse est fondée sur les seules données transmises, hors information trimestrielle, et ne constitue ni un conseil ni une recommandation d'investissement.</p>",
       "financial_analysis_quarter": "2025-12-31",

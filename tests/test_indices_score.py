@@ -1041,6 +1041,91 @@ def test_fetch_risk_free_rate_returns_none_on_request_exception(monkeypatch):
     assert fetch_risk_free_rate() is None
 
 
+from indices_score import _size_premium, estimate_wacc
+
+
+def test_size_premium_mega_cap():
+    assert _size_premium(60_000_000_000) == 0.0
+
+
+def test_size_premium_large_cap():
+    assert _size_premium(30_000_000_000) == 0.5
+
+
+def test_size_premium_mid_cap():
+    assert _size_premium(5_000_000_000) == 1.5
+
+
+def test_size_premium_small_cap():
+    assert _size_premium(1_000_000_000) == 3.0
+
+
+def test_size_premium_boundary_is_strict():
+    """Une capitalisation pile au seuil ne doit PAS obtenir la tranche
+    supérieure (comparaison stricte `>`)."""
+    assert _size_premium(50_000_000_000) == 0.5
+    assert _size_premium(10_000_000_000) == 1.5
+    assert _size_premium(2_000_000_000) == 3.0
+
+
+def test_estimate_wacc_nominal_case():
+    # Re = 3.68 + 1.2*5.0 + 0.0 (méga cap) = 9.68
+    # Rd_after_tax = 3.0 * (1 - 0.25) = 2.25
+    # E=100, D=50 -> poids E=100/150, D=50/150
+    # WACC = (100/150)*9.68 + (50/150)*2.25 = 6.4533... + 0.75 = 7.2033...
+    result = estimate_wacc(
+        risk_free_rate=3.68, beta=1.2, market_cap=100_000_000_000,
+        total_debt=50_000_000_000, tax_rate=0.25,
+    )
+    assert result == pytest.approx(7.203333333333333)
+
+
+def test_estimate_wacc_returns_none_when_risk_free_rate_missing():
+    assert estimate_wacc(
+        risk_free_rate=None, beta=1.2, market_cap=100_000_000_000,
+        total_debt=50_000_000_000, tax_rate=0.25,
+    ) is None
+
+
+def test_estimate_wacc_returns_none_when_beta_missing():
+    assert estimate_wacc(
+        risk_free_rate=3.68, beta=None, market_cap=100_000_000_000,
+        total_debt=50_000_000_000, tax_rate=0.25,
+    ) is None
+
+
+def test_estimate_wacc_returns_none_when_market_cap_not_positive():
+    assert estimate_wacc(
+        risk_free_rate=3.68, beta=1.2, market_cap=0.0,
+        total_debt=50_000_000_000, tax_rate=0.25,
+    ) is None
+    assert estimate_wacc(
+        risk_free_rate=3.68, beta=1.2, market_cap=-1.0,
+        total_debt=50_000_000_000, tax_rate=0.25,
+    ) is None
+
+
+def test_estimate_wacc_returns_none_when_total_debt_negative():
+    assert estimate_wacc(
+        risk_free_rate=3.68, beta=1.2, market_cap=100_000_000_000,
+        total_debt=-1.0, tax_rate=0.25,
+    ) is None
+
+
+def test_estimate_wacc_returns_none_when_tax_rate_missing():
+    assert estimate_wacc(
+        risk_free_rate=3.68, beta=1.2, market_cap=100_000_000_000,
+        total_debt=50_000_000_000, tax_rate=None,
+    ) is None
+
+
+def test_estimate_wacc_returns_none_when_any_input_is_nan():
+    assert estimate_wacc(
+        risk_free_rate=float("nan"), beta=1.2, market_cap=100_000_000_000,
+        total_debt=50_000_000_000, tax_rate=0.25,
+    ) is None
+
+
 from indices_score import estimate_fair_value
 
 

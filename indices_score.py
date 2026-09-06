@@ -795,6 +795,53 @@ def fetch_risk_free_rate() -> float | None:
         return None
 
 
+MARKET_RISK_PREMIUM = 5.0        # % prime de risque marché (hypothèse fixe)
+
+SIZE_PREMIUM_BANDS = [
+    (50_000_000_000, 0.0),
+    (10_000_000_000, 0.5),
+    (2_000_000_000, 1.5),
+    (0, 3.0),
+]
+
+
+def _size_premium(market_cap: float) -> float:
+    """Prime de taille (points ajoutés au coût des fonds propres) selon
+    la capitalisation boursière — parcourt les bandes de la plus grande à
+    la plus petite, renvoie la première dont le seuil est strictement
+    dépassé."""
+    for threshold, premium in SIZE_PREMIUM_BANDS:
+        if market_cap > threshold:
+            return premium
+    return SIZE_PREMIUM_BANDS[-1][1]
+
+
+def estimate_wacc(
+    risk_free_rate: float | None,
+    beta: float | None,
+    market_cap: float | None,
+    total_debt: float | None,
+    tax_rate: float | None,
+) -> float | None:
+    """WACC par entreprise (CAPM + prime de taille, Vernimmen). None si une
+    donnée nécessaire manque/est invalide — le repli sur
+    COST_OF_CAPITAL_PROXY se fait chez l'appelant, pas ici."""
+    if (
+        risk_free_rate is None or _is_missing(risk_free_rate)
+        or beta is None or _is_missing(beta)
+        or market_cap is None or _is_missing(market_cap) or market_cap <= 0
+        or total_debt is None or _is_missing(total_debt) or total_debt < 0
+        or tax_rate is None or _is_missing(tax_rate)
+    ):
+        return None
+    cost_of_equity = risk_free_rate + beta * MARKET_RISK_PREMIUM + _size_premium(market_cap)
+    cost_of_debt_after_tax = DEBT_INTEREST_RATE_PROXY * (1 - tax_rate)
+    total_capital = market_cap + total_debt
+    equity_weight = market_cap / total_capital
+    debt_weight = total_debt / total_capital
+    return equity_weight * cost_of_equity + debt_weight * cost_of_debt_after_tax
+
+
 def estimate_valuation_targets(data: dict) -> dict:
     """Combine DCF, actif net et multiples en une juste valeur, puis en
     repères d'entrée/sortie. Toujours ces 3 clés en sortie, valeurs à None

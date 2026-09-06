@@ -1,13 +1,13 @@
 {
-  "date": "2026-09-05",
-  "composite_score": 26.2,
+  "date": "2026-09-06",
+  "composite_score": 28.6,
   "interpretation": "Favorable — en attente d'un déclencheur technique",
   "factors": [
     {
       "name": "Taux réels US 10 ans",
-      "score": -0.5999999999999961,
+      "score": 0.20000000000000462,
       "weight": 0.3,
-      "raw_value": "2.42% (il y a ~45j : 2.39%)"
+      "raw_value": "2.42% (il y a ~45j : 2.43%)"
     },
     {
       "name": "Dollar (DXY)",
@@ -98,7 +98,7 @@
       "kind": "info",
       "title": "Pas de signal actif",
       "detail": "Aucune des conditions de veille, d'entrée ou de risque n'est réunie aujourd'hui.",
-      "date": "05/09/2026"
+      "date": "06/09/2026"
     }
   ]
 }

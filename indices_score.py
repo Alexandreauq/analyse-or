@@ -1144,7 +1144,30 @@ def estimate_valuation_targets(data: dict, cost_of_capital: float) -> dict:
     }
 
 
-def build_company_entry(ticker: str, name: str, risk_free_rate: float | None) -> dict:
+def load_previous_company_analyses() -> dict:
+    """Lit le docs/indices.json du run précédent (déjà commité) pour en
+    extraire, par ticker, l'analyse financière et la date de trimestre
+    qu'elle couvre. {} si le fichier n'existe pas encore ou est
+    illisible — jamais d'exception."""
+    if not os.path.exists(OUTPUT_JSON_PATH):
+        return {}
+    try:
+        with open(OUTPUT_JSON_PATH, encoding="utf-8") as fh:
+            previous = json.load(fh)
+        return {
+            c["ticker"]: {
+                "financial_analysis_html": c.get("financial_analysis_html"),
+                "financial_analysis_quarter": c.get("financial_analysis_quarter"),
+            }
+            for c in previous.get("companies", [])
+        }
+    except Exception:
+        return {}
+
+
+def build_company_entry(
+    ticker: str, name: str, risk_free_rate: float | None, previous_analyses: dict,
+) -> dict:
     data = fetch_company_financials(ticker)
     sector = data["sector"]
 
@@ -1156,6 +1179,29 @@ def build_company_entry(ticker: str, name: str, risk_free_rate: float | None) ->
         risk_free_rate, data["beta"], market_cap, data["total_debt"], data["tax_rate"]
     )
     cost_of_capital = wacc if wacc is not None else COST_OF_CAPITAL_PROXY
+
+    previous = previous_analyses.get(ticker, {})
+    current_quarter = data["latest_quarter_date"]
+    if (
+        current_quarter is not None
+        and current_quarter == previous.get("financial_analysis_quarter")
+        and previous.get("financial_analysis_html")
+    ):
+        financial_analysis_html = previous["financial_analysis_html"]
+        financial_analysis_quarter = previous["financial_analysis_quarter"]
+    else:
+        ratios_summary = (
+            f"ROCE {data['roce']:.1f}%, ROE {data['roe']:.1f}%, "
+            f"dette nette/EBITDA {data['net_debt_ebitda']:.1f}x, "
+            f"ICR {data['icr']:.1f}x, CAGR CA {data['cagr_ca']:+.1f}%/an, "
+            f"CAGR EBITDA {data['cagr_ebitda']:+.1f}%/an, "
+            f"conversion FCF/EBITDA {data['fcf_conversion']:.0f}%, "
+            f"coût du capital {cost_of_capital:.1f}%"
+        )
+        financial_analysis_html = generate_financial_analysis(
+            name, data["financial_context"], ratios_summary
+        )
+        financial_analysis_quarter = current_quarter
 
     # Les news sont récupérées avant la construction des facteurs : le
     # facteur "Actualité récente" dépend du sentiment attaché à chaque
@@ -1205,6 +1251,8 @@ def build_company_entry(ticker: str, name: str, risk_free_rate: float | None) ->
         "entry_price": valuation_targets["entry_price"],
         "exit_price": valuation_targets["exit_price"],
         "wacc": cost_of_capital,
+        "financial_analysis_html": financial_analysis_html,
+        "financial_analysis_quarter": financial_analysis_quarter,
     }
 
 
@@ -1235,11 +1283,14 @@ def _attach_alerts_and_update_history(companies: list[dict]) -> None:
 
 def main():
     risk_free_rate = fetch_risk_free_rate()
+    previous_analyses = load_previous_company_analyses()
     companies = []
     for company in COMPANIES:
         try:
             companies.append(
-                build_company_entry(company["ticker"], company["name"], risk_free_rate)
+                build_company_entry(
+                    company["ticker"], company["name"], risk_free_rate, previous_analyses,
+                )
             )
         except Exception as e:
             print(f"Erreur pour {company['ticker']} ({company['name']}) : {e}")

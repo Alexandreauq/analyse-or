@@ -1996,3 +1996,27 @@ def test_build_company_entry_keeps_previous_analysis_when_generation_fails(monke
     )
 
     assert entry["financial_analysis_html"] == "<p>Ancienne analyse valide.</p>"
+
+
+def test_compute_health_summary_all_present():
+    companies = [{"ticker": c["ticker"]} for c in indices_score.COMPANIES]
+    result = indices_score._compute_health_summary(companies)
+    assert result == {
+        "expected": len(indices_score.COMPANIES),
+        "returned": len(indices_score.COMPANIES),
+        "missing_tickers": [],
+    }
+
+
+def test_compute_health_summary_detects_missing_ticker():
+    """Une entreprise qui a levé une exception dans main() (et n'apparaît
+    donc pas dans `companies`) doit être signalée par son ticker, pas
+    juste par un décompte silencieux."""
+    all_tickers = [c["ticker"] for c in indices_score.COMPANIES]
+    companies = [{"ticker": t} for t in all_tickers[1:]]  # le premier manque
+
+    result = indices_score._compute_health_summary(companies)
+
+    assert result["expected"] == len(all_tickers)
+    assert result["returned"] == len(all_tickers) - 1
+    assert result["missing_tickers"] == [all_tickers[0]]

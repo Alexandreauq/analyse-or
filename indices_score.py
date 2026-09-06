@@ -1316,6 +1316,23 @@ def _attach_alerts_and_update_history(companies: list[dict]) -> None:
         print(f"Erreur historique/alertes Indices : {e}")
 
 
+def _compute_health_summary(companies: list[dict]) -> dict:
+    """Résumé de complétude du run : combien d'entreprises attendues
+    (COMPANIES) ont effectivement un résultat dans `companies`, et
+    lesquelles manquent. Une entreprise qui lève une exception dans la
+    boucle de main() est silencieusement absente de `companies` — sans
+    ce résumé, une panne partielle (ex : 2 entreprises sur 5 disparues)
+    ne serait visible qu'en comptant les lignes à la main."""
+    expected_tickers = [c["ticker"] for c in COMPANIES]
+    returned_tickers = {c["ticker"] for c in companies}
+    missing_tickers = [t for t in expected_tickers if t not in returned_tickers]
+    return {
+        "expected": len(expected_tickers),
+        "returned": len(companies),
+        "missing_tickers": missing_tickers,
+    }
+
+
 def main():
     risk_free_rate = fetch_risk_free_rate()
     previous_analyses = load_previous_company_analyses()
@@ -1335,6 +1352,7 @@ def main():
     payload = {
         "updated": datetime.today().strftime("%Y-%m-%d"),
         "companies": companies,
+        "health": _compute_health_summary(companies),
     }
 
     os.makedirs(os.path.dirname(OUTPUT_JSON_PATH), exist_ok=True)

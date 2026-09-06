@@ -114,6 +114,12 @@
   .tech-label { color: var(--muted); }
   .tech-value { font-weight: 500; }
 
+  .price-panel { margin: 16px 0; }
+  .price-row { display:flex; justify-content:space-between; font-size:14px; padding: 4px 0; }
+  .price-label { color: var(--muted); }
+  .price-value { font-weight: 500; }
+  .price-disclaimer { color: var(--muted); font-size: 11px; line-height: 1.5; margin: 8px 0 0; }
+
   .cal-row { display:flex; justify-content:space-between; gap:10px; font-size:12px;
              padding:8px 0; border-bottom:1px solid var(--border); }
   .cal-row:last-child { border-bottom: none; }
@@ -373,6 +379,10 @@ function renderIndicesList(companies) {
   `;
 }
 
+function formatPrice(v) {
+  return v != null ? `${v.toLocaleString('fr-FR', {maximumFractionDigits:2})} €` : 'indisponible';
+}
+
 function renderCompanyDetail(company) {
   const factorsHtml = company.factors.map(f => {
     const pct = Math.min(50, Math.abs(f.score) / 10 * 50);
@@ -404,6 +414,24 @@ function renderCompanyDetail(company) {
       <div class="hero-number">${company.score > 0 ? '+' : ''}${company.score}</div>
       <div class="hero-label">${company.name} — ${company.interpretation}</div>
     </section>
+
+    <div class="price-panel">
+      <div class="price-row">
+        <span class="price-label">Cours actuel</span>
+        <span class="price-value">${formatPrice(company.current_price)}</span>
+      </div>
+      <div class="price-row">
+        <span class="price-label">Repère d'entrée</span>
+        <span class="price-value" style="color:var(--gold)">${formatPrice(company.entry_price)}</span>
+      </div>
+      <div class="price-row">
+        <span class="price-label">Repère de sortie</span>
+        <span class="price-value" style="color:var(--rust)">${formatPrice(company.exit_price)}</span>
+      </div>
+      <p class="price-disclaimer">Repères indicatifs basés sur la valorisation
+        historique (DCF, actif net, multiples) et la tendance technique —
+        pas un conseil d'investissement.</p>
+    </div>
     <div class="divider"></div>
 
     <div class="btn-row">

@@ -1866,6 +1866,37 @@ def test_latest_quarter_date_returns_none_when_no_columns():
     assert indices_score.latest_quarter_date(quarterly_financials) is None
 
 
+def test_resolve_financial_analysis_date_prefers_quarterly_when_available():
+    quarterly_financials = _fake_annual_df(
+        {"Total Revenue": [260.0]}, [pd.Timestamp("2025-09-30")]
+    )
+    financials = _fake_annual_df(
+        {"Total Revenue": [1000.0]}, [pd.Timestamp("2025-12-31")]
+    )
+    result = indices_score._resolve_financial_analysis_date(quarterly_financials, financials)
+    assert result == "2025-09-30"
+
+
+def test_resolve_financial_analysis_date_falls_back_to_annual_when_quarterly_empty():
+    """Reproduit un cas observé en production (LVMH, Schneider Electric,
+    Danone) : quarterly_financials vide chez yfinance pour ces entreprises
+    — sans ce repli, latest_quarter_date resterait None indéfiniment et
+    leur analyse financière ne se régénérerait plus jamais."""
+    quarterly_financials = pd.DataFrame()
+    financials = _fake_annual_df(
+        {"Total Revenue": [1000.0]}, [pd.Timestamp("2025-12-31")]
+    )
+    result = indices_score._resolve_financial_analysis_date(quarterly_financials, financials)
+    assert result == "2025-12-31"
+
+
+def test_resolve_financial_analysis_date_returns_none_when_both_empty():
+    quarterly_financials = pd.DataFrame()
+    financials = pd.DataFrame()
+    result = indices_score._resolve_financial_analysis_date(quarterly_financials, financials)
+    assert result is None
+
+
 def test_generate_financial_analysis_returns_none_when_api_key_missing(monkeypatch):
     monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
 

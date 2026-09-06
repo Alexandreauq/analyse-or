@@ -590,14 +590,34 @@ def build_financial_narrative_context(
     return "\n".join(lines)
 
 
+def _column_date_iso(col) -> str:
+    return col.date().isoformat() if hasattr(col, "date") else str(col)
+
+
 def latest_quarter_date(quarterly_financials) -> str | None:
     """Date du trimestre le plus récent publié, format ISO (YYYY-MM-DD).
-    None si aucune colonne (yfinance en panne pour ce ticker)."""
+    None si aucune colonne (yfinance en panne, ou — cas rencontré en
+    production pour LVMH/Schneider Electric/Danone — pas de
+    quarterly_financials exploitable pour ce ticker du tout)."""
     cols = list(quarterly_financials.columns)
     if not cols:
         return None
-    col = cols[0]
-    return col.date().isoformat() if hasattr(col, "date") else str(col)
+    return _column_date_iso(cols[0])
+
+
+def _resolve_financial_analysis_date(quarterly_financials, financials) -> str | None:
+    """Date utilisée comme signal de fraîcheur pour l'analyse financière :
+    le dernier trimestre publié si disponible, sinon le dernier exercice
+    annuel en repli. Sans ce repli, une entreprise sans quarterly_financials
+    exploitable (LVMH, Schneider Electric, Danone en pratique) verrait
+    latest_quarter_date rester None indéfiniment — son analyse financière
+    ne se régénérerait alors plus jamais (voir le mécanisme de carry-forward
+    dans build_company_entry)."""
+    quarter_date = latest_quarter_date(quarterly_financials)
+    if quarter_date is not None:
+        return quarter_date
+    annual_cols = list(financials.columns)
+    return _column_date_iso(annual_cols[0]) if annual_cols else None
 
 
 def fetch_company_financials(ticker: str) -> dict:
@@ -633,7 +653,7 @@ def fetch_company_financials(ticker: str) -> dict:
     ratios["financial_context"] = build_financial_narrative_context(
         financials, balance_sheet, cashflow, quarterly_financials
     )
-    ratios["latest_quarter_date"] = latest_quarter_date(quarterly_financials)
+    ratios["latest_quarter_date"] = _resolve_financial_analysis_date(quarterly_financials, financials)
     ratios["current_price"] = current_price
     ratios["ma200"] = ma200
     ratios["shares_outstanding"] = shares_outstanding

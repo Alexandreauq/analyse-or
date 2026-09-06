@@ -782,6 +782,22 @@ def test_estimate_dcf_price_returns_none_when_shares_outstanding_is_zero():
     assert estimate_dcf_price(fcf=100.0, cagr_ebitda=10.0, net_debt=200.0, shares_outstanding=0.0) is None
 
 
+def test_estimate_dcf_price_returns_none_when_fcf_is_nan():
+    """Un FCF NaN (yfinance en produit parfois) ne doit pas passer le garde-fou
+    `fcf <= 0` (NaN <= 0 vaut False) et doit dégrader vers None, pas NaN."""
+    result = estimate_dcf_price(
+        fcf=float("nan"), cagr_ebitda=10.0, net_debt=200.0, shares_outstanding=50.0
+    )
+    assert result is None
+
+
+def test_estimate_dcf_price_returns_none_when_net_debt_is_nan():
+    result = estimate_dcf_price(
+        fcf=100.0, cagr_ebitda=10.0, net_debt=float("nan"), shares_outstanding=50.0
+    )
+    assert result is None
+
+
 def _fake_ratios():
     return {
         "roce": 15.0,
@@ -921,6 +937,13 @@ def test_estimate_asset_based_price_returns_none_when_shares_outstanding_is_zero
     assert estimate_asset_based_price(equity=200.0, shares_outstanding=0.0) is None
 
 
+def test_estimate_asset_based_price_returns_none_when_equity_is_nan():
+    """Des capitaux propres NaN ne doivent pas passer le garde-fou
+    `equity <= 0` (NaN <= 0 vaut False) et doivent dégrader vers None."""
+    result = estimate_asset_based_price(equity=float("nan"), shares_outstanding=50.0)
+    assert result is None
+
+
 def test_estimate_multiple_based_price_nominal_case():
     result = estimate_multiple_based_price(
         current_price=100.0, current_ev_ebitda=10.0, avg_ev_ebitda_5y=8.0
@@ -931,6 +954,15 @@ def test_estimate_multiple_based_price_nominal_case():
 def test_estimate_multiple_based_price_returns_none_when_current_multiple_is_zero():
     result = estimate_multiple_based_price(
         current_price=100.0, current_ev_ebitda=0.0, avg_ev_ebitda_5y=8.0
+    )
+    assert result is None
+
+
+def test_estimate_multiple_based_price_returns_none_when_current_ev_ebitda_is_nan():
+    """Un multiple EV/EBITDA NaN ne doit pas passer le garde-fou `not
+    current_ev_ebitda` (NaN est "truthy") et doit dégrader vers None."""
+    result = estimate_multiple_based_price(
+        current_price=100.0, current_ev_ebitda=float("nan"), avg_ev_ebitda_5y=8.0
     )
     assert result is None
 
@@ -973,3 +1005,58 @@ def test_estimate_entry_exit_prices_uses_only_technical_when_fair_value_missing(
 def test_estimate_entry_exit_prices_returns_none_for_both_when_nothing_available():
     result = estimate_entry_exit_prices(fair_value=None, ma200=None)
     assert result == {"entry": None, "exit": None}
+
+
+def test_estimate_entry_exit_prices_ignores_ma200_when_it_is_nan():
+    """Une MM200 NaN (calculable seulement avec un historique de cours
+    insuffisant) ne doit pas être traitée comme un candidat valide — le
+    garde-fou `ma200 is not None` ne suffit pas à l'exclure."""
+    result = estimate_entry_exit_prices(fair_value=100.0, ma200=float("nan"))
+    assert result == {"entry": 70.0, "exit": 130.0}
+
+
+from indices_score import estimate_valuation_targets
+
+
+def test_estimate_valuation_targets_computes_all_three_output_keys():
+    data = {
+        "fcf": 50.0,
+        "cagr_ebitda": 6.5,
+        "net_debt": 100.0,
+        "shares_outstanding": 10.0,
+        "equity": 200.0,
+        "current_price": 120.0,
+        "current_ev_ebitda": 10.0,
+        "avg_ev_ebitda_5y": 10.0,
+        "ma200": 110.0,
+    }
+    result = estimate_valuation_targets(data)
+    assert set(result.keys()) == {"fair_value", "entry_price", "exit_price"}
+    assert result["fair_value"] is not None
+    assert result["entry_price"] is not None
+    assert result["exit_price"] is not None
+    assert result["entry_price"] < result["exit_price"]
+
+
+def test_estimate_valuation_targets_degrades_to_none_with_nan_inputs():
+    """Une valeur manquante (NaN, comme yfinance en produit parfois) ne doit
+    jamais se propager jusqu'en sortie — toujours None, jamais NaN, pour
+    rester sérialisable en JSON valide."""
+    import math
+    data = {
+        "fcf": float("nan"),
+        "cagr_ebitda": 6.5,
+        "net_debt": 100.0,
+        "shares_outstanding": 10.0,
+        "equity": float("nan"),
+        "current_price": 120.0,
+        "current_ev_ebitda": float("nan"),
+        "avg_ev_ebitda_5y": 10.0,
+        "ma200": float("nan"),
+    }
+    result = estimate_valuation_targets(data)
+    assert result["fair_value"] is None
+    assert result["entry_price"] is None
+    assert result["exit_price"] is None
+    for value in result.values():
+        assert value is None or not (isinstance(value, float) and math.isnan(value))

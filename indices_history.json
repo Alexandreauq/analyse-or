@@ -31,6 +31,11 @@
   },
   {
     "date": "2026-09-06",
+    "ticker": "MC.PA",
+    "composite": 27.9
+  },
+  {
+    "date": "2026-09-06",
     "ticker": "TTE.PA",
     "composite": 15.9
   },
@@ -58,6 +63,11 @@
     "date": "2026-09-06",
     "ticker": "TTE.PA",
     "composite": 17.9
+  },
+  {
+    "date": "2026-09-06",
+    "ticker": "TTE.PA",
+    "composite": 19.9
   },
   {
     "date": "2026-09-06",
@@ -91,6 +101,11 @@
   },
   {
     "date": "2026-09-06",
+    "ticker": "SU.PA",
+    "composite": 52.7
+  },
+  {
+    "date": "2026-09-06",
     "ticker": "SAN.PA",
     "composite": 29.9
   },
@@ -113,6 +128,11 @@
     "date": "2026-09-06",
     "ticker": "SAN.PA",
     "composite": 31.9
+  },
+  {
+    "date": "2026-09-06",
+    "ticker": "SAN.PA",
+    "composite": 29.9
   },
   {
     "date": "2026-09-06",
@@ -133,6 +153,11 @@
     "date": "2026-09-06",
     "ticker": "BN.PA",
     "composite": 28.9
+  },
+  {
+    "date": "2026-09-06",
+    "ticker": "BN.PA",
+    "composite": 26.9
   },
   {
     "date": "2026-09-06",

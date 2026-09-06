@@ -759,43 +759,69 @@ from indices_score import estimate_dcf_price
 
 
 def test_estimate_dcf_price_nominal_case():
-    result = estimate_dcf_price(fcf=100.0, cagr_ebitda=10.0, net_debt=200.0, shares_outstanding=50.0)
+    result = estimate_dcf_price(
+        fcf=100.0, cagr_ebitda=10.0, net_debt=200.0, shares_outstanding=50.0,
+        discount_rate_pct=8.0,
+    )
     assert result == pytest.approx(43.8363904302955)
 
 
 def test_estimate_dcf_price_clamps_growth_at_the_cap():
-    over_cap = estimate_dcf_price(fcf=100.0, cagr_ebitda=50.0, net_debt=200.0, shares_outstanding=50.0)
-    at_cap = estimate_dcf_price(fcf=100.0, cagr_ebitda=15.0, net_debt=200.0, shares_outstanding=50.0)
+    over_cap = estimate_dcf_price(
+        fcf=100.0, cagr_ebitda=50.0, net_debt=200.0, shares_outstanding=50.0,
+        discount_rate_pct=8.0,
+    )
+    at_cap = estimate_dcf_price(
+        fcf=100.0, cagr_ebitda=15.0, net_debt=200.0, shares_outstanding=50.0,
+        discount_rate_pct=8.0,
+    )
     assert over_cap == at_cap
 
 
 def test_estimate_dcf_price_clamps_growth_at_the_floor():
-    under_floor = estimate_dcf_price(fcf=100.0, cagr_ebitda=-50.0, net_debt=200.0, shares_outstanding=50.0)
-    at_floor = estimate_dcf_price(fcf=100.0, cagr_ebitda=-5.0, net_debt=200.0, shares_outstanding=50.0)
+    under_floor = estimate_dcf_price(
+        fcf=100.0, cagr_ebitda=-50.0, net_debt=200.0, shares_outstanding=50.0,
+        discount_rate_pct=8.0,
+    )
+    at_floor = estimate_dcf_price(
+        fcf=100.0, cagr_ebitda=-5.0, net_debt=200.0, shares_outstanding=50.0,
+        discount_rate_pct=8.0,
+    )
     assert under_floor == at_floor
 
 
 def test_estimate_dcf_price_returns_none_when_fcf_not_positive():
-    assert estimate_dcf_price(fcf=0.0, cagr_ebitda=10.0, net_debt=200.0, shares_outstanding=50.0) is None
-    assert estimate_dcf_price(fcf=-10.0, cagr_ebitda=10.0, net_debt=200.0, shares_outstanding=50.0) is None
+    assert estimate_dcf_price(
+        fcf=0.0, cagr_ebitda=10.0, net_debt=200.0, shares_outstanding=50.0,
+        discount_rate_pct=8.0,
+    ) is None
+    assert estimate_dcf_price(
+        fcf=-10.0, cagr_ebitda=10.0, net_debt=200.0, shares_outstanding=50.0,
+        discount_rate_pct=8.0,
+    ) is None
 
 
 def test_estimate_dcf_price_returns_none_when_shares_outstanding_is_zero():
-    assert estimate_dcf_price(fcf=100.0, cagr_ebitda=10.0, net_debt=200.0, shares_outstanding=0.0) is None
+    assert estimate_dcf_price(
+        fcf=100.0, cagr_ebitda=10.0, net_debt=200.0, shares_outstanding=0.0,
+        discount_rate_pct=8.0,
+    ) is None
 
 
 def test_estimate_dcf_price_returns_none_when_fcf_is_nan():
     """Un FCF NaN (yfinance en produit parfois) ne doit pas passer le garde-fou
     `fcf <= 0` (NaN <= 0 vaut False) et doit dégrader vers None, pas NaN."""
     result = estimate_dcf_price(
-        fcf=float("nan"), cagr_ebitda=10.0, net_debt=200.0, shares_outstanding=50.0
+        fcf=float("nan"), cagr_ebitda=10.0, net_debt=200.0, shares_outstanding=50.0,
+        discount_rate_pct=8.0,
     )
     assert result is None
 
 
 def test_estimate_dcf_price_returns_none_when_net_debt_is_nan():
     result = estimate_dcf_price(
-        fcf=100.0, cagr_ebitda=10.0, net_debt=float("nan"), shares_outstanding=50.0
+        fcf=100.0, cagr_ebitda=10.0, net_debt=float("nan"), shares_outstanding=50.0,
+        discount_rate_pct=8.0,
     )
     assert result is None
 

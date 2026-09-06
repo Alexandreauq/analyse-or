@@ -114,6 +114,16 @@
   .scalp-panel h2 { margin: 0 0 10px; }
   .scalp-chart-box { border: 1px solid var(--border); border-radius: 10px; overflow: hidden; height: 500px; }
   .scalp-note { color: var(--muted); font-size: 11px; line-height: 1.5; margin: 8px 0 0; }
+
+  .company-layout { display: block; }
+  .company-main { min-width: 0; }
+  .company-side { margin-top: 24px; }
+  .company-side h2 { margin: 0 0 10px; }
+  @media (min-width: 900px) {
+    .app:has(.company-layout) { max-width: 1040px; }
+    .company-layout { display: grid; grid-template-columns: 1fr 320px; gap: 24px; align-items: start; }
+    .company-side { margin-top: 0; position: sticky; top: 20px; }
+  }
   .tech-row { display:flex; justify-content:space-between; font-size:13px; padding: 5px 0; }
   .tech-label { color: var(--muted); }
   .tech-value { font-weight: 500; }
@@ -249,6 +259,59 @@ function loadScalpChart() {
     });
   };
   document.body.appendChild(script);
+}
+
+const TV_SYMBOL_BY_TICKER = {
+  'MC.PA': 'EURONEXT:MC',
+  'TTE.PA': 'EURONEXT:TTE',
+  'SU.PA': 'EURONEXT:SU',
+  'SAN.PA': 'EURONEXT:SAN',
+  'BN.PA': 'EURONEXT:BN',
+};
+
+function loadSideQuoteWidget(ticker) {
+  // Widget TradingView compact (cours + mini-graphique), injecté après coup
+  // car un <script> posé via innerHTML ne s'exécute jamais tout seul dans
+  // un navigateur. Le conteneur #tv-side-widget est recréé à chaque appel
+  // de renderCompanyDetail (tout le innerHTML est remplacé), donc pas de
+  // widget dupliqué ni de nettoyage à faire d'un rendu à l'autre.
+  const tvSymbol = TV_SYMBOL_BY_TICKER[ticker];
+  const container = document.getElementById('tv-side-widget');
+  if (!tvSymbol || !container) return;
+  const script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-symbol-overview.js';
+  script.async = true;
+  script.textContent = JSON.stringify({
+    symbols: [[tvSymbol + '|1D']],
+    chartOnly: false,
+    width: '100%',
+    height: '260',
+    locale: 'fr',
+    colorTheme: 'dark',
+    autosize: false,
+    showVolume: false,
+    showMA: false,
+    hideDateRanges: false,
+    hideMarketStatus: false,
+    hideSymbolLogo: false,
+    scalePosition: 'right',
+    scaleMode: 'Normal',
+    fontFamily: '-apple-system, BlinkMacSystemFont, Trebuchet MS, Roboto, Ubuntu, sans-serif',
+    fontSize: '10',
+    noTimeScale: false,
+    valuesTracking: '1',
+    changeMode: 'price-and-percent',
+    chartType: 'area',
+    maLineColor: '#c6a15b',
+    maLineWidth: 1,
+    maLength: 9,
+    headerFontSize: 'medium',
+    lineWidth: 2,
+    lineType: 0,
+    dateRanges: ['1d|1', '1m|30', '3m|60', '12m|1D', '60m|1W', 'all|1M'],
+  });
+  container.appendChild(script);
 }
 
 async function loadScore() {
@@ -460,58 +523,72 @@ function renderCompanyDetail(company) {
 
   document.getElementById('indicesContent').innerHTML = `
     <a href="#indices" class="back-link">← Indices</a>
-    <section class="hero">
-      <div class="hero-number">${company.score > 0 ? '+' : ''}${company.score}</div>
-      <div class="hero-label">${company.name} — ${company.interpretation}</div>
-    </section>
+    <div class="company-layout">
+      <div class="company-main">
+        <section class="hero">
+          <div class="hero-number">${company.score > 0 ? '+' : ''}${company.score}</div>
+          <div class="hero-label">${company.name} — ${company.interpretation}</div>
+        </section>
 
-    <div class="price-panel">
-      <div class="price-row">
-        <span class="price-label">Cours actuel</span>
-        <span class="price-value">${formatPrice(company.current_price)}</span>
+        <div class="price-panel">
+          <div class="price-row">
+            <span class="price-label">Cours actuel</span>
+            <span class="price-value">${formatPrice(company.current_price)}</span>
+          </div>
+          <div class="price-row">
+            <span class="price-label">Repère d'entrée</span>
+            <span class="price-value" style="color:var(--gold)">${formatPrice(company.entry_price)}</span>
+          </div>
+          <div class="price-row">
+            <span class="price-label">Repère de sortie</span>
+            <span class="price-value" style="color:var(--rust)">${formatPrice(company.exit_price)}</span>
+          </div>
+          <p class="price-disclaimer">Repères indicatifs basés sur la valorisation
+            historique (DCF, actif net, multiples) et la tendance technique —
+            pas un conseil d'investissement.</p>
+        </div>
+
+        <h2>Alertes</h2>
+        ${alertsHtml || '<p class="hero-sub">Aucune alerte.</p>'}
+
+        <div class="divider"></div>
+
+        <div class="btn-row">
+          <button class="toggle-btn" id="toggleCompanyActu" type="button" aria-expanded="false">
+            Actu <span class="chevron">▾</span>
+          </button>
+          <button class="toggle-btn" id="toggleCompanyDetail" type="button" aria-expanded="false">
+            Détail du calcul <span class="chevron">▾</span>
+          </button>
+        </div>
+
+        <div class="section-wrap" id="companyActuWrap" hidden>
+          <h2>Actualités récentes</h2>
+          ${newsHtml || '<p class="hero-sub">Aucune actualité récente.</p>'}
+        </div>
+
+        <div class="section-wrap" id="companyDetailWrap" hidden>
+          <div class="notice">
+            Score composite sur l'échelle -100/+100, construit à partir de 7
+            facteurs pondérés (rentabilité, structure financière, croissance,
+            génération de cash, valorisation, dynamique récente, actualité récente), chacun noté de -10 à +10.
+            Profil sectoriel : ${company.sector_profile} (${company.sector}).
+          </div>
+          ${factorsHtml}
+        </div>
       </div>
-      <div class="price-row">
-        <span class="price-label">Repère d'entrée</span>
-        <span class="price-value" style="color:var(--gold)">${formatPrice(company.entry_price)}</span>
+
+      <div class="company-side">
+        <h2>Cours en direct</h2>
+        <div class="tradingview-widget-container">
+          <div class="tradingview-widget-container__widget" id="tv-side-widget"></div>
+        </div>
+        <p class="scalp-note">Temps réel via TradingView (${company.ticker}).</p>
       </div>
-      <div class="price-row">
-        <span class="price-label">Repère de sortie</span>
-        <span class="price-value" style="color:var(--rust)">${formatPrice(company.exit_price)}</span>
-      </div>
-      <p class="price-disclaimer">Repères indicatifs basés sur la valorisation
-        historique (DCF, actif net, multiples) et la tendance technique —
-        pas un conseil d'investissement.</p>
-    </div>
-
-    <h2>Alertes</h2>
-    ${alertsHtml || '<p class="hero-sub">Aucune alerte.</p>'}
-
-    <div class="divider"></div>
-
-    <div class="btn-row">
-      <button class="toggle-btn" id="toggleCompanyActu" type="button" aria-expanded="false">
-        Actu <span class="chevron">▾</span>
-      </button>
-      <button class="toggle-btn" id="toggleCompanyDetail" type="button" aria-expanded="false">
-        Détail du calcul <span class="chevron">▾</span>
-      </button>
-    </div>
-
-    <div class="section-wrap" id="companyActuWrap" hidden>
-      <h2>Actualités récentes</h2>
-      ${newsHtml || '<p class="hero-sub">Aucune actualité récente.</p>'}
-    </div>
-
-    <div class="section-wrap" id="companyDetailWrap" hidden>
-      <div class="notice">
-        Score composite sur l'échelle -100/+100, construit à partir de 7
-        facteurs pondérés (rentabilité, structure financière, croissance,
-        génération de cash, valorisation, dynamique récente, actualité récente), chacun noté de -10 à +10.
-        Profil sectoriel : ${company.sector_profile} (${company.sector}).
-      </div>
-      ${factorsHtml}
     </div>
   `;
+
+  loadSideQuoteWidget(company.ticker);
 
   const toggles = [
     ['toggleCompanyActu', 'companyActuWrap'],

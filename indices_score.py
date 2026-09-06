@@ -716,7 +716,12 @@ def compute_company_alerts(
     today_str = datetime.today().strftime("%d/%m/%Y")
     alerts = []
 
-    prev_composite = previous_history[-1]["composite"] if previous_history else None
+    prev_composite = None
+    if previous_history:
+        try:
+            prev_composite = previous_history[-1]["composite"]
+        except (KeyError, TypeError):
+            prev_composite = None
 
     if prev_composite is not None and prev_composite <= 15 < composite:
         alerts.append({
@@ -736,8 +741,15 @@ def compute_company_alerts(
         except (ValueError, KeyError, TypeError):
             # Ignore entries with malformed dates or missing "date" key
             pass
-    if recent:
-        max_recent = max(e["composite"] for e in recent)
+    recent_composites = []
+    for e in recent:
+        try:
+            recent_composites.append(e["composite"])
+        except (KeyError, TypeError):
+            # Ignore entries with a missing/malformed "composite" key
+            pass
+    if recent_composites:
+        max_recent = max(recent_composites)
         drop = composite - max_recent
         if drop <= -RAPID_DROP_POINTS:
             alerts.append({

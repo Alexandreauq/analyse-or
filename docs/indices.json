@@ -6,7 +6,7 @@
       "name": "LVMH",
       "sector": "Consumer Cyclical",
       "sector_profile": "cyclique",
-      "score": 27.9,
+      "score": 31.9,
       "interpretation": "Solide",
       "factors": [
         {
@@ -35,7 +35,7 @@
         },
         {
           "name": "Valorisation relative",
-          "score": -3.724169646626067,
+          "score": -3.724167262111037,
           "weight": 0.08,
           "raw_value": "EV/EBITDA 13.2x (moy. 5 ans 12.7x) — PER 28.8x (moy. 5 ans 24.3x)"
         },
@@ -47,9 +47,9 @@
         },
         {
           "name": "Actualité récente",
-          "score": -2.0,
+          "score": 2.0,
           "weight": 0.1,
-          "raw_value": "Ton moyen des 5 actualités récentes : -0.20"
+          "raw_value": "Ton moyen des 5 actualités récentes : +0.20"
         }
       ],
       "news": [
@@ -58,15 +58,31 @@
           "date": "2026-09-06",
           "link": "https://news.google.com/rss/articles/CBMi4AFBVV95cUxQdFZtbXhrbC16QjR5NG5xN3N0d1lPelpCV1ZUNzk4eWY5VE50ZS1XSzhyM3ZUeS1ScHlQaWEweW1STzVULUNRcDNkQkpBQndTTUU0UmEtU01zVllkZ2sxV0VtdkNYOE1QM0pZQUVyQmhXMVJWU3QxTWJHaDBwdGJQR1hyS2VlY0hjdmdvN29ibUV4cnVlN3NBRnZIRnJERlZJajh4V1pHT3I1enZNNGNVaXJGeVRqMW1Ca25tQmlUVVNJbl9hRElWMGxaRUhLZmc5TEVjSk5LUWstQmNUVWtELQ?oc=5",
           "source": "Le Figaro Bourse",
-          "summary": "Cet article suggère que Louis Vuitton pourrait être confronté à une controverse en Chine ayant potentiellement des répercussions négatives sur la valeur de l'action LVMH, selon l'analyse d'UBS.",
+          "summary": "Cet article suggère que Louis Vuitton serait impliqué dans une controverse en Chine qui pourrait avoir des répercussions négatives sur le cours de l'action LVMH, selon l'analyse d'UBS.",
           "sentiment": -1
+        },
+        {
+          "title": "«Le dernier lauréat a vu son chiffre d’affaires multiplié par six»: dans les coulisses du LVMH Prize, le prix le plus prestigieux de la mode - Le Figaro",
+          "date": "2026-09-05",
+          "link": "https://news.google.com/rss/articles/CBMihgJBVV95cUxOWkVQTHRCaWthQ1hDT3FmZ1piOWdxNDU4T0NmVmtYTE9Vc0k2R1dXY1VaMXh1QXVBdjdmX2dDbUNucXc1WGV2b0paWU9PTjFOMjFfV2JwYkN6TXRBZ3RkRXI3V3cwMEdZaEpRc2MzLXN4c1dKN3hMRU00UUpaUm5Ia05DQ29vRnA1Nnd4T2ZZNldlRlhmRmhFZ2NrVzA0SU9NNzZSWjBYZ002UVFqMmhqT0FtZ3dzbGNSRUR1cGo4a3VSNXhybXh1TDB0Qmluc2M0Z1RrYzJSUXlYelFTTl80TWNEVWstOW9sY2x1eG05TjJfS1RGR3hhV1ZScFVXc0l2XzI0aVpB?oc=5",
+          "source": "Le Figaro",
+          "summary": "Cet article suggère que le LVMH Prize serait un concours de mode prestigieux capable de transformer significativement la trajectoire commerciale des jeunes designers lauréats.",
+          "sentiment": 1
         },
         {
           "title": "Mode : le prix LVMH décerné à Julie Kegels - Le Monde.fr",
           "date": "2026-09-04",
           "link": "https://news.google.com/rss/articles/CBMisgFBVV95cUxNZFNIc0VaTU1fRlVOWHUxbDNLa2FONURKb242NTZibHltRjJHY29DRmxXM1htVUdER0VDcTBwZzlWdWZBVGhweVd3bExXdEhlMkIxTzNzbzV3T0F4eEo5OGhBa2RhQmNzQ2V4OE1fTjBqZjV2ZTQzLW00NzcxbGNDUWFleThtcDVtUmwwV0NPcTR0UzVzMjVib3ZzNG4tVDdlRnVLODVLRVZzZndGZDRpYUFB?oc=5",
           "source": "Le Monde.fr",
-          "summary": "Cet article suggère que LVMH aurait décerné un prix dans le domaine de la mode à une personne nommée Julie Kegels, ce qui pourrait indiquer une reconnaissance ou une distinction accordée par le groupe.",
+          "summary": "Cet article suggère que Julie Kegels aurait reçu un prix décerné par LVMH dans le domaine de la mode, ce qui pourrait indiquer une reconnaissance de talent ou une initiative de mécénat de la part du groupe.",
+          "sentiment": 1
+        },
+        {
+          "title": "Julie Kegels remporte le Prix LVMH - FashionNetwork France",
+          "date": "2026-09-04",
+          "link": "https://news.google.com/rss/articles/CBMiigFBVV95cUxPUEJsSjhBWllBNENBQ1NPd0ZVNkh4RERyQmtkSlI1c2JRRm1YMjZROURNb09OY1lQUEhYQUlfNEZFV2lPRTRHOEd2R2JvalM3bmw0S2dXblVHekVUT3pUX0kwci04c1RWMzhlREowdS0xOXFCNkVTSGs1NXJMSWtFb1JmTzVjM3I1UWc?oc=5",
+          "source": "FashionNetwork France",
+          "summary": "Cet article suggère que Julie Kegels aurait remporté un prix décerné par LVMH en partenariat avec FashionNetwork France, ce qui pourrait indiquer une reconnaissance dans le secteur de la mode ou du luxe.",
           "sentiment": 1
         },
         {
@@ -74,31 +90,17 @@
           "date": "2026-09-04",
           "link": "https://news.google.com/rss/articles/CBMi1AFBVV95cUxNcGQ3T25qbXRfQTJlTnN4Y2xqTzJXaW1sOWY3OFZfWnZzV2NRU1I1TDhrNHJZN0RjcUZWSWQyeUlJNmttUklhTnJxajRraVc4Y2lQalhHSVIzQlM2d1FkYWJwdGtxVTZTMndSUlVsOVhCY3VEcktqNlp0TktaUHBmVm5jUzNxTG5FdjhudExCMzd2RDJQZFBXanI0cGdfS2pFc0FvQzM0V01VVjFCZ3UwRWd4RHlzMzBBdi1LaE9NMUFFNjBqTl9meGt1Q3ppNXIzWUhUWg?oc=5",
           "source": "l'Informé",
-          "summary": "Cet article suggère que LVMH aurait subi des pertes financières significatives en raison du départ de journalistes des publications Challenges et Sciences et Avenir qu'elle contrôle.",
-          "sentiment": -1
-        },
-        {
-          "title": "Julie Kegels remporte le Prix LVMH - FashionNetwork France",
-          "date": "2026-09-04",
-          "link": "https://news.google.com/rss/articles/CBMiigFBVV95cUxPUEJsSjhBWllBNENBQ1NPd0ZVNkh4RERyQmtkSlI1c2JRRm1YMjZROURNb09OY1lQUEhYQUlfNEZFV2lPRTRHOEd2R2JvalM3bmw0S2dXblVHekVUT3pUX0kwci04c1RWMzhlREowdS0xOXFCNkVTSGs1NXJMSWtFb1JmTzVjM3I1UWc?oc=5",
-          "source": "FashionNetwork France",
-          "summary": "Cet article suggère que Julie Kegels aurait remporté un prix décerné par LVMH et FashionNetwork France, ce qui pourrait indiquer une distinction dans le secteur de la mode ou du luxe.",
-          "sentiment": 1
-        },
-        {
-          "title": "Hermes intl : Bank of America s'inquiète de la reprise pour le secteur du luxe, Hermès, Kering et LVMH souffrent en Bourse - BFM Bourse",
-          "date": "2026-09-03",
-          "link": "https://news.google.com/rss/articles/CBMinwJBVV95cUxPVmJOazNQQlQ4d3g0d3JXMlRUQ2QzMEhrTUtWUEgtQm50d2tCaE9yOElOZ0F0UzE3VW5qbWk3QWRPUFVzUHhjM1gwbGFKUHd2WkdVSG9UNkc3bTBqTGo3Vkt2bl9Xd3RTRUEtVnBRSF92dFN3UUpOUV96OWlfbUJyZVQ4UVRBVmJTYTdTcFlIMGg5YlRYT09xeEdNazE4WHNEZmFiQlN4MWNqZTMzMm1QX0ZoZnR5Z0J1amUxcUNfZHpWTWY4SHBYU1lRTUJ0eU5tcnVRVDlWQTR0RGlTRUZuYi1qcmYzVlVaTzNvdXlRQ3Nhb1p5cUVESXdKdGlvZGE1LW5oSno3clctSDVETVhRa2lFTlNybHdtaVo2R19Tbw?oc=5",
-          "source": "BFM Bourse",
-          "summary": "Cet article suggère que Bank of America exprimerait des préoccupations concernant la reprise du secteur du luxe, ce qui pourrait avoir entraîné des réactions négatives à la Bourse pour les principaux acteurs du secteur incluant Hermès, Kering et LVMH.",
+          "summary": "Cet article suggère que LVMH aurait subi des pertes financières importantes en raison du départ de journalistes des publications Challenges et Sciences et Avenir, potentiellement vers des concurrents.",
           "sentiment": -1
         }
       ],
       "current_price": 429.1000061035156,
-      "fair_value": 340.6849717131343,
-      "entry_price": 374.9962575098753,
-      "exit_price": 528.3530525058713,
+      "fair_value": 340.68498056210865,
+      "entry_price": 374.9962606070163,
+      "exit_price": 528.3530582577046,
       "wacc": 6.999626771308545,
+      "financial_analysis_html": "<h3>Diagnostic global</h3><p>LVMH présente le profil d'un groupe très rentable et solidement capitalisé, mais entré dans une phase de normalisation : après un pic en 2023 (86,2 Md€ de chiffre d'affaires, 22,6 Md€ d'EBIT), l'activité recule deux années de suite pour revenir à 80,8 Md€ en 2025, avec une érosion plus marquée encore des marges et du résultat net (-28 % depuis 2023). La structure financière reste néanmoins très confortable (dette nette/EBITDA de 1,1x, couverture des frais financiers de 16,2x) et la génération de trésorerie s'améliore, ce qui permet de financer le désendettement sans tension. Le ROCE de 12,6 %, bien que en repli, demeure nettement supérieur au coût du capital estimé à 7,0 %, signe d'une création de valeur toujours effective.</p><h3>Structure financière et solvabilité</h3><p>Les capitaux propres se stabilisent à 67,5 Md€ en 2025 (contre 55,1 Md€ en 2022), après trois années de renforcement par mise en réserve des résultats. La dette nette recule à 27,9 Md€, soit une baisse de 3,6 Md€ sur un an, ramenant le gearing (dette nette/capitaux propres) autour de 41 %.</p><ul><li><strong>Levier faible</strong> : dette nette/EBITDA de 1,1x, très en deçà des seuils de vigilance (au-delà de 3x pour un groupe de consommation), et en amélioration malgré la contraction de l'EBITDA.</li><li><strong>Couverture des frais financiers confortable</strong> : un ICR de 16,2x implique des charges financières nettes de l'ordre de 1,1 Md€ pour un EBIT de 17,8 Md€ ; le risque de défaillance à court terme est structurellement très faible.</li><li><strong>Capitaux engagés</strong> d'environ 95 Md€ (capitaux propres + dette nette), reflétant l'intensité en actifs incorporels (marques, goodwills) et en stocks du modèle du luxe.</li></ul><p>La solvabilité n'appelle pas de réserve : le désendettement est financé par le cash-flow d'exploitation et non par un ralentissement des investissements ou une dilution.</p><h3>Rentabilité économique et financière</h3><p>La rentabilité économique reste le point fort du dossier, mais son niveau s'est nettement replié par rapport au haut de cycle.</p><ul><li><strong>ROCE de 12,6 % contre un coût du capital de 7,0 %</strong> : le spread positif de l'ordre de 5,6 points traduit une création de valeur économique substantielle, ancrée dans le pouvoir de fixation des prix des marques.</li><li><strong>Marges en compression</strong> : la marge d'EBIT passe de 26,2 % en 2023 à 22,8 % en 2024 puis 22,1 % en 2025 ; la marge d'EBITDA suit le même chemin (34,6 % → 32,0 %). La baisse du résultat opérationnel (-21 % depuis 2023) est plus rapide que celle du chiffre d'affaires (-6 %), signe d'un effet de ciseau entre coûts fixes (réseau de distribution, communication) et volumes.</li><li><strong>ROE de 16,1 %</strong>, supérieur au ROCE : l'effet de levier financier joue positivement, la rentabilité économique après impôt dépassant le coût de la dette. Il reste toutefois modéré, le recours à l'endettement étant volontairement contenu.</li><li>La marge nette recule de 17,6 % (2023) à 13,5 % (2025), sous l'effet combiné de la baisse opérationnelle et d'éléments financiers et fiscaux.</li></ul><h3>Analyse de la trésorerie et du free cash-flow</h3><p>C'est le point de résilience du diagnostic : le free cash-flow progresse à contre-courant du compte de résultat.</p><ul><li><strong>FCF de 14,2 Md€ en 2025</strong>, en hausse de 6 % sur un an (13,4 Md€ en 2024) et de 34 % depuis 2023 (10,6 Md€), alors que l'EBITDA recule.</li><li><strong>Taux de conversion FCF/EBITDA de 55 %</strong>, un niveau élevé qui suggère une discipline retrouvée sur le besoin en fonds de roulement (normalisation des stocks après la phase de reconstitution de 2022-2023) et/ou une modération des investissements.</li><li>Le FCF représente 17,6 % du chiffre d'affaires, ce qui confère une large marge de manœuvre pour couvrir simultanément le dividende, les acquisitions ciblées et la réduction de la dette nette.</li><li>L'écart entre EBITDA (25,9 Md€) et EBIT (17,8 Md€) — soit 8,0 Md€ de dotations aux amortissements, dont une part liée aux droits d'utilisation des baux commerciaux — rappelle l'intensité capitalistique du réseau de boutiques : la lecture du FCF est donc plus pertinente que celle de l'EBITDA seul.</li></ul><h3>Dynamique récente</h3><p>Aucune donnée trimestrielle n'est disponible dans les éléments fournis ; l'analyse de la dynamique la plus récente repose donc uniquement sur l'exercice 2025 comparé à la tendance pluriannuelle.</p><ul><li><strong>Chiffre d'affaires</strong> : deuxième année consécutive de baisse (-4,6 % en 2025 après -1,7 % en 2024), pour un CAGR de +1,5 %/an sur la période, très inférieur au rythme historique du secteur.</li><li><strong>EBITDA</strong> : CAGR de -0,3 %/an, confirmant que la croissance rentable s'est interrompue et que le point d'inflexion se situe en 2023.</li><li><strong>Signaux de stabilisation</strong> : capitaux propres stables, dette nette en repli net et FCF en progression. Le groupe absorbe le ralentissement commercial en pilotant son bilan et sa trésorerie plutôt qu'en dégradant sa structure financière.</li><li><strong>Point de vigilance</strong> : les capitaux propres cessent de croître en 2025 alors que le résultat net reste positif à 10,9 Md€, ce qui suggère une politique de retour à l'actionnaire et/ou des effets de périmètre et de change absorbant l'essentiel du résultat.</li></ul><h3>Synthèse</h3><p>LVMH combine une structure financière très solide (levier de 1,1x, ICR de 16,2x, gearing de 41 %) et une rentabilité économique supérieure à son coût du capital (ROCE 12,6 % vs 7,0 %), ce qui continue de traduire une création de valeur. Le diagnostic est toutefois marqué par une double dégradation : contraction du chiffre d'affaires sur deux exercices et compression des marges opérationnelles de plus de 4 points depuis 2023, avec un EBITDA dont le CAGR est légèrement négatif. La contrepartie favorable est une conversion en cash très supérieure à la moyenne (55 % de l'EBITDA, 14,2 Md€ de FCF en croissance), qui finance le désendettement et préserve la flexibilité financière. Le suivi devra porter sur la capacité à stabiliser le chiffre d'affaires et à enrayer l'érosion de la marge d'EBIT, dont dépend le maintien du spread ROCE-coût du capital.</p>",
+      "financial_analysis_quarter": null,
       "alerts": [
         {
           "kind": "info",
@@ -113,7 +115,7 @@
       "name": "TotalEnergies",
       "sector": "Energy",
       "sector_profile": "cyclique",
-      "score": 15.9,
+      "score": 21.9,
       "interpretation": "Solide",
       "factors": [
         {
@@ -148,15 +150,15 @@
         },
         {
           "name": "Dynamique récente",
-          "score": 7.8363601143757045,
+          "score": 7.836360091070571,
           "weight": 0.1,
           "raw_value": "Cours +11.3% vs MM200 — CA dernier trim. +27.8% vs an dernier (tendance 5 ans -11.5%)"
         },
         {
           "name": "Actualité récente",
-          "score": -2.0,
+          "score": 4.0,
           "weight": 0.1,
-          "raw_value": "Ton moyen des 5 actualités récentes : -0.20"
+          "raw_value": "Ton moyen des 5 actualités récentes : +0.40"
         }
       ],
       "news": [
@@ -165,47 +167,49 @@
           "date": "2026-09-05",
           "link": "https://news.google.com/rss/articles/CBMiqgJBVV95cUxNQWhubWR5bkVzWWZURXpYUk51ZW4xbFRJZ0pUNXd3eC1hZW1jMGZwS1c1ejJHMHVpODd5VmJ3OXpxVW02aXQ3RC1wUC1qR0Q0eEZHRWY2M2tqUjVfTnJTR3Q1bUtvYWN0TnpJbTU0dFRRMHVkcGNOeWQtMm5FcjNXb0lQWjBiYW14NEV3ODFVaC1ONmdDMUxrQ3RiSHcxQllwODVKRUVPd1BlVmVyMzJ3a2w5N3lJSkwwYVVMenNOY3VsZHBiOEhDYlg0aDZzNWkzWUZENDBnRURuSDVEYy05dEVhb05STkRCNnpqeEUya0UtTUhrcnNEc3UxWkZEZklXYWVhYUwtWWFKeGFEOVkzSnhZaDloenpUeXU5MUlkRG5ISkZ3SWJqOU5n?oc=5",
           "source": "L'Équipe",
-          "summary": "Cet article suggère que TotalEnergies serait un sponsor important pour une formation cycliste française et que son départ après celui d'Arkea poserait des défis majeurs pour le financement et la pérennité du cyclisme français.",
+          "summary": "Cet article suggère que TotalEnergies pourrait cesser son partenariat avec l'équipe cycliste de Jean-René Bernaudeau après celui avec Arkea, ce qui poserait des défis importants au financement du cyclisme français.",
           "sentiment": -1
         },
         {
-          "title": "À la raffinerie TotalEnergies de Donges, un feu de végétation et un dysfonctionnement sur une unité de production - Ouest-France",
-          "date": "2026-09-05",
-          "link": "https://news.google.com/rss/articles/CBMirAJBVV95cUxPNXRaZnRwVVJsTTFzYnlhUmI0eXpvUTA3dnNTNmZFQnJUTy1pUnY1bjBVNGl5Y0xIOFNVaWFHR0VtbFRuWGx5eTN5UE1rUHpaTWVHcXZaYzEtbWdxbmRXakQzb0FDdmI4NjBOTG5pNmJKNmZyeWp2NzVWQXdjOTNoVGJFQzh2YUxoeTBIX1FkSWZWWjRQdF9tUy1fWjlzRU1oMWFTcllDb2xlTzNCUkM4blZ5RlAzSnlIeC1RV05BSEpsVmhuQTNfRm1SblhxRjFsSlhZa1M0OTBvT0JtYmZLVDZWNVdra1o4S2RTZFUwY3YxeDMwWE9QYmppdUFGOXEtS011RzFZYlBBWE1ha25KcjdMMXNLd3V3RG1VV2R3UFlQcjBTamw2Q2c4a1U?oc=5",
+          "title": "Cyclisme. Baptiste Vadic, coureur de la formation vendéenne TotalEnergies, s’impose sur le tour d’Istanbul - Ouest-France",
+          "date": "2026-09-06",
+          "link": "https://news.google.com/rss/articles/CBMijgJBVV95cUxQZTlCUVZsTC1nTkFCQ0ltdGVuMFZnR21yMUJ0NUFrTFJIdlBESk5xVlc1cWNzaVEzNzdqMUFrT200YWR0TFhCLWZiaVdWRkIzWi1mNnNIMjIwZ080MW0tM09JczBIX3RxUVk0SUVLSS13a1ZwaktIcksxV0EyVlVKSE5OOFNGVmdRSTVqQ1pFTGtsUEs0SHZGbG9fWi1pQkdPTjhjeGtaOXo0RjFqNnZhSjZCdEpvcmY3Ny11QzF3YllWazBYRUJXdTczTVBuYndKYUtHR0RCZlJ4bV9WanVwMXJZSEtveXp2RVhVUWx5Q2syd0l1NG8tU0tUb0M0c3ZjVDBkbUVTRF9DQTJxeVE?oc=5",
           "source": "Ouest-France",
-          "summary": "Cet article suggère que la raffinerie TotalEnergies de Donges aurait connu un incident impliquant un feu de végétation et une anomalie de fonctionnement affectant une de ses unités de production.",
-          "sentiment": -1
-        },
-        {
-          "title": "TotalEnergies, Accor, Axa, GTT, Aperam, ArcelorMittal, Soitec : toutes les recommandations des analystes - Investir Les Echos",
-          "date": "2026-09-04",
-          "link": "https://news.google.com/rss/articles/CBMijwJBVV95cUxQQ1V0Q3lUY3dVVkI3SWdEbEVFRGVWX0gyeTQwdG1GYUNyLTA2eUZqWWhOMWFtOXNVdFozbEVJSFdPODN2ZUQwTHNKd0w4NzZyRldwWXd1SktBOF9tMENmQzdYdVBMSWlLQVlsNFNJX3RJaDNwck16OU5CZ2c2WDhTODA1ZWhQaVVnSmNfS21UVDJyRlJyeUJuVENnM1oyMElWSnFscEdPWUhJcGlveUwyNE1iVzFIZGdDY0xQb2k2eFRlaWl4VVpPYjB4UnlPd19GNjdNbG5jRjFOenY0NURsRzVqU0JFaFkxTnBnZl9sOEI1MDd5X3VaMndNRXNQZUItMldYdHQzeWRNelBDR1Q4?oc=5",
-          "source": "Investir Les Echos",
-          "summary": "Cet article suggère que des analystes financiers ont publié leurs recommandations d'investissement sur TotalEnergies et plusieurs autres grandes entreprises françaises.",
-          "sentiment": 0
+          "summary": "Cet article suggère que Baptiste Vadic, un coureur cycliste représentant l'équipe TotalEnergies, aurait remporté une épreuve lors du tour d'Istanbul.",
+          "sentiment": 1
         },
         {
           "title": "Transfert: Nicolas Breuillard va quitter la TotalEnergies... pour une WorldTour ! - Cyclism'Actu",
           "date": "2026-09-04",
           "link": "https://news.google.com/rss/articles/CBMiywFBVV95cUxQV0JDRXNzcG5SSFJWNTlmRnZMUTZHbjd1Yi1jVEdnNmhld2Z4UmExTkg5NDl0ZnlwMXpnQWpGajRVNXU3R3k5Y191bHBBS29VS0piZEt4Si01SGlnWHZTdTNhVlpUM05oWXl3N2pnTGhhLW5jMzctYUp4XzRuQXJUUWd3RmxVOXBiWVRjNE5hZkVLT18zSVMxUk9CaDNHZDh0TUwyZnQ1eG5PbDN2aHZxV29PTXJuak5LdU1HQlJ3dTl0b1psOHpvVkt4ONIBXEFVX3lxTE1JWWhkNHIwdzBJSW5INm45ak9GRWhXSld5Nkd1V1pYdmwtQjFzWklqQUIyOTJYYUFGeUVKelowSzM1ckRBZ21BQ2NhRHdBVExWcUwxbXR0dVpyNzlT?oc=5",
           "source": "Cyclism'Actu",
-          "summary": "Cet article suggère qu'un employé nommé Nicolas Breuillard quitterait TotalEnergies pour participer à une compétition cycliste de type WorldTour.",
+          "summary": "Cet article suggère qu'un employé ou collaborateur nommé Nicolas Breuillard quitterait TotalEnergies pour participer à une compétition cycliste de type WorldTour.",
           "sentiment": 0
         },
         {
-          "title": "TotalEnergies CAF CAN PAMOJA 2027 : le calendrier des 1re et 2e journées des éliminatoires dévoilé - cafonline.com",
-          "date": "2026-09-04",
-          "link": "https://news.google.com/rss/articles/CBMi1wFBVV95cUxQZnFsMDlNNjdOUWg3ekdqb3BPVGttT2Q5bENwZ2Z5SGNFSFg5azR1TmphNmhNZWFrQk1HYnJTenoyeXBIVTBZdE5WR0xoYW9faEhyRjBGUm5BN1RVZTZseUM1T3BvSE9EbEhDa0hGWm5QTDFqeWY5V2JRU2lWSVdPOUZCUWlYRHRzUnBVcnMxb3ExdXRjZjdReUFXSXJtY1NTOS12dF9JWTM5eDZIU3BQblVSUXhEVVZlSnA1dHp5WnRFSENrZnZ0eThxZER3YTN5cjltcjFLTQ?oc=5",
-          "source": "cafonline.com",
-          "summary": "Cet article suggère que TotalEnergies serait impliquée en tant que sponsor ou partenaire d'une compétition de football africaine (CAF CAN PAMOJA 2027), pour laquelle le calendrier des premières journées des éliminatoires vient d'être annoncé.",
+          "title": "Tour of Istanbul : Baptiste Vadic s’offre le général, doublé pour TotalEnergies - Velo-Club",
+          "date": "2026-09-06",
+          "link": "https://news.google.com/rss/articles/CBMikwFBVV95cUxQc1IyQWhyUEF6TVljZFp1dW1NUTBqZmJrR1F3RnNXd2hreWhPaEN6Y3d5U0IzRFl4NGFmU2ZUMU5Sc3I4OGY0ZXNsc0RDU0drcll2SXBGWE1WeWpQN1J0ZzRKd3VRZTlmZUVMeEhFVVpNMEthWXM0V3dJZUdqcmRzcGh4eTBMR2ZBME02amtWWkU0Tmc?oc=5",
+          "source": "Velo-Club",
+          "summary": "Cet article suggère que TotalEnergies aurait remporté une victoire au Tour d'Istanbul avec le cycliste Baptiste Vadic, possiblement en tant que sponsor ou équipe associée à cet événement sportif.",
+          "sentiment": 1
+        },
+        {
+          "title": "Baptiste Vadic, coureur de TotalEnergies, remporte le Tour d'Istanbul après avoir gagné deux étapes - L'Équipe",
+          "date": "2026-09-06",
+          "link": "https://news.google.com/rss/articles/CBMi7wFBVV95cUxOc2E0M2d4YkhzcGxVOW5WS1ozUFJnM1NnNmFyU2h4RHkwRU9ZX1dBajEzeEd4YWZZZkhrN0h6QVkzQkVTaFFxRzg3NTVDNDJwN3J5TUlLZlBwbHFxTVg1SXNQRElReTV1WWZiU3dUNkV3dFcwUnh2NmFmQU9ya2NsVVpncndxbTdFZEl0VUhtRWVEZHVmU3dpb0hrU19hOXBNa19TcUU4YUNRQW15UXNkbENtdDFsbFJVVlBWc1FfTW55WndOX3ZoMDRtTFJ5ZWpuT3h5WlJRaGx6SDdLb3VEZ0VWbklzeHR5aXNyN09rUQ?oc=5",
+          "source": "L'Équipe",
+          "summary": "Cet article suggère que TotalEnergies, en tant que sponsor ou équipe cycliste, aurait remporté une victoire sportive significative au Tour d'Istanbul par l'intermédiaire de son coureur Baptiste Vadic.",
           "sentiment": 1
         }
       ],
       "current_price": 76.0999984741211,
-      "fair_value": 105.17256378274327,
-      "entry_price": 70.98332715451129,
-      "exit_price": 109.3696822554445,
+      "fair_value": 105.1725638194407,
+      "entry_price": 70.98332719596561,
+      "exit_price": 109.36968231363011,
       "wacc": 3.525105901605312,
+      "financial_analysis_html": "<h3>Diagnostic global</h3><p>TotalEnergies présente en 2025 le profil d'un groupe pétrolier et gazier intégré en phase de <strong>normalisation post-choc énergétique</strong> : le chiffre d'affaires (182,3 Md€) recule pour la troisième année consécutive depuis le pic de 2022 (263,3 Md€), et la génération de résultat suit le même mouvement (EBITDA 38,9 Md€, résultat net 13,1 Md€). La structure financière reste néanmoins très solide (dette nette/EBITDA de 0,9x, ICR de 13,9x) et la rentabilité économique (ROCE 12,4 %) demeure très largement supérieure au coût du capital estimé (3,5 %). Le principal point de vigilance porte sur la dégradation de la conversion en cash (FCF/EBITDA à 27 %) conjuguée à une remontée sensible de l'endettement net.</p><h3>Structure financière et solvabilité</h3><p>Les capitaux propres s'établissent à 114,9 Md€ fin 2025, en légère érosion (-3,0 Md€ sur un an) malgré un résultat net de 13,1 Md€, ce qui traduit une politique de distribution (dividendes et rachats d'actions) supérieure aux profits mis en réserve.</p><ul><li><strong>Endettement net : 35,9 Md€</strong>, en hausse de 10,5 Md€ sur un an et de 11,9 Md€ depuis 2022, soit une inversion nette de tendance après trois exercices de désendettement relatif.</li><li><strong>Gearing (dette nette / capitaux propres) d'environ 31 %</strong>, niveau qui reste modéré pour un groupe capitalistique, mais en progression rapide depuis les ~22 % de 2024.</li><li><strong>Dette nette/EBITDA de 0,9x</strong> : le levier demeure faible en valeur absolue, très en deçà des seuils de tension usuels ; il faut toutefois noter que ce ratio se dégrade mécaniquement à double titre, par hausse du numérateur et contraction du dénominateur.</li><li><strong>ICR de 13,9x</strong> : la couverture des frais financiers par le résultat d'exploitation est confortable et ne fait apparaître aucune contrainte de solvabilité à court ou moyen terme.</li></ul><p>La solvabilité n'est donc pas en cause ; c'est la <strong>trajectoire</strong> du levier, plus que son niveau, qui constitue l'élément à surveiller, dans un contexte où la baisse de l'EBITDA réduit la capacité d'absorption de nouvelle dette.</p><h3>Rentabilité économique et financière</h3><p>Le <strong>ROCE de 12,4 %</strong> se compare à un coût du capital de 3,5 %, soit un spread de création de valeur d'environ 8,9 points. Rapporté aux capitaux engagés (environ 150,8 Md€ de capitaux propres et dette nette), cela correspond à une création de valeur économique substantielle sur l'exercice, malgré la contraction des marges.</p><ul><li><strong>Marges 2025</strong> : marge d'EBITDA de 21,3 %, marge d'EBIT de 13,7 %, marge nette de 7,2 %. Le taux de marge d'EBITDA se maintient à un niveau proche de celui de 2024 (21,6 %) et de 2023 (23,2 %), ce qui indique que le repli des résultats provient davantage de l'<strong>effet prix/volume sur le chiffre d'affaires</strong> que d'une perte d'efficacité opérationnelle.</li><li><strong>ROE de 11,4 %</strong>, inférieur au ROCE : l'effet de levier ne joue pas favorablement dans la configuration actuelle, la fiscalité (particulièrement lourde dans l'amont pétrolier) et le coût de la dette absorbant l'écart entre rentabilité économique et rentabilité des fonds propres.</li><li><strong>Dynamique pluriannuelle</strong> : CAGR du CA de -11,5 %/an et de l'EBITDA de -14,1 %/an sur la période 2022-2025. L'EBITDA se contracte plus vite que le chiffre d'affaires, signe d'un <strong>léger effet de ciseau</strong> lié à la structure de coûts fixes et à la déflation des prix de l'énergie par rapport au point haut de 2022.</li></ul><h3>Analyse de la trésorerie et du free cash-flow</h3><p>Le free cash-flow s'établit à 10,4 Md€ en 2025, contre 15,9 Md€ en 2024, 23,0 Md€ en 2023 et 31,7 Md€ en 2022, soit une division par trois en trois ans.</p><ul><li><strong>Taux de conversion FCF/EBITDA de 27 %</strong>, contre environ 38 % en 2024, 45 % en 2023 et 54 % en 2022. La détérioration est nettement plus rapide que celle de l'EBITDA lui-même, ce qui pointe vers une <strong>intensité capitalistique accrue</strong> (investissements de développement, projets bas-carbone et électricité) et/ou un effet BFR défavorable.</li><li><strong>Bouclage de trésorerie 2025</strong> : un FCF de 10,4 Md€ face à une hausse de la dette nette de 10,5 Md€ implique que les décaissements au titre des actionnaires (dividendes, rachats d'actions) et des opérations de croissance externe ont dépassé la génération de cash disponible d'environ 20 Md€. La distribution est donc, pour cet exercice, <strong>financée en partie par endettement</strong>.</li><li>Le FCF couvre néanmoins l'ensemble des charges financières avec une très large marge, et le niveau de levier laisse une capacité d'absorption significative à court terme.</li></ul><h3>Dynamique récente (dernier trimestre vs tendance)</h3><p>La séquence trimestrielle marque une <strong>inflexion haussière nette</strong> après le point bas de mi-2025 :</p><ul><li>T2 2025 : 44,7 Md€ ; T3 2025 : 43,8 Md€ ; T4 2025 : 45,9 Md€ ; T1 2026 : 49,5 Md€ ; <strong>T2 2026 : 57,1 Md€</strong>.</li><li>Le dernier trimestre publié progresse de <strong>+15,3 % en séquentiel</strong> et de <strong>+27,8 % en glissement annuel</strong> par rapport au T2 2025.</li><li>Le chiffre d'affaires cumulé sur les quatre derniers trimestres connus (T3 2025 à T2 2026) atteint environ 196,4 Md€, soit un niveau supérieur de près de 8 % à l'exercice 2025 clos.</li></ul><p>Cette accélération rompt avec la tendance de fond mesurée par le CAGR négatif de -11,5 %/an sur 2022-2025. Deux réserves méthodologiques s'imposent toutefois : le chiffre du T1 2025 n'est pas disponible, ce qui limite la comparabilité annuelle complète ; et seule la ligne de chiffre d'affaires est renseignée, sans information sur les marges ni sur le cash-flow trimestriels. Il n'est donc pas possible de déterminer si ce rebond d'activité s'accompagne d'une reconstitution de l'EBITDA et du FCF, ni s'il traduit un effet prix, un effet volume ou un effet de périmètre.</p><h3>Synthèse</h3><ul><li><strong>Solidité financière préservée</strong> : levier de 0,9x, gearing d'environ 31 %, ICR de 13,9x — aucune tension de solvabilité identifiable sur la base des données fournies.</li><li><strong>Création de valeur économique maintenue</strong> : un ROCE de 12,4 % contre un coût du capital de 3,5 % laisse un spread confortable, même après trois années de contraction des résultats.</li><li><strong>Point de vigilance principal : le cash</strong>. La conversion FCF/EBITDA est passée de 54 % à 27 % en trois ans, et la dette nette a augmenté de 10,5 Md€ sur le seul exercice 2025, la distribution excédant la génération de trésorerie disponible.</li><li><strong>Cyclicité assumée</strong> : la baisse du chiffre d'affaires et de l'EBITDA depuis 2022 reflète principalement la normalisation des prix de l'énergie, les taux de marge d'EBITDA restant, eux, relativement stables autour de 21-23 %.</li><li><strong>Signal récent à confirmer</strong> : le rebond du chiffre d'affaires au T1 et surtout au T2 2026 (+27,8 % en glissement annuel) constitue une rupture de tendance, dont la traduction en marges et en free cash-flow reste à vérifier dans les publications ultérieures.</li></ul><p>Cette analyse est établie exclusivement à partir des données comptables et des ratios communiqués ci-dessus ; elle ne constitue ni un conseil en investissement, ni une recommandation d'achat, de conservation ou de vente.</p>",
+      "financial_analysis_quarter": "2026-06-30",
       "alerts": [
         {
           "kind": "info",
@@ -272,7 +276,7 @@
           "date": "2026-09-04",
           "link": "https://news.google.com/rss/articles/CBMiUEFVX3lxTE1uMnA4aWJ6Vlh4ZXFKMm1lYnZPRU9xcTlyclEydUNDZXgwSUlKN190UFBoTk5XYnlNWXh5WmU0OUZFTVZyaFM0eW5PRHB2MGlv?oc=5",
           "source": "Boursorama",
-          "summary": "Cet article suggère qu'il s'agit d'une page d'information boursière standard présentant les données de cotation et le cours de l'action Schneider Electric sur le marché Euronext Paris.",
+          "summary": "Cet article suggère qu'il s'agit d'une page d'information sur la cotation et le cours de l'action Schneider Electric sur le marché Euronext Paris, sans indication claire du contenu spécifique ou de l'orientation de la nouvelle.",
           "sentiment": 0
         },
         {
@@ -280,7 +284,7 @@
           "date": "2026-09-03",
           "link": "https://news.google.com/rss/articles/CBMixAFBVV95cUxOZi05b0l0MFdxQ296dGcwT2FiU2hLMkwyWUh2TkdYb3h2UFV2OWNWLUdkSmFxM1R0Mk5kZnZRUzN2UnJWelo1aFQycWJLSDFObDRycXBuMk1zcmhxV28ydkllM2lMekctUlBrRk16TlRyTUNjQTR5cTQ3U01ZZXduZFI2RHV0UWxsZGkxVXhpazBsZDU2LTdpS3lqNmtiMnRnU2xfX3NuZnFUS2ExTDAwcmRqaEtUTEMxY3Q4Y3RRZkdNem5C?oc=5",
           "source": "Investir Les Echos",
-          "summary": "Cet article suggère que Schneider Electric pourrait retrouver une position de leader ou d'excellence après une période antérieure de moins bonne performance.",
+          "summary": "Cet article suggère que Schneider Electric pourrait connaître une amélioration de sa performance ou de sa position concurrentielle, possiblement après une période de difficultés.",
           "sentiment": 1
         },
         {
@@ -288,7 +292,7 @@
           "date": "2026-09-05",
           "link": "https://news.google.com/rss/articles/CBMiqAFBVV95cUxPS2V4d25kZDg2VW9zNV9sWEhST2FMdDJHWEF0WWtDelp0a2JpZ3FLcDZ5TUotTzFqM2UyTWhJc2M3ZmFSUGxBNXhmeHBGLW1NNkpCVWtxVW5Fd2sxcHJQZlByd3NZZEN0ektrTktLbFl2c2wza01kVGUwaC1NbzlsOW5VS3J5UHNoT0pvR2xjMzVnNk1JV0w4QXhDZzlvYmR6eXF2RUE4X2c?oc=5",
           "source": "Le Revenu",
-          "summary": "Cet article suggère que Schneider Electric envisagerait de fermer son établissement situé à Chasseneuil-du-Poitou dans la Vienne, ce qui pourrait impliquer des réductions d'effectifs ou une restructuration locale.",
+          "summary": "Cet article suggère que Schneider Electric envisagerait de fermer son établissement situé à Chasseneuil-du-Poitou en Vienne, ce qui pourrait impliquer des suppressions d'emplois et un impact local.",
           "sentiment": -1
         },
         {
@@ -296,7 +300,7 @@
           "date": "2026-09-04",
           "link": "https://news.google.com/rss/articles/CBMizgFBVV95cUxOLWpRbC1fT1dYeHVqWlhSRUtvQ21qRV83UlY5Nk40eFQ0QkhGLVhoajFWS0tNZ0ZGTnR3cnhFMnhPWGVuV0haVkd4ZDNFZVdzRlBnUDVQdE1JYUFzLVljYjNjZkVjMDlHRzdnQWwxS3BScms5OVdYMjd0QVlqUkFjZ3BHQUxWVTRRd2lzeFk4aTFJa2NxeUs3OFNyalc0REtpVmxRLWlMVGp0UDBqdjNJNnJrWkZ3dGxOcUJTZ01XU2txVkxVdnRtTzdpVW1xUQ?oc=5",
           "source": "Boursier.com",
-          "summary": "Cet article suggère que Schneider Electric pourrait envisager la fermeture de son site de production situé à Chasseneuil-du-Poitou.",
+          "summary": "Cet article suggère que Schneider Electric envisagerait potentiellement la fermeture de son site de production à Chasseneuil-du-Poitou.",
           "sentiment": -1
         },
         {
@@ -304,7 +308,7 @@
           "date": "2026-09-04",
           "link": "https://news.google.com/rss/articles/CBMihAJBVV95cUxNRHdXM3hxdzMxWHRVVTJLNGZ1OTF2Tm5KZWY2NHI1aUNnQll3Y3JJUElRUjJ4bkw2TDRQT3cyVUpKbUxsM0RTRlA4OEk2VmdydTljOTZjdTlHdVJBdHVQWGF3OWxRMFd1LXMzQ3ExQXlETmF3bElLbGhmalpoNTE3ZWtxTG5WenRlNjZoLUYtdF9zZlRSMjhSY2Yxak1ibDhYNnJCSHFJQjFOS2ttcENaVHZUTVVINTNOWWhNc1gxNHo0azRaNW5oWUpVcWotRmZCZHpzYThXYVRZcThPR25mUDBYU28xRkk3UVg2MGNtd2N3Y1ZpaGI1Y2xCZkxvazlfZlFnUA?oc=5",
           "source": "La Lettre",
-          "summary": "Cet article suggère que Schneider Electric pourrait être en train d'accélérer des transformations ou des réorganisations au sein de ses installations de production.",
+          "summary": "Cet article suggère que Schneider Electric procède à des transformations importantes et rapides de ses installations de production, sans que le titre seul ne permette de déterminer si ces changements visent une optimisation stratégique ou une réaction à des défis opérationnels.",
           "sentiment": 0
         }
       ],
@@ -313,225 +317,13 @@
       "entry_price": 181.08412973351597,
       "exit_price": 251.13473703723173,
       "wacc": 8.715808539770602,
+      "financial_analysis_html": "<h3>Diagnostic global</h3><p>Schneider Electric présente le profil d'un groupe industriel en croissance rentable et créateur de valeur : le chiffre d'affaires progresse de 34,2 Md€ (2022) à 40,2 Md€ (2025), avec un EBITDA qui croît nettement plus vite (+8,9 %/an contre +4,6 %/an pour le CA), traduisant un effet de levier opérationnel et une amélioration structurelle des marges. La rentabilité économique (ROCE 13,7 %) dépasse largement le coût du capital estimé (8,7 %), soit un écart (<em>spread</em>) d'environ 5 points, tandis que la structure financière reste solide malgré une dégradation marquée en 2025 (dette nette portée à 13,2 Md€ et capitaux propres en recul de plus de 6 Md€). Le point de vigilance principal n'est donc pas la profitabilité mais l'inflexion du bilan sur le dernier exercice.</p><h3>Structure financière et solvabilité</h3><p>La structure financière demeure confortable en termes de couverture des flux, mais s'est sensiblement tendue sur le dernier exercice :</p><ul><li><strong>Endettement net</strong> : 13,2 Md€ fin 2025 contre 7,9 Md€ fin 2024, soit une hausse de 5,3 Md€ (+67 %) après une trajectoire déjà irrégulière (6,5 Md€ en 2022, 9,2 Md€ en 2023, 7,9 Md€ en 2024).</li><li><strong>Capitaux propres</strong> : 24,2 Md€ fin 2025 contre 30,5 Md€ fin 2024, soit une contraction de 6,3 Md€ alors même que le résultat net s'établit à 4,2 Md€. Cet écart de l'ordre de 10 Md€ entre résultat conservé et variation des fonds propres suppose des éléments non récurrents de nature capitalistique (distributions, rachats d'actions, écarts de conversion et/ou opérations sur périmètre) qui ne peuvent être isolés à partir des seules données fournies.</li><li><strong>Gearing</strong> : le ratio dette nette / capitaux propres passe ainsi d'environ 26 % fin 2024 à environ 55 % fin 2025, un doublement du levier bilanciel en un exercice.</li><li><strong>Levier sur flux</strong> : la dette nette représente 1,6x l'EBITDA, niveau qui reste modéré pour un industriel de cette taille et très en deçà des seuils habituellement considérés comme tendus (au-delà de 3x). Mécaniquement, ce ratio était proche de 1,0x fin 2024.</li><li><strong>Couverture des frais financiers</strong> : l'ICR de 12,5x implique des charges financières de l'ordre de 0,5 Md€ face à un EBIT de 6,7 Md€ ; la solvabilité de court et moyen terme n'appelle pas de réserve.</li></ul><p>En synthèse, la solvabilité mesurée par les flux (1,6x l'EBITDA, ICR 12,5x) reste solide, mais la dynamique de 2025 — hausse de la dette et érosion des fonds propres simultanées — mérite un suivi, car elle réduit le matelas de sécurité disponible pour d'éventuelles acquisitions ou un retournement de cycle.</p><h3>Rentabilité économique et financière</h3><p>La rentabilité est le point fort du dossier, avec une progression continue des marges :</p><ul><li><strong>Marge d'EBITDA</strong> : 18,6 % en 2022, 20,3 % en 2023, 21,2 % en 2024 et 20,8 % en 2025 — soit un gain d'environ 2,2 points sur trois ans, avec une légère érosion sur le dernier exercice.</li><li><strong>Marge d'EBIT</strong> : 14,3 % en 2022 à 16,7 % en 2025 (17,1 % en 2024), confirmant que l'amélioration provient du niveau opérationnel et non d'éléments financiers.</li><li><strong>Marge nette</strong> : 10,2 % en 2022, 11,2 % en 2023 et 2024, 10,4 % en 2025, le résultat net reculant légèrement (4 163 M€ contre 4 269 M€) malgré la croissance du CA et de l'EBIT — signe d'une hausse des charges financières et/ou de la pression fiscale.</li><li><strong>ROCE de 13,7 %</strong> pour des capitaux employés (capitaux propres + dette nette) de l'ordre de 37,4 Md€ fin 2025 : la rentabilité économique après impôt excède le coût du capital de 8,7 %, ce qui signifie que chaque euro investi dans l'exploitation génère une rentabilité supérieure à l'exigence des apporteurs de fonds. Le <strong>spread de +5,0 points</strong> appliqué aux capitaux employés correspond à une création de valeur annuelle de l'ordre de 1,8 Md€.</li><li><strong>ROE de 17,2 %</strong>, supérieur au ROCE : l'effet de levier financier est positif, la rentabilité économique après impôt dépassant le coût de la dette. Il convient toutefois de noter que ce ROE est mécaniquement flatté par la baisse des capitaux propres moyens en 2025 ; l'amélioration apparente n'est pas intégralement d'origine opérationnelle.</li></ul><h3>Analyse de la trésorerie et du free cash-flow</h3><p>La génération de cash est régulière et de bonne qualité :</p><ul><li><strong>Free cash-flow</strong> : 3,3 Md€ (2022), 4,5 Md€ (2023), 4,2 Md€ (2024) et 4,6 Md€ (2025), soit un point haut sur la période et une progression de +10 % sur le dernier exercice.</li><li><strong>Taux de conversion FCF/EBITDA de 55 %</strong> : niveau satisfaisant pour un industriel, cohérent avec un modèle combinant investissements industriels et R&D soutenus et un besoin en fonds de roulement structurellement positif. Un taux durablement supérieur à 50 % indique que la croissance du chiffre d'affaires ne s'accompagne pas d'une absorption excessive de trésorerie par le BFR.</li><li><strong>Couverture de la dette</strong> : avec 4,6 Md€ de FCF pour 13,2 Md€ de dette nette, le groupe pourrait théoriquement rembourser son endettement net en moins de trois années de flux libres, ce qui relativise la hausse du levier constatée en 2025.</li><li><strong>Cohérence flux/bilan</strong> : le FCF de 4,6 Md€ n'a pas suffi à contenir la hausse de la dette nette (+5,3 Md€), ce qui confirme que l'exercice 2025 a été marqué par des emplois de trésorerie hors exploitation (distributions aux actionnaires, rachats de titres et/ou croissance externe) d'un montant significatif, de l'ordre de 10 Md€ toutes causes confondues.</li></ul><h3>Dynamique récente</h3><p><strong>Aucune publication trimestrielle n'a été fournie</strong> : l'analyse de la dynamique récente repose donc uniquement sur la comparaison de l'exercice 2025 avec la tendance pluriannuelle, et ne peut être affinée à une maille infra-annuelle.</p><ul><li><strong>Activité</strong> : croissance du CA de +5,2 % en 2025 (40 152 M€ contre 38 153 M€), en ligne avec la tendance moyenne (+4,6 %/an) mais inférieure au rythme observé en 2023 (+5,1 %) et 2024 (+6,3 %) — la dynamique de croissance reste soutenue sans accélération.</li><li><strong>Marges</strong> : léger tassement de la marge d'EBITDA (20,8 % contre 21,2 %) et d'EBIT (16,7 % contre 17,1 %), première inflexion après trois années d'amélioration continue. L'EBITDA progresse néanmoins de +3,7 % en valeur.</li><li><strong>Résultat net</strong> : en repli de -2,5 %, première baisse de la période, décorrélée de la progression de l'EBIT — signe d'un alourdissement des charges sous le résultat opérationnel, cohérent avec la hausse de l'endettement.</li><li><strong>Cash-flow</strong> : à l'inverse, le FCF atteint son plus haut niveau (4 588 M€, +10,3 %), ce qui constitue le signal le plus favorable de l'exercice.</li><li><strong>Bilan</strong> : c'est le poste le plus mouvant, avec un levier bilanciel qui double en un an. Il s'agit de la rupture de tendance la plus notable de 2025.</li></ul><h3>Synthèse</h3><p>Schneider Electric affiche les caractéristiques d'une entreprise financièrement saine et créatrice de valeur : croissance régulière du chiffre d'affaires (+4,6 %/an), progression plus rapide de l'EBITDA (+8,9 %/an) traduisant un effet ciseau favorable, ROCE de 13,7 % supérieur de 5 points au coût du capital, ROE de 17,2 % amplifié par un levier financier utilisé de manière rentable, et une conversion en cash de 55 % de l'EBITDA qui valide la qualité des résultats comptables.</p><p>Les éléments d'attention portent sur l'exercice 2025 : première inflexion des marges après trois années de hausse, léger recul du résultat net, et surtout transformation du profil bilanciel avec un endettement net qui progresse de 67 % et des capitaux propres qui reculent de plus de 20 %, portant le gearing d'environ 26 % à 55 %. Ces mouvements restent absorbables au regard des flux (1,6x l'EBITDA, ICR de 12,5x, FCF de 4,6 Md€), mais ils réduisent la flexibilité financière et rendent le suivi de la trajectoire de désendettement, ainsi que la nature exacte des emplois de trésorerie de l'exercice, déterminants pour apprécier la soutenabilité du modèle. L'absence de données trimestrielles empêche de vérifier si cette inflexion se prolonge ou se corrige sur la période la plus récente.</p><p><em>Cette analyse est établie à partir des seules données financières communiquées, à titre strictement informatif et descriptif ; elle ne constitue ni un conseil en investissement ni une recommandation.</em></p>",
+      "financial_analysis_quarter": null,
       "alerts": [
         {
           "kind": "info",
           "title": "Pas de signal actif",
           "detail": "Aucune des conditions de veille, d'entrée ou de risque n'est réunie aujourd'hui.",
-          "date": "06/09/2026"
-        }
-      ]
-    },
-    {
-      "ticker": "SAN.PA",
-      "name": "Sanofi",
-      "sector": "Healthcare",
-      "sector_profile": "defensif",
-      "score": 29.9,
-      "interpretation": "Solide",
-      "factors": [
-        {
-          "name": "Rentabilité / création de valeur",
-          "score": 4.231685311358577,
-          "weight": 0.24,
-          "raw_value": "ROCE 6.7% vs coût du capital 4.6% (ROE 10.9%)"
-        },
-        {
-          "name": "Structure financière / solvabilité",
-          "score": 8.698120534806167,
-          "weight": 0.2,
-          "raw_value": "Dette nette/EBITDA 1.0x (seuil confort 3.9x, profil defensif) — ICR 11.2x"
-        },
-        {
-          "name": "Croissance",
-          "score": -3.342728793737501,
-          "weight": 0.16,
-          "raw_value": "CAGR CA +3.9%/an, CAGR EBITDA -4.6%/an (5 ans)"
-        },
-        {
-          "name": "Génération de cash",
-          "score": 1.558618479044796,
-          "weight": 0.12,
-          "raw_value": "Conversion FCF/EBITDA 58%"
-        },
-        {
-          "name": "Valorisation relative",
-          "score": 3.472698895862625,
-          "weight": 0.08,
-          "raw_value": "EV/EBITDA 8.5x (moy. 5 ans 8.8x) — PER 12.0x (moy. 5 ans 14.6x)"
-        },
-        {
-          "name": "Dynamique récente",
-          "score": 5.017839527017651,
-          "weight": 0.1,
-          "raw_value": "Cours +0.1% vs MM200 — CA dernier trim. +14.6% vs an dernier (tendance 5 ans +3.9%)"
-        },
-        {
-          "name": "Actualité récente",
-          "score": -2.0,
-          "weight": 0.1,
-          "raw_value": "Ton moyen des 5 actualités récentes : -0.20"
-        }
-      ],
-      "news": [
-        {
-          "title": "SANOFI Cours Action SAN, Cotation Bourse Euronext Paris - Boursorama",
-          "date": "2026-09-04",
-          "link": "https://news.google.com/rss/articles/CBMiUkFVX3lxTE5hSGE4Q2NUclVldnpENmJnbGVFY2NVS21LRzFPUW9qc25NOVhEQkxwcnV6RXRwQUFrd3c4S2RiTDlnNFdrb3hVSWYtdHZoeVlQaWc?oc=5",
-          "source": "Boursorama",
-          "summary": "Cet article suggère qu'il s'agit d'une page d'information boursière standard présentant les données de cotation de l'action Sanofi sur Euronext Paris.",
-          "sentiment": 0
-        },
-        {
-          "title": "Sanofi se porte bien, mais a des défis à relever - Investir Les Echos",
-          "date": "2026-09-02",
-          "link": "https://news.google.com/rss/articles/CBMivAFBVV95cUxNaU41WnRFZHJlTzlOVG9rVXpwekN2RHlGeXJaZjFkSE9xVEF1ZU83aVd6ekxLcmhfTHBxd0NtWTMtLTFBOVh0bTZqUE1RVTFuUUU0cGx5MG5wcDlPakFETmhJS1czYWN0ZXpLUFgwV2NTVVBhVWl2ajM0S0dRbWRjRlV6LUlsUFRpWkJXRm8tY3ZKcldFUi00Rk44NDZGNlRhdUxNTEFJVV91NWNzSk5PVEluUXBGdy1lQmxMOQ?oc=5",
-          "source": "Investir Les Echos",
-          "summary": "Cet article suggère que Sanofi maintient une situation financière ou opérationnelle correcte, mais fait face à des obstacles ou des enjeux stratégiques qui pourraient nécessiter une attention particulière.",
-          "sentiment": 0
-        },
-        {
-          "title": "Action Sanofi | Cours SAN Bourse Euronext Paris - Zonebourse",
-          "date": "2026-09-04",
-          "link": "https://news.google.com/rss/articles/CBMiYkFVX3lxTE96MHRmM0tkSERmc1pyT1NLTl9uS0daRGRoLV93WUpFZTVQbklRSWFNOXl0NTcteEotX0hRRXdsYkt4czlhVm9ITFpxcnpwcTZZUTl1MkJWNWNQZXJmcVl6UjRR?oc=5",
-          "source": "Zonebourse",
-          "summary": "Cet article suggère qu'il s'agit d'une page d'information boursière proposant des données sur le cours de l'action Sanofi cotée sur Euronext Paris.",
-          "sentiment": 0
-        },
-        {
-          "title": "Enquête sur les Français et l’innovation thérapeutique - Sanofi",
-          "date": "2026-09-02",
-          "link": "https://news.google.com/rss/articles/CBMirwFBVV95cUxNdDltdy15T3hMUFBqVjhlRjJ6OEdBbUtyb1RmQWhVRXpQcnhDZ2xNMnFjR0c0aTdFZTBuRlRQTk0tZ1RxVEVtNHllc3lXeWx5U1dxbHVqM0FoX2FCaEN3QW44ZzlYMDZaTnRkLTk3YnU3TzVfQ2NKV1VXMTRqRk5JQ1I1cjVYRGU5bU5kd2o0VlRRYjN4QUpHTER6Z1F5WjVyREEzVVFXWlFteWx3eDJV?oc=5",
-          "source": "Sanofi",
-          "summary": "Cet article suggère que Sanofi aurait commandité ou participé à une enquête explorant les perceptions et attentes des Français concernant les avancées thérapeutiques et l'innovation médicale.",
-          "sentiment": 0
-        },
-        {
-          "title": "Sanofi lâche 1,15% - Boursier.com",
-          "date": "2026-09-03",
-          "link": "https://news.google.com/rss/articles/CBMihAFBVV95cUxORW9LbE1oaExMWVB4Zy1rekxnLVAxQXQwbFBhbVFvM3hBMWo3aHJWcF9xbXRQLV9MRFJxSGJsVi1WZEl4NEtvNl9WVzZtblFJSFV4S1pDNmNNTzZHUnhFazhIQ0kwckVySG1vQkg1WXFyS1B2NS1VMEEycmpSaUI4dDc1V00?oc=5",
-          "source": "Boursier.com",
-          "summary": "Cet article suggère que le cours de l'action Sanofi aurait connu une baisse modérée d'environ 1,15% lors d'une séance de bourse, sans que le titre seul ne permette d'identifier la cause précise de cette variation.",
-          "sentiment": -1
-        }
-      ],
-      "current_price": 76.26000213623047,
-      "fair_value": 99.72337285022151,
-      "entry_price": 73.00599212019715,
-      "exit_price": 110.54356629978753,
-      "wacc": 4.609199573761032,
-      "alerts": [
-        {
-          "kind": "entree",
-          "title": "Conditions d'entrée réunies",
-          "detail": "Score favorable, cours à moins de 5% du repère d'entrée.",
-          "date": "06/09/2026"
-        }
-      ]
-    },
-    {
-      "ticker": "BN.PA",
-      "name": "Danone",
-      "sector": "Consumer Defensive",
-      "sector_profile": "defensif",
-      "score": 26.9,
-      "interpretation": "Solide",
-      "factors": [
-        {
-          "name": "Rentabilité / création de valeur",
-          "score": 6.006188668257803,
-          "weight": 0.24,
-          "raw_value": "ROCE 7.3% vs coût du capital 4.3% (ROE 10.8%)"
-        },
-        {
-          "name": "Structure financière / solvabilité",
-          "score": 6.367667420299,
-          "weight": 0.2,
-          "raw_value": "Dette nette/EBITDA 2.8x (seuil confort 3.9x, profil defensif) — ICR 7.0x"
-        },
-        {
-          "name": "Croissance",
-          "score": 2.0872210288764848,
-          "weight": 0.16,
-          "raw_value": "CAGR CA -0.4%/an, CAGR EBITDA +4.6%/an (5 ans)"
-        },
-        {
-          "name": "Génération de cash",
-          "score": 2.4128503075871492,
-          "weight": 0.12,
-          "raw_value": "Conversion FCF/EBITDA 62%"
-        },
-        {
-          "name": "Valorisation relative",
-          "score": -1.3696333892584995,
-          "weight": 0.08,
-          "raw_value": "EV/EBITDA 13.7x (moy. 5 ans 11.8x) — PER 26.2x (moy. 5 ans 28.4x)"
-        },
-        {
-          "name": "Dynamique récente",
-          "score": -3.388346335275157,
-          "weight": 0.1,
-          "raw_value": "Cours -6.8% vs MM200"
-        },
-        {
-          "name": "Actualité récente",
-          "score": -2.0,
-          "weight": 0.1,
-          "raw_value": "Ton moyen des 5 actualités récentes : -0.20"
-        }
-      ],
-      "news": [
-        {
-          "title": "DANONE Cours Action BN, Cotation Bourse Euronext Paris - Boursorama",
-          "date": "2026-09-04",
-          "link": "https://news.google.com/rss/articles/CBMiUEFVX3lxTE1oMFc5d0lZMmZIRGlUcE12WENWbi1WQkpSZlZIWVlYR3VKc0hxQmpDWS1fanlJamFPcEhmcFpvRFJUZXdlUHYtYVBQV0JRckdx?oc=5",
-          "source": "Boursorama",
-          "summary": "Cet article suggère qu'il s'agit d'une page d'information boursière standard présentant les données de cotation de l'action Danone sur Euronext Paris, sans indication du contenu spécifique traité.",
-          "sentiment": 0
-        },
-        {
-          "title": "Lactalis, Danone, Standing Ovation... Du skyr à la nutrition médicale, la bataille mondiale autour des protéines s’intensifie - LSA",
-          "date": "2026-09-06",
-          "link": "https://news.google.com/rss/articles/CBMi5gFBVV95cUxOdW9ndlZDMHhOT3lvbjZXdkNnRzFBVnJ5bV8zRVVCUVY2Z3IwWHZGcmVQaDROZUZnR2FrYXdheExJNllXTmN2Tm1RNzN2Z3BnZDdrdkU2dXQwa09KRk80NTFpdklSSUpxRUlrVERhYW5MWEh5Rmd2dnR4WGpYSmZueldMaDlRWW9OSU04OE93QmNvVFgtUjdGdXZSVFhzX3RBU1NzaDVSdVNmUERFcGxxT2RlRm5xWllNRjZSbldMX3Y1cDFBeW1LdU41M1ZJM3IwSGpXc2dOZmpjc1VmbGE0VWViZndSZw?oc=5",
-          "source": "LSA",
-          "summary": "Cet article suggère que Danone serait impliquée dans une compétition commerciale internationale croissante concernant les produits protéinés, aux côtés de concurrents comme Lactalis et Standing Ovation, couvrant divers segments du marché.",
-          "sentiment": 0
-        },
-        {
-          "title": "Danone cède 1,03% - Boursier.com",
-          "date": "2026-09-03",
-          "link": "https://news.google.com/rss/articles/CBMigwFBVV95cUxQb3FRUkNxcmFXb1FObWltWHEtVndjckEtODBUM2F6R3BsVDhYTnQ1VzhZVmdlZXAwY1I0NmtvSktSd3RoNEpRaHlkakVhV05wbUc5VGlpalUxTjVBcVM4X1FqSEpVT1pFMTQyRUdGZ1l3S0JvczRwWTNMQ29KdVA3aWt0OA?oc=5",
-          "source": "Boursier.com",
-          "summary": "Cet article suggère que le cours de l'action Danone aurait connu une baisse modérée de 1,03% lors de la séance de bourse considérée, sans que le titre seul ne permette de déterminer les causes précises de ce mouvement.",
-          "sentiment": -1
-        },
-        {
-          "title": "Danone finalise l'acquisition de Huel... - Fortuneo",
-          "date": "2026-09-04",
-          "link": "https://news.google.com/rss/articles/CBMikAFBVV95cUxQZkQ3WlVUWVdacUVuQ2JzUWlyYVRlSmNGOVBSbUszMmV4UTNhNGg1N3I1MDkwSTNFYWVlT0ZOczc1NHBacEJxLXdvbkxpY0xoZnNTeWRZVVZVU3kzQXhFcURtcXV2bDFIaHctTXZkdmJmRnJKck9qMTFyTUh3UjBOSnNHcnZKOTJ0dHJzY0JlSUnSAZABQVVfeXFMUGZEN1pVVFlXWnFFbkNic1FpcmFUZUpjRjlQUm1LMzJleFEzYTRoNTdyNTA5MEkzRWFlZU9GTnM3NTRwWnBCcS13b25MaWNMaGZzU3lkWVVWVVN5M0F4RXFEbXF1dmwxSGh3LU12ZHZiZkZySnJPajExck1Id1IwTkpzR3J2SjkydHRyc2NCZUlJ?oc=5",
-          "source": "Fortuneo",
-          "summary": "Cet article suggère que Danone aurait finalisé l'acquisition de Huel, marque spécialisée dans les produits nutritionnels, ce qui pourrait représenter une expansion stratégique du groupe dans le secteur de la nutrition.",
-          "sentiment": 1
-        },
-        {
-          "title": "Danone doit de nouveau convaincre que la croissance tient - Investir Les Echos",
-          "date": "2026-09-02",
-          "link": "https://news.google.com/rss/articles/CBMiygFBVV95cUxOU0kzR0VwYlpjTVFaM3VjeWNZX1ZkUG91RVV1djRfcnh5cHBUdkJSdGxhWW5JNWRpOUNqeEdNb2ZlaUpFTHB4TGg5YjVSYmRvS0E5amNMQ3JJZHB3MDBMVHZVTjZjMGp1YVRsYjRTZFZWU3ZVYXk3Vjd2UVdpeHEwV0ltV1RUNm94a0I5UW8yZFdVV1BWZWhIa1lVczRRa3Y5dzBKeW4yQ0V3TlVHWXVudFFPejJqaHdCbl9DNzAzQ3cwZjZwaTlvajVn?oc=5",
-          "source": "Investir Les Echos",
-          "summary": "Cet article suggère que Danone pourrait faire face à des questions ou des doutes de la part des investisseurs concernant sa capacité à maintenir ou relancer sa croissance.",
-          "sentiment": -1
-        }
-      ],
-      "current_price": 63.720001220703125,
-      "fair_value": 90.62490499384454,
-      "entry_price": 65.89472007044691,
-      "exit_price": 99.91739223312054,
-      "wacc": 4.315221283205522,
-      "alerts": [
-        {
-          "kind": "entree",
-          "title": "Conditions d'entrée réunies",
-          "detail": "Score favorable, cours à moins de 5% du repère d'entrée.",
           "date": "06/09/2026"
         }
       ]

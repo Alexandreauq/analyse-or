@@ -723,6 +723,80 @@ def summarize_news_item(title: str, company_name: str, article_text: str | None)
         return {"summary": "", "sentiment": 0}
 
 
+ANTHROPIC_MODEL_ANALYSIS = "claude-opus-5"
+
+FINANCIAL_ANALYSIS_SYSTEM_PROMPT = """Tu es un analyste financier qui \
+applique la méthode du Vernimmen (synthèse du diagnostic financier : \
+rentabilité économique et financière, structure financière et \
+solvabilité, analyse de la trésorerie et du free cash-flow, dynamique \
+récente) à une entreprise cotée. Rédige une analyse structurée en \
+français, factuelle, sans conseil d'investissement ni recommandation \
+d'achat/vente, à partir des seules données fournies."""
+
+
+def generate_financial_analysis(
+    company_name: str, financial_context: str, ratios_summary: str,
+) -> str | None:
+    """Génère l'analyse financière via Claude Opus 5 (thinking adaptatif,
+    effort élevé — tâche de raisonnement/rédaction, pas de classification
+    simple). None si la clé API est absente ou en cas d'échec — jamais
+    d'exception, même contrat que summarize_news_item."""
+    api_key = os.environ.get("ANTHROPIC_API_KEY")
+    if not api_key:
+        return None
+
+    prompt = (
+        f"Entreprise : {company_name}\n\n{financial_context}\n\n"
+        f"Ratios déjà calculés (ne pas les recalculer, les interpréter) :\n"
+        f"{ratios_summary}\n\n"
+        "Rédige une analyse structurée avec ces sections, dans cet "
+        "ordre : diagnostic global (2-3 phrases), structure financière "
+        "et solvabilité, rentabilité économique et financière, analyse "
+        "de la trésorerie et du free cash-flow, dynamique récente "
+        "(dernier trimestre vs tendance), synthèse.\n\n"
+        "Réponds uniquement avec un objet JSON valide, sans texte "
+        "autour, de la forme : {\"analysis_html\": \"...\"} où la valeur "
+        "est le texte de l'analyse en HTML, en utilisant uniquement "
+        "les balises <h3>, <p>, <ul>, <li>, <strong> (aucune autre "
+        "balise, aucun style inline, aucun script)."
+    )
+
+    try:
+        resp = requests.post(
+            ANTHROPIC_API_URL,
+            headers={
+                "x-api-key": api_key,
+                "anthropic-version": "2023-06-01",
+                "content-type": "application/json",
+            },
+            json={
+                "model": ANTHROPIC_MODEL_ANALYSIS,
+                "max_tokens": 8000,
+                "system": FINANCIAL_ANALYSIS_SYSTEM_PROMPT,
+                "thinking": {"type": "adaptive"},
+                "output_config": {"effort": "high"},
+                "messages": [{"role": "user", "content": prompt}],
+            },
+            timeout=120,
+        )
+        resp.raise_for_status()
+        data = resp.json()
+        text_block = next(
+            (b["text"] for b in data["content"] if b.get("type") == "text"), None
+        )
+        if text_block is None:
+            return None
+        text = text_block.strip()
+        if text.startswith("```"):
+            text = text.strip("`")
+            if "\n" in text:
+                text = text.split("\n", 1)[1]
+        parsed = json.loads(text)
+        return parsed.get("analysis_html")
+    except Exception:
+        return None
+
+
 OUTPUT_JSON_PATH = os.path.join(
     os.path.dirname(os.path.abspath(__file__)), "docs", "indices.json"
 )

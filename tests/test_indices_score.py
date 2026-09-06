@@ -1692,3 +1692,75 @@ def test_latest_quarter_date_returns_iso_string():
 def test_latest_quarter_date_returns_none_when_no_columns():
     quarterly_financials = pd.DataFrame()
     assert indices_score.latest_quarter_date(quarterly_financials) is None
+
+
+def test_generate_financial_analysis_returns_none_when_api_key_missing(monkeypatch):
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+
+    def fail_if_called(*a, **k):
+        raise AssertionError("no network call expected without an API key")
+
+    monkeypatch.setattr(indices_score.requests, "post", fail_if_called)
+    assert indices_score.generate_financial_analysis("Danone", "contexte", "ratios") is None
+
+
+def test_generate_financial_analysis_extracts_text_block_after_thinking_block(monkeypatch):
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "test-key")
+
+    class _FakeResponse:
+        def raise_for_status(self):
+            pass
+
+        def json(self):
+            return {
+                "content": [
+                    {"type": "thinking", "thinking": ""},
+                    {"type": "text", "text": '{"analysis_html": "<h3>Diagnostic</h3><p>Solide.</p>"}'},
+                ]
+            }
+
+    monkeypatch.setattr(indices_score.requests, "post", lambda *a, **k: _FakeResponse())
+    result = indices_score.generate_financial_analysis("Danone", "contexte", "ratios")
+    assert result == "<h3>Diagnostic</h3><p>Solide.</p>"
+
+
+def test_generate_financial_analysis_strips_code_fences(monkeypatch):
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "test-key")
+
+    class _FakeResponse:
+        def raise_for_status(self):
+            pass
+
+        def json(self):
+            return {
+                "content": [
+                    {"type": "text", "text": '```json\n{"analysis_html": "<p>OK</p>"}\n```'},
+                ]
+            }
+
+    monkeypatch.setattr(indices_score.requests, "post", lambda *a, **k: _FakeResponse())
+    assert indices_score.generate_financial_analysis("Danone", "contexte", "ratios") == "<p>OK</p>"
+
+
+def test_generate_financial_analysis_returns_none_on_malformed_json(monkeypatch):
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "test-key")
+
+    class _FakeResponse:
+        def raise_for_status(self):
+            pass
+
+        def json(self):
+            return {"content": [{"type": "text", "text": "pas du json valide"}]}
+
+    monkeypatch.setattr(indices_score.requests, "post", lambda *a, **k: _FakeResponse())
+    assert indices_score.generate_financial_analysis("Danone", "contexte", "ratios") is None
+
+
+def test_generate_financial_analysis_returns_none_on_request_exception(monkeypatch):
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "test-key")
+
+    def raise_error(*a, **k):
+        raise requests.RequestException("boom")
+
+    monkeypatch.setattr(indices_score.requests, "post", raise_error)
+    assert indices_score.generate_financial_analysis("Danone", "contexte", "ratios") is None

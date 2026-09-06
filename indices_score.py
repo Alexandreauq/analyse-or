@@ -49,7 +49,7 @@ COMPANIES = [
     # vérifiés individuellement — plusieurs diffèrent du mnémonique
     # Euronext naïf + suffixe .PA, ex : STMicroelectronics/Stellantis).
     {"ticker": "AIR.PA", "name": "Airbus"},
-    {"ticker": "AI.PA", "name": "Air Liquide"},
+    {"ticker": "MT.PA", "name": "ArcelorMittal"},
     {"ticker": "OR.PA", "name": "L'Oréal"},
     {"ticker": "DG.PA", "name": "Vinci"},
     {"ticker": "RMS.PA", "name": "Hermès International"},

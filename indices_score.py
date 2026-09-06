@@ -518,6 +518,7 @@ def fetch_company_financials(ticker: str) -> dict:
     ratios["current_price"] = current_price
     ratios["ma200"] = ma200
     ratios["shares_outstanding"] = shares_outstanding
+    ratios["beta"] = info.get("beta")
     return ratios
 
 

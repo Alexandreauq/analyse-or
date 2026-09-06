@@ -699,6 +699,71 @@ def append_indices_history(entries: list[dict], path=INDICES_HISTORY_PATH) -> li
         json.dump(trimmed, fh, ensure_ascii=False, indent=2)
     return trimmed
 
+
+RAPID_DROP_POINTS = 20   # même seuil que le volet Or
+RAPID_DROP_DAYS = 5      # même fenêtre que le volet Or
+NEAR_ENTRY_PCT = 5.0     # écart max (%) au repère d'entrée pour "conditions réunies"
+
+
+def compute_company_alerts(
+    ticker: str, composite: float, current_price: float | None,
+    entry_price: float | None, previous_history: list[dict],
+) -> list[dict]:
+    """Alertes de franchissement de seuil pour une entreprise, à partir de
+    son propre sous-historique (déjà filtré par ticker par l'appelant).
+    Ne lève jamais d'exception ; renvoie toujours au moins une alerte
+    (`info` neutre si rien ne se déclenche)."""
+    today_str = datetime.today().strftime("%d/%m/%Y")
+    alerts = []
+
+    prev_composite = previous_history[-1]["composite"] if previous_history else None
+
+    if prev_composite is not None and prev_composite <= 15 < composite:
+        alerts.append({
+            "kind": "watch",
+            "title": "Score composite a franchi +15",
+            "detail": "Surveillance active enclenchée pour cette entreprise.",
+            "date": today_str,
+        })
+
+    cutoff = datetime.today().date() - timedelta(days=RAPID_DROP_DAYS)
+    recent = [
+        e for e in previous_history
+        if datetime.strptime(e["date"], "%Y-%m-%d").date() >= cutoff
+    ]
+    if recent:
+        max_recent = max(e["composite"] for e in recent)
+        drop = composite - max_recent
+        if drop <= -RAPID_DROP_POINTS:
+            alerts.append({
+                "kind": "risque",
+                "title": "Chute rapide du score composite",
+                "detail": f"Repricing de {drop:+.1f} points en moins de {RAPID_DROP_DAYS} jours.",
+                "date": today_str,
+            })
+
+    near_entry = (
+        current_price is not None and entry_price is not None and entry_price > 0
+        and abs(current_price - entry_price) / entry_price * 100 < NEAR_ENTRY_PCT
+    )
+    if composite > 15 and near_entry:
+        alerts.append({
+            "kind": "entree",
+            "title": "Conditions d'entrée réunies",
+            "detail": f"Score favorable, cours à moins de {NEAR_ENTRY_PCT:.0f}% du repère d'entrée.",
+            "date": today_str,
+        })
+
+    if not alerts:
+        alerts.append({
+            "kind": "info",
+            "title": "Pas de signal actif",
+            "detail": "Aucune des conditions de veille, d'entrée ou de risque n'est réunie aujourd'hui.",
+            "date": today_str,
+        })
+
+    return alerts
+
 # Repli utilisé quand le WACC réel de l'entreprise (estimate_wacc, plus bas)
 # n'a pas pu être calculé pour un run donné (donnée manquante : bêta, taux
 # sans risque...). Voir Methodologie_Analyse_Indices.md, section

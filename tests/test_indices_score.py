@@ -1418,3 +1418,95 @@ def test_append_indices_history_retains_only_last_730_entries_per_ticker(tmp_pat
     mc_entries = [e for e in result if e["ticker"] == "MC.PA"]
     assert len(mc_entries) == 730
     assert mc_entries[-1]["composite"] == 42.0
+
+
+def test_compute_company_alerts_returns_info_when_nothing_triggers():
+    alerts = indices_score.compute_company_alerts(
+        "BN.PA", composite=5.0, current_price=100.0, entry_price=50.0,
+        previous_history=[],
+    )
+    assert len(alerts) == 1
+    assert alerts[0]["kind"] == "info"
+
+
+def test_compute_company_alerts_watch_when_score_crosses_15_upward():
+    previous_history = [{"date": "2026-09-05", "ticker": "BN.PA", "composite": 10.0}]
+    alerts = indices_score.compute_company_alerts(
+        "BN.PA", composite=20.0, current_price=100.0, entry_price=50.0,
+        previous_history=previous_history,
+    )
+    kinds = [a["kind"] for a in alerts]
+    assert "watch" in kinds
+
+
+def test_compute_company_alerts_no_watch_when_already_above_15():
+    """Ne doit se déclencher qu'au franchissement, pas rester actif en continu."""
+    previous_history = [{"date": "2026-09-05", "ticker": "BN.PA", "composite": 20.0}]
+    alerts = indices_score.compute_company_alerts(
+        "BN.PA", composite=22.0, current_price=100.0, entry_price=50.0,
+        previous_history=previous_history,
+    )
+    kinds = [a["kind"] for a in alerts]
+    assert "watch" not in kinds
+
+
+def test_compute_company_alerts_risque_on_rapid_drop():
+    from datetime import datetime, timedelta
+    recent_date = (datetime.today() - timedelta(days=2)).strftime("%Y-%m-%d")
+    previous_history = [{"date": recent_date, "ticker": "BN.PA", "composite": 40.0}]
+    alerts = indices_score.compute_company_alerts(
+        "BN.PA", composite=15.0, current_price=100.0, entry_price=50.0,
+        previous_history=previous_history,
+    )
+    kinds = [a["kind"] for a in alerts]
+    assert "risque" in kinds
+
+
+def test_compute_company_alerts_no_risque_when_drop_outside_window():
+    from datetime import datetime, timedelta
+    old_date = (datetime.today() - timedelta(days=30)).strftime("%Y-%m-%d")
+    previous_history = [{"date": old_date, "ticker": "BN.PA", "composite": 40.0}]
+    alerts = indices_score.compute_company_alerts(
+        "BN.PA", composite=15.0, current_price=100.0, entry_price=50.0,
+        previous_history=previous_history,
+    )
+    kinds = [a["kind"] for a in alerts]
+    assert "risque" not in kinds
+
+
+def test_compute_company_alerts_entree_when_score_favorable_and_price_near_entry():
+    alerts = indices_score.compute_company_alerts(
+        "BN.PA", composite=20.0, current_price=102.0, entry_price=100.0,
+        previous_history=[],
+    )
+    kinds = [a["kind"] for a in alerts]
+    assert "entree" in kinds
+
+
+def test_compute_company_alerts_no_entree_when_price_far_from_entry():
+    alerts = indices_score.compute_company_alerts(
+        "BN.PA", composite=20.0, current_price=130.0, entry_price=100.0,
+        previous_history=[],
+    )
+    kinds = [a["kind"] for a in alerts]
+    assert "entree" not in kinds
+
+
+def test_compute_company_alerts_no_entree_when_score_not_favorable():
+    alerts = indices_score.compute_company_alerts(
+        "BN.PA", composite=5.0, current_price=101.0, entry_price=100.0,
+        previous_history=[],
+    )
+    kinds = [a["kind"] for a in alerts]
+    assert "entree" not in kinds
+
+
+def test_compute_company_alerts_handles_missing_current_or_entry_price():
+    """Ne doit jamais lever, même si le cours ou le repère d'entrée est
+    manquant (yfinance en panne, valorisation non calculable ce jour-là)."""
+    alerts = indices_score.compute_company_alerts(
+        "BN.PA", composite=20.0, current_price=None, entry_price=None,
+        previous_history=[],
+    )
+    assert isinstance(alerts, list)
+    assert len(alerts) >= 1

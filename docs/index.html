@@ -175,6 +175,20 @@
   .company-ticker { color: var(--muted); font-size: 12px; }
   .company-score { font-family: 'Fraunces', serif; font-size: 20px; }
 
+  /* Repère "profil financier" (banques/assurances) : méthodologie de
+     calcul adaptée (ROE, ratio de levier, P/E+P/B) — voir .financial-notice. */
+  .financial-tag {
+    display: inline-block; margin-left: 6px; padding: 1px 7px;
+    border: 1px solid var(--gauge-mid); border-radius: 999px;
+    color: var(--gauge-mid); font-size: 10px; font-weight: 500;
+    letter-spacing: 0.02em; vertical-align: middle;
+  }
+  .financial-notice {
+    background: var(--panel); border: 1px solid var(--gauge-mid); border-radius: 10px;
+    padding: 14px 16px; margin: 0 0 20px; font-size: 12px; line-height: 1.6; color: var(--text);
+  }
+  .financial-notice strong { color: var(--gauge-mid); }
+
   .health-banner { color: var(--muted); font-size: 12px; margin: 0 0 12px; }
   .health-banner-warn { color: var(--rust); font-weight: 500; }
 
@@ -507,7 +521,7 @@ function renderIndicesList(companies) {
     <a class="company-row" href="#indices/${c.ticker}">
       <div class="company-row-left">
         <span class="company-name">${c.name}</span>
-        <span class="company-ticker">${c.ticker}</span>
+        <span class="company-ticker">${c.ticker}${c.is_financial ? '<span class="financial-tag">Profil financier</span>' : ''}</span>
       </div>
       <span class="company-score" style="color:${c.score >= 0 ? 'var(--gold)' : 'var(--rust)'};">
         ${c.score > 0 ? '+' : ''}${c.score}
@@ -564,6 +578,16 @@ function renderCompanyDetail(company) {
           <div class="hero-number">${company.score > 0 ? '+' : ''}${company.score}</div>
           <div class="hero-label">${company.name} — ${company.interpretation}</div>
         </section>
+
+        ${company.is_financial ? `
+        <div class="financial-notice">
+          <strong>Profil financier — méthodologie adaptée.</strong> Banque ou assurance :
+          les indicateurs habituels (ROCE, dette nette/EBITDA, EV/EBITDA...) ne s'appliquent
+          pas à ce type de bilan. Le score utilise à la place le ROE, le ratio capitaux
+          propres/actif total, et les multiples P/E + P/B. La juste valeur repose uniquement
+          sur la valeur comptable (pas de DCF, qui suppose un flux de trésorerie libre non
+          pertinent ici) — à interpréter avec prudence supplémentaire.
+        </div>` : ''}
 
         <div class="score-gauge-wrap">
           <div class="score-gauge">
@@ -623,7 +647,9 @@ function renderCompanyDetail(company) {
             Score composite sur l'échelle -100/+100, construit à partir de 7
             facteurs pondérés (rentabilité, structure financière, croissance,
             génération de cash, valorisation, dynamique récente, actualité récente), chacun noté de -10 à +10.
-            Profil sectoriel : ${company.sector_profile} (${company.sector}).
+            ${company.is_financial
+              ? `Secteur : ${company.sector} — profil financier (méthodologie adaptée, voir encart ci-dessus).`
+              : `Profil sectoriel : ${company.sector_profile} (${company.sector}).`}
           </div>
           ${factorsHtml}
         </div>

@@ -2551,3 +2551,114 @@ def test_companies_combines_cac40_and_dax_with_correct_index_tag():
     for c in indices_score.DAX_COMPANIES:
         assert by_ticker[c["ticker"]] == "DAX"
     assert set(indices_score.INDEX_NAMES) >= {"CAC40", "DAX"}
+
+
+def test_shares_outstanding_override_tickers_are_in_companies():
+    company_tickers = {c["ticker"] for c in indices_score.COMPANIES}
+    assert indices_score.SHARES_OUTSTANDING_FROM_MARKET_CAP_TICKERS <= company_tickers
+
+
+def test_fetch_company_financials_uses_market_cap_for_dual_class_share_tickers(monkeypatch):
+    """Reproduit le cas Volkswagen (VOW3.DE), trouvé via un diagnostic dédié
+    comparant cours × sharesOutstanding à marketCap sur les 79 entreprises :
+    sharesOutstanding (206M) ne compte que les actions de préférence, alors
+    que marketCap/cours reflète l'entreprise entière (~501M actions) — sans
+    ce correctif, toute valorisation par action calculée à la main
+    (juste valeur DCF notamment) serait surestimée d'environ 2,4x."""
+    financials, balance_sheet, cashflow, _ = _make_fixture_statements()
+    financials.columns = pd.to_datetime(financials.columns)
+    balance_sheet.columns = pd.to_datetime(balance_sheet.columns)
+    cashflow.columns = pd.to_datetime(cashflow.columns)
+    quarterly = _fake_annual_df({"Diluted Average Shares": [100.0]}, [pd.Timestamp("2025-09-30")])
+    history_index = pd.date_range("2024-01-01", periods=250, freq="D")
+    history_close = pd.Series([81.0] * 250, index=history_index)
+
+    class _FakeTicker:
+        def __init__(self, ticker):
+            pass
+
+        @property
+        def financials(self):
+            return financials
+
+        @property
+        def balance_sheet(self):
+            return balance_sheet
+
+        @property
+        def cashflow(self):
+            return cashflow
+
+        @property
+        def quarterly_financials(self):
+            return quarterly
+
+        @property
+        def info(self):
+            return {
+                "sharesOutstanding": 206205445, "marketCap": 40614940672,
+                "beta": 1.2, "sector": "Consumer Cyclical",
+            }
+
+        def history(self, period=None):
+            return pd.DataFrame({"Close": history_close})
+
+    monkeypatch.setattr(indices_score.yf, "Ticker", _FakeTicker)
+    monkeypatch.setattr(indices_score.time, "sleep", lambda s: None)
+
+    ratios = indices_score.fetch_company_financials("VOW3.DE")
+
+    expected_shares = 40614940672 / 81.0
+    assert ratios["shares_outstanding"] == pytest.approx(expected_shares)
+    assert ratios["shares_outstanding"] > 206205445 * 2  # nettement plus que sharesOutstanding brut
+
+
+def test_fetch_company_financials_ignores_market_cap_override_for_other_tickers(monkeypatch):
+    """Le correctif ne doit s'appliquer qu'aux tickers de
+    SHARES_OUTSTANDING_FROM_MARKET_CAP_TICKERS — pour tout autre ticker,
+    sharesOutstanding reste la source (ex : Stellantis, où c'est marketCap
+    qui est l'outlier au même diagnostic, pas sharesOutstanding)."""
+    financials, balance_sheet, cashflow, _ = _make_fixture_statements()
+    financials.columns = pd.to_datetime(financials.columns)
+    balance_sheet.columns = pd.to_datetime(balance_sheet.columns)
+    cashflow.columns = pd.to_datetime(cashflow.columns)
+    quarterly = _fake_annual_df({"Diluted Average Shares": [100.0]}, [pd.Timestamp("2025-09-30")])
+    history_index = pd.date_range("2024-01-01", periods=250, freq="D")
+    history_close = pd.Series([4.80] * 250, index=history_index)
+
+    class _FakeTicker:
+        def __init__(self, ticker):
+            pass
+
+        @property
+        def financials(self):
+            return financials
+
+        @property
+        def balance_sheet(self):
+            return balance_sheet
+
+        @property
+        def cashflow(self):
+            return cashflow
+
+        @property
+        def quarterly_financials(self):
+            return quarterly
+
+        @property
+        def info(self):
+            return {
+                "sharesOutstanding": 2900941252, "marketCap": 18094456832,
+                "beta": 1.4, "sector": "Consumer Cyclical",
+            }
+
+        def history(self, period=None):
+            return pd.DataFrame({"Close": history_close})
+
+    monkeypatch.setattr(indices_score.yf, "Ticker", _FakeTicker)
+    monkeypatch.setattr(indices_score.time, "sleep", lambda s: None)
+
+    ratios = indices_score.fetch_company_financials("STLAP.PA")
+
+    assert ratios["shares_outstanding"] == 2900941252

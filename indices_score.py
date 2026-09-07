@@ -202,6 +202,31 @@ SECTOR_OVERRIDE_BY_TICKER = {
     "MT.PA": "Basic Materials",  # ArcelorMittal (sidérurgie, cyclique)
 }
 
+# Entreprises à double classe d'actions (ordinaires + préférence) dont le
+# "sharesOutstanding" yfinance ne compte qu'une seule classe, alors que les
+# données financières (résultat net, FCF...) couvrent l'entreprise entière
+# — fausse toute valorisation par action calculée à la main (repéré via
+# Volkswagen : juste valeur DCF à 494€ pour un cours à 81€, soit ~2,4x le
+# cours réel). Confirmé via un diagnostic dédié comparant cours ×
+# sharesOutstanding à marketCap (Yahoo) sur les 79 entreprises du run :
+# ces 5 tickers montrent un écart net (ratio 0,30-0,50 — P911.DE tombe
+# quasiment pile sur 0,50, cohérent avec ses 455,5M actions ordinaires +
+# 455,5M actions de préférence = 911M au total, connu publiquement), les
+# 74 autres sont cohérentes à <0,01% près. Pour ces 5 précisément,
+# marketCap/cours est fiable — remplace sharesOutstanding. Volontairement
+# une liste explicite plutôt qu'une règle automatique pour toutes les
+# entreprises : Stellantis (STLAP.PA) montre l'écart inverse au même
+# diagnostic (c'est marketCap qui est l'outlier là, sharesOutstanding est
+# juste), et Michelin (ML.PA) a un marketCap Yahoo carrément à zéro — une
+# règle générale aurait dégradé ces deux-là au lieu de les corriger.
+SHARES_OUTSTANDING_FROM_MARKET_CAP_TICKERS = {
+    "VOW3.DE",  # Volkswagen
+    "HEN3.DE",  # Henkel
+    "MRK.DE",   # Merck KGaA
+    "P911.DE",  # Porsche AG
+    "SRT3.DE",  # Sartorius
+}
+
 # Banques et assurances françaises (BNP Paribas, Société Générale, Crédit
 # Agricole, AXA) et allemandes (Deutsche Bank, Commerzbank, Allianz,
 # Munich Re) : yfinance n'expose ni EBITDA, ni (pour les banques) EBIT
@@ -1120,6 +1145,11 @@ def fetch_company_financials(ticker: str) -> dict:
         (current_price - ma200) / ma200 * 100
         if current_price is not None and ma200 else None
     )
+
+    if ticker in SHARES_OUTSTANDING_FROM_MARKET_CAP_TICKERS:
+        market_cap = info.get("marketCap")
+        if market_cap and current_price:
+            shares_outstanding = market_cap / current_price
 
     is_financial = ticker in FINANCIAL_SECTOR_TICKERS
     if is_financial:

@@ -1478,6 +1478,8 @@ def test_estimate_valuation_targets_computes_all_three_output_keys():
         "ma200": 110.0,
         "beta": 1.0,
         "ecart_pct_ma200": 0.0,
+        "fcf_normalized": 50.0,
+        "sector": "Unknown",
     }
     result = estimate_valuation_targets(data, cost_of_capital=8.0)
     assert set(result.keys()) == {"fair_value", "entry_price", "exit_price"}
@@ -1503,6 +1505,8 @@ def test_estimate_valuation_targets_varies_with_cost_of_capital():
         "ma200": 110.0,
         "beta": 1.0,
         "ecart_pct_ma200": 0.0,
+        "fcf_normalized": 50.0,
+        "sector": "Unknown",
     }
     at_8 = estimate_valuation_targets(data, cost_of_capital=8.0)
     at_10 = estimate_valuation_targets(data, cost_of_capital=10.0)
@@ -1526,6 +1530,8 @@ def test_estimate_valuation_targets_degrades_to_none_with_nan_inputs():
         "ma200": float("nan"),
         "beta": 1.0,
         "ecart_pct_ma200": 0.0,
+        "fcf_normalized": float("nan"),
+        "sector": "Unknown",
     }
     result = estimate_valuation_targets(data, cost_of_capital=8.0)
     assert result["fair_value"] is None
@@ -1533,6 +1539,76 @@ def test_estimate_valuation_targets_degrades_to_none_with_nan_inputs():
     assert result["exit_price"] is None
     for value in result.values():
         assert value is None or not (isinstance(value, float) and math.isnan(value))
+
+
+def test_estimate_fair_value_weighs_dcf_more_for_defensive_sector():
+    """Le DCF est plus fiable pour une entreprise défensive (flux
+    prévisibles) — doit peser plus dans la moyenne qu'une entreprise
+    standard, quand DCF diverge des deux autres méthodes."""
+    standard = estimate_fair_value(100.0, 50.0, 50.0, sector_profile="standard")
+    defensif = estimate_fair_value(100.0, 50.0, 50.0, sector_profile="defensif")
+    assert defensif > standard  # DCF (le plus haut des 3) pèse plus lourd
+
+
+def test_estimate_fair_value_weighs_dcf_less_for_cyclical_sector():
+    """Le DCF est moins fiable pour une cyclique (point de départ possible
+    en haut/bas de cycle) — doit peser moins qu'une entreprise standard."""
+    standard = estimate_fair_value(100.0, 50.0, 50.0, sector_profile="standard")
+    cyclique = estimate_fair_value(100.0, 50.0, 50.0, sector_profile="cyclique")
+    assert cyclique < standard  # DCF (le plus haut des 3) pèse moins lourd
+
+
+def test_estimate_fair_value_unknown_sector_falls_back_to_equal_weights():
+    """Un profil sectoriel inconnu ne doit pas planter — replie sur une
+    pondération égale, identique à l'ancien comportement (moyenne simple)."""
+    result = estimate_fair_value(100.0, 50.0, 50.0, sector_profile="inconnu")
+    assert result == pytest.approx((100.0 + 50.0 + 50.0) / 3)
+
+
+def test_estimate_fair_value_reweights_when_a_method_is_unavailable():
+    """Quand une méthode manque (None), les poids restants doivent se
+    renormaliser plutôt que de traiter la méthode absente comme un zéro."""
+    result = estimate_fair_value(None, 50.0, 100.0, sector_profile="cyclique")
+    weights = indices_score.VALUATION_METHOD_WEIGHTS["cyclique"]
+    expected = (50.0 * weights["asset"] + 100.0 * weights["multiple"]) / (weights["asset"] + weights["multiple"])
+    assert result == pytest.approx(expected)
+
+
+def test_extract_ratios_computes_fcf_normalized_over_recent_window():
+    """fcf_normalized doit moyenner OCF+capex sur la même fenêtre récente
+    que le lissage du CAGR (2 exercices ici), pas seulement le dernier —
+    utilisé comme point de départ du DCF pour les cycliques plutôt que le
+    seul dernier exercice, qui peut être en haut ou en bas de cycle."""
+    financials, balance_sheet, cashflow, closes_by_year = _make_fixture_statements()
+    ratios = extract_ratios(
+        financials, balance_sheet, cashflow, closes_by_year, shares_outstanding=10.0
+    )
+    expected_recent_fcf = [
+        (120.0, -30.0),  # exercice le plus récent (OCF, capex) — voir _make_fixture_statements
+        (110.0, -28.0),  # exercice précédent
+    ]
+    expected = sum(ocf + capex for ocf, capex in expected_recent_fcf) / len(expected_recent_fcf)
+    assert ratios["fcf_normalized"] == pytest.approx(expected)
+    assert ratios["fcf_normalized"] != ratios["fcf"]  # le lissage change bien la valeur
+
+
+def test_estimate_valuation_targets_uses_normalized_fcf_for_cyclical_companies():
+    """Preuve bout en bout que le profil cyclique bascule bien sur
+    fcf_normalized (pas fcf) pour le DCF — deux valeurs différentes
+    doivent produire des juste valeurs différentes."""
+    base_data = {
+        "cagr_ebitda": 6.5, "net_debt": 100.0, "shares_outstanding": 10.0,
+        "equity": 200.0, "current_price": 120.0, "current_ev_ebitda": 10.0,
+        "avg_ev_ebitda_5y": 10.0, "ma200": 110.0, "beta": 1.0, "ecart_pct_ma200": 0.0,
+        "sector": "Consumer Cyclical",  # -> profil "cyclique" (SECTOR_PROFILES)
+    }
+    low_fcf = {**base_data, "fcf": 999.0, "fcf_normalized": 20.0}
+    high_fcf = {**base_data, "fcf": 999.0, "fcf_normalized": 80.0}
+
+    result_low = estimate_valuation_targets(low_fcf, cost_of_capital=8.0)
+    result_high = estimate_valuation_targets(high_fcf, cost_of_capital=8.0)
+
+    assert result_low["fair_value"] != result_high["fair_value"]  # fcf_normalized utilisé, pas fcf (identique aux 2)
 
 
 def test_load_indices_history_returns_empty_list_when_file_absent(tmp_path):

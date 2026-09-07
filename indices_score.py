@@ -687,12 +687,17 @@ def extract_ratios(financials, balance_sheet, cashflow, closes_by_year, shares_o
     equity = get_row(balance_sheet, "Stockholders Equity", "Common Stock Equity")
 
     op_cash_flow = get_row(cashflow, "Operating Cash Flow")
-    # "Net PPE Purchase And Sale" en repli : certaines entreprises (ex :
-    # Veolia Environnement) n'ont pas de ligne "Capital Expenditure"
-    # isolée chez yfinance — ce proxy nette les cessions d'immobilisations
-    # contre les achats, ce qui reste proche du capex pur tant que les
-    # cessions restent marginales (même convention de signe négatif).
-    capex = get_row(cashflow, "Capital Expenditure", "Net PPE Purchase And Sale")
+    # Replis en cascade : "Net PPE Purchase And Sale" (ex : Veolia
+    # Environnement, pas de ligne "Capital Expenditure" isolée — nette les
+    # cessions d'immobilisations contre les achats, proche du capex pur
+    # tant que les cessions restent marginales) puis "Net Investment
+    # Properties Purchase And Sale" (ex : Vonovia — une foncière investit
+    # en achetant des immeubles de placement, pas des PPE industrielles ;
+    # même convention de signe négatif pour les deux replis).
+    capex = get_row(
+        cashflow, "Capital Expenditure", "Net PPE Purchase And Sale",
+        "Net Investment Properties Purchase And Sale",
+    )
 
     # _safe_value (pas un accès direct [latest]) : total_debt/cash/equity
     # viennent de balance_sheet, dont les colonnes ne correspondent pas
@@ -960,12 +965,17 @@ def build_financial_narrative_context(
     total_debt = _get_row_or_nan(balance_sheet, "Total Debt")
     cash = get_row(balance_sheet, "Cash And Cash Equivalents", "Cash Cash Equivalents And Short Term Investments")
     op_cash_flow = get_row(cashflow, "Operating Cash Flow")
-    # "Net PPE Purchase And Sale" en repli : certaines entreprises (ex :
-    # Veolia Environnement) n'ont pas de ligne "Capital Expenditure"
-    # isolée chez yfinance — ce proxy nette les cessions d'immobilisations
-    # contre les achats, ce qui reste proche du capex pur tant que les
-    # cessions restent marginales (même convention de signe négatif).
-    capex = get_row(cashflow, "Capital Expenditure", "Net PPE Purchase And Sale")
+    # Replis en cascade : "Net PPE Purchase And Sale" (ex : Veolia
+    # Environnement, pas de ligne "Capital Expenditure" isolée — nette les
+    # cessions d'immobilisations contre les achats, proche du capex pur
+    # tant que les cessions restent marginales) puis "Net Investment
+    # Properties Purchase And Sale" (ex : Vonovia — une foncière investit
+    # en achetant des immeubles de placement, pas des PPE industrielles ;
+    # même convention de signe négatif pour les deux replis).
+    capex = get_row(
+        cashflow, "Capital Expenditure", "Net PPE Purchase And Sale",
+        "Net Investment Properties Purchase And Sale",
+    )
 
     def _fmt(value) -> str:
         return "non disponible" if value is None or _is_missing(value) else f"{value:,.0f}"

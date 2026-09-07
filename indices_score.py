@@ -804,6 +804,21 @@ def extract_ratios(financials, balance_sheet, cashflow, closes_by_year, shares_o
         if ebitda[latest] and not _is_missing(ebitda[latest]) else 0.0
     )
 
+    # FCF lissé sur la même fenêtre que le CAGR (recent_cols, 1-2 exercices)
+    # — utilisé comme point de départ du DCF à la place de `fcf` (le seul
+    # dernier exercice) pour les entreprises cycliques, dont le FCF récent
+    # peut être en haut ou en bas de cycle (voir estimate_valuation_targets).
+    # Repli sur `fcf` si la fenêtre n'a aucun exercice exploitable.
+    fcf_by_recent_year = []
+    for col in recent_cols:
+        ocf_value = _safe_value(op_cash_flow, col)
+        capex_value = _safe_value(capex, col)
+        if not _is_missing(ocf_value) and not _is_missing(capex_value):
+            fcf_by_recent_year.append(ocf_value + capex_value)
+    fcf_normalized = (
+        sum(fcf_by_recent_year) / len(fcf_by_recent_year) if fcf_by_recent_year else fcf
+    )
+
     ev_ebitda_by_year, pe_by_year = [], []
     for col in years_cols:
         price = closes_by_year.get(col)
@@ -842,6 +857,7 @@ def extract_ratios(financials, balance_sheet, cashflow, closes_by_year, shares_o
         "current_pe": current_pe,
         "avg_pe_5y": avg_pe_5y,
         "fcf": fcf,
+        "fcf_normalized": fcf_normalized,
         "net_debt": net_debt_latest,
         "equity": equity_latest,
         "tax_rate": tax_rate[latest],
@@ -949,6 +965,7 @@ def extract_ratios_financial(financials, balance_sheet, cashflow, closes_by_year
         # Valeurs neutres pour désactiver proprement DCF / multiple EV-EBITDA
         # dans estimate_valuation_targets (voir docstring ci-dessus).
         "fcf": 0.0,
+        "fcf_normalized": 0.0,
         "cagr_ebitda": 0.0,
         "net_debt": 0.0,
         "current_ev_ebitda": 0.0,
@@ -1597,14 +1614,46 @@ def estimate_multiple_based_price(
     return current_price * (avg_ev_ebitda_5y / current_ev_ebitda)
 
 
+# Avant : moyenne simple des 3 méthodes pour toutes les entreprises. Le DCF
+# extrapole 5 ans de croissance depuis le FCF actuel — fiable pour une
+# entreprise défensive aux flux prévisibles, beaucoup moins pour une
+# cyclique dont le FCF peut être en haut ou en bas de cycle (repéré via
+# Volkswagen : juste valeur à 494€ pour un cours à 81€, dont une partie
+# tenait à ça une fois le bug sharesOutstanding corrigé). La valeur
+# comptable (actif net) et le retour au multiple historique sont moins
+# sensibles à ce biais. Pondère donc les 3 méthodes par le profil
+# sectoriel déjà calculé (sector_risk_profile) plutôt qu'une moyenne
+# identique pour toutes.
+VALUATION_METHOD_WEIGHTS = {
+    "defensif": {"dcf": 1.3, "asset": 0.8, "multiple": 1.0},
+    "standard": {"dcf": 1.0, "asset": 1.0, "multiple": 1.0},
+    "cyclique": {"dcf": 0.6, "asset": 1.2, "multiple": 1.1},
+}
+
+
 def estimate_fair_value(
-    dcf_price: float | None, asset_price: float | None, multiple_price: float | None
+    dcf_price: float | None, asset_price: float | None, multiple_price: float | None,
+    sector_profile: str = "standard",
 ) -> float | None:
-    """Moyenne des méthodes de valorisation disponibles (DCF, actif net,
-    multiples) — ignore celles indisponibles (None) ; None si aucune des
-    3 n'est calculable."""
-    prices = [p for p in (dcf_price, asset_price, multiple_price) if p is not None]
-    return sum(prices) / len(prices) if prices else None
+    """Moyenne pondérée des méthodes de valorisation disponibles (DCF,
+    actif net, multiples) selon le profil sectoriel — ignore celles
+    indisponibles (None), en renormalisant les poids sur celles qui
+    restent ; None si aucune des 3 n'est calculable. Poids égaux (1.0)
+    si `sector_profile` est inconnu, ce qui reproduit exactement l'ancien
+    comportement (moyenne simple)."""
+    weights = VALUATION_METHOD_WEIGHTS.get(sector_profile, VALUATION_METHOD_WEIGHTS["standard"])
+    available = [
+        (price, weight) for price, weight in (
+            (dcf_price, weights["dcf"]),
+            (asset_price, weights["asset"]),
+            (multiple_price, weights["multiple"]),
+        )
+        if price is not None
+    ]
+    if not available:
+        return None
+    total_weight = sum(weight for _, weight in available)
+    return sum(price * weight for price, weight in available) / total_weight
 
 
 # --- Repères d'entrée/sortie pondérés par le risque ------------------------
@@ -1770,13 +1819,19 @@ def estimate_wacc(
 
 
 def estimate_valuation_targets(data: dict, cost_of_capital: float) -> dict:
-    """Combine DCF, actif net et multiples en une juste valeur, puis en
+    """Combine DCF, actif net et multiples en une juste valeur (pondérée
+    par le profil sectoriel — voir VALUATION_METHOD_WEIGHTS), puis en
     repères d'entrée/sortie. Toujours ces 3 clés en sortie, valeurs à None
     si non calculables (jamais d'exception). `cost_of_capital` est le taux
     d'actualisation du DCF (WACC de l'entreprise, ou COST_OF_CAPITAL_PROXY
     en repli — résolu par l'appelant)."""
+    sector_profile = sector_risk_profile(data["sector"])
+    # Point de départ du DCF lissé sur 2 exercices pour les cycliques (voir
+    # extract_ratios/fcf_normalized) plutôt que le seul dernier exercice,
+    # qui peut être en haut ou en bas de cycle pour ce type d'entreprise.
+    dcf_fcf = data["fcf_normalized"] if sector_profile == "cyclique" else data["fcf"]
     dcf_price = estimate_dcf_price(
-        data["fcf"], data["cagr_ebitda"], data["net_debt"], data["shares_outstanding"],
+        dcf_fcf, data["cagr_ebitda"], data["net_debt"], data["shares_outstanding"],
         cost_of_capital,
     )
     asset_price = estimate_asset_based_price(data["equity"], data["shares_outstanding"])
@@ -1786,7 +1841,7 @@ def estimate_valuation_targets(data: dict, cost_of_capital: float) -> dict:
         )
         if data["current_price"] is not None else None
     )
-    fair_value = estimate_fair_value(dcf_price, asset_price, multiple_price)
+    fair_value = estimate_fair_value(dcf_price, asset_price, multiple_price, sector_profile)
     entry_exit = estimate_entry_exit_prices(
         fair_value, data["ma200"], data["beta"], data["ecart_pct_ma200"]
     )

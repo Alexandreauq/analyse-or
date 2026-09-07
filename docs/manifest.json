@@ -1,6 +1,6 @@
 {
-  "name": "IA Investment",
-  "short_name": "IA Invest",
+  "name": "AI Investment",
+  "short_name": "AI Invest",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",

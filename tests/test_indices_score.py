@@ -1701,7 +1701,7 @@ def test_main_writes_alerts_key_for_every_company(monkeypatch, tmp_path):
         indices_score, "load_previous_company_analyses", lambda: sentinel_previous_analyses,
     )
 
-    def _fake_build_company_entry(ticker, name, risk_free_rate, previous_analyses):
+    def _fake_build_company_entry(ticker, name, risk_free_rate, previous_analyses, index_key="CAC40"):
         assert previous_analyses is sentinel_previous_analyses, (
             "main() doit transmettre le previous_analyses réellement chargé "
             "par load_previous_company_analyses(), pas un dict vide/différent "
@@ -1709,7 +1709,7 @@ def test_main_writes_alerts_key_for_every_company(monkeypatch, tmp_path):
             "est silencieusement désactivé en production."
         )
         return {
-            "ticker": ticker, "name": name, "score": 20.0,
+            "ticker": ticker, "name": name, "index": index_key, "score": 20.0,
             "interpretation": "Solide",
             "current_price": 100.0, "entry_price": 100.0,
         }
@@ -1730,17 +1730,17 @@ def test_main_writes_alerts_key_for_every_company(monkeypatch, tmp_path):
 
 
 def test_main_payload_includes_index_metadata(monkeypatch, tmp_path):
-    """Le payload exporté doit dire de quel indice il s'agit (index_key/
-    index_name), pas seulement lister des entreprises — nécessaire dès
-    qu'un second indice (DAX, S&P 500…) rejoindra un jour ce module."""
+    """Le payload exporté doit dire quels indices il couvre (index_names),
+    et chaque entreprise doit porter le bon "index" — pas une seule valeur
+    globale, puisque COMPANIES mélange déjà CAC40 et DAX."""
     import json
 
     monkeypatch.setattr(indices_score, "fetch_risk_free_rate", lambda: 3.68)
     monkeypatch.setattr(indices_score, "load_previous_company_analyses", lambda: {})
     monkeypatch.setattr(
         indices_score, "build_company_entry",
-        lambda ticker, name, risk_free_rate, previous_analyses: {
-            "ticker": ticker, "name": name, "index": indices_score.INDEX_KEY,
+        lambda ticker, name, risk_free_rate, previous_analyses, index_key="CAC40": {
+            "ticker": ticker, "name": name, "index": index_key,
             "score": 10.0, "interpretation": "Neutre",
             "current_price": 50.0, "entry_price": 50.0,
         },
@@ -1753,9 +1753,11 @@ def test_main_payload_includes_index_metadata(monkeypatch, tmp_path):
     indices_score.main()
 
     written = json.loads(output_path.read_text(encoding="utf-8"))
-    assert written["index_key"] == "CAC40"
-    assert written["index_name"] == "CAC 40"
-    assert all(c["index"] == "CAC40" for c in written["companies"])
+    assert written["index_names"] == {"CAC40": "CAC 40", "DAX": "DAX"}
+    written_by_ticker = {c["ticker"]: c["index"] for c in written["companies"]}
+    for company in indices_score.COMPANIES:
+        assert written_by_ticker[company["ticker"]] == company["index"]
+    assert {c["index"] for c in written["companies"]} == {"CAC40", "DAX"}
 
 
 import pandas as pd
@@ -2413,9 +2415,9 @@ def test_build_company_entry_uses_financial_factors_for_financial_sector_tickers
     monkeypatch.setattr(indices_score, "fetch_news", lambda name: [])
     monkeypatch.setattr(indices_score, "generate_financial_analysis", lambda *a, **k: "<p>Analyse.</p>")
 
-    entry = indices_score.build_company_entry("BNP.PA", "BNP Paribas", 3.0, {})
+    entry = indices_score.build_company_entry("BNP.PA", "BNP Paribas", 3.0, {}, index_key="CAC40")
 
-    assert entry["index"] == indices_score.INDEX_KEY
+    assert entry["index"] == "CAC40"
     assert entry["is_financial"] is True
     assert [f["name"] for f in entry["factors"]] == [
         "Rentabilité / création de valeur", "Structure financière / solvabilité",
@@ -2432,3 +2434,18 @@ def test_build_company_entry_uses_financial_factors_for_financial_sector_tickers
 def test_financial_sector_tickers_are_in_companies():
     company_tickers = {c["ticker"] for c in indices_score.COMPANIES}
     assert indices_score.FINANCIAL_SECTOR_TICKERS <= company_tickers
+
+
+def test_companies_combines_cac40_and_dax_with_correct_index_tag():
+    """COMPANIES doit être l'union de CAC40_COMPANIES et DAX_COMPANIES,
+    chaque entreprise gardant son propre indice — pas une seule valeur
+    globale (l'ancien bug qu'INDEX_KEY représentait)."""
+    assert len(indices_score.COMPANIES) == (
+        len(indices_score.CAC40_COMPANIES) + len(indices_score.DAX_COMPANIES)
+    )
+    by_ticker = {c["ticker"]: c["index"] for c in indices_score.COMPANIES}
+    for c in indices_score.CAC40_COMPANIES:
+        assert by_ticker[c["ticker"]] == "CAC40"
+    for c in indices_score.DAX_COMPANIES:
+        assert by_ticker[c["ticker"]] == "DAX"
+    assert set(indices_score.INDEX_NAMES) >= {"CAC40", "DAX"}

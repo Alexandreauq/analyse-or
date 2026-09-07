@@ -192,6 +192,16 @@
   .health-banner { color: var(--muted); font-size: 12px; margin: 0 0 12px; }
   .health-banner-warn { color: var(--rust); font-weight: 500; }
 
+  .list-controls { display: flex; gap: 8px; margin: 4px 0 4px; }
+  .list-search, .list-sort {
+    background: var(--panel); border: 1px solid var(--border); color: var(--text);
+    font: inherit; font-size: 13px; padding: 10px 12px; border-radius: 10px;
+  }
+  .list-search { flex: 1; min-width: 0; }
+  .list-search::placeholder { color: var(--muted); }
+  .list-sort { flex-shrink: 0; }
+  .list-empty { color: var(--muted); font-size: 13px; padding: 16px 0; text-align: center; }
+
   .alert-row { border-left: 2px solid; padding: 4px 0 10px 12px; margin-bottom: 12px; }
   .alert-row:last-child { margin-bottom: 0; }
   .alert-head { display:flex; justify-content:space-between; font-size:13px; font-weight:500; gap:8px; }
@@ -504,6 +514,38 @@ async function loadIndices(ticker, view) {
   }
 }
 
+let indicesListSearch = '';
+let indicesListSort = 'score_desc';
+
+function sortedFilteredCompanies(companies) {
+  let visible = companies;
+  if (indicesListSearch.trim()) {
+    const q = indicesListSearch.trim().toLowerCase();
+    visible = visible.filter(c => c.name.toLowerCase().includes(q) || c.ticker.toLowerCase().includes(q));
+  }
+  visible = [...visible];
+  if (indicesListSort === 'score_desc') visible.sort((a, b) => b.score - a.score);
+  else if (indicesListSort === 'score_asc') visible.sort((a, b) => a.score - b.score);
+  else if (indicesListSort === 'alpha') visible.sort((a, b) => a.name.localeCompare(b.name, 'fr'));
+  return visible;
+}
+
+function renderIndicesRows(companies) {
+  const panel = document.getElementById('indicesRows');
+  if (!panel) return;
+  const visible = sortedFilteredCompanies(companies);
+  panel.innerHTML = visible.length ? visible.map(c => `
+    <a class="company-row" href="#indices/${c.ticker}">
+      <div class="company-row-left">
+        <span class="company-name">${c.name}</span>
+        <span class="company-ticker">${c.ticker}${c.is_financial ? '<span class="financial-tag">Profil financier</span>' : ''}</span>
+      </div>
+      <span class="company-score" style="color:${c.score >= 0 ? 'var(--gold)' : 'var(--rust)'};">
+        ${c.score > 0 ? '+' : ''}${c.score}
+      </span>
+    </a>`).join('') : '<div class="list-empty">Aucun résultat pour cette recherche.</div>';
+}
+
 function renderIndicesList(companies) {
   if (!companies.length) {
     document.getElementById('indicesContent').innerHTML = `
@@ -517,20 +559,27 @@ function renderIndicesList(companies) {
       ? `<p class="health-banner health-banner-warn">⚠ ${health.returned}/${health.expected} entreprises à jour — manquantes : ${health.missing_tickers.join(', ')}</p>`
       : `<p class="health-banner">${health.returned}/${health.expected} entreprises à jour</p>`
   ) : '';
-  const rows = companies.map(c => `
-    <a class="company-row" href="#indices/${c.ticker}">
-      <div class="company-row-left">
-        <span class="company-name">${c.name}</span>
-        <span class="company-ticker">${c.ticker}${c.is_financial ? '<span class="financial-tag">Profil financier</span>' : ''}</span>
-      </div>
-      <span class="company-score" style="color:${c.score >= 0 ? 'var(--gold)' : 'var(--rust)'};">
-        ${c.score > 0 ? '+' : ''}${c.score}
-      </span>
-    </a>`).join('');
   document.getElementById('indicesContent').innerHTML = `
     ${healthHtml}
-    <div class="panel">${rows}</div>
+    <div class="list-controls">
+      <input type="search" class="list-search" id="indicesSearch" placeholder="Rechercher (nom, ticker)…" value="${indicesListSearch}">
+      <select class="list-sort" id="indicesSort">
+        <option value="score_desc"${indicesListSort === 'score_desc' ? ' selected' : ''}>Score ↓</option>
+        <option value="score_asc"${indicesListSort === 'score_asc' ? ' selected' : ''}>Score ↑</option>
+        <option value="alpha"${indicesListSort === 'alpha' ? ' selected' : ''}>A → Z</option>
+      </select>
+    </div>
+    <div class="panel" id="indicesRows"></div>
   `;
+  renderIndicesRows(companies);
+  document.getElementById('indicesSearch').addEventListener('input', (e) => {
+    indicesListSearch = e.target.value;
+    renderIndicesRows(companies);
+  });
+  document.getElementById('indicesSort').addEventListener('change', (e) => {
+    indicesListSort = e.target.value;
+    renderIndicesRows(companies);
+  });
 }
 
 function formatPrice(v) {

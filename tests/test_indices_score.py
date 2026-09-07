@@ -521,6 +521,24 @@ def test_extract_ratios_degrades_gracefully_when_latest_year_has_nan_balance_she
     assert ratios["net_debt_ebitda"] == 0.0
 
 
+def test_extract_ratios_handles_balance_sheet_entirely_missing_total_debt_row():
+    """Reproduit le cas E.ON (EOAN.DE) en production : le bilan yfinance
+    n'a carrément aucune ligne "Total Debt" (ni aucun équivalent) — pas
+    une valeur manquante sur un exercice, une ligne absente sur toute la
+    période. get_row() lèverait un KeyError non rattrapé ; _get_row_or_nan
+    doit dégrader vers les mêmes replis que le cas "valeur NaN" ci-dessus."""
+    financials, balance_sheet, cashflow, closes_by_year = _make_fixture_statements()
+    balance_sheet = balance_sheet.drop(index="Total Debt")
+
+    ratios = extract_ratios(
+        financials, balance_sheet, cashflow, closes_by_year, shares_outstanding=10.0
+    )
+
+    assert ratios["icr"] == 10.0
+    assert ratios["net_debt_ebitda"] == 0.0
+    assert ratios["total_debt"] != ratios["total_debt"]  # NaN (total_debt réellement indisponible)
+
+
 def test_extract_ratios_handles_latest_year_missing_from_balance_sheet_and_cashflow():
     """Reproduit le bug SAN.PA/BN.PA (colonnes désalignées entre relevés
     annuels), mais sur l'exercice le plus récent plutôt qu'un ancien : ne

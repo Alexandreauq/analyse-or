@@ -107,7 +107,7 @@
   {
     "date": "2026-09-07",
     "ticker": "MC.PA",
-    "composite": 26.2
+    "composite": 22.2
   },
   {
     "date": "2026-09-06",
@@ -327,7 +327,7 @@
   {
     "date": "2026-09-07",
     "ticker": "SU.PA",
-    "composite": 60.0
+    "composite": 62.0
   },
   {
     "date": "2026-09-06",
@@ -432,7 +432,7 @@
   {
     "date": "2026-09-07",
     "ticker": "SAN.PA",
-    "composite": 31.7
+    "composite": 29.7
   },
   {
     "date": "2026-09-06",
@@ -837,7 +837,7 @@
   {
     "date": "2026-09-07",
     "ticker": "RMS.PA",
-    "composite": 54.8
+    "composite": 57.3
   },
   {
     "date": "2026-09-06",
@@ -912,7 +912,7 @@
   {
     "date": "2026-09-07",
     "ticker": "ENGI.PA",
-    "composite": 40.4
+    "composite": 36.4
   },
   {
     "date": "2026-09-06",
@@ -987,7 +987,7 @@
   {
     "date": "2026-09-07",
     "ticker": "ORA.PA",
-    "composite": 34.9
+    "composite": 32.9
   },
   {
     "date": "2026-09-06",
@@ -1062,7 +1062,7 @@
   {
     "date": "2026-09-07",
     "ticker": "STMPA.PA",
-    "composite": -31.5
+    "composite": -27.5
   },
   {
     "date": "2026-09-06",
@@ -1402,7 +1402,7 @@
   {
     "date": "2026-09-07",
     "ticker": "LR.PA",
-    "composite": 47.7
+    "composite": 43.7
   },
   {
     "date": "2026-09-06",
@@ -1462,7 +1462,7 @@
   {
     "date": "2026-09-07",
     "ticker": "SGO.PA",
-    "composite": 25.3
+    "composite": 23.3
   },
   {
     "date": "2026-09-06",
@@ -1522,7 +1522,7 @@
   {
     "date": "2026-09-07",
     "ticker": "HO.PA",
-    "composite": 55.1
+    "composite": 58.1
   },
   {
     "date": "2026-09-06",
@@ -1817,7 +1817,7 @@
   {
     "date": "2026-09-07",
     "ticker": "VIE.PA",
-    "composite": 47.9
+    "composite": 45.4
   },
   {
     "date": "2026-09-06",
@@ -1922,7 +1922,7 @@
   {
     "date": "2026-09-07",
     "ticker": "EL.PA",
-    "composite": -3.7
+    "composite": 0.3
   },
   {
     "date": "2026-09-06",
@@ -1972,7 +1972,7 @@
   {
     "date": "2026-09-07",
     "ticker": "PUB.PA",
-    "composite": 79.4
+    "composite": 79.5
   },
   {
     "date": "2026-09-06",
@@ -2122,7 +2122,7 @@
   {
     "date": "2026-09-07",
     "ticker": "ENX.PA",
-    "composite": 66.6
+    "composite": 66.4
   },
   {
     "date": "2026-09-06",
@@ -2272,7 +2272,7 @@
   {
     "date": "2026-09-07",
     "ticker": "EN.PA",
-    "composite": 30.2
+    "composite": 34.2
   },
   {
     "date": "2026-09-07",
@@ -2302,7 +2302,7 @@
   {
     "date": "2026-09-07",
     "ticker": "AI.PA",
-    "composite": 34.8
+    "composite": 36.8
   },
   {
     "date": "2026-09-07",
@@ -2362,7 +2362,7 @@
   {
     "date": "2026-09-07",
     "ticker": "AC.PA",
-    "composite": 26.6
+    "composite": 28.6
   },
   {
     "date": "2026-09-07",
@@ -2387,7 +2387,7 @@
   {
     "date": "2026-09-07",
     "ticker": "BNP.PA",
-    "composite": 44.1
+    "composite": 42.1
   },
   {
     "date": "2026-09-07",
@@ -2492,7 +2492,7 @@
   {
     "date": "2026-09-07",
     "ticker": "SIE.DE",
-    "composite": 26.2
+    "composite": 28.1
   },
   {
     "date": "2026-09-07",
@@ -2507,7 +2507,7 @@
   {
     "date": "2026-09-07",
     "ticker": "DTE.DE",
-    "composite": 33.4
+    "composite": 35.4
   },
   {
     "date": "2026-09-07",
@@ -2522,7 +2522,7 @@
   {
     "date": "2026-09-07",
     "ticker": "VOW3.DE",
-    "composite": -30.4
+    "composite": -32.4
   },
   {
     "date": "2026-09-07",
@@ -2552,7 +2552,7 @@
   {
     "date": "2026-09-07",
     "ticker": "BAS.DE",
-    "composite": -10.4
+    "composite": -12.2
   },
   {
     "date": "2026-09-07",
@@ -2567,7 +2567,7 @@
   {
     "date": "2026-09-07",
     "ticker": "BAYN.DE",
-    "composite": -45.4
+    "composite": -43.4
   },
   {
     "date": "2026-09-07",
@@ -2612,6 +2612,51 @@
   {
     "date": "2026-09-07",
     "ticker": "HEN3.DE",
-    "composite": 57.8
+    "composite": 60.3
+  },
+  {
+    "date": "2026-09-07",
+    "ticker": "DHL.DE",
+    "composite": 28.6
+  },
+  {
+    "date": "2026-09-07",
+    "ticker": "IFX.DE",
+    "composite": -19.1
+  },
+  {
+    "date": "2026-09-07",
+    "ticker": "MRK.DE",
+    "composite": 19.1
+  },
+  {
+    "date": "2026-09-07",
+    "ticker": "FRE.DE",
+    "composite": 6.2
+  },
+  {
+    "date": "2026-09-07",
+    "ticker": "CON.DE",
+    "composite": -35.7
+  },
+  {
+    "date": "2026-09-07",
+    "ticker": "RWE.DE",
+    "composite": 42.4
+  },
+  {
+    "date": "2026-09-07",
+    "ticker": "RHM.DE",
+    "composite": 64.3
+  },
+  {
+    "date": "2026-09-07",
+    "ticker": "BEI.DE",
+    "composite": 58.2
+  },
+  {
+    "date": "2026-09-07",
+    "ticker": "MTX.DE",
+    "composite": 63.5
   }
 ]

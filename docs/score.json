@@ -1,6 +1,6 @@
 {
-  "date": "2026-09-06",
-  "composite_score": 28.7,
+  "date": "2026-09-07",
+  "composite_score": 29.7,
   "interpretation": "Favorable — en attente d'un déclencheur technique",
   "factors": [
     {
@@ -17,9 +17,9 @@
     },
     {
       "name": "Anticipations d'inflation",
-      "score": 2.333333333333343,
+      "score": 3.0000000000000107,
       "weight": 0.15,
-      "raw_value": "2.35% (il y a ~45j : 2.28%)"
+      "raw_value": "2.35% (il y a ~45j : 2.26%)"
     },
     {
       "name": "Ton de la Fed",
@@ -98,7 +98,7 @@
       "kind": "info",
       "title": "Pas de signal actif",
       "detail": "Aucune des conditions de veille, d'entrée ou de risque n'est réunie aujourd'hui.",
-      "date": "06/09/2026"
+      "date": "07/09/2026"
     }
   ]
 }

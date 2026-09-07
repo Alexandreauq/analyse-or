@@ -1577,25 +1577,78 @@ def estimate_fair_value(
     return sum(prices) / len(prices) if prices else None
 
 
-VALUATION_MARGIN_OF_SAFETY = 0.30   # ±30%, cohérent avec le seuil de prime/décote
-                                     # significative déjà utilisé dans score_valorisation
-TECHNICAL_EXIT_MARGIN = 0.20        # +20% au-dessus de la MM200, cohérent avec
-                                     # PRICE_MOMENTUM_SCALE de score_dynamique_recente
+# --- Repères d'entrée/sortie pondérés par le risque ------------------------
+#
+# Avant : marge de sécurité fixe (±30% autour de la juste valeur, +20% pour
+# la sortie technique) pour toutes les entreprises, quel que soit leur
+# risque réel. Deux indicateurs déjà calculés (aucun nouvel appel yfinance)
+# affinent maintenant ça :
+# - le bêta (déjà utilisé pour le WACC) élargit ou resserre la marge de
+#   sécurité proportionnellement au risque relatif au marché ;
+# - la dynamique récente (écart au MM200, déjà calculé pour le facteur du
+#   même nom) décale le repère technique : évite de recommander une entrée
+#   sur une action en tendance baissière prononcée juste parce qu'elle est
+#   sous sa MM200 (le piège classique du "couteau qui tombe"), et inversement
+#   permet de suivre une tendance haussière confirmée plutôt que d'attendre
+#   un retour à la MM200 qui peut ne jamais venir.
+
+BETA_NEUTRAL = 1.0
+VALUATION_MARGIN_BASE = 0.30   # marge à bêta neutre — valeur inchangée par rapport à avant
+VALUATION_MARGIN_MIN = 0.15
+VALUATION_MARGIN_MAX = 0.45
+TECHNICAL_MARGIN_BASE = 0.20   # marge à bêta neutre — valeur inchangée par rapport à avant
+TECHNICAL_MARGIN_MIN = 0.10
+TECHNICAL_MARGIN_MAX = 0.30
+TECHNICAL_MOMENTUM_ADJUSTMENT_MAX = 0.15   # décalage max (±15%) du repère technique
 
 
-def estimate_entry_exit_prices(fair_value: float | None, ma200: float | None) -> dict:
-    """Combine repère de valorisation (juste valeur ± 30%) et repère
-    technique (MM200 / MM200 × 1,20) en moyennant ceux disponibles.
-    Renvoie {"entry": float | None, "exit": float | None} — None des deux
-    côtés si ni la valorisation ni la MM200 ne sont disponibles."""
+def _risk_adjusted_margin(beta: float | None, base: float, floor: float, cap: float) -> float:
+    """Marge proportionnelle au bêta plutôt que fixe : une action volatile
+    (bêta > 1) mérite une marge de sécurité plus large avant d'être jugée
+    attractive, une action stable (bêta < 1) une marge plus resserrée.
+    Repli sur la marge de base si le bêta est indisponible ou invalide."""
+    if beta is None or _is_missing(beta) or beta <= 0:
+        return base
+    return _clamp(base * (beta / BETA_NEUTRAL), floor, cap)
+
+
+def _momentum_adjustment(ecart_pct_ma200: float | None) -> float:
+    """Décale le repère technique dans le sens de la tendance récente
+    (même échelle que score_dynamique_recente), plafonné à ±15% — 0.0
+    (aucun décalage) si l'écart à la MM200 est indisponible."""
+    if ecart_pct_ma200 is None or _is_missing(ecart_pct_ma200):
+        return 0.0
+    return _clamp(
+        ecart_pct_ma200 / PRICE_MOMENTUM_SCALE * TECHNICAL_MOMENTUM_ADJUSTMENT_MAX,
+        -TECHNICAL_MOMENTUM_ADJUSTMENT_MAX, TECHNICAL_MOMENTUM_ADJUSTMENT_MAX,
+    )
+
+
+def estimate_entry_exit_prices(
+    fair_value: float | None, ma200: float | None,
+    beta: float | None, ecart_pct_ma200: float | None,
+) -> dict:
+    """Combine repère de valorisation (juste valeur ± marge pondérée par le
+    bêta) et repère technique (MM200 décalée selon la dynamique récente) en
+    moyennant ceux disponibles. Renvoie {"entry": float | None,
+    "exit": float | None} — None des deux côtés si ni la valorisation ni la
+    MM200 ne sont disponibles."""
+    valuation_margin = _risk_adjusted_margin(
+        beta, VALUATION_MARGIN_BASE, VALUATION_MARGIN_MIN, VALUATION_MARGIN_MAX
+    )
+    technical_margin = _risk_adjusted_margin(
+        beta, TECHNICAL_MARGIN_BASE, TECHNICAL_MARGIN_MIN, TECHNICAL_MARGIN_MAX
+    )
+    momentum_adjustment = _momentum_adjustment(ecart_pct_ma200)
+
     entry_candidates = []
     exit_candidates = []
     if fair_value is not None:
-        entry_candidates.append(fair_value * (1 - VALUATION_MARGIN_OF_SAFETY))
-        exit_candidates.append(fair_value * (1 + VALUATION_MARGIN_OF_SAFETY))
+        entry_candidates.append(fair_value * (1 - valuation_margin))
+        exit_candidates.append(fair_value * (1 + valuation_margin))
     if ma200 is not None and not _is_missing(ma200):
-        entry_candidates.append(ma200)
-        exit_candidates.append(ma200 * (1 + TECHNICAL_EXIT_MARGIN))
+        entry_candidates.append(ma200 * (1 + momentum_adjustment))
+        exit_candidates.append(ma200 * (1 + technical_margin + momentum_adjustment))
     entry = sum(entry_candidates) / len(entry_candidates) if entry_candidates else None
     exit_price = sum(exit_candidates) / len(exit_candidates) if exit_candidates else None
     return {"entry": entry, "exit": exit_price}
@@ -1704,7 +1757,9 @@ def estimate_valuation_targets(data: dict, cost_of_capital: float) -> dict:
         if data["current_price"] is not None else None
     )
     fair_value = estimate_fair_value(dcf_price, asset_price, multiple_price)
-    entry_exit = estimate_entry_exit_prices(fair_value, data["ma200"])
+    entry_exit = estimate_entry_exit_prices(
+        fair_value, data["ma200"], data["beta"], data["ecart_pct_ma200"]
+    )
     return {
         "fair_value": fair_value,
         "entry_price": entry_exit["entry"],

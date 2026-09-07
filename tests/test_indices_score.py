@@ -1392,22 +1392,22 @@ from indices_score import estimate_entry_exit_prices
 
 
 def test_estimate_entry_exit_prices_combines_valuation_and_technical():
-    result = estimate_entry_exit_prices(fair_value=100.0, ma200=90.0)
+    result = estimate_entry_exit_prices(fair_value=100.0, ma200=90.0, beta=1.0, ecart_pct_ma200=0.0)
     assert result == {"entry": 80.0, "exit": 119.0}
 
 
 def test_estimate_entry_exit_prices_uses_only_valuation_when_ma200_missing():
-    result = estimate_entry_exit_prices(fair_value=100.0, ma200=None)
+    result = estimate_entry_exit_prices(fair_value=100.0, ma200=None, beta=1.0, ecart_pct_ma200=0.0)
     assert result == {"entry": 70.0, "exit": 130.0}
 
 
 def test_estimate_entry_exit_prices_uses_only_technical_when_fair_value_missing():
-    result = estimate_entry_exit_prices(fair_value=None, ma200=90.0)
+    result = estimate_entry_exit_prices(fair_value=None, ma200=90.0, beta=1.0, ecart_pct_ma200=0.0)
     assert result == {"entry": 90.0, "exit": 108.0}
 
 
 def test_estimate_entry_exit_prices_returns_none_for_both_when_nothing_available():
-    result = estimate_entry_exit_prices(fair_value=None, ma200=None)
+    result = estimate_entry_exit_prices(fair_value=None, ma200=None, beta=1.0, ecart_pct_ma200=0.0)
     assert result == {"entry": None, "exit": None}
 
 
@@ -1415,8 +1415,51 @@ def test_estimate_entry_exit_prices_ignores_ma200_when_it_is_nan():
     """Une MM200 NaN (calculable seulement avec un historique de cours
     insuffisant) ne doit pas être traitée comme un candidat valide — le
     garde-fou `ma200 is not None` ne suffit pas à l'exclure."""
-    result = estimate_entry_exit_prices(fair_value=100.0, ma200=float("nan"))
+    result = estimate_entry_exit_prices(fair_value=100.0, ma200=float("nan"), beta=1.0, ecart_pct_ma200=0.0)
     assert result == {"entry": 70.0, "exit": 130.0}
+
+
+def test_estimate_entry_exit_prices_widens_margin_for_high_beta():
+    """Une action volatile (bêta > 1) doit avoir une marge de sécurité
+    plus large qu'une action neutre — entrée plus basse, sortie plus haute."""
+    neutral = estimate_entry_exit_prices(fair_value=100.0, ma200=None, beta=1.0, ecart_pct_ma200=0.0)
+    volatile = estimate_entry_exit_prices(fair_value=100.0, ma200=None, beta=1.5, ecart_pct_ma200=0.0)
+    assert volatile["entry"] < neutral["entry"]
+    assert volatile["exit"] > neutral["exit"]
+
+
+def test_estimate_entry_exit_prices_narrows_margin_for_low_beta():
+    """Une action stable (bêta < 1) doit avoir une marge plus resserrée."""
+    neutral = estimate_entry_exit_prices(fair_value=100.0, ma200=None, beta=1.0, ecart_pct_ma200=0.0)
+    stable = estimate_entry_exit_prices(fair_value=100.0, ma200=None, beta=0.6, ecart_pct_ma200=0.0)
+    assert stable["entry"] > neutral["entry"]
+    assert stable["exit"] < neutral["exit"]
+
+
+def test_estimate_entry_exit_prices_falls_back_to_base_margin_when_beta_missing():
+    result = estimate_entry_exit_prices(fair_value=100.0, ma200=None, beta=None, ecart_pct_ma200=0.0)
+    assert result == {"entry": 70.0, "exit": 130.0}  # marge de base (30%), comportement inchangé
+
+
+def test_estimate_entry_exit_prices_shifts_technical_entry_down_in_downtrend():
+    """Une tendance baissière prononcée (écart MM200 très négatif) doit
+    décaler le repère technique sous la MM200 elle-même — évite de
+    recommander une entrée juste parce que le prix est sous sa moyenne
+    (le piège classique du "couteau qui tombe")."""
+    flat = estimate_entry_exit_prices(fair_value=None, ma200=100.0, beta=1.0, ecart_pct_ma200=0.0)
+    downtrend = estimate_entry_exit_prices(fair_value=None, ma200=100.0, beta=1.0, ecart_pct_ma200=-20.0)
+    assert downtrend["entry"] < flat["entry"]
+    assert downtrend["exit"] < flat["exit"]
+
+
+def test_estimate_entry_exit_prices_shifts_technical_entry_up_in_uptrend():
+    """Une tendance haussière confirmée doit décaler le repère technique
+    au-dessus de la MM200 plutôt que d'attendre un retour qui peut ne
+    jamais venir."""
+    flat = estimate_entry_exit_prices(fair_value=None, ma200=100.0, beta=1.0, ecart_pct_ma200=0.0)
+    uptrend = estimate_entry_exit_prices(fair_value=None, ma200=100.0, beta=1.0, ecart_pct_ma200=20.0)
+    assert uptrend["entry"] > flat["entry"]
+    assert uptrend["exit"] > flat["exit"]
 
 
 from indices_score import estimate_valuation_targets
@@ -1433,6 +1476,8 @@ def test_estimate_valuation_targets_computes_all_three_output_keys():
         "current_ev_ebitda": 10.0,
         "avg_ev_ebitda_5y": 10.0,
         "ma200": 110.0,
+        "beta": 1.0,
+        "ecart_pct_ma200": 0.0,
     }
     result = estimate_valuation_targets(data, cost_of_capital=8.0)
     assert set(result.keys()) == {"fair_value", "entry_price", "exit_price"}
@@ -1456,6 +1501,8 @@ def test_estimate_valuation_targets_varies_with_cost_of_capital():
         "current_ev_ebitda": 10.0,
         "avg_ev_ebitda_5y": 10.0,
         "ma200": 110.0,
+        "beta": 1.0,
+        "ecart_pct_ma200": 0.0,
     }
     at_8 = estimate_valuation_targets(data, cost_of_capital=8.0)
     at_10 = estimate_valuation_targets(data, cost_of_capital=10.0)
@@ -1477,6 +1524,8 @@ def test_estimate_valuation_targets_degrades_to_none_with_nan_inputs():
         "current_ev_ebitda": float("nan"),
         "avg_ev_ebitda_5y": 10.0,
         "ma200": float("nan"),
+        "beta": 1.0,
+        "ecart_pct_ma200": 0.0,
     }
     result = estimate_valuation_targets(data, cost_of_capital=8.0)
     assert result["fair_value"] is None

@@ -1,14 +1,15 @@
 """
-Score fondamental CAC 40
-=========================
+Score fondamental — indices boursiers
+=======================================
 
 Calcule un score composite par entreprise à partir de 5 ans de comptes
 publiés (via yfinance), selon la méthodologie décrite dans
 Methodologie_Analyse_Indices.md (synthèse Vernimmen : rentabilité
 comptable, analyse du financement, coût du capital, pratique de
-l'évaluation). Un indice (CAC 40 aujourd'hui) est un seul payload
-COMPANIES/INDEX_KEY/INDEX_NAME — voir ces 3 noms si un second indice
-(DAX, S&P 500…) rejoint un jour ce module.
+l'évaluation). Un seul run couvre plusieurs indices (CAC 40, DAX
+aujourd'hui) : chaque entreprise de COMPANIES porte son propre champ
+"index" (voir <INDICE>_COMPANIES + INDEX_NAMES) plutôt qu'un seul indice
+par run.
 
 Installation :
     pip install requests yfinance pandas
@@ -42,7 +43,7 @@ WEIGHTS = {
     "actualite_recente": 0.10,
 }
 
-COMPANIES = [
+CAC40_COMPANIES = [
     {"ticker": "MC.PA", "name": "LVMH"},
     {"ticker": "TTE.PA", "name": "TotalEnergies"},
     {"ticker": "SU.PA", "name": "Schneider Electric"},
@@ -102,14 +103,35 @@ COMPANIES = [
     {"ticker": "CS.PA", "name": "AXA"},
 ]
 
-# Toutes les entreprises de COMPANIES appartiennent aujourd'hui au même
-# indice — INDEX_KEY/INDEX_NAME existent déjà pour que chaque entreprise
-# et le payload exporté portent cette information, avant même qu'un
-# second indice n'existe. Objectif à terme (pas encore fait) : plusieurs
-# indices dans un même run, chaque entreprise gardant son propre
-# "index" plutôt qu'une seule valeur globale comme aujourd'hui.
-INDEX_KEY = "CAC40"
-INDEX_NAME = "CAC 40"
+# Lot 1 DAX (10 entreprises, toutes non-financières — même méthode que le
+# lot 1 CAC 40 : banques/assurances traitées à part dans un lot ultérieur).
+# Tickers Yahoo Finance vérifiés individuellement (suffixe .DE = Xetra) ;
+# VOW3/HEN3 sont les actions de préférence (Vorzugsaktien), pas un
+# mnémonique inventé — c'est ce que Yahoo Finance référence réellement
+# pour Volkswagen et Henkel.
+DAX_COMPANIES = [
+    {"ticker": "SAP.DE", "name": "SAP"},
+    {"ticker": "SIE.DE", "name": "Siemens"},
+    {"ticker": "DTE.DE", "name": "Deutsche Telekom"},
+    {"ticker": "VOW3.DE", "name": "Volkswagen"},
+    {"ticker": "MBG.DE", "name": "Mercedes-Benz Group"},
+    {"ticker": "BAS.DE", "name": "BASF"},
+    {"ticker": "BAYN.DE", "name": "Bayer"},
+    {"ticker": "SHL.DE", "name": "Siemens Healthineers"},
+    {"ticker": "ADS.DE", "name": "Adidas"},
+    {"ticker": "HEN3.DE", "name": "Henkel"},
+]
+
+# Chaque entreprise de COMPANIES porte son propre indice ("index" ajouté
+# ici, pas dans CAC40_COMPANIES/DAX_COMPANIES eux-mêmes, pour garder ces
+# listes lisibles) — remplace l'ancienne constante unique INDEX_KEY,
+# insuffisante dès qu'un 2e indice existe. INDEX_NAMES : nom affiché par
+# indice, complété au fil de l'ajout de nouveaux indices.
+COMPANIES = (
+    [{**c, "index": "CAC40"} for c in CAC40_COMPANIES]
+    + [{**c, "index": "DAX"} for c in DAX_COMPANIES]
+)
+INDEX_NAMES = {"CAC40": "CAC 40", "DAX": "DAX"}
 
 SECTOR_PROFILES = {
     "Utilities": "defensif",
@@ -1631,6 +1653,7 @@ def load_previous_company_analyses() -> dict:
 
 def build_company_entry(
     ticker: str, name: str, risk_free_rate: float | None, previous_analyses: dict,
+    index_key: str = "CAC40",
 ) -> dict:
     data = fetch_company_financials(ticker)
     sector = data["sector"]
@@ -1745,7 +1768,7 @@ def build_company_entry(
     return {
         "ticker": ticker,
         "name": name,
-        "index": INDEX_KEY,
+        "index": index_key,
         "sector": sector,
         "sector_profile": sector_risk_profile(sector),
         "is_financial": data["is_financial"],
@@ -1817,6 +1840,7 @@ def main():
             companies.append(
                 build_company_entry(
                     company["ticker"], company["name"], risk_free_rate, previous_analyses,
+                    index_key=company["index"],
                 )
             )
         except Exception as e:
@@ -1826,8 +1850,7 @@ def main():
 
     payload = {
         "updated": datetime.today().strftime("%Y-%m-%d"),
-        "index_key": INDEX_KEY,
-        "index_name": INDEX_NAME,
+        "index_names": INDEX_NAMES,
         "companies": companies,
         "health": _compute_health_summary(companies),
     }

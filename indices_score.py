@@ -2188,5 +2188,21 @@ def main():
         print(f"  {c['ticker']:<8} {c['name']:<20} score {c['score']:+.1f}  ({c['interpretation']})")
 
 
+def _run_test_entry_email() -> None:
+    """DIAGNOSTIC TEMPORAIRE — force l'envoi d'un email de test avec une
+    seule entreprise fictive, pour vérifier la réception réelle avant de
+    merger le mécanisme d'alerte entrée. À retirer une fois vérifié."""
+    test_company = {
+        "ticker": "TEST.PA", "name": "Entreprise de test (vérification email)",
+        "score": 20.0, "current_price": 100.0, "entry_price": 100.0,
+    }
+    sent = send_entry_alert_email([test_company])
+    print(f"Envoi test : {sent}")
+
+
 if __name__ == "__main__":
-    main()
+    import sys
+    if "--test-entry-email" in sys.argv:
+        _run_test_entry_email()
+    else:
+        main()

@@ -2089,6 +2089,37 @@ def _entry_alert_detail(company: dict) -> str:
     return ""
 
 
+ENTRY_ALERT_NEWS_COUNT = 2  # nombre d'actus récentes reprises dans l'email
+
+
+def _entry_alert_context(company: dict) -> str:
+    """Contexte du signal : dynamique récente (prix/trimestre, déjà
+    calculée pour le facteur du même nom) + les actus les plus fraîches
+    déjà résumées (fetch_news/summarize_news_item) — pas une affirmation
+    qu'une actu précise a "causé" le signal (c'est un seuil mécanique
+    score + prix), seulement le contexte disponible pour l'interpréter."""
+    parts = []
+    dynamique = next(
+        (f for f in company.get("factors", []) if f.get("name") == "Dynamique récente"), None
+    )
+    if dynamique and dynamique.get("raw_value"):
+        parts.append(
+            f'<p style="color:#edeef3;font-size:13px;line-height:1.6;margin:0 0 14px;">'
+            f'{dynamique["raw_value"]}</p>'
+        )
+    recent_news = [n for n in company.get("news", []) if n.get("summary")][:ENTRY_ALERT_NEWS_COUNT]
+    for n in recent_news:
+        meta = " · ".join(part for part in (n.get("source"), n.get("date")) if part)
+        parts.append(
+            f'<p style="margin:0 0 14px;padding:10px 14px;background:#1b1d25;'
+            f'border-left:3px solid #2a2d38;font-family:Arial,sans-serif;">'
+            f'<strong style="color:#edeef3;font-size:13px;">{n["title"]}</strong><br>'
+            f'<span style="color:#8a90a3;font-size:11px;">{meta}</span><br>'
+            f'<span style="color:#8a90a3;font-size:12px;line-height:1.5;">{n["summary"]}</span></p>'
+        )
+    return "".join(parts)
+
+
 def build_entry_alert_email_html(company: dict) -> str:
     """Un email par entreprise (pas un digest groupé) : objet et contenu
     portent sur cette seule entreprise, dans le même langage visuel que
@@ -2098,6 +2129,7 @@ def build_entry_alert_email_html(company: dict) -> str:
     score = company["score"]
     score_color = "#b99a68" if score >= 0 else "#a35540"
     detail = _entry_alert_detail(company)
+    context_html = _entry_alert_context(company)
     fiche_url = f"{SITE_BASE_URL}#indices/{company['ticker']}"
 
     return f"""
@@ -2129,7 +2161,12 @@ def build_entry_alert_email_html(company: dict) -> str:
           </tr>
         </table>
 
-        <p style="color:#8a90a3;font-size:13px;line-height:1.6;margin:0 0 28px;">{detail}</p>
+        <p style="color:#8a90a3;font-size:13px;line-height:1.6;margin:0 0 20px;">{detail}</p>
+
+        {f'''<p style="color:#8a90a3;font-size:11px;letter-spacing:0.06em;text-transform:uppercase;margin:0 0 12px;">
+          Pourquoi ce signal ?
+        </p>
+        {context_html}''' if context_html else ''}
 
         <a href="{fiche_url}" style="display:inline-block;background:#b99a68;color:#15161c;
            font-weight:bold;font-size:14px;padding:13px 26px;border-radius:8px;text-decoration:none;">
@@ -2239,6 +2276,15 @@ def _run_test_entry_email() -> None:
         "index": "CAC40", "score": 20.0, "interpretation": "Solide",
         "current_price": 100.0, "entry_price": 100.0, "exit_price": 130.0,
         "alerts": [{"kind": "entree", "detail": "Score favorable, cours à moins de 5% du repère d'entrée."}],
+        "factors": [
+            {"name": "Dynamique récente", "score": 7.0, "weight": 0.10,
+             "raw_value": "Cours +12.4% vs MM200 — CA dernier trim. +6.2% vs an dernier"},
+        ],
+        "news": [
+            {"title": "Résultats trimestriels au-dessus des attentes", "source": "Les Echos",
+             "date": "2026-09-06", "summary": "Le groupe relève ses objectifs annuels après un trimestre solide.",
+             "sentiment": 1},
+        ],
     }
     sent = send_entry_alert_email([test_company])
     print(f"Envoi test : {sent}")

@@ -202,6 +202,23 @@
   .list-sort { flex-shrink: 0; }
   .list-empty { color: var(--muted); font-size: 13px; padding: 16px 0; text-align: center; }
 
+  /* Liste des indices (CAC 40 aujourd'hui, DAX/Nasdaq à terme) : chacun
+     est un panneau dépliant contenant l'équivalent de ce que le CAC 40
+     a seul aujourd'hui (cours de l'indice, recherche/tri, entreprises). */
+  .index-card-list { display: flex; flex-direction: column; gap: 10px; margin: 4px 0 20px; }
+  .index-card { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+  .index-card-header {
+    width: 100%; display: flex; align-items: center; gap: 10px;
+    background: none; border: none; color: var(--text); padding: 16px; text-align: left;
+  }
+  .index-card-name { font-family: 'Fraunces', serif; font-weight: 500; font-size: 18px; letter-spacing: 0.02em; }
+  .index-card-count { color: var(--muted); font-size: 12px; flex: 1; }
+  .index-card-header .chevron { color: var(--muted); transition: transform 0.15s ease; flex-shrink: 0; }
+  .index-card-header[aria-expanded="true"] .chevron { color: var(--gold); transform: rotate(180deg); }
+  .index-card-header[aria-expanded="true"] .index-card-name { color: var(--gold); }
+  .index-card-body { padding: 0 16px 16px; border-top: 1px solid var(--border); }
+  .index-card-body .list-controls { margin-top: 16px; }
+
   .alert-row { border-left: 2px solid; padding: 4px 0 10px 12px; margin-bottom: 12px; }
   .alert-row:last-child { margin-bottom: 0; }
   .alert-head { display:flex; justify-content:space-between; font-size:13px; font-weight:500; gap:8px; }
@@ -367,12 +384,14 @@ const INDEX_TV_SYMBOL_BY_KEY = {
   CAC40: 'EURONEXT:PX1',
 };
 
-function loadIndexQuoteWidget(indexKey) {
-  // Cours de l'indice lui-même (pas une entreprise) au-dessus de la liste
-  // — même mécanisme d'injection différée que loadSideQuoteWidget (un
-  // <script> posé via innerHTML ne s'exécute jamais tout seul).
+function loadIndexQuoteWidget(indexKey, containerId) {
+  // Cours de l'indice lui-même (pas une entreprise), en tête du panneau
+  // dépliant de cet indice — même mécanisme d'injection différée que
+  // loadSideQuoteWidget (un <script> posé via innerHTML ne s'exécute
+  // jamais tout seul). containerId est propre à chaque indice (pas un id
+  // fixe) : plusieurs panneaux dépliants coexistent dans le DOM.
   const tvSymbol = INDEX_TV_SYMBOL_BY_KEY[indexKey];
-  const container = document.getElementById('tv-index-widget');
+  const container = document.getElementById(containerId);
   if (!tvSymbol || !container) return;
   const script = document.createElement('script');
   script.type = 'text/javascript';
@@ -547,7 +566,6 @@ async function loadIndices(ticker, view) {
     }
   }
   document.getElementById('indicesUpdated').textContent = 'Mis à jour le ' + indicesData.updated;
-  document.getElementById('indicesTitle').textContent = indicesData.index_name || 'Indices';
 
   if (!ticker) {
     renderIndicesList(indicesData.companies);
@@ -568,6 +586,16 @@ async function loadIndices(ticker, view) {
 let indicesListSearch = '';
 let indicesListSort = 'score_desc';
 
+// Nom affiché par indice — INDEX_DISPLAY_NAMES, pas indicesData.index_name
+// tout seul : la liste va, à terme, contenir plusieurs indices en même
+// temps (CAC 40, DAX, Nasdaq…), chacun avec son propre nom à afficher sur
+// son panneau dépliant — un seul index_name global n'aurait plus de sens
+// dès qu'un 2e indice existe. Repli sur la clé brute si un indice apparaît
+// dans les données avant d'être ajouté ici.
+const INDEX_DISPLAY_NAMES = {
+  CAC40: 'CAC 40',
+};
+
 function sortedFilteredCompanies(companies) {
   let visible = companies;
   if (indicesListSearch.trim()) {
@@ -581,8 +609,8 @@ function sortedFilteredCompanies(companies) {
   return visible;
 }
 
-function renderIndicesRows(companies) {
-  const panel = document.getElementById('indicesRows');
+function renderIndicesRows(companies, rowsContainerId) {
+  const panel = document.getElementById(rowsContainerId);
   if (!panel) return;
   const visible = sortedFilteredCompanies(companies);
   panel.innerHTML = visible.length ? visible.map(c => `
@@ -595,6 +623,34 @@ function renderIndicesRows(companies) {
         ${c.score > 0 ? '+' : ''}${c.score}
       </span>
     </a>`).join('') : '<div class="list-empty">Aucun résultat pour cette recherche.</div>';
+}
+
+function renderIndexBody(wrap, indexKey, companiesInGroup) {
+  // Contenu d'un panneau dépliant : cours de l'indice + recherche/tri +
+  // liste — rendu à la première ouverture seulement (voir renderIndicesList),
+  // pas à chaque clic, pour ne pas relancer le widget TradingView inutilement.
+  wrap.innerHTML = `
+    <div class="tradingview-widget-container" id="tv-index-widget-${indexKey}"></div>
+    <div class="list-controls">
+      <input type="search" class="list-search" id="indicesSearch-${indexKey}" placeholder="Rechercher (nom, ticker)…" value="${indicesListSearch}">
+      <select class="list-sort" id="indicesSort-${indexKey}">
+        <option value="score_desc"${indicesListSort === 'score_desc' ? ' selected' : ''}>Score ↓</option>
+        <option value="score_asc"${indicesListSort === 'score_asc' ? ' selected' : ''}>Score ↑</option>
+        <option value="alpha"${indicesListSort === 'alpha' ? ' selected' : ''}>A → Z</option>
+      </select>
+    </div>
+    <div id="indicesRows-${indexKey}"></div>
+  `;
+  loadIndexQuoteWidget(indexKey, `tv-index-widget-${indexKey}`);
+  renderIndicesRows(companiesInGroup, `indicesRows-${indexKey}`);
+  document.getElementById(`indicesSearch-${indexKey}`).addEventListener('input', (e) => {
+    indicesListSearch = e.target.value;
+    renderIndicesRows(companiesInGroup, `indicesRows-${indexKey}`);
+  });
+  document.getElementById(`indicesSort-${indexKey}`).addEventListener('change', (e) => {
+    indicesListSort = e.target.value;
+    renderIndicesRows(companiesInGroup, `indicesRows-${indexKey}`);
+  });
 }
 
 function renderIndicesList(companies) {
@@ -610,29 +666,62 @@ function renderIndicesList(companies) {
       ? `<p class="health-banner health-banner-warn">⚠ ${health.returned}/${health.expected} entreprises à jour — manquantes : ${health.missing_tickers.join(', ')}</p>`
       : `<p class="health-banner">${health.returned}/${health.expected} entreprises à jour</p>`
   ) : '';
+
+  // Regroupe par indice (company.index) plutôt que de tout afficher à plat
+  // — chaque groupe devient un panneau dépliant. Un seul groupe aujourd'hui
+  // (CAC 40) ; la structure est prête à en recevoir d'autres (DAX, Nasdaq…)
+  // sans changement de code, seulement de nouvelles entreprises côté données.
+  const groups = {};
+  companies.forEach(c => {
+    const key = c.index || indicesData.index_key || 'Autre';
+    (groups[key] = groups[key] || []).push(c);
+  });
+  const indexKeys = Object.keys(groups);
+
+  const cardsHtml = indexKeys.map(key => `
+    <div class="index-card">
+      <button class="index-card-header" id="indexToggle-${key}" type="button" aria-expanded="false">
+        <span class="index-card-name">${INDEX_DISPLAY_NAMES[key] || key}</span>
+        <span class="index-card-count">${groups[key].length} entreprise${groups[key].length > 1 ? 's' : ''}</span>
+        <span class="chevron">▾</span>
+      </button>
+      <div class="index-card-body" id="indexBody-${key}" hidden></div>
+    </div>`).join('');
+
   document.getElementById('indicesContent').innerHTML = `
-    <div class="tradingview-widget-container" id="tv-index-widget"></div>
     ${healthHtml}
-    <div class="list-controls">
-      <input type="search" class="list-search" id="indicesSearch" placeholder="Rechercher (nom, ticker)…" value="${indicesListSearch}">
-      <select class="list-sort" id="indicesSort">
-        <option value="score_desc"${indicesListSort === 'score_desc' ? ' selected' : ''}>Score ↓</option>
-        <option value="score_asc"${indicesListSort === 'score_asc' ? ' selected' : ''}>Score ↑</option>
-        <option value="alpha"${indicesListSort === 'alpha' ? ' selected' : ''}>A → Z</option>
-      </select>
-    </div>
-    <div class="panel" id="indicesRows"></div>
+    <div class="index-card-list">${cardsHtml}</div>
   `;
-  loadIndexQuoteWidget(indicesData.index_key || 'CAC40');
-  renderIndicesRows(companies);
-  document.getElementById('indicesSearch').addEventListener('input', (e) => {
-    indicesListSearch = e.target.value;
-    renderIndicesRows(companies);
+
+  // Accordéon : ouvrir l'un ferme les autres, un seul panneau visible à la
+  // fois — le contenu de chaque panneau n'est construit qu'à sa première
+  // ouverture (renderedKeys), pas au chargement de la page.
+  const toggles = indexKeys.map(key => [`indexToggle-${key}`, `indexBody-${key}`, key]);
+  const renderedKeys = new Set();
+  toggles.forEach(([btnId, wrapId, key]) => {
+    const btn = document.getElementById(btnId);
+    btn.addEventListener('click', () => {
+      const wrap = document.getElementById(wrapId);
+      const opening = wrap.hidden;
+      toggles.forEach(([otherBtnId, otherWrapId]) => {
+        if (otherWrapId === wrapId) return;
+        document.getElementById(otherWrapId).hidden = true;
+        document.getElementById(otherBtnId).setAttribute('aria-expanded', 'false');
+      });
+      wrap.hidden = !opening;
+      btn.setAttribute('aria-expanded', String(opening));
+      if (opening && !renderedKeys.has(key)) {
+        renderedKeys.add(key);
+        renderIndexBody(wrap, key, groups[key]);
+      }
+    });
   });
-  document.getElementById('indicesSort').addEventListener('change', (e) => {
-    indicesListSort = e.target.value;
-    renderIndicesRows(companies);
-  });
+
+  // Un seul indice aujourd'hui : on l'ouvre par défaut, pour ne pas
+  // ajouter un clic obligatoire là où il n'y avait qu'une liste avant.
+  if (indexKeys.length === 1) {
+    document.getElementById(`indexToggle-${indexKeys[0]}`).click();
+  }
 }
 
 function formatPrice(v) {

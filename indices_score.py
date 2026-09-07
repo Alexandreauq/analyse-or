@@ -88,6 +88,16 @@ COMPANIES = [
     {"ticker": "AI.PA", "name": "Air Liquide"},
     {"ticker": "ML.PA", "name": "Michelin"},
     {"ticker": "AC.PA", "name": "Accor"},
+    # Banques et assurance (voir FINANCIAL_SECTOR_TICKERS) : méthodologie
+    # adaptée (ROE, ratio de levier, P/E + P/B) plutôt que la grille
+    # standard, EBITDA/EBIT étant indisponibles chez yfinance pour ces
+    # entreprises. 37 entreprises au total désormais — le reliquat par
+    # rapport aux 40 constituants du CAC 40 n'a pas été audité valeur par
+    # valeur (composition de l'indice qui évolue dans le temps).
+    {"ticker": "BNP.PA", "name": "BNP Paribas"},
+    {"ticker": "GLE.PA", "name": "Société Générale"},
+    {"ticker": "ACA.PA", "name": "Crédit Agricole"},
+    {"ticker": "CS.PA", "name": "AXA"},
 ]
 
 SECTOR_PROFILES = {
@@ -114,6 +124,19 @@ SECTOR_ADJUSTMENT = {"defensif": 1.3, "standard": 1.0, "cyclique": 0.7}
 SECTOR_OVERRIDE_BY_TICKER = {
     "MT.PA": "Basic Materials",  # ArcelorMittal (sidérurgie, cyclique)
 }
+
+# Banques (BNP Paribas, Société Générale, Crédit Agricole) et assurance
+# (AXA) : yfinance n'expose ni EBITDA, ni (pour les 3 banques) EBIT dans
+# leurs comptes — vérifié via un diagnostic dédié sur ces 4 tickers, pas
+# une lacune ponctuelle. Ces notions n'ont de toute façon pas le même sens
+# pour un établissement financier, dont le "chiffre d'affaires" est un
+# produit net bancaire et non un résultat d'exploitation classique avec
+# amortissements. Ces entreprises passent par extract_ratios_financial et
+# les fonctions score_*_financiere (ROE, ratio de levier, conversion cash,
+# P/E + P/B) plutôt que par la méthodologie standard — voir aussi le badge
+# "Profil financier" côté frontend (docs/index.html), affiché pour que
+# cette différence de méthodologie soit visible des utilisateurs.
+FINANCIAL_SECTOR_TICKERS = {"BNP.PA", "GLE.PA", "ACA.PA", "CS.PA"}
 
 
 @dataclass
@@ -316,6 +339,120 @@ def score_valorisation(
     )
 
 
+# --- Variantes "profil financier" (banques, assurances) -------------------
+#
+# yfinance n'expose ni EBITDA, ni (pour les banques) EBIT dans les comptes
+# de ces entreprises (vérifié via un diagnostic dédié sur BNP.PA/GLE.PA/
+# ACA.PA/CS.PA, pas une lacune ponctuelle) — et ces notions n'ont de toute
+# façon pas le même sens pour un établissement financier, dont le "chiffre
+# d'affaires" est un produit net bancaire et non un résultat d'exploitation
+# classique avec amortissements. Les 4 fonctions ci-dessous remplacent
+# score_rentabilite / score_structure_financiere / score_generation_cash /
+# score_valorisation pour les tickers de FINANCIAL_SECTOR_TICKERS, en
+# réutilisant les indicateurs standards du secteur. Croissance, dynamique
+# récente et actualité récente restent inchangées (indépendantes d'EBITDA).
+
+def score_rentabilite_financiere(roe: float, cost_of_capital: float) -> FactorResult:
+    """ROE (résultat net / capitaux propres) à la place du ROCE : pour un
+    établissement financier, le levier fait partie intégrante du modèle
+    économique plutôt qu'un effet à isoler — même logique d'écart au coût
+    du capital que score_rentabilite, appliquée au ROE."""
+    spread = roe - cost_of_capital
+    score = _clamp((spread / ROCE_SPREAD_SCALE) * 10)
+    return FactorResult(
+        "Rentabilité / création de valeur",
+        score,
+        WEIGHTS["rentabilite"],
+        f"ROE {roe:.1f}% vs coût du capital {cost_of_capital:.1f}% (profil financier)",
+    )
+
+
+LEVERAGE_RATIO_COMFORTABLE = 6.0   # % capitaux propres/actif total jugé confortable
+LEVERAGE_RATIO_RISKY = 3.0         # % proche du minimum réglementaire indicatif (ratio
+                                    # de levier Bâle III, 3%) — seuil de vigilance, pas
+                                    # une lecture réglementaire précise (CET1 réel non
+                                    # exposé par yfinance)
+
+
+def _score_capital_ratio(ratio: float, comfortable: float, risky: float) -> float:
+    """+10 au ratio confortable et au-delà, -10 au seuil risqué et en
+    dessous, linéaire entre les deux — inverse de _score_leverage : ici,
+    plus le ratio capitaux propres/actif est élevé, plus c'est solide."""
+    if ratio <= risky:
+        return -10.0
+    if ratio >= comfortable:
+        return 10.0
+    return -10.0 + 20.0 * (ratio - risky) / (comfortable - risky)
+
+
+def score_structure_financiere_bancaire(leverage_ratio: float) -> FactorResult:
+    """Capitaux propres/actif total, l'indicateur de solidité standard
+    pour une banque/assurance — remplace dette nette/EBITDA + ICR, qui
+    supposent un EBITDA et des frais financiers isolables absents ici."""
+    score = _score_capital_ratio(leverage_ratio, LEVERAGE_RATIO_COMFORTABLE, LEVERAGE_RATIO_RISKY)
+    return FactorResult(
+        "Structure financière / solvabilité",
+        score,
+        WEIGHTS["structure_financiere"],
+        f"Capitaux propres/actif total {leverage_ratio:.1f}% (seuil confort "
+        f"{LEVERAGE_RATIO_COMFORTABLE:.0f}%, vigilance sous {LEVERAGE_RATIO_RISKY:.0f}%) "
+        f"— profil financier",
+    )
+
+
+def score_croissance_financiere(cagr_ca: float, cagr_net_income: float) -> FactorResult:
+    """CAGR chiffre d'affaires et résultat net (remplace CAGR EBITDA,
+    indisponible) — réutilise le calcul de score_croissance tel quel, seul
+    le libellé change."""
+    base = score_croissance(cagr_ca, cagr_net_income)
+    return FactorResult(
+        base.name, base.score, base.weight,
+        f"CAGR CA {cagr_ca:+.1f}%/an, CAGR résultat net {cagr_net_income:+.1f}%/an "
+        f"(5 ans, profil financier)",
+    )
+
+
+CASH_CONVERSION_FINANCIAL_NEUTRAL = 80.0   # % OCF/résultat net jugé neutre
+CASH_CONVERSION_FINANCIAL_SCALE = 40.0     # échelle volontairement large (voir docstring)
+
+
+def score_generation_cash_financiere(cash_conversion: float) -> FactorResult:
+    """Flux de trésorerie opérationnel / résultat net (%), en repli du
+    FCF/EBITDA (EBITDA indisponible). Échelle nettement plus large que la
+    version standard (40 points contre 5) : l'OCF d'une banque encaisse
+    les variations d'encours de crédits/dépôts, bien plus volatiles d'un
+    exercice à l'autre que pour une entreprise non financière — signal à
+    interpréter avec prudence, pondération inchangée (12%) mais amplitude
+    de score volontairement amortie."""
+    score = _clamp((cash_conversion - CASH_CONVERSION_FINANCIAL_NEUTRAL) / CASH_CONVERSION_FINANCIAL_SCALE)
+    return FactorResult(
+        "Génération de cash",
+        score,
+        WEIGHTS["generation_cash"],
+        f"OCF/résultat net {cash_conversion:.0f}% (profil financier, signal volatil)",
+    )
+
+
+def score_valorisation_financiere(
+    current_pe: float, avg_pe_5y: float,
+    current_pb: float, avg_pb_5y: float,
+    cagr_net_income: float,
+) -> FactorResult:
+    """P/E et P/B (Price/Book, standard pour valoriser une banque/
+    assurance) comparés à leur moyenne 5 ans — remplace EV/EBITDA
+    (indisponible) par P/B, garde P/E."""
+    pe_score = _premium_score(current_pe, avg_pe_5y, cagr_net_income)
+    pb_score = _premium_score(current_pb, avg_pb_5y, cagr_net_income)
+    score = _clamp((pe_score + pb_score) / 2)
+    return FactorResult(
+        "Valorisation relative",
+        score,
+        WEIGHTS["valorisation"],
+        f"PER {current_pe:.1f}x (moy. 5 ans {avg_pe_5y:.1f}x) — "
+        f"P/B {current_pb:.1f}x (moy. 5 ans {avg_pb_5y:.1f}x) — profil financier",
+    )
+
+
 PRICE_MOMENTUM_SCALE = 20.0    # % d'écart vs MM200 pour un score plein
 QUARTERLY_ACCEL_SCALE = 10.0   # points d'écart de croissance pour un score plein
 
@@ -403,6 +540,17 @@ def get_row(df, *aliases):
     raise KeyError(
         f"Aucune des lignes {aliases} trouvée (lignes disponibles : {list(df.index)})"
     )
+
+
+def _try_get_row(df, *aliases):
+    """Comme get_row, mais renvoie None au lieu de lever KeyError si aucun
+    alias ne correspond — pour une ligne réellement optionnelle (EBITDA/
+    EBIT chez un établissement financier, où la notion n'existe pas),
+    à distinguer d'une ligne attendue mais manquante par accident."""
+    try:
+        return get_row(df, *aliases)
+    except KeyError:
+        return None
 
 
 def _cagr(first_value: float, last_value: float, years: int) -> float:
@@ -571,6 +719,113 @@ def extract_ratios(financials, balance_sheet, cashflow, closes_by_year, shares_o
     }
 
 
+def extract_ratios_financial(financials, balance_sheet, cashflow, closes_by_year, shares_outstanding: float) -> dict:
+    """Variante d'extract_ratios pour les banques/assurances de
+    FINANCIAL_SECTOR_TICKERS : ni EBITDA ni (pour les banques) EBIT
+    n'existent dans leurs comptes yfinance — voir le commentaire sur
+    FINANCIAL_SECTOR_TICKERS. Calcule ROE, ratio de levier (capitaux
+    propres/actif total), conversion cash (OCF/résultat net), P/E et P/B
+    plutôt que ROCE/dette nette-EBITDA/ICR/FCF-EBITDA/EV-EBITDA.
+
+    fcf/cagr_ebitda/net_debt/current_ev_ebitda/avg_ev_ebitda_5y sont tout
+    de même présents dans le dict renvoyé, à des valeurs neutres (0.0) :
+    estimate_valuation_targets() y accède sans condition pour toutes les
+    entreprises, et ces valeurs neutres désactivent proprement le DCF et
+    la valorisation par multiple EV/EBITDA via leur garde-fou déjà
+    existant (fcf <= 0 -> None, current_ev_ebitda == 0 -> None) — la juste
+    valeur repose alors uniquement sur l'approche patrimoniale (valeur
+    comptable par action), une ancre usuelle pour ce secteur, plutôt que
+    de construire un DCF avec un FCF ou une croissance d'EBITDA qui
+    n'existent pas."""
+    years_cols = list(financials.columns)
+    n_years = len(years_cols)
+    latest = years_cols[0]
+
+    revenue = get_row(financials, "Total Revenue", "Operating Revenue")
+    net_income = get_row(financials, "Net Income", "Net Income Common Stockholders")
+    tax_rate = get_row(financials, "Tax Rate For Calcs")
+
+    total_assets = get_row(balance_sheet, "Total Assets")
+    equity = get_row(balance_sheet, "Stockholders Equity", "Common Stock Equity")
+    total_debt = get_row(balance_sheet, "Total Debt")
+
+    op_cash_flow = get_row(cashflow, "Operating Cash Flow")
+
+    equity_latest = _safe_value(equity, latest)
+    total_assets_latest = _safe_value(total_assets, latest)
+    total_debt_latest = _safe_value(total_debt, latest)
+    net_income_latest = _safe_value(net_income, latest)
+    op_cash_flow_latest = _safe_value(op_cash_flow, latest)
+
+    roe = (
+        (net_income_latest / equity_latest) * 100
+        if equity_latest and not _is_missing(equity_latest) and not _is_missing(net_income_latest)
+        else 0.0
+    )
+    leverage_ratio = (
+        (equity_latest / total_assets_latest) * 100
+        if total_assets_latest and not _is_missing(total_assets_latest) and not _is_missing(equity_latest)
+        else 0.0
+    )
+    cash_conversion = (
+        (op_cash_flow_latest / net_income_latest) * 100
+        if net_income_latest and not _is_missing(net_income_latest) and not _is_missing(op_cash_flow_latest)
+        else 0.0
+    )
+
+    smoothing_window = 2 if n_years >= 4 else 1
+    recent_cols = years_cols[:smoothing_window]
+    old_cols = years_cols[-smoothing_window:]
+    cagr_span = n_years - smoothing_window
+    cagr_ca = _cagr(
+        _window_average(revenue, old_cols), _window_average(revenue, recent_cols), cagr_span
+    )
+    cagr_net_income = _cagr(
+        _window_average(net_income, old_cols), _window_average(net_income, recent_cols), cagr_span
+    )
+
+    pe_by_year, pb_by_year = [], []
+    for col in years_cols:
+        price = closes_by_year.get(col)
+        equity_value = _safe_value(equity, col)
+        if (
+            price is None
+            or not net_income[col] or _is_missing(net_income[col])
+            or not equity_value or _is_missing(equity_value)
+        ):
+            continue
+        market_cap = price * shares_outstanding
+        pe_by_year.append(market_cap / net_income[col])
+        pb_by_year.append(market_cap / equity_value)
+
+    current_pe = pe_by_year[0] if pe_by_year else 0.0
+    avg_pe_5y = sum(pe_by_year) / len(pe_by_year) if pe_by_year else 0.0
+    current_pb = pb_by_year[0] if pb_by_year else 0.0
+    avg_pb_5y = sum(pb_by_year) / len(pb_by_year) if pb_by_year else 0.0
+
+    return {
+        "roe": roe,
+        "leverage_ratio": leverage_ratio,
+        "cash_conversion": cash_conversion,
+        "cagr_ca": cagr_ca,
+        "cagr_net_income": cagr_net_income,
+        "current_pe": current_pe,
+        "avg_pe_5y": avg_pe_5y,
+        "current_pb": current_pb,
+        "avg_pb_5y": avg_pb_5y,
+        "equity": equity_latest,
+        "tax_rate": tax_rate[latest],
+        "total_debt": total_debt_latest,
+        # Valeurs neutres pour désactiver proprement DCF / multiple EV-EBITDA
+        # dans estimate_valuation_targets (voir docstring ci-dessus).
+        "fcf": 0.0,
+        "cagr_ebitda": 0.0,
+        "net_debt": 0.0,
+        "current_ev_ebitda": 0.0,
+        "avg_ev_ebitda_5y": 0.0,
+    }
+
+
 def extract_quarterly_growth(quarterly_financials) -> float | None:
     """CA du dernier trimestre publié vs le même trimestre il y a un an
     (%). None si moins de 5 trimestres sont disponibles (yfinance
@@ -603,8 +858,11 @@ def build_financial_narrative_context(
     la mise en forme brute. Une ligne 'non disponible' remplace toute
     valeur manquante plutôt que de faire échouer le formatage."""
     revenue = get_row(financials, "Total Revenue", "Operating Revenue")
-    ebitda = get_row(financials, "EBITDA", "Normalized EBITDA")
-    ebit = get_row(financials, "EBIT", "Operating Income", "Total Operating Income As Reported")
+    # _try_get_row (pas get_row) pour EBITDA/EBIT : absentes des comptes
+    # yfinance des banques/assurances (voir FINANCIAL_SECTOR_TICKERS) — pas
+    # une panne, ces notions n'existent pas pour un établissement financier.
+    ebitda = _try_get_row(financials, "EBITDA", "Normalized EBITDA")
+    ebit = _try_get_row(financials, "EBIT", "Operating Income", "Total Operating Income As Reported")
     net_income = get_row(financials, "Net Income", "Net Income Common Stockholders")
     equity = get_row(balance_sheet, "Stockholders Equity", "Common Stock Equity")
     total_debt = get_row(balance_sheet, "Total Debt")
@@ -618,7 +876,7 @@ def build_financial_narrative_context(
     capex = get_row(cashflow, "Capital Expenditure", "Net PPE Purchase And Sale")
 
     def _fmt(value) -> str:
-        return "non disponible" if _is_missing(value) else f"{value:,.0f}"
+        return "non disponible" if value is None or _is_missing(value) else f"{value:,.0f}"
 
     lines = ["Comptes annuels (le plus récent en premier) :"]
     for col in financials.columns:
@@ -635,9 +893,11 @@ def build_financial_narrative_context(
             op_cash_flow_value + capex_value
             if not _is_missing(op_cash_flow_value) and not _is_missing(capex_value) else None
         )
+        ebitda_value = ebitda[col] if ebitda is not None else None
+        ebit_value = ebit[col] if ebit is not None else None
         lines.append(
             f"- {col.date() if hasattr(col, 'date') else col} : CA {_fmt(revenue[col])}, "
-            f"EBITDA {_fmt(ebitda[col])}, EBIT {_fmt(ebit[col])}, "
+            f"EBITDA {_fmt(ebitda_value)}, EBIT {_fmt(ebit_value)}, "
             f"résultat net {_fmt(net_income[col])}, capitaux propres {_fmt(equity_value)}, "
             f"dette nette {_fmt(net_debt)}, FCF {_fmt(fcf)}"
         )
@@ -751,10 +1011,23 @@ def fetch_company_financials(ticker: str) -> dict:
         if current_price is not None and ma200 else None
     )
 
-    ratios = extract_ratios(financials, balance_sheet, cashflow, closes_by_year, shares_outstanding)
+    is_financial = ticker in FINANCIAL_SECTOR_TICKERS
+    if is_financial:
+        ratios = extract_ratios_financial(financials, balance_sheet, cashflow, closes_by_year, shares_outstanding)
+    else:
+        ratios = extract_ratios(financials, balance_sheet, cashflow, closes_by_year, shares_outstanding)
+    ratios["is_financial"] = is_financial
     ratios["sector"] = SECTOR_OVERRIDE_BY_TICKER.get(ticker) or sector
     ratios["ecart_pct_ma200"] = ecart_pct_ma200
-    ratios["quarterly_yoy_growth_ca"] = extract_quarterly_growth(quarterly_financials)
+    try:
+        # Même précaution que build_financial_narrative_context pour le
+        # même motif (voir son commentaire) : une entreprise dont le
+        # quarterly_financials a des colonnes mais pas la ligne CA ne doit
+        # pas faire échouer toute l'entreprise pour un sous-signal
+        # secondaire (10% du score).
+        ratios["quarterly_yoy_growth_ca"] = extract_quarterly_growth(quarterly_financials)
+    except KeyError:
+        ratios["quarterly_yoy_growth_ca"] = None
     ratios["financial_context"] = build_financial_narrative_context(
         financials, balance_sheet, cashflow, quarterly_financials
     )
@@ -1374,14 +1647,28 @@ def build_company_entry(
         financial_analysis_html = previous["financial_analysis_html"]
         financial_analysis_quarter = previous.get("financial_analysis_quarter")
     else:
-        ratios_summary = (
-            f"ROCE {data['roce']:.1f}%, ROE {data['roe']:.1f}%, "
-            f"dette nette/EBITDA {data['net_debt_ebitda']:.1f}x, "
-            f"ICR {data['icr']:.1f}x, CAGR CA {data['cagr_ca']:+.1f}%/an, "
-            f"CAGR EBITDA {data['cagr_ebitda']:+.1f}%/an, "
-            f"conversion FCF/EBITDA {data['fcf_conversion']:.0f}%, "
-            f"coût du capital {cost_of_capital:.1f}%"
-        )
+        if data["is_financial"]:
+            # Profil financier (voir FINANCIAL_SECTOR_TICKERS) : ROE/ratio
+            # de levier/CAGR résultat net plutôt que ROCE/dette nette-
+            # EBITDA/ICR/CAGR EBITDA, absents pour ces entreprises.
+            ratios_summary = (
+                f"[Profil financier — méthodologie adaptée, EBITDA/EBIT non "
+                f"disponibles pour cette entreprise] "
+                f"ROE {data['roe']:.1f}%, capitaux propres/actif total "
+                f"{data['leverage_ratio']:.1f}%, CAGR CA {data['cagr_ca']:+.1f}%/an, "
+                f"CAGR résultat net {data['cagr_net_income']:+.1f}%/an, "
+                f"conversion cash (OCF/résultat net) {data['cash_conversion']:.0f}%, "
+                f"coût du capital {cost_of_capital:.1f}%"
+            )
+        else:
+            ratios_summary = (
+                f"ROCE {data['roce']:.1f}%, ROE {data['roe']:.1f}%, "
+                f"dette nette/EBITDA {data['net_debt_ebitda']:.1f}x, "
+                f"ICR {data['icr']:.1f}x, CAGR CA {data['cagr_ca']:+.1f}%/an, "
+                f"CAGR EBITDA {data['cagr_ebitda']:+.1f}%/an, "
+                f"conversion FCF/EBITDA {data['fcf_conversion']:.0f}%, "
+                f"coût du capital {cost_of_capital:.1f}%"
+            )
         generated = generate_financial_analysis(
             name, data["financial_context"], ratios_summary
         )
@@ -1410,20 +1697,36 @@ def build_company_entry(
         print(f"Erreur récupération news pour {name} : {e}")
         news = []
 
-    factors = [
-        score_rentabilite(data["roce"], data["roe"], cost_of_capital),
-        score_structure_financiere(data["net_debt_ebitda"], data["icr"], sector),
-        score_croissance(data["cagr_ca"], data["cagr_ebitda"]),
-        score_generation_cash(data["fcf_conversion"]),
-        score_valorisation(
-            data["current_ev_ebitda"], data["avg_ev_ebitda_5y"],
-            data["current_pe"], data["avg_pe_5y"], data["cagr_ebitda"],
-        ),
-        score_dynamique_recente(
-            data["ecart_pct_ma200"], data["quarterly_yoy_growth_ca"], data["cagr_ca"],
-        ),
-        score_actualite_recente(news),
-    ]
+    if data["is_financial"]:
+        factors = [
+            score_rentabilite_financiere(data["roe"], cost_of_capital),
+            score_structure_financiere_bancaire(data["leverage_ratio"]),
+            score_croissance_financiere(data["cagr_ca"], data["cagr_net_income"]),
+            score_generation_cash_financiere(data["cash_conversion"]),
+            score_valorisation_financiere(
+                data["current_pe"], data["avg_pe_5y"],
+                data["current_pb"], data["avg_pb_5y"], data["cagr_net_income"],
+            ),
+            score_dynamique_recente(
+                data["ecart_pct_ma200"], data["quarterly_yoy_growth_ca"], data["cagr_ca"],
+            ),
+            score_actualite_recente(news),
+        ]
+    else:
+        factors = [
+            score_rentabilite(data["roce"], data["roe"], cost_of_capital),
+            score_structure_financiere(data["net_debt_ebitda"], data["icr"], sector),
+            score_croissance(data["cagr_ca"], data["cagr_ebitda"]),
+            score_generation_cash(data["fcf_conversion"]),
+            score_valorisation(
+                data["current_ev_ebitda"], data["avg_ev_ebitda_5y"],
+                data["current_pe"], data["avg_pe_5y"], data["cagr_ebitda"],
+            ),
+            score_dynamique_recente(
+                data["ecart_pct_ma200"], data["quarterly_yoy_growth_ca"], data["cagr_ca"],
+            ),
+            score_actualite_recente(news),
+        ]
     composite = compute_composite(factors)
 
     valuation_targets = estimate_valuation_targets(data, cost_of_capital)
@@ -1433,6 +1736,7 @@ def build_company_entry(
         "name": name,
         "sector": sector,
         "sector_profile": sector_risk_profile(sector),
+        "is_financial": data["is_financial"],
         "score": composite,
         "interpretation": interpret(composite),
         "factors": [

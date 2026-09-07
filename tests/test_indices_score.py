@@ -961,6 +961,7 @@ def _fake_ratios():
         "sector": "Consumer Defensive",
         "financial_context": "Comptes annuels (le plus récent en premier) :\n- ...",
         "latest_quarter_date": "2026-06-30",
+        "is_financial": False,
     }
 
 
@@ -2227,3 +2228,177 @@ def test_build_financial_narrative_context_handles_quarterly_without_revenue_row
 
     assert "Derniers trimestres publiés" in context
     assert "2025-06-30" not in context  # aucune ligne trimestrielle rendue, faute de CA exploitable
+
+
+# --- Profil financier (banques, assurances) --------------------------------
+
+def _make_financial_fixture_statements():
+    """Reproduit la forme réelle des comptes yfinance pour BNP.PA/GLE.PA/
+    ACA.PA/CS.PA : ni EBITDA ni EBIT, mais Total Revenue/Net Income/Tax
+    Rate For Calcs, Total Assets/Stockholders Equity/Total Debt/Cash, et
+    Operating Cash Flow/Capital Expenditure sont bien présents (confirmé
+    via un diagnostic dédié — voir FINANCIAL_SECTOR_TICKERS)."""
+    years = [
+        pd.Timestamp("2025-12-31"), pd.Timestamp("2024-12-31"),
+        pd.Timestamp("2023-12-31"), pd.Timestamp("2022-12-31"),
+    ]
+    financials = _fake_annual_df(
+        {
+            "Total Revenue": [1000.0, 950.0, 900.0, 850.0],
+            "Net Income": [300.0, 280.0, 260.0, 240.0],
+            "Tax Rate For Calcs": [0.25, 0.25, 0.25, 0.25],
+        },
+        years,
+    )
+    balance_sheet = _fake_annual_df(
+        {
+            "Total Assets": [50000.0, 48000.0, 46000.0, 44000.0],
+            "Stockholders Equity": [3000.0, 2900.0, 2800.0, 2700.0],
+            "Total Debt": [500.0, 480.0, 460.0, 440.0],
+            "Cash And Cash Equivalents": [200.0, 190.0, 180.0, 170.0],
+        },
+        years,
+    )
+    cashflow = _fake_annual_df(
+        {
+            "Operating Cash Flow": [320.0, 300.0, 280.0, 260.0],
+            "Capital Expenditure": [-10.0, -9.0, -8.0, -7.0],
+        },
+        years,
+    )
+    closes_by_year = {y: 50.0 for y in years}
+    return financials, balance_sheet, cashflow, closes_by_year
+
+
+def test_extract_ratios_raises_on_financial_sector_statements_without_ebitda():
+    """Documente la raison d'être d'extract_ratios_financial : la fonction
+    standard plante sur des comptes sans EBITDA, comme observé en
+    diagnostic pour BNP/SocGen/Crédit Agricole/AXA."""
+    financials, balance_sheet, cashflow, closes_by_year = _make_financial_fixture_statements()
+    try:
+        extract_ratios(financials, balance_sheet, cashflow, closes_by_year, shares_outstanding=100.0)
+        assert False, "expected KeyError"
+    except KeyError:
+        pass
+
+
+def test_extract_ratios_financial_computes_expected_keys():
+    financials, balance_sheet, cashflow, closes_by_year = _make_financial_fixture_statements()
+
+    ratios = indices_score.extract_ratios_financial(
+        financials, balance_sheet, cashflow, closes_by_year, shares_outstanding=100.0
+    )
+
+    for key in [
+        "roe", "leverage_ratio", "cash_conversion", "cagr_ca", "cagr_net_income",
+        "current_pe", "avg_pe_5y", "current_pb", "avg_pb_5y", "equity", "tax_rate",
+        "total_debt", "fcf", "cagr_ebitda", "net_debt", "current_ev_ebitda", "avg_ev_ebitda_5y",
+    ]:
+        assert key in ratios, f"clé manquante : {key}"
+
+    assert ratios["roe"] == pytest.approx(300.0 / 3000.0 * 100)
+    assert ratios["leverage_ratio"] == pytest.approx(3000.0 / 50000.0 * 100)
+    assert ratios["cash_conversion"] == pytest.approx(320.0 / 300.0 * 100)
+    # Valeurs neutres : désactivent proprement le DCF et le multiple EV/EBITDA
+    # dans estimate_valuation_targets (fcf <= 0 -> None, current_ev_ebitda == 0 -> None).
+    assert ratios["fcf"] == 0.0
+    assert ratios["net_debt"] == 0.0
+    assert ratios["current_ev_ebitda"] == 0.0
+    assert ratios["avg_ev_ebitda_5y"] == 0.0
+
+
+def test_build_financial_narrative_context_omits_ebitda_ebit_for_financial_profile():
+    financials, balance_sheet, cashflow, _ = _make_financial_fixture_statements()
+    quarterly_financials = _fake_annual_df(
+        {"Diluted Average Shares": [100.0]}, [pd.Timestamp("2025-06-30")],
+    )
+
+    context = indices_score.build_financial_narrative_context(
+        financials, balance_sheet, cashflow, quarterly_financials,
+    )
+
+    assert "EBITDA non disponible" in context
+    assert "EBIT non disponible" in context
+    assert "CA 1,000" in context or "CA 1 000" in context or "1,000" in context
+
+
+def test_score_rentabilite_financiere_rewards_roe_above_cost_of_capital():
+    good = indices_score.score_rentabilite_financiere(roe=15.0, cost_of_capital=8.0)
+    bad = indices_score.score_rentabilite_financiere(roe=2.0, cost_of_capital=8.0)
+    assert good.score > 0
+    assert bad.score < 0
+    assert "profil financier" in good.raw_value.lower()
+
+
+def test_score_structure_financiere_bancaire_bands():
+    solid = indices_score.score_structure_financiere_bancaire(leverage_ratio=8.0)
+    risky = indices_score.score_structure_financiere_bancaire(leverage_ratio=2.0)
+    assert solid.score == 10.0
+    assert risky.score == -10.0
+
+
+def test_score_croissance_financiere_reuses_score_croissance_math():
+    result = indices_score.score_croissance_financiere(cagr_ca=6.0, cagr_net_income=6.0)
+    expected = indices_score.score_croissance(6.0, 6.0)
+    assert result.score == expected.score
+    assert "résultat net" in result.raw_value
+    assert "EBITDA" not in result.raw_value
+
+
+def test_score_generation_cash_financiere_wider_scale_than_standard():
+    """La même valeur de conversion doit produire un score moins extrême
+    côté financier (échelle 40 contre 5) — signal jugé plus volatil."""
+    standard = indices_score.score_generation_cash(70.0)
+    financial = indices_score.score_generation_cash_financiere(70.0)
+    assert abs(financial.score) < abs(standard.score)
+
+
+def test_score_valorisation_financiere_uses_pb_instead_of_ev_ebitda():
+    result = indices_score.score_valorisation_financiere(
+        current_pe=8.0, avg_pe_5y=10.0, current_pb=0.7, avg_pb_5y=1.0, cagr_net_income=3.0,
+    )
+    assert "P/B" in result.raw_value
+    assert "EV/EBITDA" not in result.raw_value
+    assert result.score > 0  # décote sur les deux multiples -> favorable
+
+
+def _fake_financial_ratios():
+    return {
+        "roe": 10.0, "leverage_ratio": 5.5, "cash_conversion": 90.0,
+        "cagr_ca": 4.0, "cagr_net_income": 5.0,
+        "current_pe": 9.0, "avg_pe_5y": 9.0, "current_pb": 0.8, "avg_pb_5y": 0.8,
+        "ecart_pct_ma200": 2.0, "quarterly_yoy_growth_ca": 3.0,
+        "fcf": 0.0, "cagr_ebitda": 0.0, "net_debt": 0.0,
+        "current_ev_ebitda": 0.0, "avg_ev_ebitda_5y": 0.0,
+        "equity": 500.0, "current_price": 60.0, "ma200": 58.0,
+        "shares_outstanding": 20.0, "tax_rate": 0.25, "total_debt": 30.0,
+        "beta": 1.0, "sector": "Financial Services",
+        "financial_context": "Comptes annuels (le plus récent en premier) :\n- ...",
+        "latest_quarter_date": "2026-06-30",
+        "is_financial": True,
+    }
+
+
+def test_build_company_entry_uses_financial_factors_for_financial_sector_tickers(monkeypatch):
+    monkeypatch.setattr(indices_score, "fetch_company_financials", lambda ticker: _fake_financial_ratios())
+    monkeypatch.setattr(indices_score, "fetch_news", lambda name: [])
+    monkeypatch.setattr(indices_score, "generate_financial_analysis", lambda *a, **k: "<p>Analyse.</p>")
+
+    entry = indices_score.build_company_entry("BNP.PA", "BNP Paribas", 3.0, {})
+
+    assert entry["is_financial"] is True
+    assert [f["name"] for f in entry["factors"]] == [
+        "Rentabilité / création de valeur", "Structure financière / solvabilité",
+        "Croissance", "Génération de cash", "Valorisation relative",
+        "Dynamique récente", "Actualité récente",
+    ]
+    assert "profil financier" in entry["factors"][0]["raw_value"].lower()
+    # fcf neutre (0.0) désactive le DCF : la juste valeur ne peut reposer
+    # que sur l'approche patrimoniale (equity/shares_outstanding = 25.0),
+    # qui doit rester calculable malgré l'absence de FCF/EBITDA.
+    assert entry["fair_value"] is not None
+
+
+def test_financial_sector_tickers_are_in_companies():
+    company_tickers = {c["ticker"] for c in indices_score.COMPANIES}
+    assert indices_score.FINANCIAL_SECTOR_TICKERS <= company_tickers

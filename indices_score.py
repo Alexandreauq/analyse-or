@@ -2078,37 +2078,78 @@ SMTP_PORT = 587
 SITE_BASE_URL = "https://alexandreauq.github.io/analyse-or/"
 
 
-def build_entry_alert_email_html(companies: list[dict]) -> str:
-    rows = "".join(
-        f'<p style="margin:0 0 14px;padding:10px 14px;border-left:3px solid #b99a68;'
-        f'font-family:Arial,sans-serif;">'
-        f'<strong style="color:#edeef3;">{c["name"]} ({c["ticker"]})</strong><br>'
-        f'<span style="color:#8a90a3;font-size:13px;">'
-        f'Score {c["score"]:+.1f} — cours {c["current_price"]:.2f} €, '
-        f'repère d\'entrée {c["entry_price"]:.2f} €</span><br>'
-        f'<a href="{SITE_BASE_URL}#indices/{c["ticker"]}" style="color:#b99a68;font-size:13px;">'
-        f'Voir la fiche →</a></p>'
-        for c in companies
-    )
+def _entry_alert_detail(company: dict) -> str:
+    """Texte de l'alerte "entree" elle-même (déjà rédigé par
+    compute_company_alerts) — plutôt que de reformuler la condition
+    séparément et risquer une divergence avec ce qui est réellement
+    affiché sur le site."""
+    for alert in company.get("alerts", []):
+        if alert.get("kind") == "entree":
+            return alert.get("detail", "")
+    return ""
+
+
+def build_entry_alert_email_html(company: dict) -> str:
+    """Un email par entreprise (pas un digest groupé) : objet et contenu
+    portent sur cette seule entreprise, dans le même langage visuel que
+    le site (Fraunces remplacé par une police sans-serif — non
+    disponible dans un email — mais mêmes couleurs et hiérarchie)."""
+    index_name = INDEX_NAMES.get(company.get("index"), company.get("index", ""))
+    score = company["score"]
+    score_color = "#b99a68" if score >= 0 else "#a35540"
+    detail = _entry_alert_detail(company)
+    fiche_url = f"{SITE_BASE_URL}#indices/{company['ticker']}"
+
     return f"""
-    <html><body style="background:#15161c;color:#edeef3;font-family:Arial,sans-serif;padding:24px;">
-      <h2 style="color:#b99a68;margin:0 0 4px;">Nouveaux signaux d'entrée</h2>
-      <p style="color:#8a90a3;margin:0 0 20px;">{datetime.today():%d/%m/%Y}</p>
-      {rows}
-      <p style="color:#8a90a3;font-size:12px;margin-top:24px;">
-        Score composite favorable (&gt; +15) et cours à moins de {NEAR_ENTRY_PCT:.0f}%
-        du repère d'entrée — pas un conseil d'investissement.
-      </p>
+    <html><body style="background:#15161c;margin:0;padding:0;">
+      <div style="max-width:480px;margin:0 auto;padding:32px 24px;font-family:Arial,Helvetica,sans-serif;">
+        <p style="color:#8a90a3;font-size:11px;letter-spacing:0.08em;text-transform:uppercase;margin:0 0 10px;">
+          {index_name} — Signal d'entrée
+        </p>
+        <h1 style="color:#edeef3;font-size:24px;font-weight:bold;margin:0 0 2px;">{company['name']}</h1>
+        <p style="color:#8a90a3;font-size:13px;margin:0 0 24px;">{company['ticker']}</p>
+
+        <div style="background:#1b1d25;border:1px solid #2a2d38;border-radius:10px;padding:20px 20px 16px;margin:0 0 20px;">
+          <p style="color:{score_color};font-size:42px;font-weight:bold;margin:0;line-height:1;">{score:+.1f}</p>
+          <p style="color:#edeef3;font-size:14px;margin:8px 0 0;">{company['interpretation']}</p>
+        </div>
+
+        <table style="width:100%;border-collapse:collapse;margin:0 0 20px;">
+          <tr>
+            <td style="padding:9px 0;border-bottom:1px solid #2a2d38;color:#8a90a3;font-size:13px;font-family:Arial,sans-serif;">Cours actuel</td>
+            <td style="padding:9px 0;border-bottom:1px solid #2a2d38;color:#edeef3;font-size:13px;font-family:Arial,sans-serif;text-align:right;">{company['current_price']:.2f} €</td>
+          </tr>
+          <tr>
+            <td style="padding:9px 0;border-bottom:1px solid #2a2d38;color:#8a90a3;font-size:13px;font-family:Arial,sans-serif;">Repère d'entrée</td>
+            <td style="padding:9px 0;border-bottom:1px solid #2a2d38;color:#b99a68;font-size:13px;font-family:Arial,sans-serif;text-align:right;">{company['entry_price']:.2f} €</td>
+          </tr>
+          <tr>
+            <td style="padding:9px 0;color:#8a90a3;font-size:13px;font-family:Arial,sans-serif;">Repère de sortie</td>
+            <td style="padding:9px 0;color:#a35540;font-size:13px;font-family:Arial,sans-serif;text-align:right;">{company['exit_price']:.2f} €</td>
+          </tr>
+        </table>
+
+        <p style="color:#8a90a3;font-size:13px;line-height:1.6;margin:0 0 28px;">{detail}</p>
+
+        <a href="{fiche_url}" style="display:inline-block;background:#b99a68;color:#15161c;
+           font-weight:bold;font-size:14px;padding:13px 26px;border-radius:8px;text-decoration:none;">
+          Voir la fiche complète →
+        </a>
+
+        <p style="color:#8a90a3;font-size:11px;line-height:1.5;margin:32px 0 0;">
+          Score composite favorable et cours proche du repère d'entrée — pas un conseil d'investissement.
+        </p>
+      </div>
     </body></html>
     """
 
 
 def send_entry_alert_email(companies: list[dict]) -> bool:
-    """Envoie un email listant les entreprises dont le signal "entree"
-    vient d'apparaître aujourd'hui. Ignoré silencieusement (avec un
-    message) si les identifiants SMTP ne sont pas configurés ou si
-    `companies` est vide — jamais d'exception, même contrat que
-    gold_score.send_email."""
+    """Envoie un email par entreprise dont le signal "entree" vient
+    d'apparaître aujourd'hui (pas un digest groupé). Ignoré
+    silencieusement (avec un message) si les identifiants SMTP ne sont
+    pas configurés ou si `companies` est vide — jamais d'exception,
+    même contrat que gold_score.send_email."""
     if not companies:
         return False
     smtp_user = os.environ.get("SMTP_USER")
@@ -2118,19 +2159,20 @@ def send_entry_alert_email(companies: list[dict]) -> bool:
         print("\n(Envoi d'email d'alerte entrée ignoré : SMTP_USER / SMTP_PASSWORD non configurés.)")
         return False
 
-    tickers = ", ".join(c["ticker"] for c in companies)
-    msg = MIMEMultipart("mixed")
-    msg["Subject"] = f"Indices — {len(companies)} nouveau(x) signal(aux) d'entrée ({tickers})"
-    msg["From"] = smtp_user
-    msg["To"] = mail_to
-    msg.attach(MIMEText(build_entry_alert_email_html(companies), "html"))
-
     try:
         with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
             server.starttls()
             server.login(smtp_user, smtp_password)
-            server.sendmail(smtp_user, [mail_to], msg.as_string())
-        print(f"\nEmail d'alerte entrée envoyé à {mail_to} ({tickers})")
+            for company in companies:
+                index_name = INDEX_NAMES.get(company.get("index"), company.get("index", ""))
+                msg = MIMEMultipart("mixed")
+                msg["Subject"] = f"{company['name']} ({index_name}) — signal d'entrée"
+                msg["From"] = smtp_user
+                msg["To"] = mail_to
+                msg.attach(MIMEText(build_entry_alert_email_html(company), "html"))
+                server.sendmail(smtp_user, [mail_to], msg.as_string())
+        tickers = ", ".join(c["ticker"] for c in companies)
+        print(f"\nEmail(s) d'alerte entrée envoyé(s) à {mail_to} ({tickers})")
         return True
     except Exception as e:
         print(f"Erreur envoi email d'alerte entrée : {e}")
@@ -2194,7 +2236,9 @@ def _run_test_entry_email() -> None:
     merger le mécanisme d'alerte entrée. À retirer une fois vérifié."""
     test_company = {
         "ticker": "TEST.PA", "name": "Entreprise de test (vérification email)",
-        "score": 20.0, "current_price": 100.0, "entry_price": 100.0,
+        "index": "CAC40", "score": 20.0, "interpretation": "Solide",
+        "current_price": 100.0, "entry_price": 100.0, "exit_price": 130.0,
+        "alerts": [{"kind": "entree", "detail": "Score favorable, cours à moins de 5% du repère d'entrée."}],
     }
     sent = send_entry_alert_email([test_company])
     print(f"Envoi test : {sent}")

@@ -378,10 +378,11 @@ function loadSideQuoteWidget(ticker) {
 }
 
 // Symbole TradingView par indice — INDEX_TV_SYMBOL_BY_KEY, pas une seule
-// constante : quand d'autres indices (DAX, S&P 500…) rejoindront
-// indicesData.index_key un jour, ce sera la seule ligne à ajouter ici.
+// constante : quand d'autres indices (S&P 500…) rejoindront
+// indicesData.companies un jour, ce sera la seule ligne à ajouter ici.
 const INDEX_TV_SYMBOL_BY_KEY = {
   CAC40: 'EURONEXT:PX1',
+  DAX: 'XETR:DAX',
 };
 
 function loadIndexQuoteWidget(indexKey, containerId) {
@@ -586,14 +587,12 @@ async function loadIndices(ticker, view) {
 let indicesListSearch = '';
 let indicesListSort = 'score_desc';
 
-// Nom affiché par indice — INDEX_DISPLAY_NAMES, pas indicesData.index_name
-// tout seul : la liste va, à terme, contenir plusieurs indices en même
-// temps (CAC 40, DAX, Nasdaq…), chacun avec son propre nom à afficher sur
-// son panneau dépliant — un seul index_name global n'aurait plus de sens
-// dès qu'un 2e indice existe. Repli sur la clé brute si un indice apparaît
-// dans les données avant d'être ajouté ici.
+// Nom affiché par indice — repli sur indicesData.index_names (fourni par
+// le backend) si une clé n'est pas encore listée ici, puis sur la clé
+// brute en dernier recours.
 const INDEX_DISPLAY_NAMES = {
   CAC40: 'CAC 40',
+  DAX: 'DAX',
 };
 
 function sortedFilteredCompanies(companies) {
@@ -668,20 +667,21 @@ function renderIndicesList(companies) {
   ) : '';
 
   // Regroupe par indice (company.index) plutôt que de tout afficher à plat
-  // — chaque groupe devient un panneau dépliant. Un seul groupe aujourd'hui
-  // (CAC 40) ; la structure est prête à en recevoir d'autres (DAX, Nasdaq…)
-  // sans changement de code, seulement de nouvelles entreprises côté données.
+  // — chaque groupe devient un panneau dépliant. CAC 40 et DAX aujourd'hui ;
+  // la structure est prête à en recevoir d'autres (Nasdaq…) sans changement
+  // de code, seulement de nouvelles entreprises côté données.
   const groups = {};
   companies.forEach(c => {
-    const key = c.index || indicesData.index_key || 'Autre';
+    const key = c.index || 'Autre';
     (groups[key] = groups[key] || []).push(c);
   });
   const indexKeys = Object.keys(groups);
+  const indexNames = { ...INDEX_DISPLAY_NAMES, ...(indicesData.index_names || {}) };
 
   const cardsHtml = indexKeys.map(key => `
     <div class="index-card">
       <button class="index-card-header" id="indexToggle-${key}" type="button" aria-expanded="false">
-        <span class="index-card-name">${INDEX_DISPLAY_NAMES[key] || key}</span>
+        <span class="index-card-name">${indexNames[key] || key}</span>
         <span class="index-card-count">${groups[key].length} entreprise${groups[key].length > 1 ? 's' : ''}</span>
         <span class="chevron">▾</span>
       </button>

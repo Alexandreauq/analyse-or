@@ -459,6 +459,22 @@ def test_extract_ratios_uses_net_ppe_purchase_and_sale_as_capex_fallback():
     assert ratios["fcf"] == 120.0 + (-30.0)  # OCF + proxy capex, exercice le plus récent
 
 
+def test_extract_ratios_uses_net_investment_properties_purchase_and_sale_as_capex_fallback():
+    """Reproduit le cas Vonovia (VNA.DE) en production : une foncière
+    n'a ni 'Capital Expenditure' ni 'Net PPE Purchase And Sale' — elle
+    investit en achetant des immeubles de placement ('Net Investment
+    Properties Purchase And Sale'), pas des PPE industrielles. Doit être
+    utilisée comme 2e repli plutôt que de faire lever KeyError."""
+    financials, balance_sheet, cashflow, closes_by_year = _make_fixture_statements()
+    cashflow = cashflow.rename(index={"Capital Expenditure": "Net Investment Properties Purchase And Sale"})
+
+    ratios = extract_ratios(
+        financials, balance_sheet, cashflow, closes_by_year, shares_outstanding=10.0
+    )  # ne doit pas lever KeyError
+
+    assert ratios["fcf"] == 120.0 + (-30.0)  # OCF + proxy capex, exercice le plus récent
+
+
 def test_extract_ratios_ignores_years_with_missing_ebitda_or_net_income():
     """yfinance ne garantit pas 5 années pleines pour chaque poste : une
     année (souvent la plus ancienne) peut manquer de valeur pour EBITDA ou

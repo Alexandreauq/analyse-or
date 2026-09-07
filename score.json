@@ -1,6 +1,6 @@
 {
   "date": "2026-09-07",
-  "composite_score": 29.7,
+  "composite_score": 31.9,
   "interpretation": "Favorable — en attente d'un déclencheur technique",
   "factors": [
     {
@@ -11,9 +11,9 @@
     },
     {
       "name": "Dollar (DXY)",
-      "score": 8.504981994628906,
+      "score": 10,
       "weight": 0.15,
-      "raw_value": "99.15 (il y a 2 mois : 100.85)"
+      "raw_value": "99.09 (il y a 2 mois : 101.14)"
     },
     {
       "name": "Anticipations d'inflation",

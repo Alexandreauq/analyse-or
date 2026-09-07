@@ -14,6 +14,7 @@
     --bg: #15161c; --panel: #1b1d25; --border: #2a2d38;
     --text: #edeef3; --muted: #8a90a3;
     --gold: #b99a68; --rust: #a35540;
+    --gauge-bad: #a3453d; --gauge-mid: #b98a3f; --gauge-good: #5c8c56;
   }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   html, body {
@@ -79,6 +80,22 @@
   .hero-number { font-family: 'Fraunces', serif; font-weight: 500; font-size: 64px; line-height:1; color: var(--gold); }
   .hero-label { font-size: 16px; font-weight: 500; margin-bottom: 6px; }
   .hero-sub { color: var(--muted); font-size: 13px; line-height: 1.5; margin: 0; }
+
+  /* Jauge de recommandation : dégradé rouge → orange → vert sur -100/+100,
+     un repère indique la position du score composite. */
+  .score-gauge-wrap { margin: 0 0 20px; }
+  .score-gauge {
+    position: relative; height: 12px; border-radius: 999px; overflow: visible;
+    background: linear-gradient(90deg, var(--gauge-bad) 0%, var(--gauge-mid) 50%, var(--gauge-good) 100%);
+  }
+  .score-gauge-marker {
+    position: absolute; top: 50%; width: 4px; height: 22px; background: var(--text);
+    border-radius: 2px; transform: translate(-50%, -50%); box-shadow: 0 0 0 3px var(--bg);
+  }
+  .score-gauge-labels {
+    display: flex; justify-content: space-between; color: var(--muted);
+    font-size: 11px; margin-top: 8px;
+  }
 
   .divider { height: 1px; background: var(--border); margin: 4px 0 20px; }
   h2 { font-family: 'Fraunces', serif; font-weight: 500; font-size: 18px; letter-spacing: 0.02em; margin: 0 0 12px; }
@@ -537,6 +554,8 @@ function renderCompanyDetail(company) {
       <p class="alert-detail">${a.detail}</p>
     </div>`).join('');
 
+  const gaugePct = Math.max(0, Math.min(100, (company.score + 100) / 2));
+
   document.getElementById('indicesContent').innerHTML = `
     <a href="#indices" class="back-link">← Indices</a>
     <div class="company-layout">
@@ -545,6 +564,17 @@ function renderCompanyDetail(company) {
           <div class="hero-number">${company.score > 0 ? '+' : ''}${company.score}</div>
           <div class="hero-label">${company.name} — ${company.interpretation}</div>
         </section>
+
+        <div class="score-gauge-wrap">
+          <div class="score-gauge">
+            <div class="score-gauge-marker" style="left:${gaugePct}%;"></div>
+          </div>
+          <div class="score-gauge-labels">
+            <span>Défavorable</span>
+            <span>Neutre</span>
+            <span>Favorable</span>
+          </div>
+        </div>
 
         <div class="price-panel">
           <div class="price-row">

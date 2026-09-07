@@ -201,6 +201,11 @@
   .list-search::placeholder { color: var(--muted); }
   .list-sort { flex-shrink: 0; }
   .list-empty { color: var(--muted); font-size: 13px; padding: 16px 0; text-align: center; }
+  .list-filter-toggle {
+    display: flex; align-items: center; gap: 6px; margin: 10px 0 4px;
+    color: var(--muted); font-size: 12px; cursor: pointer; user-select: none;
+  }
+  .list-filter-toggle input { accent-color: var(--gauge-mid); }
 
   /* Liste des indices (CAC 40 aujourd'hui, DAX/Nasdaq à terme) : chacun
      est un panneau dépliant contenant l'équivalent de ce que le CAC 40
@@ -595,6 +600,7 @@ async function loadIndices(ticker, view) {
 
 let indicesListSearch = '';
 let indicesListSort = 'score_desc';
+let indicesListFinancialOnly = false;
 
 // Nom affiché par indice — repli sur indicesData.index_names (fourni par
 // le backend) si une clé n'est pas encore listée ici, puis sur la clé
@@ -609,6 +615,9 @@ function sortedFilteredCompanies(companies) {
   if (indicesListSearch.trim()) {
     const q = indicesListSearch.trim().toLowerCase();
     visible = visible.filter(c => c.name.toLowerCase().includes(q) || c.ticker.toLowerCase().includes(q));
+  }
+  if (indicesListFinancialOnly) {
+    visible = visible.filter(c => c.is_financial);
   }
   visible = [...visible];
   if (indicesListSort === 'score_desc') visible.sort((a, b) => b.score - a.score);
@@ -647,12 +656,20 @@ function renderIndexBody(wrap, indexKey, companiesInGroup) {
         <option value="alpha"${indicesListSort === 'alpha' ? ' selected' : ''}>A → Z</option>
       </select>
     </div>
+    <label class="list-filter-toggle">
+      <input type="checkbox" id="indicesFinancialOnly-${indexKey}"${indicesListFinancialOnly ? ' checked' : ''}>
+      Profil financier uniquement
+    </label>
     <div id="indicesRows-${indexKey}"></div>
   `;
   loadIndexQuoteWidget(indexKey, `tv-index-widget-${indexKey}`);
   renderIndicesRows(companiesInGroup, `indicesRows-${indexKey}`);
   document.getElementById(`indicesSearch-${indexKey}`).addEventListener('input', (e) => {
     indicesListSearch = e.target.value;
+    renderIndicesRows(companiesInGroup, `indicesRows-${indexKey}`);
+  });
+  document.getElementById(`indicesFinancialOnly-${indexKey}`).addEventListener('change', (e) => {
+    indicesListFinancialOnly = e.target.checked;
     renderIndicesRows(companiesInGroup, `indicesRows-${indexKey}`);
   });
   document.getElementById(`indicesSort-${indexKey}`).addEventListener('change', (e) => {

@@ -1983,6 +1983,36 @@ def test_build_entry_alert_email_html_includes_company_details():
     assert "Score favorable" in html  # détail de l'alerte "entree" elle-même
 
 
+def test_entry_alert_context_includes_dynamique_recente_and_news():
+    company = _fake_entry_alert_company(
+        factors=[
+            {"name": "Croissance", "score": 5.0, "weight": 0.16, "raw_value": "CAGR CA +8%"},
+            {"name": "Dynamique récente", "score": 7.0, "weight": 0.10, "raw_value": "Cours +12.0% vs MM200"},
+        ],
+        news=[
+            {"title": "Danone relève ses objectifs", "source": "Les Echos", "date": "2026-09-06",
+             "summary": "Résultats trimestriels supérieurs aux attentes.", "sentiment": 1},
+            {"title": "Sans résumé (échec)", "source": "Reuters", "date": "2026-09-05", "summary": "", "sentiment": 0},
+        ],
+    )
+    context = indices_score._entry_alert_context(company)
+    assert "Cours +12.0% vs MM200" in context
+    assert "Danone relève ses objectifs" in context
+    assert "Résultats trimestriels supérieurs aux attentes." in context
+    assert "Sans résumé (échec)" not in context  # actu sans résumé exploitable, exclue
+
+
+def test_entry_alert_context_empty_when_no_data():
+    company = _fake_entry_alert_company(factors=[], news=[])
+    assert indices_score._entry_alert_context(company) == ""
+
+
+def test_build_entry_alert_email_html_omits_context_heading_when_no_context():
+    company = _fake_entry_alert_company(factors=[], news=[])
+    html = indices_score.build_entry_alert_email_html(company)
+    assert "Pourquoi ce signal" not in html
+
+
 def test_main_writes_alerts_key_for_every_company(monkeypatch, tmp_path):
     """Preuve que main() câble réellement _attach_alerts_and_update_history
     et écrit le résultat dans le JSON — pas seulement que la fonction

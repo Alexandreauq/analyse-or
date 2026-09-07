@@ -1278,7 +1278,14 @@ def generate_financial_analysis(
                 text = text.split("\n", 1)[1]
         parsed = json.loads(text)
         return parsed.get("analysis_html")
-    except Exception:
+    except Exception as e:
+        # DIAGNOSTIC TEMPORAIRE — generate_financial_analysis avale
+        # normalement toute exception en silence ; à retirer une fois la
+        # cause des échecs (DAX + entreprises fraîchement ajoutées) trouvée.
+        status = getattr(getattr(e, "response", None), "status_code", None)
+        body = getattr(getattr(e, "response", None), "text", None)
+        print(f"DIAG generate_financial_analysis({company_name!r}) : {type(e).__name__}: {e} "
+              f"status={status} body={str(body)[:300] if body else None}")
         return None
 
 

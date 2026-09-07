@@ -334,11 +334,20 @@ function loadSideQuoteWidget(ticker) {
   // être le bug lui-même (ajoutée pour les 5 entreprises pilotes, jamais
   // mise à jour pendant les 3 lots d'extension CAC 40 → seules les 5
   // premières affichaient un graphique). Vérifié que le ticker Yahoo moins
-  // le suffixe .PA correspond bien au code Euronext Paris réel pour les 33
-  // entreprises courantes, y compris les deux cas a priori ambigus
-  // (STMicroelectronics → STMPA, Stellantis → STLAP, confirmés via
-  // TradingView/MarketScreener — ce ne sont pas des codes Yahoo inventés).
-  const tvSymbol = ticker.endsWith('.PA') ? 'EURONEXT:' + ticker.slice(0, -3) : null;
+  // le suffixe .PA correspond bien au code Euronext Paris réel pour les
+  // entreprises françaises (y compris les deux cas a priori ambigus
+  // STMicroelectronics → STMPA, Stellantis → STLAP, confirmés via
+  // TradingView/MarketScreener — pas des codes Yahoo inventés), et que
+  // .DE (Xetra) correspond au préfixe XETR: pour les entreprises
+  // allemandes (DAX) — même vérification via TradingView pour SAP/VOW3.
+  // Ne couvre pour l'instant que ces deux suffixes ; un futur indice avec
+  // un autre suffixe (ex : .MI pour Milan) devra ajouter sa propre entrée
+  // ici plutôt que de supposer qu'un des deux cas existants s'applique.
+  const TV_EXCHANGE_PREFIX_BY_SUFFIX = { '.PA': 'EURONEXT:', '.DE': 'XETR:' };
+  const tickerSuffix = Object.keys(TV_EXCHANGE_PREFIX_BY_SUFFIX).find(s => ticker.endsWith(s));
+  const tvSymbol = tickerSuffix
+    ? TV_EXCHANGE_PREFIX_BY_SUFFIX[tickerSuffix] + ticker.slice(0, -tickerSuffix.length)
+    : null;
   const container = document.getElementById('tv-side-widget');
   if (!tvSymbol || !container) return;
   const script = document.createElement('script');

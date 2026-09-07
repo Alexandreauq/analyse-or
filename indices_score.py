@@ -120,6 +120,20 @@ DAX_COMPANIES = [
     {"ticker": "SHL.DE", "name": "Siemens Healthineers"},
     {"ticker": "ADS.DE", "name": "Adidas"},
     {"ticker": "HEN3.DE", "name": "Henkel"},
+    # Lot 2 DAX (10 entreprises), tickers Yahoo Finance vérifiés
+    # individuellement comme le lot 1 — attention particulière à MRK.DE
+    # (Merck KGaA, l'entreprise allemande) qui ne doit pas être confondue
+    # avec MRK (Merck & Co, l'entreprise américaine sur le NYSE).
+    {"ticker": "DHL.DE", "name": "DHL Group"},
+    {"ticker": "IFX.DE", "name": "Infineon Technologies"},
+    {"ticker": "MRK.DE", "name": "Merck KGaA"},
+    {"ticker": "FRE.DE", "name": "Fresenius"},
+    {"ticker": "CON.DE", "name": "Continental"},
+    {"ticker": "RWE.DE", "name": "RWE"},
+    {"ticker": "EOAN.DE", "name": "E.ON"},
+    {"ticker": "RHM.DE", "name": "Rheinmetall"},
+    {"ticker": "BEI.DE", "name": "Beiersdorf"},
+    {"ticker": "MTX.DE", "name": "MTU Aero Engines"},
 ]
 
 # Chaque entreprise de COMPANIES porte son propre indice ("index" ajouté

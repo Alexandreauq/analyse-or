@@ -2017,6 +2017,25 @@ def test_generate_financial_analysis_returns_none_on_request_exception(monkeypat
     assert indices_score.generate_financial_analysis("Danone", "contexte", "ratios") is None
 
 
+def test_generate_financial_analysis_logs_failure_instead_of_swallowing_silently(monkeypatch, capsys):
+    """Une vraie panne (ex : crédit API Anthropic épuisé, rencontré en
+    production) ne doit plus disparaître sans laisser de trace — sinon
+    une entreprise sans analyse à reprendre par carry-forward reste
+    silencieusement vide indéfiniment, sans que rien dans les logs ne le
+    signale."""
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "test-key")
+
+    def raise_error(*a, **k):
+        raise requests.RequestException("crédit insuffisant")
+
+    monkeypatch.setattr(indices_score.requests, "post", raise_error)
+    indices_score.generate_financial_analysis("Danone", "contexte", "ratios")
+
+    captured = capsys.readouterr()
+    assert "Danone" in captured.out
+    assert "crédit insuffisant" in captured.out
+
+
 import json
 
 

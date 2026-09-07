@@ -1905,11 +1905,22 @@ def test_send_entry_alert_email_returns_false_when_smtp_credentials_missing(monk
     assert indices_score.send_entry_alert_email(companies) is False
 
 
+def _fake_entry_alert_company(**overrides):
+    company = {
+        "ticker": "BN.PA", "name": "Danone", "index": "CAC40",
+        "score": 20.0, "interpretation": "Solide",
+        "current_price": 100.0, "entry_price": 100.0, "exit_price": 130.0,
+        "alerts": [{"kind": "entree", "detail": "Score favorable, cours à moins de 5% du repère d'entrée."}],
+    }
+    company.update(overrides)
+    return company
+
+
 def test_send_entry_alert_email_sends_via_smtp_when_configured(monkeypatch):
     monkeypatch.setenv("SMTP_USER", "bot@example.com")
     monkeypatch.setenv("SMTP_PASSWORD", "secret")
     monkeypatch.delenv("MAIL_TO", raising=False)
-    companies = [{"ticker": "BN.PA", "name": "Danone", "score": 20.0, "current_price": 100.0, "entry_price": 100.0}]
+    companies = [_fake_entry_alert_company()]
 
     sent = {}
 
@@ -1963,11 +1974,13 @@ def test_send_entry_alert_email_returns_false_on_smtp_error(monkeypatch):
 
 
 def test_build_entry_alert_email_html_includes_company_details():
-    companies = [{"ticker": "BN.PA", "name": "Danone", "score": 20.0, "current_price": 63.5, "entry_price": 60.0}]
-    html = indices_score.build_entry_alert_email_html(companies)
+    company = _fake_entry_alert_company(current_price=63.5, entry_price=60.0)
+    html = indices_score.build_entry_alert_email_html(company)
     assert "Danone" in html
     assert "BN.PA" in html
+    assert "CAC 40" in html  # nom affiché de l'indice, pas la clé brute
     assert "#indices/BN.PA" in html
+    assert "Score favorable" in html  # détail de l'alerte "entree" elle-même
 
 
 def test_main_writes_alerts_key_for_every_company(monkeypatch, tmp_path):

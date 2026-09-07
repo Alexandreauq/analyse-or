@@ -253,8 +253,8 @@
 <div id="indices" class="screen app" hidden>
   <header>
     <a href="#home" class="back-link">← IA Investment</a>
-    <div class="eyebrow">Analyse — phase pilote</div>
-    <h1>Indices</h1>
+    <div class="eyebrow">Indice actions</div>
+    <h1 id="indicesTitle">Indices</h1>
     <p class="updated" id="indicesUpdated"></p>
   </header>
 
@@ -350,6 +350,56 @@ function loadSideQuoteWidget(ticker) {
     changeMode: 'price-and-percent',
     chartType: 'area',
     maLineColor: '#c6a15b',
+    maLineWidth: 1,
+    maLength: 9,
+    headerFontSize: 'medium',
+    lineWidth: 2,
+    lineType: 0,
+    dateRanges: ['1d|1', '1m|30', '3m|60', '12m|1D', '60m|1W', 'all|1M'],
+  });
+  container.appendChild(script);
+}
+
+// Symbole TradingView par indice — INDEX_TV_SYMBOL_BY_KEY, pas une seule
+// constante : quand d'autres indices (DAX, S&P 500…) rejoindront
+// indicesData.index_key un jour, ce sera la seule ligne à ajouter ici.
+const INDEX_TV_SYMBOL_BY_KEY = {
+  CAC40: 'EURONEXT:PX1',
+};
+
+function loadIndexQuoteWidget(indexKey) {
+  // Cours de l'indice lui-même (pas une entreprise) au-dessus de la liste
+  // — même mécanisme d'injection différée que loadSideQuoteWidget (un
+  // <script> posé via innerHTML ne s'exécute jamais tout seul).
+  const tvSymbol = INDEX_TV_SYMBOL_BY_KEY[indexKey];
+  const container = document.getElementById('tv-index-widget');
+  if (!tvSymbol || !container) return;
+  const script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-symbol-overview.js';
+  script.async = true;
+  script.textContent = JSON.stringify({
+    symbols: [[tvSymbol + '|1D']],
+    chartOnly: false,
+    width: '100%',
+    height: '200',
+    locale: 'fr',
+    colorTheme: 'dark',
+    autosize: false,
+    showVolume: false,
+    showMA: false,
+    hideDateRanges: false,
+    hideMarketStatus: false,
+    hideSymbolLogo: false,
+    scalePosition: 'right',
+    scaleMode: 'Normal',
+    fontFamily: '-apple-system, BlinkMacSystemFont, Trebuchet MS, Roboto, Ubuntu, sans-serif',
+    fontSize: '10',
+    noTimeScale: false,
+    valuesTracking: '1',
+    changeMode: 'price-and-percent',
+    chartType: 'area',
+    maLineColor: '#b99a68',
     maLineWidth: 1,
     maLength: 9,
     headerFontSize: 'medium',
@@ -497,6 +547,7 @@ async function loadIndices(ticker, view) {
     }
   }
   document.getElementById('indicesUpdated').textContent = 'Mis à jour le ' + indicesData.updated;
+  document.getElementById('indicesTitle').textContent = indicesData.index_name || 'Indices';
 
   if (!ticker) {
     renderIndicesList(indicesData.companies);
@@ -560,6 +611,7 @@ function renderIndicesList(companies) {
       : `<p class="health-banner">${health.returned}/${health.expected} entreprises à jour</p>`
   ) : '';
   document.getElementById('indicesContent').innerHTML = `
+    <div class="tradingview-widget-container" id="tv-index-widget"></div>
     ${healthHtml}
     <div class="list-controls">
       <input type="search" class="list-search" id="indicesSearch" placeholder="Rechercher (nom, ticker)…" value="${indicesListSearch}">
@@ -571,6 +623,7 @@ function renderIndicesList(companies) {
     </div>
     <div class="panel" id="indicesRows"></div>
   `;
+  loadIndexQuoteWidget(indicesData.index_key || 'CAC40');
   renderIndicesRows(companies);
   document.getElementById('indicesSearch').addEventListener('input', (e) => {
     indicesListSearch = e.target.value;

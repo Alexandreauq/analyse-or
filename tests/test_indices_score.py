@@ -1729,6 +1729,35 @@ def test_main_writes_alerts_key_for_every_company(monkeypatch, tmp_path):
         assert len(company["alerts"]) >= 1
 
 
+def test_main_payload_includes_index_metadata(monkeypatch, tmp_path):
+    """Le payload exporté doit dire de quel indice il s'agit (index_key/
+    index_name), pas seulement lister des entreprises — nécessaire dès
+    qu'un second indice (DAX, S&P 500…) rejoindra un jour ce module."""
+    import json
+
+    monkeypatch.setattr(indices_score, "fetch_risk_free_rate", lambda: 3.68)
+    monkeypatch.setattr(indices_score, "load_previous_company_analyses", lambda: {})
+    monkeypatch.setattr(
+        indices_score, "build_company_entry",
+        lambda ticker, name, risk_free_rate, previous_analyses: {
+            "ticker": ticker, "name": name, "index": indices_score.INDEX_KEY,
+            "score": 10.0, "interpretation": "Neutre",
+            "current_price": 50.0, "entry_price": 50.0,
+        },
+    )
+    monkeypatch.setattr(indices_score, "load_indices_history", lambda: [])
+    monkeypatch.setattr(indices_score, "append_indices_history", lambda entries: entries)
+    output_path = tmp_path / "indices.json"
+    monkeypatch.setattr(indices_score, "OUTPUT_JSON_PATH", str(output_path))
+
+    indices_score.main()
+
+    written = json.loads(output_path.read_text(encoding="utf-8"))
+    assert written["index_key"] == "CAC40"
+    assert written["index_name"] == "CAC 40"
+    assert all(c["index"] == "CAC40" for c in written["companies"])
+
+
 import pandas as pd
 
 
@@ -2386,6 +2415,7 @@ def test_build_company_entry_uses_financial_factors_for_financial_sector_tickers
 
     entry = indices_score.build_company_entry("BNP.PA", "BNP Paribas", 3.0, {})
 
+    assert entry["index"] == indices_score.INDEX_KEY
     assert entry["is_financial"] is True
     assert [f["name"] for f in entry["factors"]] == [
         "Rentabilité / création de valeur", "Structure financière / solvabilité",

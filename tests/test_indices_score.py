@@ -2206,3 +2206,24 @@ def test_fetch_statement_with_retry_gives_up_after_max_attempts(monkeypatch):
 
     assert result is degraded
     assert sleep_calls["n"] == indices_score.FETCH_RETRY_ATTEMPTS - 1
+
+
+def test_build_financial_narrative_context_handles_quarterly_without_revenue_row():
+    """Reproduit exactement le cas Air Liquide/Michelin/Accor : yfinance
+    renvoie un quarterly_financials avec 1 colonne (donc pas "vide" au sens
+    de len(...columns)), mais dont les seules lignes sont des compteurs
+    d'actions (Diluted/Basic Average Shares) — jamais de "Total Revenue" ni
+    "Operating Revenue". Avant le correctif, get_row() levait un KeyError
+    non rattrapé qui faisait échouer toute l'entreprise dans main()."""
+    financials, balance_sheet, cashflow, _ = _make_fixture_statements()
+    quarterly_financials = _fake_annual_df(
+        {"Diluted Average Shares": [100.0], "Basic Average Shares": [98.0]},
+        [pd.Timestamp("2025-06-30")],
+    )
+
+    context = indices_score.build_financial_narrative_context(
+        financials, balance_sheet, cashflow, quarterly_financials,
+    )
+
+    assert "Derniers trimestres publiés" in context
+    assert "2025-06-30" not in context  # aucune ligne trimestrielle rendue, faute de CA exploitable

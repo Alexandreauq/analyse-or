@@ -2267,32 +2267,5 @@ def main():
         print(f"  {c['ticker']:<8} {c['name']:<20} score {c['score']:+.1f}  ({c['interpretation']})")
 
 
-def _run_test_entry_email() -> None:
-    """DIAGNOSTIC TEMPORAIRE — force l'envoi d'un email de test avec une
-    seule entreprise fictive, pour vérifier la réception réelle avant de
-    merger le mécanisme d'alerte entrée. À retirer une fois vérifié."""
-    test_company = {
-        "ticker": "TEST.PA", "name": "Entreprise de test (vérification email)",
-        "index": "CAC40", "score": 20.0, "interpretation": "Solide",
-        "current_price": 100.0, "entry_price": 100.0, "exit_price": 130.0,
-        "alerts": [{"kind": "entree", "detail": "Score favorable, cours à moins de 5% du repère d'entrée."}],
-        "factors": [
-            {"name": "Dynamique récente", "score": 7.0, "weight": 0.10,
-             "raw_value": "Cours +12.4% vs MM200 — CA dernier trim. +6.2% vs an dernier"},
-        ],
-        "news": [
-            {"title": "Résultats trimestriels au-dessus des attentes", "source": "Les Echos",
-             "date": "2026-09-06", "summary": "Le groupe relève ses objectifs annuels après un trimestre solide.",
-             "sentiment": 1},
-        ],
-    }
-    sent = send_entry_alert_email([test_company])
-    print(f"Envoi test : {sent}")
-
-
 if __name__ == "__main__":
-    import sys
-    if "--test-entry-email" in sys.argv:
-        _run_test_entry_email()
-    else:
-        main()
+    main()

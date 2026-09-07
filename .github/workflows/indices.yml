@@ -27,9 +27,11 @@ jobs:
       - name: Installer les dépendances
         run: pip install -r requirements.txt
 
-      - name: DIAGNOSTIC TEMPORAIRE — test envoi email alerte entrée
-        run: python3 indices_score.py --test-entry-email
+      - name: Calculer le score des entreprises pilotes
+        run: python3 indices_score.py
         env:
+          ANTHROPIC_API_KEY: ${{ secrets.CLAUDE_API_KEY }}
+          FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
           SMTP_USER: ${{ secrets.SMTP_USER }}
           SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
 

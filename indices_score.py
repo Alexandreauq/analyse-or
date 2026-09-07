@@ -29,6 +29,7 @@ try:
 except ImportError:
     yf = None
 
+import pandas as pd
 import requests
 import trafilatura
 
@@ -600,6 +601,21 @@ def _try_get_row(df, *aliases):
         return None
 
 
+def _get_row_or_nan(df, *aliases):
+    """Comme _try_get_row, mais renvoie une ligne entièrement NaN (alignée
+    sur les colonnes de df) plutôt que None quand aucun alias ne
+    correspond — pour une ligne consommée ensuite via l'indexation
+    [col]/_safe_value(...), qui suppose un objet indexable comme une
+    vraie ligne yfinance plutôt qu'un None à gérer à chaque site d'appel.
+    Cas rencontré en production : E.ON (EOAN.DE) n'a aucune ligne "Total
+    Debt" ni aucun équivalent (ni "Long Term Debt", ni "Current Debt") —
+    un vrai trou de données, pas un alias manquant à ajouter."""
+    row = _try_get_row(df, *aliases)
+    if row is not None:
+        return row
+    return pd.Series(float("nan"), index=df.columns)
+
+
 def _cagr(first_value: float, last_value: float, years: int) -> float:
     """CAGR en % entre la valeur la plus ancienne et la plus récente.
 
@@ -637,7 +653,7 @@ def extract_ratios(financials, balance_sheet, cashflow, closes_by_year, shares_o
     net_income = get_row(financials, "Net Income", "Net Income Common Stockholders")
     tax_rate = get_row(financials, "Tax Rate For Calcs")
 
-    total_debt = get_row(balance_sheet, "Total Debt")
+    total_debt = _get_row_or_nan(balance_sheet, "Total Debt")
     cash = get_row(balance_sheet, "Cash And Cash Equivalents", "Cash Cash Equivalents And Short Term Investments")
     equity = get_row(balance_sheet, "Stockholders Equity", "Common Stock Equity")
 
@@ -794,7 +810,7 @@ def extract_ratios_financial(financials, balance_sheet, cashflow, closes_by_year
 
     total_assets = get_row(balance_sheet, "Total Assets")
     equity = get_row(balance_sheet, "Stockholders Equity", "Common Stock Equity")
-    total_debt = get_row(balance_sheet, "Total Debt")
+    total_debt = _get_row_or_nan(balance_sheet, "Total Debt")
 
     op_cash_flow = get_row(cashflow, "Operating Cash Flow")
 
@@ -912,7 +928,7 @@ def build_financial_narrative_context(
     ebit = _try_get_row(financials, "EBIT", "Operating Income", "Total Operating Income As Reported")
     net_income = get_row(financials, "Net Income", "Net Income Common Stockholders")
     equity = get_row(balance_sheet, "Stockholders Equity", "Common Stock Equity")
-    total_debt = get_row(balance_sheet, "Total Debt")
+    total_debt = _get_row_or_nan(balance_sheet, "Total Debt")
     cash = get_row(balance_sheet, "Cash And Cash Equivalents", "Cash Cash Equivalents And Short Term Investments")
     op_cash_flow = get_row(cashflow, "Operating Cash Flow")
     # "Net PPE Purchase And Sale" en repli : certaines entreprises (ex :

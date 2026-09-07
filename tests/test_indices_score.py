@@ -1847,6 +1847,129 @@ def test_attach_alerts_and_update_history_degrades_gracefully_on_failure(monkeyp
     assert companies[0]["alerts"] == []
 
 
+def test_load_previous_alert_kinds_returns_empty_dict_when_file_absent(monkeypatch, tmp_path):
+    monkeypatch.setattr(indices_score, "OUTPUT_JSON_PATH", str(tmp_path / "does_not_exist.json"))
+    assert indices_score.load_previous_alert_kinds() == {}
+
+
+def test_load_previous_alert_kinds_extracts_kinds_per_ticker(tmp_path, monkeypatch):
+    path = tmp_path / "indices.json"
+    path.write_text(json.dumps({
+        "companies": [
+            {"ticker": "BN.PA", "alerts": [{"kind": "entree"}, {"kind": "watch"}]},
+            {"ticker": "MC.PA", "alerts": [{"kind": "info"}]},
+        ]
+    }), encoding="utf-8")
+    monkeypatch.setattr(indices_score, "OUTPUT_JSON_PATH", str(path))
+    result = indices_score.load_previous_alert_kinds()
+    assert result["BN.PA"] == {"entree", "watch"}
+    assert result["MC.PA"] == {"info"}
+
+
+def test_attach_alerts_and_update_history_flags_newly_triggered_entree_signal(monkeypatch):
+    """Une entreprise dont le signal "entree" apparaît aujourd'hui, sans
+    être actif hier, doit être renvoyée par _attach_alerts_and_update_history
+    — c'est ce que main() utilise pour déclencher l'email d'alerte."""
+    companies = [{"ticker": "BN.PA", "score": 20.0, "current_price": 100.0, "entry_price": 100.0}]
+    monkeypatch.setattr(indices_score, "load_indices_history", lambda: [])
+    monkeypatch.setattr(indices_score, "append_indices_history", lambda entries: entries)
+    monkeypatch.setattr(indices_score, "load_previous_alert_kinds", lambda: {})
+
+    result = indices_score._attach_alerts_and_update_history(companies)
+
+    assert [c["ticker"] for c in result] == ["BN.PA"]
+
+
+def test_attach_alerts_and_update_history_does_not_reflag_persisting_entree_signal(monkeypatch):
+    """Une entreprise dont le signal "entree" était déjà actif hier ne
+    doit pas être renvoyée à nouveau aujourd'hui — évite un email par
+    jour tant que le cours reste proche du repère d'entrée."""
+    companies = [{"ticker": "BN.PA", "score": 20.0, "current_price": 100.0, "entry_price": 100.0}]
+    monkeypatch.setattr(indices_score, "load_indices_history", lambda: [])
+    monkeypatch.setattr(indices_score, "append_indices_history", lambda entries: entries)
+    monkeypatch.setattr(indices_score, "load_previous_alert_kinds", lambda: {"BN.PA": {"entree"}})
+
+    result = indices_score._attach_alerts_and_update_history(companies)
+
+    assert result == []
+
+
+def test_send_entry_alert_email_returns_false_when_companies_empty():
+    assert indices_score.send_entry_alert_email([]) is False
+
+
+def test_send_entry_alert_email_returns_false_when_smtp_credentials_missing(monkeypatch):
+    monkeypatch.delenv("SMTP_USER", raising=False)
+    monkeypatch.delenv("SMTP_PASSWORD", raising=False)
+    companies = [{"ticker": "BN.PA", "name": "Danone", "score": 20.0, "current_price": 100.0, "entry_price": 100.0}]
+    assert indices_score.send_entry_alert_email(companies) is False
+
+
+def test_send_entry_alert_email_sends_via_smtp_when_configured(monkeypatch):
+    monkeypatch.setenv("SMTP_USER", "bot@example.com")
+    monkeypatch.setenv("SMTP_PASSWORD", "secret")
+    monkeypatch.delenv("MAIL_TO", raising=False)
+    companies = [{"ticker": "BN.PA", "name": "Danone", "score": 20.0, "current_price": 100.0, "entry_price": 100.0}]
+
+    sent = {}
+
+    class _FakeSMTP:
+        def __init__(self, host, port):
+            sent["host"] = host
+            sent["port"] = port
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *exc):
+            return False
+
+        def starttls(self):
+            sent["starttls"] = True
+
+        def login(self, user, password):
+            sent["login"] = (user, password)
+
+        def sendmail(self, from_addr, to_addrs, message):
+            sent["from_addr"] = from_addr
+            sent["to_addrs"] = to_addrs
+            sent["message"] = message
+
+    monkeypatch.setattr(indices_score.smtplib, "SMTP", _FakeSMTP)
+
+    result = indices_score.send_entry_alert_email(companies)
+
+    assert result is True
+    assert sent["host"] == indices_score.SMTP_HOST
+    assert sent["login"] == ("bot@example.com", "secret")
+    assert sent["to_addrs"] == ["bot@example.com"]  # repli sur SMTP_USER si MAIL_TO absent
+    assert sent["from_addr"] == "bot@example.com"
+    assert sent["message"]  # le message MIME a bien été construit et envoyé
+
+
+def test_send_entry_alert_email_returns_false_on_smtp_error(monkeypatch):
+    """Une panne SMTP (identifiants invalides, réseau...) ne doit jamais
+    faire lever d'exception ni faire échouer le run."""
+    monkeypatch.setenv("SMTP_USER", "bot@example.com")
+    monkeypatch.setenv("SMTP_PASSWORD", "secret")
+    companies = [{"ticker": "BN.PA", "name": "Danone", "score": 20.0, "current_price": 100.0, "entry_price": 100.0}]
+
+    def _raise(host, port):
+        raise OSError("connexion refusée")
+
+    monkeypatch.setattr(indices_score.smtplib, "SMTP", _raise)
+
+    assert indices_score.send_entry_alert_email(companies) is False
+
+
+def test_build_entry_alert_email_html_includes_company_details():
+    companies = [{"ticker": "BN.PA", "name": "Danone", "score": 20.0, "current_price": 63.5, "entry_price": 60.0}]
+    html = indices_score.build_entry_alert_email_html(companies)
+    assert "Danone" in html
+    assert "BN.PA" in html
+    assert "#indices/BN.PA" in html
+
+
 def test_main_writes_alerts_key_for_every_company(monkeypatch, tmp_path):
     """Preuve que main() câble réellement _attach_alerts_and_update_history
     et écrit le résultat dans le JSON — pas seulement que la fonction

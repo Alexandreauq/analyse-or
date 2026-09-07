@@ -1,12 +1,14 @@
 """
-Score fondamental CAC 40 — Phase pilote (5 entreprises)
-=========================================================
+Score fondamental CAC 40
+=========================
 
 Calcule un score composite par entreprise à partir de 5 ans de comptes
 publiés (via yfinance), selon la méthodologie décrite dans
 Methodologie_Analyse_Indices.md (synthèse Vernimmen : rentabilité
 comptable, analyse du financement, coût du capital, pratique de
-l'évaluation).
+l'évaluation). Un indice (CAC 40 aujourd'hui) est un seul payload
+COMPANIES/INDEX_KEY/INDEX_NAME — voir ces 3 noms si un second indice
+(DAX, S&P 500…) rejoint un jour ce module.
 
 Installation :
     pip install requests yfinance pandas
@@ -99,6 +101,15 @@ COMPANIES = [
     {"ticker": "ACA.PA", "name": "Crédit Agricole"},
     {"ticker": "CS.PA", "name": "AXA"},
 ]
+
+# Toutes les entreprises de COMPANIES appartiennent aujourd'hui au même
+# indice — INDEX_KEY/INDEX_NAME existent déjà pour que chaque entreprise
+# et le payload exporté portent cette information, avant même qu'un
+# second indice n'existe. Objectif à terme (pas encore fait) : plusieurs
+# indices dans un même run, chaque entreprise gardant son propre
+# "index" plutôt qu'une seule valeur globale comme aujourd'hui.
+INDEX_KEY = "CAC40"
+INDEX_NAME = "CAC 40"
 
 SECTOR_PROFILES = {
     "Utilities": "defensif",
@@ -1734,6 +1745,7 @@ def build_company_entry(
     return {
         "ticker": ticker,
         "name": name,
+        "index": INDEX_KEY,
         "sector": sector,
         "sector_profile": sector_risk_profile(sector),
         "is_financial": data["is_financial"],
@@ -1814,6 +1826,8 @@ def main():
 
     payload = {
         "updated": datetime.today().strftime("%Y-%m-%d"),
+        "index_key": INDEX_KEY,
+        "index_name": INDEX_NAME,
         "companies": companies,
         "health": _compute_health_summary(companies),
     }

@@ -156,6 +156,14 @@ DAX_COMPANIES = [
     {"ticker": "SRT3.DE", "name": "Sartorius"},
     {"ticker": "BNR.DE", "name": "Brenntag"},
     {"ticker": "HEI.DE", "name": "Heidelberg Materials"},
+    # Lot 4 DAX (dernier lot pour compléter la couverture), tickers Yahoo
+    # Finance vérifiés individuellement. Hannover Rück est une assurance
+    # (voir FINANCIAL_SECTOR_TICKERS), les 4 autres sont standards.
+    {"ticker": "BMW.DE", "name": "BMW"},
+    {"ticker": "ENR.DE", "name": "Siemens Energy"},
+    {"ticker": "1COV.DE", "name": "Covestro"},
+    {"ticker": "G1A.DE", "name": "GEA Group"},
+    {"ticker": "HNR1.DE", "name": "Hannover Rück"},
 ]
 
 # Chaque entreprise de COMPANIES porte son propre indice ("index" ajouté
@@ -212,7 +220,7 @@ SECTOR_OVERRIDE_BY_TICKER = {
 # différence de méthodologie soit visible des utilisateurs.
 FINANCIAL_SECTOR_TICKERS = {
     "BNP.PA", "GLE.PA", "ACA.PA", "CS.PA",
-    "DBK.DE", "CBK.DE", "ALV.DE", "MUV2.DE",
+    "DBK.DE", "CBK.DE", "ALV.DE", "MUV2.DE", "HNR1.DE",
 }
 
 

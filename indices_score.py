@@ -141,6 +141,21 @@ DAX_COMPANIES = [
     {"ticker": "CBK.DE", "name": "Commerzbank"},
     {"ticker": "ALV.DE", "name": "Allianz"},
     {"ticker": "MUV2.DE", "name": "Munich Re"},
+    # Lot 3 DAX (10 entreprises), tickers Yahoo Finance vérifiés
+    # individuellement comme les lots précédents. Vonovia (foncière) et
+    # Deutsche Börse (opérateur de marché) inclus comme entreprises
+    # standards malgré un profil de bilan atypique — même traitement que
+    # Unibail-Rodamco-Westfield/Euronext dans le CAC 40.
+    {"ticker": "VNA.DE", "name": "Vonovia"},
+    {"ticker": "DB1.DE", "name": "Deutsche Börse"},
+    {"ticker": "SY1.DE", "name": "Symrise"},
+    {"ticker": "ZAL.DE", "name": "Zalando"},
+    {"ticker": "P911.DE", "name": "Porsche AG"},
+    {"ticker": "DTG.DE", "name": "Daimler Truck"},
+    {"ticker": "QIA.DE", "name": "Qiagen"},
+    {"ticker": "SRT3.DE", "name": "Sartorius"},
+    {"ticker": "BNR.DE", "name": "Brenntag"},
+    {"ticker": "HEI.DE", "name": "Heidelberg Materials"},
 ]
 
 # Chaque entreprise de COMPANIES porte son propre indice ("index" ajouté

@@ -18,10 +18,13 @@ Installation :
 import json
 import math
 import os
+import smtplib
 import time
 import xml.etree.ElementTree as ET
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 from email.utils import parsedate_to_datetime
 
 try:
@@ -1874,6 +1877,27 @@ def load_previous_company_analyses() -> dict:
         return {}
 
 
+def load_previous_alert_kinds() -> dict:
+    """Lit le docs/indices.json du run précédent pour en extraire, par
+    ticker, l'ensemble des types d'alerte actifs hier (ex : {"entree"}) —
+    permet de détecter un signal "entrée" nouvellement apparu aujourd'hui
+    plutôt qu'un signal qui persiste depuis plusieurs jours (pas de mail
+    à répétition tant que le cours reste proche du repère). {} si le
+    fichier n'existe pas encore ou est illisible — jamais d'exception."""
+    if not os.path.exists(OUTPUT_JSON_PATH):
+        return {}
+    try:
+        with open(OUTPUT_JSON_PATH, encoding="utf-8") as fh:
+            previous = json.load(fh)
+        return {
+            c["ticker"]: {a["kind"] for a in c.get("alerts", [])}
+            for c in previous.get("companies", [])
+            if c.get("ticker")
+        }
+    except Exception:
+        return {}
+
+
 def build_company_entry(
     ticker: str, name: str, risk_free_rate: float | None, previous_analyses: dict,
     index_key: str = "CAC40",
@@ -2012,15 +2036,20 @@ def build_company_entry(
     }
 
 
-def _attach_alerts_and_update_history(companies: list[dict]) -> None:
+def _attach_alerts_and_update_history(companies: list[dict]) -> list[dict]:
     """Calcule les alertes de chaque entreprise à partir de son historique
     et enregistre le score du jour. Dégrade vers alerts=[] pour toutes les
     entreprises si l'historique est illisible/inscriptible — ne doit
-    jamais faire échouer la publication du score déjà calculé."""
+    jamais faire échouer la publication du score déjà calculé. Renvoie la
+    liste des entreprises dont le signal "entree" vient d'apparaître
+    aujourd'hui (absent des alertes de la veille) — [] si rien de nouveau
+    ou en cas d'échec, jamais d'exception."""
     for company in companies:
         company["alerts"] = []
+    newly_triggered = []
     try:
         history = load_indices_history()
+        previous_alert_kinds = load_previous_alert_kinds()
         today_str = datetime.today().strftime("%Y-%m-%d")
         new_entries = []
         for company in companies:
@@ -2029,12 +2058,83 @@ def _attach_alerts_and_update_history(companies: list[dict]) -> None:
                 company["ticker"], company["score"], company["current_price"],
                 company["entry_price"], ticker_history,
             )
+            today_kinds = {a["kind"] for a in company["alerts"]}
+            if "entree" in today_kinds and "entree" not in previous_alert_kinds.get(company["ticker"], set()):
+                newly_triggered.append(company)
             new_entries.append({
                 "date": today_str, "ticker": company["ticker"], "composite": company["score"],
             })
         append_indices_history(new_entries)
     except Exception as e:
         print(f"Erreur historique/alertes Indices : {e}")
+        return []
+    return newly_triggered
+
+
+# Même serveur/couple de secrets GitHub Actions que gold_score.py
+# (SMTP_USER/SMTP_PASSWORD) — voir .github/workflows/indices.yml.
+SMTP_HOST = "smtp.gmail.com"
+SMTP_PORT = 587
+SITE_BASE_URL = "https://alexandreauq.github.io/analyse-or/"
+
+
+def build_entry_alert_email_html(companies: list[dict]) -> str:
+    rows = "".join(
+        f'<p style="margin:0 0 14px;padding:10px 14px;border-left:3px solid #b99a68;'
+        f'font-family:Arial,sans-serif;">'
+        f'<strong style="color:#edeef3;">{c["name"]} ({c["ticker"]})</strong><br>'
+        f'<span style="color:#8a90a3;font-size:13px;">'
+        f'Score {c["score"]:+.1f} — cours {c["current_price"]:.2f} €, '
+        f'repère d\'entrée {c["entry_price"]:.2f} €</span><br>'
+        f'<a href="{SITE_BASE_URL}#indices/{c["ticker"]}" style="color:#b99a68;font-size:13px;">'
+        f'Voir la fiche →</a></p>'
+        for c in companies
+    )
+    return f"""
+    <html><body style="background:#15161c;color:#edeef3;font-family:Arial,sans-serif;padding:24px;">
+      <h2 style="color:#b99a68;margin:0 0 4px;">Nouveaux signaux d'entrée</h2>
+      <p style="color:#8a90a3;margin:0 0 20px;">{datetime.today():%d/%m/%Y}</p>
+      {rows}
+      <p style="color:#8a90a3;font-size:12px;margin-top:24px;">
+        Score composite favorable (&gt; +15) et cours à moins de {NEAR_ENTRY_PCT:.0f}%
+        du repère d'entrée — pas un conseil d'investissement.
+      </p>
+    </body></html>
+    """
+
+
+def send_entry_alert_email(companies: list[dict]) -> bool:
+    """Envoie un email listant les entreprises dont le signal "entree"
+    vient d'apparaître aujourd'hui. Ignoré silencieusement (avec un
+    message) si les identifiants SMTP ne sont pas configurés ou si
+    `companies` est vide — jamais d'exception, même contrat que
+    gold_score.send_email."""
+    if not companies:
+        return False
+    smtp_user = os.environ.get("SMTP_USER")
+    smtp_password = os.environ.get("SMTP_PASSWORD")
+    mail_to = os.environ.get("MAIL_TO") or smtp_user
+    if not smtp_user or not smtp_password:
+        print("\n(Envoi d'email d'alerte entrée ignoré : SMTP_USER / SMTP_PASSWORD non configurés.)")
+        return False
+
+    tickers = ", ".join(c["ticker"] for c in companies)
+    msg = MIMEMultipart("mixed")
+    msg["Subject"] = f"Indices — {len(companies)} nouveau(x) signal(aux) d'entrée ({tickers})"
+    msg["From"] = smtp_user
+    msg["To"] = mail_to
+    msg.attach(MIMEText(build_entry_alert_email_html(companies), "html"))
+
+    try:
+        with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
+            server.starttls()
+            server.login(smtp_user, smtp_password)
+            server.sendmail(smtp_user, [mail_to], msg.as_string())
+        print(f"\nEmail d'alerte entrée envoyé à {mail_to} ({tickers})")
+        return True
+    except Exception as e:
+        print(f"Erreur envoi email d'alerte entrée : {e}")
+        return False
 
 
 def _compute_health_summary(companies: list[dict]) -> dict:
@@ -2069,7 +2169,8 @@ def main():
         except Exception as e:
             print(f"Erreur pour {company['ticker']} ({company['name']}) : {e}")
 
-    _attach_alerts_and_update_history(companies)
+    newly_triggered = _attach_alerts_and_update_history(companies)
+    send_entry_alert_email(newly_triggered)
 
     payload = {
         "updated": datetime.today().strftime("%Y-%m-%d"),

@@ -135,6 +135,12 @@ DAX_COMPANIES = [
     {"ticker": "RHM.DE", "name": "Rheinmetall"},
     {"ticker": "BEI.DE", "name": "Beiersdorf"},
     {"ticker": "MTX.DE", "name": "MTU Aero Engines"},
+    # Banques et assurances allemandes (voir FINANCIAL_SECTOR_TICKERS) :
+    # tickers Yahoo Finance vérifiés individuellement comme le reste du DAX.
+    {"ticker": "DBK.DE", "name": "Deutsche Bank"},
+    {"ticker": "CBK.DE", "name": "Commerzbank"},
+    {"ticker": "ALV.DE", "name": "Allianz"},
+    {"ticker": "MUV2.DE", "name": "Munich Re"},
 ]
 
 # Chaque entreprise de COMPANIES porte son propre indice ("index" ajouté
@@ -173,18 +179,26 @@ SECTOR_OVERRIDE_BY_TICKER = {
     "MT.PA": "Basic Materials",  # ArcelorMittal (sidérurgie, cyclique)
 }
 
-# Banques (BNP Paribas, Société Générale, Crédit Agricole) et assurance
-# (AXA) : yfinance n'expose ni EBITDA, ni (pour les 3 banques) EBIT dans
-# leurs comptes — vérifié via un diagnostic dédié sur ces 4 tickers, pas
-# une lacune ponctuelle. Ces notions n'ont de toute façon pas le même sens
-# pour un établissement financier, dont le "chiffre d'affaires" est un
-# produit net bancaire et non un résultat d'exploitation classique avec
-# amortissements. Ces entreprises passent par extract_ratios_financial et
-# les fonctions score_*_financiere (ROE, ratio de levier, conversion cash,
-# P/E + P/B) plutôt que par la méthodologie standard — voir aussi le badge
-# "Profil financier" côté frontend (docs/index.html), affiché pour que
-# cette différence de méthodologie soit visible des utilisateurs.
-FINANCIAL_SECTOR_TICKERS = {"BNP.PA", "GLE.PA", "ACA.PA", "CS.PA"}
+# Banques et assurances françaises (BNP Paribas, Société Générale, Crédit
+# Agricole, AXA) et allemandes (Deutsche Bank, Commerzbank, Allianz,
+# Munich Re) : yfinance n'expose ni EBITDA, ni (pour les banques) EBIT
+# dans leurs comptes — vérifié via un diagnostic dédié pour les 4
+# françaises ; les 4 allemandes n'ont pas été rediagnostiquées
+# individuellement mais suivent le même modèle économique (établissement
+# financier, pas d'EBITDA/EBIT comptable) — à surveiller au premier run
+# réel plutôt qu'une certitude absolue comme pour les françaises. Ces
+# notions n'ont de toute façon pas le même sens pour un établissement
+# financier, dont le "chiffre d'affaires" est un produit net bancaire et
+# non un résultat d'exploitation classique avec amortissements. Ces
+# entreprises passent par extract_ratios_financial et les fonctions
+# score_*_financiere (ROE, ratio de levier, conversion cash, P/E + P/B)
+# plutôt que par la méthodologie standard — voir aussi le badge "Profil
+# financier" côté frontend (docs/index.html), affiché pour que cette
+# différence de méthodologie soit visible des utilisateurs.
+FINANCIAL_SECTOR_TICKERS = {
+    "BNP.PA", "GLE.PA", "ACA.PA", "CS.PA",
+    "DBK.DE", "CBK.DE", "ALV.DE", "MUV2.DE",
+}
 
 
 @dataclass

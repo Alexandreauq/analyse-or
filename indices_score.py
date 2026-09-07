@@ -80,19 +80,15 @@ COMPANIES = [
     {"ticker": "FGR.PA", "name": "Eiffage"},
     {"ticker": "BVI.PA", "name": "Bureau Veritas"},
     {"ticker": "EN.PA", "name": "Bouygues"},
+    # Réintégrées après correction du vrai bug (voir
+    # build_financial_narrative_context) : leur quarterly_financials
+    # yfinance a bien 1 colonne mais sans ligne "Total Revenue" (juste des
+    # lignes de nombre d'actions), ce qui levait un KeyError non rattrapé
+    # et faisait échouer toute l'entreprise — pas un problème de fetch.
+    {"ticker": "AI.PA", "name": "Air Liquide"},
+    {"ticker": "ML.PA", "name": "Michelin"},
+    {"ticker": "AC.PA", "name": "Accor"},
 ]
-
-# Non couvertes en pratique, malgré plusieurs tentatives : Air Liquide
-# (AI.PA), Michelin (ML.PA), Accor (AC.PA). Un diagnostic isolé a confirmé
-# que yfinance a bien leurs données complètes (pas un vrai trou), mais un
-# relevé dégradé revient systématiquement quand elles sont récupérées
-# dans la boucle des ~36 entreprises — même avec un mécanisme de retry
-# (_fetch_statement_with_retry). Cause exacte non identifiée (rate-
-# limiting Yahoo au-delà d'une simple pause de quelques secondes, ou état
-# interne du processus plutôt que de l'objet Ticker). Accepté tel quel :
-# 33 entreprises non-financières sur 36 couvertes, le reste de ce fichier
-# (retry, alias de repli, correction de secteur) reste en place au cas où
-# ça aide d'autres tickers à l'avenir.
 
 SECTOR_PROFILES = {
     "Utilities": "defensif",
@@ -647,8 +643,20 @@ def build_financial_narrative_context(
         )
 
     lines.append("\nDerniers trimestres publiés (le plus récent en premier) :")
+    # `len(...columns)` vérifie seulement qu'il y a des colonnes, pas que la
+    # ligne "Total Revenue" existe dedans — insuffisant pour Air Liquide,
+    # Michelin, Accor : yfinance leur renvoie un quarterly_financials avec
+    # 1 colonne mais seulement des lignes de nombre d'actions (Diluted/Basic
+    # Average Shares), jamais de chiffre d'affaires. Un vrai trou de données
+    # trimestrielles côté source, pas une panne — get_row lèverait sinon un
+    # KeyError non rattrapé qui ferait échouer toute l'entreprise.
+    quarterly_revenue = None
     if len(quarterly_financials.columns):
-        quarterly_revenue = get_row(quarterly_financials, "Total Revenue", "Operating Revenue")
+        try:
+            quarterly_revenue = get_row(quarterly_financials, "Total Revenue", "Operating Revenue")
+        except KeyError:
+            quarterly_revenue = None
+    if quarterly_revenue is not None:
         for col in quarterly_financials.columns:
             lines.append(
                 f"- {col.date() if hasattr(col, 'date') else col} : CA {_fmt(quarterly_revenue[col])}"
@@ -724,9 +732,11 @@ def fetch_company_financials(ticker: str) -> dict:
     cashflow = _fetch_statement_with_retry(ticker, "cashflow")
     quarterly_financials = t.quarterly_financials
     info = t.info
-
     shares_outstanding = info.get("sharesOutstanding") or 0.0
+    beta = info.get("beta")
+    sector = info.get("sector")
     history = t.history(period="6y")["Close"]
+
     closes_by_year = {}
     for col in financials.columns:
         target_date = col.date() if hasattr(col, "date") else col
@@ -742,7 +752,7 @@ def fetch_company_financials(ticker: str) -> dict:
     )
 
     ratios = extract_ratios(financials, balance_sheet, cashflow, closes_by_year, shares_outstanding)
-    ratios["sector"] = SECTOR_OVERRIDE_BY_TICKER.get(ticker) or info.get("sector")
+    ratios["sector"] = SECTOR_OVERRIDE_BY_TICKER.get(ticker) or sector
     ratios["ecart_pct_ma200"] = ecart_pct_ma200
     ratios["quarterly_yoy_growth_ca"] = extract_quarterly_growth(quarterly_financials)
     ratios["financial_context"] = build_financial_narrative_context(
@@ -752,7 +762,7 @@ def fetch_company_financials(ticker: str) -> dict:
     ratios["current_price"] = current_price
     ratios["ma200"] = ma200
     ratios["shares_outstanding"] = shares_outstanding
-    ratios["beta"] = info.get("beta")
+    ratios["beta"] = beta
     return ratios
 
 

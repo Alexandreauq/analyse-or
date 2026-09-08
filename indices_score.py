@@ -1662,6 +1662,30 @@ def _resolve_pending_shadow_benchmarks(
     return positions
 
 
+def update_signal_tracking(companies: list[dict], newly_triggered_entree: list[dict]) -> list[dict]:
+    """Met à jour docs/signal_tracking.json : ouvre les nouvelles
+    positions du jour (à partir de newly_triggered_entree, déjà calculé
+    par _attach_alerts_and_update_history — pas re-détecté ici), clôture
+    celles éligibles, résout les benchmarks fantômes arrivés à échéance,
+    sauvegarde. Dégrade toujours vers [] en cas d'erreur — ne fait jamais
+    échouer main(). Renvoie la liste des positions (utile aux tests/logs)."""
+    try:
+        positions = load_signal_tracking()
+        companies_by_ticker = {c["ticker"]: c for c in companies}
+        index_prices = fetch_index_prices()
+        today = datetime.today().strftime("%Y-%m-%d")
+
+        positions = _open_new_signal_positions(positions, newly_triggered_entree, index_prices, today)
+        positions = _close_eligible_positions(positions, companies_by_ticker, index_prices, today)
+        positions = _resolve_pending_shadow_benchmarks(positions, companies_by_ticker, today)
+
+        save_signal_tracking(positions)
+        return positions
+    except Exception as e:
+        print(f"Erreur suivi de performance des signaux : {e}")
+        return []
+
+
 def load_indices_history(path=INDICES_HISTORY_PATH) -> list[dict]:
     """Historique quotidien du score composite par entreprise. []  si le
     fichier n'existe pas encore ou est corrompu — jamais d'exception."""
@@ -2749,6 +2773,7 @@ def main():
     newly_triggered_entree, newly_triggered_major_news = _attach_alerts_and_update_history(companies)
     send_entry_alert_email(newly_triggered_entree)
     send_major_news_alert_email(newly_triggered_major_news)
+    update_signal_tracking(companies, newly_triggered_entree)
 
     payload = {
         "updated": datetime.today().strftime("%Y-%m-%d"),

@@ -26,6 +26,7 @@ from datetime import datetime, timedelta
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.utils import parsedate_to_datetime
+from dateutil.relativedelta import relativedelta
 
 try:
     import yfinance as yf
@@ -1483,6 +1484,40 @@ INDICES_HISTORY_PATH = os.path.join(
     os.path.dirname(os.path.abspath(__file__)), "indices_history.json"
 )
 HISTORY_RETENTION_PER_TICKER = 730  # ~2 ans, une entrée par jour et par ticker
+
+SIGNAL_TRACKING_PATH = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "docs", "signal_tracking.json"
+)
+# Indices utilisés comme benchmark de chaque position (voir "index" sur
+# chaque société — CAC40/DAX) : tickers yfinance correspondants.
+INDEX_YFINANCE_TICKERS = {"CAC40": "^FCHI", "DAX": "^GDAXI"}
+SIGNAL_STOP_LOSS_PCT = -20.0     # % perte déclenchant une clôture anticipée
+SIGNAL_SHADOW_DELAY_MONTHS = 6   # délai max avant clôture forcée du signal
+                                  # ET date du benchmark "tenir 6 mois pleins"
+                                  # (même valeur, volontairement — voir
+                                  # docs/superpowers/specs/2026-09-08-signal-performance-tracking-design.md)
+
+
+def load_signal_tracking() -> list[dict]:
+    """Positions de suivi des signaux (ouvertes et clôturées). [] si le
+    fichier n'existe pas encore ou est corrompu — jamais d'exception."""
+    if not os.path.exists(SIGNAL_TRACKING_PATH):
+        return []
+    try:
+        with open(SIGNAL_TRACKING_PATH, encoding="utf-8") as fh:
+            data = json.load(fh)
+        return data.get("positions", [])
+    except (json.JSONDecodeError, AttributeError):
+        return []
+
+
+def save_signal_tracking(positions: list[dict]) -> None:
+    """Écrit docs/signal_tracking.json — même dossier que docs/indices.json
+    (servi statiquement au frontend), pas indices_history.json (racine,
+    non servi)."""
+    os.makedirs(os.path.dirname(SIGNAL_TRACKING_PATH), exist_ok=True)
+    with open(SIGNAL_TRACKING_PATH, "w", encoding="utf-8") as fh:
+        json.dump({"positions": positions}, fh, ensure_ascii=False, indent=2)
 
 
 def load_indices_history(path=INDICES_HISTORY_PATH) -> list[dict]:

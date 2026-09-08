@@ -1077,7 +1077,7 @@ def test_build_company_entry_degrades_gracefully_when_news_fetch_fails(monkeypat
     et le facteur Actualité récente doit rester neutre plutôt que planter."""
     monkeypatch.setattr(indices_score, "fetch_company_financials", lambda ticker: _fake_ratios())
 
-    def _raise_news(name):
+    def _raise_news(name, prev=None):
         raise RuntimeError("flux RSS indisponible")
 
     monkeypatch.setattr(indices_score, "fetch_news", _raise_news)
@@ -1121,7 +1121,7 @@ def test_build_company_entry_includes_news_when_fetch_succeeds(monkeypatch):
     monkeypatch.setattr(indices_score, "fetch_company_financials", lambda ticker: _fake_ratios())
     monkeypatch.setattr(
         indices_score, "fetch_news",
-        lambda name: [
+        lambda name, prev=None: [
             {"title": "Titre", "date": "2026-09-04", "link": "https://example.com", "sentiment": 1}
         ],
     )
@@ -1143,7 +1143,7 @@ def test_build_company_entry_falls_back_to_proxy_wacc_when_beta_missing(monkeypa
     ratios = _fake_ratios()
     ratios["beta"] = None
     monkeypatch.setattr(indices_score, "fetch_company_financials", lambda ticker: ratios)
-    monkeypatch.setattr(indices_score, "fetch_news", lambda name: [])
+    monkeypatch.setattr(indices_score, "fetch_news", lambda name, prev=None: [])
 
     entry = indices_score.build_company_entry(
         "BN.PA", "Danone", risk_free_rate=3.68, previous_analyses=_carried_forward_analysis(),
@@ -1157,7 +1157,7 @@ def test_build_company_entry_falls_back_to_proxy_wacc_when_risk_free_rate_missin
     (ex : FRED_API_KEY absente, panne réseau), repli sur
     COST_OF_CAPITAL_PROXY pour chaque entreprise."""
     monkeypatch.setattr(indices_score, "fetch_company_financials", lambda ticker: _fake_ratios())
-    monkeypatch.setattr(indices_score, "fetch_news", lambda name: [])
+    monkeypatch.setattr(indices_score, "fetch_news", lambda name, prev=None: [])
 
     entry = indices_score.build_company_entry(
         "BN.PA", "Danone", risk_free_rate=None, previous_analyses=_carried_forward_analysis(),
@@ -1221,6 +1221,85 @@ def test_fetch_news_attaches_source_and_summary_and_isolates_per_item_failures(m
     assert items[1]["summary"] == "Résumé pour Titre B (article=Texte B)"
     assert items[1]["sentiment"] == -1
     assert items[1]["importance"] == "majeure"
+
+
+def test_fetch_news_reuses_previous_classification_instead_of_reclassifying(monkeypatch):
+    """Une actu déjà classée lors d'un run précédent (par lien) ne doit
+    pas être renvoyée à Claude — sa classification reste stable d'un run
+    à l'autre au lieu de risquer de varier (ex : "majeure" un jour,
+    "mineure" le lendemain pour le même article)."""
+    xml_one_item = b"""<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0"><channel>
+<item>
+  <title>Titre A</title>
+  <link>https://example.com/a</link>
+  <pubDate>Thu, 04 Sep 2026 10:00:00 GMT</pubDate>
+  <source url="https://a.example.com">Source A</source>
+</item>
+</channel></rss>
+"""
+
+    class FakeRssResponse:
+        content = xml_one_item
+
+        def raise_for_status(self):
+            pass
+
+    monkeypatch.setattr(indices_score.requests, "get", lambda *a, **k: FakeRssResponse())
+
+    def _fail_if_called(*a, **k):
+        raise AssertionError("summarize_news_item ne doit pas être appelée pour une actu déjà classée")
+
+    monkeypatch.setattr(indices_score, "fetch_article_text", _fail_if_called)
+    monkeypatch.setattr(indices_score, "summarize_news_item", _fail_if_called)
+
+    previous_classifications = {
+        "https://example.com/a": {"summary": "Résumé mis en cache", "sentiment": 1, "importance": "majeure"},
+    }
+    items = fetch_news("Test SA", previous_classifications)
+
+    assert len(items) == 1
+    assert items[0]["summary"] == "Résumé mis en cache"
+    assert items[0]["sentiment"] == 1
+    assert items[0]["importance"] == "majeure"
+
+
+def test_fetch_news_classifies_new_items_not_in_previous_classifications(monkeypatch):
+    """Une actu absente du cache (nouvelle, ou run précédent inexistant)
+    doit bien être classée normalement — le cache ne doit pas empêcher
+    la classification des nouvelles actus."""
+    xml_one_item = b"""<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0"><channel>
+<item>
+  <title>Titre B</title>
+  <link>https://example.com/b</link>
+  <pubDate>Thu, 04 Sep 2026 10:00:00 GMT</pubDate>
+  <source url="https://b.example.com">Source B</source>
+</item>
+</channel></rss>
+"""
+
+    class FakeRssResponse:
+        content = xml_one_item
+
+        def raise_for_status(self):
+            pass
+
+    monkeypatch.setattr(indices_score.requests, "get", lambda *a, **k: FakeRssResponse())
+    monkeypatch.setattr(indices_score, "fetch_article_text", lambda url: "Texte B")
+    monkeypatch.setattr(
+        indices_score, "summarize_news_item",
+        lambda title, name, text: {"summary": "Résumé frais", "sentiment": -1, "importance": "notable"},
+    )
+
+    # Cache non vide, mais pour un autre lien — l'actu B doit être classée.
+    previous_classifications = {
+        "https://example.com/a": {"summary": "Autre", "sentiment": 0, "importance": "mineure"},
+    }
+    items = fetch_news("Test SA", previous_classifications)
+
+    assert items[0]["summary"] == "Résumé frais"
+    assert items[0]["importance"] == "notable"
 
 
 from indices_score import estimate_asset_based_price, estimate_multiple_based_price
@@ -2700,13 +2779,40 @@ def test_load_previous_company_analyses_indexes_by_ticker(monkeypatch, tmp_path)
     }), encoding="utf-8")
     monkeypatch.setattr(indices_score, "OUTPUT_JSON_PATH", str(path))
     result = indices_score.load_previous_company_analyses()
-    assert result["BN.PA"] == {"financial_analysis_html": "<p>A</p>", "financial_analysis_quarter": "2026-06-30"}
-    assert result["MC.PA"] == {"financial_analysis_html": "<p>B</p>", "financial_analysis_quarter": "2026-03-31"}
+    assert result["BN.PA"] == {
+        "financial_analysis_html": "<p>A</p>", "financial_analysis_quarter": "2026-06-30",
+        "news_classifications": {},
+    }
+    assert result["MC.PA"] == {
+        "financial_analysis_html": "<p>B</p>", "financial_analysis_quarter": "2026-03-31",
+        "news_classifications": {},
+    }
+
+
+def test_load_previous_company_analyses_indexes_news_classifications_by_link(monkeypatch, tmp_path):
+    """Sert à fetch_news pour réutiliser la classification (résumé/
+    sentiment/importance) déjà attribuée à une actu déjà vue, plutôt que
+    de rappeler Claude et risquer un résultat différent d'un run à
+    l'autre (voir fetch_news)."""
+    path = tmp_path / "indices.json"
+    path.write_text(json.dumps({
+        "companies": [
+            {"ticker": "BN.PA", "news": [
+                {"link": "https://example.com/a", "summary": "Résumé A", "sentiment": 1, "importance": "majeure"},
+                {"title": "Sans lien, ignorée"},
+            ]},
+        ]
+    }), encoding="utf-8")
+    monkeypatch.setattr(indices_score, "OUTPUT_JSON_PATH", str(path))
+    result = indices_score.load_previous_company_analyses()
+    assert result["BN.PA"]["news_classifications"] == {
+        "https://example.com/a": {"summary": "Résumé A", "sentiment": 1, "importance": "majeure"},
+    }
 
 
 def test_build_company_entry_carries_forward_analysis_when_quarter_unchanged(monkeypatch):
     monkeypatch.setattr(indices_score, "fetch_company_financials", lambda ticker: _fake_ratios())
-    monkeypatch.setattr(indices_score, "fetch_news", lambda name: [])
+    monkeypatch.setattr(indices_score, "fetch_news", lambda name, prev=None: [])
 
     def fail_if_called(*a, **k):
         raise AssertionError("generate_financial_analysis ne doit pas être appelée si le trimestre est inchangé")
@@ -2727,7 +2833,7 @@ def test_build_company_entry_carries_forward_analysis_when_quarter_unchanged(mon
 
 def test_build_company_entry_regenerates_analysis_when_quarter_changed(monkeypatch):
     monkeypatch.setattr(indices_score, "fetch_company_financials", lambda ticker: _fake_ratios())
-    monkeypatch.setattr(indices_score, "fetch_news", lambda name: [])
+    monkeypatch.setattr(indices_score, "fetch_news", lambda name, prev=None: [])
     monkeypatch.setattr(
         indices_score, "generate_financial_analysis",
         lambda company_name, financial_context, ratios_summary: "<p>Nouvelle analyse.</p>",
@@ -2751,7 +2857,7 @@ def test_build_company_entry_carries_forward_when_latest_quarter_date_is_none(mo
     ratios = _fake_ratios()
     ratios["latest_quarter_date"] = None
     monkeypatch.setattr(indices_score, "fetch_company_financials", lambda ticker: ratios)
-    monkeypatch.setattr(indices_score, "fetch_news", lambda name: [])
+    monkeypatch.setattr(indices_score, "fetch_news", lambda name, prev=None: [])
 
     def fail_if_called(*a, **k):
         raise AssertionError("generate_financial_analysis ne doit pas être appelée si latest_quarter_date est None et qu'une analyse précédente existe")
@@ -2773,7 +2879,7 @@ def test_build_company_entry_keeps_previous_analysis_when_generation_fails(monke
     """Si le trimestre a changé mais que generate_financial_analysis échoue
     (None), garder l'ancienne analyse valide plutôt que la remplacer par None."""
     monkeypatch.setattr(indices_score, "fetch_company_financials", lambda ticker: _fake_ratios())
-    monkeypatch.setattr(indices_score, "fetch_news", lambda name: [])
+    monkeypatch.setattr(indices_score, "fetch_news", lambda name, prev=None: [])
     monkeypatch.setattr(
         indices_score, "generate_financial_analysis",
         lambda company_name, financial_context, ratios_summary: None,
@@ -3070,7 +3176,7 @@ def _fake_financial_ratios():
 
 def test_build_company_entry_uses_financial_factors_for_financial_sector_tickers(monkeypatch):
     monkeypatch.setattr(indices_score, "fetch_company_financials", lambda ticker: _fake_financial_ratios())
-    monkeypatch.setattr(indices_score, "fetch_news", lambda name: [])
+    monkeypatch.setattr(indices_score, "fetch_news", lambda name, prev=None: [])
     monkeypatch.setattr(indices_score, "generate_financial_analysis", lambda *a, **k: "<p>Analyse.</p>")
 
     entry = indices_score.build_company_entry("BNP.PA", "BNP Paribas", 3.0, {}, index_key="CAC40")

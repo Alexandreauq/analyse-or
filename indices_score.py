@@ -1247,12 +1247,24 @@ def parse_news_rss(xml_bytes: bytes) -> list[dict]:
     return items
 
 
-def fetch_news(company_name: str) -> list[dict]:
+def fetch_news(company_name: str, previous_classifications: dict | None = None) -> list[dict]:
+    """`previous_classifications` (optionnel, {lien: {summary, sentiment,
+    importance}}) permet de réutiliser la classification déjà attribuée à
+    une actu déjà vue lors d'un run précédent au lieu de rappeler Claude —
+    évite qu'un même article change de classification d'un jour à l'autre
+    (voir load_previous_company_analyses) et réduit le nombre d'appels."""
     params = {"q": company_name, "hl": "fr", "gl": "FR", "ceid": "FR:fr"}
     resp = requests.get(NEWS_RSS_URL, params=params, timeout=15)
     resp.raise_for_status()
     items = parse_news_rss(resp.content)
+    previous_classifications = previous_classifications or {}
     for item in items:
+        cached = previous_classifications.get(item["link"])
+        if cached is not None:
+            item["summary"] = cached.get("summary")
+            item["sentiment"] = cached.get("sentiment")
+            item["importance"] = cached.get("importance") or "mineure"
+            continue
         article_text = fetch_article_text(item["link"])
         result = summarize_news_item(item["title"], company_name, article_text)
         item["summary"] = result["summary"]
@@ -1949,8 +1961,15 @@ def estimate_valuation_targets(data: dict, cost_of_capital: float) -> dict:
 def load_previous_company_analyses() -> dict:
     """Lit le docs/indices.json du run précédent (déjà commité) pour en
     extraire, par ticker, l'analyse financière et la date de trimestre
-    qu'elle couvre. {} si le fichier n'existe pas encore ou est
-    illisible — jamais d'exception."""
+    qu'elle couvre, ainsi que la classification (résumé/sentiment/
+    importance) déjà attribuée à chaque actu par son lien
+    (`news_classifications`) — voir fetch_news, qui la réutilise au lieu
+    de rappeler Claude sur une actu déjà vue, pour que la classification
+    d'un article donné reste stable d'un run à l'autre plutôt que de
+    dériver (ex : "majeure" un jour, "mineure" le lendemain pour le même
+    article) et faire disparaître/réapparaître l'alerte "actu_majeure" au
+    hasard. {} si le fichier n'existe pas encore ou est illisible —
+    jamais d'exception."""
     if not os.path.exists(OUTPUT_JSON_PATH):
         return {}
     try:
@@ -1960,6 +1979,15 @@ def load_previous_company_analyses() -> dict:
             c["ticker"]: {
                 "financial_analysis_html": c.get("financial_analysis_html"),
                 "financial_analysis_quarter": c.get("financial_analysis_quarter"),
+                "news_classifications": {
+                    n["link"]: {
+                        "summary": n.get("summary"),
+                        "sentiment": n.get("sentiment"),
+                        "importance": n.get("importance"),
+                    }
+                    for n in c.get("news", [])
+                    if n.get("link")
+                },
             }
             for c in previous.get("companies", [])
             if c.get("ticker")
@@ -2087,7 +2115,7 @@ def build_company_entry(
     # sur son cas neutre — la dépendance se dégrade proprement de bout
     # en bout, sans faire perdre le score fondamental déjà calculable.
     try:
-        news = fetch_news(name)
+        news = fetch_news(name, previous.get("news_classifications", {}))
     except Exception as e:
         print(f"Erreur récupération news pour {name} : {e}")
         news = []

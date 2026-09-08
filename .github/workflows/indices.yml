@@ -40,6 +40,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add docs/indices.json
+          [ -f docs/signal_tracking.json ] && git add docs/signal_tracking.json || true
           [ -f indices_history.json ] && git add indices_history.json || true
           git diff --staged --quiet || git commit -m "Mise à jour du score Indices"
           git pull --rebase --autostash

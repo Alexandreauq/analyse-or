@@ -32,6 +32,7 @@ try:
 except ImportError:
     yf = None
 
+from dateutil.relativedelta import relativedelta
 import pandas as pd
 import requests
 import trafilatura
@@ -1484,6 +1485,209 @@ INDICES_HISTORY_PATH = os.path.join(
 )
 HISTORY_RETENTION_PER_TICKER = 730  # ~2 ans, une entrée par jour et par ticker
 
+SIGNAL_TRACKING_PATH = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "docs", "signal_tracking.json"
+)
+# Indices utilisés comme benchmark de chaque position (voir "index" sur
+# chaque société — CAC40/DAX) : tickers yfinance correspondants.
+INDEX_YFINANCE_TICKERS = {"CAC40": "^FCHI", "DAX": "^GDAXI"}
+SIGNAL_STOP_LOSS_PCT = -20.0     # % perte déclenchant une clôture anticipée
+SIGNAL_SHADOW_DELAY_MONTHS = 6   # délai max avant clôture forcée du signal
+                                  # ET date du benchmark "tenir 6 mois pleins"
+                                  # (même valeur, volontairement — voir
+                                  # docs/superpowers/specs/2026-09-08-signal-performance-tracking-design.md)
+
+
+def load_signal_tracking() -> list[dict]:
+    """Positions de suivi des signaux (ouvertes et clôturées). [] si le
+    fichier n'existe pas encore ou est corrompu — jamais d'exception."""
+    if not os.path.exists(SIGNAL_TRACKING_PATH):
+        return []
+    try:
+        with open(SIGNAL_TRACKING_PATH, encoding="utf-8") as fh:
+            data = json.load(fh)
+        return data.get("positions", [])
+    except (json.JSONDecodeError, AttributeError):
+        return []
+
+
+def save_signal_tracking(positions: list[dict]) -> None:
+    """Écrit docs/signal_tracking.json — même dossier que docs/indices.json
+    (servi statiquement au frontend), pas indices_history.json (racine,
+    non servi)."""
+    os.makedirs(os.path.dirname(SIGNAL_TRACKING_PATH), exist_ok=True)
+    with open(SIGNAL_TRACKING_PATH, "w", encoding="utf-8") as fh:
+        json.dump({"positions": positions}, fh, ensure_ascii=False, indent=2, allow_nan=False)
+
+
+def fetch_index_prices() -> dict:
+    """Niveau du jour de chaque indice suivi (voir INDEX_YFINANCE_TICKERS)
+    — utilisé comme benchmark des positions de suivi des signaux. Une clé
+    à None si son fetch échoue individuellement, ou si yfinance n'est pas
+    installé — ne fait jamais échouer les autres indices ni lever
+    d'exception."""
+    if yf is None:
+        return {index_key: None for index_key in INDEX_YFINANCE_TICKERS}
+    prices = {}
+    for index_key, yf_ticker in INDEX_YFINANCE_TICKERS.items():
+        try:
+            history = yf.Ticker(yf_ticker).history(period="5d")["Close"]
+            price = float(history.iloc[-1]) if len(history) else None
+            prices[index_key] = None if _is_missing(price) else price
+        except Exception:
+            prices[index_key] = None
+    return prices
+
+
+def _open_new_signal_positions(
+    positions: list[dict], newly_triggered_entree: list[dict],
+    index_prices: dict, today: str,
+) -> list[dict]:
+    """Ouvre une position pour chaque société dont le signal "entree"
+    vient d'apparaître aujourd'hui (newly_triggered_entree, déjà calculé
+    par _attach_alerts_and_update_history) — sauf si une position est
+    déjà "open" sur ce ticker (une seule à la fois). Modifie et renvoie
+    `positions`."""
+    open_tickers = {p["ticker"] for p in positions if p["status"] == "open"}
+    shadow_close_date = (
+        datetime.strptime(today, "%Y-%m-%d").date()
+        + relativedelta(months=SIGNAL_SHADOW_DELAY_MONTHS)
+    ).strftime("%Y-%m-%d")
+    for company in newly_triggered_entree:
+        ticker = company["ticker"]
+        if ticker in open_tickers:
+            continue
+        if _is_missing(company.get("current_price")) or _is_missing(company.get("exit_price")):
+            continue
+        if company["index"] not in INDEX_YFINANCE_TICKERS:
+            print(f"Avertissement : pas de benchmark indice pour '{company['index']}' (ticker {ticker}) — position suivie sans comparaison à l'indice.")
+        positions.append({
+            "id": f"{ticker}-{today}",
+            "ticker": ticker,
+            "name": company["name"],
+            "index": company["index"],
+            "status": "open",
+            "entry_date": today,
+            "entry_price": company["current_price"],
+            "target_exit_price": company["exit_price"],
+            "index_price_at_entry": index_prices.get(company["index"]),
+            "close_date": None,
+            "close_price": None,
+            "close_reason": None,
+            "return_pct": None,
+            "index_price_at_close": None,
+            "index_return_pct": None,
+            "shadow_close_date": shadow_close_date,
+            "shadow_resolved": False,
+            "shadow_price": None,
+            "shadow_return_pct": None,
+        })
+        open_tickers.add(ticker)
+    return positions
+
+
+def _close_eligible_positions(
+    positions: list[dict], companies_by_ticker: dict, index_prices: dict, today: str,
+) -> list[dict]:
+    """Clôture toute position "open" dont une condition est remplie —
+    stop-loss (SIGNAL_STOP_LOSS_PCT) -> objectif atteint -> délai max,
+    dans cet ordre de priorité. Une position dont le ticker n'est plus
+    dans companies_by_ticker (sorti de l'indice) ou sans current_price
+    est laissée intacte plutôt que clôturée sur une donnée périmée."""
+    today_date = datetime.strptime(today, "%Y-%m-%d").date()
+    for position in positions:
+        if position["status"] != "open":
+            continue
+        company = companies_by_ticker.get(position["ticker"])
+        if company is None or _is_missing(company.get("current_price")):
+            continue
+        current_price = company["current_price"]
+        entry_price = position["entry_price"]
+
+        close_reason = None
+        if current_price <= entry_price * (1 + SIGNAL_STOP_LOSS_PCT / 100):
+            close_reason = "stop_loss"
+        elif current_price >= position["target_exit_price"]:
+            close_reason = "objectif_atteint"
+        elif today_date >= datetime.strptime(position["shadow_close_date"], "%Y-%m-%d").date():
+            close_reason = "delai_max"
+        if close_reason is None:
+            continue
+
+        position["status"] = "closed"
+        position["close_date"] = today
+        position["close_price"] = current_price
+        position["close_reason"] = close_reason
+        position["return_pct"] = (current_price - entry_price) / entry_price * 100
+
+        index_price_at_close = index_prices.get(position["index"])
+        position["index_price_at_close"] = index_price_at_close
+        index_price_at_entry = position["index_price_at_entry"]
+        if index_price_at_close is not None and index_price_at_entry:
+            position["index_return_pct"] = (
+                (index_price_at_close - index_price_at_entry) / index_price_at_entry * 100
+            )
+
+        if close_reason == "delai_max":
+            # La date fantôme est la même que le délai max (voir
+            # SIGNAL_SHADOW_DELAY_MONTHS) : résolue tout de suite plutôt
+            # que d'attendre un jour de plus pour rien.
+            position["shadow_resolved"] = True
+            position["shadow_price"] = current_price
+            position["shadow_return_pct"] = position["return_pct"]
+    return positions
+
+
+def _resolve_pending_shadow_benchmarks(
+    positions: list[dict], companies_by_ticker: dict, today: str,
+) -> list[dict]:
+    """Résout le benchmark "tenir les 6 mois pleins" pour toute position
+    (ouverte OU déjà clôturée — les deux cycles de vie sont indépendants)
+    dont la date fantôme est atteinte et pas encore résolue. Laisse en
+    attente (retenté le jour suivant) si le ticker n'a pas de cours
+    disponible aujourd'hui — jamais d'exception."""
+    today_date = datetime.strptime(today, "%Y-%m-%d").date()
+    for position in positions:
+        if position["shadow_resolved"]:
+            continue
+        shadow_date = datetime.strptime(position["shadow_close_date"], "%Y-%m-%d").date()
+        if today_date < shadow_date:
+            continue
+        company = companies_by_ticker.get(position["ticker"])
+        if company is None or _is_missing(company.get("current_price")):
+            continue
+        shadow_price = company["current_price"]
+        position["shadow_price"] = shadow_price
+        position["shadow_return_pct"] = (
+            (shadow_price - position["entry_price"]) / position["entry_price"] * 100
+        )
+        position["shadow_resolved"] = True
+    return positions
+
+
+def update_signal_tracking(companies: list[dict], newly_triggered_entree: list[dict]) -> list[dict]:
+    """Met à jour docs/signal_tracking.json : ouvre les nouvelles
+    positions du jour (à partir de newly_triggered_entree, déjà calculé
+    par _attach_alerts_and_update_history — pas re-détecté ici), clôture
+    celles éligibles, résout les benchmarks fantômes arrivés à échéance,
+    sauvegarde. Dégrade toujours vers [] en cas d'erreur — ne fait jamais
+    échouer main(). Renvoie la liste des positions (utile aux tests/logs)."""
+    try:
+        positions = load_signal_tracking()
+        companies_by_ticker = {c["ticker"]: c for c in companies}
+        index_prices = fetch_index_prices()
+        today = datetime.today().strftime("%Y-%m-%d")
+
+        positions = _open_new_signal_positions(positions, newly_triggered_entree, index_prices, today)
+        positions = _close_eligible_positions(positions, companies_by_ticker, index_prices, today)
+        positions = _resolve_pending_shadow_benchmarks(positions, companies_by_ticker, today)
+
+        save_signal_tracking(positions)
+        return positions
+    except Exception as e:
+        print(f"Erreur suivi de performance des signaux : {e}")
+        return []
+
 
 def load_indices_history(path=INDICES_HISTORY_PATH) -> list[dict]:
     """Historique quotidien du score composite par entreprise. []  si le
@@ -2572,6 +2776,7 @@ def main():
     newly_triggered_entree, newly_triggered_major_news = _attach_alerts_and_update_history(companies)
     send_entry_alert_email(newly_triggered_entree)
     send_major_news_alert_email(newly_triggered_major_news)
+    update_signal_tracking(companies, newly_triggered_entree)
 
     payload = {
         "updated": datetime.today().strftime("%Y-%m-%d"),

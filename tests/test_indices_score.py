@@ -3535,3 +3535,79 @@ def test_fetch_index_prices_degrades_to_none_per_index_on_failure(monkeypatch):
 def test_fetch_index_prices_returns_all_none_when_yfinance_unavailable(monkeypatch):
     monkeypatch.setattr(indices_score, "yf", None)
     assert indices_score.fetch_index_prices() == {"CAC40": None, "DAX": None}
+
+
+def test_open_new_signal_positions_creates_position_for_newly_triggered_company():
+    company = {
+        "ticker": "BN.PA", "name": "Danone", "index": "CAC40",
+        "current_price": 100.0, "exit_price": 130.0,
+    }
+    positions = indices_score._open_new_signal_positions(
+        [], [company], {"CAC40": 7850.0, "DAX": 19230.0}, today="2026-09-08",
+    )
+    assert len(positions) == 1
+    p = positions[0]
+    assert p["id"] == "BN.PA-2026-09-08"
+    assert p["ticker"] == "BN.PA"
+    assert p["name"] == "Danone"
+    assert p["index"] == "CAC40"
+    assert p["status"] == "open"
+    assert p["entry_date"] == "2026-09-08"
+    assert p["entry_price"] == 100.0
+    assert p["target_exit_price"] == 130.0
+    assert p["index_price_at_entry"] == 7850.0
+    assert p["close_date"] is None
+    assert p["close_reason"] is None
+    assert p["shadow_close_date"] == "2027-03-08"
+    assert p["shadow_resolved"] is False
+    assert p["shadow_price"] is None
+
+
+def test_open_new_signal_positions_skips_ticker_with_already_open_position():
+    company = {
+        "ticker": "BN.PA", "name": "Danone", "index": "CAC40",
+        "current_price": 100.0, "exit_price": 130.0,
+    }
+    existing = [{"ticker": "BN.PA", "status": "open"}]
+    positions = indices_score._open_new_signal_positions(
+        existing, [company], {"CAC40": 7850.0}, today="2026-09-08",
+    )
+    assert len(positions) == 1  # pas de doublon, la position existante reste seule
+    assert positions[0] is existing[0]
+
+
+def test_open_new_signal_positions_allows_new_position_after_previous_closed():
+    company = {
+        "ticker": "BN.PA", "name": "Danone", "index": "CAC40",
+        "current_price": 100.0, "exit_price": 130.0,
+    }
+    existing = [{"ticker": "BN.PA", "status": "closed"}]
+    positions = indices_score._open_new_signal_positions(
+        existing, [company], {"CAC40": 7850.0}, today="2026-09-08",
+    )
+    assert len(positions) == 2
+    assert positions[1]["status"] == "open"
+
+
+def test_open_new_signal_positions_skips_company_with_missing_price_data():
+    """Donnée incomplète (ex: current_price/exit_price manquants) : ne
+    doit jamais lever, la société est simplement ignorée pour aujourd'hui."""
+    company = {
+        "ticker": "BN.PA", "name": "Danone", "index": "CAC40",
+        "current_price": None, "exit_price": 130.0,
+    }
+    positions = indices_score._open_new_signal_positions(
+        [], [company], {"CAC40": 7850.0}, today="2026-09-08",
+    )
+    assert positions == []
+
+
+def test_open_new_signal_positions_uses_none_index_price_when_index_fetch_failed():
+    company = {
+        "ticker": "BN.PA", "name": "Danone", "index": "CAC40",
+        "current_price": 100.0, "exit_price": 130.0,
+    }
+    positions = indices_score._open_new_signal_positions(
+        [], [company], {"CAC40": None, "DAX": None}, today="2026-09-08",
+    )
+    assert positions[0]["index_price_at_entry"] is None

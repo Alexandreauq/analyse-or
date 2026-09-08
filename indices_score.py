@@ -153,10 +153,8 @@ DAX_COMPANIES = [
     {"ticker": "DB1.DE", "name": "Deutsche Börse"},
     {"ticker": "SY1.DE", "name": "Symrise"},
     {"ticker": "ZAL.DE", "name": "Zalando"},
-    {"ticker": "P911.DE", "name": "Porsche AG"},
     {"ticker": "DTG.DE", "name": "Daimler Truck"},
     {"ticker": "QIA.DE", "name": "Qiagen"},
-    {"ticker": "SRT3.DE", "name": "Sartorius"},
     {"ticker": "BNR.DE", "name": "Brenntag"},
     {"ticker": "HEI.DE", "name": "Heidelberg Materials"},
     # Lot 4 DAX (dernier lot pour compléter la couverture), tickers Yahoo
@@ -164,9 +162,18 @@ DAX_COMPANIES = [
     # (voir FINANCIAL_SECTOR_TICKERS), les 4 autres sont standards.
     {"ticker": "BMW.DE", "name": "BMW"},
     {"ticker": "ENR.DE", "name": "Siemens Energy"},
-    {"ticker": "1COV.DE", "name": "Covestro"},
     {"ticker": "G1A.DE", "name": "GEA Group"},
     {"ticker": "HNR1.DE", "name": "Hannover Rück"},
+    # Mise à jour composition DAX (2026-09-08, vérifiée via Wikipedia) :
+    # Porsche AG, Sartorius et Covestro sont sortis de l'indice ; Fresenius
+    # Medical Care, Porsche SE et Scout24 y sont entrés. Airbus (AIR.PA),
+    # également entrée dans le DAX, n'est PAS dupliquée ici : déjà suivie
+    # côté CAC40 (voir CAC40_COMPANIES) — un choix explicite de
+    # l'utilisateur pour éviter un double suivi/double alerte sur la même
+    # entreprise. Le DAX est donc à 39/40 par ce choix, pas par erreur.
+    {"ticker": "FME.DE", "name": "Fresenius Medical Care"},
+    {"ticker": "PAH3.DE", "name": "Porsche SE"},
+    {"ticker": "G24.DE", "name": "Scout24"},
 ]
 
 # Chaque entreprise de COMPANIES porte son propre indice ("index" ajouté
@@ -226,8 +233,6 @@ SHARES_OUTSTANDING_FROM_MARKET_CAP_TICKERS = {
     "VOW3.DE",  # Volkswagen
     "HEN3.DE",  # Henkel
     "MRK.DE",   # Merck KGaA
-    "P911.DE",  # Porsche AG
-    "SRT3.DE",  # Sartorius
 }
 
 # Banques et assurances françaises (BNP Paribas, Société Générale, Crédit

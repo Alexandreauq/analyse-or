@@ -1520,6 +1520,24 @@ def save_signal_tracking(positions: list[dict]) -> None:
         json.dump({"positions": positions}, fh, ensure_ascii=False, indent=2)
 
 
+def fetch_index_prices() -> dict:
+    """Niveau du jour de chaque indice suivi (voir INDEX_YFINANCE_TICKERS)
+    — utilisé comme benchmark des positions de suivi des signaux. Une clé
+    à None si son fetch échoue individuellement, ou si yfinance n'est pas
+    installé — ne fait jamais échouer les autres indices ni lever
+    d'exception."""
+    if yf is None:
+        return {index_key: None for index_key in INDEX_YFINANCE_TICKERS}
+    prices = {}
+    for index_key, yf_ticker in INDEX_YFINANCE_TICKERS.items():
+        try:
+            history = yf.Ticker(yf_ticker).history(period="5d")["Close"]
+            prices[index_key] = float(history.iloc[-1]) if len(history) else None
+        except Exception:
+            prices[index_key] = None
+    return prices
+
+
 def load_indices_history(path=INDICES_HISTORY_PATH) -> list[dict]:
     """Historique quotidien du score composite par entreprise. []  si le
     fichier n'existe pas encore ou est corrompu — jamais d'exception."""

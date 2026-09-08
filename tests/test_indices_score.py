@@ -3491,3 +3491,47 @@ def test_save_signal_tracking_creates_parent_directory(monkeypatch, tmp_path):
     monkeypatch.setattr(indices_score, "SIGNAL_TRACKING_PATH", str(path))
     indices_score.save_signal_tracking([])
     assert path.exists()
+
+
+def test_fetch_index_prices_returns_latest_close_per_index(monkeypatch):
+    class FakeHistory:
+        def __getitem__(self, key):
+            assert key == "Close"
+            import pandas as pd
+            return pd.Series([7800.0, 7850.0])
+
+    class FakeTicker:
+        def __init__(self, symbol):
+            self.symbol = symbol
+
+        def history(self, period):
+            assert period == "5d"
+            return FakeHistory()
+
+    monkeypatch.setattr(indices_score.yf, "Ticker", FakeTicker)
+    result = indices_score.fetch_index_prices()
+    assert result == {"CAC40": 7850.0, "DAX": 7850.0}
+
+
+def test_fetch_index_prices_degrades_to_none_per_index_on_failure(monkeypatch):
+    """Une panne sur un seul indice ne doit pas empêcher de récupérer
+    l'autre, ni lever d'exception."""
+    class FailingTicker:
+        def __init__(self, symbol):
+            self.symbol = symbol
+
+        def history(self, period):
+            if self.symbol == "^FCHI":
+                raise RuntimeError("panne réseau")
+            import pandas as pd
+            return {"Close": pd.Series([19230.0])}
+
+    monkeypatch.setattr(indices_score.yf, "Ticker", FailingTicker)
+    result = indices_score.fetch_index_prices()
+    assert result["CAC40"] is None
+    assert result["DAX"] == 19230.0
+
+
+def test_fetch_index_prices_returns_all_none_when_yfinance_unavailable(monkeypatch):
+    monkeypatch.setattr(indices_score, "yf", None)
+    assert indices_score.fetch_index_prices() == {"CAC40": None, "DAX": None}

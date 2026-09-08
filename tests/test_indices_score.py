@@ -1459,6 +1459,30 @@ def test_estimate_wacc_nominal_case():
     assert result == pytest.approx(7.203333333333333)
 
 
+def test_estimate_wacc_caps_debt_weight_for_captive_finance_heavy_balance_sheet():
+    """Un constructeur auto dont la dette de financement captif (crédit
+    clients/concessionnaires) écrase largement une capitalisation
+    boursière déprimée ne doit pas voir son WACC retomber quasiment au
+    seul coût de la dette — la pondération dette est plafonnée à
+    DEBT_WEIGHT_CAP (voir sa docstring, cas Volkswagen)."""
+    # Re = 3.68 + 1.2*5.0 + 0.0 (méga cap) = 9.68
+    # Rd_after_tax = 3.0 * (1 - 0.25) = 2.25
+    # E=60, D=200 -> poids marché D = 200/260 ≈ 0.769, plafonné à 0.75
+    # WACC = 0.25*9.68 + 0.75*2.25 = 2.42 + 1.6875 = 4.1075
+    result = indices_score.estimate_wacc(
+        risk_free_rate=3.68, beta=1.2, market_cap=60_000_000_000,
+        total_debt=200_000_000_000, tax_rate=0.25,
+    )
+    assert result == pytest.approx(4.1075)
+    # Sans plafond, le WACC serait plus bas (dominé par le coût de la
+    # dette) : preuve que le plafond a un effet réel, pas seulement présent
+    # dans le code sans changer le résultat.
+    unc_debt_weight = 200_000_000_000 / 260_000_000_000
+    unc_equity_weight = 1 - unc_debt_weight
+    uncapped = unc_equity_weight * 9.68 + unc_debt_weight * 2.25
+    assert result > uncapped
+
+
 def test_estimate_wacc_returns_none_when_risk_free_rate_missing():
     assert estimate_wacc(
         risk_free_rate=None, beta=1.2, market_cap=100_000_000_000,

@@ -1893,6 +1893,18 @@ def _size_premium(market_cap: float) -> float:
     return SIZE_PREMIUM_BANDS[-1][1]
 
 
+DEBT_WEIGHT_CAP = 0.75  # part maximale de la dette dans la pondération du WACC
+                         # (voir estimate_wacc) — sans ce plafond, un constructeur
+                         # auto dont la dette de financement captif (crédit aux
+                         # clients/concessionnaires via sa filiale financière,
+                         # sans rapport avec le risque de l'activité industrielle)
+                         # écrase largement une capitalisation boursière déprimée
+                         # fait retomber le WACC quasiment au seul coût de la
+                         # dette — repéré sur Volkswagen (WACC à 3.4%, en dessous
+                         # du coût de la dette après impôt à taux constant, alors
+                         # qu'un WACC industriel plausible est plutôt 6-9%).
+
+
 def estimate_wacc(
     risk_free_rate: float | None,
     beta: float | None,
@@ -1904,7 +1916,13 @@ def estimate_wacc(
     donnée nécessaire manque/est invalide — le repli sur
     COST_OF_CAPITAL_PROXY se fait chez l'appelant, pas ici. Ne lève jamais
     d'exception, même si une donnée yfinance est d'un type inattendu
-    (ex : bêta remonté comme chaîne de caractères)."""
+    (ex : bêta remonté comme chaîne de caractères).
+
+    La pondération dette/fonds propres est plafonnée à DEBT_WEIGHT_CAP
+    (voir sa docstring) plutôt que d'utiliser directement le ratio de
+    marché total_debt/(market_cap+total_debt), pour ne pas laisser une
+    dette de financement captif (constructeurs auto notamment) écraser
+    le coût des fonds propres dans le mix."""
     if (
         risk_free_rate is None or _is_missing(risk_free_rate)
         or beta is None or _is_missing(beta)
@@ -1917,8 +1935,8 @@ def estimate_wacc(
         cost_of_equity = risk_free_rate + beta * MARKET_RISK_PREMIUM + _size_premium(market_cap)
         cost_of_debt_after_tax = DEBT_INTEREST_RATE_PROXY * (1 - tax_rate)
         total_capital = market_cap + total_debt
-        equity_weight = market_cap / total_capital
-        debt_weight = total_debt / total_capital
+        debt_weight = min(total_debt / total_capital, DEBT_WEIGHT_CAP)
+        equity_weight = 1 - debt_weight
         return equity_weight * cost_of_equity + debt_weight * cost_of_debt_after_tax
     except (TypeError, ValueError, ZeroDivisionError):
         return None

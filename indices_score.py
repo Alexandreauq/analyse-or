@@ -2466,27 +2466,4 @@ def main():
 
 
 if __name__ == "__main__":
-    import sys
-
-    if "--test-major-news-email" in sys.argv:
-        _test_company = {
-            "ticker": "BN.PA", "name": "Danone", "index": "CAC40",
-            "news": [{
-                "title": "Danone annonce une OPA amicale sur un concurrent",
-                "source": "Les Echos", "date": datetime.today().strftime("%d/%m/%Y"),
-                "summary": "Danone lance une offre publique d'achat amicale, renforçant sa position sur le segment des produits laitiers premium.",
-                "sentiment": 1,
-                "link": "https://alexandreauq.github.io/analyse-or/",
-            }],
-        }
-        _test_alert = {
-            "kind": "actu_majeure",
-            "title": "Danone annonce une OPA amicale sur un concurrent",
-            "detail": "Danone lance une offre publique d'achat amicale, renforçant sa position sur le segment des produits laitiers premium.",
-            "date": datetime.today().strftime("%d/%m/%Y"),
-            "link": "https://alexandreauq.github.io/analyse-or/",
-        }
-        ok = send_major_news_alert_email([(_test_company, _test_alert)])
-        print(f"Test email actu majeure envoyé : {ok}")
-    else:
-        main()
+    main()

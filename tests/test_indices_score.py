@@ -1325,6 +1325,45 @@ def test_estimate_asset_based_price_returns_none_when_equity_is_nan():
     assert result is None
 
 
+def test_estimate_asset_based_price_no_discount_when_roe_meets_cost_of_capital():
+    """ROE >= coût du capital : facteur qualité plafonné à 1.0, valeur
+    comptable brute inchangée — pas de prime au-dessus du book value."""
+    result = estimate_asset_based_price(equity=200.0, shares_outstanding=50.0, roe=10.0, cost_of_capital=8.0)
+    assert result == 4.0
+
+
+def test_estimate_asset_based_price_discounted_when_roe_below_cost_of_capital():
+    """ROE sous le coût du capital : la valeur comptable est décotée
+    proportionnellement (modèle du résultat résiduel / justified P/B) —
+    repéré sur Volkswagen (ROE faible, book value très au-dessus du
+    marché)."""
+    # facteur = 4.0/8.0 = 0.5
+    result = estimate_asset_based_price(equity=200.0, shares_outstanding=50.0, roe=4.0, cost_of_capital=8.0)
+    assert result == 2.0
+
+
+def test_estimate_asset_based_price_floors_discount_at_asset_quality_floor():
+    """Un ROE très négatif ne doit pas faire tendre le prix vers 0/négatif
+    — décote plafonnée à ASSET_QUALITY_FLOOR (approximation simplifiée,
+    jamais une décote totale)."""
+    result = estimate_asset_based_price(equity=200.0, shares_outstanding=50.0, roe=-50.0, cost_of_capital=8.0)
+    assert result == pytest.approx(4.0 * indices_score.ASSET_QUALITY_FLOOR)
+
+
+def test_estimate_asset_based_price_ignores_quality_factor_when_not_provided():
+    """Comportement inchangé pour les appelants qui ne fournissent pas
+    roe/cost_of_capital (rétrocompatibilité)."""
+    assert estimate_asset_based_price(equity=200.0, shares_outstanding=50.0) == 4.0
+    assert estimate_asset_based_price(equity=200.0, shares_outstanding=50.0, roe=4.0) == 4.0
+    assert estimate_asset_based_price(equity=200.0, shares_outstanding=50.0, cost_of_capital=8.0) == 4.0
+
+
+def test_estimate_asset_based_price_ignores_quality_factor_when_cost_of_capital_not_positive():
+    """cost_of_capital nul/négatif (donnée dégradée) : pas de division par
+    zéro, repli sur la valeur comptable brute."""
+    assert estimate_asset_based_price(equity=200.0, shares_outstanding=50.0, roe=4.0, cost_of_capital=0.0) == 4.0
+
+
 def test_estimate_multiple_based_price_nominal_case():
     result = estimate_multiple_based_price(
         current_price=100.0, current_ev_ebitda=10.0, avg_ev_ebitda_5y=8.0
@@ -1649,6 +1688,7 @@ def test_estimate_valuation_targets_computes_all_three_output_keys():
         "ecart_pct_ma200": 0.0,
         "fcf_normalized": 50.0,
         "sector": "Unknown",
+        "roe": 12.0,
     }
     result = estimate_valuation_targets(data, cost_of_capital=8.0)
     assert set(result.keys()) == {"fair_value", "entry_price", "exit_price"}
@@ -1676,6 +1716,7 @@ def test_estimate_valuation_targets_varies_with_cost_of_capital():
         "ecart_pct_ma200": 0.0,
         "fcf_normalized": 50.0,
         "sector": "Unknown",
+        "roe": 12.0,
     }
     at_8 = estimate_valuation_targets(data, cost_of_capital=8.0)
     at_10 = estimate_valuation_targets(data, cost_of_capital=10.0)
@@ -1701,6 +1742,7 @@ def test_estimate_valuation_targets_degrades_to_none_with_nan_inputs():
         "ecart_pct_ma200": 0.0,
         "fcf_normalized": float("nan"),
         "sector": "Unknown",
+        "roe": float("nan"),
     }
     result = estimate_valuation_targets(data, cost_of_capital=8.0)
     assert result["fair_value"] is None
@@ -1770,6 +1812,7 @@ def test_estimate_valuation_targets_uses_normalized_fcf_for_cyclical_companies()
         "equity": 200.0, "current_price": 120.0, "current_ev_ebitda": 10.0,
         "avg_ev_ebitda_5y": 10.0, "ma200": 110.0, "beta": 1.0, "ecart_pct_ma200": 0.0,
         "sector": "Consumer Cyclical",  # -> profil "cyclique" (SECTOR_PROFILES)
+        "roe": 12.0,
     }
     low_fcf = {**base_data, "fcf": 999.0, "fcf_normalized": 20.0}
     high_fcf = {**base_data, "fcf": 999.0, "fcf_normalized": 80.0}

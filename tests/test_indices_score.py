@@ -2565,6 +2565,7 @@ def test_main_writes_alerts_key_for_every_company(monkeypatch, tmp_path):
     monkeypatch.setattr(indices_score, "build_company_entry", _fake_build_company_entry)
     monkeypatch.setattr(indices_score, "load_indices_history", lambda: [])
     monkeypatch.setattr(indices_score, "append_indices_history", lambda entries: entries)
+    monkeypatch.setattr(indices_score, "update_signal_tracking", lambda companies, newly_triggered_entree: [])
     output_path = tmp_path / "indices.json"
     monkeypatch.setattr(indices_score, "OUTPUT_JSON_PATH", str(output_path))
 
@@ -2595,6 +2596,7 @@ def test_main_payload_includes_index_metadata(monkeypatch, tmp_path):
     )
     monkeypatch.setattr(indices_score, "load_indices_history", lambda: [])
     monkeypatch.setattr(indices_score, "append_indices_history", lambda entries: entries)
+    monkeypatch.setattr(indices_score, "update_signal_tracking", lambda companies, newly_triggered_entree: [])
     output_path = tmp_path / "indices.json"
     monkeypatch.setattr(indices_score, "OUTPUT_JSON_PATH", str(output_path))
 
@@ -3454,3 +3456,410 @@ def test_fetch_company_financials_ignores_market_cap_override_for_other_tickers(
     ratios = indices_score.fetch_company_financials("STLAP.PA")
 
     assert ratios["shares_outstanding"] == 2900941252
+
+
+def test_load_signal_tracking_returns_empty_list_when_file_absent(monkeypatch, tmp_path):
+    monkeypatch.setattr(indices_score, "SIGNAL_TRACKING_PATH", str(tmp_path / "does_not_exist.json"))
+    assert indices_score.load_signal_tracking() == []
+
+
+def test_load_signal_tracking_returns_empty_list_on_corrupted_json(monkeypatch, tmp_path):
+    path = tmp_path / "signal_tracking.json"
+    path.write_text("{not valid json", encoding="utf-8")
+    monkeypatch.setattr(indices_score, "SIGNAL_TRACKING_PATH", str(path))
+    assert indices_score.load_signal_tracking() == []
+
+
+def test_load_signal_tracking_returns_positions_list(monkeypatch, tmp_path):
+    path = tmp_path / "signal_tracking.json"
+    path.write_text(json.dumps({"positions": [{"id": "BN.PA-2026-09-08"}]}), encoding="utf-8")
+    monkeypatch.setattr(indices_score, "SIGNAL_TRACKING_PATH", str(path))
+    assert indices_score.load_signal_tracking() == [{"id": "BN.PA-2026-09-08"}]
+
+
+def test_save_signal_tracking_writes_positions_wrapped_in_object(monkeypatch, tmp_path):
+    path = tmp_path / "signal_tracking.json"
+    monkeypatch.setattr(indices_score, "SIGNAL_TRACKING_PATH", str(path))
+    indices_score.save_signal_tracking([{"id": "BN.PA-2026-09-08"}])
+    written = json.loads(path.read_text(encoding="utf-8"))
+    assert written == {"positions": [{"id": "BN.PA-2026-09-08"}]}
+
+
+def test_save_signal_tracking_creates_parent_directory(monkeypatch, tmp_path):
+    """docs/ peut ne pas exister sur une éventuelle exécution locale
+    from scratch — même garde-fou que le payload principal
+    (os.makedirs(..., exist_ok=True) dans main())."""
+    path = tmp_path / "nested" / "signal_tracking.json"
+    monkeypatch.setattr(indices_score, "SIGNAL_TRACKING_PATH", str(path))
+    indices_score.save_signal_tracking([])
+    assert path.exists()
+
+
+def test_fetch_index_prices_returns_latest_close_per_index(monkeypatch):
+    class FakeHistory:
+        def __getitem__(self, key):
+            assert key == "Close"
+            import pandas as pd
+            return pd.Series([7800.0, 7850.0])
+
+    class FakeTicker:
+        def __init__(self, symbol):
+            self.symbol = symbol
+
+        def history(self, period):
+            assert period == "5d"
+            return FakeHistory()
+
+    monkeypatch.setattr(indices_score.yf, "Ticker", FakeTicker)
+    result = indices_score.fetch_index_prices()
+    assert result == {"CAC40": 7850.0, "DAX": 7850.0}
+
+
+def test_fetch_index_prices_degrades_to_none_per_index_on_failure(monkeypatch):
+    """Une panne sur un seul indice ne doit pas empêcher de récupérer
+    l'autre, ni lever d'exception."""
+    class FailingTicker:
+        def __init__(self, symbol):
+            self.symbol = symbol
+
+        def history(self, period):
+            if self.symbol == "^FCHI":
+                raise RuntimeError("panne réseau")
+            import pandas as pd
+            return {"Close": pd.Series([19230.0])}
+
+    monkeypatch.setattr(indices_score.yf, "Ticker", FailingTicker)
+    result = indices_score.fetch_index_prices()
+    assert result["CAC40"] is None
+    assert result["DAX"] == 19230.0
+
+
+def test_fetch_index_prices_returns_all_none_when_yfinance_unavailable(monkeypatch):
+    monkeypatch.setattr(indices_score, "yf", None)
+    assert indices_score.fetch_index_prices() == {"CAC40": None, "DAX": None}
+
+
+def test_open_new_signal_positions_creates_position_for_newly_triggered_company():
+    company = {
+        "ticker": "BN.PA", "name": "Danone", "index": "CAC40",
+        "current_price": 100.0, "exit_price": 130.0,
+    }
+    positions = indices_score._open_new_signal_positions(
+        [], [company], {"CAC40": 7850.0, "DAX": 19230.0}, today="2026-09-08",
+    )
+    assert len(positions) == 1
+    p = positions[0]
+    assert p["id"] == "BN.PA-2026-09-08"
+    assert p["ticker"] == "BN.PA"
+    assert p["name"] == "Danone"
+    assert p["index"] == "CAC40"
+    assert p["status"] == "open"
+    assert p["entry_date"] == "2026-09-08"
+    assert p["entry_price"] == 100.0
+    assert p["target_exit_price"] == 130.0
+    assert p["index_price_at_entry"] == 7850.0
+    assert p["close_date"] is None
+    assert p["close_reason"] is None
+    assert p["shadow_close_date"] == "2027-03-08"
+    assert p["shadow_resolved"] is False
+    assert p["shadow_price"] is None
+
+
+def test_open_new_signal_positions_skips_ticker_with_already_open_position():
+    company = {
+        "ticker": "BN.PA", "name": "Danone", "index": "CAC40",
+        "current_price": 100.0, "exit_price": 130.0,
+    }
+    existing = [{"ticker": "BN.PA", "status": "open"}]
+    positions = indices_score._open_new_signal_positions(
+        existing, [company], {"CAC40": 7850.0}, today="2026-09-08",
+    )
+    assert len(positions) == 1  # pas de doublon, la position existante reste seule
+    assert positions[0] is existing[0]
+
+
+def test_open_new_signal_positions_allows_new_position_after_previous_closed():
+    company = {
+        "ticker": "BN.PA", "name": "Danone", "index": "CAC40",
+        "current_price": 100.0, "exit_price": 130.0,
+    }
+    existing = [{"ticker": "BN.PA", "status": "closed"}]
+    positions = indices_score._open_new_signal_positions(
+        existing, [company], {"CAC40": 7850.0}, today="2026-09-08",
+    )
+    assert len(positions) == 2
+    assert positions[1]["status"] == "open"
+
+
+def test_open_new_signal_positions_skips_company_with_missing_price_data():
+    """Donnée incomplète (ex: current_price/exit_price manquants) : ne
+    doit jamais lever, la société est simplement ignorée pour aujourd'hui."""
+    company = {
+        "ticker": "BN.PA", "name": "Danone", "index": "CAC40",
+        "current_price": None, "exit_price": 130.0,
+    }
+    positions = indices_score._open_new_signal_positions(
+        [], [company], {"CAC40": 7850.0}, today="2026-09-08",
+    )
+    assert positions == []
+
+
+def test_open_new_signal_positions_uses_none_index_price_when_index_fetch_failed():
+    company = {
+        "ticker": "BN.PA", "name": "Danone", "index": "CAC40",
+        "current_price": 100.0, "exit_price": 130.0,
+    }
+    positions = indices_score._open_new_signal_positions(
+        [], [company], {"CAC40": None, "DAX": None}, today="2026-09-08",
+    )
+    assert positions[0]["index_price_at_entry"] is None
+
+
+def _fake_open_position(**overrides):
+    position = {
+        "id": "BN.PA-2026-06-08", "ticker": "BN.PA", "name": "Danone", "index": "CAC40",
+        "status": "open", "entry_date": "2026-06-08", "entry_price": 100.0,
+        "target_exit_price": 130.0, "index_price_at_entry": 7500.0,
+        "close_date": None, "close_price": None, "close_reason": None, "return_pct": None,
+        "index_price_at_close": None, "index_return_pct": None,
+        "shadow_close_date": "2026-12-08", "shadow_resolved": False,
+        "shadow_price": None, "shadow_return_pct": None,
+    }
+    position.update(overrides)
+    return position
+
+
+def test_close_eligible_positions_closes_on_stop_loss():
+    position = _fake_open_position(entry_price=100.0)
+    companies_by_ticker = {"BN.PA": {"current_price": 79.0}}  # -21%, sous le seuil -20%
+    result = indices_score._close_eligible_positions(
+        [position], companies_by_ticker, {"CAC40": 7600.0}, today="2026-09-08",
+    )
+    p = result[0]
+    assert p["status"] == "closed"
+    assert p["close_reason"] == "stop_loss"
+    assert p["close_price"] == 79.0
+    assert p["return_pct"] == pytest.approx(-21.0)
+    assert p["index_price_at_close"] == 7600.0
+    assert p["index_return_pct"] == pytest.approx((7600.0 - 7500.0) / 7500.0 * 100)
+
+
+def test_close_eligible_positions_closes_on_target_reached():
+    position = _fake_open_position(entry_price=100.0, target_exit_price=130.0)
+    companies_by_ticker = {"BN.PA": {"current_price": 131.0}}
+    result = indices_score._close_eligible_positions(
+        [position], companies_by_ticker, {"CAC40": 7600.0}, today="2026-09-08",
+    )
+    assert result[0]["close_reason"] == "objectif_atteint"
+    assert result[0]["return_pct"] == pytest.approx(31.0)
+
+
+def test_close_eligible_positions_closes_on_delai_max_and_resolves_shadow_immediately():
+    position = _fake_open_position(
+        entry_price=100.0, target_exit_price=130.0, shadow_close_date="2026-09-08",
+    )
+    companies_by_ticker = {"BN.PA": {"current_price": 110.0}}
+    result = indices_score._close_eligible_positions(
+        [position], companies_by_ticker, {"CAC40": 7600.0}, today="2026-09-08",
+    )
+    p = result[0]
+    assert p["close_reason"] == "delai_max"
+    assert p["return_pct"] == pytest.approx(10.0)
+    # Clôture par délai max == date fantôme atteinte le même jour : résolu tout de suite.
+    assert p["shadow_resolved"] is True
+    assert p["shadow_price"] == 110.0
+    assert p["shadow_return_pct"] == pytest.approx(10.0)
+
+
+def test_close_eligible_positions_stop_loss_takes_priority_over_target():
+    """Cas limite improbable mais à couvrir explicitement : si les deux
+    conditions sont vraies le même jour (n'arrive normalement jamais vu
+    les seuils -20%/objectif > entrée), stop-loss est vérifié en premier
+    dans cet ordre de priorité de la spec."""
+    position = _fake_open_position(entry_price=100.0, target_exit_price=70.0)  # objectif sous l'entrée
+    companies_by_ticker = {"BN.PA": {"current_price": 79.0}}  # <= objectif ET <= stop-loss
+    result = indices_score._close_eligible_positions(
+        [position], companies_by_ticker, {"CAC40": 7600.0}, today="2026-09-08",
+    )
+    assert result[0]["close_reason"] == "stop_loss"
+
+
+def test_close_eligible_positions_leaves_open_when_no_condition_met():
+    position = _fake_open_position(entry_price=100.0, target_exit_price=130.0)
+    companies_by_ticker = {"BN.PA": {"current_price": 105.0}}
+    result = indices_score._close_eligible_positions(
+        [position], companies_by_ticker, {"CAC40": 7600.0}, today="2026-09-08",
+    )
+    assert result[0]["status"] == "open"
+
+
+def test_close_eligible_positions_leaves_open_when_ticker_not_in_companies():
+    """Ticker sorti de l'indice (ex: recomposition DAX) : pas de cours
+    disponible aujourd'hui, position laissée intacte plutôt que
+    clôturée sur une donnée périmée ou une exception."""
+    position = _fake_open_position()
+    result = indices_score._close_eligible_positions(
+        [position], {}, {"CAC40": 7600.0}, today="2026-09-08",
+    )
+    assert result[0]["status"] == "open"
+
+
+def test_close_eligible_positions_ignores_already_closed_positions():
+    position = _fake_open_position(status="closed", close_price=140.0)
+    companies_by_ticker = {"BN.PA": {"current_price": 79.0}}  # aurait déclenché stop-loss si "open"
+    result = indices_score._close_eligible_positions(
+        [position], companies_by_ticker, {"CAC40": 7600.0}, today="2026-09-08",
+    )
+    assert result[0]["close_price"] == 140.0  # inchangé
+
+
+def test_close_eligible_positions_leaves_index_return_none_when_index_fetch_failed():
+    position = _fake_open_position(entry_price=100.0, target_exit_price=130.0)
+    companies_by_ticker = {"BN.PA": {"current_price": 131.0}}
+    result = indices_score._close_eligible_positions(
+        [position], companies_by_ticker, {"CAC40": None}, today="2026-09-08",
+    )
+    assert result[0]["index_price_at_close"] is None
+    assert result[0]["index_return_pct"] is None
+
+
+def test_resolve_pending_shadow_benchmarks_resolves_when_date_reached():
+    position = _fake_open_position(
+        status="closed", entry_price=100.0, shadow_close_date="2026-09-08", shadow_resolved=False,
+    )
+    companies_by_ticker = {"BN.PA": {"current_price": 115.0}}
+    result = indices_score._resolve_pending_shadow_benchmarks(
+        [position], companies_by_ticker, today="2026-09-08",
+    )
+    p = result[0]
+    assert p["shadow_resolved"] is True
+    assert p["shadow_price"] == 115.0
+    assert p["shadow_return_pct"] == pytest.approx(15.0)
+
+
+def test_resolve_pending_shadow_benchmarks_resolves_for_still_open_position():
+    """Une position encore "open" (pas encore clôturée par le repère de
+    sortie/stop-loss) mais dont la date fantôme est déjà atteinte doit
+    aussi être résolue — les deux cycles de vie sont indépendants."""
+    position = _fake_open_position(
+        status="open", entry_price=100.0, shadow_close_date="2026-09-08", shadow_resolved=False,
+    )
+    companies_by_ticker = {"BN.PA": {"current_price": 90.0}}
+    result = indices_score._resolve_pending_shadow_benchmarks(
+        [position], companies_by_ticker, today="2026-09-08",
+    )
+    assert result[0]["shadow_resolved"] is True
+    assert result[0]["shadow_return_pct"] == pytest.approx(-10.0)
+
+
+def test_resolve_pending_shadow_benchmarks_leaves_unresolved_before_date():
+    position = _fake_open_position(shadow_close_date="2026-12-08", shadow_resolved=False)
+    companies_by_ticker = {"BN.PA": {"current_price": 115.0}}
+    result = indices_score._resolve_pending_shadow_benchmarks(
+        [position], companies_by_ticker, today="2026-09-08",
+    )
+    assert result[0]["shadow_resolved"] is False
+    assert result[0]["shadow_price"] is None
+
+
+def test_resolve_pending_shadow_benchmarks_skips_already_resolved():
+    position = _fake_open_position(
+        shadow_close_date="2026-09-08", shadow_resolved=True, shadow_price=999.0,
+    )
+    companies_by_ticker = {"BN.PA": {"current_price": 42.0}}
+    result = indices_score._resolve_pending_shadow_benchmarks(
+        [position], companies_by_ticker, today="2026-09-08",
+    )
+    assert result[0]["shadow_price"] == 999.0  # inchangé
+
+
+def test_resolve_pending_shadow_benchmarks_leaves_pending_when_no_price_available():
+    """Ticker sorti de l'indice ou sans cours ce jour : retenté le jour
+    suivant, jamais d'exception."""
+    position = _fake_open_position(shadow_close_date="2026-09-08", shadow_resolved=False)
+    result = indices_score._resolve_pending_shadow_benchmarks(
+        [position], {}, today="2026-09-08",
+    )
+    assert result[0]["shadow_resolved"] is False
+
+
+def test_update_signal_tracking_opens_closes_and_saves(monkeypatch, tmp_path):
+    """Test bout en bout : preuve que update_signal_tracking cable bien
+    les 3 sous-fonctions et écrit le fichier — pas seulement qu'elles
+    existent en isolation."""
+    path = tmp_path / "signal_tracking.json"
+    monkeypatch.setattr(indices_score, "SIGNAL_TRACKING_PATH", str(path))
+    monkeypatch.setattr(indices_score, "fetch_index_prices", lambda: {"CAC40": 7600.0, "DAX": 19000.0})
+
+    company = {
+        "ticker": "BN.PA", "name": "Danone", "index": "CAC40",
+        "current_price": 100.0, "exit_price": 130.0,
+    }
+    result = indices_score.update_signal_tracking([company], [company])
+
+    assert len(result) == 1
+    assert result[0]["ticker"] == "BN.PA"
+    assert result[0]["status"] == "open"
+    written = json.loads(path.read_text(encoding="utf-8"))
+    assert written["positions"][0]["ticker"] == "BN.PA"
+
+
+def test_update_signal_tracking_degrades_gracefully_on_failure(monkeypatch, tmp_path):
+    """Une panne (ex: fichier illisible, fetch_index_prices qui lève)
+    ne doit jamais faire échouer main() — renvoie [] plutôt que de
+    propager l'exception."""
+    monkeypatch.setattr(indices_score, "SIGNAL_TRACKING_PATH", str(tmp_path / "signal_tracking.json"))
+    monkeypatch.setattr(indices_score, "fetch_index_prices", lambda: (_ for _ in ()).throw(RuntimeError("boom")))
+    result = indices_score.update_signal_tracking([], [])
+    assert result == []
+
+
+def test_update_signal_tracking_reuses_newly_triggered_entree_from_alerts(monkeypatch, tmp_path):
+    """Ne doit PAS re-détecter lui-même les signaux "entree" nouveaux —
+    doit utiliser tel quel ce que _attach_alerts_and_update_history a
+    déjà calculé, transmis en paramètre."""
+    path = tmp_path / "signal_tracking.json"
+    monkeypatch.setattr(indices_score, "SIGNAL_TRACKING_PATH", str(path))
+    monkeypatch.setattr(indices_score, "fetch_index_prices", lambda: {"CAC40": 7600.0, "DAX": 19000.0})
+
+    all_companies = [
+        {"ticker": "BN.PA", "name": "Danone", "index": "CAC40", "current_price": 100.0, "exit_price": 130.0},
+        {"ticker": "MC.PA", "name": "LVMH", "index": "CAC40", "current_price": 500.0, "exit_price": 600.0},
+    ]
+    # Seul BN.PA est dans newly_triggered_entree -> seul BN.PA doit avoir une position.
+    result = indices_score.update_signal_tracking(all_companies, [all_companies[0]])
+    tickers_with_position = {p["ticker"] for p in result}
+    assert tickers_with_position == {"BN.PA"}
+
+
+def test_main_calls_update_signal_tracking(monkeypatch, tmp_path):
+    """Preuve que main() appelle réellement update_signal_tracking —
+    si l'appel était supprimé de main(), ce test doit échouer."""
+    monkeypatch.setattr(indices_score, "fetch_risk_free_rate", lambda: 3.68)
+    monkeypatch.setattr(indices_score, "load_previous_company_analyses", lambda: {})
+    monkeypatch.setattr(
+        indices_score, "build_company_entry",
+        lambda ticker, name, risk_free_rate, previous_analyses, index_key="CAC40": {
+            "ticker": ticker, "name": name, "index": index_key,
+            "score": 10.0, "interpretation": "Neutre",
+            "current_price": 50.0, "entry_price": 50.0,
+        },
+    )
+    monkeypatch.setattr(indices_score, "load_indices_history", lambda: [])
+    monkeypatch.setattr(indices_score, "append_indices_history", lambda entries: entries)
+    output_path = tmp_path / "indices.json"
+    monkeypatch.setattr(indices_score, "OUTPUT_JSON_PATH", str(output_path))
+
+    called_with = {}
+
+    def _fake_update_signal_tracking(companies, newly_triggered_entree):
+        called_with["companies"] = companies
+        called_with["newly_triggered_entree"] = newly_triggered_entree
+        return []
+
+    monkeypatch.setattr(indices_score, "update_signal_tracking", _fake_update_signal_tracking)
+
+    indices_score.main()
+
+    assert "companies" in called_with
+    assert len(called_with["companies"]) == len(indices_score.COMPANIES)

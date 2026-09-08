@@ -183,6 +183,10 @@
     color: var(--gauge-mid); font-size: 10px; font-weight: 500;
     letter-spacing: 0.02em; vertical-align: middle;
   }
+  /* Modificateur de .financial-tag pour l'actu majeure (voir
+     hasMajorNewsAlert) : même forme, couleur distincte du badge "Profil
+     financier" pour rester lisible quand les deux se cumulent. */
+  .majeure-tag { border-color: var(--gold); color: var(--gold); }
   .financial-notice {
     background: var(--panel); border: 1px solid var(--gauge-mid); border-radius: 10px;
     padding: 14px 16px; margin: 0 0 20px; font-size: 12px; line-height: 1.6; color: var(--text);
@@ -293,7 +297,16 @@ if ('serviceWorker' in navigator) {
 function alertColor(kind) {
   if (kind === 'risque') return 'var(--rust)';
   if (kind === 'watch' || kind === 'entree') return 'var(--gold)';
+  if (kind === 'actu_majeure') return 'var(--gauge-mid)';
   return 'var(--muted)';
+}
+
+// Une entreprise a une actu majeure active dès que compute_company_alerts
+// (indices_score.py) a émis une alerte "actu_majeure" — reste vraie tant
+// que l'actu reste dans sa fenêtre de pertinence (voir NEWS_SENTIMENT_WINDOW_DAYS
+// côté backend), pas seulement le jour de sa détection.
+function hasMajorNewsAlert(company) {
+  return (company.alerts || []).some(a => a.kind === 'actu_majeure');
 }
 
 let scoreLoaded = false;
@@ -634,7 +647,7 @@ function renderIndicesRows(companies, rowsContainerId) {
     <a class="company-row" href="#indices/${c.ticker}">
       <div class="company-row-left">
         <span class="company-name">${c.name}</span>
-        <span class="company-ticker">${c.ticker}${c.is_financial ? '<span class="financial-tag">Profil financier</span>' : ''}</span>
+        <span class="company-ticker">${c.ticker}${c.is_financial ? '<span class="financial-tag">Profil financier</span>' : ''}${hasMajorNewsAlert(c) ? '<span class="financial-tag majeure-tag">Actu majeure</span>' : ''}</span>
       </div>
       <span class="company-score" style="color:${c.score >= 0 ? 'var(--gold)' : 'var(--rust)'};">
         ${c.score > 0 ? '+' : ''}${c.score}
@@ -793,7 +806,7 @@ function renderCompanyDetail(company) {
       <div class="company-main">
         <section class="hero">
           <div class="hero-number">${company.score > 0 ? '+' : ''}${company.score}</div>
-          <div class="hero-label">${company.name} — ${company.interpretation}</div>
+          <div class="hero-label">${company.name} — ${company.interpretation}${hasMajorNewsAlert(company) ? '<br><span class="financial-tag majeure-tag" style="margin-left:0;">Actu majeure récente</span>' : ''}</div>
         </section>
 
         ${company.is_financial ? `

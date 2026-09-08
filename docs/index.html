@@ -211,6 +211,24 @@
   }
   .list-filter-toggle input { accent-color: var(--gauge-mid); }
 
+  .signal-tracking-link {
+    display: block; background: var(--panel); border: 1px solid var(--border);
+    border-radius: 10px; padding: 14px 16px; margin: 4px 0 16px;
+    color: var(--gold); font-size: 13px; font-weight: 500; text-align: center;
+  }
+
+  .signal-stats { display: flex; flex-direction: column; gap: 2px; margin: 0 0 20px; }
+  .signal-table-wrap { overflow-x: auto; margin: 0 0 20px; }
+  .signal-table { width: 100%; border-collapse: collapse; font-size: 12px; white-space: nowrap; }
+  .signal-table th {
+    text-align: left; color: var(--muted); font-weight: 500; padding: 8px 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  .signal-table td { padding: 8px 10px; border-bottom: 1px solid var(--border); }
+  .signal-return-positive { color: var(--gold); }
+  .signal-return-negative { color: var(--rust); }
+  .signal-status-open { color: var(--muted); }
+
   /* Liste des indices (CAC 40 aujourd'hui, DAX/Nasdaq à terme) : chacun
      est un panneau dépliant contenant l'équivalent de ce que le CAC 40
      a seul aujourd'hui (cours de l'indice, recherche/tri, entreprises). */
@@ -595,7 +613,9 @@ async function loadIndices(ticker, view) {
   }
   document.getElementById('indicesUpdated').textContent = 'Mis à jour le ' + indicesData.updated;
 
-  if (!ticker) {
+  if (view === 'suivi') {
+    loadSignalTracking();
+  } else if (!ticker) {
     renderIndicesList(indicesData.companies);
   } else {
     const company = indicesData.companies.find(c => c.ticker === ticker);
@@ -729,6 +749,7 @@ function renderIndicesList(companies) {
 
   document.getElementById('indicesContent').innerHTML = `
     ${healthHtml}
+    <a href="#indices/suivi" class="signal-tracking-link">Suivi des signaux — performance réelle des conseils →</a>
     <div class="index-card-list">${cardsHtml}</div>
   `;
 
@@ -765,6 +786,83 @@ function renderIndicesList(companies) {
 
 function formatPrice(v) {
   return v != null ? `${v.toLocaleString('fr-FR', {maximumFractionDigits:2})} €` : 'indisponible';
+}
+
+function formatPct(v) {
+  if (v == null) return '—';
+  const sign = v > 0 ? '+' : '';
+  return `${sign}${v.toLocaleString('fr-FR', {maximumFractionDigits:1})}%`;
+}
+
+function pctClass(v) {
+  if (v == null) return '';
+  return v >= 0 ? 'signal-return-positive' : 'signal-return-negative';
+}
+
+let signalTrackingData = null;
+
+async function loadSignalTracking() {
+  const content = document.getElementById('indicesContent');
+  try {
+    const res = await fetch('signal_tracking.json?t=' + Date.now());
+    if (!res.ok) throw new Error('signal_tracking.json introuvable');
+    signalTrackingData = await res.json();
+  } catch (e) {
+    content.innerHTML = `<a href="#indices" class="back-link">← Indices</a><div class="empty">Suivi indisponible pour l'instant.<br>${e.message}</div>`;
+    return;
+  }
+  renderSignalTracking(signalTrackingData.positions || []);
+}
+
+function renderSignalTracking(positions) {
+  const closed = positions.filter(p => p.status === 'closed');
+  const withReturn = closed.filter(p => p.return_pct != null);
+  const winCount = withReturn.filter(p => p.return_pct > 0).length;
+  const avg = arr => arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : null;
+
+  const avgReturn = avg(withReturn.map(p => p.return_pct));
+  const withIndex = closed.filter(p => p.return_pct != null && p.index_return_pct != null);
+  const avgAlpha = avg(withIndex.map(p => p.return_pct - p.index_return_pct));
+  const withShadow = closed.filter(p => p.return_pct != null && p.shadow_resolved && p.shadow_return_pct != null);
+  const avgVsHold = avg(withShadow.map(p => p.return_pct - p.shadow_return_pct));
+
+  const statsHtml = `
+    <div class="signal-stats">
+      <div class="price-row"><span class="price-label">Positions clôturées</span><span class="price-value">${closed.length}</span></div>
+      <div class="price-row"><span class="price-label">Taux de réussite</span><span class="price-value">${withReturn.length ? formatPct(winCount / withReturn.length * 100) : '—'}</span></div>
+      <div class="price-row"><span class="price-label">Rendement moyen</span><span class="price-value ${pctClass(avgReturn)}">${formatPct(avgReturn)}</span></div>
+      <div class="price-row"><span class="price-label">Vs indice (alpha moyen)</span><span class="price-value ${pctClass(avgAlpha)}">${formatPct(avgAlpha)}</span></div>
+      <div class="price-row"><span class="price-label">Vs tenir 6 mois pleins</span><span class="price-value ${pctClass(avgVsHold)}">${formatPct(avgVsHold)}</span></div>
+    </div>`;
+
+  const rowsHtml = positions.length ? positions.map(p => `
+    <tr>
+      <td>${p.name} <span class="hero-sub">${p.ticker}</span></td>
+      <td>${p.entry_date}</td>
+      <td>${formatPrice(p.entry_price)}</td>
+      <td>${p.status === 'open' ? '<span class="signal-status-open">en cours</span>' : p.close_date}</td>
+      <td>${p.status === 'open' ? '—' : formatPrice(p.close_price)}</td>
+      <td>${p.close_reason || '—'}</td>
+      <td class="${pctClass(p.return_pct)}">${formatPct(p.return_pct)}</td>
+      <td class="${pctClass(p.return_pct != null && p.index_return_pct != null ? p.return_pct - p.index_return_pct : null)}">${p.index_return_pct != null ? formatPct(p.return_pct - p.index_return_pct) : '—'}</td>
+    </tr>`).join('') : '<tr><td colspan="8" class="list-empty">Aucune position pour l\'instant.</td></tr>';
+
+  document.getElementById('indicesContent').innerHTML = `
+    <a href="#indices" class="back-link">← Indices</a>
+    <div class="eyebrow">Indices</div>
+    <h1>Suivi des signaux</h1>
+    <p class="hero-sub" style="margin:0 0 20px;">Performance réelle des signaux "entrée" depuis leur mise en place — comparée à l'indice et à un simple achat-conservation. Pas un conseil d'investissement.</p>
+    ${statsHtml}
+    <div class="signal-table-wrap">
+      <table class="signal-table">
+        <thead><tr>
+          <th>Entreprise</th><th>Entrée</th><th>Prix entrée</th><th>Clôture</th>
+          <th>Prix clôture</th><th>Raison</th><th>Rendement</th><th>Vs indice</th>
+        </tr></thead>
+        <tbody>${rowsHtml}</tbody>
+      </table>
+    </div>
+  `;
 }
 
 function renderCompanyDetail(company) {
@@ -934,6 +1032,7 @@ function parseRoute() {
   const hash = location.hash.slice(1);
   if (hash === 'or') return { screen: 'or' };
   if (hash === 'indices') return { screen: 'indices', ticker: null };
+  if (hash === 'indices/suivi') return { screen: 'indices', ticker: null, view: 'suivi' };
   if (hash.startsWith('indices/')) {
     const rest = hash.slice('indices/'.length);
     if (rest.endsWith('/analyse')) {

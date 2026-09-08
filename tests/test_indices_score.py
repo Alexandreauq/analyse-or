@@ -1459,7 +1459,34 @@ def test_fetch_risk_free_rate_returns_none_on_request_exception(monkeypatch):
     assert fetch_risk_free_rate() is None
 
 
-from indices_score import _size_premium, estimate_wacc
+from indices_score import _size_premium, estimate_wacc, estimate_cost_of_equity
+
+
+def test_estimate_cost_of_equity_nominal_case():
+    # 3.68 + 1.2*5.0 + 0.0 (méga cap) = 9.68
+    result = estimate_cost_of_equity(risk_free_rate=3.68, beta=1.2, market_cap=100_000_000_000)
+    assert result == pytest.approx(9.68)
+
+
+def test_estimate_cost_of_equity_matches_wacc_equity_component():
+    """estimate_wacc doit utiliser exactement ce même coût des fonds
+    propres en interne (pas une formule dupliquée qui pourrait diverger)
+    — vérifié en isolant le cas 100% fonds propres (dette nulle), où le
+    WACC doit être strictement égal au coût des fonds propres seul."""
+    cost_of_equity = estimate_cost_of_equity(risk_free_rate=3.68, beta=1.2, market_cap=100_000_000_000)
+    wacc = estimate_wacc(
+        risk_free_rate=3.68, beta=1.2, market_cap=100_000_000_000,
+        total_debt=0.0, tax_rate=0.25,
+    )
+    assert wacc == pytest.approx(cost_of_equity)
+
+
+def test_estimate_cost_of_equity_returns_none_when_market_cap_not_positive():
+    assert estimate_cost_of_equity(risk_free_rate=3.68, beta=1.2, market_cap=0.0) is None
+
+
+def test_estimate_cost_of_equity_returns_none_when_beta_missing():
+    assert estimate_cost_of_equity(risk_free_rate=3.68, beta=None, market_cap=100_000_000_000) is None
 
 
 def test_size_premium_mega_cap():
@@ -1721,6 +1748,42 @@ def test_estimate_valuation_targets_varies_with_cost_of_capital():
     at_8 = estimate_valuation_targets(data, cost_of_capital=8.0)
     at_10 = estimate_valuation_targets(data, cost_of_capital=10.0)
     assert at_8["fair_value"] != at_10["fair_value"]
+
+
+def test_estimate_valuation_targets_uses_cost_of_equity_for_asset_quality_discount():
+    """La décote qualité de la valeur comptable doit se baser sur
+    `cost_of_equity` (coût des seuls fonds propres) quand il est fourni,
+    pas sur `cost_of_capital` (WACC, dilué par une dette bon marché) —
+    reproduit le cas Volkswagen : WACC bas (dette de financement captif)
+    mais coût des fonds propres nettement plus élevé, seul pertinent pour
+    juger si le ROE couvre ce que les actionnaires exigent réellement."""
+    # DCF exclu (fcf négatif, comme VW) : seuls asset/multiple pèsent.
+    data = {
+        "fcf": -10.0, "cagr_ebitda": 6.5, "net_debt": 100.0, "shares_outstanding": 10.0,
+        "equity": 800.0,  # book value/action = 80.0
+        "current_price": 100.0, "current_ev_ebitda": 10.0, "avg_ev_ebitda_5y": 10.0,
+        "ma200": 100.0, "beta": 1.0, "ecart_pct_ma200": 0.0, "fcf_normalized": -10.0,
+        "sector": "Unknown", "roe": 4.0,
+    }
+    # cost_of_capital bas (4.0, proche du ROE) -> quasi pas de décote ;
+    # cost_of_equity nettement plus haut (12.0) -> décote marquée.
+    low_benchmark = estimate_valuation_targets(data, cost_of_capital=4.0)
+    high_benchmark = estimate_valuation_targets(data, cost_of_capital=4.0, cost_of_equity=12.0)
+    assert high_benchmark["fair_value"] < low_benchmark["fair_value"]
+
+
+def test_estimate_valuation_targets_falls_back_to_cost_of_capital_when_cost_of_equity_absent():
+    """Rétrocompatibilité : sans `cost_of_equity` fourni, le comportement
+    doit rester identique à avant (repli sur `cost_of_capital`)."""
+    data = {
+        "fcf": -10.0, "cagr_ebitda": 6.5, "net_debt": 100.0, "shares_outstanding": 10.0,
+        "equity": 800.0, "current_price": 100.0, "current_ev_ebitda": 10.0, "avg_ev_ebitda_5y": 10.0,
+        "ma200": 100.0, "beta": 1.0, "ecart_pct_ma200": 0.0, "fcf_normalized": -10.0,
+        "sector": "Unknown", "roe": 4.0,
+    }
+    without_arg = estimate_valuation_targets(data, cost_of_capital=8.0)
+    with_none = estimate_valuation_targets(data, cost_of_capital=8.0, cost_of_equity=None)
+    assert without_arg["fair_value"] == with_none["fair_value"]
 
 
 def test_estimate_valuation_targets_degrades_to_none_with_nan_inputs():

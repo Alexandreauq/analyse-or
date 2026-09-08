@@ -3808,6 +3808,7 @@ def test_update_signal_tracking_degrades_gracefully_on_failure(monkeypatch, tmp_
     """Une panne (ex: fichier illisible, fetch_index_prices qui lève)
     ne doit jamais faire échouer main() — renvoie [] plutôt que de
     propager l'exception."""
+    monkeypatch.setattr(indices_score, "SIGNAL_TRACKING_PATH", str(tmp_path / "signal_tracking.json"))
     monkeypatch.setattr(indices_score, "fetch_index_prices", lambda: (_ for _ in ()).throw(RuntimeError("boom")))
     result = indices_score.update_signal_tracking([], [])
     assert result == []

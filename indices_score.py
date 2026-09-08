@@ -26,13 +26,13 @@ from datetime import datetime, timedelta
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.utils import parsedate_to_datetime
-from dateutil.relativedelta import relativedelta
 
 try:
     import yfinance as yf
 except ImportError:
     yf = None
 
+from dateutil.relativedelta import relativedelta
 import pandas as pd
 import requests
 import trafilatura
@@ -1517,7 +1517,7 @@ def save_signal_tracking(positions: list[dict]) -> None:
     non servi)."""
     os.makedirs(os.path.dirname(SIGNAL_TRACKING_PATH), exist_ok=True)
     with open(SIGNAL_TRACKING_PATH, "w", encoding="utf-8") as fh:
-        json.dump({"positions": positions}, fh, ensure_ascii=False, indent=2)
+        json.dump({"positions": positions}, fh, ensure_ascii=False, indent=2, allow_nan=False)
 
 
 def fetch_index_prices() -> dict:
@@ -1532,7 +1532,8 @@ def fetch_index_prices() -> dict:
     for index_key, yf_ticker in INDEX_YFINANCE_TICKERS.items():
         try:
             history = yf.Ticker(yf_ticker).history(period="5d")["Close"]
-            prices[index_key] = float(history.iloc[-1]) if len(history) else None
+            price = float(history.iloc[-1]) if len(history) else None
+            prices[index_key] = None if _is_missing(price) else price
         except Exception:
             prices[index_key] = None
     return prices
@@ -1556,8 +1557,10 @@ def _open_new_signal_positions(
         ticker = company["ticker"]
         if ticker in open_tickers:
             continue
-        if company.get("current_price") is None or company.get("exit_price") is None:
+        if _is_missing(company.get("current_price")) or _is_missing(company.get("exit_price")):
             continue
+        if company["index"] not in INDEX_YFINANCE_TICKERS:
+            print(f"Avertissement : pas de benchmark indice pour '{company['index']}' (ticker {ticker}) — position suivie sans comparaison à l'indice.")
         positions.append({
             "id": f"{ticker}-{today}",
             "ticker": ticker,
@@ -1596,7 +1599,7 @@ def _close_eligible_positions(
         if position["status"] != "open":
             continue
         company = companies_by_ticker.get(position["ticker"])
-        if company is None or company.get("current_price") is None:
+        if company is None or _is_missing(company.get("current_price")):
             continue
         current_price = company["current_price"]
         entry_price = position["entry_price"]
@@ -1651,7 +1654,7 @@ def _resolve_pending_shadow_benchmarks(
         if today_date < shadow_date:
             continue
         company = companies_by_ticker.get(position["ticker"])
-        if company is None or company.get("current_price") is None:
+        if company is None or _is_missing(company.get("current_price")):
             continue
         shadow_price = company["current_price"]
         position["shadow_price"] = shadow_price

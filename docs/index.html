@@ -799,20 +799,25 @@ function pctClass(v) {
   return v >= 0 ? 'signal-return-positive' : 'signal-return-negative';
 }
 
-let signalTrackingData = null;
-
 async function loadSignalTracking() {
   const content = document.getElementById('indicesContent');
+  let data;
   try {
     const res = await fetch('signal_tracking.json?t=' + Date.now());
     if (!res.ok) throw new Error('signal_tracking.json introuvable');
-    signalTrackingData = await res.json();
+    data = await res.json();
   } catch (e) {
     content.innerHTML = `<a href="#indices" class="back-link">← Indices</a><div class="empty">Suivi indisponible pour l'instant.<br>${e.message}</div>`;
     return;
   }
-  renderSignalTracking(signalTrackingData.positions || []);
+  renderSignalTracking(data.positions || []);
 }
+
+const CLOSE_REASON_LABELS = {
+  stop_loss: 'Stop-loss',
+  objectif_atteint: 'Objectif atteint',
+  delai_max: 'Délai max',
+};
 
 function renderSignalTracking(positions) {
   const closed = positions.filter(p => p.status === 'closed');
@@ -842,10 +847,11 @@ function renderSignalTracking(positions) {
       <td>${formatPrice(p.entry_price)}</td>
       <td>${p.status === 'open' ? '<span class="signal-status-open">en cours</span>' : p.close_date}</td>
       <td>${p.status === 'open' ? '—' : formatPrice(p.close_price)}</td>
-      <td>${p.close_reason || '—'}</td>
+      <td>${CLOSE_REASON_LABELS[p.close_reason] || '—'}</td>
       <td class="${pctClass(p.return_pct)}">${formatPct(p.return_pct)}</td>
       <td class="${pctClass(p.return_pct != null && p.index_return_pct != null ? p.return_pct - p.index_return_pct : null)}">${p.index_return_pct != null ? formatPct(p.return_pct - p.index_return_pct) : '—'}</td>
-    </tr>`).join('') : '<tr><td colspan="8" class="list-empty">Aucune position pour l\'instant.</td></tr>';
+      <td class="${pctClass(p.shadow_resolved && p.return_pct != null && p.shadow_return_pct != null ? p.return_pct - p.shadow_return_pct : null)}">${p.shadow_resolved && p.shadow_return_pct != null ? formatPct(p.return_pct - p.shadow_return_pct) : '—'}</td>
+    </tr>`).join('') : '<tr><td colspan="9" class="list-empty">Aucune position pour l\'instant.</td></tr>';
 
   document.getElementById('indicesContent').innerHTML = `
     <a href="#indices" class="back-link">← Indices</a>
@@ -857,7 +863,7 @@ function renderSignalTracking(positions) {
       <table class="signal-table">
         <thead><tr>
           <th>Entreprise</th><th>Entrée</th><th>Prix entrée</th><th>Clôture</th>
-          <th>Prix clôture</th><th>Raison</th><th>Rendement</th><th>Vs indice</th>
+          <th>Prix clôture</th><th>Raison</th><th>Rendement</th><th>Vs indice</th><th>Vs tenir 6 mois</th>
         </tr></thead>
         <tbody>${rowsHtml}</tbody>
       </table>

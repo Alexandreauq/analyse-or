@@ -1849,7 +1849,7 @@ def test_compute_company_alerts_ignores_malformed_dates():
     assert "risque" in kinds
 
 
-def test_compute_company_alerts_actu_majeure_when_recent_and_not_previously_alerted():
+def test_compute_company_alerts_actu_majeure_when_recent():
     news_items = [{
         "title": "Rachat surprise annoncé", "link": "https://example.com/a",
         "date": _days_ago(1), "summary": "Résumé.", "importance": "majeure",
@@ -1875,10 +1875,13 @@ def test_compute_company_alerts_no_actu_majeure_for_non_majeure_news():
     assert "actu_majeure" not in [a["kind"] for a in alerts]
 
 
-def test_compute_company_alerts_no_actu_majeure_when_already_alerted():
-    """Ne doit jamais re-notifier deux fois pour la même actu tant
-    qu'elle reste dans la fenêtre de 14 jours — suivie par lien, pas
-    par date."""
+def test_compute_company_alerts_actu_majeure_persists_even_if_already_emailed():
+    """compute_company_alerts ne dédoublonne plus par lien — l'alerte doit
+    rester affichée (panneau Alertes + badge du site) tant que l'actu est
+    dans sa fenêtre de pertinence, même si un email a déjà été envoyé pour
+    elle. Le dédoublonnage "ne pas ré-envoyer un email" est de la
+    responsabilité de _attach_alerts_and_update_history, pas de cette
+    fonction — voir test_attach_alerts_and_update_history_does_not_reemail_persisting_actu_majeure."""
     news_items = [{
         "title": "Rachat surprise annoncé", "link": "https://example.com/a",
         "date": _days_ago(1), "summary": "Résumé.", "importance": "majeure",
@@ -1886,9 +1889,8 @@ def test_compute_company_alerts_no_actu_majeure_when_already_alerted():
     alerts = indices_score.compute_company_alerts(
         "BN.PA", composite=5.0, current_price=100.0, entry_price=50.0,
         previous_history=[], news_items=news_items,
-        previously_alerted_news_links={"https://example.com/a"},
     )
-    assert "actu_majeure" not in [a["kind"] for a in alerts]
+    assert "actu_majeure" in [a["kind"] for a in alerts]
 
 
 def test_compute_company_alerts_no_actu_majeure_outside_news_window():
@@ -2051,6 +2053,48 @@ def test_attach_alerts_and_update_history_does_not_reflag_persisting_entree_sign
 
     assert newly_triggered_entree == []
     assert newly_triggered_major_news == []
+
+
+def test_attach_alerts_and_update_history_flags_new_actu_majeure_link(monkeypatch):
+    """Une actu majeure dont le lien n'a jamais été signalé doit déclencher
+    un email — c'est ce que main() utilise pour l'alerte actu majeure."""
+    companies = [{
+        "ticker": "BN.PA", "name": "Danone", "score": 5.0, "current_price": 100.0, "entry_price": 50.0,
+        "news": [{"title": "Rachat surprise", "link": "https://example.com/a",
+                  "date": datetime.today().strftime("%Y-%m-%d"), "summary": "Résumé.", "importance": "majeure"}],
+    }]
+    monkeypatch.setattr(indices_score, "load_indices_history", lambda: [])
+    monkeypatch.setattr(indices_score, "append_indices_history", lambda entries: entries)
+    monkeypatch.setattr(indices_score, "load_previous_alert_kinds", lambda: {})
+    monkeypatch.setattr(indices_score, "load_previous_alerted_news_links", lambda: {})
+
+    newly_triggered_entree, newly_triggered_major_news = indices_score._attach_alerts_and_update_history(companies)
+
+    assert len(newly_triggered_major_news) == 1
+    assert newly_triggered_major_news[0][0]["ticker"] == "BN.PA"
+    assert newly_triggered_major_news[0][1]["link"] == "https://example.com/a"
+
+
+def test_attach_alerts_and_update_history_persists_actu_majeure_alert_but_does_not_reemail(monkeypatch):
+    """Une actu majeure déjà signalée (lien connu de la veille) doit rester
+    dans company["alerts"] — panneau Alertes + badge du site restent
+    corrects — mais ne doit PAS redéclencher un email chaque jour."""
+    companies = [{
+        "ticker": "BN.PA", "name": "Danone", "score": 5.0, "current_price": 100.0, "entry_price": 50.0,
+        "news": [{"title": "Rachat surprise", "link": "https://example.com/a",
+                  "date": datetime.today().strftime("%Y-%m-%d"), "summary": "Résumé.", "importance": "majeure"}],
+    }]
+    monkeypatch.setattr(indices_score, "load_indices_history", lambda: [])
+    monkeypatch.setattr(indices_score, "append_indices_history", lambda entries: entries)
+    monkeypatch.setattr(indices_score, "load_previous_alert_kinds", lambda: {})
+    monkeypatch.setattr(
+        indices_score, "load_previous_alerted_news_links", lambda: {"BN.PA": {"https://example.com/a"}},
+    )
+
+    newly_triggered_entree, newly_triggered_major_news = indices_score._attach_alerts_and_update_history(companies)
+
+    assert newly_triggered_major_news == []
+    assert "actu_majeure" in [a["kind"] for a in companies[0]["alerts"]]
 
 
 def test_send_entry_alert_email_returns_false_when_companies_empty():

@@ -1933,6 +1933,30 @@ DEBT_WEIGHT_CAP = 0.75  # part maximale de la dette dans la pondération du WACC
                          # qu'un WACC industriel plausible est plutôt 6-9%).
 
 
+def estimate_cost_of_equity(
+    risk_free_rate: float | None, beta: float | None, market_cap: float | None,
+) -> float | None:
+    """Coût des seuls fonds propres (CAPM + prime de taille, Vernimmen) —
+    sans mélange avec le coût de la dette, contrairement au WACC
+    (estimate_wacc, qui appelle cette fonction en interne). Exposée
+    séparément pour estimate_asset_based_price : le ROE d'une entreprise
+    se compare au coût de SES fonds propres, pas au WACC — une dette bon
+    marché (ex : financement captif d'un constructeur auto) fait
+    baisser le WACC sans rendre les fonds propres eux-mêmes moins
+    exigeants. None si une donnée nécessaire manque/est invalide. Ne
+    lève jamais d'exception."""
+    if (
+        risk_free_rate is None or _is_missing(risk_free_rate)
+        or beta is None or _is_missing(beta)
+        or market_cap is None or _is_missing(market_cap) or market_cap <= 0
+    ):
+        return None
+    try:
+        return risk_free_rate + beta * MARKET_RISK_PREMIUM + _size_premium(market_cap)
+    except (TypeError, ValueError):
+        return None
+
+
 def estimate_wacc(
     risk_free_rate: float | None,
     beta: float | None,
@@ -1951,16 +1975,14 @@ def estimate_wacc(
     marché total_debt/(market_cap+total_debt), pour ne pas laisser une
     dette de financement captif (constructeurs auto notamment) écraser
     le coût des fonds propres dans le mix."""
+    cost_of_equity = estimate_cost_of_equity(risk_free_rate, beta, market_cap)
     if (
-        risk_free_rate is None or _is_missing(risk_free_rate)
-        or beta is None or _is_missing(beta)
-        or market_cap is None or _is_missing(market_cap) or market_cap <= 0
+        cost_of_equity is None
         or total_debt is None or _is_missing(total_debt) or total_debt < 0
         or tax_rate is None or _is_missing(tax_rate)
     ):
         return None
     try:
-        cost_of_equity = risk_free_rate + beta * MARKET_RISK_PREMIUM + _size_premium(market_cap)
         cost_of_debt_after_tax = DEBT_INTEREST_RATE_PROXY * (1 - tax_rate)
         total_capital = market_cap + total_debt
         debt_weight = min(total_debt / total_capital, DEBT_WEIGHT_CAP)
@@ -1970,13 +1992,19 @@ def estimate_wacc(
         return None
 
 
-def estimate_valuation_targets(data: dict, cost_of_capital: float) -> dict:
+def estimate_valuation_targets(
+    data: dict, cost_of_capital: float, cost_of_equity: float | None = None,
+) -> dict:
     """Combine DCF, actif net et multiples en une juste valeur (pondérée
     par le profil sectoriel — voir VALUATION_METHOD_WEIGHTS), puis en
     repères d'entrée/sortie. Toujours ces 3 clés en sortie, valeurs à None
     si non calculables (jamais d'exception). `cost_of_capital` est le taux
     d'actualisation du DCF (WACC de l'entreprise, ou COST_OF_CAPITAL_PROXY
-    en repli — résolu par l'appelant)."""
+    en repli — résolu par l'appelant). `cost_of_equity` (optionnel) sert
+    de référence à la décote qualité de la valeur comptable
+    (estimate_asset_based_price) au lieu du WACC — repli sur
+    `cost_of_capital` si absent, pour ne rien changer au comportement des
+    appelants existants qui ne le fournissent pas."""
     sector_profile = sector_risk_profile(data["sector"])
     # Point de départ du DCF lissé sur 2 exercices pour les cycliques (voir
     # extract_ratios/fcf_normalized) plutôt que le seul dernier exercice,
@@ -1987,7 +2015,8 @@ def estimate_valuation_targets(data: dict, cost_of_capital: float) -> dict:
         cost_of_capital,
     )
     asset_price = estimate_asset_based_price(
-        data["equity"], data["shares_outstanding"], data["roe"], cost_of_capital,
+        data["equity"], data["shares_outstanding"], data["roe"],
+        cost_of_equity if cost_of_equity is not None else cost_of_capital,
     )
     multiple_price = (
         estimate_multiple_based_price(
@@ -2103,6 +2132,7 @@ def build_company_entry(
         risk_free_rate, data["beta"], market_cap, data["total_debt"], data["tax_rate"]
     )
     cost_of_capital = wacc if wacc is not None else COST_OF_CAPITAL_PROXY
+    cost_of_equity = estimate_cost_of_equity(risk_free_rate, data["beta"], market_cap)
 
     previous = previous_analyses.get(ticker, {})
     current_quarter = data["latest_quarter_date"]
@@ -2200,7 +2230,7 @@ def build_company_entry(
         ]
     composite = compute_composite(factors)
 
-    valuation_targets = estimate_valuation_targets(data, cost_of_capital)
+    valuation_targets = estimate_valuation_targets(data, cost_of_capital, cost_of_equity)
 
     return {
         "ticker": ticker,

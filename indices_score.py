@@ -1583,6 +1583,58 @@ def _open_new_signal_positions(
     return positions
 
 
+def _close_eligible_positions(
+    positions: list[dict], companies_by_ticker: dict, index_prices: dict, today: str,
+) -> list[dict]:
+    """Clôture toute position "open" dont une condition est remplie —
+    stop-loss (SIGNAL_STOP_LOSS_PCT) -> objectif atteint -> délai max,
+    dans cet ordre de priorité. Une position dont le ticker n'est plus
+    dans companies_by_ticker (sorti de l'indice) ou sans current_price
+    est laissée intacte plutôt que clôturée sur une donnée périmée."""
+    today_date = datetime.strptime(today, "%Y-%m-%d").date()
+    for position in positions:
+        if position["status"] != "open":
+            continue
+        company = companies_by_ticker.get(position["ticker"])
+        if company is None or company.get("current_price") is None:
+            continue
+        current_price = company["current_price"]
+        entry_price = position["entry_price"]
+
+        close_reason = None
+        if current_price <= entry_price * (1 + SIGNAL_STOP_LOSS_PCT / 100):
+            close_reason = "stop_loss"
+        elif current_price >= position["target_exit_price"]:
+            close_reason = "objectif_atteint"
+        elif today_date >= datetime.strptime(position["shadow_close_date"], "%Y-%m-%d").date():
+            close_reason = "delai_max"
+        if close_reason is None:
+            continue
+
+        position["status"] = "closed"
+        position["close_date"] = today
+        position["close_price"] = current_price
+        position["close_reason"] = close_reason
+        position["return_pct"] = (current_price - entry_price) / entry_price * 100
+
+        index_price_at_close = index_prices.get(position["index"])
+        position["index_price_at_close"] = index_price_at_close
+        index_price_at_entry = position["index_price_at_entry"]
+        if index_price_at_close is not None and index_price_at_entry:
+            position["index_return_pct"] = (
+                (index_price_at_close - index_price_at_entry) / index_price_at_entry * 100
+            )
+
+        if close_reason == "delai_max":
+            # La date fantôme est la même que le délai max (voir
+            # SIGNAL_SHADOW_DELAY_MONTHS) : résolue tout de suite plutôt
+            # que d'attendre un jour de plus pour rien.
+            position["shadow_resolved"] = True
+            position["shadow_price"] = current_price
+            position["shadow_return_pct"] = position["return_pct"]
+    return positions
+
+
 def load_indices_history(path=INDICES_HISTORY_PATH) -> list[dict]:
     """Historique quotidien du score composite par entreprise. []  si le
     fichier n'existe pas encore ou est corrompu — jamais d'exception."""

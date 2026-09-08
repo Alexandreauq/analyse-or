@@ -1511,17 +1511,26 @@ def compute_company_alerts(
     ticker: str, composite: float, current_price: float | None,
     entry_price: float | None, previous_history: list[dict],
     news_items: list[dict] | None = None,
-    previously_alerted_news_links: set | None = None,
 ) -> list[dict]:
     """Alertes de franchissement de seuil pour une entreprise, à partir de
     son propre sous-historique (déjà filtré par ticker par l'appelant).
-    `news_items`/`previously_alerted_news_links` sont optionnels (défaut
-    None) pour ne rien changer au comportement des appelants existants
-    qui ne les fournissent pas. Ne lève jamais d'exception ; renvoie
-    toujours au moins une alerte (`info` neutre si rien ne se déclenche —
-    calculé après l'alerte "actu_majeure" ci-dessous, pas avant, pour ne
-    jamais afficher "pas de signal actif" en même temps qu'une vraie
-    actu majeure)."""
+    `news_items` est optionnel (défaut None) pour ne rien changer au
+    comportement des appelants existants qui ne le fournissent pas. Ne
+    lève jamais d'exception ; renvoie toujours au moins une alerte
+    (`info` neutre si rien ne se déclenche — calculé après l'alerte
+    "actu_majeure" ci-dessous, pas avant, pour ne jamais afficher "pas de
+    signal actif" en même temps qu'une vraie actu majeure).
+
+    Toute actu classée "majeure" et encore dans sa fenêtre de pertinence
+    (NEWS_SENTIMENT_WINDOW_DAYS) reste dans la liste retournée à CHAQUE
+    run tant qu'elle est d'actualité — cette liste alimente aussi bien le
+    panneau "Alertes" que le badge affiché sur le site, qui doivent
+    rester vrais tant que l'actu est pertinente, pas seulement le jour de
+    sa détection. Le dédoublonnage "ne pas ré-envoyer un email pour la
+    même actu" est une décision distincte, prise par l'appelant
+    (_attach_alerts_and_update_history) à partir de cette même liste —
+    volontairement PAS ici, pour ne pas faire disparaître l'alerte de
+    l'affichage simplement parce qu'elle a déjà été mailée."""
     today_str = datetime.today().strftime("%d/%m/%Y")
     alerts = []
 
@@ -1587,12 +1596,11 @@ def compute_company_alerts(
     # par date) pour ne jamais re-notifier deux fois pour la même actu
     # tant qu'elle reste dans la fenêtre de NEWS_SENTIMENT_WINDOW_DAYS.
     news_cutoff = datetime.today().date() - timedelta(days=NEWS_SENTIMENT_WINDOW_DAYS)
-    already_alerted_links = previously_alerted_news_links or set()
     for item in (news_items or []):
         if item.get("importance") != "majeure":
             continue
         link = item.get("link")
-        if not link or link in already_alerted_links:
+        if not link:
             continue
         try:
             item_date = datetime.strptime(item["date"], "%Y-%m-%d").date()
@@ -2170,13 +2178,18 @@ def _attach_alerts_and_update_history(companies: list[dict]) -> tuple[list[dict]
                 company["ticker"], company["score"], company["current_price"],
                 company["entry_price"], ticker_history,
                 news_items=company.get("news", []),
-                previously_alerted_news_links=previous_alerted_news_links.get(company["ticker"], set()),
             )
             today_kinds = {a["kind"] for a in company["alerts"]}
             if "entree" in today_kinds and "entree" not in previous_alert_kinds.get(company["ticker"], set()):
                 newly_triggered_entree.append(company)
+            # L'alerte "actu_majeure" reste affichée tant que l'actu est
+            # pertinente (voir compute_company_alerts), mais ne doit
+            # déclencher un email qu'une seule fois par actu — dédoublonnage
+            # par lien fait ici, pas dans compute_company_alerts, pour ne
+            # pas faire disparaître l'alerte de l'affichage une fois mailée.
+            already_alerted_links = previous_alerted_news_links.get(company["ticker"], set())
             for alert in company["alerts"]:
-                if alert["kind"] == "actu_majeure":
+                if alert["kind"] == "actu_majeure" and alert.get("link") not in already_alerted_links:
                     newly_triggered_major_news.append((company, alert))
             new_entries.append({
                 "date": today_str, "ticker": company["ticker"], "composite": company["score"],

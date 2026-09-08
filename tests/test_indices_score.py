@@ -3779,3 +3779,84 @@ def test_resolve_pending_shadow_benchmarks_leaves_pending_when_no_price_availabl
         [position], {}, today="2026-09-08",
     )
     assert result[0]["shadow_resolved"] is False
+
+
+def test_update_signal_tracking_opens_closes_and_saves(monkeypatch, tmp_path):
+    """Test bout en bout : preuve que update_signal_tracking cable bien
+    les 3 sous-fonctions et écrit le fichier — pas seulement qu'elles
+    existent en isolation."""
+    path = tmp_path / "signal_tracking.json"
+    monkeypatch.setattr(indices_score, "SIGNAL_TRACKING_PATH", str(path))
+    monkeypatch.setattr(indices_score, "fetch_index_prices", lambda: {"CAC40": 7600.0, "DAX": 19000.0})
+
+    company = {
+        "ticker": "BN.PA", "name": "Danone", "index": "CAC40",
+        "current_price": 100.0, "exit_price": 130.0,
+    }
+    result = indices_score.update_signal_tracking([company], [company])
+
+    assert len(result) == 1
+    assert result[0]["ticker"] == "BN.PA"
+    assert result[0]["status"] == "open"
+    written = json.loads(path.read_text(encoding="utf-8"))
+    assert written["positions"][0]["ticker"] == "BN.PA"
+
+
+def test_update_signal_tracking_degrades_gracefully_on_failure(monkeypatch, tmp_path):
+    """Une panne (ex: fichier illisible, fetch_index_prices qui lève)
+    ne doit jamais faire échouer main() — renvoie [] plutôt que de
+    propager l'exception."""
+    monkeypatch.setattr(indices_score, "fetch_index_prices", lambda: (_ for _ in ()).throw(RuntimeError("boom")))
+    result = indices_score.update_signal_tracking([], [])
+    assert result == []
+
+
+def test_update_signal_tracking_reuses_newly_triggered_entree_from_alerts(monkeypatch, tmp_path):
+    """Ne doit PAS re-détecter lui-même les signaux "entree" nouveaux —
+    doit utiliser tel quel ce que _attach_alerts_and_update_history a
+    déjà calculé, transmis en paramètre."""
+    path = tmp_path / "signal_tracking.json"
+    monkeypatch.setattr(indices_score, "SIGNAL_TRACKING_PATH", str(path))
+    monkeypatch.setattr(indices_score, "fetch_index_prices", lambda: {"CAC40": 7600.0, "DAX": 19000.0})
+
+    all_companies = [
+        {"ticker": "BN.PA", "name": "Danone", "index": "CAC40", "current_price": 100.0, "exit_price": 130.0},
+        {"ticker": "MC.PA", "name": "LVMH", "index": "CAC40", "current_price": 500.0, "exit_price": 600.0},
+    ]
+    # Seul BN.PA est dans newly_triggered_entree -> seul BN.PA doit avoir une position.
+    result = indices_score.update_signal_tracking(all_companies, [all_companies[0]])
+    tickers_with_position = {p["ticker"] for p in result}
+    assert tickers_with_position == {"BN.PA"}
+
+
+def test_main_calls_update_signal_tracking(monkeypatch, tmp_path):
+    """Preuve que main() appelle réellement update_signal_tracking —
+    si l'appel était supprimé de main(), ce test doit échouer."""
+    monkeypatch.setattr(indices_score, "fetch_risk_free_rate", lambda: 3.68)
+    monkeypatch.setattr(indices_score, "load_previous_company_analyses", lambda: {})
+    monkeypatch.setattr(
+        indices_score, "build_company_entry",
+        lambda ticker, name, risk_free_rate, previous_analyses, index_key="CAC40": {
+            "ticker": ticker, "name": name, "index": index_key,
+            "score": 10.0, "interpretation": "Neutre",
+            "current_price": 50.0, "entry_price": 50.0,
+        },
+    )
+    monkeypatch.setattr(indices_score, "load_indices_history", lambda: [])
+    monkeypatch.setattr(indices_score, "append_indices_history", lambda entries: entries)
+    output_path = tmp_path / "indices.json"
+    monkeypatch.setattr(indices_score, "OUTPUT_JSON_PATH", str(output_path))
+
+    called_with = {}
+
+    def _fake_update_signal_tracking(companies, newly_triggered_entree):
+        called_with["companies"] = companies
+        called_with["newly_triggered_entree"] = newly_triggered_entree
+        return []
+
+    monkeypatch.setattr(indices_score, "update_signal_tracking", _fake_update_signal_tracking)
+
+    indices_score.main()
+
+    assert "companies" in called_with
+    assert len(called_with["companies"]) == len(indices_score.COMPANIES)

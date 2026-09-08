@@ -3454,3 +3454,40 @@ def test_fetch_company_financials_ignores_market_cap_override_for_other_tickers(
     ratios = indices_score.fetch_company_financials("STLAP.PA")
 
     assert ratios["shares_outstanding"] == 2900941252
+
+
+def test_load_signal_tracking_returns_empty_list_when_file_absent(monkeypatch, tmp_path):
+    monkeypatch.setattr(indices_score, "SIGNAL_TRACKING_PATH", str(tmp_path / "does_not_exist.json"))
+    assert indices_score.load_signal_tracking() == []
+
+
+def test_load_signal_tracking_returns_empty_list_on_corrupted_json(monkeypatch, tmp_path):
+    path = tmp_path / "signal_tracking.json"
+    path.write_text("{not valid json", encoding="utf-8")
+    monkeypatch.setattr(indices_score, "SIGNAL_TRACKING_PATH", str(path))
+    assert indices_score.load_signal_tracking() == []
+
+
+def test_load_signal_tracking_returns_positions_list(monkeypatch, tmp_path):
+    path = tmp_path / "signal_tracking.json"
+    path.write_text(json.dumps({"positions": [{"id": "BN.PA-2026-09-08"}]}), encoding="utf-8")
+    monkeypatch.setattr(indices_score, "SIGNAL_TRACKING_PATH", str(path))
+    assert indices_score.load_signal_tracking() == [{"id": "BN.PA-2026-09-08"}]
+
+
+def test_save_signal_tracking_writes_positions_wrapped_in_object(monkeypatch, tmp_path):
+    path = tmp_path / "signal_tracking.json"
+    monkeypatch.setattr(indices_score, "SIGNAL_TRACKING_PATH", str(path))
+    indices_score.save_signal_tracking([{"id": "BN.PA-2026-09-08"}])
+    written = json.loads(path.read_text(encoding="utf-8"))
+    assert written == {"positions": [{"id": "BN.PA-2026-09-08"}]}
+
+
+def test_save_signal_tracking_creates_parent_directory(monkeypatch, tmp_path):
+    """docs/ peut ne pas exister sur une éventuelle exécution locale
+    from scratch — même garde-fou que le payload principal
+    (os.makedirs(..., exist_ok=True) dans main())."""
+    path = tmp_path / "nested" / "signal_tracking.json"
+    monkeypatch.setattr(indices_score, "SIGNAL_TRACKING_PATH", str(path))
+    indices_score.save_signal_tracking([])
+    assert path.exists()

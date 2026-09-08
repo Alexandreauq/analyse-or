@@ -1538,6 +1538,51 @@ def fetch_index_prices() -> dict:
     return prices
 
 
+def _open_new_signal_positions(
+    positions: list[dict], newly_triggered_entree: list[dict],
+    index_prices: dict, today: str,
+) -> list[dict]:
+    """Ouvre une position pour chaque société dont le signal "entree"
+    vient d'apparaître aujourd'hui (newly_triggered_entree, déjà calculé
+    par _attach_alerts_and_update_history) — sauf si une position est
+    déjà "open" sur ce ticker (une seule à la fois). Modifie et renvoie
+    `positions`."""
+    open_tickers = {p["ticker"] for p in positions if p["status"] == "open"}
+    shadow_close_date = (
+        datetime.strptime(today, "%Y-%m-%d").date()
+        + relativedelta(months=SIGNAL_SHADOW_DELAY_MONTHS)
+    ).strftime("%Y-%m-%d")
+    for company in newly_triggered_entree:
+        ticker = company["ticker"]
+        if ticker in open_tickers:
+            continue
+        if company.get("current_price") is None or company.get("exit_price") is None:
+            continue
+        positions.append({
+            "id": f"{ticker}-{today}",
+            "ticker": ticker,
+            "name": company["name"],
+            "index": company["index"],
+            "status": "open",
+            "entry_date": today,
+            "entry_price": company["current_price"],
+            "target_exit_price": company["exit_price"],
+            "index_price_at_entry": index_prices.get(company["index"]),
+            "close_date": None,
+            "close_price": None,
+            "close_reason": None,
+            "return_pct": None,
+            "index_price_at_close": None,
+            "index_return_pct": None,
+            "shadow_close_date": shadow_close_date,
+            "shadow_resolved": False,
+            "shadow_price": None,
+            "shadow_return_pct": None,
+        })
+        open_tickers.add(ticker)
+    return positions
+
+
 def load_indices_history(path=INDICES_HISTORY_PATH) -> list[dict]:
     """Historique quotidien du score composite par entreprise. []  si le
     fichier n'existe pas encore ou est corrompu — jamais d'exception."""

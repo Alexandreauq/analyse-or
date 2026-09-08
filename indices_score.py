@@ -1635,6 +1635,33 @@ def _close_eligible_positions(
     return positions
 
 
+def _resolve_pending_shadow_benchmarks(
+    positions: list[dict], companies_by_ticker: dict, today: str,
+) -> list[dict]:
+    """Résout le benchmark "tenir les 6 mois pleins" pour toute position
+    (ouverte OU déjà clôturée — les deux cycles de vie sont indépendants)
+    dont la date fantôme est atteinte et pas encore résolue. Laisse en
+    attente (retenté le jour suivant) si le ticker n'a pas de cours
+    disponible aujourd'hui — jamais d'exception."""
+    today_date = datetime.strptime(today, "%Y-%m-%d").date()
+    for position in positions:
+        if position["shadow_resolved"]:
+            continue
+        shadow_date = datetime.strptime(position["shadow_close_date"], "%Y-%m-%d").date()
+        if today_date < shadow_date:
+            continue
+        company = companies_by_ticker.get(position["ticker"])
+        if company is None or company.get("current_price") is None:
+            continue
+        shadow_price = company["current_price"]
+        position["shadow_price"] = shadow_price
+        position["shadow_return_pct"] = (
+            (shadow_price - position["entry_price"]) / position["entry_price"] * 100
+        )
+        position["shadow_resolved"] = True
+    return positions
+
+
 def load_indices_history(path=INDICES_HISTORY_PATH) -> list[dict]:
     """Historique quotidien du score composite par entreprise. []  si le
     fichier n'existe pas encore ou est corrompu — jamais d'exception."""

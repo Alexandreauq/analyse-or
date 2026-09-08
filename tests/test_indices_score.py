@@ -3719,3 +3719,63 @@ def test_close_eligible_positions_leaves_index_return_none_when_index_fetch_fail
     )
     assert result[0]["index_price_at_close"] is None
     assert result[0]["index_return_pct"] is None
+
+
+def test_resolve_pending_shadow_benchmarks_resolves_when_date_reached():
+    position = _fake_open_position(
+        status="closed", entry_price=100.0, shadow_close_date="2026-09-08", shadow_resolved=False,
+    )
+    companies_by_ticker = {"BN.PA": {"current_price": 115.0}}
+    result = indices_score._resolve_pending_shadow_benchmarks(
+        [position], companies_by_ticker, today="2026-09-08",
+    )
+    p = result[0]
+    assert p["shadow_resolved"] is True
+    assert p["shadow_price"] == 115.0
+    assert p["shadow_return_pct"] == pytest.approx(15.0)
+
+
+def test_resolve_pending_shadow_benchmarks_resolves_for_still_open_position():
+    """Une position encore "open" (pas encore clôturée par le repère de
+    sortie/stop-loss) mais dont la date fantôme est déjà atteinte doit
+    aussi être résolue — les deux cycles de vie sont indépendants."""
+    position = _fake_open_position(
+        status="open", entry_price=100.0, shadow_close_date="2026-09-08", shadow_resolved=False,
+    )
+    companies_by_ticker = {"BN.PA": {"current_price": 90.0}}
+    result = indices_score._resolve_pending_shadow_benchmarks(
+        [position], companies_by_ticker, today="2026-09-08",
+    )
+    assert result[0]["shadow_resolved"] is True
+    assert result[0]["shadow_return_pct"] == pytest.approx(-10.0)
+
+
+def test_resolve_pending_shadow_benchmarks_leaves_unresolved_before_date():
+    position = _fake_open_position(shadow_close_date="2026-12-08", shadow_resolved=False)
+    companies_by_ticker = {"BN.PA": {"current_price": 115.0}}
+    result = indices_score._resolve_pending_shadow_benchmarks(
+        [position], companies_by_ticker, today="2026-09-08",
+    )
+    assert result[0]["shadow_resolved"] is False
+    assert result[0]["shadow_price"] is None
+
+
+def test_resolve_pending_shadow_benchmarks_skips_already_resolved():
+    position = _fake_open_position(
+        shadow_close_date="2026-09-08", shadow_resolved=True, shadow_price=999.0,
+    )
+    companies_by_ticker = {"BN.PA": {"current_price": 42.0}}
+    result = indices_score._resolve_pending_shadow_benchmarks(
+        [position], companies_by_ticker, today="2026-09-08",
+    )
+    assert result[0]["shadow_price"] == 999.0  # inchangé
+
+
+def test_resolve_pending_shadow_benchmarks_leaves_pending_when_no_price_available():
+    """Ticker sorti de l'indice ou sans cours ce jour : retenté le jour
+    suivant, jamais d'exception."""
+    position = _fake_open_position(shadow_close_date="2026-09-08", shadow_resolved=False)
+    result = indices_score._resolve_pending_shadow_benchmarks(
+        [position], {}, today="2026-09-08",
+    )
+    assert result[0]["shadow_resolved"] is False

@@ -3611,3 +3611,111 @@ def test_open_new_signal_positions_uses_none_index_price_when_index_fetch_failed
         [], [company], {"CAC40": None, "DAX": None}, today="2026-09-08",
     )
     assert positions[0]["index_price_at_entry"] is None
+
+
+def _fake_open_position(**overrides):
+    position = {
+        "id": "BN.PA-2026-06-08", "ticker": "BN.PA", "name": "Danone", "index": "CAC40",
+        "status": "open", "entry_date": "2026-06-08", "entry_price": 100.0,
+        "target_exit_price": 130.0, "index_price_at_entry": 7500.0,
+        "close_date": None, "close_price": None, "close_reason": None, "return_pct": None,
+        "index_price_at_close": None, "index_return_pct": None,
+        "shadow_close_date": "2026-12-08", "shadow_resolved": False,
+        "shadow_price": None, "shadow_return_pct": None,
+    }
+    position.update(overrides)
+    return position
+
+
+def test_close_eligible_positions_closes_on_stop_loss():
+    position = _fake_open_position(entry_price=100.0)
+    companies_by_ticker = {"BN.PA": {"current_price": 79.0}}  # -21%, sous le seuil -20%
+    result = indices_score._close_eligible_positions(
+        [position], companies_by_ticker, {"CAC40": 7600.0}, today="2026-09-08",
+    )
+    p = result[0]
+    assert p["status"] == "closed"
+    assert p["close_reason"] == "stop_loss"
+    assert p["close_price"] == 79.0
+    assert p["return_pct"] == pytest.approx(-21.0)
+    assert p["index_price_at_close"] == 7600.0
+    assert p["index_return_pct"] == pytest.approx((7600.0 - 7500.0) / 7500.0 * 100)
+
+
+def test_close_eligible_positions_closes_on_target_reached():
+    position = _fake_open_position(entry_price=100.0, target_exit_price=130.0)
+    companies_by_ticker = {"BN.PA": {"current_price": 131.0}}
+    result = indices_score._close_eligible_positions(
+        [position], companies_by_ticker, {"CAC40": 7600.0}, today="2026-09-08",
+    )
+    assert result[0]["close_reason"] == "objectif_atteint"
+    assert result[0]["return_pct"] == pytest.approx(31.0)
+
+
+def test_close_eligible_positions_closes_on_delai_max_and_resolves_shadow_immediately():
+    position = _fake_open_position(
+        entry_price=100.0, target_exit_price=130.0, shadow_close_date="2026-09-08",
+    )
+    companies_by_ticker = {"BN.PA": {"current_price": 110.0}}
+    result = indices_score._close_eligible_positions(
+        [position], companies_by_ticker, {"CAC40": 7600.0}, today="2026-09-08",
+    )
+    p = result[0]
+    assert p["close_reason"] == "delai_max"
+    assert p["return_pct"] == pytest.approx(10.0)
+    # Clôture par délai max == date fantôme atteinte le même jour : résolu tout de suite.
+    assert p["shadow_resolved"] is True
+    assert p["shadow_price"] == 110.0
+    assert p["shadow_return_pct"] == pytest.approx(10.0)
+
+
+def test_close_eligible_positions_stop_loss_takes_priority_over_target():
+    """Cas limite improbable mais à couvrir explicitement : si les deux
+    conditions sont vraies le même jour (n'arrive normalement jamais vu
+    les seuils -20%/objectif > entrée), stop-loss est vérifié en premier
+    dans cet ordre de priorité de la spec."""
+    position = _fake_open_position(entry_price=100.0, target_exit_price=70.0)  # objectif sous l'entrée
+    companies_by_ticker = {"BN.PA": {"current_price": 79.0}}  # <= objectif ET <= stop-loss
+    result = indices_score._close_eligible_positions(
+        [position], companies_by_ticker, {"CAC40": 7600.0}, today="2026-09-08",
+    )
+    assert result[0]["close_reason"] == "stop_loss"
+
+
+def test_close_eligible_positions_leaves_open_when_no_condition_met():
+    position = _fake_open_position(entry_price=100.0, target_exit_price=130.0)
+    companies_by_ticker = {"BN.PA": {"current_price": 105.0}}
+    result = indices_score._close_eligible_positions(
+        [position], companies_by_ticker, {"CAC40": 7600.0}, today="2026-09-08",
+    )
+    assert result[0]["status"] == "open"
+
+
+def test_close_eligible_positions_leaves_open_when_ticker_not_in_companies():
+    """Ticker sorti de l'indice (ex: recomposition DAX) : pas de cours
+    disponible aujourd'hui, position laissée intacte plutôt que
+    clôturée sur une donnée périmée ou une exception."""
+    position = _fake_open_position()
+    result = indices_score._close_eligible_positions(
+        [position], {}, {"CAC40": 7600.0}, today="2026-09-08",
+    )
+    assert result[0]["status"] == "open"
+
+
+def test_close_eligible_positions_ignores_already_closed_positions():
+    position = _fake_open_position(status="closed", close_price=140.0)
+    companies_by_ticker = {"BN.PA": {"current_price": 79.0}}  # aurait déclenché stop-loss si "open"
+    result = indices_score._close_eligible_positions(
+        [position], companies_by_ticker, {"CAC40": 7600.0}, today="2026-09-08",
+    )
+    assert result[0]["close_price"] == 140.0  # inchangé
+
+
+def test_close_eligible_positions_leaves_index_return_none_when_index_fetch_failed():
+    position = _fake_open_position(entry_price=100.0, target_exit_price=130.0)
+    companies_by_ticker = {"BN.PA": {"current_price": 131.0}}
+    result = indices_score._close_eligible_positions(
+        [position], companies_by_ticker, {"CAC40": None}, today="2026-09-08",
+    )
+    assert result[0]["index_price_at_close"] is None
+    assert result[0]["index_return_pct"] is None

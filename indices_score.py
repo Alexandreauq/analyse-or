@@ -1695,15 +1695,43 @@ def estimate_dcf_price(
     return equity_value / shares_outstanding
 
 
-def estimate_asset_based_price(equity: float, shares_outstanding: float) -> float | None:
+ASSET_QUALITY_FLOOR = 0.3  # décote maximale (70%) appliquée à la valeur
+                            # comptable — voir estimate_asset_based_price
+
+
+def estimate_asset_based_price(
+    equity: float, shares_outstanding: float,
+    roe: float | None = None, cost_of_capital: float | None = None,
+) -> float | None:
     """Valeur comptable par action (capitaux propres / actions en
-    circulation) — approche patrimoniale simplifiée, sans réévaluation des
-    actifs à la valeur de marché (hors périmètre v1). None si les capitaux
-    propres sont négatifs ou nuls (base non significative comme plancher
-    de valorisation) ou si le nombre d'actions est nul/inconnu."""
+    circulation), pondérée par un facteur qualité ROE/coût du capital
+    (`justified P/B` — modèle du résultat résiduel : un P/B de 1 n'est
+    justifié que si ROE = coût du capital ; en dessous, la valeur
+    comptable surestime la valeur économique réelle, un capital qui ne
+    couvre pas son propre coût détruisant de la valeur). Repéré sur
+    Volkswagen (juste valeur à 232€ pour un cours à 83€, book value très
+    au-dessus du marché — restructuration en cours, FCF négatif, ROE
+    faible) : sans cette pondération, la valeur comptable brute écrasait
+    le DCF/multiples dans la moyenne pondérée pour les cycliques.
+    `roe`/`cost_of_capital` optionnels (défaut None) pour ne rien changer
+    au comportement des appelants existants qui ne les fournissent pas —
+    renvoie alors la valeur comptable brute (facteur 1.0), comme avant.
+    Le facteur est plafonné à 1.0 (jamais de prime au-dessus du book
+    value brut — les méthodes DCF/multiples portent déjà l'upside des
+    entreprises performantes) et à ASSET_QUALITY_FLOOR au plancher (décote
+    jamais totale, cette approximation reste simplifiée). None si les
+    capitaux propres sont négatifs ou nuls (base non significative comme
+    plancher de valorisation) ou si le nombre d'actions est nul/inconnu."""
     if not shares_outstanding or _is_missing(equity) or equity <= 0:
         return None
-    return equity / shares_outstanding
+    book_value_per_share = equity / shares_outstanding
+    if (
+        roe is None or _is_missing(roe)
+        or cost_of_capital is None or _is_missing(cost_of_capital) or cost_of_capital <= 0
+    ):
+        return book_value_per_share
+    quality_factor = _clamp(roe / cost_of_capital, ASSET_QUALITY_FLOOR, 1.0)
+    return book_value_per_share * quality_factor
 
 
 def estimate_multiple_based_price(
@@ -1958,7 +1986,9 @@ def estimate_valuation_targets(data: dict, cost_of_capital: float) -> dict:
         dcf_fcf, data["cagr_ebitda"], data["net_debt"], data["shares_outstanding"],
         cost_of_capital,
     )
-    asset_price = estimate_asset_based_price(data["equity"], data["shares_outstanding"])
+    asset_price = estimate_asset_based_price(
+        data["equity"], data["shares_outstanding"], data["roe"], cost_of_capital,
+    )
     multiple_price = (
         estimate_multiple_based_price(
             data["current_price"], data["current_ev_ebitda"], data["avg_ev_ebitda_5y"]

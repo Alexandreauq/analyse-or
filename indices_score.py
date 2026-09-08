@@ -600,30 +600,52 @@ def score_dynamique_recente(
 
 NEWS_SENTIMENT_WINDOW_DAYS = 14
 
+NEWS_IMPORTANCE_LEVELS = ("mineure", "notable", "majeure")
+# Poids par niveau d'importance pour score_actualite_recente : une actu
+# majeure très négative doit pouvoir faire basculer le facteur à elle
+# seule, même entourée de plusieurs actus mineures neutres — une moyenne
+# simple diluait ça (une actu ultra importante pesait pareil qu'une
+# mention mineure). Valeurs de départ, à ajuster une fois de vrais
+# exemples observés en production.
+NEWS_IMPORTANCE_WEIGHTS = {"mineure": 1.0, "notable": 2.0, "majeure": 4.0}
+
 
 def score_actualite_recente(news_items: list[dict]) -> FactorResult:
-    """Moyenne du sentiment des actus datées de moins de 14 jours, mise à
-    l'échelle -10/+10. Neutre (0.0) si aucune actu récente exploitable —
-    ni erreur, ni biais optimiste/pessimiste par défaut."""
+    """Moyenne pondérée du sentiment des actus datées de moins de 14
+    jours — poids par importance (voir NEWS_IMPORTANCE_WEIGHTS), une actu
+    majeure pèse jusqu'à 4x plus qu'une actu mineure plutôt qu'un poids
+    égal qui la diluerait au milieu de plusieurs actus mineures neutres.
+    Si toutes les actus sont "mineure" (poids 1.0 chacune), ça reproduit
+    exactement l'ancienne moyenne simple. Mise à l'échelle -10/+10.
+    Neutre (0.0) si aucune actu récente exploitable — ni erreur, ni
+    biais optimiste/pessimiste par défaut."""
     cutoff = datetime.now() - timedelta(days=NEWS_SENTIMENT_WINDOW_DAYS)
-    recent_sentiments = []
+    recent = []
     for item in news_items:
         try:
             item_date = datetime.strptime(item["date"], "%Y-%m-%d")
         except (ValueError, TypeError, KeyError):
             continue
         if item_date >= cutoff:
-            recent_sentiments.append(item.get("sentiment", 0))
-    if not recent_sentiments:
+            recent.append(item)
+    if not recent:
         return FactorResult(
             "Actualité récente", 0.0, WEIGHTS["actualite_recente"],
             "Aucune actualité récente exploitable",
         )
-    avg_sentiment = sum(recent_sentiments) / len(recent_sentiments)
+    weighted_sum = 0.0
+    total_weight = 0.0
+    for item in recent:
+        weight = NEWS_IMPORTANCE_WEIGHTS.get(item.get("importance", "mineure"), 1.0)
+        weighted_sum += item.get("sentiment", 0) * weight
+        total_weight += weight
+    avg_sentiment = weighted_sum / total_weight if total_weight else 0.0
     score = _clamp(avg_sentiment * 10)
+    majeure_count = sum(1 for item in recent if item.get("importance") == "majeure")
+    majeure_note = f", dont {majeure_count} majeure(s)" if majeure_count else ""
     return FactorResult(
         "Actualité récente", score, WEIGHTS["actualite_recente"],
-        f"Ton moyen des {len(recent_sentiments)} actualités récentes : {avg_sentiment:+.2f}",
+        f"Ton moyen pondéré des {len(recent)} actualités récentes : {avg_sentiment:+.2f}{majeure_note}",
     )
 
 
@@ -1230,6 +1252,7 @@ def fetch_news(company_name: str) -> list[dict]:
         result = summarize_news_item(item["title"], company_name, article_text)
         item["summary"] = result["summary"]
         item["sentiment"] = result["sentiment"]
+        item["importance"] = result["importance"]
     return items
 
 
@@ -1265,16 +1288,20 @@ ANTHROPIC_MODEL = "claude-haiku-4-5-20251001"
 
 
 def summarize_news_item(title: str, company_name: str, article_text: str | None) -> dict:
-    """Génère un résumé/contexte (1-2 phrases en français) et une
-    classification de sentiment pour l'entreprise via l'API Anthropic, en
-    un seul appel. Renvoie {"summary": "", "sentiment": 0} sur tout échec
-    (clé API absente, erreur réseau, réponse HTTP non-200, JSON malformé)
-    — ne lève jamais, même justification que fetch_article_text (dialogue
-    avec un service tiers dont on ne peut pas énumérer précisément tous
-    les modes d'échec)."""
+    """Génère un résumé/contexte (1-2 phrases en français), une
+    classification de sentiment et un niveau d'importance pour
+    l'entreprise via l'API Anthropic, en un seul appel. Renvoie
+    {"summary": "", "sentiment": 0, "importance": "mineure"} sur tout
+    échec (clé API absente, erreur réseau, réponse HTTP non-200, JSON
+    malformé) — ne lève jamais, même justification que
+    fetch_article_text (dialogue avec un service tiers dont on ne peut
+    pas énumérer précisément tous les modes d'échec). "mineure" en repli
+    par défaut plutôt que "majeure" : une classification ratée ne doit
+    jamais gonfler artificiellement le poids d'une actu ni déclencher à
+    tort l'alerte "actu majeure"."""
     api_key = os.environ.get("ANTHROPIC_API_KEY")
     if not api_key:
-        return {"summary": "", "sentiment": 0}
+        return {"summary": "", "sentiment": 0, "importance": "mineure"}
 
     if article_text:
         prompt = (
@@ -1296,9 +1323,22 @@ def summarize_news_item(title: str, company_name: str, article_text: str | None)
         )
 
     prompt += (
-        "\n\nRéponds uniquement avec un objet JSON valide, sans texte "
+        "\n\nÉvalue aussi l'importance de cette actu pour l'entreprise, "
+        "sur 3 niveaux :\n"
+        "- \"majeure\" : OPA/fusion-acquisition, changement de direction "
+        "générale (PDG/DG), avertissement sur résultats ou révision "
+        "significative de la guidance, procédure judiciaire/réglementaire "
+        "à fort impact, choc macro ou sectoriel touchant directement "
+        "l'entreprise.\n"
+        "- \"notable\" : résultats trimestriels sans avertissement, "
+        "partenariat ou contrat commercial significatif, mouvement de "
+        "matières premières pertinent pour le secteur de l'entreprise.\n"
+        "- \"mineure\" : tout le reste (actualité générale, simple "
+        "mention, communication mineure).\n\n"
+        "Réponds uniquement avec un objet JSON valide, sans texte "
         "autour, de la forme : "
-        '{"summary": "...", "sentiment": -1|0|1} '
+        '{"summary": "...", "sentiment": -1|0|1, "importance": '
+        '"mineure"|"notable"|"majeure"} '
         "où sentiment vaut -1 si l'actu est plutôt défavorable pour "
         "l'entreprise, 0 si neutre ou mixte, 1 si plutôt favorable."
     )
@@ -1313,7 +1353,7 @@ def summarize_news_item(title: str, company_name: str, article_text: str | None)
             },
             json={
                 "model": ANTHROPIC_MODEL,
-                "max_tokens": 150,
+                "max_tokens": 200,
                 "messages": [{"role": "user", "content": prompt}],
             },
             timeout=20,
@@ -1328,11 +1368,14 @@ def summarize_news_item(title: str, company_name: str, article_text: str | None)
         parsed = json.loads(text)
         summary = str(parsed.get("summary", "")).strip()
         sentiment = parsed.get("sentiment", 0)
+        importance = parsed.get("importance", "mineure")
+        if importance not in NEWS_IMPORTANCE_LEVELS:
+            importance = "mineure"
         if sentiment not in (-1, 0, 1):
             sentiment = 0
-        return {"summary": summary, "sentiment": sentiment}
+        return {"summary": summary, "sentiment": sentiment, "importance": importance}
     except Exception:
-        return {"summary": "", "sentiment": 0}
+        return {"summary": "", "sentiment": 0, "importance": "mineure"}
 
 
 ANTHROPIC_MODEL_ANALYSIS = "claude-opus-5"
@@ -1462,11 +1505,18 @@ NEAR_ENTRY_PCT = 5.0     # écart max (%) au repère d'entrée pour "conditions 
 def compute_company_alerts(
     ticker: str, composite: float, current_price: float | None,
     entry_price: float | None, previous_history: list[dict],
+    news_items: list[dict] | None = None,
+    previously_alerted_news_links: set | None = None,
 ) -> list[dict]:
     """Alertes de franchissement de seuil pour une entreprise, à partir de
     son propre sous-historique (déjà filtré par ticker par l'appelant).
-    Ne lève jamais d'exception ; renvoie toujours au moins une alerte
-    (`info` neutre si rien ne se déclenche)."""
+    `news_items`/`previously_alerted_news_links` sont optionnels (défaut
+    None) pour ne rien changer au comportement des appelants existants
+    qui ne les fournissent pas. Ne lève jamais d'exception ; renvoie
+    toujours au moins une alerte (`info` neutre si rien ne se déclenche —
+    calculé après l'alerte "actu_majeure" ci-dessous, pas avant, pour ne
+    jamais afficher "pas de signal actif" en même temps qu'une vraie
+    actu majeure)."""
     today_str = datetime.today().strftime("%d/%m/%Y")
     alerts = []
 
@@ -1523,6 +1573,34 @@ def compute_company_alerts(
             "title": "Conditions d'entrée réunies",
             "detail": f"Score favorable, cours à moins de {NEAR_ENTRY_PCT:.0f}% du repère d'entrée.",
             "date": today_str,
+        })
+
+    # Actu majeure : indépendant du score et du prix — contrairement à
+    # l'alerte "entree", un événement majeur (OPA, changement de
+    # direction, avertissement sur résultats...) mérite un signal même
+    # si le cours n'a pas encore bougé. Suivie par lien d'article (pas
+    # par date) pour ne jamais re-notifier deux fois pour la même actu
+    # tant qu'elle reste dans la fenêtre de NEWS_SENTIMENT_WINDOW_DAYS.
+    news_cutoff = datetime.today().date() - timedelta(days=NEWS_SENTIMENT_WINDOW_DAYS)
+    already_alerted_links = previously_alerted_news_links or set()
+    for item in (news_items or []):
+        if item.get("importance") != "majeure":
+            continue
+        link = item.get("link")
+        if not link or link in already_alerted_links:
+            continue
+        try:
+            item_date = datetime.strptime(item["date"], "%Y-%m-%d").date()
+        except (ValueError, TypeError, KeyError):
+            continue
+        if item_date < news_cutoff:
+            continue
+        alerts.append({
+            "kind": "actu_majeure",
+            "title": item.get("title") or "Actualité majeure",
+            "detail": item.get("summary") or "Actualité classée comme majeure pour cette entreprise.",
+            "date": today_str,
+            "link": link,
         })
 
     if not alerts:
@@ -1898,6 +1976,29 @@ def load_previous_alert_kinds() -> dict:
         return {}
 
 
+def load_previous_alerted_news_links() -> dict:
+    """Lit le docs/indices.json du run précédent pour en extraire, par
+    ticker, les liens d'actus déjà signalées par une alerte "actu_majeure"
+    — permet de ne jamais re-notifier deux fois pour la même actu tant
+    qu'elle reste dans la fenêtre de NEWS_SENTIMENT_WINDOW_DAYS. {} si le
+    fichier n'existe pas encore ou est illisible — jamais d'exception."""
+    if not os.path.exists(OUTPUT_JSON_PATH):
+        return {}
+    try:
+        with open(OUTPUT_JSON_PATH, encoding="utf-8") as fh:
+            previous = json.load(fh)
+        return {
+            c["ticker"]: {
+                a["link"] for a in c.get("alerts", [])
+                if a.get("kind") == "actu_majeure" and a.get("link")
+            }
+            for c in previous.get("companies", [])
+            if c.get("ticker")
+        }
+    except Exception:
+        return {}
+
+
 def build_company_entry(
     ticker: str, name: str, risk_free_rate: float | None, previous_analyses: dict,
     index_key: str = "CAC40",
@@ -2036,20 +2137,26 @@ def build_company_entry(
     }
 
 
-def _attach_alerts_and_update_history(companies: list[dict]) -> list[dict]:
+def _attach_alerts_and_update_history(companies: list[dict]) -> tuple[list[dict], list[tuple]]:
     """Calcule les alertes de chaque entreprise à partir de son historique
     et enregistre le score du jour. Dégrade vers alerts=[] pour toutes les
     entreprises si l'historique est illisible/inscriptible — ne doit
-    jamais faire échouer la publication du score déjà calculé. Renvoie la
-    liste des entreprises dont le signal "entree" vient d'apparaître
-    aujourd'hui (absent des alertes de la veille) — [] si rien de nouveau
-    ou en cas d'échec, jamais d'exception."""
+    jamais faire échouer la publication du score déjà calculé. Renvoie
+    (newly_triggered_entree, newly_triggered_major_news) :
+    - newly_triggered_entree : entreprises dont le signal "entree" vient
+      d'apparaître aujourd'hui (absent des alertes de la veille) ;
+    - newly_triggered_major_news : liste de (entreprise, alerte) pour
+      chaque actu "actu_majeure" nouvellement signalée aujourd'hui (une
+      entreprise peut en avoir plusieurs le même jour, rare mais possible).
+    ([], []) si rien de nouveau ou en cas d'échec, jamais d'exception."""
     for company in companies:
         company["alerts"] = []
-    newly_triggered = []
+    newly_triggered_entree = []
+    newly_triggered_major_news = []
     try:
         history = load_indices_history()
         previous_alert_kinds = load_previous_alert_kinds()
+        previous_alerted_news_links = load_previous_alerted_news_links()
         today_str = datetime.today().strftime("%Y-%m-%d")
         new_entries = []
         for company in companies:
@@ -2057,18 +2164,23 @@ def _attach_alerts_and_update_history(companies: list[dict]) -> list[dict]:
             company["alerts"] = compute_company_alerts(
                 company["ticker"], company["score"], company["current_price"],
                 company["entry_price"], ticker_history,
+                news_items=company.get("news", []),
+                previously_alerted_news_links=previous_alerted_news_links.get(company["ticker"], set()),
             )
             today_kinds = {a["kind"] for a in company["alerts"]}
             if "entree" in today_kinds and "entree" not in previous_alert_kinds.get(company["ticker"], set()):
-                newly_triggered.append(company)
+                newly_triggered_entree.append(company)
+            for alert in company["alerts"]:
+                if alert["kind"] == "actu_majeure":
+                    newly_triggered_major_news.append((company, alert))
             new_entries.append({
                 "date": today_str, "ticker": company["ticker"], "composite": company["score"],
             })
         append_indices_history(new_entries)
     except Exception as e:
         print(f"Erreur historique/alertes Indices : {e}")
-        return []
-    return newly_triggered
+        return [], []
+    return newly_triggered_entree, newly_triggered_major_news
 
 
 # Même serveur/couple de secrets GitHub Actions que gold_score.py
@@ -2216,6 +2328,91 @@ def send_entry_alert_email(companies: list[dict]) -> bool:
         return False
 
 
+def _find_news_item_by_link(company: dict, link: str) -> dict | None:
+    for item in company.get("news", []):
+        if item.get("link") == link:
+            return item
+    return None
+
+
+def build_major_news_alert_email_html(company: dict, alert: dict) -> str:
+    """Email centré sur l'actu elle-même (pas le score/prix, contrairement
+    à l'alerte entrée) : titre, source, résumé, lien direct vers la fiche."""
+    index_name = INDEX_NAMES.get(company.get("index"), company.get("index", ""))
+    news_item = _find_news_item_by_link(company, alert.get("link", "")) or {}
+    sentiment = news_item.get("sentiment", 0)
+    sentiment_label = {-1: "Défavorable", 0: "Neutre", 1: "Favorable"}.get(sentiment, "Neutre")
+    sentiment_color = {-1: "#a35540", 0: "#8a90a3", 1: "#b99a68"}.get(sentiment, "#8a90a3")
+    meta = " · ".join(part for part in (news_item.get("source"), alert.get("date")) if part)
+    fiche_url = f"{SITE_BASE_URL}#indices/{company['ticker']}"
+
+    return f"""
+    <html><body style="background:#15161c;margin:0;padding:0;">
+      <div style="max-width:480px;margin:0 auto;padding:32px 24px;font-family:Arial,Helvetica,sans-serif;">
+        <p style="color:#8a90a3;font-size:11px;letter-spacing:0.08em;text-transform:uppercase;margin:0 0 10px;">
+          {company['name']} ({index_name}) — Actu majeure
+        </p>
+        <span style="display:inline-block;background:{sentiment_color};color:#15161c;
+           font-size:11px;font-weight:bold;padding:3px 10px;border-radius:999px;margin:0 0 14px;">
+          {sentiment_label}
+        </span>
+
+        <h1 style="color:#edeef3;font-size:20px;font-weight:bold;margin:0 0 6px;line-height:1.3;">{alert['title']}</h1>
+        <p style="color:#8a90a3;font-size:12px;margin:0 0 20px;">{meta}</p>
+
+        <div style="background:#1b1d25;border:1px solid #2a2d38;border-radius:10px;padding:16px 18px;margin:0 0 24px;">
+          <p style="color:#edeef3;font-size:13px;line-height:1.6;margin:0;">{alert['detail']}</p>
+        </div>
+
+        <a href="{fiche_url}" style="display:inline-block;background:#b99a68;color:#15161c;
+           font-weight:bold;font-size:14px;padding:13px 26px;border-radius:8px;text-decoration:none;">
+          Voir la fiche complète →
+        </a>
+
+        <p style="color:#8a90a3;font-size:11px;line-height:1.5;margin:32px 0 0;">
+          Actualité classée automatiquement comme majeure pour cette entreprise — pas un conseil d'investissement.
+        </p>
+      </div>
+    </body></html>
+    """
+
+
+def send_major_news_alert_email(triggered: list[tuple]) -> bool:
+    """Envoie un email par (entreprise, alerte "actu_majeure") nouvellement
+    apparue aujourd'hui — chaque alerte de ce type est déjà garantie
+    nouvelle par construction (compute_company_alerts ne l'émet que pour
+    un lien pas encore signalé). Ignoré silencieusement (avec un message)
+    si les identifiants SMTP ne sont pas configurés ou si `triggered` est
+    vide — jamais d'exception, même contrat que send_entry_alert_email."""
+    if not triggered:
+        return False
+    smtp_user = os.environ.get("SMTP_USER")
+    smtp_password = os.environ.get("SMTP_PASSWORD")
+    mail_to = os.environ.get("MAIL_TO") or smtp_user
+    if not smtp_user or not smtp_password:
+        print("\n(Envoi d'email d'alerte actu majeure ignoré : SMTP_USER / SMTP_PASSWORD non configurés.)")
+        return False
+
+    try:
+        with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
+            server.starttls()
+            server.login(smtp_user, smtp_password)
+            for company, alert in triggered:
+                index_name = INDEX_NAMES.get(company.get("index"), company.get("index", ""))
+                msg = MIMEMultipart("mixed")
+                msg["Subject"] = f"{company['name']} ({index_name}) — actu majeure"
+                msg["From"] = smtp_user
+                msg["To"] = mail_to
+                msg.attach(MIMEText(build_major_news_alert_email_html(company, alert), "html"))
+                server.sendmail(smtp_user, [mail_to], msg.as_string())
+        tickers = ", ".join(c["ticker"] for c, _ in triggered)
+        print(f"\nEmail(s) d'alerte actu majeure envoyé(s) à {mail_to} ({tickers})")
+        return True
+    except Exception as e:
+        print(f"Erreur envoi email d'alerte actu majeure : {e}")
+        return False
+
+
 def _compute_health_summary(companies: list[dict]) -> dict:
     """Résumé de complétude du run : combien d'entreprises attendues
     (COMPANIES) ont effectivement un résultat dans `companies`, et
@@ -2248,8 +2445,9 @@ def main():
         except Exception as e:
             print(f"Erreur pour {company['ticker']} ({company['name']}) : {e}")
 
-    newly_triggered = _attach_alerts_and_update_history(companies)
-    send_entry_alert_email(newly_triggered)
+    newly_triggered_entree, newly_triggered_major_news = _attach_alerts_and_update_history(companies)
+    send_entry_alert_email(newly_triggered_entree)
+    send_major_news_alert_email(newly_triggered_major_news)
 
     payload = {
         "updated": datetime.today().strftime("%Y-%m-%d"),

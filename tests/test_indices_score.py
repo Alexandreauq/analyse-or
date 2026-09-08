@@ -281,6 +281,46 @@ def test_score_actualite_recente_handles_missing_sentiment_key_as_neutral():
     assert result.score == 0.0
 
 
+def test_score_actualite_recente_weighs_majeure_news_more_than_mineure():
+    """Une actu majeure très négative doit faire basculer le facteur vers
+    le négatif même entourée de plusieurs actus mineures neutres — une
+    moyenne simple (poids égal) resterait quasi neutre ici."""
+    news = [
+        {"date": _days_ago(1), "sentiment": -1, "importance": "majeure"},
+        {"date": _days_ago(2), "sentiment": 0, "importance": "mineure"},
+        {"date": _days_ago(3), "sentiment": 0, "importance": "mineure"},
+        {"date": _days_ago(4), "sentiment": 0, "importance": "mineure"},
+    ]
+    result = score_actualite_recente(news)
+    # moyenne pondérée (-1*4 + 0+0+0) / (4+1+1+1) = -4/7 ≈ -0.571 -> score ≈ -5.71
+    assert result.score < -4.0
+    assert "1 majeure" in result.raw_value
+
+
+def test_score_actualite_recente_missing_importance_defaults_to_mineure_weight():
+    """Sans clé "importance" (actu jamais reclassée, ou ancien format),
+    le poids doit rester 1.0 — comportement strictement identique à
+    l'ancienne moyenne simple, pas de régression pour les actus déjà en
+    cache d'un run précédent."""
+    with_explicit_mineure = score_actualite_recente(
+        [{"date": _days_ago(1), "sentiment": 1, "importance": "mineure"}]
+    )
+    without_importance_key = score_actualite_recente(
+        [{"date": _days_ago(1), "sentiment": 1}]
+    )
+    assert with_explicit_mineure.score == without_importance_key.score == 10.0
+
+
+def test_score_actualite_recente_all_mineure_reproduces_simple_average():
+    news = [
+        {"date": _days_ago(1), "sentiment": 1, "importance": "mineure"},
+        {"date": _days_ago(2), "sentiment": 1, "importance": "mineure"},
+        {"date": _days_ago(3), "sentiment": -1, "importance": "mineure"},
+    ]
+    result = score_actualite_recente(news)
+    assert 3.0 < result.score < 3.5  # identique à test_..._averages_recent_sentiments
+
+
 from indices_score import compute_composite, interpret, FactorResult
 
 
@@ -772,7 +812,9 @@ def test_summarize_news_item_returns_empty_when_api_key_missing(monkeypatch):
         raise AssertionError("no network call expected without an API key")
 
     monkeypatch.setattr(indices_score.requests, "post", fail_if_called)
-    assert summarize_news_item("Titre", "LVMH", "Texte de l'article") == {"summary": "", "sentiment": 0}
+    assert summarize_news_item("Titre", "LVMH", "Texte de l'article") == {
+        "summary": "", "sentiment": 0, "importance": "mineure",
+    }
 
 
 def test_summarize_news_item_uses_article_text_when_available(monkeypatch):
@@ -782,12 +824,12 @@ def test_summarize_news_item_uses_article_text_when_available(monkeypatch):
     def fake_post(url, headers, json, timeout):
         captured["json"] = json
         return _FakeAnthropicResponse(
-            {"content": [{"text": '{"summary": "Résumé généré.", "sentiment": 1}'}]}
+            {"content": [{"text": '{"summary": "Résumé généré.", "sentiment": 1, "importance": "notable"}'}]}
         )
 
     monkeypatch.setattr(indices_score.requests, "post", fake_post)
     result = summarize_news_item("Titre", "LVMH", "Contenu réel de l'article")
-    assert result == {"summary": "Résumé généré.", "sentiment": 1}
+    assert result == {"summary": "Résumé généré.", "sentiment": 1, "importance": "notable"}
     assert "Contenu réel de l'article" in captured["json"]["messages"][0]["content"]
     assert captured["json"]["model"] == "claude-haiku-4-5-20251001"
 
@@ -804,7 +846,7 @@ def test_summarize_news_item_uses_headline_only_prompt_when_article_text_missing
 
     monkeypatch.setattr(indices_score.requests, "post", fake_post)
     result = summarize_news_item("Titre", "LVMH", None)
-    assert result == {"summary": "Contexte prudent.", "sentiment": 0}
+    assert result == {"summary": "Contexte prudent.", "sentiment": 0, "importance": "mineure"}
     assert "suggère" in captured["json"]["messages"][0]["content"]
 
 
@@ -815,7 +857,9 @@ def test_summarize_news_item_returns_empty_on_http_failure(monkeypatch):
         raise requests.RequestException("boom")
 
     monkeypatch.setattr(indices_score.requests, "post", fake_post)
-    assert summarize_news_item("Titre", "LVMH", "texte") == {"summary": "", "sentiment": 0}
+    assert summarize_news_item("Titre", "LVMH", "texte") == {
+        "summary": "", "sentiment": 0, "importance": "mineure",
+    }
 
 
 def test_summarize_news_item_returns_empty_on_malformed_response(monkeypatch):
@@ -824,7 +868,9 @@ def test_summarize_news_item_returns_empty_on_malformed_response(monkeypatch):
         indices_score.requests, "post",
         lambda *a, **k: _FakeAnthropicResponse({"unexpected": "shape"})
     )
-    assert summarize_news_item("Titre", "LVMH", "texte") == {"summary": "", "sentiment": 0}
+    assert summarize_news_item("Titre", "LVMH", "texte") == {
+        "summary": "", "sentiment": 0, "importance": "mineure",
+    }
 
 
 def test_summarize_news_item_strips_markdown_code_fences_before_parsing(monkeypatch):
@@ -832,11 +878,11 @@ def test_summarize_news_item_strips_markdown_code_fences_before_parsing(monkeypa
     monkeypatch.setattr(
         indices_score.requests, "post",
         lambda *a, **k: _FakeAnthropicResponse(
-            {"content": [{"text": '```json\n{"summary": "Texte.", "sentiment": -1}\n```'}]}
+            {"content": [{"text": '```json\n{"summary": "Texte.", "sentiment": -1, "importance": "majeure"}\n```'}]}
         )
     )
     result = summarize_news_item("Titre", "LVMH", "texte")
-    assert result == {"summary": "Texte.", "sentiment": -1}
+    assert result == {"summary": "Texte.", "sentiment": -1, "importance": "majeure"}
 
 
 def test_summarize_news_item_returns_empty_when_response_is_not_valid_json(monkeypatch):
@@ -845,7 +891,9 @@ def test_summarize_news_item_returns_empty_when_response_is_not_valid_json(monke
         indices_score.requests, "post",
         lambda *a, **k: _FakeAnthropicResponse({"content": [{"text": "Ceci n'est pas du JSON."}]})
     )
-    assert summarize_news_item("Titre", "LVMH", "texte") == {"summary": "", "sentiment": 0}
+    assert summarize_news_item("Titre", "LVMH", "texte") == {
+        "summary": "", "sentiment": 0, "importance": "mineure",
+    }
 
 
 def test_summarize_news_item_defaults_invalid_sentiment_value_to_zero(monkeypatch):
@@ -857,7 +905,22 @@ def test_summarize_news_item_defaults_invalid_sentiment_value_to_zero(monkeypatc
         )
     )
     result = summarize_news_item("Titre", "LVMH", "texte")
-    assert result == {"summary": "Texte.", "sentiment": 0}
+    assert result == {"summary": "Texte.", "sentiment": 0, "importance": "mineure"}
+
+
+def test_summarize_news_item_defaults_invalid_importance_value_to_mineure(monkeypatch):
+    """Une valeur d'importance hors des 3 niveaux attendus ne doit jamais
+    se propager — une classification ratée ne doit ni gonfler le poids
+    de l'actu ni déclencher à tort l'alerte "actu majeure"."""
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-test")
+    monkeypatch.setattr(
+        indices_score.requests, "post",
+        lambda *a, **k: _FakeAnthropicResponse(
+            {"content": [{"text": '{"summary": "Texte.", "sentiment": 0, "importance": "critique"}'}]}
+        )
+    )
+    result = summarize_news_item("Titre", "LVMH", "texte")
+    assert result["importance"] == "mineure"
 
 
 from indices_score import estimate_dcf_price
@@ -1143,6 +1206,7 @@ def test_fetch_news_attaches_source_and_summary_and_isolates_per_item_failures(m
         lambda title, name, text: {
             "summary": f"Résumé pour {title} (article={text})",
             "sentiment": 1 if text is None else -1,
+            "importance": "mineure" if text is None else "majeure",
         }
     )
 
@@ -1152,9 +1216,11 @@ def test_fetch_news_attaches_source_and_summary_and_isolates_per_item_failures(m
     assert items[0]["source"] == "Source A"
     assert items[0]["summary"] == "Résumé pour Titre A (article=None)"
     assert items[0]["sentiment"] == 1
+    assert items[0]["importance"] == "mineure"
     assert items[1]["source"] == "Source B"
     assert items[1]["summary"] == "Résumé pour Titre B (article=Texte B)"
     assert items[1]["sentiment"] == -1
+    assert items[1]["importance"] == "majeure"
 
 
 from indices_score import estimate_asset_based_price, estimate_multiple_based_price
@@ -1783,6 +1849,75 @@ def test_compute_company_alerts_ignores_malformed_dates():
     assert "risque" in kinds
 
 
+def test_compute_company_alerts_actu_majeure_when_recent_and_not_previously_alerted():
+    news_items = [{
+        "title": "Rachat surprise annoncé", "link": "https://example.com/a",
+        "date": _days_ago(1), "summary": "Résumé.", "importance": "majeure",
+    }]
+    alerts = indices_score.compute_company_alerts(
+        "BN.PA", composite=5.0, current_price=100.0, entry_price=50.0,
+        previous_history=[], news_items=news_items,
+    )
+    kinds = [a["kind"] for a in alerts]
+    assert "actu_majeure" in kinds
+    assert "info" not in kinds  # pas "pas de signal actif" en même temps qu'une vraie actu majeure
+
+
+def test_compute_company_alerts_no_actu_majeure_for_non_majeure_news():
+    news_items = [{
+        "title": "Petite mention", "link": "https://example.com/a",
+        "date": _days_ago(1), "summary": "Résumé.", "importance": "notable",
+    }]
+    alerts = indices_score.compute_company_alerts(
+        "BN.PA", composite=5.0, current_price=100.0, entry_price=50.0,
+        previous_history=[], news_items=news_items,
+    )
+    assert "actu_majeure" not in [a["kind"] for a in alerts]
+
+
+def test_compute_company_alerts_no_actu_majeure_when_already_alerted():
+    """Ne doit jamais re-notifier deux fois pour la même actu tant
+    qu'elle reste dans la fenêtre de 14 jours — suivie par lien, pas
+    par date."""
+    news_items = [{
+        "title": "Rachat surprise annoncé", "link": "https://example.com/a",
+        "date": _days_ago(1), "summary": "Résumé.", "importance": "majeure",
+    }]
+    alerts = indices_score.compute_company_alerts(
+        "BN.PA", composite=5.0, current_price=100.0, entry_price=50.0,
+        previous_history=[], news_items=news_items,
+        previously_alerted_news_links={"https://example.com/a"},
+    )
+    assert "actu_majeure" not in [a["kind"] for a in alerts]
+
+
+def test_compute_company_alerts_no_actu_majeure_outside_news_window():
+    news_items = [{
+        "title": "Vieille actu majeure", "link": "https://example.com/a",
+        "date": _days_ago(30), "summary": "Résumé.", "importance": "majeure",
+    }]
+    alerts = indices_score.compute_company_alerts(
+        "BN.PA", composite=5.0, current_price=100.0, entry_price=50.0,
+        previous_history=[], news_items=news_items,
+    )
+    assert "actu_majeure" not in [a["kind"] for a in alerts]
+
+
+def test_compute_company_alerts_no_actu_majeure_without_link():
+    """Une actu majeure sans lien ne peut pas être suivie de façon fiable
+    (impossible de savoir si elle a déjà été signalée) — ignorée plutôt
+    que de risquer un spam quotidien."""
+    news_items = [{
+        "title": "Rachat surprise annoncé", "link": "",
+        "date": _days_ago(1), "summary": "Résumé.", "importance": "majeure",
+    }]
+    alerts = indices_score.compute_company_alerts(
+        "BN.PA", composite=5.0, current_price=100.0, entry_price=50.0,
+        previous_history=[], news_items=news_items,
+    )
+    assert "actu_majeure" not in [a["kind"] for a in alerts]
+
+
 def test_attach_alerts_and_update_history_sets_alerts_key(monkeypatch):
     companies = [
         {"ticker": "BN.PA", "score": 20.0, "current_price": 102.0, "entry_price": 100.0},
@@ -1820,9 +1955,9 @@ def test_attach_alerts_and_update_history_filters_history_per_ticker(monkeypatch
     captured = {}
     original = indices_score.compute_company_alerts
 
-    def _spy(ticker, composite, current_price, entry_price, previous_history):
+    def _spy(ticker, composite, current_price, entry_price, previous_history, **kwargs):
         captured["previous_history"] = previous_history
-        return original(ticker, composite, current_price, entry_price, previous_history)
+        return original(ticker, composite, current_price, entry_price, previous_history, **kwargs)
 
     monkeypatch.setattr(indices_score, "compute_company_alerts", _spy)
 
@@ -1866,6 +2001,28 @@ def test_load_previous_alert_kinds_extracts_kinds_per_ticker(tmp_path, monkeypat
     assert result["MC.PA"] == {"info"}
 
 
+def test_load_previous_alerted_news_links_returns_empty_dict_when_file_absent(monkeypatch, tmp_path):
+    monkeypatch.setattr(indices_score, "OUTPUT_JSON_PATH", str(tmp_path / "does_not_exist.json"))
+    assert indices_score.load_previous_alerted_news_links() == {}
+
+
+def test_load_previous_alerted_news_links_extracts_links_per_ticker(tmp_path, monkeypatch):
+    path = tmp_path / "indices.json"
+    path.write_text(json.dumps({
+        "companies": [
+            {"ticker": "BN.PA", "alerts": [
+                {"kind": "actu_majeure", "link": "https://example.com/a"},
+                {"kind": "entree"},  # pas de champ "link" pertinent, ignoré
+            ]},
+            {"ticker": "MC.PA", "alerts": [{"kind": "info"}]},
+        ]
+    }), encoding="utf-8")
+    monkeypatch.setattr(indices_score, "OUTPUT_JSON_PATH", str(path))
+    result = indices_score.load_previous_alerted_news_links()
+    assert result["BN.PA"] == {"https://example.com/a"}
+    assert result["MC.PA"] == set()
+
+
 def test_attach_alerts_and_update_history_flags_newly_triggered_entree_signal(monkeypatch):
     """Une entreprise dont le signal "entree" apparaît aujourd'hui, sans
     être actif hier, doit être renvoyée par _attach_alerts_and_update_history
@@ -1875,9 +2032,10 @@ def test_attach_alerts_and_update_history_flags_newly_triggered_entree_signal(mo
     monkeypatch.setattr(indices_score, "append_indices_history", lambda entries: entries)
     monkeypatch.setattr(indices_score, "load_previous_alert_kinds", lambda: {})
 
-    result = indices_score._attach_alerts_and_update_history(companies)
+    newly_triggered_entree, newly_triggered_major_news = indices_score._attach_alerts_and_update_history(companies)
 
-    assert [c["ticker"] for c in result] == ["BN.PA"]
+    assert [c["ticker"] for c in newly_triggered_entree] == ["BN.PA"]
+    assert newly_triggered_major_news == []
 
 
 def test_attach_alerts_and_update_history_does_not_reflag_persisting_entree_signal(monkeypatch):
@@ -1889,9 +2047,10 @@ def test_attach_alerts_and_update_history_does_not_reflag_persisting_entree_sign
     monkeypatch.setattr(indices_score, "append_indices_history", lambda entries: entries)
     monkeypatch.setattr(indices_score, "load_previous_alert_kinds", lambda: {"BN.PA": {"entree"}})
 
-    result = indices_score._attach_alerts_and_update_history(companies)
+    newly_triggered_entree, newly_triggered_major_news = indices_score._attach_alerts_and_update_history(companies)
 
-    assert result == []
+    assert newly_triggered_entree == []
+    assert newly_triggered_major_news == []
 
 
 def test_send_entry_alert_email_returns_false_when_companies_empty():
@@ -2011,6 +2170,117 @@ def test_build_entry_alert_email_html_omits_context_heading_when_no_context():
     company = _fake_entry_alert_company(factors=[], news=[])
     html = indices_score.build_entry_alert_email_html(company)
     assert "Pourquoi ce signal" not in html
+
+
+def _fake_major_news_alert(**overrides):
+    company = {
+        "ticker": "BN.PA", "name": "Danone", "index": "CAC40",
+        "news": [
+            {"title": "Danone annonce une OPA sur un concurrent", "source": "Les Echos",
+             "date": "2026-09-08", "summary": "Danone lance une offre publique d'achat.", "sentiment": 1,
+             "link": "https://example.com/danone-opa"},
+        ],
+    }
+    company.update(overrides.pop("company_overrides", {}))
+    alert = {
+        "kind": "actu_majeure",
+        "title": "Danone annonce une OPA sur un concurrent",
+        "detail": "Danone lance une offre publique d'achat.",
+        "date": "2026-09-08",
+        "link": "https://example.com/danone-opa",
+    }
+    alert.update(overrides)
+    return company, alert
+
+
+def test_build_major_news_alert_email_html_includes_article_details():
+    company, alert = _fake_major_news_alert()
+    html = indices_score.build_major_news_alert_email_html(company, alert)
+    assert "Danone" in html
+    assert "CAC 40" in html  # nom affiché de l'indice, pas la clé brute
+    assert "Danone annonce une OPA sur un concurrent" in html
+    assert "Danone lance une offre publique d'achat." in html
+    assert "Les Echos" in html  # source retrouvée via le lien dans company["news"]
+    assert "Favorable" in html  # sentiment de l'actu retrouvée
+    assert "#indices/BN.PA" in html
+
+
+def test_build_major_news_alert_email_html_defaults_when_news_item_not_found():
+    """Si le lien de l'alerte ne correspond à aucune actu de company["news"]
+    (ne devrait pas arriver en pratique, mais ne doit jamais planter), le
+    mail reste construit avec un sentiment neutre par défaut."""
+    company, alert = _fake_major_news_alert(link="https://example.com/inconnu")
+    html = indices_score.build_major_news_alert_email_html(company, alert)
+    assert "Neutre" in html
+
+
+def test_send_major_news_alert_email_returns_false_when_triggered_empty():
+    assert indices_score.send_major_news_alert_email([]) is False
+
+
+def test_send_major_news_alert_email_returns_false_when_smtp_credentials_missing(monkeypatch):
+    monkeypatch.delenv("SMTP_USER", raising=False)
+    monkeypatch.delenv("SMTP_PASSWORD", raising=False)
+    company, alert = _fake_major_news_alert()
+    assert indices_score.send_major_news_alert_email([(company, alert)]) is False
+
+
+def test_send_major_news_alert_email_sends_via_smtp_when_configured(monkeypatch):
+    monkeypatch.setenv("SMTP_USER", "bot@example.com")
+    monkeypatch.setenv("SMTP_PASSWORD", "secret")
+    monkeypatch.delenv("MAIL_TO", raising=False)
+    company, alert = _fake_major_news_alert()
+
+    sent = {}
+
+    class _FakeSMTP:
+        def __init__(self, host, port):
+            sent["host"] = host
+            sent["port"] = port
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *exc):
+            return False
+
+        def starttls(self):
+            sent["starttls"] = True
+
+        def login(self, user, password):
+            sent["login"] = (user, password)
+
+        def sendmail(self, from_addr, to_addrs, message):
+            sent["from_addr"] = from_addr
+            sent["to_addrs"] = to_addrs
+            sent["message"] = message
+            sent["subject"] = "OPA" in message and "Danone" in message
+
+    monkeypatch.setattr(indices_score.smtplib, "SMTP", _FakeSMTP)
+
+    result = indices_score.send_major_news_alert_email([(company, alert)])
+
+    assert result is True
+    assert sent["host"] == indices_score.SMTP_HOST
+    assert sent["login"] == ("bot@example.com", "secret")
+    assert sent["to_addrs"] == ["bot@example.com"]  # repli sur SMTP_USER si MAIL_TO absent
+    assert sent["from_addr"] == "bot@example.com"
+    assert sent["message"]  # le message MIME a bien été construit et envoyé
+
+
+def test_send_major_news_alert_email_returns_false_on_smtp_error(monkeypatch):
+    """Une panne SMTP ne doit jamais faire lever d'exception ni faire
+    échouer le run."""
+    monkeypatch.setenv("SMTP_USER", "bot@example.com")
+    monkeypatch.setenv("SMTP_PASSWORD", "secret")
+    company, alert = _fake_major_news_alert()
+
+    def _raise(host, port):
+        raise OSError("connexion refusée")
+
+    monkeypatch.setattr(indices_score.smtplib, "SMTP", _raise)
+
+    assert indices_score.send_major_news_alert_email([(company, alert)]) is False
 
 
 def test_main_writes_alerts_key_for_every_company(monkeypatch, tmp_path):

@@ -40,7 +40,7 @@ async function fetchGoldCandles(apiKey, fetchImpl = fetch) {
   // Twelve Data renvoie le plus récent en premier — on inverse pour avoir
   // un ordre chronologique, attendu par toutes les fonctions de calcul
   // de ce module (pivots, indicateurs, patterns).
-  return data.values
+  const candles = data.values
     .map(v => ({
       time: v.datetime,
       open: parseFloat(v.open),
@@ -49,6 +49,13 @@ async function fetchGoldCandles(apiKey, fetchImpl = fetch) {
       close: parseFloat(v.close),
     }))
     .reverse();
+  if (candles.length === 0) {
+    throw new Error('Twelve Data a renvoyé une liste de bougies vide');
+  }
+  if (candles.some(c => !Number.isFinite(c.close))) {
+    throw new Error('Twelve Data a renvoyé des valeurs de prix invalides');
+  }
+  return candles;
 }
 
 /**
@@ -272,6 +279,8 @@ const SCALP_BOLLINGER_PERIOD = 20;
 const SCALP_BOLLINGER_MULT = 2;
 const SCALP_TAKEPROFIT_RISK_MULTIPLE = 1.5; // repli si aucun niveau S/R clair pour le TP
 const SCALP_LEVEL_PROXIMITY = 0.5; // $ de tolérance pour juger un "rebond" sur un niveau
+const SCALP_MIN_CANDLES = Math.max(SCALP_BOLLINGER_PERIOD, SCALP_MACD_SLOW + SCALP_MACD_SIGNAL) + 1; // MACD(26,9) a besoin de ~35 bougies pour une EMA fiable — Bollinger(20) seul ne suffit pas comme garde-fou
+const SCALP_STOP_BUFFER = SCALP_LEVEL_PROXIMITY * 3; // marge du stop au-delà du niveau, distincte de la tolérance de "rebond" (SCALP_LEVEL_PROXIMITY) — un stop à peine plus loin que le niveau lui-même serait déclenché par le bruit normal du marché plutôt que par une vraie invalidation du scénario de trade
 
 /**
  * Moteur de confluence (spec §6) : combine tendance + S/R + indicateurs +
@@ -281,7 +290,7 @@ const SCALP_LEVEL_PROXIMITY = 0.5; // $ de tolérance pour juger un "rebond" sur
  */
 function computeSignal(candles) {
   const price = candles.length ? candles[candles.length - 1].close : null;
-  if (!price || candles.length < SCALP_BOLLINGER_PERIOD + 1) {
+  if (!price || candles.length < SCALP_MIN_CANDLES) {
     return { status: 'neutre', price, entry: null, stopLoss: null, takeProfit: null, trend: 'neutre', pattern: null };
   }
 
@@ -305,7 +314,7 @@ function computeSignal(candles) {
   const confirmationVente = rsi > 30 && macd.macd < macd.signal && pattern && pattern.direction === 'baissier';
 
   if (structurelAchat && confirmationAchat) {
-    const stopLoss = levels.support !== null ? levels.support - SCALP_LEVEL_PROXIMITY : price - price * 0.001;
+    const stopLoss = levels.support !== null ? levels.support - SCALP_STOP_BUFFER : price - price * 0.001;
     const risk = price - stopLoss;
     const takeProfit = levels.resistance !== null && levels.resistance > price
       ? levels.resistance
@@ -313,7 +322,7 @@ function computeSignal(candles) {
     return { status: 'achat', price, entry: price, stopLoss, takeProfit, trend, pattern };
   }
   if (structurelVente && confirmationVente) {
-    const stopLoss = levels.resistance !== null ? levels.resistance + SCALP_LEVEL_PROXIMITY : price + price * 0.001;
+    const stopLoss = levels.resistance !== null ? levels.resistance + SCALP_STOP_BUFFER : price + price * 0.001;
     const risk = stopLoss - price;
     const takeProfit = levels.support !== null && levels.support < price
       ? levels.support

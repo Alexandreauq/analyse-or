@@ -263,6 +263,70 @@ function matchCandlestickPattern(candles, trend) {
   return null;
 }
 
+const SCALP_PIVOT_K = 3;
+const SCALP_RSI_PERIOD = 14;
+const SCALP_MACD_FAST = 12;
+const SCALP_MACD_SLOW = 26;
+const SCALP_MACD_SIGNAL = 9;
+const SCALP_BOLLINGER_PERIOD = 20;
+const SCALP_BOLLINGER_MULT = 2;
+const SCALP_TAKEPROFIT_RISK_MULTIPLE = 1.5; // repli si aucun niveau S/R clair pour le TP
+const SCALP_LEVEL_PROXIMITY = 0.5; // $ de tolérance pour juger un "rebond" sur un niveau
+
+/**
+ * Moteur de confluence (spec §6) : combine tendance + S/R + indicateurs +
+ * chandeliers en un signal Achat/Vente/Neutre, avec Entrée/Stop-loss/TP
+ * si un signal est émis. Ne lève jamais d'exception — `candles` trop
+ * court renvoie `neutre` avec tous les champs de prix à null.
+ */
+function computeSignal(candles) {
+  const price = candles.length ? candles[candles.length - 1].close : null;
+  if (!price || candles.length < SCALP_BOLLINGER_PERIOD + 1) {
+    return { status: 'neutre', price, entry: null, stopLoss: null, takeProfit: null, trend: 'neutre', pattern: null };
+  }
+
+  const pivots = detectPivots(candles, SCALP_PIVOT_K);
+  const trend = classifyTrend(pivots);
+  const levels = currentLevels(pivots, price);
+  const closes = candles.map(c => c.close);
+  const rsi = computeRSI(closes, SCALP_RSI_PERIOD);
+  const macd = computeMACD(closes, SCALP_MACD_FAST, SCALP_MACD_SLOW, SCALP_MACD_SIGNAL);
+  const pattern = matchCandlestickPattern(candles, trend);
+
+  const nearSupport = levels.support !== null && Math.abs(price - levels.support) <= SCALP_LEVEL_PROXIMITY;
+  const nearResistance = levels.resistance !== null && Math.abs(price - levels.resistance) <= SCALP_LEVEL_PROXIMITY;
+  const brokeResistance = levels.resistance !== null && price > levels.resistance;
+  const brokeSupport = levels.support !== null && price < levels.support;
+
+  const structurelAchat = trend === 'baissier' && (nearSupport || brokeResistance);
+  const structurelVente = trend === 'haussier' && (nearResistance || brokeSupport);
+
+  const confirmationAchat = rsi < 70 && macd.macd > macd.signal && pattern && pattern.direction === 'haussier';
+  const confirmationVente = rsi > 30 && macd.macd < macd.signal && pattern && pattern.direction === 'baissier';
+
+  if (structurelAchat && confirmationAchat) {
+    const stopLoss = levels.support !== null ? levels.support - SCALP_LEVEL_PROXIMITY : price - price * 0.001;
+    const risk = price - stopLoss;
+    const takeProfit = levels.resistance !== null && levels.resistance > price
+      ? levels.resistance
+      : price + risk * SCALP_TAKEPROFIT_RISK_MULTIPLE;
+    return { status: 'achat', price, entry: price, stopLoss, takeProfit, trend, pattern };
+  }
+  if (structurelVente && confirmationVente) {
+    const stopLoss = levels.resistance !== null ? levels.resistance + SCALP_LEVEL_PROXIMITY : price + price * 0.001;
+    const risk = stopLoss - price;
+    const takeProfit = levels.support !== null && levels.support < price
+      ? levels.support
+      : price - risk * SCALP_TAKEPROFIT_RISK_MULTIPLE;
+    return { status: 'vente', price, entry: price, stopLoss, takeProfit, trend, pattern };
+  }
+  return { status: 'neutre', price, entry: null, stopLoss: null, takeProfit: null, trend, pattern: null };
+}
+
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { fetchGoldCandles, detectPivots, classifyTrend, currentLevels, computeRSI, computeMACD, computeBollinger, matchCandlestickPattern };
+  module.exports = {
+    fetchGoldCandles, detectPivots, classifyTrend, currentLevels,
+    computeRSI, computeMACD, computeBollinger, matchCandlestickPattern,
+    computeSignal,
+  };
 }

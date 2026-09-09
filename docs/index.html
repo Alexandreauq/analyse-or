@@ -387,6 +387,7 @@ const TWELVE_DATA_API_KEY = '8e2de649868b408ba09c21926c414556';
 
 let scalpingJsLoaded = false;
 let scalpingPollTimer = null;
+let scalpRefreshInFlight = false;
 
 function loadScalpingModule() {
   // Charge docs/scalping.js à la demande (premier clic sur l'onglet
@@ -405,14 +406,14 @@ function renderScalpSignal(signal) {
   const panel = document.getElementById('scalpSignalPanel');
   const statusLabel = { achat: 'Achat', vente: 'Vente', neutre: 'Neutre — en attente de confluence' }[signal.status];
   const priceRows = signal.status === 'neutre' ? '' : `
-    <div class="price-row"><span class="price-label">Entrée</span><span class="price-value">${formatPrice(signal.entry)}</span></div>
-    <div class="price-row"><span class="price-label">Stop-loss</span><span class="price-value" style="color:var(--rust)">${formatPrice(signal.stopLoss)}</span></div>
-    <div class="price-row"><span class="price-label">TP</span><span class="price-value" style="color:var(--gold)">${formatPrice(signal.takeProfit)}</span></div>
+    <div class="price-row"><span class="price-label">Entrée</span><span class="price-value">${formatPriceUsd(signal.entry)}</span></div>
+    <div class="price-row"><span class="price-label">Stop-loss</span><span class="price-value" style="color:var(--rust)">${formatPriceUsd(signal.stopLoss)}</span></div>
+    <div class="price-row"><span class="price-label">TP</span><span class="price-value" style="color:var(--gold)">${formatPriceUsd(signal.takeProfit)}</span></div>
   `;
   panel.innerHTML = `
     <span class="scalp-signal-status ${signal.status}">${statusLabel}</span>
     <div class="price-panel">
-      <div class="price-row"><span class="price-label">Cours actuel</span><span class="price-value">${formatPrice(signal.price)}</span></div>
+      <div class="price-row"><span class="price-label">Cours actuel</span><span class="price-value">${formatPriceUsd(signal.price)}</span></div>
       ${priceRows}
       <p class="price-disclaimer">Signal probabiliste basé sur tendance/S-R/indicateurs/chandeliers sur bougies 1min — pas un conseil d'investissement.</p>
     </div>
@@ -422,12 +423,14 @@ function renderScalpSignal(signal) {
 const SCALP_STALE_THRESHOLD_MS = 5 * 60 * 1000; // 5 minutes
 
 async function refreshScalpSignal() {
+  if (scalpRefreshInFlight) return;
+  scalpRefreshInFlight = true;
   const panel = document.getElementById('scalpSignalPanel');
   try {
     const candles = await fetchGoldCandles(TWELVE_DATA_API_KEY);
     const lastCandleTime = new Date(candles[candles.length - 1].time.replace(' ', 'T') + 'Z');
     const ageMs = Date.now() - lastCandleTime.getTime();
-    if (ageMs > SCALP_STALE_THRESHOLD_MS) {
+    if (!Number.isFinite(ageMs) || ageMs > SCALP_STALE_THRESHOLD_MS) {
       // Marché fermé (week-end) ou API en retard — le cours de l'or spot
       // (forex) est fermé du vendredi soir au dimanche soir UTC. Plutôt
       // que d'afficher un signal calculé sur une donnée périmée comme
@@ -440,6 +443,8 @@ async function refreshScalpSignal() {
     renderScalpSignal(signal);
   } catch (e) {
     panel.innerHTML = `<div class="empty">Scalping indisponible pour l'instant.<br>${e.message}</div>`;
+  } finally {
+    scalpRefreshInFlight = false;
   }
 }
 
@@ -885,6 +890,10 @@ function formatPrice(v) {
   return v != null ? `${v.toLocaleString('fr-FR', {maximumFractionDigits:2})} €` : 'indisponible';
 }
 
+function formatPriceUsd(v) {
+  return v != null ? `${v.toLocaleString('fr-FR', {maximumFractionDigits:2})} $` : 'indisponible';
+}
+
 function formatPct(v) {
   if (v == null) return '—';
   const sign = v > 0 ? '+' : '';
@@ -1192,6 +1201,9 @@ function renderRoute(animate) {
   if (route.screen === 'or' && !scoreLoaded) {
     scoreLoaded = true;
     loadScore();
+  }
+  if (route.screen === 'or' && scalpingJsLoaded && !document.getElementById('orScalpingView').hidden) {
+    startScalpingPolling();
   }
   if (route.screen === 'indices') {
     loadIndices(route.ticker, route.view);

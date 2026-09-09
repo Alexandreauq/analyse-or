@@ -196,6 +196,73 @@ function computeBollinger(closes, period, mult) {
   return { middle: mean, upper: mean + mult * stdev, lower: mean - mult * stdev };
 }
 
+function _bodySize(c) { return Math.abs(c.close - c.open); }
+function _isBullish(c) { return c.close > c.open; }
+function _upperWick(c) { return c.high - Math.max(c.open, c.close); }
+function _lowerWick(c) { return Math.min(c.open, c.close) - c.low; }
+
+/**
+ * Reconnaît un sous-ensemble de 8 figures de chandeliers (les jugées
+ * "efficace/très efficace" par le cours — voir spec §5) sur les 1 à 3
+ * dernières bougies de `candles`. `trend` est la tendance courte au
+ * moment de l'examen (`classifyTrend`) — plusieurs figures n'ont de sens
+ * qu'en contexte (ex: Marteau seulement en tendance baissière). Renvoie
+ * la première figure trouvée (ordre de test = ordre de spécificité
+ * décroissante : 3 bougies avant 2 avant 1) ou null.
+ */
+function matchCandlestickPattern(candles, trend) {
+  const n = candles.length;
+  if (n < 1) return null;
+  const last = candles[n - 1];
+
+  // --- Figures à 3 bougies ---
+  if (n >= 3) {
+    const [c1, c2, c3] = candles.slice(-3);
+    // Étoile du Matin : bougie baissière, petit corps isolé (étoile), bougie haussière qui valide.
+    if (trend === 'baissier' && !_isBullish(c1) && _bodySize(c2) < _bodySize(c1) * 0.5 && _isBullish(c3) && c3.close > (c1.open + c1.close) / 2) {
+      return { name: 'Étoile du Matin', direction: 'haussier' };
+    }
+    // Étoile du Soir : symétrique.
+    if (trend === 'haussier' && _isBullish(c1) && _bodySize(c2) < _bodySize(c1) * 0.5 && !_isBullish(c3) && c3.close < (c1.open + c1.close) / 2) {
+      return { name: 'Étoile du Soir', direction: 'baissier' };
+    }
+  }
+
+  // --- Figures à 2 bougies ---
+  if (n >= 2) {
+    const [prev, cur] = candles.slice(-2);
+    // Englobante haussière : corps de `cur` (vert) englobe le corps de `prev` (rouge).
+    if (trend === 'baissier' && !_isBullish(prev) && _isBullish(cur) && cur.open <= prev.close && cur.close >= prev.open) {
+      return { name: 'Englobante haussière', direction: 'haussier' };
+    }
+    // Englobante baissière : symétrique.
+    if (trend === 'haussier' && _isBullish(prev) && !_isBullish(cur) && cur.open >= prev.close && cur.close <= prev.open) {
+      return { name: 'Englobante baissière', direction: 'baissier' };
+    }
+    // Pénétrante : bougie verte ouvre sous le corps rouge précédent, clôture au-dessus de son milieu.
+    if (trend === 'baissier' && !_isBullish(prev) && _isBullish(cur) && cur.open < prev.close && cur.close > (prev.open + prev.close) / 2 && cur.close < prev.open) {
+      return { name: 'Pénétrante', direction: 'haussier' };
+    }
+    // Nuage noir : symétrique.
+    if (trend === 'haussier' && _isBullish(prev) && !_isBullish(cur) && cur.open > prev.close && cur.close < (prev.open + prev.close) / 2 && cur.close > prev.open) {
+      return { name: 'Nuage noir', direction: 'baissier' };
+    }
+  }
+
+  // --- Figures à 1 bougie ---
+  const body = _bodySize(last);
+  const upperWick = _upperWick(last);
+  const lowerWick = _lowerWick(last);
+  if (trend === 'baissier' && lowerWick >= body * 2 && upperWick < body * 0.3) {
+    return { name: 'Marteau', direction: 'haussier' };
+  }
+  if (trend === 'haussier' && upperWick >= body * 2 && lowerWick < body * 0.3) {
+    return { name: 'Étoile filante', direction: 'baissier' };
+  }
+
+  return null;
+}
+
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { fetchGoldCandles, detectPivots, classifyTrend, currentLevels, computeRSI, computeMACD, computeBollinger };
+  module.exports = { fetchGoldCandles, detectPivots, classifyTrend, currentLevels, computeRSI, computeMACD, computeBollinger, matchCandlestickPattern };
 }

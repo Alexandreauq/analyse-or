@@ -1011,15 +1011,27 @@ let scalpingPollTimer = null;
 let scalpRefreshInFlight = false;
 
 function loadScalpingModule() {
-  // Charge docs/scalping.js à la demande (premier clic sur l'onglet
-  // Scalping), même logique paresseuse que loadScalpChart/loadIndices.
+  // Charge docs/chart_patterns.js puis docs/scalping.js à la demande
+  // (premier clic sur l'onglet Scalping), même logique paresseuse que
+  // loadScalpChart/loadIndices. chart_patterns.js en premier (ordre de
+  // dépendance conceptuelle — computeSignal, dans scalping.js, appelle
+  // detectChartPatterns) ; l'ordre d'exécution n'a pas d'importance
+  // stricte ici (aucune des deux fonctions n'est appelée avant que les
+  // deux scripts aient fini de charger), mais garder cet ordre de
+  // lecture évite toute confusion.
   return new Promise((resolve, reject) => {
     if (scalpingJsLoaded) { resolve(); return; }
-    const script = document.createElement('script');
-    script.src = 'scalping.js';
-    script.onload = () => { scalpingJsLoaded = true; resolve(); };
-    script.onerror = () => reject(new Error('scalping.js n\'a pas pu être chargé'));
-    document.body.appendChild(script);
+    const chartPatternsScript = document.createElement('script');
+    chartPatternsScript.src = 'chart_patterns.js';
+    chartPatternsScript.onload = () => {
+      const scalpingScript = document.createElement('script');
+      scalpingScript.src = 'scalping.js';
+      scalpingScript.onload = () => { scalpingJsLoaded = true; resolve(); };
+      scalpingScript.onerror = () => reject(new Error('scalping.js n\'a pas pu être chargé'));
+      document.body.appendChild(scalpingScript);
+    };
+    chartPatternsScript.onerror = () => reject(new Error('chart_patterns.js n\'a pas pu être chargé'));
+    document.body.appendChild(chartPatternsScript);
   });
 }
 

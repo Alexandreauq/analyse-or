@@ -603,6 +603,7 @@ function loadSideQuoteWidget(ticker) {
 const INDEX_TV_SYMBOL_BY_KEY = {
   CAC40: 'EURONEXT:PX1',
   DAX: 'XETR:DAX',
+  NASDAQ: 'NASDAQ:NDX',
 };
 
 function loadIndexQuoteWidget(indexKey, containerId) {
@@ -816,7 +817,25 @@ let indicesListFinancialOnly = false;
 const INDEX_DISPLAY_NAMES = {
   CAC40: 'CAC 40',
   DAX: 'DAX',
+  NASDAQ: 'Nasdaq 100',
 };
+
+// Devise par indice — repli local, écrasé par indicesData.index_currency
+// (fourni par le backend, voir INDEX_CURRENCY dans indices_score.py) dès
+// qu'il est disponible, même mécanisme que INDEX_DISPLAY_NAMES ci-dessus.
+const INDEX_CURRENCY_BY_KEY = {
+  CAC40: 'EUR',
+  DAX: 'EUR',
+  NASDAQ: 'USD',
+};
+
+// Formate un prix d'entreprise dans la devise de SON indice (€ pour
+// CAC40/DAX, $ pour NASDAQ) — corrige le bug de fond où tout était
+// affiché en € indépendamment de la devise réelle des comptes publiés.
+function formatPriceForIndex(v, indexKey) {
+  const currencies = { ...INDEX_CURRENCY_BY_KEY, ...(indicesData.index_currency || {}) };
+  return currencies[indexKey] === 'USD' ? formatPriceUsd(v) : formatPrice(v);
+}
 
 function sortedFilteredCompanies(companies) {
   let visible = companies;
@@ -1031,9 +1050,9 @@ function renderSignalTracking(positions) {
     <tr>
       <td>${p.name} <span class="hero-sub">${p.ticker}</span></td>
       <td>${p.entry_date}</td>
-      <td>${formatPrice(p.entry_price)}</td>
+      <td>${formatPriceForIndex(p.entry_price, p.index)}</td>
       <td>${p.status === 'open' ? '<span class="signal-status-open">en cours</span>' : p.close_date}</td>
-      <td>${p.status === 'open' ? '—' : formatPrice(p.close_price)}</td>
+      <td>${p.status === 'open' ? '—' : formatPriceForIndex(p.close_price, p.index)}</td>
       <td>${CLOSE_REASON_LABELS[p.close_reason] || '—'}</td>
       <td class="${pctClass(p.return_pct)}">${formatPct(p.return_pct)}</td>
       <td class="${pctClass(p.return_pct != null && p.index_return_pct != null ? p.return_pct - p.index_return_pct : null)}">${p.index_return_pct != null ? formatPct(p.return_pct - p.index_return_pct) : '—'}</td>
@@ -1124,15 +1143,15 @@ function renderCompanyDetail(company) {
         <div class="price-panel">
           <div class="price-row">
             <span class="price-label">Cours actuel</span>
-            <span class="price-value">${formatPrice(company.current_price)}</span>
+            <span class="price-value">${formatPriceForIndex(company.current_price, company.index)}</span>
           </div>
           <div class="price-row">
             <span class="price-label">Repère d'entrée</span>
-            <span class="price-value" style="color:var(--gold)">${formatPrice(company.entry_price)}</span>
+            <span class="price-value" style="color:var(--gold)">${formatPriceForIndex(company.entry_price, company.index)}</span>
           </div>
           <div class="price-row">
             <span class="price-label">Repère de sortie</span>
-            <span class="price-value" style="color:var(--rust)">${formatPrice(company.exit_price)}</span>
+            <span class="price-value" style="color:var(--rust)">${formatPriceForIndex(company.exit_price, company.index)}</span>
           </div>
           <p class="price-disclaimer">Repères indicatifs basés sur la valorisation
             historique (DCF, actif net, multiples) et la tendance technique —

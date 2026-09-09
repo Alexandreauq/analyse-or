@@ -533,32 +533,28 @@ function renderScalpTracking(data) {
   panel.innerHTML = banner + summary + (rows || '<div class="empty">Aucune position pour l\'instant.</div>');
 }
 
-function loadSideQuoteWidget(ticker) {
+// Préfixe d'échange TradingView par indice — dérivé du suffixe Yahoo
+// Finance pour CAC40 (.PA → Euronext Paris) et DAX (.DE → Xetra), vérifié
+// contre TradingView/MarketScreener y compris pour les cas a priori
+// ambigus (STMicroelectronics → STMPA, Stellantis → STLAP, SAP, VOW3).
+// NASDAQ n'a PAS de suffixe Yahoo (tickers US bruts, ex. "AAPL") — d'où
+// une table par indice plutôt qu'une déduction par suffixe (l'ancienne
+// approche, qui a laissé chaque entreprise Nasdaq sans widget de cours :
+// aucun suffixe ne matchait jamais). Un futur indice avec un autre
+// préfixe/suffixe devra ajouter sa propre entrée ici.
+const TV_EXCHANGE_PREFIX_BY_INDEX = { CAC40: 'EURONEXT:', DAX: 'XETR:', NASDAQ: 'NASDAQ:' };
+const TV_TICKER_SUFFIX_BY_INDEX = { CAC40: '.PA', DAX: '.DE', NASDAQ: '' };
+
+function loadSideQuoteWidget(ticker, indexKey) {
   // Widget TradingView compact (cours + mini-graphique), injecté après coup
   // car un <script> posé via innerHTML ne s'exécute jamais tout seul dans
   // un navigateur. Le conteneur #tv-side-widget est recréé à chaque appel
   // de renderCompanyDetail (tout le innerHTML est remplacé), donc pas de
   // widget dupliqué ni de nettoyage à faire d'un rendu à l'autre.
-  //
-  // Le symbole TradingView est dérivé du ticker Yahoo Finance plutôt que
-  // listé dans une table statique : une table à tenir à jour s'est révélée
-  // être le bug lui-même (ajoutée pour les 5 entreprises pilotes, jamais
-  // mise à jour pendant les 3 lots d'extension CAC 40 → seules les 5
-  // premières affichaient un graphique). Vérifié que le ticker Yahoo moins
-  // le suffixe .PA correspond bien au code Euronext Paris réel pour les
-  // entreprises françaises (y compris les deux cas a priori ambigus
-  // STMicroelectronics → STMPA, Stellantis → STLAP, confirmés via
-  // TradingView/MarketScreener — pas des codes Yahoo inventés), et que
-  // .DE (Xetra) correspond au préfixe XETR: pour les entreprises
-  // allemandes (DAX) — même vérification via TradingView pour SAP/VOW3.
-  // Ne couvre pour l'instant que ces deux suffixes ; un futur indice avec
-  // un autre suffixe (ex : .MI pour Milan) devra ajouter sa propre entrée
-  // ici plutôt que de supposer qu'un des deux cas existants s'applique.
-  const TV_EXCHANGE_PREFIX_BY_SUFFIX = { '.PA': 'EURONEXT:', '.DE': 'XETR:' };
-  const tickerSuffix = Object.keys(TV_EXCHANGE_PREFIX_BY_SUFFIX).find(s => ticker.endsWith(s));
-  const tvSymbol = tickerSuffix
-    ? TV_EXCHANGE_PREFIX_BY_SUFFIX[tickerSuffix] + ticker.slice(0, -tickerSuffix.length)
-    : null;
+  const prefix = TV_EXCHANGE_PREFIX_BY_INDEX[indexKey];
+  const suffix = TV_TICKER_SUFFIX_BY_INDEX[indexKey] || '';
+  const bareTicker = suffix && ticker.endsWith(suffix) ? ticker.slice(0, -suffix.length) : ticker;
+  const tvSymbol = prefix ? prefix + bareTicker : null;
   const container = document.getElementById('tv-side-widget');
   if (!tvSymbol || !container) return;
   const script = document.createElement('script');
@@ -1205,7 +1201,7 @@ function renderCompanyDetail(company) {
     </div>
   `;
 
-  loadSideQuoteWidget(company.ticker);
+  loadSideQuoteWidget(company.ticker, company.index);
 
   const toggles = [
     ['toggleCompanyActu', 'companyActuWrap'],

@@ -1605,7 +1605,14 @@ def generate_financial_analysis(
         # invisible indéfiniment pour toute entreprise sans analyse à
         # reprendre par carry-forward. Même style de log que
         # fetch_news/build_company_entry pour les autres échecs "doux".
-        print(f"Erreur génération analyse financière pour {company_name} : {e}")
+        # Le corps de la réponse est loggé en plus du message d'exception
+        # générique (ex. "400 Client Error: Bad Request for url: ...") qui,
+        # seul, ne dit pas POURQUOI la requête a été rejetée — trouvé
+        # insuffisant lors du diagnostic de l'échec massif à l'ajout du
+        # Nasdaq-100 (104 échecs identiques, cause réelle invisible sans ça).
+        body = getattr(getattr(e, "response", None), "text", None)
+        print(f"Erreur génération analyse financière pour {company_name} : {e}"
+              + (f" — réponse API : {body[:500]}" if body else ""))
         return None
 
 

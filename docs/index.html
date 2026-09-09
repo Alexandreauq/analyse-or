@@ -515,14 +515,14 @@ function renderScalpTracking(data) {
     <div class="tracking-summary">
       <div class="tracking-stat"><div class="tracking-stat-value">${closed.length}</div><div class="tracking-stat-label">Positions clôturées</div></div>
       <div class="tracking-stat"><div class="tracking-stat-value">${winRate != null ? winRate.toFixed(0) + '%' : '—'}</div><div class="tracking-stat-label">Taux de réussite</div></div>
-      <div class="tracking-stat"><div class="tracking-stat-value">${avgPct != null ? formatPct(avgPct) : '—'}</div><div class="tracking-stat-label">Rendement moyen</div></div>
+      <div class="tracking-stat"><div class="tracking-stat-value">${avgPct != null ? formatPctPrecise(avgPct) : '—'}</div><div class="tracking-stat-label">Rendement moyen</div></div>
       <div class="tracking-stat"><div class="tracking-stat-value">${formatPriceUsd(totalUsd)}</div><div class="tracking-stat-label">Cumulé</div></div>
     </div>
   `;
 
   const rows = data.positions.slice().reverse().map(p => {
     const label = p.status === 'open' ? 'En cours' : (SCALP_CLOSE_REASON_LABELS[p.close_reason] || p.close_reason);
-    const resultText = p.status === 'open' ? '—' : `${formatPriceUsd(p.return_usd)} (${formatPct(p.return_pct)})`;
+    const resultText = p.status === 'open' ? '—' : `${formatPriceUsd(p.return_usd)} (${formatPctPrecise(p.return_pct)})`;
     return `<div class="tracking-row ${p.status === 'open' ? 'open' : ''}">
       <span>${p.direction === 'achat' ? 'Achat' : 'Vente'} — ${new Date(p.entry_time).toLocaleString('fr-FR')}</span>
       <span>${label}</span>
@@ -971,6 +971,14 @@ function formatPct(v) {
   if (v == null) return '—';
   const sign = v > 0 ? '+' : '';
   return `${sign}${v.toLocaleString('fr-FR', {maximumFractionDigits:1})}%`;
+}
+
+function formatPctPrecise(v) {
+  if (v == null) return '—';
+  const rounded = Math.round(v * 100) / 100;
+  const clean = Object.is(rounded, -0) ? 0 : rounded; // evite l'affichage "-0,00%"
+  const sign = clean > 0 ? '+' : '';
+  return `${sign}${clean.toLocaleString('fr-FR', {minimumFractionDigits:2, maximumFractionDigits:2})}%`;
 }
 
 function pctClass(v) {

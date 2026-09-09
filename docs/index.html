@@ -148,6 +148,14 @@
   .scalp-signal-status.vente { background: var(--rust); color: var(--bg); }
   .scalp-signal-status.neutre { background: var(--panel); color: var(--muted); border: 1px solid var(--border); }
 
+  .tracking-summary { display: flex; gap: 16px; margin: 0 0 16px; flex-wrap: wrap; }
+  .tracking-stat { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; flex: 1; min-width: 120px; }
+  .tracking-stat-value { font-family: 'Fraunces', serif; font-size: 22px; color: var(--gold); }
+  .tracking-stat-label { color: var(--muted); font-size: 11px; margin-top: 2px; }
+  .tracking-row { display: flex; justify-content: space-between; gap: 8px; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+  .tracking-row.open { color: var(--gold); }
+  .tracking-banner { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; margin-bottom: 16px; font-size: 12px; color: var(--muted); }
+
   .company-layout { display: block; }
   .company-main { min-width: 0; }
   .company-side { margin-top: 24px; }
@@ -297,6 +305,7 @@
   <div class="or-tabbar" role="tablist">
     <button class="or-tab-btn" id="orTabLongTerme" role="tab" aria-selected="true" type="button">Long terme</button>
     <button class="or-tab-btn" id="orTabScalping" role="tab" aria-selected="false" type="button">Scalping</button>
+    <button class="or-tab-btn" id="orTabSuivi" role="tab" aria-selected="false" type="button">Suivi</button>
   </div>
 
   <div id="orScalpingView" hidden>
@@ -310,6 +319,12 @@
         graphique n'affecte pas le score macro de l'onglet Long terme.</p>
     </div>
     <div class="scalp-signal-panel" id="scalpSignalPanel">
+      <div class="empty">Chargement…</div>
+    </div>
+  </div>
+
+  <div id="orSuiviView" hidden>
+    <div class="scalp-signal-panel" id="scalpTrackingPanel">
       <div class="empty">Chargement…</div>
     </div>
   </div>
@@ -458,6 +473,64 @@ function startScalpingPolling() {
 
 function stopScalpingPolling() {
   if (scalpingPollTimer) { clearInterval(scalpingPollTimer); scalpingPollTimer = null; }
+}
+
+let scalpTrackingLoaded = false;
+
+async function loadScalpTracking() {
+  const panel = document.getElementById('scalpTrackingPanel');
+  try {
+    const res = await fetch(`scalping_tracking.json?t=${Date.now()}`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    scalpTrackingLoaded = true;
+    renderScalpTracking(data);
+  } catch (e) {
+    panel.innerHTML = `<div class="empty">Suivi indisponible pour l'instant.<br>${e.message}</div>`;
+  }
+}
+
+const SCALP_CLOSE_REASON_LABELS = {
+  tp_hit: 'TP touché',
+  sl_hit: 'SL touché',
+  max_duration: 'Durée max (2h)',
+  trial_end: "Fin d'essai",
+};
+
+function renderScalpTracking(data) {
+  const panel = document.getElementById('scalpTrackingPanel');
+  const closed = data.positions.filter(p => p.status === 'closed');
+  const wins = closed.filter(p => p.return_usd > 0).length;
+  const winRate = closed.length ? (wins / closed.length * 100) : null;
+  const avgPct = closed.length ? (closed.reduce((s, p) => s + p.return_pct, 0) / closed.length) : null;
+  const totalUsd = closed.reduce((s, p) => s + p.return_usd, 0);
+
+  const banner = data.trial_ended
+    ? `<div class="tracking-banner">Essai terminé.</div>`
+    : (data.trial_start
+        ? `<div class="tracking-banner">Essai en cours depuis le ${new Date(data.trial_start).toLocaleString('fr-FR')}.</div>`
+        : `<div class="tracking-banner">Essai pas encore démarré.</div>`);
+
+  const summary = `
+    <div class="tracking-summary">
+      <div class="tracking-stat"><div class="tracking-stat-value">${closed.length}</div><div class="tracking-stat-label">Positions clôturées</div></div>
+      <div class="tracking-stat"><div class="tracking-stat-value">${winRate != null ? winRate.toFixed(0) + '%' : '—'}</div><div class="tracking-stat-label">Taux de réussite</div></div>
+      <div class="tracking-stat"><div class="tracking-stat-value">${avgPct != null ? formatPct(avgPct) : '—'}</div><div class="tracking-stat-label">Rendement moyen</div></div>
+      <div class="tracking-stat"><div class="tracking-stat-value">${formatPriceUsd(totalUsd)}</div><div class="tracking-stat-label">Cumulé</div></div>
+    </div>
+  `;
+
+  const rows = data.positions.slice().reverse().map(p => {
+    const label = p.status === 'open' ? 'En cours' : (SCALP_CLOSE_REASON_LABELS[p.close_reason] || p.close_reason);
+    const resultText = p.status === 'open' ? '—' : `${formatPriceUsd(p.return_usd)} (${formatPct(p.return_pct)})`;
+    return `<div class="tracking-row ${p.status === 'open' ? 'open' : ''}">
+      <span>${p.direction === 'achat' ? 'Achat' : 'Vente'} — ${new Date(p.entry_time).toLocaleString('fr-FR')}</span>
+      <span>${label}</span>
+      <span>${resultText}</span>
+    </div>`;
+  }).join('');
+
+  panel.innerHTML = banner + summary + (rows || '<div class="empty">Aucune position pour l\'instant.</div>');
 }
 
 function loadSideQuoteWidget(ticker) {
@@ -1216,19 +1289,33 @@ document.querySelectorAll('.tab[data-route]').forEach(tab => {
 document.getElementById('orTabLongTerme').addEventListener('click', () => {
   document.getElementById('orTabLongTerme').setAttribute('aria-selected', 'true');
   document.getElementById('orTabScalping').setAttribute('aria-selected', 'false');
+  document.getElementById('orTabSuivi').setAttribute('aria-selected', 'false');
   document.getElementById('orScalpingView').hidden = true;
+  document.getElementById('orSuiviView').hidden = true;
   document.getElementById('content').hidden = false;
   stopScalpingPolling();
 });
 document.getElementById('orTabScalping').addEventListener('click', () => {
   document.getElementById('orTabScalping').setAttribute('aria-selected', 'true');
   document.getElementById('orTabLongTerme').setAttribute('aria-selected', 'false');
+  document.getElementById('orTabSuivi').setAttribute('aria-selected', 'false');
   document.getElementById('content').hidden = true;
+  document.getElementById('orSuiviView').hidden = true;
   document.getElementById('orScalpingView').hidden = false;
   loadScalpChart();
   loadScalpingModule().then(startScalpingPolling).catch(e => {
     document.getElementById('scalpSignalPanel').innerHTML = `<div class="empty">${e.message}</div>`;
   });
+});
+document.getElementById('orTabSuivi').addEventListener('click', () => {
+  document.getElementById('orTabSuivi').setAttribute('aria-selected', 'true');
+  document.getElementById('orTabLongTerme').setAttribute('aria-selected', 'false');
+  document.getElementById('orTabScalping').setAttribute('aria-selected', 'false');
+  document.getElementById('content').hidden = true;
+  document.getElementById('orScalpingView').hidden = true;
+  document.getElementById('orSuiviView').hidden = false;
+  stopScalpingPolling();
+  loadScalpTracking();
 });
 
 window.addEventListener('hashchange', () => renderRoute(true));

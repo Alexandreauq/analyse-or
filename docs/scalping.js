@@ -51,6 +51,27 @@ async function fetchGoldCandles(apiKey, fetchImpl = fetch) {
     .reverse();
 }
 
+/**
+ * Un pivot haut à l'index i : High[i] est strictement supérieur aux
+ * High des k bougies avant ET des k bougies après (symétrique pour un
+ * pivot bas sur les Low). Un pivot n'est donc confirmé qu'une fois les k
+ * bougies suivantes closes — délai inhérent à la méthode, pas un bug.
+ * Renvoie les pivots confirmés, triés par index croissant.
+ */
+function detectPivots(candles, k) {
+  const pivots = [];
+  for (let i = k; i < candles.length - k; i++) {
+    const isHigh = candles.slice(i - k, i).every(c => c.high < candles[i].high)
+      && candles.slice(i + 1, i + 1 + k).every(c => c.high < candles[i].high);
+    if (isHigh) pivots.push({ index: i, type: 'high', price: candles[i].high });
+
+    const isLow = candles.slice(i - k, i).every(c => c.low > candles[i].low)
+      && candles.slice(i + 1, i + 1 + k).every(c => c.low > candles[i].low);
+    if (isLow) pivots.push({ index: i, type: 'low', price: candles[i].low });
+  }
+  return pivots.sort((a, b) => a.index - b.index);
+}
+
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { fetchGoldCandles };
+  module.exports = { fetchGoldCandles, detectPivots };
 }

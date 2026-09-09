@@ -15,6 +15,7 @@ const {
   runOnce,
   TRIAL_DURATION_MS,
   MAX_POSITION_DURATION_MS,
+  STALE_THRESHOLD_MS,
 } = require('./scalping_tracker.js');
 
 function tempFile() {
@@ -209,6 +210,84 @@ async function test_runOnce_does_not_write_on_fetch_failure() {
   console.log('OK: test_runOnce_does_not_write_on_fetch_failure');
 }
 
+function test_decidePositionOutcome_stays_open_when_stale_despite_max_duration() {
+  // Meme scenario que test_decidePositionOutcome_max_duration (2h ecoulees,
+  // ni SL ni TP touche) MAIS isStale=true -> ne doit PAS se clore : les
+  // clotures basees sur l'horloge murale sont suspendues tant que les
+  // donnees sont perimees (marche ferme ou run tres en retard).
+  const entryTime = new Date('2026-01-01T00:00:00.000Z').getTime();
+  const now = entryTime + MAX_POSITION_DURATION_MS;
+  const position = { direction: 'achat', stop_loss: 90, take_profit: 120, entry_time: '2026-01-01T00:00:00.000Z' };
+  const candles = [{ high: 100, low: 99, close: 99.5 }];
+  const outcome = decidePositionOutcome(position, candles, now, false, true);
+  assert.deepStrictEqual(outcome, { closed: false });
+  console.log('OK: test_decidePositionOutcome_stays_open_when_stale_despite_max_duration');
+}
+
+function test_decidePositionOutcome_sl_still_detected_when_stale() {
+  // isStale=true n'empeche PAS la detection d'un vrai SL touche dans les
+  // bougies recues (donnee historique fiable, independante de la
+  // fraicheur du dernier point).
+  const position = { direction: 'achat', stop_loss: 95, take_profit: 110, entry_time: '2026-01-01T00:00:00.000Z' };
+  const candles = [{ high: 97, low: 93, close: 94 }];
+  const outcome = decidePositionOutcome(position, candles, Date.now(), false, true);
+  assert.deepStrictEqual(outcome, { closed: true, reason: 'sl_hit', price: 95 });
+  console.log('OK: test_decidePositionOutcome_sl_still_detected_when_stale');
+}
+
+async function test_runOnce_does_not_open_position_on_stale_data() {
+  const f = tempFile();
+  // Bougies toutes horodatees il y a plus de STALE_THRESHOLD_MS par
+  // rapport a `now` -> meme si computeSignal produisait un achat/vente
+  // (peu importe ici lequel), aucune position ne doit s'ouvrir.
+  const values = [];
+  const baseTime = Date.UTC(2020, 0, 1, 0, 0, 0); // tres ancien, largement perime
+  for (let i = 0; i < 40; i++) {
+    const t = new Date(baseTime + i * 60000);
+    const p = 3450 + Math.sin(i) * 2;
+    values.push({
+      datetime: t.toISOString().slice(0, 19).replace('T', ' '),
+      open: String(p), high: String(p + 0.5), low: String(p - 0.5), close: String(p),
+    });
+  }
+  values.reverse();
+  const fakeFetch = async () => ({ ok: true, json: async () => ({ status: 'ok', values }) });
+  const now = Date.now(); // "aujourd'hui", tres loin des bougies de 2020
+  const data = await runOnce('fake-key', fakeFetch, now, f);
+  assert.strictEqual(data.positions.length, 0, 'aucune position ne doit etre ouverte sur des donnees perimees');
+  if (fs.existsSync(f)) fs.unlinkSync(f);
+  console.log('OK: test_runOnce_does_not_open_position_on_stale_data');
+}
+
+async function test_runOnce_closes_open_position_on_tp_hit() {
+  const f = tempFile();
+  const openPosition = {
+    id: 'scalp-test', direction: 'achat', status: 'open',
+    entry_time: '2026-09-09T14:00:00.000Z', entry_price: 100,
+    stop_loss: 95, take_profit: 110,
+    trend_at_entry: 'baissier', pattern_at_entry: 'Marteau',
+    close_time: null, close_price: null, close_reason: null,
+    return_usd: null, return_pct: null,
+  };
+  saveTracking({ trial_start: '2026-09-09T13:00:00.000Z', trial_ended: false, positions: [openPosition] }, f);
+  // Une bougie postérieure à l'entrée dont le high touche le TP (110), à
+  // un horodatage récent par rapport à `now` pour éviter le garde-fou de
+  // fraîcheur.
+  const now = new Date('2026-09-09T14:10:00.000Z').getTime();
+  const values = [{ datetime: '2026-09-09 14:05:00', open: '108', high: '112', low: '107', close: '111' }];
+  const fakeFetch = async () => ({ ok: true, json: async () => ({ status: 'ok', values }) });
+  const data = await runOnce('fake-key', fakeFetch, now, f);
+  const closed = data.positions[0];
+  assert.strictEqual(closed.status, 'closed');
+  assert.strictEqual(closed.close_reason, 'tp_hit');
+  assert.strictEqual(closed.close_price, 110);
+  assert.strictEqual(closed.return_usd, 10);
+  assert.strictEqual(closed.return_pct, 10);
+  assert.strictEqual(closed.close_time, new Date(now).toISOString());
+  if (fs.existsSync(f)) fs.unlinkSync(f);
+  console.log('OK: test_runOnce_closes_open_position_on_tp_hit');
+}
+
 async function main() {
   test_loadTracking_returns_default_shape_when_file_missing();
   test_saveTracking_then_loadTracking_roundtrips();
@@ -225,6 +304,10 @@ async function main() {
   test_buildPositionFromSignal_without_pattern();
   await test_runOnce_opens_position_on_new_signal();
   await test_runOnce_does_not_write_on_fetch_failure();
+  test_decidePositionOutcome_stays_open_when_stale_despite_max_duration();
+  test_decidePositionOutcome_sl_still_detected_when_stale();
+  await test_runOnce_does_not_open_position_on_stale_data();
+  await test_runOnce_closes_open_position_on_tp_hit();
   console.log('Tous les tests scalping_tracker sont passes.');
 }
 

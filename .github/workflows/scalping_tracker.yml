@@ -25,6 +25,9 @@ jobs:
         with:
           node-version: "20"
 
+      - name: Lancer les tests
+        run: node scalping_tracker.test.js
+
       - name: Exécuter le suivi de paper-trading
         run: node scalping_tracker.js
         env:
@@ -35,7 +38,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add docs/scalping_tracking.json
+          [ -f docs/scalping_tracking.json ] && git add docs/scalping_tracking.json || true
           git diff --staged --quiet || git commit -m "Mise a jour du suivi Scalping"
           git pull --rebase --autostash
           git push

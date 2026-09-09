@@ -11,6 +11,7 @@ const { fetchGoldCandles, computeSignal } = require('./docs/scalping.js');
 const TRACKING_FILE = path.join(__dirname, 'docs', 'scalping_tracking.json');
 const TRIAL_DURATION_MS = 7 * 24 * 60 * 60 * 1000; // 7 jours
 const MAX_POSITION_DURATION_MS = 2 * 60 * 60 * 1000; // 2 heures
+const STALE_THRESHOLD_MS = 5 * 60 * 1000; // aligne sur SCALP_STALE_THRESHOLD_MS du navigateur (docs/index.html)
 
 function loadTracking(filePath = TRACKING_FILE) {
   if (!fs.existsSync(filePath)) {
@@ -43,7 +44,7 @@ function computeReturn(direction, entryPrice, closePrice) {
  * `candlesSinceEntry` doit déjà être filtré (candle.time > entry_time) par
  * l'appelant.
  */
-function decidePositionOutcome(position, candlesSinceEntry, now, trialElapsed) {
+function decidePositionOutcome(position, candlesSinceEntry, now, trialElapsed, isStale = false) {
   const isAchat = position.direction === 'achat';
   for (const c of candlesSinceEntry) {
     const slTouched = isAchat ? c.low <= position.stop_loss : c.high >= position.stop_loss;
@@ -54,6 +55,13 @@ function decidePositionOutcome(position, candlesSinceEntry, now, trialElapsed) {
     if (tpTouched) {
       return { closed: true, reason: 'tp_hit', price: position.take_profit };
     }
+  }
+  if (isStale) {
+    // Donnees perimees : on ne force aucune cloture basee sur l'horloge
+    // murale (max_duration/trial_end) tant qu'on n'a pas de confirmation
+    // fraiche du marche — seul un vrai SL/TP touche dans les bougies
+    // recues (deja verifie ci-dessus) peut clore une position ici.
+    return { closed: false };
   }
   const lastClose = candlesSinceEntry.length ? candlesSinceEntry[candlesSinceEntry.length - 1].close : position.entry_price;
   const entryTime = new Date(position.entry_time).getTime();
@@ -112,12 +120,18 @@ async function runOnce(apiKey, fetchImpl, now = Date.now(), filePath = TRACKING_
     return undefined;
   }
 
+  const lastCandleTime = new Date(candles[candles.length - 1].time.replace(' ', 'T') + 'Z').getTime();
+  const isStale = (now - lastCandleTime) > STALE_THRESHOLD_MS;
+  if (isStale) {
+    console.log(`Donnees perimees (${Math.round((now - lastCandleTime) / 60000)} min) - pas d'ouverture ni de cloture forcee ce run.`);
+  }
+
   const openPosition = data.positions.find(p => p.status === 'open');
 
   if (openPosition) {
     const entryTime = new Date(openPosition.entry_time).getTime();
     const candlesSinceEntry = candles.filter(c => new Date(c.time.replace(' ', 'T') + 'Z').getTime() > entryTime);
-    const outcome = decidePositionOutcome(openPosition, candlesSinceEntry, now, trialElapsed);
+    const outcome = decidePositionOutcome(openPosition, candlesSinceEntry, now, trialElapsed, isStale);
     if (outcome.closed) {
       openPosition.status = 'closed';
       openPosition.close_time = new Date(now).toISOString();
@@ -127,7 +141,7 @@ async function runOnce(apiKey, fetchImpl, now = Date.now(), filePath = TRACKING_
       openPosition.return_usd = return_usd;
       openPosition.return_pct = return_pct;
     }
-  } else if (!trialElapsed) {
+  } else if (!trialElapsed && !isStale) {
     const signal = computeSignal(candles);
     if (signal.status === 'achat' || signal.status === 'vente') {
       data.positions.push(buildPositionFromSignal(signal, now));
@@ -179,4 +193,5 @@ module.exports = {
   runOnce,
   TRIAL_DURATION_MS,
   MAX_POSITION_DURATION_MS,
+  STALE_THRESHOLD_MS,
 };

@@ -41,6 +41,48 @@
       "shadow_resolved": false,
       "shadow_price": null,
       "shadow_return_pct": null
+    },
+    {
+      "id": "VRTX-2026-09-09",
+      "ticker": "VRTX",
+      "name": "Vertex Pharmaceuticals",
+      "index": "NASDAQ",
+      "status": "open",
+      "entry_date": "2026-09-09",
+      "entry_price": 521.1199951171875,
+      "target_exit_price": 617.7682715169051,
+      "index_price_at_entry": 29421.552734375,
+      "close_date": null,
+      "close_price": null,
+      "close_reason": null,
+      "return_pct": null,
+      "index_price_at_close": null,
+      "index_return_pct": null,
+      "shadow_close_date": "2027-03-09",
+      "shadow_resolved": false,
+      "shadow_price": null,
+      "shadow_return_pct": null
+    },
+    {
+      "id": "WDAY-2026-09-09",
+      "ticker": "WDAY",
+      "name": "Workday",
+      "index": "NASDAQ",
+      "status": "open",
+      "entry_date": "2026-09-09",
+      "entry_price": 186.0500030517578,
+      "target_exit_price": 307.3950601301998,
+      "index_price_at_entry": 29421.552734375,
+      "close_date": null,
+      "close_price": null,
+      "close_reason": null,
+      "return_pct": null,
+      "index_price_at_close": null,
+      "index_return_pct": null,
+      "shadow_close_date": "2027-03-09",
+      "shadow_resolved": false,
+      "shadow_price": null,
+      "shadow_return_pct": null
     }
   ]
 }

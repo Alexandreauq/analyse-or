@@ -72,6 +72,45 @@ function detectPivots(candles, k) {
   return pivots.sort((a, b) => a.index - b.index);
 }
 
+/**
+ * Tendance courte : haussière si les 2 derniers pivots bas confirmés sont
+ * strictement croissants ET les 2 derniers pivots hauts confirmés sont
+ * strictement croissants (règle du cours — les deux exigés pour "haussier"
+ * franc plutôt que "en formation"). Symétrique pour baissière. Neutre sinon,
+ * y compris si pas assez de pivots d'un type ou de l'autre.
+ */
+function classifyTrend(pivots) {
+  const lows = pivots.filter(p => p.type === 'low');
+  const highs = pivots.filter(p => p.type === 'high');
+  if (lows.length < 2 || highs.length < 2) return 'neutre';
+  const lastLows = lows.slice(-2);
+  const lastHighs = highs.slice(-2);
+  const lowsRising = lastLows[1].price > lastLows[0].price;
+  const highsRising = lastHighs[1].price > lastHighs[0].price;
+  const lowsFalling = lastLows[1].price < lastLows[0].price;
+  const highsFalling = lastHighs[1].price < lastHighs[0].price;
+  if (lowsRising && highsRising) return 'haussier';
+  if (lowsFalling && highsFalling) return 'baissier';
+  return 'neutre';
+}
+
+/**
+ * Support = dernier pivot bas confirmé sous currentPrice ; résistance =
+ * dernier pivot haut confirmé au-dessus. null si aucun pivot de ce côté.
+ * (La notion de "non cassé depuis" est simplifiée en v1 à "le plus
+ * récent en dessous/au-dessus du prix" — un niveau déjà cassé aurait de
+ * toute façon le prix de l'autre côté, donc ne serait plus le plus
+ * proche pivot pertinent.)
+ */
+function currentLevels(pivots, currentPrice) {
+  const belowLows = pivots.filter(p => p.type === 'low' && p.price < currentPrice);
+  const aboveHighs = pivots.filter(p => p.type === 'high' && p.price > currentPrice);
+  return {
+    support: belowLows.length ? belowLows[belowLows.length - 1].price : null,
+    resistance: aboveHighs.length ? aboveHighs[aboveHighs.length - 1].price : null,
+  };
+}
+
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { fetchGoldCandles, detectPivots };
+  module.exports = { fetchGoldCandles, detectPivots, classifyTrend, currentLevels };
 }

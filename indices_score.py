@@ -177,16 +177,149 @@ DAX_COMPANIES = [
     {"ticker": "G24.DE", "name": "Scout24"},
 ]
 
+# Nasdaq-100 : composition sourcée depuis Wikipédia (List of NASDAQ-100
+# companies, version du 12/08/2026) et recoupée avec le classement par
+# poids des positions QQQ (Invesco QQQ Trust, qui réplique le Nasdaq-100)
+# via stockanalysis.com — les deux sources s'accordent sur les entrées les
+# plus surprenantes (ex. SPCX/SpaceX, absente des connaissances de
+# l'assistant à sa date de coupure mais confirmée par les deux sources
+# indépendamment). Tickers Yahoo Finance identiques au ticker boursier US
+# (pas de suffixe, contrairement à CAC40 .PA / DAX .DE).
+#
+# Limite assumée : contrairement à CAC40/DAX, ces tickers n'ont PAS pu
+# être vérifiés un par un via yfinance pendant la construction (blocage
+# SSL/réseau du sandbox local — indépendant du code, l'environnement de
+# production GitHub Actions n'a jamais eu ce problème). Le garde-fou déjà
+# en place (bandeau "santé" du frontend, docs/index.html, qui signale les
+# tickers manquants après un run réel) sert de filet de sécurité si l'un
+# d'eux s'avère invalide en production — à surveiller après le premier run.
+#
+# Le Nasdaq-100 exclut par construction les valeurs financières (règle de
+# l'indice, pas une vérification au cas par cas comme pour CAC40/DAX) —
+# voir FINANCIAL_SECTOR_TICKERS plus bas, aucune entrée Nasdaq n'y est
+# ajoutée sur cette base.
+NASDAQ_COMPANIES = [
+    {"ticker": "ADBE", "name": "Adobe Inc."},
+    {"ticker": "AMD", "name": "Advanced Micro Devices"},
+    {"ticker": "ABNB", "name": "Airbnb"},
+    {"ticker": "ALNY", "name": "Alnylam Pharmaceuticals"},
+    {"ticker": "GOOGL", "name": "Alphabet Inc. (Classe A)"},
+    {"ticker": "GOOG", "name": "Alphabet Inc. (Classe C)"},
+    {"ticker": "AMZN", "name": "Amazon"},
+    {"ticker": "AEP", "name": "American Electric Power"},
+    {"ticker": "AMGN", "name": "Amgen"},
+    {"ticker": "ADI", "name": "Analog Devices"},
+    {"ticker": "AAPL", "name": "Apple Inc."},
+    {"ticker": "AMAT", "name": "Applied Materials"},
+    {"ticker": "APP", "name": "AppLovin"},
+    {"ticker": "ARM", "name": "Arm Holdings"},
+    {"ticker": "ASML", "name": "ASML Holding"},
+    {"ticker": "ALAB", "name": "Astera Labs"},
+    {"ticker": "ADSK", "name": "Autodesk"},
+    {"ticker": "ADP", "name": "Automatic Data Processing"},
+    {"ticker": "AXON", "name": "Axon Enterprise"},
+    {"ticker": "BKR", "name": "Baker Hughes"},
+    {"ticker": "BKNG", "name": "Booking Holdings"},
+    {"ticker": "AVGO", "name": "Broadcom"},
+    {"ticker": "CDNS", "name": "Cadence Design Systems"},
+    {"ticker": "CTAS", "name": "Cintas"},
+    {"ticker": "CSCO", "name": "Cisco Systems"},
+    {"ticker": "CCEP", "name": "Coca-Cola Europacific Partners"},
+    {"ticker": "CMCSA", "name": "Comcast"},
+    {"ticker": "CEG", "name": "Constellation Energy"},
+    {"ticker": "CPRT", "name": "Copart"},
+    {"ticker": "CRWV", "name": "CoreWeave"},
+    {"ticker": "COST", "name": "Costco Wholesale"},
+    {"ticker": "CRWD", "name": "CrowdStrike Holdings"},
+    {"ticker": "CSX", "name": "CSX Corporation"},
+    {"ticker": "DDOG", "name": "Datadog"},
+    {"ticker": "DXCM", "name": "DexCom"},
+    {"ticker": "FANG", "name": "Diamondback Energy"},
+    {"ticker": "DASH", "name": "DoorDash"},
+    {"ticker": "EXC", "name": "Exelon"},
+    {"ticker": "FAST", "name": "Fastenal"},
+    {"ticker": "FER", "name": "Ferrovial"},
+    {"ticker": "FTNT", "name": "Fortinet"},
+    {"ticker": "GEHC", "name": "GE HealthCare"},
+    {"ticker": "GILD", "name": "Gilead Sciences"},
+    {"ticker": "HONA", "name": "Honeywell Aerospace"},
+    {"ticker": "HON", "name": "Honeywell Technologies"},
+    {"ticker": "IDXX", "name": "Idexx Laboratories"},
+    {"ticker": "INTC", "name": "Intel"},
+    {"ticker": "INTU", "name": "Intuit"},
+    {"ticker": "ISRG", "name": "Intuitive Surgical"},
+    {"ticker": "KDP", "name": "Keurig Dr Pepper"},
+    {"ticker": "KLAC", "name": "KLA Corporation"},
+    {"ticker": "KHC", "name": "Kraft Heinz"},
+    {"ticker": "LRCX", "name": "Lam Research"},
+    {"ticker": "LIN", "name": "Linde plc"},
+    {"ticker": "LITE", "name": "Lumentum Holdings"},
+    {"ticker": "MAR", "name": "Marriott International"},
+    {"ticker": "MRVL", "name": "Marvell Technology"},
+    {"ticker": "MELI", "name": "MercadoLibre"},
+    {"ticker": "META", "name": "Meta Platforms"},
+    {"ticker": "MCHP", "name": "Microchip Technology"},
+    {"ticker": "MU", "name": "Micron Technology"},
+    {"ticker": "MSFT", "name": "Microsoft"},
+    {"ticker": "MSTR", "name": "MicroStrategy (Strategy)"},
+    {"ticker": "MDLZ", "name": "Mondelez International"},
+    {"ticker": "MPWR", "name": "Monolithic Power Systems"},
+    {"ticker": "MNST", "name": "Monster Beverage"},
+    {"ticker": "NBIS", "name": "Nebius Group"},
+    {"ticker": "NFLX", "name": "Netflix"},
+    {"ticker": "NVDA", "name": "Nvidia"},
+    {"ticker": "NXPI", "name": "NXP Semiconductors"},
+    {"ticker": "ORLY", "name": "O'Reilly Automotive"},
+    {"ticker": "ODFL", "name": "Old Dominion Freight Line"},
+    {"ticker": "PCAR", "name": "Paccar"},
+    {"ticker": "PLTR", "name": "Palantir Technologies"},
+    {"ticker": "PANW", "name": "Palo Alto Networks"},
+    {"ticker": "PAYX", "name": "Paychex"},
+    {"ticker": "PYPL", "name": "PayPal Holdings"},
+    {"ticker": "PDD", "name": "PDD Holdings"},
+    {"ticker": "PEP", "name": "PepsiCo"},
+    {"ticker": "QCOM", "name": "Qualcomm"},
+    {"ticker": "REGN", "name": "Regeneron Pharmaceuticals"},
+    {"ticker": "RKLB", "name": "Rocket Lab"},
+    {"ticker": "ROP", "name": "Roper Technologies"},
+    {"ticker": "ROST", "name": "Ross Stores"},
+    {"ticker": "SNDK", "name": "Sandisk"},
+    {"ticker": "STX", "name": "Seagate Technology"},
+    {"ticker": "SHOP", "name": "Shopify"},
+    {"ticker": "SPCX", "name": "Space Exploration Technologies (SpaceX)"},
+    {"ticker": "SBUX", "name": "Starbucks"},
+    {"ticker": "SNPS", "name": "Synopsys"},
+    {"ticker": "TMUS", "name": "T-Mobile US"},
+    {"ticker": "TTWO", "name": "Take-Two Interactive"},
+    {"ticker": "TER", "name": "Teradyne"},
+    {"ticker": "TSLA", "name": "Tesla"},
+    {"ticker": "TXN", "name": "Texas Instruments"},
+    {"ticker": "TRI", "name": "Thomson Reuters"},
+    {"ticker": "VRTX", "name": "Vertex Pharmaceuticals"},
+    {"ticker": "WMT", "name": "Walmart"},
+    {"ticker": "WBD", "name": "Warner Bros. Discovery"},
+    {"ticker": "WDC", "name": "Western Digital"},
+    {"ticker": "WDAY", "name": "Workday"},
+    {"ticker": "XEL", "name": "Xcel Energy"},
+]
+
 # Chaque entreprise de COMPANIES porte son propre indice ("index" ajouté
-# ici, pas dans CAC40_COMPANIES/DAX_COMPANIES eux-mêmes, pour garder ces
-# listes lisibles) — remplace l'ancienne constante unique INDEX_KEY,
-# insuffisante dès qu'un 2e indice existe. INDEX_NAMES : nom affiché par
-# indice, complété au fil de l'ajout de nouveaux indices.
+# ici, pas dans CAC40_COMPANIES/DAX_COMPANIES/NASDAQ_COMPANIES eux-mêmes,
+# pour garder ces listes lisibles) — remplace l'ancienne constante unique
+# INDEX_KEY, insuffisante dès qu'un 2e indice existe. INDEX_NAMES : nom
+# affiché par indice, complété au fil de l'ajout de nouveaux indices.
 COMPANIES = (
     [{**c, "index": "CAC40"} for c in CAC40_COMPANIES]
     + [{**c, "index": "DAX"} for c in DAX_COMPANIES]
+    + [{**c, "index": "NASDAQ"} for c in NASDAQ_COMPANIES]
 )
-INDEX_NAMES = {"CAC40": "CAC 40", "DAX": "DAX"}
+INDEX_NAMES = {"CAC40": "CAC 40", "DAX": "DAX", "NASDAQ": "Nasdaq 100"}
+
+# Devise native de chaque indice — CAC40/DAX publient en euros, le
+# Nasdaq-100 en dollars. Consommé côté frontend (docs/index.html) pour
+# afficher le bon symbole plutôt que de supposer € partout (bug de fond
+# corrigé à l'occasion de l'ajout du Nasdaq, pas seulement étendu).
+INDEX_CURRENCY = {"CAC40": "EUR", "DAX": "EUR", "NASDAQ": "USD"}
 
 SECTOR_PROFILES = {
     "Utilities": "defensif",
@@ -1490,7 +1623,7 @@ SIGNAL_TRACKING_PATH = os.path.join(
 )
 # Indices utilisés comme benchmark de chaque position (voir "index" sur
 # chaque société — CAC40/DAX) : tickers yfinance correspondants.
-INDEX_YFINANCE_TICKERS = {"CAC40": "^FCHI", "DAX": "^GDAXI"}
+INDEX_YFINANCE_TICKERS = {"CAC40": "^FCHI", "DAX": "^GDAXI", "NASDAQ": "^NDX"}
 SIGNAL_STOP_LOSS_PCT = -20.0     # % perte déclenchant une clôture anticipée
 SIGNAL_SHADOW_DELAY_MONTHS = 6   # délai max avant clôture forcée du signal
                                   # ET date du benchmark "tenir 6 mois pleins"
@@ -2072,14 +2205,24 @@ def estimate_entry_exit_prices(
 
 
 FRED_RISK_FREE_SERIES = "IRLTLT01FRM156N"  # OAT 10 ans (France), FRED/OCDE, mensuel
+FRED_RISK_FREE_SERIES_US = "DGS10"  # Treasury 10 ans (US), FRED, quotidien — ajouté avec le Nasdaq-100 : le taux sans risque du CAPM doit correspondre à la devise des cash-flows valorisés (dollars pour le Nasdaq), pas être le taux France appliqué partout par défaut.
+
+# Taux sans risque à utiliser selon la devise de l'entreprise (voir
+# INDEX_CURRENCY) — CAC40/DAX (EUR) gardent le taux France historique,
+# NASDAQ (USD) utilise le Treasury US. Rempli dans main() une fois les
+# deux taux récupérés (un seul appel FRED par série et par run, pas par
+# entreprise).
+RISK_FREE_SERIES_BY_CURRENCY = {"EUR": FRED_RISK_FREE_SERIES, "USD": FRED_RISK_FREE_SERIES_US}
 
 
-def fetch_risk_free_rate() -> float | None:
-    """Dernier taux OAT 10 ans publié (FRED, série IRLTLT01FRM156N,
-    mensuelle avec ~1-2 mois de décalage) — taux sans risque pour le
-    CAPM. None si la clé API FRED est absente (aucun appel réseau dans ce
-    cas) ou en cas d'échec réseau/API : toutes les entreprises retombent
-    alors sur COST_OF_CAPITAL_PROXY pour ce run."""
+def fetch_risk_free_rate(series_id: str = FRED_RISK_FREE_SERIES) -> float | None:
+    """Dernier taux publié pour la série FRED donnée (par défaut, OAT 10
+    ans France, IRLTLT01FRM156N, mensuelle avec ~1-2 mois de décalage) —
+    taux sans risque pour le CAPM. Passer FRED_RISK_FREE_SERIES_US pour le
+    Treasury 10 ans US (quotidien). None si la clé API FRED est absente
+    (aucun appel réseau dans ce cas) ou en cas d'échec réseau/API : les
+    entreprises concernées retombent alors sur COST_OF_CAPITAL_PROXY pour
+    ce run."""
     api_key = os.environ.get("FRED_API_KEY")
     if not api_key:
         return None
@@ -2088,7 +2231,7 @@ def fetch_risk_free_rate() -> float | None:
         resp = requests.get(
             "https://api.stlouisfed.org/fred/series/observations",
             params={
-                "series_id": FRED_RISK_FREE_SERIES,
+                "series_id": series_id,
                 "api_key": api_key,
                 "file_type": "json",
                 "observation_start": start,
@@ -2759,11 +2902,18 @@ def _compute_health_summary(companies: list[dict]) -> dict:
 
 
 def main():
-    risk_free_rate = fetch_risk_free_rate()
+    # Un taux sans risque par devise (voir RISK_FREE_SERIES_BY_CURRENCY) —
+    # un seul appel FRED par devise pour tout le run, pas par entreprise.
+    risk_free_rate_by_currency = {
+        currency: fetch_risk_free_rate(series_id)
+        for currency, series_id in RISK_FREE_SERIES_BY_CURRENCY.items()
+    }
     previous_analyses = load_previous_company_analyses()
     companies = []
     for company in COMPANIES:
         try:
+            currency = INDEX_CURRENCY.get(company["index"], "EUR")
+            risk_free_rate = risk_free_rate_by_currency.get(currency)
             companies.append(
                 build_company_entry(
                     company["ticker"], company["name"], risk_free_rate, previous_analyses,
@@ -2781,6 +2931,7 @@ def main():
     payload = {
         "updated": datetime.today().strftime("%Y-%m-%d"),
         "index_names": INDEX_NAMES,
+        "index_currency": INDEX_CURRENCY,
         "companies": companies,
         "health": _compute_health_summary(companies),
     }

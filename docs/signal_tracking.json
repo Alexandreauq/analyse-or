@@ -1,3 +1,46 @@
 {
-  "positions": []
+  "positions": [
+    {
+      "id": "GLE.PA-2026-09-09",
+      "ticker": "GLE.PA",
+      "name": "Société Générale",
+      "index": "CAC40",
+      "status": "open",
+      "entry_date": "2026-09-09",
+      "entry_price": 73.62999725341797,
+      "target_exit_price": 105.19697453749374,
+      "index_price_at_entry": 8200.3203125,
+      "close_date": null,
+      "close_price": null,
+      "close_reason": null,
+      "return_pct": null,
+      "index_price_at_close": null,
+      "index_return_pct": null,
+      "shadow_close_date": "2027-03-09",
+      "shadow_resolved": false,
+      "shadow_price": null,
+      "shadow_return_pct": null
+    },
+    {
+      "id": "ALV.DE-2026-09-09",
+      "ticker": "ALV.DE",
+      "name": "Allianz",
+      "index": "DAX",
+      "status": "open",
+      "entry_date": "2026-09-09",
+      "entry_price": 437.29998779296875,
+      "target_exit_price": 474.79492018066406,
+      "index_price_at_entry": 25689.1796875,
+      "close_date": null,
+      "close_price": null,
+      "close_reason": null,
+      "return_pct": null,
+      "index_price_at_close": null,
+      "index_return_pct": null,
+      "shadow_close_date": "2027-03-09",
+      "shadow_resolved": false,
+      "shadow_price": null,
+      "shadow_return_pct": null
+    }
+  ]
 }

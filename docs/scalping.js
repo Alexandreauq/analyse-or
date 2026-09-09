@@ -11,6 +11,26 @@
 
 const TWELVE_DATA_URL = 'https://api.twelvedata.com/time_series';
 
+// docs/chart_patterns.js expose detectChartPatterns/CHARTPATTERN_PIVOT_K.
+// Dans le navigateur, chart_patterns.js est chargé en <script> avant tout
+// appel à computeSignal (docs/index.html, loadScalpingModule) — ses
+// déclarations globales (function/const) sont donc directement lisibles
+// ici par identifiant nu, sans import. Pour Node (tests,
+// scalping_tracker.js), chaque fichier require()é est un module isolé
+// sans scope global partagé : require() explicite. Attention à ne PAS
+// redéclarer `CHARTPATTERN_PIVOT_K` ici (collision de nom avec le const
+// global de chart_patterns.js dans le navigateur, SyntaxError) — d'où
+// le passage par une fonction wrapper plutôt qu'une constante.
+const _chartPatternsModule = (typeof require === 'function') ? require('./chart_patterns.js') : null;
+function _detectChartPatterns(pivots, trend, price) {
+  return _chartPatternsModule
+    ? _chartPatternsModule.detectChartPatterns(pivots, trend, price)
+    : detectChartPatterns(pivots, trend, price);
+}
+function _chartPatternPivotK() {
+  return _chartPatternsModule ? _chartPatternsModule.CHARTPATTERN_PIVOT_K : CHARTPATTERN_PIVOT_K;
+}
+
 /**
  * Récupère les dernières bougies 1min XAU/USD via Twelve Data.
  * `fetchImpl` est injectable (tests) — vaut `fetch` par défaut (navigateur).
@@ -300,33 +320,81 @@ function computeSignal(candles) {
   const closes = candles.map(c => c.close);
   const rsi = computeRSI(closes, SCALP_RSI_PERIOD);
   const macd = computeMACD(closes, SCALP_MACD_FAST, SCALP_MACD_SLOW, SCALP_MACD_SIGNAL);
-  const pattern = matchCandlestickPattern(candles, trend);
+  const candlestickPattern = matchCandlestickPattern(candles, trend);
+  const chartPivots = detectPivots(candles, _chartPatternPivotK());
+  const chartPattern = _detectChartPatterns(chartPivots, trend, price);
 
   const nearSupport = levels.support !== null && Math.abs(price - levels.support) <= SCALP_LEVEL_PROXIMITY;
   const nearResistance = levels.resistance !== null && Math.abs(price - levels.resistance) <= SCALP_LEVEL_PROXIMITY;
   const brokeResistance = levels.resistance !== null && price > levels.resistance;
   const brokeSupport = levels.support !== null && price < levels.support;
 
-  const structurelAchat = trend === 'baissier' && (nearSupport || brokeResistance);
-  const structurelVente = trend === 'haussier' && (nearResistance || brokeSupport);
+  const chartRetournementHaussier = chartPattern && chartPattern.kind === 'retournement' && chartPattern.direction === 'haussier';
+  const chartRetournementBaissier = chartPattern && chartPattern.kind === 'retournement' && chartPattern.direction === 'baissier';
+  const chartContinuationHaussier = chartPattern && chartPattern.kind === 'continuation' && chartPattern.direction === 'haussier';
+  const chartContinuationBaissier = chartPattern && chartPattern.kind === 'continuation' && chartPattern.direction === 'baissier';
 
-  const confirmationAchat = rsi < 70 && macd.macd > macd.signal && pattern && pattern.direction === 'haussier';
-  const confirmationVente = rsi > 30 && macd.macd < macd.signal && pattern && pattern.direction === 'baissier';
+  // Deux déclencheurs structurels : retournement (logique existante,
+  // élargie aux figures chartistes de retournement) et continuation
+  // (nouveau, uniquement pour les triangles). Note : structurelAchat et
+  // structurelVente ne sont plus strictement mutuellement exclusifs pris
+  // isolément (un même `trend` peut désormais satisfaire l'un via le
+  // chemin retournement et l'autre via le chemin continuation) — ce n'est
+  // pas un bug : confirmationAchat/confirmationVente restent, elles,
+  // mutuellement exclusives par construction (`macd.macd` ne peut pas
+  // être à la fois > et < `macd.signal`), donc au plus UN des deux blocs
+  // `if` plus bas peut jamais renvoyer un signal.
+  const structurelAchat = (trend === 'baissier' && (nearSupport || brokeResistance || chartRetournementHaussier))
+    || (trend === 'haussier' && chartContinuationHaussier);
+  const structurelVente = (trend === 'haussier' && (nearResistance || brokeSupport || chartRetournementBaissier))
+    || (trend === 'baissier' && chartContinuationBaissier);
+
+  // Le pattern de confirmation peut venir du chandelier OU de la figure
+  // chartiste. Sélection par SENS (jamais l'un ne doit masquer l'autre
+  // s'ils vont dans des sens différents), priorité à la figure chartiste
+  // quand les deux vont dans le même sens (poids ×2 au barème du cours,
+  // contre ×1 pour les chandeliers).
+  const patternHaussier = (chartPattern && chartPattern.direction === 'haussier') ? chartPattern
+    : (candlestickPattern && candlestickPattern.direction === 'haussier') ? candlestickPattern
+    : null;
+  const patternBaissier = (chartPattern && chartPattern.direction === 'baissier') ? chartPattern
+    : (candlestickPattern && candlestickPattern.direction === 'baissier') ? candlestickPattern
+    : null;
+
+  const confirmationAchat = rsi < 70 && macd.macd > macd.signal && patternHaussier !== null;
+  const confirmationVente = rsi > 30 && macd.macd < macd.signal && patternBaissier !== null;
 
   if (structurelAchat && confirmationAchat) {
-    const stopLoss = levels.support !== null ? levels.support - SCALP_STOP_BUFFER : price - price * 0.001;
-    const risk = price - stopLoss;
-    const takeProfit = levels.resistance !== null && levels.resistance > price
-      ? levels.resistance
-      : price + risk * SCALP_TAKEPROFIT_RISK_MULTIPLE;
+    const pattern = patternHaussier;
+    let stopLoss, takeProfit;
+    if (pattern === chartPattern) {
+      // Règle du cours spécifique aux figures chartistes : objectif =
+      // hauteur de la figure projetée depuis la cassure ; stop juste
+      // au-delà du point le plus extrême de la figure.
+      stopLoss = chartPattern.extremityPrice - SCALP_STOP_BUFFER;
+      takeProfit = chartPattern.breakoutPrice + chartPattern.patternHeight;
+    } else {
+      stopLoss = levels.support !== null ? levels.support - SCALP_STOP_BUFFER : price - price * 0.001;
+      const risk = price - stopLoss;
+      takeProfit = levels.resistance !== null && levels.resistance > price
+        ? levels.resistance
+        : price + risk * SCALP_TAKEPROFIT_RISK_MULTIPLE;
+    }
     return { status: 'achat', price, entry: price, stopLoss, takeProfit, trend, pattern };
   }
   if (structurelVente && confirmationVente) {
-    const stopLoss = levels.resistance !== null ? levels.resistance + SCALP_STOP_BUFFER : price + price * 0.001;
-    const risk = stopLoss - price;
-    const takeProfit = levels.support !== null && levels.support < price
-      ? levels.support
-      : price - risk * SCALP_TAKEPROFIT_RISK_MULTIPLE;
+    const pattern = patternBaissier;
+    let stopLoss, takeProfit;
+    if (pattern === chartPattern) {
+      stopLoss = chartPattern.extremityPrice + SCALP_STOP_BUFFER;
+      takeProfit = chartPattern.breakoutPrice - chartPattern.patternHeight;
+    } else {
+      stopLoss = levels.resistance !== null ? levels.resistance + SCALP_STOP_BUFFER : price + price * 0.001;
+      const risk = stopLoss - price;
+      takeProfit = levels.support !== null && levels.support < price
+        ? levels.support
+        : price - risk * SCALP_TAKEPROFIT_RISK_MULTIPLE;
+    }
     return { status: 'vente', price, entry: price, stopLoss, takeProfit, trend, pattern };
   }
   return { status: 'neutre', price, entry: null, stopLoss: null, takeProfit: null, trend, pattern: null };

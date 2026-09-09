@@ -5,7 +5,7 @@
 // correspond pas — pas de bibliothèque d'assertion, juste `assert` natif
 // de Node pour rester sans dépendance.
 const assert = require('assert');
-const { fetchGoldCandles } = require('./scalping.js');
+const { fetchGoldCandles, detectPivots } = require('./scalping.js');
 
 async function test_fetchGoldCandles_parses_and_reverses_to_chronological_order() {
   const fakeResponse = {
@@ -54,10 +54,44 @@ async function test_fetchGoldCandles_rejects_on_http_error() {
   console.log('OK: test_fetchGoldCandles_rejects_on_http_error');
 }
 
+function test_detectPivots_finds_high_and_low_with_k1() {
+  // 5 bougies, K=1 : un pivot haut net à l'index 2 (14 > 10 des deux
+  // côtés), un pivot bas net à l'index 3 (3 < 8 des deux côtés).
+  // Calculé à la main, voir docs/superpowers/plans/2026-09-09-gold-scalping.md.
+  const candles = [
+    { high: 10, low: 8 },
+    { high: 10, low: 8 },
+    { high: 14, low: 8 },
+    { high: 10, low: 3 },
+    { high: 10, low: 8 },
+  ];
+  const pivots = detectPivots(candles, 1);
+  assert.deepStrictEqual(pivots, [
+    { index: 2, type: 'high', price: 14 },
+    { index: 3, type: 'low', price: 3 },
+  ]);
+  console.log('OK: test_detectPivots_finds_high_and_low_with_k1');
+}
+
+function test_detectPivots_rejects_equal_neighbor_as_not_strictly_higher() {
+  // idx1 a High=10, égal à idx0 — pas strictement supérieur, donc pas
+  // un pivot (la règle exige une inégalité stricte des deux côtés).
+  const candles = [
+    { high: 10, low: 5 },
+    { high: 10, low: 5 },
+    { high: 8, low: 5 },
+  ];
+  const pivots = detectPivots(candles, 1);
+  assert.deepStrictEqual(pivots, []);
+  console.log('OK: test_detectPivots_rejects_equal_neighbor_as_not_strictly_higher');
+}
+
 async function main() {
   await test_fetchGoldCandles_parses_and_reverses_to_chronological_order();
   await test_fetchGoldCandles_rejects_on_error_status();
   await test_fetchGoldCandles_rejects_on_http_error();
+  test_detectPivots_finds_high_and_low_with_k1();
+  test_detectPivots_rejects_equal_neighbor_as_not_strictly_higher();
   console.log('Tous les tests scalping.test.js sont passés.');
 }
 

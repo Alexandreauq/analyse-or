@@ -111,6 +111,91 @@ function currentLevels(pivots, currentPrice) {
   };
 }
 
+/**
+ * RSI classique (formule du cours) : compare la moyenne des hausses à la
+ * moyenne des baisses sur les `period` dernières variations. Renvoie 100
+ * si aucune baisse (évite une division par zéro), pas juste une valeur
+ * indéfinie.
+ */
+function computeRSI(closes, period) {
+  const changes = [];
+  for (let i = closes.length - period; i < closes.length; i++) {
+    changes.push(closes[i] - closes[i - 1]);
+  }
+  const gains = changes.filter(c => c > 0);
+  const losses = changes.filter(c => c < 0).map(c => -c);
+  const avgGain = gains.reduce((a, b) => a + b, 0) / period;
+  const avgLoss = losses.reduce((a, b) => a + b, 0) / period;
+  if (avgLoss === 0) return 100;
+  const rs = avgGain / avgLoss;
+  return 100 - 100 / (1 + rs);
+}
+
+/**
+ * Moyenne mobile exponentielle, seedée par une SMA classique des `period`
+ * premières valeurs (convention standard). Renvoie la dernière valeur.
+ */
+function _emaLast(values, period) {
+  const k = 2 / (period + 1);
+  let ema = values.slice(0, period).reduce((a, b) => a + b, 0) / period;
+  for (let i = period; i < values.length; i++) {
+    ema = values[i] * k + ema * (1 - k);
+  }
+  return ema;
+}
+
+/**
+ * Renvoie la série complète des EMA (une valeur par index à partir de
+ * `period-1`), nécessaire pour calculer la ligne signal du MACD (qui est
+ * elle-même une EMA de la série MACD, pas juste de son dernier point).
+ */
+function _emaSeries(values, period) {
+  const k = 2 / (period + 1);
+  const out = [];
+  let ema = values.slice(0, period).reduce((a, b) => a + b, 0) / period;
+  out.push(ema);
+  for (let i = period; i < values.length; i++) {
+    ema = values[i] * k + ema * (1 - k);
+    out.push(ema);
+  }
+  return out;
+}
+
+/**
+ * MACD(fastPeriod, slowPeriod, signalPeriod) — formule du cours.
+ * Renvoie uniquement le dernier point {macd, signal, histogram}, seul
+ * nécessaire au moteur de confluence.
+ */
+function computeMACD(closes, fastPeriod, slowPeriod, signalPeriod) {
+  const fastSeries = _emaSeries(closes, fastPeriod);
+  const slowSeries = _emaSeries(closes, slowPeriod);
+  // fastSeries commence à l'index (fastPeriod-1) de `closes`, slowSeries à
+  // (slowPeriod-1) — slowSeries est donc plus courte (elle démarre plus
+  // tard). On aligne les deux séries sur le même index de `closes` en
+  // décalant fastSeries de (fastSeries.length - slowSeries.length), pour
+  // calculer la ligne MACD uniquement sur la période où les deux existent.
+  const macdSeries = [];
+  for (let i = 0; i < slowSeries.length; i++) {
+    const fastIdx = fastSeries.length - slowSeries.length + i;
+    macdSeries.push(fastSeries[fastIdx] - slowSeries[i]);
+  }
+  const signal = _emaLast(macdSeries, signalPeriod);
+  const macd = macdSeries[macdSeries.length - 1];
+  return { macd, signal, histogram: macd - signal };
+}
+
+/**
+ * Bandes de Bollinger (formule du cours : MM `period` ± mult × écart-type
+ * population sur `period`). Renvoie le dernier point uniquement.
+ */
+function computeBollinger(closes, period, mult) {
+  const window = closes.slice(-period);
+  const mean = window.reduce((a, b) => a + b, 0) / period;
+  const variance = window.reduce((sum, c) => sum + (c - mean) ** 2, 0) / period;
+  const stdev = Math.sqrt(variance);
+  return { middle: mean, upper: mean + mult * stdev, lower: mean - mult * stdev };
+}
+
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { fetchGoldCandles, detectPivots, classifyTrend, currentLevels };
+  module.exports = { fetchGoldCandles, detectPivots, classifyTrend, currentLevels, computeRSI, computeMACD, computeBollinger };
 }

@@ -5,7 +5,7 @@
 // correspond pas — pas de bibliothèque d'assertion, juste `assert` natif
 // de Node pour rester sans dépendance.
 const assert = require('assert');
-const { fetchGoldCandles, detectPivots, classifyTrend, currentLevels } = require('./scalping.js');
+const { fetchGoldCandles, detectPivots, classifyTrend, currentLevels, computeRSI, computeMACD, computeBollinger } = require('./scalping.js');
 
 async function test_fetchGoldCandles_parses_and_reverses_to_chronological_order() {
   const fakeResponse = {
@@ -138,6 +138,53 @@ function test_currentLevels_null_when_no_pivot_on_one_side() {
   console.log('OK: test_currentLevels_null_when_no_pivot_on_one_side');
 }
 
+function test_computeRSI_all_gains_is_100() {
+  // 15 clôtures, 14 hausses de +1 chacune -> aucune baisse -> RSI=100
+  // (convention standard quand la moyenne des baisses est nulle).
+  const closes = [10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24];
+  assert.strictEqual(computeRSI(closes, 14), 100);
+  console.log('OK: test_computeRSI_all_gains_is_100');
+}
+
+function test_computeRSI_all_losses_is_0() {
+  const closes = [24, 23, 22, 21, 20, 19, 18, 17, 16, 15, 14, 13, 12, 11, 10];
+  assert.strictEqual(computeRSI(closes, 14), 0);
+  console.log('OK: test_computeRSI_all_losses_is_0');
+}
+
+function test_computeRSI_balanced_alternating_is_50() {
+  // 14 variations alternées +1/-1 (7 hausses, 7 baisses de même ampleur)
+  // -> RS=1 -> RSI=50.
+  const closes = [10, 11, 10, 11, 10, 11, 10, 11, 10, 11, 10, 11, 10, 11, 10];
+  assert.strictEqual(computeRSI(closes, 14), 50);
+  console.log('OK: test_computeRSI_balanced_alternating_is_50');
+}
+
+function test_computeMACD_constant_offset_on_linear_series() {
+  // closes en progression arithmétique parfaite (+2 à chaque bougie).
+  // Avec fast=2/slow=4/signal=2, la MACD line et la ligne signal
+  // convergent toutes deux vers la constante 2 -> histogramme 0.
+  // Calcul détaillé à la main dans docs/superpowers/plans/2026-09-09-gold-scalping.md.
+  const closes = [10, 12, 14, 16, 18, 20, 22];
+  const result = computeMACD(closes, 2, 4, 2);
+  assert.deepStrictEqual(result, { macd: 2, signal: 2, histogram: 0 });
+  console.log('OK: test_computeMACD_constant_offset_on_linear_series');
+}
+
+function test_computeBollinger_zero_variance() {
+  const closes = [100, 100, 100, 100];
+  assert.deepStrictEqual(computeBollinger(closes, 4, 2), { middle: 100, upper: 100, lower: 100 });
+  console.log('OK: test_computeBollinger_zero_variance');
+}
+
+function test_computeBollinger_with_variance() {
+  // closes=[0,0,4,4], période 4 : moyenne=2, écart-type population=2
+  // -> upper=2+2*2=6, lower=2-2*2=-2.
+  const closes = [0, 0, 4, 4];
+  assert.deepStrictEqual(computeBollinger(closes, 4, 2), { middle: 2, upper: 6, lower: -2 });
+  console.log('OK: test_computeBollinger_with_variance');
+}
+
 async function main() {
   await test_fetchGoldCandles_parses_and_reverses_to_chronological_order();
   await test_fetchGoldCandles_rejects_on_error_status();
@@ -149,6 +196,12 @@ async function main() {
   test_classifyTrend_neutre_when_not_enough_pivots();
   test_currentLevels_picks_nearest_unbroken_pivots();
   test_currentLevels_null_when_no_pivot_on_one_side();
+  test_computeRSI_all_gains_is_100();
+  test_computeRSI_all_losses_is_0();
+  test_computeRSI_balanced_alternating_is_50();
+  test_computeMACD_constant_offset_on_linear_series();
+  test_computeBollinger_zero_variance();
+  test_computeBollinger_with_variance();
   console.log('Tous les tests scalping.test.js sont passés.');
 }
 

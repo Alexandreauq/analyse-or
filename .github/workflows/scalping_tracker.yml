@@ -1,0 +1,41 @@
+name: Suivi paper-trading Scalping Or
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"   # toutes les 5 minutes, plancher technique GitHub Actions
+  workflow_dispatch: {}
+
+concurrency:
+  group: scalping-tracker
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  actions: write
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Récupérer le dépôt
+        uses: actions/checkout@v4
+
+      - name: Installer Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Exécuter le suivi de paper-trading
+        run: node scalping_tracker.js
+        env:
+          TWELVE_DATA_API_KEY: ${{ secrets.TWELVE_DATA_API_KEY }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publier le suivi mis à jour
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add docs/scalping_tracking.json
+          git diff --staged --quiet || git commit -m "Mise a jour du suivi Scalping"
+          git pull --rebase --autostash
+          git push

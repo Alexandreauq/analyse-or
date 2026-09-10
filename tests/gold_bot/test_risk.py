@@ -68,6 +68,22 @@ def test_circuit_breaker_raises_on_invalid_threshold_pct():
         risk.CircuitBreaker(threshold_pct=0)
 
 
+def test_circuit_breaker_persists_starting_balance_across_instances(tmp_path):
+    path = str(tmp_path / "state.json")
+    cb1 = risk.CircuitBreaker(threshold_pct=0.10, now_fn=lambda: datetime(2026, 9, 10, tzinfo=timezone.utc), persist_path=path)
+    cb1.check(10000)
+    # Nouvelle instance (simule un redémarrage) le même jour UTC : doit
+    # retrouver le solde de référence persisté, pas repartir du solde courant.
+    cb2 = risk.CircuitBreaker(threshold_pct=0.10, now_fn=lambda: datetime(2026, 9, 10, 18, tzinfo=timezone.utc), persist_path=path)
+    assert cb2.can_open_position(8900) is False  # -11% depuis 10000, pas depuis 8900
+
+
+def test_circuit_breaker_without_persist_path_stays_in_memory_only():
+    cb = risk.CircuitBreaker(threshold_pct=0.10, now_fn=lambda: datetime(2026, 9, 10, tzinfo=timezone.utc))
+    cb.check(10000)
+    assert cb._persist_path is None
+
+
 def test_circuit_breaker_resets_on_new_day():
     clock = {"now": datetime(2026, 9, 10, 23, 0, tzinfo=timezone.utc)}
     cb = risk.CircuitBreaker(threshold_pct=0.10, now_fn=lambda: clock["now"])

@@ -1512,7 +1512,22 @@ function renderIndicesList(companies) {
   document.getElementById('indicesContent').innerHTML = `
     ${healthHtml}
     <a href="#indices/suivi" class="signal-tracking-link">Suivi des signaux — performance réelle des conseils →</a>
-    <div class="index-card-list">${cardsHtml}</div>
+    <div class="indices-layout">
+      <aside class="indices-filters">
+        <h2>Filtrer</h2>
+        <input type="search" class="list-search" id="filterSearch" placeholder="Rechercher (nom, ticker)…" value="${indicesListSearch}">
+        <select class="list-sort" id="filterSort">
+          <option value="score_desc"${indicesListSort === 'score_desc' ? ' selected' : ''}>Score ↓</option>
+          <option value="score_asc"${indicesListSort === 'score_asc' ? ' selected' : ''}>Score ↑</option>
+          <option value="alpha"${indicesListSort === 'alpha' ? ' selected' : ''}>A → Z</option>
+        </select>
+        <label class="list-filter-toggle">
+          <input type="checkbox" id="filterFinancialOnly"${indicesListFinancialOnly ? ' checked' : ''}>
+          Profil financier uniquement
+        </label>
+      </aside>
+      <div class="index-card-list">${cardsHtml}</div>
+    </div>
   `;
 
   // Le contenu de chaque panneau n'est construit qu'à sa première ouverture

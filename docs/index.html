@@ -1117,15 +1117,15 @@ function loadSideQuoteWidget(ticker, indexKey) {
 // Symbole TradingView par indice — INDEX_TV_SYMBOL_BY_KEY, pas une seule
 // constante : quand d'autres indices (S&P 500…) rejoindront
 // indicesData.companies un jour, ce sera la seule ligne à ajouter ici.
-// Nasdaq/Dow en préfixe TVC (flux consolidé TradingView, prévu pour les
-// widgets embarqués gratuits) plutôt que NASDAQ:/DJ: (flux propriétaires
-// d'échange/fournisseur, souvent restreints hors session TradingView —
-// le widget restait vide en pratique avec ces préfixes).
+// Nasdaq/Dow en CFD OANDA (même famille de flux que OANDA:XAUUSD pour l'or,
+// déjà utilisé et fonctionnel dans l'onglet Scalping) plutôt que NASDAQ:/DJ:
+// ou TVC: (flux d'échange/fournisseur "réservé à TradingView", le widget
+// restait vide sans compte connecté avec ces préfixes).
 const INDEX_TV_SYMBOL_BY_KEY = {
   CAC40: 'EURONEXT:PX1',
   DAX: 'XETR:DAX',
-  NASDAQ: 'TVC:NDX',
-  DOW: 'TVC:DJI',
+  NASDAQ: 'OANDA:NAS100USD',
+  DOW: 'OANDA:US30USD',
 };
 
 function loadIndexQuoteWidget(indexKey, containerId) {

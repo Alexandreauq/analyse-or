@@ -1,0 +1,43 @@
+name: Synchronisation portefeuille MT5
+
+on:
+  schedule:
+    - cron: "0 8 * * *"   # une fois par jour, 08h00 UTC (décalé des crons Indices 07h00 et IBKR 07h00)
+  workflow_dispatch: {}
+
+concurrency:
+  group: portfolio-sync-mt5
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Récupérer le dépôt
+        uses: actions/checkout@v4
+
+      - name: Installer Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Installer les dépendances
+        run: pip install -r requirements.txt
+
+      - name: Synchroniser les positions MT5
+        run: python3 portfolio_sync_mt5.py
+        env:
+          METAAPI_TOKEN: ${{ secrets.METAAPI_TOKEN }}
+          METAAPI_ACCOUNT_ID: ${{ secrets.METAAPI_ACCOUNT_ID }}
+
+      - name: Publier les données mises à jour sur le site
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add docs/real_portfolio_mt5.json
+          git diff --staged --quiet || git commit -m "Mise à jour de la synchronisation portefeuille MT5"
+          git pull --rebase --autostash
+          git push

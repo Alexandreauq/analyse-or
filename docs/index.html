@@ -589,7 +589,14 @@
   }
   @keyframes content-fade-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 
-  .indices-filters { display: none; }
+  /* Filtre partagé (recherche/tri/profil financier) : visible à toutes les
+     tailles d'écran désormais — empilé au-dessus de la liste sur mobile,
+     en colonne latérale collante à partir de 1024px (voir media query plus
+     bas) — pour que mobile ait le même accès direct au filtre que desktop,
+     sans avoir à déplier une carte au préalable. */
+  .indices-filters { display: flex; flex-direction: column; gap: 10px; margin: 4px 0 16px; }
+  .indices-filters h2 { display: none; }
+  .indices-filters .list-search, .indices-filters .list-sort { width: 100%; }
 
   .index-card-list { display: flex; flex-direction: column; gap: 12px; margin: 4px 0 20px; }
   .index-card {
@@ -636,25 +643,27 @@
   }
   .index-card-body.is-open { padding-bottom: 16px; max-height: 6000px; opacity: 1; border-top-color: var(--border); }
   .index-card-body .list-controls { margin-top: 16px; }
+  /* Le filtre partagé ci-dessus (.indices-filters) couvre déjà recherche/
+     tri/profil financier à toutes les tailles d'écran ; les contrôles
+     dupliqués par carte restent dans le DOM (mêmes écouteurs, même état
+     partagé) mais ne s'affichent jamais, pour éviter un doublon visible. */
+  .index-card-body .list-controls, .index-card-body .list-filter-toggle { display: none; }
 
   /* Page Indices (≥1024px) : grille de cartes-indice + panneau de filtres
-     persistant à gauche, plutôt qu'un accordéon à ouvrir un par un avec
-     des contrôles de recherche/tri dupliqués dans chaque panneau. */
+     collant à gauche, plutôt qu'un accordéon à ouvrir un par un. */
   @media (min-width: 1024px) {
     .app:has(.indices-layout) { max-width: 1440px; }
     .indices-layout { display: grid; grid-template-columns: 240px 1fr; gap: 32px; align-items: start; }
     .indices-filters {
-      display: flex; flex-direction: column; gap: 12px; position: sticky; top: 20px;
+      margin: 0; gap: 12px; position: sticky; top: 20px;
       padding-top: 17px; /* aligne "Filtrer" avec le texte des en-têtes de carte (bordure+padding du .index-card) */
     }
-    .indices-filters h2 { margin: 0; }
-    .indices-filters .list-search, .indices-filters .list-sort { width: 100%; }
+    .indices-filters h2 { display: block; margin: 0; }
     .index-card-list { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
     .index-card-header { pointer-events: none; }
     .index-card-header .chevron { display: none; }
     .index-card-peek { display: none; }
     .index-card-body { max-height: none; opacity: 1; padding-bottom: 16px; border-top-color: var(--border); }
-    .index-card-body .list-controls, .index-card-body .list-filter-toggle { display: none; }
   }
 
   .alert-row {

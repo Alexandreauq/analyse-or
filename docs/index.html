@@ -211,10 +211,15 @@
      hasMajorNewsAlert) : même forme, couleur distincte du badge "Profil
      financier" pour rester lisible quand les deux se cumulent. */
   .majeure-tag { border-color: var(--gold); color: var(--gold); }
-  /* Repère "Aussi dans X" (voir also_indices, indices_score.py) : purement
-     informatif, pas une alerte — ton neutre pour rester distinct des
-     badges "Profil financier"/"Actu majeure" quand ils se cumulent. */
-  .also-index-tag { border-color: var(--border); color: var(--muted); }
+  /* Badge code court d'indice (voir company.index/also_indices,
+     indices_score.py) : purement informatif, pas une alerte — ton neutre
+     pour rester distinct des badges "Profil financier"/"Actu majeure"
+     quand ils se cumulent. */
+  .index-badge { border-color: var(--border); color: var(--muted); }
+  /* Ligne de badges sur la fiche entreprise : commence sur sa propre
+     ligne (après un <br>), le 1er badge ne doit pas hériter du
+     margin-left de .financial-tag (prévu pour un badge en fin de texte). */
+  .index-badges-row .index-badge:first-child { margin-left: 0; }
   .financial-notice {
     background: var(--panel); border: 1px solid var(--gauge-mid); border-radius: 10px;
     padding: 14px 16px; margin: 0 0 20px; font-size: 12px; line-height: 1.6; color: var(--text);
@@ -826,6 +831,16 @@ const INDEX_DISPLAY_NAMES = {
   DOW: 'Dow Jones',
 };
 
+// Code court par indice, pour les badges (fiche entreprise, liste) — DJ
+// pour le Dow Jones (pas "DOW", trop proche du ticker Dow Inc. lui-même),
+// les autres reprennent la clé telle quelle.
+const INDEX_SHORT_CODE_BY_KEY = {
+  CAC40: 'CAC40',
+  DAX: 'DAX',
+  NASDAQ: 'NASDAQ',
+  DOW: 'DJ',
+};
+
 // Devise par indice — repli local, écrasé par indicesData.index_currency
 // (fourni par le backend, voir INDEX_CURRENCY dans indices_score.py) dès
 // qu'il est disponible, même mécanisme que INDEX_DISPLAY_NAMES ci-dessus.
@@ -860,26 +875,36 @@ function sortedFilteredCompanies(companies) {
   return visible;
 }
 
-// Étiquette(s) "Aussi dans X" pour une entreprise suivie sous un seul
-// indice (company.index) mais réellement membre d'un ou plusieurs autres
-// (company.also_indices, ex. Apple : suivie côté Nasdaq 100, également
-// membre réel du Dow Jones — pas dupliquée pour éviter un calcul/coût
-// d'analyse financière en double, voir also_indices dans indices_score.py).
-function alsoIndicesTagsHtml(company, indexNames) {
+// Badge(s) code court pour les indices dont une entreprise est
+// RÉELLEMENT membre en plus de son indice suivi (company.also_indices,
+// ex. Apple : suivie côté Nasdaq 100, également membre réel du Dow
+// Jones — pas dupliquée pour éviter un calcul/coût d'analyse financière
+// en double, voir also_indices dans indices_score.py). N'inclut PAS
+// l'indice principal (company.index) : dans une liste déjà groupée par
+// indice, ce serait redondant avec la carte elle-même.
+function alsoIndicesBadgesHtml(company) {
   const also = company.also_indices || [];
-  return also.map(key => `<span class="financial-tag also-index-tag">Aussi dans ${indexNames[key] || key}</span>`).join('');
+  return also.map(key => `<span class="financial-tag index-badge">${INDEX_SHORT_CODE_BY_KEY[key] || key}</span>`).join('');
+}
+
+// Badges code court pour TOUS les indices dont une entreprise est membre
+// (indice principal + also_indices) — utilisé sur la fiche entreprise,
+// une page autonome où le contexte de regroupement de la liste n'existe
+// plus, donc l'indice principal doit aussi être rendu explicite.
+function allIndicesBadgesHtml(company) {
+  const keys = [company.index, ...(company.also_indices || [])];
+  return keys.map(key => `<span class="financial-tag index-badge">${INDEX_SHORT_CODE_BY_KEY[key] || key}</span>`).join('');
 }
 
 function renderIndicesRows(companies, rowsContainerId) {
   const panel = document.getElementById(rowsContainerId);
   if (!panel) return;
-  const indexNames = { ...INDEX_DISPLAY_NAMES, ...(indicesData.index_names || {}) };
   const visible = sortedFilteredCompanies(companies);
   panel.innerHTML = visible.length ? visible.map(c => `
     <a class="company-row" href="#indices/${c.ticker}">
       <div class="company-row-left">
         <span class="company-name">${c.name}</span>
-        <span class="company-ticker">${c.ticker}${c.is_financial ? '<span class="financial-tag">Profil financier</span>' : ''}${hasMajorNewsAlert(c) ? '<span class="financial-tag majeure-tag">Actu majeure</span>' : ''}${alsoIndicesTagsHtml(c, indexNames)}</span>
+        <span class="company-ticker">${c.ticker}${c.is_financial ? '<span class="financial-tag">Profil financier</span>' : ''}${hasMajorNewsAlert(c) ? '<span class="financial-tag majeure-tag">Actu majeure</span>' : ''}${alsoIndicesBadgesHtml(c)}</span>
       </div>
       <span class="company-score" style="color:${c.score >= 0 ? 'var(--gold)' : 'var(--rust)'};">
         ${c.score > 0 ? '+' : ''}${c.score}
@@ -1127,8 +1152,7 @@ function renderCompanyDetail(company) {
     </div>`).join('');
 
   const gaugePct = Math.max(0, Math.min(100, (company.score + 100) / 2));
-  const detailIndexNames = { ...INDEX_DISPLAY_NAMES, ...(indicesData.index_names || {}) };
-  const alsoIndicesHtml = alsoIndicesTagsHtml(company, detailIndexNames);
+  const indexBadgesHtml = allIndicesBadgesHtml(company);
 
   document.getElementById('indicesContent').innerHTML = `
     <a href="#indices" class="back-link">← Indices</a>
@@ -1136,7 +1160,7 @@ function renderCompanyDetail(company) {
       <div class="company-main">
         <section class="hero">
           <div class="hero-number">${company.score > 0 ? '+' : ''}${company.score}</div>
-          <div class="hero-label">${company.name} — ${company.interpretation}${hasMajorNewsAlert(company) ? '<br><span class="financial-tag majeure-tag" style="margin-left:0;">Actu majeure récente</span>' : ''}${alsoIndicesHtml ? `<br>${alsoIndicesHtml}` : ''}</div>
+          <div class="hero-label">${company.name} — ${company.interpretation}${hasMajorNewsAlert(company) ? '<br><span class="financial-tag majeure-tag" style="margin-left:0;">Actu majeure récente</span>' : ''}<br><span class="index-badges-row">${indexBadgesHtml}</span></div>
         </section>
 
         ${company.is_financial ? `

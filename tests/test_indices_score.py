@@ -515,6 +515,28 @@ def test_extract_ratios_uses_net_investment_properties_purchase_and_sale_as_cape
     assert ratios["fcf"] == 120.0 + (-30.0)  # OCF + proxy capex, exercice le plus récent
 
 
+def test_extract_ratios_derives_operating_cash_flow_from_free_cash_flow_when_missing():
+    """Reproduit le cas ASML Holding (reporting IFRS) en production : pas de
+    ligne 'Operating Cash Flow' chez yfinance pour cette entreprise, mais
+    'Free Cash Flow' (= OCF + capex) est présente — doit être utilisée pour
+    reconstituer OCF plutôt que de faire lever KeyError sur toute
+    l'entreprise."""
+    financials, balance_sheet, cashflow, closes_by_year = _make_fixture_statements()
+    # FCF = OCF + capex (capex déjà négatif) sur chaque exercice de la
+    # fixture d'origine (OCF=[120,110,100,90,80], capex=[-30,-28,-26,-24,-22]).
+    cashflow = cashflow.rename(index={"Operating Cash Flow": "Free Cash Flow"})
+    cashflow.loc["Free Cash Flow"] = [90.0, 82.0, 74.0, 66.0, 58.0]
+
+    ratios = extract_ratios(
+        financials, balance_sheet, cashflow, closes_by_year, shares_outstanding=10.0
+    )  # ne doit pas lever KeyError
+
+    # OCF reconstitué = FCF - capex = 90 - (-30) = 120 (exercice le plus
+    # récent) -> fcf recalculé = OCF + capex = 120 + (-30) = 90, identique
+    # à la valeur FCF d'origine (cohérence du repli).
+    assert ratios["fcf"] == 90.0
+
+
 def test_extract_ratios_ignores_years_with_missing_ebitda_or_net_income():
     """yfinance ne garantit pas 5 années pleines pour chaque poste : une
     année (souvent la plus ancienne) peut manquer de valeur pour EBITDA ou

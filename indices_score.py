@@ -20,6 +20,7 @@ import math
 import os
 import smtplib
 import time
+import traceback
 import xml.etree.ElementTree as ET
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -883,7 +884,6 @@ def extract_ratios(financials, balance_sheet, cashflow, closes_by_year, shares_o
     cash = get_row(balance_sheet, "Cash And Cash Equivalents", "Cash Cash Equivalents And Short Term Investments")
     equity = get_row(balance_sheet, "Stockholders Equity", "Common Stock Equity")
 
-    op_cash_flow = get_row(cashflow, "Operating Cash Flow")
     # Replis en cascade : "Net PPE Purchase And Sale" (ex : Veolia
     # Environnement, pas de ligne "Capital Expenditure" isolée — nette les
     # cessions d'immobilisations contre les achats, proche du capex pur
@@ -895,6 +895,19 @@ def extract_ratios(financials, balance_sheet, cashflow, closes_by_year, shares_o
         cashflow, "Capital Expenditure", "Net PPE Purchase And Sale",
         "Net Investment Properties Purchase And Sale",
     )
+    # "Operating Cash Flow" absent chez certaines entreprises (ex : ASML
+    # Holding, reporting IFRS) — dérivé depuis "Free Cash Flow" (= OCF +
+    # capex, capex déjà négatif) quand disponible plutôt que d'échouer.
+    op_cash_flow = _try_get_row(cashflow, "Operating Cash Flow")
+    if op_cash_flow is None:
+        free_cash_flow = _try_get_row(cashflow, "Free Cash Flow")
+        if free_cash_flow is not None:
+            op_cash_flow = free_cash_flow - capex
+        else:
+            raise KeyError(
+                f"Aucune des lignes ('Operating Cash Flow',) ni du repli "
+                f"('Free Cash Flow',) trouvée (lignes disponibles : {list(cashflow.index)})"
+            )
 
     # _safe_value (pas un accès direct [latest]) : total_debt/cash/equity
     # viennent de balance_sheet, dont les colonnes ne correspondent pas
@@ -1178,7 +1191,6 @@ def build_financial_narrative_context(
     equity = get_row(balance_sheet, "Stockholders Equity", "Common Stock Equity")
     total_debt = _get_row_or_nan(balance_sheet, "Total Debt")
     cash = get_row(balance_sheet, "Cash And Cash Equivalents", "Cash Cash Equivalents And Short Term Investments")
-    op_cash_flow = get_row(cashflow, "Operating Cash Flow")
     # Replis en cascade : "Net PPE Purchase And Sale" (ex : Veolia
     # Environnement, pas de ligne "Capital Expenditure" isolée — nette les
     # cessions d'immobilisations contre les achats, proche du capex pur
@@ -1190,6 +1202,20 @@ def build_financial_narrative_context(
         cashflow, "Capital Expenditure", "Net PPE Purchase And Sale",
         "Net Investment Properties Purchase And Sale",
     )
+    # "Operating Cash Flow" absent chez certaines entreprises (ex : ASML
+    # Holding, reporting IFRS) — dérivé depuis "Free Cash Flow" (= OCF +
+    # capex, capex déjà négatif) quand disponible plutôt que d'échouer.
+    # Même repli que dans extract_ratios (même limite yfinance).
+    op_cash_flow = _try_get_row(cashflow, "Operating Cash Flow")
+    if op_cash_flow is None:
+        free_cash_flow = _try_get_row(cashflow, "Free Cash Flow")
+        if free_cash_flow is not None:
+            op_cash_flow = free_cash_flow - capex
+        else:
+            raise KeyError(
+                f"Aucune des lignes ('Operating Cash Flow',) ni du repli "
+                f"('Free Cash Flow',) trouvée (lignes disponibles : {list(cashflow.index)})"
+            )
 
     def _fmt(value) -> str:
         return "non disponible" if value is None or _is_missing(value) else f"{value:,.0f}"
@@ -2928,7 +2954,14 @@ def main():
                 )
             )
         except Exception as e:
+            # Trace complète en plus du message (pas juste str(e)) : un
+            # message générique comme "list index out of range" (IndexError
+            # brut, pas une KeyError volontaire de get_row) ne dit ni où ni
+            # pourquoi — insuffisant pour diagnostiquer un vrai bug de code
+            # plutôt qu'une donnée manquante (trouvé en production : Axon
+            # Enterprise, cause réelle invisible sans la trace).
             print(f"Erreur pour {company['ticker']} ({company['name']}) : {e}")
+            traceback.print_exc()
 
     newly_triggered_entree, newly_triggered_major_news = _attach_alerts_and_update_history(companies)
     send_entry_alert_email(newly_triggered_entree)

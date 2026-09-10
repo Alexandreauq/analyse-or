@@ -2,7 +2,7 @@ name: Synchronisation portefeuille MT5
 
 on:
   schedule:
-    - cron: "0 8 * * *"   # une fois par jour, 08h00 UTC (décalé des crons Indices 07h00 et IBKR 07h00)
+    - cron: "0 8 * * *"   # une fois par jour, 08h00 UTC (décalé du cron Indices 06h00 ; le cron IBKR est désactivé)
   workflow_dispatch: {}
 
 concurrency:
@@ -32,6 +32,7 @@ jobs:
         env:
           METAAPI_TOKEN: ${{ secrets.METAAPI_TOKEN }}
           METAAPI_ACCOUNT_ID: ${{ secrets.METAAPI_ACCOUNT_ID }}
+          METAAPI_REGION: ${{ vars.METAAPI_REGION }}
 
       - name: Publier les données mises à jour sur le site
         run: |

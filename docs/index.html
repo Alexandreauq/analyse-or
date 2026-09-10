@@ -1202,7 +1202,7 @@ function realPortfolioHtml() {
     <div class="portfolio-position-row">
       <div class="portfolio-position-main">
         <span class="company-name">${escHtml(p.symbol)}</span>
-        <span class="company-ticker">${p.type === 'achat' ? 'Achat' : 'Vente'}</span>
+        <span class="company-ticker">${p.type === 'achat' ? 'Achat' : p.type === 'vente' ? 'Vente' : '—'}</span>
       </div>
       <div class="portfolio-position-pnl">
         <span style="color:${p.pnl_sign === 'positif' ? 'var(--gold)' : 'var(--rust)'}">${p.pnl_sign === 'positif' ? '▲' : '▼'}</span>

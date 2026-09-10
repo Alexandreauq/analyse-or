@@ -722,6 +722,7 @@
   <symbol id="icon-or" viewBox="0 0 24 24"><path d="M6.5 8h11l3 9h-17z"/></symbol>
   <symbol id="icon-minieres" viewBox="0 0 24 24"><path d="M12 3l6.5 6.5L12 21 5.5 9.5z M6.5 9.5h11"/></symbol>
   <symbol id="icon-indices" viewBox="0 0 24 24"><path d="M4 20h16M6.5 20v-5.5M12 20V8M17.5 20v-9.5"/></symbol>
+  <symbol id="icon-portefeuille" viewBox="0 0 24 24"><path d="M4 8h16v11a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z M9 8V6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2 M4 13h16"/></symbol>
   <symbol id="icon-menu" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></symbol>
   <symbol id="icon-close" viewBox="0 0 24 24"><path d="M5 5l14 14M19 5L5 19"/></symbol>
   <symbol id="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.6M12 18.9v2.6M4.6 4.6l1.8 1.8M17.6 17.6l1.8 1.8M2.5 12h2.6M18.9 12h2.6M4.6 19.4l1.8-1.8M17.6 6.4l1.8-1.8"/></symbol>
@@ -742,6 +743,10 @@
   <button class="nav-item" data-route="indices">
     <svg class="nav-icon"><use href="#icon-indices"/></svg>
     <span>Indices</span>
+  </button>
+  <button class="nav-item" data-route="portefeuille">
+    <svg class="nav-icon"><use href="#icon-portefeuille"/></svg>
+    <span>Portefeuille</span>
   </button>
   <button class="theme-toggle" id="themeToggleDesktop" type="button" aria-label="Basculer mode jour/nuit">
     <svg class="nav-icon" id="themeToggleDesktopIcon"><use href="#icon-sun"/></svg>
@@ -766,6 +771,10 @@
   <button class="nav-item" data-route="indices">
     <svg class="nav-icon"><use href="#icon-indices"/></svg>
     <span>Indices</span>
+  </button>
+  <button class="nav-item" data-route="portefeuille">
+    <svg class="nav-icon"><use href="#icon-portefeuille"/></svg>
+    <span>Portefeuille</span>
   </button>
   <button class="nav-item" id="themeToggleDrawer" type="button">
     <svg class="nav-icon" id="themeToggleDrawerIcon"><use href="#icon-sun"/></svg>
@@ -793,6 +802,11 @@
       <svg class="module-card-icon"><use href="#icon-indices"/></svg>
       <span class="module-card-name">Indices</span>
       <span class="module-card-desc">Scoring fondamental CAC 40 / DAX, analyses IA.</span>
+    </a>
+    <a href="#portefeuille" class="module-card">
+      <svg class="module-card-icon"><use href="#icon-portefeuille"/></svg>
+      <span class="module-card-name">Portefeuille</span>
+      <span class="module-card-desc">Suivi de tes positions, P&amp;L, opportunités.</span>
     </a>
   </div>
 </div>
@@ -852,6 +866,22 @@
   </header>
 
   <main id="indicesContent">
+    <div class="skeleton">
+      <div class="skeleton-line"></div>
+      <div class="skeleton-line"></div>
+      <div class="skeleton-line"></div>
+      <div class="skeleton-line"></div>
+    </div>
+  </main>
+</div>
+
+<div id="portefeuille" class="screen app" hidden>
+  <header>
+    <div class="eyebrow">Suivi personnel</div>
+    <h1>Portefeuille</h1>
+  </header>
+
+  <main id="portefeuilleContent">
     <div class="skeleton">
       <div class="skeleton-line"></div>
       <div class="skeleton-line"></div>
@@ -940,6 +970,37 @@ function loadScalpingModule() {
     script.onerror = () => reject(new Error('scalping.js n\'a pas pu être chargé'));
     document.body.appendChild(script);
   });
+}
+
+let portfolioJsLoaded = false;
+
+function loadPortfolioModule() {
+  // Charge docs/portfolio.js à la demande (premier passage sur l'onglet
+  // Portefeuille), même logique paresseuse que loadScalpingModule.
+  return new Promise((resolve, reject) => {
+    if (portfolioJsLoaded) { resolve(); return; }
+    const script = document.createElement('script');
+    script.src = 'portfolio.js';
+    script.onload = () => { portfolioJsLoaded = true; resolve(); };
+    script.onerror = () => reject(new Error("portfolio.js n'a pas pu être chargé"));
+    document.body.appendChild(script);
+  });
+}
+
+let portfolioScreenLoaded = false;
+
+async function loadPortfolioScreen() {
+  // Squelette pour Task 3 : confirme juste que la route/le chargement
+  // fonctionnent. Le vrai rendu (formulaire, positions, totaux,
+  // opportunités) arrive en Task 4-5 et remplacera ce corps de fonction.
+  if (portfolioScreenLoaded) return;
+  portfolioScreenLoaded = true;
+  try {
+    await loadPortfolioModule();
+    document.getElementById('portefeuilleContent').innerHTML = '<div class="empty">Portefeuille (à venir).</div>';
+  } catch (e) {
+    document.getElementById('portefeuilleContent').innerHTML = `<div class="empty">Portefeuille indisponible pour l'instant.<br>${e.message}</div>`;
+  }
 }
 
 function renderScalpSignal(signal) {
@@ -1357,7 +1418,7 @@ function render(data) {
   if (matchMedia('(min-width: 1024px)').matches) animateFactorBars();
 }
 
-const SLIDING_PANES = ['or', 'indices'];
+const SLIDING_PANES = ['or', 'indices', 'portefeuille'];
 let indicesLoaded = false;
 let indicesData = null;
 
@@ -1904,6 +1965,7 @@ function renderCompanyAnalysis(company) {
 function parseRoute() {
   const hash = location.hash.slice(1);
   if (hash === 'or') return { screen: 'or' };
+  if (hash === 'portefeuille') return { screen: 'portefeuille' };
   if (hash === 'indices') return { screen: 'indices', ticker: null };
   if (hash === 'indices/suivi') return { screen: 'indices', ticker: null, view: 'suivi' };
   if (hash.startsWith('indices/')) {
@@ -1968,6 +2030,9 @@ function renderRoute(animate) {
   }
   if (route.screen === 'indices') {
     loadIndices(route.ticker, route.view);
+  }
+  if (route.screen === 'portefeuille') {
+    loadPortfolioScreen();
   }
 }
 

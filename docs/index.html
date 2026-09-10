@@ -1205,22 +1205,22 @@ function wirePortfolioPositionActions(companiesByTicker) {
       if (!position || !row) return;
       row.innerHTML = `
         <div class="portfolio-form-row">
-          <input class="list-search" type="number" value="${position.quantity}" id="portfolioEditQuantity" min="0" step="any">
-          <input class="list-search" type="number" value="${position.buy_price}" id="portfolioEditPrice" min="0" step="any">
-          <input class="list-search" type="date" value="${position.buy_date}" id="portfolioEditDate">
+          <input class="list-search" type="number" value="${position.quantity}" id="portfolioEditQuantity-${position.id}" min="0" step="any">
+          <input class="list-search" type="number" value="${position.buy_price}" id="portfolioEditPrice-${position.id}" min="0" step="any">
+          <input class="list-search" type="date" value="${position.buy_date}" id="portfolioEditDate-${position.id}">
         </div>
-        <p class="portfolio-form-error" id="portfolioEditError" hidden></p>
+        <p class="portfolio-form-error" id="portfolioEditError-${position.id}" hidden></p>
         <div class="portfolio-position-actions">
-          <button class="toggle-btn" type="button" id="portfolioEditSave">Enregistrer</button>
-          <button class="toggle-btn" type="button" id="portfolioEditCancel">Annuler</button>
+          <button class="toggle-btn" type="button" id="portfolioEditSave-${position.id}">Enregistrer</button>
+          <button class="toggle-btn" type="button" id="portfolioEditCancel-${position.id}">Annuler</button>
         </div>`;
-      document.getElementById('portfolioEditCancel').addEventListener('click', () => renderPortfolioScreen());
-      document.getElementById('portfolioEditSave').addEventListener('click', () => {
-        const quantity = parseFloat(document.getElementById('portfolioEditQuantity').value);
-        const buyPrice = parseFloat(document.getElementById('portfolioEditPrice').value);
-        const buyDate = document.getElementById('portfolioEditDate').value;
+      document.getElementById(`portfolioEditCancel-${position.id}`).addEventListener('click', () => renderPortfolioScreen());
+      document.getElementById(`portfolioEditSave-${position.id}`).addEventListener('click', () => {
+        const quantity = parseFloat(document.getElementById(`portfolioEditQuantity-${position.id}`).value);
+        const buyPrice = parseFloat(document.getElementById(`portfolioEditPrice-${position.id}`).value);
+        const buyDate = document.getElementById(`portfolioEditDate-${position.id}`).value;
         const result = updatePosition(position.id, quantity, buyPrice, buyDate);
-        const errorEl = document.getElementById('portfolioEditError');
+        const errorEl = document.getElementById(`portfolioEditError-${position.id}`);
         if (!result.ok) {
           errorEl.textContent = result.error;
           errorEl.hidden = false;

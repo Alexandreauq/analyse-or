@@ -1,7 +1,9 @@
 # gold_bot/risk.py
 # Dimensionnement de position par le risque et coupe-circuit journalier
 # — voir docs/superpowers/specs/2026-09-10-bot-trading-or-design.md.
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
+
+import gold_bot.state as state
 
 
 def compute_position_size(balance: float, entry: float, stop_loss: float,
@@ -28,15 +30,28 @@ class CircuitBreaker:
     positions si la perte cumulée du jour dépasse threshold_pct du solde
     fixé au début de la journée UTC courante. Ne ferme jamais de
     position existante — seul un filtre sur can_open_position().
-    `now_fn` est injectable pour les tests (horloge fixe/contrôlable)."""
+    `now_fn` est injectable pour les tests (horloge fixe/contrôlable).
+    `persist_path`, si fourni, persiste {day, starting_balance} via
+    gold_bot.state — sans lui, l'état reste en mémoire uniquement (perdu
+    au redémarrage), ce qui suffit pour les tests mais pas en
+    production, où un redémarrage ne doit pas réinitialiser le seuil du
+    jour au solde courant."""
 
-    def __init__(self, threshold_pct: float = 0.10, now_fn=None):
+    def __init__(self, threshold_pct: float = 0.10, now_fn=None, persist_path=None):
         if not 0 < threshold_pct <= 1:
             raise ValueError("threshold_pct doit être compris entre 0 (exclu) et 1 (inclus)")
         self.threshold_pct = threshold_pct
         self._now_fn = now_fn or (lambda: datetime.now(timezone.utc))
+        self._persist_path = persist_path
         self._day = None
         self._starting_balance = None
+        if persist_path is not None:
+            saved = state.load_state(persist_path)
+            saved_day = saved.get("circuit_breaker_day")
+            saved_balance = saved.get("circuit_breaker_starting_balance")
+            if saved_day is not None and saved_balance is not None:
+                self._day = date.fromisoformat(saved_day)
+                self._starting_balance = saved_balance
 
     def check(self, current_balance: float) -> None:
         """À appeler avant toute décision — fixe le solde de référence
@@ -45,6 +60,15 @@ class CircuitBreaker:
         if self._day != today:
             self._day = today
             self._starting_balance = current_balance
+            self._persist()
+
+    def _persist(self) -> None:
+        if self._persist_path is None:
+            return
+        current = state.load_state(self._persist_path)
+        current["circuit_breaker_day"] = self._day.isoformat()
+        current["circuit_breaker_starting_balance"] = self._starting_balance
+        state.save_state(current, self._persist_path)
 
     def can_open_position(self, current_balance: float) -> bool:
         self.check(current_balance)

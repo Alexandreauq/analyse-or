@@ -9,7 +9,7 @@ import gold_bot.confluence as confluence
 import gold_bot.risk as risk
 
 
-def decide_and_act(candles: list[dict], contract_size: float, balance: float,
+def decide_and_act(candles: list[dict], *, contract_size: float, balance: float,
                     open_positions: list[dict], circuit_breaker: "risk.CircuitBreaker",
                     symbol: str = "XAUUSD") -> dict:
     """Cœur de la boucle : évalue le signal, applique les règles de

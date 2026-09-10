@@ -1,7 +1,7 @@
 // Service worker minimal : met en cache la coquille de l'app pour qu'elle
 // s'ouvre instantanément, sans bloquer les mises à jour de score.json qui
 // doit toujours être rechargé depuis le réseau (données du jour).
-const CACHE_NAME = "analyse-or-shell-v22";
+const CACHE_NAME = "analyse-or-shell-v23";
 const SHELL_FILES = ["./index.html", "./manifest.json"];
 
 self.addEventListener("install", (event) => {
@@ -24,7 +24,7 @@ self.addEventListener("fetch", (event) => {
   const url = new URL(event.request.url);
 
   // score.json : toujours réseau d'abord (données fraîches), jamais de cache
-  if (url.pathname.endsWith("score.json") || url.pathname.endsWith("indices.json") || url.pathname.endsWith("real_portfolio.json")) {
+  if (url.pathname.endsWith("score.json") || url.pathname.endsWith("indices.json") || url.pathname.endsWith("real_portfolio.json") || url.pathname.endsWith("real_portfolio_mt5.json")) {
     event.respondWith(fetch(event.request).catch(() => caches.match(event.request)));
     return;
   }

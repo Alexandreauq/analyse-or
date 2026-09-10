@@ -304,23 +304,66 @@ NASDAQ_COMPANIES = [
     {"ticker": "XEL", "name": "Xcel Energy"},
 ]
 
+# Dow Jones Industrial Average : 30 composants (source Wikipedia,
+# 2026-08-16 — Alphabet (GOOGL) a remplacé Verizon (VZ) dans l'indice le
+# 2026-06-29, confirmé via le communiqué S&P Global ; ne pas réintroduire
+# VZ par erreur en pensant combler un oubli), 9 d'entre eux déjà suivis
+# côté NASDAQ_COMPANIES (Alphabet, Amazon, Amgen, Apple, Cisco, Honeywell
+# Technologies, Microsoft, Nvidia, Walmart — tous cotés Nasdaq et déjà
+# membres du Nasdaq-100) — PAS dupliqués ici, même choix déjà fait pour
+# le chevauchement CAC40/DAX (voir plus haut). Le Dow est donc à 21/30
+# par ce choix, pas par erreur. Les 21 restantes sont toutes cotées au
+# NYSE (aucune exception parmi elles) — d'où un seul préfixe NYSE: côté
+# frontend pour cet indice, comme pour les autres (pas besoin d'un
+# mapping par entreprise).
+DOW_COMPANIES = [
+    {"ticker": "MMM", "name": "3M"},
+    {"ticker": "AXP", "name": "American Express"},
+    {"ticker": "BA", "name": "Boeing"},
+    {"ticker": "CAT", "name": "Caterpillar"},
+    {"ticker": "CVX", "name": "Chevron"},
+    {"ticker": "KO", "name": "Coca-Cola"},
+    {"ticker": "DIS", "name": "Walt Disney"},
+    {"ticker": "GS", "name": "Goldman Sachs"},
+    {"ticker": "HD", "name": "Home Depot"},
+    {"ticker": "IBM", "name": "IBM"},
+    {"ticker": "JNJ", "name": "Johnson & Johnson"},
+    {"ticker": "JPM", "name": "JPMorgan Chase"},
+    {"ticker": "MCD", "name": "McDonald's"},
+    {"ticker": "MRK", "name": "Merck"},
+    {"ticker": "NKE", "name": "Nike"},
+    {"ticker": "PG", "name": "Procter & Gamble"},
+    {"ticker": "CRM", "name": "Salesforce"},
+    {"ticker": "SHW", "name": "Sherwin-Williams"},
+    {"ticker": "TRV", "name": "Travelers"},
+    {"ticker": "UNH", "name": "UnitedHealth Group"},
+    {"ticker": "V", "name": "Visa"},
+]
+
 # Chaque entreprise de COMPANIES porte son propre indice ("index" ajouté
-# ici, pas dans CAC40_COMPANIES/DAX_COMPANIES/NASDAQ_COMPANIES eux-mêmes,
-# pour garder ces listes lisibles) — remplace l'ancienne constante unique
-# INDEX_KEY, insuffisante dès qu'un 2e indice existe. INDEX_NAMES : nom
-# affiché par indice, complété au fil de l'ajout de nouveaux indices.
+# ici, pas dans CAC40_COMPANIES/DAX_COMPANIES/NASDAQ_COMPANIES/
+# DOW_COMPANIES eux-mêmes, pour garder ces listes lisibles) — remplace
+# l'ancienne constante unique INDEX_KEY, insuffisante dès qu'un 2e indice
+# existe. INDEX_NAMES : nom affiché par indice, complété au fil de
+# l'ajout de nouveaux indices.
+#
+# Sont exclues de FINANCIAL_SECTOR_TICKERS (méthodologie standard,
+# EBITDA/EBIT disponibles) — sauf Goldman Sachs et JPMorgan Chase,
+# établissements financiers, voir FINANCIAL_SECTOR_TICKERS plus bas.
 COMPANIES = (
     [{**c, "index": "CAC40"} for c in CAC40_COMPANIES]
     + [{**c, "index": "DAX"} for c in DAX_COMPANIES]
     + [{**c, "index": "NASDAQ"} for c in NASDAQ_COMPANIES]
+    + [{**c, "index": "DOW"} for c in DOW_COMPANIES]
 )
-INDEX_NAMES = {"CAC40": "CAC 40", "DAX": "DAX", "NASDAQ": "Nasdaq 100"}
+INDEX_NAMES = {"CAC40": "CAC 40", "DAX": "DAX", "NASDAQ": "Nasdaq 100", "DOW": "Dow Jones"}
 
 # Devise native de chaque indice — CAC40/DAX publient en euros, le
-# Nasdaq-100 en dollars. Consommé côté frontend (docs/index.html) pour
-# afficher le bon symbole plutôt que de supposer € partout (bug de fond
-# corrigé à l'occasion de l'ajout du Nasdaq, pas seulement étendu).
-INDEX_CURRENCY = {"CAC40": "EUR", "DAX": "EUR", "NASDAQ": "USD"}
+# Nasdaq-100 et le Dow Jones en dollars. Consommé côté frontend
+# (docs/index.html) pour afficher le bon symbole plutôt que de supposer
+# € partout (bug de fond corrigé à l'occasion de l'ajout du Nasdaq, pas
+# seulement étendu).
+INDEX_CURRENCY = {"CAC40": "EUR", "DAX": "EUR", "NASDAQ": "USD", "DOW": "USD"}
 
 SECTOR_PROFILES = {
     "Utilities": "defensif",
@@ -389,6 +432,12 @@ SHARES_OUTSTANDING_FROM_MARKET_CAP_TICKERS = {
 FINANCIAL_SECTOR_TICKERS = {
     "BNP.PA", "GLE.PA", "ACA.PA", "CS.PA",
     "DBK.DE", "CBK.DE", "ALV.DE", "MUV2.DE", "HNR1.DE",
+    # Dow Jones : banques dont le bilan ne fournit pas d'EBITDA/EBIT
+    # exploitable chez yfinance, même critère que ci-dessus. Visa (V),
+    # présente dans le Dow, n'est PAS ajoutée ici : société de paiement
+    # (pas une banque de dépôt/crédit), EBITDA/EBIT standard disponibles
+    # chez yfinance — même choix que PayPal (PYPL) côté Nasdaq-100.
+    "GS", "JPM",
 }
 
 
@@ -1656,7 +1705,7 @@ SIGNAL_TRACKING_PATH = os.path.join(
 )
 # Indices utilisés comme benchmark de chaque position (voir "index" sur
 # chaque société — CAC40/DAX) : tickers yfinance correspondants.
-INDEX_YFINANCE_TICKERS = {"CAC40": "^FCHI", "DAX": "^GDAXI", "NASDAQ": "^NDX"}
+INDEX_YFINANCE_TICKERS = {"CAC40": "^FCHI", "DAX": "^GDAXI", "NASDAQ": "^NDX", "DOW": "^DJI"}
 SIGNAL_STOP_LOSS_PCT = -20.0     # % perte déclenchant une clôture anticipée
 SIGNAL_SHADOW_DELAY_MONTHS = 6   # délai max avant clôture forcée du signal
                                   # ET date du benchmark "tenir 6 mois pleins"

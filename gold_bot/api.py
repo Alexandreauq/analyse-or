@@ -27,10 +27,15 @@ app.add_middleware(
 def _check_token(x_bot_token: str | None) -> None:
     """Refuse par défaut si BOT_API_TOKEN n'est pas configuré (échec
     fermé, jamais ouvert) — pas seulement si le jeton fourni est faux.
-    Comparaison à temps constant pour ne pas fuiter d'information sur
-    la position du premier caractère incorrect."""
+    Comparaison à temps constant sur les octets UTF-8 (pas des `str`) :
+    Starlette décode les en-têtes en latin-1, donc tout octet non-ASCII
+    ferait lever un TypeError non capturé à hmac.compare_digest sur des
+    `str` — pas seulement pour ne pas fuiter d'information sur la
+    position du premier caractère incorrect."""
     expected = os.environ.get("BOT_API_TOKEN")
-    if not expected or not hmac.compare_digest(x_bot_token or "", expected):
+    if not expected or not hmac.compare_digest(
+        (x_bot_token or "").encode("utf-8", "surrogateescape"), expected.encode("utf-8")
+    ):
         raise HTTPException(status_code=401, detail="Jeton invalide ou absent")
 
 
@@ -42,7 +47,6 @@ def get_status():
         "kill_switch": current["kill_switch"],
         "dry_run": current["dry_run"],
         "circuit_breaker_day": circuit_breaker_state.get("circuit_breaker_day"),
-        "circuit_breaker_starting_balance": circuit_breaker_state.get("circuit_breaker_starting_balance"),
     }
 
 

@@ -2,6 +2,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 import gold_bot.api as api
+import gold_bot.loop as loop
 import gold_bot.state as state
 
 
@@ -59,7 +60,6 @@ def test_status_reports_circuit_breaker_fields_from_separate_file(client, monkey
     response = client.get("/status")
     body = response.json()
     assert body["circuit_breaker_day"] == "2026-09-10"
-    assert body["circuit_breaker_starting_balance"] == 10000.0
 
 
 def test_kill_rejected_when_bot_api_token_not_configured(tmp_path, monkeypatch):
@@ -81,3 +81,17 @@ def test_broker_module_is_never_referenced_in_api_source():
     import inspect
     source = inspect.getsource(api)
     assert "broker" not in source
+
+
+def test_kill_rejected_not_crashed_on_non_ascii_token(client):
+    # Header envoyé comme octets latin-1 bruts (ce que le serveur reçoit
+    # réellement sur le fil) plutôt qu'un `str` Python — httpx (client de
+    # test) refuse lui-même d'encoder un `str` non-ASCII en en-tête HTTP
+    # avant même que la requête ne parte, ce qui ne reproduirait pas le
+    # scénario visé (un octet non-ASCII arrivant côté serveur).
+    response = client.post("/kill", headers={"X-Bot-Token": "tokén".encode("latin-1")})
+    assert response.status_code == 401
+
+
+def test_circuit_breaker_state_path_matches_loop_module():
+    assert api.CIRCUIT_BREAKER_STATE_PATH == loop.CIRCUIT_BREAKER_STATE_PATH

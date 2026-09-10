@@ -37,7 +37,7 @@ def execute_steps(token: str, account_id: str, steps: list[dict],
     non, est consignée dans le résultat, pour qu'une étape en échec
     n'efface jamais la trace d'une étape précédente réellement
     exécutée (ex. une clôture réussie suivie d'une ouverture ratée)."""
-    current_state = state.load_state()
+    current_state = state.load_state(state.STATE_PATH)
     if current_state["kill_switch"] or current_state["dry_run"]:
         return [
             {"step": step, "result": None, "error": "exécution refusée : kill_switch ou dry_run actif"}
@@ -83,7 +83,7 @@ def run_cycle(token: str, account_id: str, twelve_data_api_key: str,
     pu être activé pendant la collecte, qui prend jusqu'à ~1 minute) ->
     exécution réelle seulement si toujours pas dry_run. Journalise
     systématiquement le résultat, y compris les erreurs."""
-    current_state = state.load_state()
+    current_state = state.load_state(state.STATE_PATH)
     if current_state["kill_switch"]:
         decision = {"action": "ignore", "reason": "interrupteur d'urgence activé"}
         _log_decision(decision, path=DECISIONS_LOG_PATH)
@@ -114,14 +114,14 @@ def run_cycle(token: str, account_id: str, twelve_data_api_key: str,
     # écoulée depuis le premier contrôle (4 appels réseau ci-dessus) —
     # on ne se fie pas à un état potentiellement périmé pour décider
     # d'exécuter réellement.
-    fresh_state = state.load_state()
+    fresh_state = state.load_state(state.STATE_PATH)
     if fresh_state["kill_switch"] or fresh_state["dry_run"]:
         result = {**decision, "action": "simulation_dry_run"}
         _log_decision(result, path=DECISIONS_LOG_PATH)
         return result
 
     results = execute_steps(token, account_id, decision["steps"], region)
-    had_error = any(r["error"] for r in results)
+    had_error = any(r["error"] for r in results) or not results
     result = {"action": "erreur" if had_error else "exécuté", "steps": decision["steps"], "results": results}
     _log_decision(result, path=DECISIONS_LOG_PATH)
     return result
@@ -142,7 +142,12 @@ def main():
             # vrai crash de la boucle serait pire qu'un cycle manqué.
             print(f"Erreur inattendue pendant le cycle : {e}")
             traceback.print_exc()
-        time.sleep(POLL_INTERVAL_SECONDS)
+        # Dort jusqu'à la prochaine limite de minute plutôt qu'un délai
+        # fixe après le cycle — sinon la durée du cycle lui-même (jusqu'à
+        # ~60s cumulés sur les 4 appels réseau) s'additionne au délai et
+        # le bot finit par évaluer des bougies en milieu de clôture au
+        # lieu de leur clôture réelle.
+        time.sleep(max(1, POLL_INTERVAL_SECONDS - time.time() % POLL_INTERVAL_SECONDS))
 
 
 if __name__ == "__main__":

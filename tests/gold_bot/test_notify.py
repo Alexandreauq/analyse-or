@@ -1,5 +1,6 @@
 import json
 
+import gold_bot.loop as loop
 import gold_bot.notify as notify
 
 
@@ -89,3 +90,7 @@ def test_send_daily_summary_sends_email_when_configured(monkeypatch):
     assert sent["host_port"] == (notify.SMTP_HOST, notify.SMTP_PORT)
     assert sent["login"] == ("bot@example.com", "secret")
     assert sent["sendmail"][0] == "bot@example.com"
+
+
+def test_decisions_log_path_matches_loop_module():
+    assert notify.DECISIONS_LOG_PATH == loop.DECISIONS_LOG_PATH

@@ -71,5 +71,45 @@ def fetch_flex_statement(
     )
 
 
+def parse_open_positions(xml_text: str) -> list[dict]:
+    """Extrait chaque <OpenPosition> du rapport Flex en dict. Une section
+    OpenPositions absente ou vide renvoie une liste vide (compte sans
+    position ouverte — cas valide, pas une erreur)."""
+    root = ET.fromstring(xml_text)
+    positions = []
+    for el in root.iter("OpenPosition"):
+        positions.append({
+            "ibkr_symbol": el.get("symbol"),
+            "description": el.get("description"),
+            "currency": el.get("currency"),
+            "quantity": float(el.get("position")),
+            "current_price": float(el.get("markPrice")),
+            "position_value": float(el.get("positionValue")),
+            "cost_basis_price": float(el.get("costBasisPrice")),
+            "cost_basis_value": float(el.get("costBasisMoney")),
+            "unrealized_pnl": float(el.get("fifoPnlUnrealized")),
+        })
+    return positions
+
+
+def match_tickers(positions: list[dict], companies: list[dict]) -> list[dict]:
+    """Ajoute matched_ticker à chaque position, par recherche du symbole
+    IBKR (insensible à la casse) contre les tickers suivis avec leur
+    suffixe Yahoo (.PA/.DE) retiré — AAPL/DOW n'ont pas de suffixe donc
+    ne sont pas affectés par le split. None si aucune correspondance :
+    pas une erreur, attendu pour tout ce qui n'est pas dans les indices
+    suivis (ETF, obligations, actions hors périmètre)."""
+    bare_to_ticker = {}
+    for c in companies:
+        ticker = c["ticker"]
+        bare = ticker.split(".")[0].upper()
+        bare_to_ticker.setdefault(bare, ticker)
+    result = []
+    for p in positions:
+        symbol = (p.get("ibkr_symbol") or "").upper()
+        result.append({**p, "matched_ticker": bare_to_ticker.get(symbol)})
+    return result
+
+
 if __name__ == "__main__":
     pass

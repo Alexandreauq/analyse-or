@@ -1,8 +1,13 @@
 name: Suivi paper-trading Scalping Or
 
 on:
+  # GitHub ne respecte pas les cron plus fréquents que ~toutes les heures en
+  # pratique (throttling documenté sur les schedules très courts) — ce cron
+  # sert donc de filet de secours pour relancer une boucle si la précédente
+  # s'arrête, pas de mécanisme principal. La cadence de 5 min vient de la
+  # boucle interne du job ci-dessous, qui tourne en continu ~5h50.
   schedule:
-    - cron: "*/5 * * * *"   # toutes les 5 minutes, plancher technique GitHub Actions
+    - cron: "*/5 * * * *"
   workflow_dispatch: {}
 
 concurrency:
@@ -16,6 +21,7 @@ permissions:
 jobs:
   run:
     runs-on: ubuntu-latest
+    timeout-minutes: 355
     steps:
       - name: Récupérer le dépôt
         uses: actions/checkout@v4
@@ -28,17 +34,23 @@ jobs:
       - name: Lancer les tests
         run: node scalping_tracker.test.js
 
-      - name: Exécuter le suivi de paper-trading
-        run: node scalping_tracker.js
-        env:
-          TWELVE_DATA_API_KEY: ${{ secrets.TWELVE_DATA_API_KEY }}
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Publier le suivi mis à jour
+      - name: Boucle de suivi (toutes les 5 min pendant ~5h40)
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          [ -f docs/scalping_tracking.json ] && git add docs/scalping_tracking.json || true
-          git diff --staged --quiet || git commit -m "Mise a jour du suivi Scalping"
-          git pull --rebase --autostash
-          git push
+          END=$((SECONDS + 340 * 60))
+          while [ "$SECONDS" -lt "$END" ]; do
+            node scalping_tracker.js
+            if [ -f docs/scalping_tracking.json ]; then
+              git add docs/scalping_tracking.json
+              if ! git diff --staged --quiet; then
+                git commit -m "Mise a jour du suivi Scalping"
+                git pull --rebase --autostash
+                git push
+              fi
+            fi
+            sleep 300
+          done
+        env:
+          TWELVE_DATA_API_KEY: ${{ secrets.TWELVE_DATA_API_KEY }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

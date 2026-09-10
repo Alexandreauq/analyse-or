@@ -3034,6 +3034,11 @@ def main():
         "updated": datetime.today().strftime("%Y-%m-%d"),
         "index_names": INDEX_NAMES,
         "index_currency": INDEX_CURRENCY,
+        # Niveau du jour de chaque indice (voir fetch_index_prices) — sert
+        # de repli côté frontend quand le widget TradingView n'est pas
+        # disponible pour un indice (licence de données bloquée en widget
+        # gratuit pour Nasdaq/Dow Jones, contrairement à CAC40/DAX).
+        "index_prices": fetch_index_prices(),
         "companies": companies,
         "health": _compute_health_summary(companies),
     }

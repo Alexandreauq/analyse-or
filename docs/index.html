@@ -637,6 +637,14 @@
   .index-card-peek-empty { color: var(--muted); font-size: var(--text-sm); margin: 0; }
   .index-card:has(.index-card-header[aria-expanded="true"]) .index-card-peek { display: none; }
 
+  /* Repli sans widget TradingView (voir loadIndexQuoteWidget/indexPriceFallbackHtml) :
+     juste le niveau du jour de l'indice, sobre, pas un graphique. */
+  .index-price-fallback {
+    font-family: 'Newsreader', serif; font-weight: 400; font-size: var(--text-2xl);
+    padding: 14px 0 4px;
+  }
+  .index-price-fallback-empty { color: var(--muted); font-size: var(--text-sm); padding: 10px 0; margin: 0; }
+
   .index-card-body {
     padding: 0 18px; max-height: 0; overflow: hidden; opacity: 0;
     border-top: 1px solid transparent;
@@ -1117,18 +1125,25 @@ function loadSideQuoteWidget(ticker, indexKey) {
 // Symbole TradingView par indice — INDEX_TV_SYMBOL_BY_KEY, pas une seule
 // constante : quand d'autres indices (S&P 500…) rejoindront
 // indicesData.companies un jour, ce sera la seule ligne à ajouter ici.
-// Nasdaq/Dow en ETF qui répliquent l'indice (QQQ, DIA) plutôt qu'en accès
-// direct à l'indice — NASDAQ:/DJ:/TVC:/OANDA: donnaient tous "réservé à
-// TradingView" (licence de données bloquée pour le widget gratuit, quel
-// que soit le fournisseur). Un ETF est une action cotée normale, même
-// catégorie de données que les widgets par entreprise qui fonctionnent
-// déjà ailleurs dans l'appli — très proche de l'indice, pas identique.
+// Pas d'entrée Nasdaq/Dow : NASDAQ:NDX, DJ:DJI, TVC:NDX, TVC:DJI,
+// OANDA:NAS100USD/US30USD et même les ETF NASDAQ:QQQ/AMEX:DIA donnent tous
+// soit "réservé à TradingView" (licence de données bloquée en widget
+// gratuit) soit un prix qui n'est plus celui de l'indice (échelle ETF) —
+// voir loadIndexQuoteWidget, qui bascule sur indicesData.index_prices
+// (indices_score.py/yfinance) quand aucun symbole fiable n'existe ici.
 const INDEX_TV_SYMBOL_BY_KEY = {
   CAC40: 'EURONEXT:PX1',
   DAX: 'XETR:DAX',
-  NASDAQ: 'NASDAQ:QQQ',
-  DOW: 'AMEX:DIA',
 };
+
+// Repli sans widget : affiche juste le niveau du jour de l'indice (voir
+// index_prices dans indices.json) quand INDEX_TV_SYMBOL_BY_KEY n'a pas de
+// symbole fiable — pas de dépendance à une licence de données TradingView.
+function indexPriceFallbackHtml(indexKey) {
+  const price = indicesData.index_prices && indicesData.index_prices[indexKey];
+  if (price == null) return `<p class="index-price-fallback-empty">Cours indisponible pour le moment.</p>`;
+  return `<div class="index-price-fallback">${formatPriceForIndex(price, indexKey)}</div>`;
+}
 
 function loadIndexQuoteWidget(indexKey, containerId) {
   // Cours de l'indice lui-même (pas une entreprise), en tête du panneau
@@ -1138,7 +1153,11 @@ function loadIndexQuoteWidget(indexKey, containerId) {
   // fixe) : plusieurs panneaux dépliants coexistent dans le DOM.
   const tvSymbol = INDEX_TV_SYMBOL_BY_KEY[indexKey];
   const container = document.getElementById(containerId);
-  if (!tvSymbol || !container) return;
+  if (!container) return;
+  if (!tvSymbol) {
+    container.innerHTML = indexPriceFallbackHtml(indexKey);
+    return;
+  }
   const script = document.createElement('script');
   script.type = 'text/javascript';
   script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-symbol-overview.js';

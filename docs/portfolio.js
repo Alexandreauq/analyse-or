@@ -112,9 +112,56 @@ function removePosition(id, storage) {
   return { ok: true, positions };
 }
 
+/**
+ * `null` si currentPrice n'est pas un nombre fini (prix indisponible pour
+ * ce ticker) — jamais NaN qui se propagerait silencieusement dans les
+ * totaux du portefeuille.
+ */
+function computePositionPnL(position, currentPrice) {
+  if (!Number.isFinite(currentPrice)) return null;
+  const value = currentPrice * position.quantity;
+  const cost = position.buy_price * position.quantity;
+  const pnlAbs = value - cost;
+  const pnlPct = cost !== 0 ? (pnlAbs / cost) * 100 : 0;
+  return { value, pnlAbs, pnlPct };
+}
+
+/**
+ * Deux totaux séparés, jamais convertis/mélangés (voir spec). Une
+ * position dont le ticker n'est pas dans companiesByTicker (retiré de
+ * l'indice suivi) ou dont computePositionPnL renvoie null est ignorée
+ * pour ce calcul, plutôt que de faire échouer tout le total.
+ */
+function computePortfolioTotals(positions, companiesByTicker, currencyByIndex) {
+  const totals = { EUR: { value: 0, pnlAbs: 0 }, USD: { value: 0, pnlAbs: 0 } };
+  positions.forEach(position => {
+    const company = companiesByTicker[position.ticker];
+    if (!company) return;
+    const pnl = computePositionPnL(position, company.current_price);
+    if (!pnl) return;
+    const currency = currencyByIndex[company.index] === 'USD' ? 'USD' : 'EUR';
+    totals[currency].value += pnl.value;
+    totals[currency].pnlAbs += pnl.pnlAbs;
+  });
+  return totals;
+}
+
+/**
+ * Entreprises suivies avec un signal "entrée" actif que l'utilisateur ne
+ * détient pas déjà (heldTickers). Même filtre d'alerte que
+ * hasMajorNewsAlert côté docs/index.html, mais sur "entree" au lieu de
+ * "actu_majeure".
+ */
+function findOpportunities(companies, heldTickers) {
+  return companies.filter(c =>
+    !heldTickers.has(c.ticker) && (c.alerts || []).some(a => a.kind === 'entree')
+  );
+}
+
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
     PORTFOLIO_STORAGE_KEY, validatePositionInput, createPosition,
     loadPortfolio, savePortfolio, addPosition, updatePosition, removePosition,
+    computePositionPnL, computePortfolioTotals, findOpportunities,
   };
 }

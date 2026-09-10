@@ -31,6 +31,27 @@ def test_read_todays_decisions_skips_corrupted_lines(tmp_path):
     assert len(result) == 1
 
 
+def test_build_summary_email_html_surfaces_reason_errors():
+    decisions = [{"action": "erreur", "reason": "Twelve Data indisponible"}]
+    html = notify.build_summary_email_html(decisions, "2026-09-10")
+    assert "Twelve Data indisponible" in html
+
+
+def test_build_summary_email_html_surfaces_partial_execution_errors():
+    decisions = [{
+        "action": "erreur",
+        "steps": [{"type": "ouverture_simulee", "symbol": "XAUUSD"}],
+        "results": [{
+            "step": {"type": "ouverture_simulee", "symbol": "XAUUSD"},
+            "result": None,
+            "error": "échec MetaApi",
+        }],
+    }]
+    html = notify.build_summary_email_html(decisions, "2026-09-10")
+    assert "échec MetaApi" in html
+    assert "XAUUSD" in html
+
+
 def test_send_daily_summary_skipped_when_smtp_not_configured(monkeypatch):
     monkeypatch.delenv("SMTP_USER", raising=False)
     monkeypatch.delenv("SMTP_PASSWORD", raising=False)

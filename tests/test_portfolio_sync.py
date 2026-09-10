@@ -280,3 +280,28 @@ def test_main_starts_from_empty_state_when_output_file_absent(monkeypatch, tmp_p
 
     written = json.loads(output_path.read_text(encoding="utf-8"))
     assert written["positions"] == []
+
+
+def test_main_sanitizes_request_exception_message_to_avoid_leaking_token(monkeypatch, tmp_path):
+    monkeypatch.setenv("IBKR_FLEX_TOKEN", "SECRET123")
+    monkeypatch.setenv("IBKR_FLEX_QUERY_ID", "qid")
+    output_path = tmp_path / "real_portfolio.json"
+    monkeypatch.setattr(portfolio_sync, "REAL_PORTFOLIO_JSON_PATH", str(output_path))
+
+    def _raise(token, query_id):
+        response = portfolio_sync.requests.Response()
+        response.status_code = 429
+        raise portfolio_sync.requests.exceptions.HTTPError(
+            "429 Client Error: Too Many Requests for url: "
+            "https://ndcdyn.interactivebrokers.com/AccountManagement/FlexWebService/SendRequest?t=SECRET123&q=qid",
+            response=response,
+        )
+
+    monkeypatch.setattr(portfolio_sync, "fetch_flex_reference_code", _raise)
+
+    portfolio_sync.main()
+
+    written = json.loads(output_path.read_text(encoding="utf-8"))
+    assert written["sync_status"] == "error"
+    assert "SECRET123" not in written["sync_error"]
+    assert "429" in written["sync_error"]

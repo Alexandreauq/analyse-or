@@ -175,6 +175,23 @@ def main():
         positions = parse_open_positions(xml_text)
         companies = _load_tracked_companies()
         positions = match_tickers(positions, companies)
+    except requests.exceptions.RequestException as e:
+        # Le message par défaut d'une exception requests (ex. HTTPError)
+        # inclut l'URL complète de la requête, donc le jeton IBKR passé en
+        # paramètre — jamais stocker ce message brut dans real_portfolio.json,
+        # publié publiquement par ce dépôt. Le détail complet part quand même
+        # sur stdout (traceback compris) : GitHub Actions masque automatiquement
+        # la valeur du secret dans tous les logs d'un job qui la référence via
+        # env:, donc seul le fichier persisté a besoin d'être assaini ici.
+        status = getattr(getattr(e, "response", None), "status_code", None)
+        payload["sync_status"] = "error"
+        payload["sync_error"] = (
+            f"Erreur réseau IBKR (HTTP {status})" if status else "Erreur réseau IBKR (pas de réponse)"
+        )
+        _write_real_portfolio(payload)
+        print(f"Erreur synchronisation IBKR (réseau) : HTTP {status}")
+        traceback.print_exc()
+        return
     except Exception as e:
         payload["sync_status"] = "error"
         payload["sync_error"] = str(e)

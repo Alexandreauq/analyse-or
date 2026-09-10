@@ -512,6 +512,28 @@
   .company-ticker { color: var(--muted); font-size: var(--text-xs); }
   .company-score { font-family: 'Newsreader', serif; font-weight: 600; font-size: var(--text-xl); }
 
+  .portfolio-totals { display: flex; gap: 12px; margin: 4px 0 20px; flex-wrap: wrap; }
+  .portfolio-total-card {
+    display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 140px;
+    background: var(--bg-2); border: 1px solid var(--border); border-radius: var(--radius-lg);
+    padding: 14px 16px;
+  }
+  .portfolio-total-label { color: var(--muted); font-size: var(--text-xs); }
+  .portfolio-total-value { font-family: 'Newsreader', serif; font-size: var(--text-xl); }
+  .portfolio-total-pnl { font-size: var(--text-sm); font-weight: 500; }
+
+  .portfolio-position-list { display: flex; flex-direction: column; gap: 10px; margin: 4px 0 24px; }
+  .portfolio-position-row {
+    display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px;
+    background: var(--bg-2); border: 1px solid var(--border); border-radius: var(--radius-lg);
+    padding: 14px 16px;
+  }
+  .portfolio-position-degraded { opacity: .7; }
+  .portfolio-position-main { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .portfolio-position-pnl { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; font-size: var(--text-sm); }
+  .portfolio-position-actions { display: flex; gap: 8px; }
+  .portfolio-position-actions .toggle-btn { flex: none; padding: 6px 12px; font-size: var(--text-xs); }
+
   /* Repère "profil financier" (banques/assurances) : méthodologie de
      calcul adaptée (ROE, ratio de levier, P/E+P/B) — voir .financial-notice. */
   .financial-tag {
@@ -987,20 +1009,103 @@ function loadPortfolioModule() {
   });
 }
 
-let portfolioScreenLoaded = false;
-
 async function loadPortfolioScreen() {
-  // Squelette pour Task 3 : confirme juste que la route/le chargement
-  // fonctionnent. Le vrai rendu (formulaire, positions, totaux,
-  // opportunités) arrive en Task 4-5 et remplacera ce corps de fonction.
-  if (portfolioScreenLoaded) return;
-  portfolioScreenLoaded = true;
+  const content = document.getElementById('portefeuilleContent');
   try {
     await loadPortfolioModule();
-    document.getElementById('portefeuilleContent').innerHTML = '<div class="empty">Portefeuille (à venir).</div>';
   } catch (e) {
-    document.getElementById('portefeuilleContent').innerHTML = `<div class="empty">Portefeuille indisponible pour l'instant.<br>${e.message}</div>`;
+    content.innerHTML = `<div class="empty">Portefeuille indisponible pour l'instant.<br>${e.message}</div>`;
+    return;
   }
+  if (!indicesData) {
+    // Même pattern que loadIndices : le portefeuille dépend des mêmes
+    // données (companies/scores/alertes/prix), partagées via la variable
+    // globale indicesData — si l'utilisateur ouvre Portefeuille avant
+    // Indices, ce fetch alimente les deux ; s'il l'a déjà fait, on
+    // réutilise ce qui est déjà chargé sans re-fetcher.
+    try {
+      const res = await fetch('indices.json?t=' + Date.now());
+      if (!res.ok) throw new Error('indices.json introuvable');
+      indicesData = await res.json();
+    } catch (e) {
+      content.innerHTML = `<div class="empty">Données indisponibles pour l'instant.<br>${e.message}</div>`;
+      return;
+    }
+  }
+  renderPortfolioScreen();
+}
+
+function renderPortfolioScreen() {
+  const companiesByTicker = {};
+  indicesData.companies.forEach(c => { companiesByTicker[c.ticker] = c; });
+  const currencyByIndex = { ...INDEX_CURRENCY_BY_KEY, ...(indicesData.index_currency || {}) };
+  const positions = loadPortfolio();
+  const totals = computePortfolioTotals(positions, companiesByTicker, currencyByIndex);
+
+  document.getElementById('portefeuilleContent').innerHTML = `
+    ${portfolioTotalsHtml(totals)}
+    <h2>Tes positions</h2>
+    ${portfolioPositionsHtml(positions, companiesByTicker, currencyByIndex)}
+  `;
+}
+
+function portfolioTotalsHtml(totals) {
+  const rows = [
+    ['EUR', totals.EUR, formatPrice],
+    ['USD', totals.USD, formatPriceUsd],
+  ].filter(([, t]) => t.value !== 0 || t.pnlAbs !== 0);
+  if (!rows.length) return '';
+  return `
+    <div class="portfolio-totals">
+      ${rows.map(([label, t, fmt]) => `
+        <div class="portfolio-total-card">
+          <span class="portfolio-total-label">Total ${label}</span>
+          <span class="portfolio-total-value">${fmt(t.value)}</span>
+          <span class="portfolio-total-pnl" style="color:${t.pnlAbs >= 0 ? 'var(--gold)' : 'var(--rust)'}">${t.pnlAbs >= 0 ? '+' : ''}${fmt(t.pnlAbs)}</span>
+        </div>`).join('')}
+    </div>`;
+}
+
+function portfolioPositionsHtml(positions, companiesByTicker, currencyByIndex) {
+  if (!positions.length) {
+    return '<div class="empty">Aucune position pour l\'instant — ajoute ta première ligne ci-dessous.</div>';
+  }
+  return `<div class="portfolio-position-list">${positions.map(position => {
+    const company = companiesByTicker[position.ticker];
+    if (!company) {
+      return `
+        <div class="portfolio-position-row portfolio-position-degraded" data-id="${position.id}">
+          <div class="portfolio-position-main">
+            <span class="company-name">${position.ticker}</span>
+            <span class="hero-sub">Cette entreprise n'est plus suivie — cours et score indisponibles.</span>
+          </div>
+          <div class="portfolio-position-actions">
+            <button class="toggle-btn portfolio-edit-btn" type="button" data-id="${position.id}">Modifier</button>
+            <button class="toggle-btn portfolio-delete-btn" type="button" data-id="${position.id}">Supprimer</button>
+          </div>
+        </div>`;
+    }
+    const pnl = computePositionPnL(position, company.current_price);
+    const currency = currencyByIndex[company.index] === 'USD' ? 'USD' : 'EUR';
+    const fmt = v => formatPriceForIndex(v, company.index);
+    return `
+      <div class="portfolio-position-row" data-id="${position.id}">
+        <div class="portfolio-position-main">
+          <a class="company-name" href="#indices/${company.ticker}">${company.name}</a>
+          <span class="company-ticker">${company.ticker}${allIndicesBadgesHtml(company)}</span>
+          <span class="hero-sub">${position.quantity} × ${fmt(position.buy_price)} (${position.buy_date})</span>
+        </div>
+        <div class="portfolio-position-pnl">
+          <span class="price-value">${fmt(pnl ? pnl.value : company.current_price * position.quantity)}</span>
+          ${pnl ? `<span style="color:${pnl.pnlAbs >= 0 ? 'var(--gold)' : 'var(--rust)'}">${pnl.pnlAbs >= 0 ? '+' : ''}${fmt(pnl.pnlAbs)} (${formatPct(pnl.pnlPct)})</span>` : ''}
+          <span class="company-score" style="color:${company.score >= 0 ? 'var(--gold)' : 'var(--rust)'};">${company.score > 0 ? '+' : ''}${company.score}</span>
+        </div>
+        <div class="portfolio-position-actions">
+          <button class="toggle-btn portfolio-edit-btn" type="button" data-id="${position.id}">Modifier</button>
+          <button class="toggle-btn portfolio-delete-btn" type="button" data-id="${position.id}">Supprimer</button>
+        </div>
+      </div>`;
+  }).join('')}</div>`;
 }
 
 function renderScalpSignal(signal) {

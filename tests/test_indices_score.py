@@ -2605,6 +2605,7 @@ def test_main_writes_alerts_key_for_every_company(monkeypatch, tmp_path):
     monkeypatch.setattr(indices_score, "load_indices_history", lambda: [])
     monkeypatch.setattr(indices_score, "append_indices_history", lambda entries: entries)
     monkeypatch.setattr(indices_score, "update_signal_tracking", lambda companies, newly_triggered_entree: [])
+    monkeypatch.setattr(indices_score, "fetch_index_prices", lambda: {"CAC40": None, "DAX": None, "NASDAQ": None, "DOW": None})
     output_path = tmp_path / "indices.json"
     monkeypatch.setattr(indices_score, "OUTPUT_JSON_PATH", str(output_path))
 
@@ -2636,6 +2637,8 @@ def test_main_payload_includes_index_metadata(monkeypatch, tmp_path):
     monkeypatch.setattr(indices_score, "load_indices_history", lambda: [])
     monkeypatch.setattr(indices_score, "append_indices_history", lambda entries: entries)
     monkeypatch.setattr(indices_score, "update_signal_tracking", lambda companies, newly_triggered_entree: [])
+    fake_index_prices = {"CAC40": 7600.5, "DAX": 19000.2, "NASDAQ": 20123.4, "DOW": 41234.5}
+    monkeypatch.setattr(indices_score, "fetch_index_prices", lambda: fake_index_prices)
     output_path = tmp_path / "indices.json"
     monkeypatch.setattr(indices_score, "OUTPUT_JSON_PATH", str(output_path))
 
@@ -2644,6 +2647,7 @@ def test_main_payload_includes_index_metadata(monkeypatch, tmp_path):
     written = json.loads(output_path.read_text(encoding="utf-8"))
     assert written["index_names"] == {"CAC40": "CAC 40", "DAX": "DAX", "NASDAQ": "Nasdaq 100", "DOW": "Dow Jones"}
     assert written["index_currency"] == {"CAC40": "EUR", "DAX": "EUR", "NASDAQ": "USD", "DOW": "USD"}
+    assert written["index_prices"] == fake_index_prices
     written_by_ticker = {c["ticker"]: c["index"] for c in written["companies"]}
     for company in indices_score.COMPANIES:
         assert written_by_ticker[company["ticker"]] == company["index"]
@@ -2680,6 +2684,7 @@ def test_main_routes_risk_free_rate_by_currency(monkeypatch, tmp_path):
     monkeypatch.setattr(indices_score, "load_indices_history", lambda: [])
     monkeypatch.setattr(indices_score, "append_indices_history", lambda entries: entries)
     monkeypatch.setattr(indices_score, "update_signal_tracking", lambda companies, newly_triggered_entree: [])
+    monkeypatch.setattr(indices_score, "fetch_index_prices", lambda: {"CAC40": None, "DAX": None, "NASDAQ": None, "DOW": None})
     output_path = tmp_path / "indices.json"
     monkeypatch.setattr(indices_score, "OUTPUT_JSON_PATH", str(output_path))
 
@@ -3999,6 +4004,7 @@ def test_main_calls_update_signal_tracking(monkeypatch, tmp_path):
         return []
 
     monkeypatch.setattr(indices_score, "update_signal_tracking", _fake_update_signal_tracking)
+    monkeypatch.setattr(indices_score, "fetch_index_prices", lambda: {"CAC40": None, "DAX": None, "NASDAQ": None, "DOW": None})
 
     indices_score.main()
 

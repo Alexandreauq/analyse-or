@@ -50,8 +50,12 @@ class CircuitBreaker:
             saved_day = saved.get("circuit_breaker_day")
             saved_balance = saved.get("circuit_breaker_starting_balance")
             if saved_day is not None and saved_balance is not None:
-                self._day = date.fromisoformat(saved_day)
-                self._starting_balance = saved_balance
+                try:
+                    self._day = date.fromisoformat(saved_day)
+                    self._starting_balance = float(saved_balance)
+                except (ValueError, TypeError):
+                    self._day = None
+                    self._starting_balance = None
 
     def check(self, current_balance: float) -> None:
         """À appeler avant toute décision — fixe le solde de référence
@@ -65,10 +69,10 @@ class CircuitBreaker:
     def _persist(self) -> None:
         if self._persist_path is None:
             return
-        current = state.load_state(self._persist_path)
-        current["circuit_breaker_day"] = self._day.isoformat()
-        current["circuit_breaker_starting_balance"] = self._starting_balance
-        state.save_state(current, self._persist_path)
+        state.save_state(
+            {"circuit_breaker_day": self._day.isoformat(), "circuit_breaker_starting_balance": self._starting_balance},
+            self._persist_path,
+        )
 
     def can_open_position(self, current_balance: float) -> bool:
         self.check(current_balance)

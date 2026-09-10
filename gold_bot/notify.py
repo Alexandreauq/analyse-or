@@ -2,6 +2,7 @@
 # Résumé quotidien par email des décisions du bot — même conventions
 # SMTP que indices_score.py (voir SMTP_HOST/SMTP_PORT/variables
 # d'environnement ci-dessous). Un email par jour, jamais par trade.
+import html
 import json
 import os
 import smtplib
@@ -59,8 +60,8 @@ def build_summary_email_html(decisions: list[dict], day: str) -> str:
                 body_html += (
                     f'<p style="margin:0 0 8px;padding:10px 14px;background:#1b1d25;'
                     f'border-left:3px solid #2a2d38;font-family:Arial,sans-serif;">'
-                    f'<span style="color:#edeef3;font-size:13px;">{step.get("type")} — '
-                    f'{step.get("symbol")} {step.get("direction", "")}</span></p>'
+                    f'<span style="color:#edeef3;font-size:13px;">{html.escape(str(step.get("type")))} — '
+                    f'{html.escape(str(step.get("symbol")))} {step.get("direction", "")}</span></p>'
                 )
         for d in errors:
             reason = d.get("reason")
@@ -71,13 +72,14 @@ def build_summary_email_html(decisions: list[dict], day: str) -> str:
                 failed_steps = [r for r in d.get("results", []) if r.get("error")]
                 if failed_steps:
                     detail = "; ".join(
-                        f'{r["step"].get("type", "?")} {r["step"].get("symbol", "")} : {r["error"]}'
+                        f'{html.escape(str(r["step"].get("type", "?")))} '
+                        f'{html.escape(str(r["step"].get("symbol", "")))} : {html.escape(str(r["error"]))}'
                         for r in failed_steps
                     )
                 else:
                     detail = "échec d'exécution (détail indisponible)"
             else:
-                detail = reason
+                detail = html.escape(str(reason))
             body_html += (
                 f'<p style="margin:0 0 8px;padding:10px 14px;background:#1b1d25;'
                 f'border-left:3px solid #a35540;font-family:Arial,sans-serif;">'

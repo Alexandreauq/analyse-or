@@ -2,6 +2,7 @@ from datetime import date, datetime, timezone
 
 import pytest
 import gold_bot.risk as risk
+import gold_bot.state as state
 
 
 def test_compute_position_size_basic():
@@ -93,3 +94,10 @@ def test_circuit_breaker_resets_on_new_day():
     # Le solde de référence doit être refixé au solde courant (8900) au
     # premier appel du nouveau jour, donc plus aucune perte accumulée.
     assert cb.can_open_position(8900) is True
+
+
+def test_circuit_breaker_ignores_corrupt_persisted_day(tmp_path):
+    path = str(tmp_path / "state.json")
+    state.save_state({"circuit_breaker_day": "not-a-date", "circuit_breaker_starting_balance": 10000}, path)
+    cb = risk.CircuitBreaker(persist_path=path)  # ne doit pas lever
+    assert cb._day is None

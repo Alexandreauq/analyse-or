@@ -1220,6 +1220,10 @@ function realPortfolioHtml() {
 }
 
 async function loadBotStatus() {
+  if (BOT_API_BASE_URL.includes('DOMAINE_A_REMPLACER')) {
+    botStatusData = null;
+    return;
+  }
   try {
     const res = await fetch(`${BOT_API_BASE_URL}/status`);
     botStatusData = res.ok ? await res.json() : null;
@@ -1271,7 +1275,10 @@ function wireBotControls() {
         method: 'POST',
         headers: { 'X-Bot-Token': token },
       });
-      if (!res.ok) throw new Error('échec de la requête');
+      if (!res.ok) {
+        if (res.status === 401) localStorage.removeItem('goldBotToken');
+        throw new Error('échec de la requête');
+      }
       await loadBotStatus();
       renderPortfolioScreen();
     } catch (e) {

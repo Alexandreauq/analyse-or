@@ -432,12 +432,16 @@ SHARES_OUTSTANDING_FROM_MARKET_CAP_TICKERS = {
 FINANCIAL_SECTOR_TICKERS = {
     "BNP.PA", "GLE.PA", "ACA.PA", "CS.PA",
     "DBK.DE", "CBK.DE", "ALV.DE", "MUV2.DE", "HNR1.DE",
-    # Dow Jones : banques dont le bilan ne fournit pas d'EBITDA/EBIT
-    # exploitable chez yfinance, même critère que ci-dessus. Visa (V),
-    # présente dans le Dow, n'est PAS ajoutée ici : société de paiement
-    # (pas une banque de dépôt/crédit), EBITDA/EBIT standard disponibles
-    # chez yfinance — même choix que PayPal (PYPL) côté Nasdaq-100.
-    "GS", "JPM",
+    # Dow Jones : banques/émetteurs de crédit/assureurs dont le compte de
+    # résultat yfinance ne fournit pas d'EBITDA/EBIT exploitable (structure
+    # bancaire "Net Interest Income"/"Interest Expense" pour AXP, structure
+    # assurance "Policyholder Benefits"/"Loss Adjustment Expense" pour TRV
+    # — trouvé en échec de production, pas anticipé à la construction
+    # initiale du Dow). GS/JPM = banques classiques. Visa (V), également
+    # dans le Dow, n'est PAS ajoutée : société de paiement (pas une banque
+    # de dépôt/crédit), EBITDA/EBIT standard disponibles chez yfinance —
+    # même choix que PayPal (PYPL) côté Nasdaq-100.
+    "GS", "JPM", "AXP", "TRV",
 }
 
 
@@ -1246,15 +1250,23 @@ def build_financial_narrative_context(
     # tant que les cessions restent marginales) puis "Net Investment
     # Properties Purchase And Sale" (ex : Vonovia — une foncière investit
     # en achetant des immeubles de placement, pas des PPE industrielles ;
-    # même convention de signe négatif pour les deux replis).
-    capex = get_row(
+    # même convention de signe négatif pour les deux replis). _get_row_or_nan
+    # (pas get_row) : une banque (ex : JPMorgan Chase, trouvé en échec de
+    # production) n'a souvent AUCUNE des 3 lignes — pas une panne, la
+    # notion de "capex industriel" n'existe pas pour un établissement
+    # financier, et "Operating Cash Flow" (utilisé juste après) est de
+    # toute façon directement disponible pour ces entreprises-là.
+    capex = _get_row_or_nan(
         cashflow, "Capital Expenditure", "Net PPE Purchase And Sale",
         "Net Investment Properties Purchase And Sale",
     )
     # "Operating Cash Flow" absent chez certaines entreprises (ex : ASML
     # Holding, reporting IFRS) — dérivé depuis "Free Cash Flow" (= OCF +
     # capex, capex déjà négatif) quand disponible plutôt que d'échouer.
-    # Même repli que dans extract_ratios (même limite yfinance).
+    # Même repli que dans extract_ratios (même limite yfinance). Si capex
+    # est NaN (repli ci-dessus) le résultat de la dérivation est NaN aussi
+    # (propagation normale, gérée par _is_missing plus bas) plutôt qu'une
+    # valeur fausse.
     op_cash_flow = _try_get_row(cashflow, "Operating Cash Flow")
     if op_cash_flow is None:
         free_cash_flow = _try_get_row(cashflow, "Free Cash Flow")

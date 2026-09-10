@@ -211,6 +211,10 @@
      hasMajorNewsAlert) : même forme, couleur distincte du badge "Profil
      financier" pour rester lisible quand les deux se cumulent. */
   .majeure-tag { border-color: var(--gold); color: var(--gold); }
+  /* Repère "Aussi dans X" (voir also_indices, indices_score.py) : purement
+     informatif, pas une alerte — ton neutre pour rester distinct des
+     badges "Profil financier"/"Actu majeure" quand ils se cumulent. */
+  .also-index-tag { border-color: var(--border); color: var(--muted); }
   .financial-notice {
     background: var(--panel); border: 1px solid var(--gauge-mid); border-radius: 10px;
     padding: 14px 16px; margin: 0 0 20px; font-size: 12px; line-height: 1.6; color: var(--text);
@@ -856,15 +860,26 @@ function sortedFilteredCompanies(companies) {
   return visible;
 }
 
+// Étiquette(s) "Aussi dans X" pour une entreprise suivie sous un seul
+// indice (company.index) mais réellement membre d'un ou plusieurs autres
+// (company.also_indices, ex. Apple : suivie côté Nasdaq 100, également
+// membre réel du Dow Jones — pas dupliquée pour éviter un calcul/coût
+// d'analyse financière en double, voir also_indices dans indices_score.py).
+function alsoIndicesTagsHtml(company, indexNames) {
+  const also = company.also_indices || [];
+  return also.map(key => `<span class="financial-tag also-index-tag">Aussi dans ${indexNames[key] || key}</span>`).join('');
+}
+
 function renderIndicesRows(companies, rowsContainerId) {
   const panel = document.getElementById(rowsContainerId);
   if (!panel) return;
+  const indexNames = { ...INDEX_DISPLAY_NAMES, ...(indicesData.index_names || {}) };
   const visible = sortedFilteredCompanies(companies);
   panel.innerHTML = visible.length ? visible.map(c => `
     <a class="company-row" href="#indices/${c.ticker}">
       <div class="company-row-left">
         <span class="company-name">${c.name}</span>
-        <span class="company-ticker">${c.ticker}${c.is_financial ? '<span class="financial-tag">Profil financier</span>' : ''}${hasMajorNewsAlert(c) ? '<span class="financial-tag majeure-tag">Actu majeure</span>' : ''}</span>
+        <span class="company-ticker">${c.ticker}${c.is_financial ? '<span class="financial-tag">Profil financier</span>' : ''}${hasMajorNewsAlert(c) ? '<span class="financial-tag majeure-tag">Actu majeure</span>' : ''}${alsoIndicesTagsHtml(c, indexNames)}</span>
       </div>
       <span class="company-score" style="color:${c.score >= 0 ? 'var(--gold)' : 'var(--rust)'};">
         ${c.score > 0 ? '+' : ''}${c.score}
@@ -1112,6 +1127,8 @@ function renderCompanyDetail(company) {
     </div>`).join('');
 
   const gaugePct = Math.max(0, Math.min(100, (company.score + 100) / 2));
+  const detailIndexNames = { ...INDEX_DISPLAY_NAMES, ...(indicesData.index_names || {}) };
+  const alsoIndicesHtml = alsoIndicesTagsHtml(company, detailIndexNames);
 
   document.getElementById('indicesContent').innerHTML = `
     <a href="#indices" class="back-link">← Indices</a>
@@ -1119,7 +1136,7 @@ function renderCompanyDetail(company) {
       <div class="company-main">
         <section class="hero">
           <div class="hero-number">${company.score > 0 ? '+' : ''}${company.score}</div>
-          <div class="hero-label">${company.name} — ${company.interpretation}${hasMajorNewsAlert(company) ? '<br><span class="financial-tag majeure-tag" style="margin-left:0;">Actu majeure récente</span>' : ''}</div>
+          <div class="hero-label">${company.name} — ${company.interpretation}${hasMajorNewsAlert(company) ? '<br><span class="financial-tag majeure-tag" style="margin-left:0;">Actu majeure récente</span>' : ''}${alsoIndicesHtml ? `<br>${alsoIndicesHtml}` : ''}</div>
         </section>
 
         ${company.is_financial ? `

@@ -2588,7 +2588,7 @@ def test_main_writes_alerts_key_for_every_company(monkeypatch, tmp_path):
         indices_score, "load_previous_company_analyses", lambda: sentinel_previous_analyses,
     )
 
-    def _fake_build_company_entry(ticker, name, risk_free_rate, previous_analyses, index_key="CAC40"):
+    def _fake_build_company_entry(ticker, name, risk_free_rate, previous_analyses, index_key="CAC40", also_indices=None):
         assert previous_analyses is sentinel_previous_analyses, (
             "main() doit transmettre le previous_analyses réellement chargé "
             "par load_previous_company_analyses(), pas un dict vide/différent "
@@ -2627,7 +2627,7 @@ def test_main_payload_includes_index_metadata(monkeypatch, tmp_path):
     monkeypatch.setattr(indices_score, "load_previous_company_analyses", lambda: {})
     monkeypatch.setattr(
         indices_score, "build_company_entry",
-        lambda ticker, name, risk_free_rate, previous_analyses, index_key="CAC40": {
+        lambda ticker, name, risk_free_rate, previous_analyses, index_key="CAC40", also_indices=None: {
             "ticker": ticker, "name": name, "index": index_key,
             "score": 10.0, "interpretation": "Neutre",
             "current_price": 50.0, "entry_price": 50.0,
@@ -2668,7 +2668,7 @@ def test_main_routes_risk_free_rate_by_currency(monkeypatch, tmp_path):
     monkeypatch.setattr(indices_score, "load_previous_company_analyses", lambda: {})
     received_rates = {}
 
-    def _fake_build_company_entry(ticker, name, risk_free_rate, previous_analyses, index_key="CAC40"):
+    def _fake_build_company_entry(ticker, name, risk_free_rate, previous_analyses, index_key="CAC40", also_indices=None):
         received_rates[ticker] = risk_free_rate
         return {
             "ticker": ticker, "name": name, "index": index_key,
@@ -3430,6 +3430,26 @@ def test_build_company_entry_uses_financial_factors_for_financial_sector_tickers
     assert entry["fair_value"] is not None
 
 
+def test_build_company_entry_includes_also_indices(monkeypatch):
+    """Reproduit le cas Apple (AAPL) : suivie sous NASDAQ_COMPANIES mais
+    aussi membre réel du Dow Jones — pas dupliquée dans DOW_COMPANIES,
+    mais le champ also_indices doit porter cette appartenance
+    supplémentaire jusqu'au JSON exporté, pour que le frontend l'affiche."""
+    monkeypatch.setattr(indices_score, "fetch_company_financials", lambda ticker: _fake_financial_ratios())
+    monkeypatch.setattr(indices_score, "fetch_news", lambda name, prev=None: [])
+    monkeypatch.setattr(indices_score, "generate_financial_analysis", lambda *a, **k: "<p>Analyse.</p>")
+
+    with_also = indices_score.build_company_entry(
+        "AAPL", "Apple Inc.", 3.0, {}, index_key="NASDAQ", also_indices=["DOW"],
+    )
+    without_also = indices_score.build_company_entry(
+        "BNP.PA", "BNP Paribas", 3.0, {}, index_key="CAC40",
+    )
+
+    assert with_also["also_indices"] == ["DOW"]
+    assert without_also["also_indices"] == []  # défaut None -> [] plutôt qu'absent du dict
+
+
 def test_financial_sector_tickers_are_in_companies():
     company_tickers = {c["ticker"] for c in indices_score.COMPANIES}
     assert indices_score.FINANCIAL_SECTOR_TICKERS <= company_tickers
@@ -3960,7 +3980,7 @@ def test_main_calls_update_signal_tracking(monkeypatch, tmp_path):
     monkeypatch.setattr(indices_score, "load_previous_company_analyses", lambda: {})
     monkeypatch.setattr(
         indices_score, "build_company_entry",
-        lambda ticker, name, risk_free_rate, previous_analyses, index_key="CAC40": {
+        lambda ticker, name, risk_free_rate, previous_analyses, index_key="CAC40", also_indices=None: {
             "ticker": ticker, "name": name, "index": index_key,
             "score": 10.0, "interpretation": "Neutre",
             "current_price": 50.0, "entry_price": 50.0,

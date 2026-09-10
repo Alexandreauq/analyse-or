@@ -204,13 +204,13 @@ NASDAQ_COMPANIES = [
     {"ticker": "AMD", "name": "Advanced Micro Devices"},
     {"ticker": "ABNB", "name": "Airbnb"},
     {"ticker": "ALNY", "name": "Alnylam Pharmaceuticals"},
-    {"ticker": "GOOGL", "name": "Alphabet Inc. (Classe A)"},
+    {"ticker": "GOOGL", "name": "Alphabet Inc. (Classe A)", "also_indices": ["DOW"]},
     {"ticker": "GOOG", "name": "Alphabet Inc. (Classe C)"},
-    {"ticker": "AMZN", "name": "Amazon"},
+    {"ticker": "AMZN", "name": "Amazon", "also_indices": ["DOW"]},
     {"ticker": "AEP", "name": "American Electric Power"},
-    {"ticker": "AMGN", "name": "Amgen"},
+    {"ticker": "AMGN", "name": "Amgen", "also_indices": ["DOW"]},
     {"ticker": "ADI", "name": "Analog Devices"},
-    {"ticker": "AAPL", "name": "Apple Inc."},
+    {"ticker": "AAPL", "name": "Apple Inc.", "also_indices": ["DOW"]},
     {"ticker": "AMAT", "name": "Applied Materials"},
     {"ticker": "APP", "name": "AppLovin"},
     {"ticker": "ARM", "name": "Arm Holdings"},
@@ -224,7 +224,7 @@ NASDAQ_COMPANIES = [
     {"ticker": "AVGO", "name": "Broadcom"},
     {"ticker": "CDNS", "name": "Cadence Design Systems"},
     {"ticker": "CTAS", "name": "Cintas"},
-    {"ticker": "CSCO", "name": "Cisco Systems"},
+    {"ticker": "CSCO", "name": "Cisco Systems", "also_indices": ["DOW"]},
     {"ticker": "CCEP", "name": "Coca-Cola Europacific Partners"},
     {"ticker": "CMCSA", "name": "Comcast"},
     {"ticker": "CEG", "name": "Constellation Energy"},
@@ -244,7 +244,7 @@ NASDAQ_COMPANIES = [
     {"ticker": "GEHC", "name": "GE HealthCare"},
     {"ticker": "GILD", "name": "Gilead Sciences"},
     {"ticker": "HONA", "name": "Honeywell Aerospace"},
-    {"ticker": "HON", "name": "Honeywell Technologies"},
+    {"ticker": "HON", "name": "Honeywell Technologies", "also_indices": ["DOW"]},
     {"ticker": "IDXX", "name": "Idexx Laboratories"},
     {"ticker": "INTC", "name": "Intel"},
     {"ticker": "INTU", "name": "Intuit"},
@@ -261,14 +261,14 @@ NASDAQ_COMPANIES = [
     {"ticker": "META", "name": "Meta Platforms"},
     {"ticker": "MCHP", "name": "Microchip Technology"},
     {"ticker": "MU", "name": "Micron Technology"},
-    {"ticker": "MSFT", "name": "Microsoft"},
+    {"ticker": "MSFT", "name": "Microsoft", "also_indices": ["DOW"]},
     {"ticker": "MSTR", "name": "MicroStrategy (Strategy)"},
     {"ticker": "MDLZ", "name": "Mondelez International"},
     {"ticker": "MPWR", "name": "Monolithic Power Systems"},
     {"ticker": "MNST", "name": "Monster Beverage"},
     {"ticker": "NBIS", "name": "Nebius Group"},
     {"ticker": "NFLX", "name": "Netflix"},
-    {"ticker": "NVDA", "name": "Nvidia"},
+    {"ticker": "NVDA", "name": "Nvidia", "also_indices": ["DOW"]},
     {"ticker": "NXPI", "name": "NXP Semiconductors"},
     {"ticker": "ORLY", "name": "O'Reilly Automotive"},
     {"ticker": "ODFL", "name": "Old Dominion Freight Line"},
@@ -297,7 +297,7 @@ NASDAQ_COMPANIES = [
     {"ticker": "TXN", "name": "Texas Instruments"},
     {"ticker": "TRI", "name": "Thomson Reuters"},
     {"ticker": "VRTX", "name": "Vertex Pharmaceuticals"},
-    {"ticker": "WMT", "name": "Walmart"},
+    {"ticker": "WMT", "name": "Walmart", "also_indices": ["DOW"]},
     {"ticker": "WBD", "name": "Warner Bros. Discovery"},
     {"ticker": "WDC", "name": "Western Digital"},
     {"ticker": "WDAY", "name": "Workday"},
@@ -2560,7 +2560,7 @@ def load_previous_alerted_news_links() -> dict:
 
 def build_company_entry(
     ticker: str, name: str, risk_free_rate: float | None, previous_analyses: dict,
-    index_key: str = "CAC40",
+    index_key: str = "CAC40", also_indices: list[str] | None = None,
 ) -> dict:
     data = fetch_company_financials(ticker)
     sector = data["sector"]
@@ -2677,6 +2677,7 @@ def build_company_entry(
         "ticker": ticker,
         "name": name,
         "index": index_key,
+        "also_indices": also_indices or [],
         "sector": sector,
         "sector_profile": sector_risk_profile(sector),
         "is_financial": data["is_financial"],
@@ -3011,7 +3012,7 @@ def main():
             companies.append(
                 build_company_entry(
                     company["ticker"], company["name"], risk_free_rate, previous_analyses,
-                    index_key=company["index"],
+                    index_key=company["index"], also_indices=company.get("also_indices"),
                 )
             )
         except Exception as e:

@@ -1,6 +1,17 @@
 {
-  "updated": "2026-09-10T19:19:04Z",
-  "sync_status": "error",
-  "sync_error": "Erreur réseau MT5 (HTTP 401)",
-  "positions": []
+  "updated": "2026-09-10T19:23:16Z",
+  "sync_status": "ok",
+  "sync_error": null,
+  "positions": [
+    {
+      "symbol": "XAUUSD",
+      "type": "achat",
+      "pnl_sign": "positif"
+    },
+    {
+      "symbol": "XAUUSD",
+      "type": "achat",
+      "pnl_sign": "positif"
+    }
+  ]
 }

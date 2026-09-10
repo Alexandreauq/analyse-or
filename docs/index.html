@@ -534,6 +534,16 @@
   .portfolio-position-actions { display: flex; gap: 8px; }
   .portfolio-position-actions .toggle-btn { flex: none; padding: 6px 12px; font-size: var(--text-xs); }
 
+  .portfolio-form {
+    display: flex; flex-direction: column; gap: 10px; margin: 4px 0 24px;
+    background: var(--bg-2); border: 1px solid var(--border); border-radius: var(--radius-lg);
+    padding: 16px;
+  }
+  .portfolio-form h2 { margin: 0; }
+  .portfolio-form-row { display: flex; gap: 8px; flex-wrap: wrap; }
+  .portfolio-form-row input { flex: 1; min-width: 110px; }
+  .portfolio-form-error { color: var(--rust); font-size: var(--text-sm); margin: 0; }
+
   /* Repère "profil financier" (banques/assurances) : méthodologie de
      calcul adaptée (ROE, ratio de levier, P/E+P/B) — voir .financial-notice. */
   .financial-tag {
@@ -1042,11 +1052,18 @@ function renderPortfolioScreen() {
   const positions = loadPortfolio();
   const totals = computePortfolioTotals(positions, companiesByTicker, currencyByIndex);
 
+  const heldTickers = new Set(positions.map(p => p.ticker));
+  const opportunities = findOpportunities(indicesData.companies, heldTickers);
+
   document.getElementById('portefeuilleContent').innerHTML = `
     ${portfolioTotalsHtml(totals)}
+    ${portfolioFormHtml(indicesData.companies)}
     <h2>Tes positions</h2>
     ${portfolioPositionsHtml(positions, companiesByTicker, currencyByIndex)}
+    ${portfolioOpportunitiesHtml(opportunities)}
   `;
+  wirePortfolioForm();
+  wirePortfolioPositionActions(companiesByTicker);
 }
 
 function portfolioTotalsHtml(totals) {
@@ -1106,6 +1123,113 @@ function portfolioPositionsHtml(positions, companiesByTicker, currencyByIndex) {
         </div>
       </div>`;
   }).join('')}</div>`;
+}
+
+function portfolioFormHtml(companies) {
+  const grouped = {};
+  companies.forEach(c => { (grouped[c.index] = grouped[c.index] || []).push(c); });
+  const indexNames = { ...INDEX_DISPLAY_NAMES, ...(indicesData.index_names || {}) };
+  const optionsHtml = Object.keys(grouped).sort().map(key => `
+    <optgroup label="${indexNames[key] || key}">
+      ${grouped[key]
+        .slice().sort((a, b) => a.name.localeCompare(b.name, 'fr'))
+        .map(c => `<option value="${c.ticker}">${c.name} (${c.ticker})</option>`).join('')}
+    </optgroup>`).join('');
+  return `
+    <form class="portfolio-form" id="portfolioAddForm">
+      <h2>Ajouter une position</h2>
+      <select class="list-sort" id="portfolioFormTicker" required>
+        <option value="" disabled selected>Choisir une entreprise…</option>
+        ${optionsHtml}
+      </select>
+      <div class="portfolio-form-row">
+        <input class="list-search" type="number" id="portfolioFormQuantity" placeholder="Quantité" min="0" step="any" required>
+        <input class="list-search" type="number" id="portfolioFormPrice" placeholder="Prix d'achat" min="0" step="any" required>
+        <input class="list-search" type="date" id="portfolioFormDate" required>
+      </div>
+      <p class="portfolio-form-error" id="portfolioFormError" hidden></p>
+      <button class="toggle-btn" type="submit">Ajouter</button>
+    </form>`;
+}
+
+function portfolioOpportunitiesHtml(opportunities) {
+  if (!opportunities.length) return '';
+  return `
+    <h2>Opportunités</h2>
+    <p class="hero-sub">Entreprises suivies avec un signal d'entrée actif que tu ne détiens pas encore.</p>
+    <div class="index-card-list">${opportunities.map(c => `
+      <a class="company-row" href="#indices/${c.ticker}">
+        <div class="company-row-left">
+          <span class="company-name">${c.name}</span>
+          <span class="company-ticker">${c.ticker}${allIndicesBadgesHtml(c)}</span>
+        </div>
+        <span class="company-score" style="color:${c.score >= 0 ? 'var(--gold)' : 'var(--rust)'};">${c.score > 0 ? '+' : ''}${c.score}</span>
+      </a>`).join('')}</div>`;
+}
+
+function wirePortfolioForm() {
+  const form = document.getElementById('portfolioAddForm');
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const ticker = document.getElementById('portfolioFormTicker').value;
+    const quantity = parseFloat(document.getElementById('portfolioFormQuantity').value);
+    const buyPrice = parseFloat(document.getElementById('portfolioFormPrice').value);
+    const buyDate = document.getElementById('portfolioFormDate').value;
+    const errorEl = document.getElementById('portfolioFormError');
+    if (!ticker) {
+      errorEl.textContent = 'Choisis une entreprise.';
+      errorEl.hidden = false;
+      return;
+    }
+    const result = addPosition(ticker, quantity, buyPrice, buyDate);
+    if (!result.ok) {
+      errorEl.textContent = result.error;
+      errorEl.hidden = false;
+      return;
+    }
+    renderPortfolioScreen();
+  });
+}
+
+function wirePortfolioPositionActions(companiesByTicker) {
+  document.querySelectorAll('.portfolio-delete-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      removePosition(btn.dataset.id);
+      renderPortfolioScreen();
+    });
+  });
+  document.querySelectorAll('.portfolio-edit-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const row = document.querySelector(`.portfolio-position-row[data-id="${btn.dataset.id}"]`);
+      const position = loadPortfolio().find(p => p.id === btn.dataset.id);
+      if (!position || !row) return;
+      row.innerHTML = `
+        <div class="portfolio-form-row">
+          <input class="list-search" type="number" value="${position.quantity}" id="portfolioEditQuantity" min="0" step="any">
+          <input class="list-search" type="number" value="${position.buy_price}" id="portfolioEditPrice" min="0" step="any">
+          <input class="list-search" type="date" value="${position.buy_date}" id="portfolioEditDate">
+        </div>
+        <p class="portfolio-form-error" id="portfolioEditError" hidden></p>
+        <div class="portfolio-position-actions">
+          <button class="toggle-btn" type="button" id="portfolioEditSave">Enregistrer</button>
+          <button class="toggle-btn" type="button" id="portfolioEditCancel">Annuler</button>
+        </div>`;
+      document.getElementById('portfolioEditCancel').addEventListener('click', () => renderPortfolioScreen());
+      document.getElementById('portfolioEditSave').addEventListener('click', () => {
+        const quantity = parseFloat(document.getElementById('portfolioEditQuantity').value);
+        const buyPrice = parseFloat(document.getElementById('portfolioEditPrice').value);
+        const buyDate = document.getElementById('portfolioEditDate').value;
+        const result = updatePosition(position.id, quantity, buyPrice, buyDate);
+        const errorEl = document.getElementById('portfolioEditError');
+        if (!result.ok) {
+          errorEl.textContent = result.error;
+          errorEl.hidden = false;
+          return;
+        }
+        renderPortfolioScreen();
+      });
+    });
+  });
 }
 
 function renderScalpSignal(signal) {

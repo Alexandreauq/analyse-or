@@ -1044,7 +1044,7 @@ async function loadPortfolioScreen() {
   }
   if (!realPortfolioData) {
     try {
-      const res = await fetch('real_portfolio.json?t=' + Date.now());
+      const res = await fetch('real_portfolio_mt5.json?t=' + Date.now());
       realPortfolioData = res.ok ? await res.json() : null;
     } catch (e) {
       realPortfolioData = null;
@@ -1068,7 +1068,7 @@ function renderPortfolioScreen() {
     ${portfolioFormHtml(indicesData.companies)}
     <h2>Tes positions</h2>
     ${portfolioPositionsHtml(positions, companiesByTicker, currencyByIndex)}
-    ${realPortfolioHtml(companiesByTicker)}
+    ${realPortfolioHtml()}
     ${portfolioOpportunitiesHtml(opportunities)}
   `;
   wirePortfolioForm();
@@ -1177,52 +1177,39 @@ function portfolioOpportunitiesHtml(opportunities) {
       </a>`).join('')}</div>`;
 }
 
-function realPortfolioHtml(companiesByTicker) {
+function realPortfolioHtml() {
   if (!realPortfolioData) {
     return `
-      <h2>Positions réelles (IBKR)</h2>
-      <div class="empty">Synchronisation IBKR pas encore disponible.</div>`;
+      <h2>Positions réelles (MT5)</h2>
+      <div class="empty">Synchronisation MT5 pas encore disponible.</div>`;
   }
   if (realPortfolioData.sync_status === 'not_configured') {
     return `
-      <h2>Positions réelles (IBKR)</h2>
-      <div class="empty">Synchronisation IBKR pas encore configurée.</div>`;
+      <h2>Positions réelles (MT5)</h2>
+      <div class="empty">Synchronisation MT5 pas encore configurée.</div>`;
   }
   const warningHtml = realPortfolioData.sync_status === 'error'
-    ? `<p class="portfolio-form-error">Dernière synchronisation IBKR échouée : ${escHtml(realPortfolioData.sync_error)}</p>`
+    ? `<p class="portfolio-form-error">Dernière synchronisation MT5 échouée : ${escHtml(realPortfolioData.sync_error)}</p>`
     : '';
   const positions = realPortfolioData.positions || [];
   if (!positions.length) {
     return `
-      <h2>Positions réelles (IBKR)</h2>
+      <h2>Positions réelles (MT5)</h2>
       ${warningHtml}
-      <div class="empty">Aucune position détenue chez IBKR pour l'instant.</div>`;
+      <div class="empty">Aucune position détenue chez MT5 pour l'instant.</div>`;
   }
-  const rowsHtml = positions.map(p => {
-    const company = p.matched_ticker ? companiesByTicker[p.matched_ticker] : null;
-    const badgesHtml = company
-      ? `${company.is_financial ? '<span class="financial-tag">Profil financier</span>' : ''}${hasMajorNewsAlert(company) ? '<span class="financial-tag majeure-tag">Actu majeure</span>' : ''}${allIndicesBadgesHtml(company)}`
-      : '';
-    const nameHtml = company
-      ? `<a class="company-name" href="#indices/${company.ticker}">${company.name}</a>`
-      : `<span class="company-name">${escHtml(p.description || p.ibkr_symbol)}</span>`;
-    const pnlHtml = p.pnl_pct == null
-      ? '<span class="hero-sub">Performance indisponible</span>'
-      : `<span style="color:${p.pnl_pct >= 0 ? 'var(--gold)' : 'var(--rust)'}">${formatPct(p.pnl_pct)}</span>`;
-    return `
-      <div class="portfolio-position-row">
-        <div class="portfolio-position-main">
-          ${nameHtml}
-          <span class="company-ticker">${escHtml(p.ibkr_symbol)}${badgesHtml}</span>
-        </div>
-        <div class="portfolio-position-pnl">
-          ${pnlHtml}
-          ${company ? `<span class="company-score" style="color:${company.score >= 0 ? 'var(--gold)' : 'var(--rust)'};">${company.score > 0 ? '+' : ''}${company.score}</span>` : ''}
-        </div>
-      </div>`;
-  }).join('');
+  const rowsHtml = positions.map(p => `
+    <div class="portfolio-position-row">
+      <div class="portfolio-position-main">
+        <span class="company-name">${escHtml(p.symbol)}</span>
+        <span class="company-ticker">${p.type === 'achat' ? 'Achat' : p.type === 'vente' ? 'Vente' : '—'}</span>
+      </div>
+      <div class="portfolio-position-pnl">
+        <span style="color:${p.pnl_sign === 'positif' ? 'var(--gold)' : 'var(--rust)'}">${p.pnl_sign === 'positif' ? '▲' : '▼'}</span>
+      </div>
+    </div>`).join('');
   return `
-    <h2>Positions réelles (IBKR)</h2>
+    <h2>Positions réelles (MT5)</h2>
     ${warningHtml}
     <div class="portfolio-position-list">${rowsHtml}</div>`;
 }

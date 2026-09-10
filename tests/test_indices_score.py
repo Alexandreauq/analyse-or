@@ -3330,6 +3330,28 @@ def test_build_financial_narrative_context_omits_ebitda_ebit_for_financial_profi
     assert "CA 1,000" in context or "CA 1 000" in context or "1,000" in context
 
 
+def test_build_financial_narrative_context_degrades_gracefully_when_capex_entirely_absent():
+    """Reproduit le cas JPMorgan Chase (JPM) en production : aucune des 3
+    lignes de repli capex ('Capital Expenditure', 'Net PPE Purchase And
+    Sale', 'Net Investment Properties Purchase And Sale') n'existe pour
+    une banque — pas une panne, la notion de capex industriel n'existe pas
+    pour un établissement financier. 'Operating Cash Flow' reste
+    directement disponible (donc pas besoin du repli Free Cash Flow) :
+    ne doit PAS lever KeyError sur toute l'entreprise, juste afficher
+    capex/FCF comme non disponibles."""
+    financials, balance_sheet, cashflow, _ = _make_financial_fixture_statements()
+    cashflow = cashflow.drop(index="Capital Expenditure")  # aucune ligne capex du tout
+    quarterly_financials = _fake_annual_df(
+        {"Diluted Average Shares": [100.0]}, [pd.Timestamp("2025-06-30")],
+    )
+
+    context = indices_score.build_financial_narrative_context(
+        financials, balance_sheet, cashflow, quarterly_financials,
+    )  # ne doit pas lever KeyError
+
+    assert "FCF non disponible" in context
+
+
 def test_score_rentabilite_financiere_rewards_roe_above_cost_of_capital():
     good = indices_score.score_rentabilite_financiere(roe=15.0, cost_of_capital=8.0)
     bad = indices_score.score_rentabilite_financiere(roe=2.0, cost_of_capital=8.0)

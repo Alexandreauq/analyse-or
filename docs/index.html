@@ -384,17 +384,18 @@
   }
   .scalp-expand-btn:hover { border-color: var(--border-strong); color: var(--text); }
   /* Hauteur réduite sur mobile — un graphique de 500px de haut y écrase tout
-     le reste de l'écran ; on lui redonne cette hauteur seulement à partir
-     de la tablette, où l'écran a la place. Sous ce seuil, bouton "Agrandir"
-     pour l'ouvrir en plein à la demande plutôt que fixer un compromis. */
+     le reste de l'écran ; on lui redonne cette hauteur à partir de la
+     tablette, où l'écran a la place. Le bouton "Agrandir" reste disponible
+     à toutes les tailles d'écran pour ouvrir le graphique en plus grand à
+     la demande (320→560px mobile, 500→750px tablette/desktop). */
   .scalp-chart-box {
     border: 1px solid var(--border); border-radius: 10px; overflow: hidden; height: 320px;
     transition: height .3s cubic-bezier(.22,1,.36,1);
   }
   .scalp-chart-box.expanded { height: 560px; }
   @media (min-width: 768px) {
-    .scalp-chart-box, .scalp-chart-box.expanded { height: 500px; }
-    .scalp-expand-btn { display: none; }
+    .scalp-chart-box { height: 500px; }
+    .scalp-chart-box.expanded { height: 750px; }
   }
   .scalp-note { color: var(--muted); font-size: 11px; line-height: 1.5; margin: 8px 0 0; }
 

@@ -1,2 +1,5 @@
 __pycache__/
 *.pyc
+gold_bot/state.json
+gold_bot/circuit_breaker_state.json
+gold_bot/decisions_log.jsonl

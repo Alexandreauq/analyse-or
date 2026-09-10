@@ -187,3 +187,17 @@ def test_match_tickers_preserves_all_original_fields():
     assert result[0]["ibkr_symbol"] == "AAPL"
     assert result[0]["description"] == "APPLE"
     assert result[0]["matched_ticker"] is None
+
+
+def test_match_tickers_returns_none_when_bare_symbol_is_ambiguous():
+    positions = [{
+        "ibkr_symbol": "MRK", "description": "MERCK", "currency": "USD",
+        "quantity": 1.0, "current_price": 147.0, "position_value": 147.0,
+        "cost_basis_price": 140.0, "cost_basis_value": 140.0, "unrealized_pnl": 7.0,
+    }]
+    companies = [
+        {"ticker": "MRK.DE", "index": "DAX"},
+        {"ticker": "MRK", "index": "DOW"},
+    ]
+    result = portfolio_sync.match_tickers(positions, companies)
+    assert result[0]["matched_ticker"] is None

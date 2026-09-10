@@ -95,15 +95,22 @@ def parse_open_positions(xml_text: str) -> list[dict]:
 def match_tickers(positions: list[dict], companies: list[dict]) -> list[dict]:
     """Ajoute matched_ticker à chaque position, par recherche du symbole
     IBKR (insensible à la casse) contre les tickers suivis avec leur
-    suffixe Yahoo (.PA/.DE) retiré — AAPL/DOW n'ont pas de suffixe donc
-    ne sont pas affectés par le split. None si aucune correspondance :
-    pas une erreur, attendu pour tout ce qui n'est pas dans les indices
-    suivis (ETF, obligations, actions hors périmètre)."""
+    suffixe Yahoo (.PA/.DE) retiré. Si plusieurs entreprises suivies
+    partagent le même symbole nu (ex. MRK.DE et MRK), aucune des deux
+    n'est retenue — mieux vaut ne pas enrichir que de rattacher un vrai
+    montant détenu à la mauvaise entreprise. None si aucune
+    correspondance (ou correspondance ambiguë) : pas une erreur, attendu
+    pour tout ce qui n'est pas dans les indices suivis."""
+    bare_counts = {}
+    for c in companies:
+        bare = c["ticker"].split(".")[0].upper()
+        bare_counts[bare] = bare_counts.get(bare, 0) + 1
     bare_to_ticker = {}
     for c in companies:
         ticker = c["ticker"]
         bare = ticker.split(".")[0].upper()
-        bare_to_ticker.setdefault(bare, ticker)
+        if bare_counts[bare] == 1:
+            bare_to_ticker[bare] = ticker
     result = []
     for p in positions:
         symbol = (p.get("ibkr_symbol") or "").upper()

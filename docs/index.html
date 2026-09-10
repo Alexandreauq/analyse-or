@@ -285,9 +285,8 @@
   }
   .hero-number {
     font-family: 'Newsreader', serif; font-weight: 400; font-size: var(--text-hero); line-height: 1;
-    background: linear-gradient(135deg, var(--green-300), var(--green-700));
-    -webkit-background-clip: text; background-clip: text; color: transparent;
-    filter: drop-shadow(0 2px 18px rgba(79,138,100,.22));
+    color: var(--gold);
+    filter: drop-shadow(0 2px 18px rgba(185,154,104,.3));
     animation: hero-in .45s cubic-bezier(.22,1,.36,1) backwards;
   }
   @keyframes hero-in { from { opacity: 0; transform: translateY(6px) scale(.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
@@ -357,12 +356,12 @@
     position:absolute; top:0; bottom:0; border-radius: var(--radius-pill);
     transition: width .6s cubic-bezier(.22,1,.36,1), left .6s cubic-bezier(.22,1,.36,1);
   }
-  .bar-fill-pos { background: linear-gradient(90deg, var(--green-300), var(--green-500)); }
+  .bar-fill-pos { background: var(--gold); }
   .bar-fill-neg { background: linear-gradient(90deg, var(--rust-500), var(--rust-300)); }
   .factor-foot { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
   .factor-note { color: var(--muted); font-size: var(--text-xs); line-height: var(--lh-normal); margin: 0; }
   .factor-score { font-size: var(--text-xs); font-weight: 600; flex-shrink: 0; }
-  .factor-score-pos { color: var(--green-300); }
+  .factor-score-pos { color: var(--gold); }
   .factor-score-neg { color: var(--rust-300); }
 
   .panel {
@@ -1424,7 +1423,7 @@ function peekRowsHtml(companies) {
   return top3.map(c => `
     <div class="index-card-peek-row">
       <span class="index-card-peek-name">${c.name}</span>
-      <span class="index-card-peek-score" style="color:${c.score >= 0 ? 'var(--accent)' : 'var(--rust)'}">${c.score > 0 ? '+' : ''}${c.score}</span>
+      <span class="index-card-peek-score" style="color:${c.score >= 0 ? 'var(--gold)' : 'var(--rust)'}">${c.score > 0 ? '+' : ''}${c.score}</span>
     </div>`).join('');
 }
 
@@ -1459,7 +1458,7 @@ function renderIndicesRows(companies, rowsContainerId) {
         <span class="company-name">${c.name}</span>
         <span class="company-ticker">${c.ticker}${c.is_financial ? '<span class="financial-tag">Profil financier</span>' : ''}${hasMajorNewsAlert(c) ? '<span class="financial-tag majeure-tag">Actu majeure</span>' : ''}${alsoIndicesBadgesHtml(c)}</span>
       </div>
-      <span class="company-score" style="color:${c.score >= 0 ? 'var(--accent)' : 'var(--rust)'};">
+      <span class="company-score" style="color:${c.score >= 0 ? 'var(--gold)' : 'var(--rust)'};">
         ${c.score > 0 ? '+' : ''}${c.score}
       </span>
     </a>`).join('') : '<div class="list-empty">Aucun résultat pour cette recherche.</div>';
@@ -1766,7 +1765,7 @@ function renderCompanyDetail(company) {
 
     <div class="mobile-key-bar">
       <span class="mobile-key-bar-name">${company.name}</span>
-      <span class="mobile-key-bar-score" style="color:${company.score >= 0 ? 'var(--accent)' : 'var(--rust)'}">${company.score > 0 ? '+' : ''}${company.score}</span>
+      <span class="mobile-key-bar-score" style="color:${company.score >= 0 ? 'var(--gold)' : 'var(--rust)'}">${company.score > 0 ? '+' : ''}${company.score}</span>
       <span class="mobile-key-bar-prices">${formatPriceForIndex(company.entry_price, company.index)} · ${formatPriceForIndex(company.exit_price, company.index)}</span>
     </div>
 

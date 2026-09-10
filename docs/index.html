@@ -615,7 +615,13 @@
     display: flex; flex-direction: column; gap: 14px; padding: 16px 18px 18px;
     border-top: 1px solid var(--border);
   }
-  .index-card-peek-row { display: flex; justify-content: space-between; gap: 10px; font-size: var(--text-sm); }
+  .index-card-peek-row {
+    display: flex; justify-content: space-between; align-items: center; gap: 10px;
+    font-size: var(--text-sm); margin: 0 -8px; padding: 4px 8px; border-radius: var(--radius-sm);
+    color: inherit; transition: background .14s ease, transform .14s ease;
+  }
+  .index-card-peek-row:hover { background: var(--bg-3); transform: translateX(2px); }
+  .index-card-peek-row:active { transform: translateX(2px) scale(.99); }
   .index-card-peek-name { color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .index-card-peek-score { font-family: 'Newsreader', serif; font-weight: 500; flex-shrink: 0; }
   .index-card-peek-empty { color: var(--muted); font-size: var(--text-sm); margin: 0; }
@@ -1423,10 +1429,10 @@ function peekRowsHtml(companies) {
   const top3 = sortedFilteredCompanies(companies).slice(0, 3);
   if (!top3.length) return '<p class="index-card-peek-empty">Aucun résultat pour ce filtre.</p>';
   return top3.map(c => `
-    <div class="index-card-peek-row">
+    <a class="index-card-peek-row" href="#indices/${c.ticker}">
       <span class="index-card-peek-name">${c.name}</span>
       <span class="index-card-peek-score" style="color:${c.score >= 0 ? 'var(--gold)' : 'var(--rust)'}">${c.score > 0 ? '+' : ''}${c.score}</span>
-    </div>`).join('');
+    </a>`).join('');
 }
 
 // Badge(s) code court pour les indices dont une entreprise est

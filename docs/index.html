@@ -542,8 +542,12 @@ function renderScalpTracking(data) {
 // approche, qui a laissé chaque entreprise Nasdaq sans widget de cours :
 // aucun suffixe ne matchait jamais). Un futur indice avec un autre
 // préfixe/suffixe devra ajouter sa propre entrée ici.
-const TV_EXCHANGE_PREFIX_BY_INDEX = { CAC40: 'EURONEXT:', DAX: 'XETR:', NASDAQ: 'NASDAQ:' };
-const TV_TICKER_SUFFIX_BY_INDEX = { CAC40: '.PA', DAX: '.DE', NASDAQ: '' };
+// DOW : les 21 entreprises suivies (voir DOW_COMPANIES, indices_score.py)
+// sont toutes cotées au NYSE — les 9 composants du Dow cotés Nasdaq
+// (Apple, Microsoft...) sont déjà suivis côté NASDAQ, pas dupliqués ici,
+// donc un seul préfixe suffit comme pour les 3 autres indices.
+const TV_EXCHANGE_PREFIX_BY_INDEX = { CAC40: 'EURONEXT:', DAX: 'XETR:', NASDAQ: 'NASDAQ:', DOW: 'NYSE:' };
+const TV_TICKER_SUFFIX_BY_INDEX = { CAC40: '.PA', DAX: '.DE', NASDAQ: '', DOW: '' };
 
 function loadSideQuoteWidget(ticker, indexKey) {
   // Widget TradingView compact (cours + mini-graphique), injecté après coup
@@ -600,6 +604,7 @@ const INDEX_TV_SYMBOL_BY_KEY = {
   CAC40: 'EURONEXT:PX1',
   DAX: 'XETR:DAX',
   NASDAQ: 'NASDAQ:NDX',
+  DOW: 'DJ:DJI',
 };
 
 function loadIndexQuoteWidget(indexKey, containerId) {
@@ -814,6 +819,7 @@ const INDEX_DISPLAY_NAMES = {
   CAC40: 'CAC 40',
   DAX: 'DAX',
   NASDAQ: 'Nasdaq 100',
+  DOW: 'Dow Jones',
 };
 
 // Devise par indice — repli local, écrasé par indicesData.index_currency
@@ -823,6 +829,7 @@ const INDEX_CURRENCY_BY_KEY = {
   CAC40: 'EUR',
   DAX: 'EUR',
   NASDAQ: 'USD',
+  DOW: 'USD',
 };
 
 // Formate un prix d'entreprise dans la devise de SON indice (€ pour

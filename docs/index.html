@@ -1109,11 +1109,12 @@ function portfolioPositionsHtml(positions, companiesByTicker, currencyByIndex) {
       <div class="portfolio-position-row" data-id="${position.id}">
         <div class="portfolio-position-main">
           <a class="company-name" href="#indices/${company.ticker}">${company.name}</a>
-          <span class="company-ticker">${company.ticker}${allIndicesBadgesHtml(company)}</span>
+          <span class="company-ticker">${company.ticker}${company.is_financial ? '<span class="financial-tag">Profil financier</span>' : ''}${hasMajorNewsAlert(company) ? '<span class="financial-tag majeure-tag">Actu majeure</span>' : ''}${allIndicesBadgesHtml(company)}</span>
           <span class="hero-sub">${position.quantity} × ${fmt(position.buy_price)} (${position.buy_date})</span>
+          <span class="hero-sub">Cours actuel : ${fmt(company.current_price)}</span>
         </div>
         <div class="portfolio-position-pnl">
-          <span class="price-value">${fmt(pnl ? pnl.value : company.current_price * position.quantity)}</span>
+          <span class="price-value">${pnl ? fmt(pnl.value) : 'Cours indisponible'}</span>
           ${pnl ? `<span style="color:${pnl.pnlAbs >= 0 ? 'var(--gold)' : 'var(--rust)'}">${pnl.pnlAbs >= 0 ? '+' : ''}${fmt(pnl.pnlAbs)} (${formatPct(pnl.pnlPct)})</span>` : ''}
           <span class="company-score" style="color:${company.score >= 0 ? 'var(--gold)' : 'var(--rust)'};">${company.score > 0 ? '+' : ''}${company.score}</span>
         </div>

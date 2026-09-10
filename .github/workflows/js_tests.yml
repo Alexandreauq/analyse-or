@@ -1,0 +1,40 @@
+name: Tests JS
+
+# Aucune machine de dev n'a Node.js installé dans ce projet — ce workflow
+# est le seul moyen d'exécuter réellement docs/*.test.js (scalping.test.js,
+# scalping_tracker.test.js, portfolio.test.js...) plutôt que de se fier à
+# une relecture de code. Lecture seule, aucun accès en écriture au dépôt.
+
+on:
+  push:
+    branches: ["**"]
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Récupérer le dépôt
+        uses: actions/checkout@v4
+
+      - name: Installer Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Lancer tous les tests JS (docs/*.test.js)
+        run: |
+          set -e
+          shopt -s nullglob
+          files=(docs/*.test.js *.test.js)
+          if [ ${#files[@]} -eq 0 ]; then
+            echo "Aucun fichier docs/*.test.js trouvé."
+            exit 0
+          fi
+          for f in "${files[@]}"; do
+            echo "=== $f ==="
+            node "$f"
+          done

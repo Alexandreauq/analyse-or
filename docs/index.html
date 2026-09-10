@@ -606,6 +606,20 @@
   .index-card-header .chevron { color: var(--muted); transition: transform 0.15s ease; flex-shrink: 0; }
   .index-card-header[aria-expanded="true"] .chevron { color: var(--green-300); transform: rotate(180deg); }
   .index-card-header[aria-expanded="true"] .index-card-name { color: var(--green-300); }
+
+  /* Aperçu des 3 meilleurs scores, visible carte repliée (mobile et desktop)
+     — pour que la carte ne se résume pas qu'à sa ligne de titre. Masqué à
+     l'ouverture, le panneau déplié (recherche/tri/liste + widget) prend le relais. */
+  .index-card-peek {
+    display: flex; flex-direction: column; gap: 14px; padding: 16px 18px 18px;
+    border-top: 1px solid var(--border);
+  }
+  .index-card-peek-row { display: flex; justify-content: space-between; gap: 10px; font-size: var(--text-sm); }
+  .index-card-peek-name { color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .index-card-peek-score { font-family: 'Newsreader', serif; font-weight: 500; flex-shrink: 0; }
+  .index-card-peek-empty { color: var(--muted); font-size: var(--text-sm); margin: 0; }
+  .index-card:has(.index-card-header[aria-expanded="true"]) .index-card-peek { display: none; }
+
   .index-card-body {
     padding: 0 16px; max-height: 0; overflow: hidden; opacity: 0;
     border-top: 1px solid transparent;
@@ -630,6 +644,7 @@
     .index-card-list { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
     .index-card-header { pointer-events: none; }
     .index-card-header .chevron { display: none; }
+    .index-card-peek { display: none; }
     .index-card-body { max-height: none; opacity: 1; padding-bottom: 16px; border-top-color: var(--border); }
     .index-card-body .list-controls, .index-card-body .list-filter-toggle { display: none; }
   }
@@ -1400,6 +1415,19 @@ function sortedFilteredCompanies(companies) {
   return visible;
 }
 
+// Aperçu (3 meilleurs scores) d'une carte repliée — respecte les mêmes
+// filtres (recherche, profil financier) que la liste complète, pour que la
+// case "Profil financier uniquement" ait un effet visible même carte fermée.
+function peekRowsHtml(companies) {
+  const top3 = sortedFilteredCompanies(companies).slice(0, 3);
+  if (!top3.length) return '<p class="index-card-peek-empty">Aucun résultat pour ce filtre.</p>';
+  return top3.map(c => `
+    <div class="index-card-peek-row">
+      <span class="index-card-peek-name">${c.name}</span>
+      <span class="index-card-peek-score" style="color:${c.score >= 0 ? 'var(--accent)' : 'var(--rust)'}">${c.score > 0 ? '+' : ''}${c.score}</span>
+    </div>`).join('');
+}
+
 // Badge(s) code court pour les indices dont une entreprise est
 // RÉELLEMENT membre en plus de son indice suivi (company.also_indices,
 // ex. Apple : suivie côté Nasdaq 100, également membre réel du Dow
@@ -1506,6 +1534,7 @@ function renderIndicesList(companies) {
         <span class="index-card-count">${groups[key].length} entreprise${groups[key].length > 1 ? 's' : ''}</span>
         <span class="chevron">▾</span>
       </button>
+      <div class="index-card-peek" id="indexPeek-${key}">${peekRowsHtml(groups[key])}</div>
       <div class="index-card-body" id="indexBody-${key}"></div>
     </div>`).join('');
 
@@ -1558,7 +1587,10 @@ function renderIndicesList(companies) {
   // cocher partagée qui rafraîchit tous les groupes déjà rendus, plutôt que
   // les contrôles par groupe (mobile, cachés à ce format — voir CSS).
   function refreshAllVisibleGroups() {
-    indexKeys.forEach(key => renderIndicesRows(groups[key], `indicesRows-${key}`));
+    indexKeys.forEach(key => {
+      document.getElementById(`indexPeek-${key}`).innerHTML = peekRowsHtml(groups[key]);
+      renderIndicesRows(groups[key], `indicesRows-${key}`);
+    });
   }
   document.getElementById('filterSearch').addEventListener('input', (e) => {
     indicesListSearch = e.target.value;

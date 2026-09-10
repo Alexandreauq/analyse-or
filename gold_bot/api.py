@@ -4,6 +4,7 @@
 # route qui l'active, augmente une position, ou déclenche un ordre :
 # ces actions n'existent tout simplement pas ici. Voir
 # docs/superpowers/specs/2026-09-10-bot-trading-or-design.md.
+import hmac
 import os
 
 from fastapi import FastAPI, Header, HTTPException
@@ -11,7 +12,9 @@ from fastapi.middleware.cors import CORSMiddleware
 
 import gold_bot.state as state
 
-app = FastAPI()
+CIRCUIT_BREAKER_STATE_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "circuit_breaker_state.json")
+
+app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
 
 app.add_middleware(
     CORSMiddleware,
@@ -23,20 +26,23 @@ app.add_middleware(
 
 def _check_token(x_bot_token: str | None) -> None:
     """Refuse par défaut si BOT_API_TOKEN n'est pas configuré (échec
-    fermé, jamais ouvert) — pas seulement si le jeton fourni est faux."""
+    fermé, jamais ouvert) — pas seulement si le jeton fourni est faux.
+    Comparaison à temps constant pour ne pas fuiter d'information sur
+    la position du premier caractère incorrect."""
     expected = os.environ.get("BOT_API_TOKEN")
-    if not expected or x_bot_token != expected:
+    if not expected or not hmac.compare_digest(x_bot_token or "", expected):
         raise HTTPException(status_code=401, detail="Jeton invalide ou absent")
 
 
 @app.get("/status")
 def get_status():
     current = state.load_state(state.STATE_PATH)
+    circuit_breaker_state = state.load_state(CIRCUIT_BREAKER_STATE_PATH)
     return {
         "kill_switch": current["kill_switch"],
         "dry_run": current["dry_run"],
-        "circuit_breaker_day": current.get("circuit_breaker_day"),
-        "circuit_breaker_starting_balance": current.get("circuit_breaker_starting_balance"),
+        "circuit_breaker_day": circuit_breaker_state.get("circuit_breaker_day"),
+        "circuit_breaker_starting_balance": circuit_breaker_state.get("circuit_breaker_starting_balance"),
     }
 
 

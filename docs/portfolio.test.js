@@ -6,6 +6,7 @@ const assert = require('assert');
 const {
   PORTFOLIO_STORAGE_KEY, validatePositionInput, createPosition,
   loadPortfolio, savePortfolio, addPosition, updatePosition, removePosition,
+  computePositionPnL, computePortfolioTotals, findOpportunities,
 } = require('./portfolio.js');
 
 // Mock localStorage minimal — Node n'a pas cet objet nativement.
@@ -165,6 +166,90 @@ function test_removePosition_deletes_only_targeted_position() {
   console.log('OK: test_removePosition_deletes_only_targeted_position');
 }
 
+function test_computePositionPnL_gain() {
+  const position = { id: 'p1', ticker: 'MC.PA', quantity: 10, buy_price: 600, buy_date: '2026-07-01' };
+  const result = computePositionPnL(position, 660);
+  assert.strictEqual(result.value, 6600);
+  assert.strictEqual(result.pnlAbs, 600);
+  assert.ok(Math.abs(result.pnlPct - 10) < 1e-9);
+  console.log('OK: test_computePositionPnL_gain');
+}
+
+function test_computePositionPnL_loss() {
+  const position = { id: 'p1', ticker: 'MC.PA', quantity: 10, buy_price: 600, buy_date: '2026-07-01' };
+  const result = computePositionPnL(position, 540);
+  assert.strictEqual(result.value, 5400);
+  assert.strictEqual(result.pnlAbs, -600);
+  assert.ok(Math.abs(result.pnlPct - -10) < 1e-9);
+  console.log('OK: test_computePositionPnL_loss');
+}
+
+function test_computePositionPnL_null_when_price_unavailable() {
+  const position = { id: 'p1', ticker: 'MC.PA', quantity: 10, buy_price: 600, buy_date: '2026-07-01' };
+  assert.strictEqual(computePositionPnL(position, null), null);
+  assert.strictEqual(computePositionPnL(position, undefined), null);
+  assert.strictEqual(computePositionPnL(position, NaN), null);
+  console.log('OK: test_computePositionPnL_null_when_price_unavailable');
+}
+
+function test_computePortfolioTotals_splits_eur_and_usd() {
+  const positions = [
+    { id: 'p1', ticker: 'MC.PA', quantity: 10, buy_price: 600, buy_date: '2026-07-01' },
+    { id: 'p2', ticker: 'AAPL', quantity: 5, buy_price: 180, buy_date: '2026-07-01' },
+  ];
+  const companiesByTicker = {
+    'MC.PA': { ticker: 'MC.PA', index: 'CAC40', current_price: 660 },
+    'AAPL': { ticker: 'AAPL', index: 'NASDAQ', current_price: 200 },
+  };
+  const currencyByIndex = { CAC40: 'EUR', NASDAQ: 'USD' };
+  const totals = computePortfolioTotals(positions, companiesByTicker, currencyByIndex);
+  assert.strictEqual(totals.EUR.value, 6600);
+  assert.strictEqual(totals.EUR.pnlAbs, 600);
+  assert.strictEqual(totals.USD.value, 1000);
+  assert.strictEqual(totals.USD.pnlAbs, 100);
+  console.log('OK: test_computePortfolioTotals_splits_eur_and_usd');
+}
+
+function test_computePortfolioTotals_skips_position_with_unknown_ticker() {
+  const positions = [{ id: 'p1', ticker: 'DELISTED', quantity: 10, buy_price: 600, buy_date: '2026-07-01' }];
+  const totals = computePortfolioTotals(positions, {}, { CAC40: 'EUR' });
+  assert.strictEqual(totals.EUR.value, 0);
+  assert.strictEqual(totals.USD.value, 0);
+  console.log('OK: test_computePortfolioTotals_skips_position_with_unknown_ticker');
+}
+
+function test_computePortfolioTotals_empty_positions_returns_zeroed_totals() {
+  const totals = computePortfolioTotals([], {}, {});
+  assert.deepStrictEqual(totals, { EUR: { value: 0, pnlAbs: 0 }, USD: { value: 0, pnlAbs: 0 } });
+  console.log('OK: test_computePortfolioTotals_empty_positions_returns_zeroed_totals');
+}
+
+function test_findOpportunities_returns_entree_alerts_not_held() {
+  const companies = [
+    { ticker: 'MC.PA', alerts: [{ kind: 'entree' }] },
+    { ticker: 'OR.PA', alerts: [{ kind: 'risque' }] },
+    { ticker: 'AAPL', alerts: [{ kind: 'entree' }] },
+  ];
+  const result = findOpportunities(companies, new Set(['AAPL']));
+  assert.strictEqual(result.length, 1);
+  assert.strictEqual(result[0].ticker, 'MC.PA');
+  console.log('OK: test_findOpportunities_returns_entree_alerts_not_held');
+}
+
+function test_findOpportunities_excludes_companies_without_entree_alert() {
+  const companies = [{ ticker: 'MC.PA', alerts: [] }];
+  const result = findOpportunities(companies, new Set());
+  assert.strictEqual(result.length, 0);
+  console.log('OK: test_findOpportunities_excludes_companies_without_entree_alert');
+}
+
+function test_findOpportunities_handles_missing_alerts_field() {
+  const companies = [{ ticker: 'MC.PA' }];
+  const result = findOpportunities(companies, new Set());
+  assert.strictEqual(result.length, 0);
+  console.log('OK: test_findOpportunities_handles_missing_alerts_field');
+}
+
 function main() {
   test_validatePositionInput_accepts_positive_numbers();
   test_validatePositionInput_rejects_non_positive_quantity();
@@ -184,7 +269,16 @@ function main() {
   test_updatePosition_rejects_invalid_input();
   test_updatePosition_returns_error_for_unknown_id();
   test_removePosition_deletes_only_targeted_position();
-  console.log('Tous les tests portfolio.test.js (Task 1) sont passés.');
+  test_computePositionPnL_gain();
+  test_computePositionPnL_loss();
+  test_computePositionPnL_null_when_price_unavailable();
+  test_computePortfolioTotals_splits_eur_and_usd();
+  test_computePortfolioTotals_skips_position_with_unknown_ticker();
+  test_computePortfolioTotals_empty_positions_returns_zeroed_totals();
+  test_findOpportunities_returns_entree_alerts_not_held();
+  test_findOpportunities_excludes_companies_without_entree_alert();
+  test_findOpportunities_handles_missing_alerts_field();
+  console.log('Tous les tests portfolio.test.js sont passés.');
 }
 
 main();

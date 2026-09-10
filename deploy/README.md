@@ -45,13 +45,18 @@ pip install -r requirements-bot.txt
 Créer `/home/goldbot/analyse-or/.env` :
 
 ```
-METAAPI_TRADE_TOKEN=...       # token du DEUXIÈME compte MetaApi, connecté avec le mot de passe de trading réel
-METAAPI_TRADE_ACCOUNT_ID=...  # account ID MetaApi de ce compte (différent du compte lecture seule)
-TWELVE_DATA_API_KEY=...       # déjà utilisé ailleurs dans ce projet
+# Token du DEUXIÈME compte MetaApi, connecté avec le mot de passe de trading réel
+METAAPI_TRADE_TOKEN=...
+# Account ID MetaApi de ce compte (différent du compte lecture seule)
+METAAPI_TRADE_ACCOUNT_ID=...
+# Déjà utilisé ailleurs dans ce projet
+TWELVE_DATA_API_KEY=...
 SMTP_USER=...
 SMTP_PASSWORD=...
-MAIL_TO=...                   # optionnel, sinon = SMTP_USER
-BOT_API_TOKEN=...             # jeton secret pour /kill et /resume — génère une chaîne aléatoire longue
+# Optionnel, sinon = SMTP_USER
+MAIL_TO=...
+# Jeton secret pour /kill et /resume — génère une chaîne aléatoire longue
+BOT_API_TOKEN=...
 ```
 
 Permissions restreintes : `chmod 600 .env`.

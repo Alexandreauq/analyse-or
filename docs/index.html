@@ -1183,8 +1183,13 @@ function realPortfolioHtml(companiesByTicker) {
       <h2>Positions réelles (IBKR)</h2>
       <div class="empty">Synchronisation IBKR pas encore disponible.</div>`;
   }
+  if (realPortfolioData.sync_status === 'not_configured') {
+    return `
+      <h2>Positions réelles (IBKR)</h2>
+      <div class="empty">Synchronisation IBKR pas encore configurée.</div>`;
+  }
   const warningHtml = realPortfolioData.sync_status === 'error'
-    ? `<p class="portfolio-form-error">Dernière synchronisation IBKR échouée : ${realPortfolioData.sync_error}</p>`
+    ? `<p class="portfolio-form-error">Dernière synchronisation IBKR échouée : ${escHtml(realPortfolioData.sync_error)}</p>`
     : '';
   const positions = realPortfolioData.positions || [];
   if (!positions.length) {
@@ -1193,38 +1198,25 @@ function realPortfolioHtml(companiesByTicker) {
       ${warningHtml}
       <div class="empty">Aucune position détenue chez IBKR pour l'instant.</div>`;
   }
-  const totals = {};
-  positions.forEach(p => {
-    totals[p.currency] = totals[p.currency] || { value: 0, pnlAbs: 0 };
-    totals[p.currency].value += p.position_value;
-    totals[p.currency].pnlAbs += p.unrealized_pnl;
-  });
-  const fmtCurrency = (v, currency) => currency === 'USD' ? formatPriceUsd(v) : formatPrice(v);
-  const totalsHtml = Object.keys(totals).map(currency => `
-    <div class="portfolio-total-card">
-      <span class="portfolio-total-label">Total ${currency}</span>
-      <span class="portfolio-total-value">${fmtCurrency(totals[currency].value, currency)}</span>
-      <span class="portfolio-total-pnl" style="color:${totals[currency].pnlAbs >= 0 ? 'var(--gold)' : 'var(--rust)'}">${totals[currency].pnlAbs >= 0 ? '+' : ''}${fmtCurrency(totals[currency].pnlAbs, currency)}</span>
-    </div>`).join('');
   const rowsHtml = positions.map(p => {
     const company = p.matched_ticker ? companiesByTicker[p.matched_ticker] : null;
-    const fmt = v => fmtCurrency(v, p.currency);
     const badgesHtml = company
       ? `${company.is_financial ? '<span class="financial-tag">Profil financier</span>' : ''}${hasMajorNewsAlert(company) ? '<span class="financial-tag majeure-tag">Actu majeure</span>' : ''}${allIndicesBadgesHtml(company)}`
       : '';
     const nameHtml = company
       ? `<a class="company-name" href="#indices/${company.ticker}">${company.name}</a>`
-      : `<span class="company-name">${p.description || p.ibkr_symbol}</span>`;
+      : `<span class="company-name">${escHtml(p.description || p.ibkr_symbol)}</span>`;
+    const pnlHtml = p.pnl_pct == null
+      ? '<span class="hero-sub">Performance indisponible</span>'
+      : `<span style="color:${p.pnl_pct >= 0 ? 'var(--gold)' : 'var(--rust)'}">${formatPct(p.pnl_pct)}</span>`;
     return `
       <div class="portfolio-position-row">
         <div class="portfolio-position-main">
           ${nameHtml}
-          <span class="company-ticker">${p.ibkr_symbol}${badgesHtml}</span>
-          <span class="hero-sub">${p.quantity} × ${fmt(p.current_price)}</span>
+          <span class="company-ticker">${escHtml(p.ibkr_symbol)}${badgesHtml}</span>
         </div>
         <div class="portfolio-position-pnl">
-          <span class="price-value">${fmt(p.position_value)}</span>
-          <span style="color:${p.unrealized_pnl >= 0 ? 'var(--gold)' : 'var(--rust)'}">${p.unrealized_pnl >= 0 ? '+' : ''}${fmt(p.unrealized_pnl)}</span>
+          ${pnlHtml}
           ${company ? `<span class="company-score" style="color:${company.score >= 0 ? 'var(--gold)' : 'var(--rust)'};">${company.score > 0 ? '+' : ''}${company.score}</span>` : ''}
         </div>
       </div>`;
@@ -1232,7 +1224,6 @@ function realPortfolioHtml(companiesByTicker) {
   return `
     <h2>Positions réelles (IBKR)</h2>
     ${warningHtml}
-    <div class="portfolio-totals">${totalsHtml}</div>
     <div class="portfolio-position-list">${rowsHtml}</div>`;
 }
 
@@ -1263,7 +1254,11 @@ function wirePortfolioForm() {
 function wirePortfolioPositionActions(companiesByTicker) {
   document.querySelectorAll('.portfolio-delete-btn').forEach(btn => {
     btn.addEventListener('click', () => {
-      removePosition(btn.dataset.id);
+      const result = removePosition(btn.dataset.id);
+      if (!result.ok) {
+        alert(result.error);
+        return;
+      }
       renderPortfolioScreen();
     });
   });
@@ -1997,6 +1992,12 @@ function renderIndicesList(companies) {
     indicesListFinancialOnly = e.target.checked;
     refreshAllVisibleGroups();
   });
+}
+
+function escHtml(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+  }[c]));
 }
 
 function formatPrice(v) {

@@ -1,0 +1,15 @@
+[Unit]
+Description=Bot Or - boucle de trading
+After=network.target
+
+[Service]
+Type=simple
+User=goldbot
+WorkingDirectory=/home/goldbot/analyse-or
+EnvironmentFile=/home/goldbot/analyse-or/.env
+ExecStart=/home/goldbot/analyse-or/venv/bin/python3 -m gold_bot.loop
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

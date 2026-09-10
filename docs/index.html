@@ -589,16 +589,18 @@
   }
   @keyframes content-fade-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 
-  /* Filtre partagé (recherche/tri/profil financier) : visible à toutes les
-     tailles d'écran désormais — empilé au-dessus de la liste sur mobile,
-     en colonne latérale collante à partir de 1024px (voir media query plus
-     bas) — pour que mobile ait le même accès direct au filtre que desktop,
-     sans avoir à déplier une carte au préalable. */
-  .indices-filters { display: flex; flex-direction: column; gap: 10px; margin: 4px 0 16px; }
-  .indices-filters h2 { display: none; }
+  /* Panneau de filtres partagé (recherche/tri/case à cocher) — remplace les
+     contrôles par carte, masqués partout (voir .index-card-body .list-controls
+     plus bas) : plus simple qu'un filtre par carte à ouvrir un par un. */
+  .indices-filters {
+    display: flex; flex-direction: column; gap: 10px; margin: 18px 0 4px;
+    padding: 14px; background: var(--bg-2); border: 1px solid var(--border); border-radius: var(--radius-lg);
+  }
+  .indices-filters h2 { margin: 0; }
   .indices-filters .list-search, .indices-filters .list-sort { width: 100%; }
+  .index-card-body .list-controls, .index-card-body .list-filter-toggle { display: none; }
 
-  .index-card-list { display: flex; flex-direction: column; gap: 12px; margin: 4px 0 20px; }
+  .index-card-list { display: flex; flex-direction: column; gap: 18px; margin: 4px 0 24px; }
   .index-card {
     background: var(--bg-2); border: 1px solid var(--border); border-radius: var(--radius-lg);
     overflow: hidden; box-shadow: var(--shadow-1); transition: box-shadow .2s ease, border-color .2s ease;
@@ -606,7 +608,7 @@
   .index-card:has(.index-card-header[aria-expanded="true"]) { box-shadow: var(--shadow-2); border-color: var(--border-strong); }
   .index-card-header {
     width: 100%; display: flex; align-items: center; gap: 10px;
-    background: none; border: none; color: var(--text); padding: 16px; text-align: left;
+    background: none; border: none; color: var(--text); padding: 18px 18px 16px; text-align: left;
     transition: transform .12s ease;
   }
   .index-card-header:active { transform: scale(.99); }
@@ -636,34 +638,26 @@
   .index-card:has(.index-card-header[aria-expanded="true"]) .index-card-peek { display: none; }
 
   .index-card-body {
-    padding: 0 16px; max-height: 0; overflow: hidden; opacity: 0;
+    padding: 0 18px; max-height: 0; overflow: hidden; opacity: 0;
     border-top: 1px solid transparent;
     transition: max-height .35s cubic-bezier(.22,1,.36,1), opacity .25s ease,
                 padding-bottom .35s cubic-bezier(.22,1,.36,1), border-color .35s ease;
   }
-  .index-card-body.is-open { padding-bottom: 16px; max-height: 6000px; opacity: 1; border-top-color: var(--border); }
+  .index-card-body.is-open { padding-bottom: 18px; max-height: 6000px; opacity: 1; border-top-color: var(--border); }
   .index-card-body .list-controls { margin-top: 16px; }
-  /* Le filtre partagé ci-dessus (.indices-filters) couvre déjà recherche/
-     tri/profil financier à toutes les tailles d'écran ; les contrôles
-     dupliqués par carte restent dans le DOM (mêmes écouteurs, même état
-     partagé) mais ne s'affichent jamais, pour éviter un doublon visible. */
-  .index-card-body .list-controls, .index-card-body .list-filter-toggle { display: none; }
 
-  /* Page Indices (≥1024px) : grille de cartes-indice + panneau de filtres
-     collant à gauche, plutôt qu'un accordéon à ouvrir un par un. */
+  /* Page Indices (≥1024px) : grille de cartes-indice (repliées par défaut,
+     comme sur mobile — indispensable dès qu'il y aura beaucoup plus
+     d'indices, impossible de tous les afficher dépliés) + panneau de
+     filtres persistant à gauche qui remplace les contrôles par carte. */
   @media (min-width: 1024px) {
     .app:has(.indices-layout) { max-width: 1440px; }
     .indices-layout { display: grid; grid-template-columns: 240px 1fr; gap: 32px; align-items: start; }
     .indices-filters {
-      margin: 0; gap: 12px; position: sticky; top: 20px;
-      padding-top: 17px; /* aligne "Filtrer" avec le texte des en-têtes de carte (bordure+padding du .index-card) */
+      gap: 12px; position: sticky; top: 20px; margin: 0;
+      padding-top: 19px; /* aligne "Filtrer" avec le texte des en-têtes de carte (bordure+padding du .index-card) */
     }
-    .indices-filters h2 { display: block; margin: 0; }
-    .index-card-list { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-    .index-card-header { pointer-events: none; }
-    .index-card-header .chevron { display: none; }
-    .index-card-peek { display: none; }
-    .index-card-body { max-height: none; opacity: 1; padding-bottom: 16px; border-top-color: var(--border); }
+    .index-card-list { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
   }
 
   .alert-row {
@@ -1590,19 +1584,16 @@ function renderIndicesList(companies) {
     (key, wrap) => renderGroupIfNeeded(key, wrap)
   );
 
-  if (matchMedia('(min-width: 1024px)').matches) {
-    // Desktop : grille avec panneau de filtres persistant — tous les groupes
-    // sont visibles d'emblée, pas d'accordéon à ouvrir un par un.
-    indexKeys.forEach(key => renderGroupIfNeeded(key, document.getElementById(`indexBody-${key}`)));
-  } else if (indexKeys.length === 1) {
-    // Mobile, un seul indice aujourd'hui : on l'ouvre par défaut, pour ne
-    // pas ajouter un clic obligatoire là où il n'y avait qu'une liste avant.
+  // Repliés par défaut sur mobile ET desktop — sauf s'il n'y a qu'un seul
+  // indice, auquel cas pas la peine d'imposer un clic pour le déplier.
+  if (indexKeys.length === 1) {
     document.getElementById(`indexToggle-${indexKeys[0]}`).click();
   }
 
-  // Panneau de filtres persistant (desktop) : une recherche/tri/case à
-  // cocher partagée qui rafraîchit tous les groupes déjà rendus, plutôt que
-  // les contrôles par groupe (mobile, cachés à ce format — voir CSS).
+  // Panneau de filtres partagé (recherche/tri/case à cocher, voir
+  // .indices-filters) : rafraîchit l'aperçu de chaque carte et la liste
+  // complète des groupes déjà dépliés, plutôt que les contrôles par carte
+  // (dupliqués mais cachés partout — voir CSS).
   function refreshAllVisibleGroups() {
     indexKeys.forEach(key => {
       document.getElementById(`indexPeek-${key}`).innerHTML = peekRowsHtml(groups[key]);

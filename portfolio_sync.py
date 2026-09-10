@@ -71,23 +71,44 @@ def fetch_flex_statement(
     )
 
 
+def _to_float(raw):
+    """Parse un attribut XML IBKR potentiellement absent ou vide (ex. un
+    ETF/obligation transféré sans coût de revient connu) sans lever —
+    une position incomplète dégrade son pnl_pct à None plutôt que de
+    faire échouer toute la synchronisation."""
+    try:
+        return float(raw)
+    except (TypeError, ValueError):
+        return None
+
+
 def parse_open_positions(xml_text: str) -> list[dict]:
-    """Extrait chaque <OpenPosition> du rapport Flex en dict. Une section
-    OpenPositions absente ou vide renvoie une liste vide (compte sans
-    position ouverte — cas valide, pas une erreur)."""
+    """Extrait chaque <OpenPosition> "résumé" (levelOfDetail=SUMMARY) du
+    rapport Flex en dict. Ne construit jamais les montants absolus
+    (quantité, valeur, coût de revient, P&L en devise) — seul un
+    pourcentage de performance est calculé et conservé, car ce fichier
+    est publié publiquement (voir la section Confidentialité du spec).
+    Une section OpenPositions absente ou vide renvoie une liste vide
+    (compte sans position ouverte — cas valide, pas une erreur). Une
+    ligne "LOT" (détail par lot fiscal, si la Flex Query est configurée
+    en détail lot plutôt que résumé) est ignorée pour ne pas compter
+    une même position plusieurs fois."""
     root = ET.fromstring(xml_text)
     positions = []
     for el in root.iter("OpenPosition"):
+        level = (el.get("levelOfDetail") or "SUMMARY").upper()
+        if level != "SUMMARY":
+            continue
+        cost_basis_value = _to_float(el.get("costBasisMoney"))
+        unrealized_pnl = _to_float(el.get("fifoPnlUnrealized"))
+        pnl_pct = None
+        if cost_basis_value and unrealized_pnl is not None:
+            pnl_pct = unrealized_pnl / abs(cost_basis_value) * 100
         positions.append({
             "ibkr_symbol": el.get("symbol"),
             "description": el.get("description"),
             "currency": el.get("currency"),
-            "quantity": float(el.get("position")),
-            "current_price": float(el.get("markPrice")),
-            "position_value": float(el.get("positionValue")),
-            "cost_basis_price": float(el.get("costBasisPrice")),
-            "cost_basis_value": float(el.get("costBasisMoney")),
-            "unrealized_pnl": float(el.get("fifoPnlUnrealized")),
+            "pnl_pct": pnl_pct,
         })
     return positions
 
@@ -151,7 +172,7 @@ def _load_tracked_companies() -> list[dict]:
 def _write_real_portfolio(payload: dict) -> None:
     os.makedirs(os.path.dirname(REAL_PORTFOLIO_JSON_PATH), exist_ok=True)
     with open(REAL_PORTFOLIO_JSON_PATH, "w", encoding="utf-8") as fh:
-        json.dump(payload, fh, ensure_ascii=False, indent=2)
+        json.dump(payload, fh, ensure_ascii=False, indent=2, allow_nan=False)
 
 
 def main():
@@ -161,12 +182,10 @@ def main():
     payload["updated"] = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
     if not token or not query_id:
-        payload["sync_status"] = "error"
-        payload["sync_error"] = (
-            "IBKR_FLEX_TOKEN ou IBKR_FLEX_QUERY_ID manquant dans l'environnement."
-        )
+        payload["sync_status"] = "not_configured"
+        payload["sync_error"] = None
         _write_real_portfolio(payload)
-        print(f"Erreur synchronisation IBKR : {payload['sync_error']}")
+        print("Synchronisation IBKR non configurée (secrets absents) — étape attendue avant la configuration du compte.")
         return
 
     try:

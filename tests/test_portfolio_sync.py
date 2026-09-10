@@ -111,19 +111,22 @@ _SAMPLE_FLEX_XML = """<FlexQueryResponse queryName="Open Positions" type="AF">
 def test_parse_open_positions_extracts_all_fields():
     result = portfolio_sync.parse_open_positions(_SAMPLE_FLEX_XML)
     assert len(result) == 2
-    assert result[0] == {
-        "ibkr_symbol": "MC",
-        "description": "LVMH MOET HENNESSY LOUIS VUI",
-        "currency": "EUR",
-        "quantity": 10.0,
-        "current_price": 652.3,
-        "position_value": 6523.0,
-        "cost_basis_price": 600.0,
-        "cost_basis_value": 6000.0,
-        "unrealized_pnl": 523.0,
-    }
+    assert result[0]["ibkr_symbol"] == "MC"
+    assert result[0]["description"] == "LVMH MOET HENNESSY LOUIS VUI"
+    assert result[0]["currency"] == "EUR"
+    assert result[0]["pnl_pct"] == pytest.approx(523.0 / 6000.0 * 100)
+    assert set(result[0].keys()) == {"ibkr_symbol", "description", "currency", "pnl_pct"}
     assert result[1]["ibkr_symbol"] == "AAPL"
     assert result[1]["currency"] == "USD"
+    assert result[1]["pnl_pct"] == pytest.approx(100.0 / 900.0 * 100)
+
+
+def test_parse_open_positions_never_includes_absolute_amounts():
+    result = portfolio_sync.parse_open_positions(_SAMPLE_FLEX_XML)
+    forbidden = {"quantity", "current_price", "position_value",
+                 "cost_basis_price", "cost_basis_value", "unrealized_pnl"}
+    for position in result:
+        assert forbidden.isdisjoint(position.keys())
 
 
 def test_parse_open_positions_empty_section_returns_empty_list():
@@ -135,56 +138,59 @@ def test_parse_open_positions_empty_section_returns_empty_list():
     assert portfolio_sync.parse_open_positions(xml) == []
 
 
+def test_parse_open_positions_skips_lot_level_detail_rows():
+    xml = """<FlexQueryResponse><FlexStatements count="1"><FlexStatement>
+      <OpenPositions>
+        <OpenPosition symbol="MC" description="LVMH" currency="EUR" levelOfDetail="SUMMARY" costBasisMoney="6000.0" fifoPnlUnrealized="523.0"/>
+        <OpenPosition symbol="MC" description="LVMH" currency="EUR" levelOfDetail="LOT" costBasisMoney="3000.0" fifoPnlUnrealized="200.0"/>
+      </OpenPositions>
+    </FlexStatement></FlexStatements></FlexQueryResponse>"""
+    result = portfolio_sync.parse_open_positions(xml)
+    assert len(result) == 1
+    assert result[0]["ibkr_symbol"] == "MC"
+
+
+def test_parse_open_positions_missing_cost_basis_yields_none_pct():
+    xml = """<FlexQueryResponse><FlexStatements count="1"><FlexStatement>
+      <OpenPositions>
+        <OpenPosition symbol="BOND1" description="SOME BOND" currency="USD" costBasisMoney="" fifoPnlUnrealized=""/>
+      </OpenPositions>
+    </FlexStatement></FlexStatements></FlexQueryResponse>"""
+    result = portfolio_sync.parse_open_positions(xml)
+    assert len(result) == 1
+    assert result[0]["pnl_pct"] is None
+
+
 def test_match_tickers_matches_cac40_by_stripping_yahoo_suffix():
-    positions = [{
-        "ibkr_symbol": "MC", "description": "LVMH", "currency": "EUR",
-        "quantity": 10.0, "current_price": 652.3, "position_value": 6523.0,
-        "cost_basis_price": 600.0, "cost_basis_value": 6000.0, "unrealized_pnl": 523.0,
-    }]
+    positions = [{"ibkr_symbol": "MC", "description": "LVMH", "currency": "EUR", "pnl_pct": 8.7}]
     companies = [{"ticker": "MC.PA", "index": "CAC40"}]
     result = portfolio_sync.match_tickers(positions, companies)
     assert result[0]["matched_ticker"] == "MC.PA"
 
 
 def test_match_tickers_matches_nasdaq_without_suffix():
-    positions = [{
-        "ibkr_symbol": "AAPL", "description": "APPLE", "currency": "USD",
-        "quantity": 5.0, "current_price": 200.0, "position_value": 1000.0,
-        "cost_basis_price": 180.0, "cost_basis_value": 900.0, "unrealized_pnl": 100.0,
-    }]
+    positions = [{"ibkr_symbol": "AAPL", "description": "APPLE", "currency": "USD", "pnl_pct": 11.1}]
     companies = [{"ticker": "AAPL", "index": "NASDAQ"}]
     result = portfolio_sync.match_tickers(positions, companies)
     assert result[0]["matched_ticker"] == "AAPL"
 
 
 def test_match_tickers_is_case_insensitive():
-    positions = [{
-        "ibkr_symbol": "aapl", "description": "APPLE", "currency": "USD",
-        "quantity": 5.0, "current_price": 200.0, "position_value": 1000.0,
-        "cost_basis_price": 180.0, "cost_basis_value": 900.0, "unrealized_pnl": 100.0,
-    }]
+    positions = [{"ibkr_symbol": "aapl", "description": "APPLE", "currency": "USD", "pnl_pct": 11.1}]
     companies = [{"ticker": "AAPL", "index": "NASDAQ"}]
     result = portfolio_sync.match_tickers(positions, companies)
     assert result[0]["matched_ticker"] == "AAPL"
 
 
 def test_match_tickers_none_when_symbol_not_tracked():
-    positions = [{
-        "ibkr_symbol": "SPY", "description": "SPDR S&P 500 ETF", "currency": "USD",
-        "quantity": 1.0, "current_price": 500.0, "position_value": 500.0,
-        "cost_basis_price": 480.0, "cost_basis_value": 480.0, "unrealized_pnl": 20.0,
-    }]
+    positions = [{"ibkr_symbol": "SPY", "description": "SPDR S&P 500 ETF", "currency": "USD", "pnl_pct": 4.2}]
     companies = [{"ticker": "AAPL", "index": "NASDAQ"}]
     result = portfolio_sync.match_tickers(positions, companies)
     assert result[0]["matched_ticker"] is None
 
 
 def test_match_tickers_preserves_all_original_fields():
-    positions = [{
-        "ibkr_symbol": "AAPL", "description": "APPLE", "currency": "USD",
-        "quantity": 5.0, "current_price": 200.0, "position_value": 1000.0,
-        "cost_basis_price": 180.0, "cost_basis_value": 900.0, "unrealized_pnl": 100.0,
-    }]
+    positions = [{"ibkr_symbol": "AAPL", "description": "APPLE", "currency": "USD", "pnl_pct": 11.1}]
     result = portfolio_sync.match_tickers(positions, [])
     assert result[0]["ibkr_symbol"] == "AAPL"
     assert result[0]["description"] == "APPLE"
@@ -192,11 +198,7 @@ def test_match_tickers_preserves_all_original_fields():
 
 
 def test_match_tickers_returns_none_when_bare_symbol_is_ambiguous():
-    positions = [{
-        "ibkr_symbol": "MRK", "description": "MERCK", "currency": "USD",
-        "quantity": 1.0, "current_price": 147.0, "position_value": 147.0,
-        "cost_basis_price": 140.0, "cost_basis_value": 140.0, "unrealized_pnl": 7.0,
-    }]
+    positions = [{"ibkr_symbol": "MRK", "description": "MERCK", "currency": "USD", "pnl_pct": 5.0}]
     companies = [
         {"ticker": "MRK.DE", "index": "DAX"},
         {"ticker": "MRK", "index": "DOW"},
@@ -205,7 +207,7 @@ def test_match_tickers_returns_none_when_bare_symbol_is_ambiguous():
     assert result[0]["matched_ticker"] is None
 
 
-def test_main_writes_error_status_when_credentials_missing(monkeypatch, tmp_path):
+def test_main_writes_not_configured_status_when_credentials_missing(monkeypatch, tmp_path):
     monkeypatch.delenv("IBKR_FLEX_TOKEN", raising=False)
     monkeypatch.delenv("IBKR_FLEX_QUERY_ID", raising=False)
     output_path = tmp_path / "real_portfolio.json"
@@ -214,9 +216,17 @@ def test_main_writes_error_status_when_credentials_missing(monkeypatch, tmp_path
     portfolio_sync.main()
 
     written = json.loads(output_path.read_text(encoding="utf-8"))
-    assert written["sync_status"] == "error"
-    assert "IBKR_FLEX_TOKEN" in written["sync_error"]
+    assert written["sync_status"] == "not_configured"
+    assert written["sync_error"] is None
     assert written["positions"] == []
+
+
+def test_write_real_portfolio_never_emits_invalid_json_nan(monkeypatch, tmp_path):
+    output_path = tmp_path / "real_portfolio.json"
+    monkeypatch.setattr(portfolio_sync, "REAL_PORTFOLIO_JSON_PATH", str(output_path))
+
+    with pytest.raises(ValueError):
+        portfolio_sync._write_real_portfolio({"positions": [{"pnl_pct": float("nan")}]})
 
 
 def test_main_writes_ok_status_and_matched_positions_on_success(monkeypatch, tmp_path):

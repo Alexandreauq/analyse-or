@@ -49,6 +49,22 @@ achète/vend à tort) n'existe donc pas dans cette phase.
 - Rafraîchissement en temps réel ou à la demande — cadence périodique
   uniquement (voir Logique).
 
+## Confidentialité
+
+`docs/real_portfolio.json` est publié sur un dépôt **public**, et le site
+GitHub Pages qui le sert reste public quel que soit le plan GitHub utilisé
+sur un compte personnel (un repo privé + GitHub Pro cache le code source et
+l'historique, mais pas le site publié lui-même — une confidentialité réelle
+du site nécessiterait GitHub Enterprise Cloud, une offre organisationnelle
+non pertinente ici). Décision explicite, prise avec l'utilisateur : ne
+jamais publier de montant absolu (quantité détenue, valeur de position,
+coût de revient, plus/moins-value en devise). Seul un pourcentage de
+performance (`pnl_pct`) est publié, avec le symbole/nom/devise de la
+position et le rapprochement éventuel avec une entreprise suivie. Ce choix
+révèle toujours quelles valeurs sont détenues et leur performance relative,
+mais jamais la taille réelle du portefeuille — un compromis assumé plutôt
+qu'un défaut non examiné.
+
 ## Mécanisme IBKR : Flex Query / Flex Web Service
 
 IBKR permet de configurer, dans son espace de gestion de compte
@@ -93,25 +109,30 @@ dépôt, dans l'espace de gestion de compte IBKR) :**
       "ibkr_symbol": "MC",
       "description": "LVMH MOET HENNESSY LOUIS VUI",
       "currency": "EUR",
-      "quantity": 10.0,
-      "current_price": 652.3,
-      "position_value": 6523.0,
-      "cost_basis_price": 600.0,
-      "cost_basis_value": 6000.0,
-      "unrealized_pnl": 523.0,
+      "pnl_pct": 8.72,
       "matched_ticker": "MC.PA"
     }
   ]
 }
 ```
 
-- `sync_status` ∈ `"ok" | "error"`. `sync_error` : message d'erreur
-  lisible si `"error"`, sinon `null`.
-- Les champs de position viennent directement du rapport IBKR — pas de
-  recalcul de P&L côté Python, IBKR le fournit déjà
-  (`FifoPnlUnrealized`), évitant toute divergence entre "ce qu'IBKR dit
-  détenir" et "ce qu'on recalcule nous-mêmes" à partir d'un cours qu'on
-  irait chercher ailleurs.
+- `sync_status` ∈ `"ok" | "error" | "not_configured"`. `"not_configured"` :
+  les secrets `IBKR_FLEX_TOKEN`/`IBKR_FLEX_QUERY_ID` ne sont pas encore
+  définis (étape attendue avant que l'utilisateur ait fini de configurer
+  son compte IBKR) — distinct de `"error"` pour ne pas afficher un
+  bandeau d'erreur sur le site public tant que la configuration est
+  simplement en attente. `sync_error` : message d'erreur lisible si
+  `"error"`, sinon `null`.
+- **Aucun montant absolu n'est jamais publié** (voir Confidentialité
+  ci-dessus) : ni la quantité détenue, ni la valeur de position, ni le
+  coût de revient, ni la plus/moins-value en devise. Seul `pnl_pct`
+  (pourcentage de performance, calculé côté script à partir de
+  `FifoPnlUnrealized`/`CostBasisMoney` fournis par IBKR) est conservé,
+  `null` si le calcul n'est pas possible (coût de revient absent/nul).
+- Une ligne IBKR en détail "lot" (`levelOfDetail="LOT"`, si la Flex Query
+  est configurée en détail plutôt qu'en résumé) est ignorée — seules les
+  lignes `"SUMMARY"` (ou sans l'attribut, comportement par défaut d'IBKR)
+  sont retenues, pour ne pas compter une même position plusieurs fois.
 - `matched_ticker` : `null` si aucune correspondance trouvée parmi les
   entreprises suivies (voir Rapprochement des tickers), sinon le
   ticker exact tel qu'utilisé dans `indices.json` (ex. `"MC.PA"`),
@@ -194,7 +215,7 @@ phase, pas de besoin de fraîcheur à la minute.
 - **Position dont le symbole ne correspond à aucune entreprise suivie**
   (ETF, obligation, action hors périmètre) : affichée avec
   `matched_ticker: null`, sans score/alertes/badges — juste les
-  données brutes IBKR (nom, quantité, valeur, P&L).
+  données publiques IBKR (nom, devise, pourcentage de performance).
 - **`docs/real_portfolio.json` absent au premier run** : le script part
   d'un état vide (`positions: []`) plutôt que de lever une exception en
   tentant de le lire.
@@ -209,15 +230,16 @@ existant (sous la section des positions manuelles de la phase 1, avant
 - Si `sync_status === 'error'` : bandeau d'avertissement avec
   `sync_error`, au-dessus des positions (affichées quand même si
   `positions` contient une donnée précédente valide).
-- Chaque position : nom/symbole IBKR, quantité, cours actuel, valeur,
-  P&L (`unrealized_pnl`, coloré vert/rouge comme l'existant) — **lecture
-  seule, aucun bouton modifier/supprimer** (ce sont des données
-  synchronisées, pas saisies). Si `matched_ticker` n'est pas `null` :
-  badges d'indice + score + lien vers la fiche entreprise, en
+- Chaque position : nom/symbole IBKR, pourcentage de performance
+  (`pnl_pct`, coloré vert/rouge comme l'existant, "indisponible" si
+  `null`) — **lecture seule, aucun bouton modifier/supprimer** (ce sont
+  des données synchronisées, pas saisies). Si `matched_ticker` n'est pas
+  `null` : badges d'indice + score + lien vers la fiche entreprise, en
   réutilisant `allIndicesBadgesHtml`/le routage `#indices/{ticker}`
   déjà en place.
-- Un total séparé par devise (même principe que la phase 1, sur les
-  positions réelles uniquement — pas mélangé avec les totaux manuels).
+- Pas de total agrégé par devise sur cette section (contrairement à la
+  phase 1) : sans montant absolu publié, un total chiffré n'a pas de
+  sens à afficher.
 
 ## Tests
 

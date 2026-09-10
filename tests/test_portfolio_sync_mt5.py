@@ -106,3 +106,81 @@ def test_to_public_positions_never_includes_numeric_fields():
 
 def test_to_public_positions_empty_list_returns_empty_list():
     assert portfolio_sync_mt5.to_public_positions([]) == []
+
+
+def test_main_writes_not_configured_status_when_credentials_missing(monkeypatch, tmp_path):
+    monkeypatch.delenv("METAAPI_TOKEN", raising=False)
+    monkeypatch.delenv("METAAPI_ACCOUNT_ID", raising=False)
+    output_path = tmp_path / "real_portfolio_mt5.json"
+    monkeypatch.setattr(portfolio_sync_mt5, "REAL_PORTFOLIO_JSON_PATH", str(output_path))
+
+    portfolio_sync_mt5.main()
+
+    written = json.loads(output_path.read_text(encoding="utf-8"))
+    assert written["sync_status"] == "not_configured"
+    assert written["sync_error"] is None
+    assert written["positions"] == []
+
+
+def test_main_writes_ok_status_and_positions_on_success(monkeypatch, tmp_path):
+    monkeypatch.setenv("METAAPI_TOKEN", "tok")
+    monkeypatch.setenv("METAAPI_ACCOUNT_ID", "acc123")
+    output_path = tmp_path / "real_portfolio_mt5.json"
+    monkeypatch.setattr(portfolio_sync_mt5, "REAL_PORTFOLIO_JSON_PATH", str(output_path))
+    monkeypatch.setattr(
+        portfolio_sync_mt5, "fetch_positions",
+        lambda token, account_id, region=portfolio_sync_mt5.DEFAULT_MT5_REGION: [
+            {"symbol": "XAUUSD", "type": "POSITION_TYPE_BUY", "profit": 12.5},
+        ],
+    )
+
+    portfolio_sync_mt5.main()
+
+    written = json.loads(output_path.read_text(encoding="utf-8"))
+    assert written["sync_status"] == "ok"
+    assert written["sync_error"] is None
+    assert written["positions"] == [{"symbol": "XAUUSD", "type": "achat", "pnl_sign": "positif"}]
+
+
+def test_main_keeps_previous_positions_and_sets_error_on_fetch_failure(monkeypatch, tmp_path):
+    monkeypatch.setenv("METAAPI_TOKEN", "tok")
+    monkeypatch.setenv("METAAPI_ACCOUNT_ID", "acc123")
+    output_path = tmp_path / "real_portfolio_mt5.json"
+    output_path.write_text(
+        json.dumps({
+            "updated": "2026-09-09T07:00:00Z", "sync_status": "ok", "sync_error": None,
+            "positions": [{"symbol": "XAUUSD", "type": "achat", "pnl_sign": "positif"}],
+        }),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(portfolio_sync_mt5, "REAL_PORTFOLIO_JSON_PATH", str(output_path))
+
+    def _raise(token, account_id, region=portfolio_sync_mt5.DEFAULT_MT5_REGION):
+        raise portfolio_sync_mt5.requests.exceptions.HTTPError("401 Client Error")
+
+    monkeypatch.setattr(portfolio_sync_mt5, "fetch_positions", _raise)
+
+    portfolio_sync_mt5.main()
+
+    written = json.loads(output_path.read_text(encoding="utf-8"))
+    assert written["sync_status"] == "error"
+    assert written["positions"] == [{"symbol": "XAUUSD", "type": "achat", "pnl_sign": "positif"}]
+
+
+def test_main_starts_from_empty_state_when_output_file_absent(monkeypatch, tmp_path):
+    monkeypatch.delenv("METAAPI_TOKEN", raising=False)
+    output_path = tmp_path / "does_not_exist" / "real_portfolio_mt5.json"
+    monkeypatch.setattr(portfolio_sync_mt5, "REAL_PORTFOLIO_JSON_PATH", str(output_path))
+
+    portfolio_sync_mt5.main()
+
+    written = json.loads(output_path.read_text(encoding="utf-8"))
+    assert written["positions"] == []
+
+
+def test_write_real_portfolio_never_emits_invalid_json_nan(monkeypatch, tmp_path):
+    output_path = tmp_path / "real_portfolio_mt5.json"
+    monkeypatch.setattr(portfolio_sync_mt5, "REAL_PORTFOLIO_JSON_PATH", str(output_path))
+
+    with pytest.raises(ValueError):
+        portfolio_sync_mt5._write_real_portfolio({"positions": [{"x": float("nan")}]})

@@ -108,6 +108,12 @@ def test_to_public_positions_empty_list_returns_empty_list():
     assert portfolio_sync_mt5.to_public_positions([]) == []
 
 
+def test_to_public_positions_maps_unknown_type_to_inconnu():
+    raw = [{"symbol": "US30", "type": "POSITION_TYPE_SOMETHING_ELSE", "profit": 1.0}]
+    result = portfolio_sync_mt5.to_public_positions(raw)
+    assert result[0]["type"] == "inconnu"
+
+
 def test_main_writes_not_configured_status_when_credentials_missing(monkeypatch, tmp_path):
     monkeypatch.delenv("METAAPI_TOKEN", raising=False)
     monkeypatch.delenv("METAAPI_ACCOUNT_ID", raising=False)
@@ -165,6 +171,27 @@ def test_main_keeps_previous_positions_and_sets_error_on_fetch_failure(monkeypat
     written = json.loads(output_path.read_text(encoding="utf-8"))
     assert written["sync_status"] == "error"
     assert written["positions"] == [{"symbol": "XAUUSD", "type": "achat", "pnl_sign": "positif"}]
+
+
+def test_main_sanitizes_request_exception_message_to_avoid_leaking_token(monkeypatch, tmp_path):
+    monkeypatch.setenv("METAAPI_TOKEN", "SECRET123")
+    monkeypatch.setenv("METAAPI_ACCOUNT_ID", "acc123")
+    output_path = tmp_path / "real_portfolio_mt5.json"
+    monkeypatch.setattr(portfolio_sync_mt5, "REAL_PORTFOLIO_JSON_PATH", str(output_path))
+
+    def _raise(token, account_id, region=portfolio_sync_mt5.DEFAULT_MT5_REGION):
+        raise portfolio_sync_mt5.requests.exceptions.InvalidHeader(
+            "Invalid leading whitespace, reserved character(s), or return "
+            "character(s) in header value: 'SECRET123'"
+        )
+
+    monkeypatch.setattr(portfolio_sync_mt5, "fetch_positions", _raise)
+
+    portfolio_sync_mt5.main()
+
+    written = json.loads(output_path.read_text(encoding="utf-8"))
+    assert written["sync_status"] == "error"
+    assert "SECRET123" not in written["sync_error"]
 
 
 def test_main_starts_from_empty_state_when_output_file_absent(monkeypatch, tmp_path):

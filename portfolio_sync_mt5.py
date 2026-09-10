@@ -43,7 +43,13 @@ def to_public_positions(raw_positions: list[dict]) -> list[dict]:
     montant n'est de toute façon affiché)."""
     positions = []
     for p in raw_positions:
-        position_type = "achat" if p.get("type") == "POSITION_TYPE_BUY" else "vente"
+        raw_type = p.get("type")
+        if raw_type == "POSITION_TYPE_BUY":
+            position_type = "achat"
+        elif raw_type == "POSITION_TYPE_SELL":
+            position_type = "vente"
+        else:
+            position_type = "inconnu"
         pnl_sign = "positif" if p.get("profit", 0) >= 0 else "négatif"
         positions.append({
             "symbol": p.get("symbol"),
@@ -77,7 +83,7 @@ def _write_real_portfolio(payload: dict) -> None:
 def main():
     token = os.environ.get("METAAPI_TOKEN")
     account_id = os.environ.get("METAAPI_ACCOUNT_ID")
-    region = os.environ.get("METAAPI_REGION", DEFAULT_MT5_REGION)
+    region = os.environ.get("METAAPI_REGION") or DEFAULT_MT5_REGION
     payload = _load_existing_real_portfolio()
     payload["updated"] = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
@@ -109,7 +115,7 @@ def main():
         return
     except Exception as e:
         payload["sync_status"] = "error"
-        payload["sync_error"] = str(e)
+        payload["sync_error"] = f"Erreur interne de synchronisation MT5 ({type(e).__name__})"
         _write_real_portfolio(payload)
         print(f"Erreur synchronisation MT5 : {e}")
         traceback.print_exc()

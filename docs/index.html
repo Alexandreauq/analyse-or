@@ -1042,6 +1042,14 @@ async function loadPortfolioScreen() {
       return;
     }
   }
+  if (!realPortfolioData) {
+    try {
+      const res = await fetch('real_portfolio.json?t=' + Date.now());
+      realPortfolioData = res.ok ? await res.json() : null;
+    } catch (e) {
+      realPortfolioData = null;
+    }
+  }
   renderPortfolioScreen();
 }
 
@@ -1060,6 +1068,7 @@ function renderPortfolioScreen() {
     ${portfolioFormHtml(indicesData.companies)}
     <h2>Tes positions</h2>
     ${portfolioPositionsHtml(positions, companiesByTicker, currencyByIndex)}
+    ${realPortfolioHtml(companiesByTicker)}
     ${portfolioOpportunitiesHtml(opportunities)}
   `;
   wirePortfolioForm();
@@ -1166,6 +1175,65 @@ function portfolioOpportunitiesHtml(opportunities) {
         </div>
         <span class="company-score" style="color:${c.score >= 0 ? 'var(--gold)' : 'var(--rust)'};">${c.score > 0 ? '+' : ''}${c.score}</span>
       </a>`).join('')}</div>`;
+}
+
+function realPortfolioHtml(companiesByTicker) {
+  if (!realPortfolioData) {
+    return `
+      <h2>Positions réelles (IBKR)</h2>
+      <div class="empty">Synchronisation IBKR pas encore disponible.</div>`;
+  }
+  const warningHtml = realPortfolioData.sync_status === 'error'
+    ? `<p class="portfolio-form-error">Dernière synchronisation IBKR échouée : ${realPortfolioData.sync_error}</p>`
+    : '';
+  const positions = realPortfolioData.positions || [];
+  if (!positions.length) {
+    return `
+      <h2>Positions réelles (IBKR)</h2>
+      ${warningHtml}
+      <div class="empty">Aucune position détenue chez IBKR pour l'instant.</div>`;
+  }
+  const totals = {};
+  positions.forEach(p => {
+    totals[p.currency] = totals[p.currency] || { value: 0, pnlAbs: 0 };
+    totals[p.currency].value += p.position_value;
+    totals[p.currency].pnlAbs += p.unrealized_pnl;
+  });
+  const fmtCurrency = (v, currency) => currency === 'USD' ? formatPriceUsd(v) : formatPrice(v);
+  const totalsHtml = Object.keys(totals).map(currency => `
+    <div class="portfolio-total-card">
+      <span class="portfolio-total-label">Total ${currency}</span>
+      <span class="portfolio-total-value">${fmtCurrency(totals[currency].value, currency)}</span>
+      <span class="portfolio-total-pnl" style="color:${totals[currency].pnlAbs >= 0 ? 'var(--gold)' : 'var(--rust)'}">${totals[currency].pnlAbs >= 0 ? '+' : ''}${fmtCurrency(totals[currency].pnlAbs, currency)}</span>
+    </div>`).join('');
+  const rowsHtml = positions.map(p => {
+    const company = p.matched_ticker ? companiesByTicker[p.matched_ticker] : null;
+    const fmt = v => fmtCurrency(v, p.currency);
+    const badgesHtml = company
+      ? `${company.is_financial ? '<span class="financial-tag">Profil financier</span>' : ''}${hasMajorNewsAlert(company) ? '<span class="financial-tag majeure-tag">Actu majeure</span>' : ''}${allIndicesBadgesHtml(company)}`
+      : '';
+    const nameHtml = company
+      ? `<a class="company-name" href="#indices/${company.ticker}">${company.name}</a>`
+      : `<span class="company-name">${p.description || p.ibkr_symbol}</span>`;
+    return `
+      <div class="portfolio-position-row">
+        <div class="portfolio-position-main">
+          ${nameHtml}
+          <span class="company-ticker">${p.ibkr_symbol}${badgesHtml}</span>
+          <span class="hero-sub">${p.quantity} × ${fmt(p.current_price)}</span>
+        </div>
+        <div class="portfolio-position-pnl">
+          <span class="price-value">${fmt(p.position_value)}</span>
+          <span style="color:${p.unrealized_pnl >= 0 ? 'var(--gold)' : 'var(--rust)'}">${p.unrealized_pnl >= 0 ? '+' : ''}${fmt(p.unrealized_pnl)}</span>
+          ${company ? `<span class="company-score" style="color:${company.score >= 0 ? 'var(--gold)' : 'var(--rust)'};">${company.score > 0 ? '+' : ''}${company.score}</span>` : ''}
+        </div>
+      </div>`;
+  }).join('');
+  return `
+    <h2>Positions réelles (IBKR)</h2>
+    ${warningHtml}
+    <div class="portfolio-totals">${totalsHtml}</div>
+    <div class="portfolio-position-list">${rowsHtml}</div>`;
 }
 
 function wirePortfolioForm() {
@@ -1651,6 +1719,7 @@ function render(data) {
 const SLIDING_PANES = ['or', 'indices', 'portefeuille'];
 let indicesLoaded = false;
 let indicesData = null;
+let realPortfolioData = null;
 
 async function loadIndices(ticker, view) {
   const content = document.getElementById('indicesContent');

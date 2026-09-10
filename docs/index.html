@@ -119,20 +119,20 @@
   .app { max-width: 720px; margin: 0 auto; }
 
   /* Les écrans occupent tout le viewport et se superposent pendant
-     la transition ; #or / #indices glissent par-dessus #home puis repartent au retour. */
-  .home, #or, #indices {
+     la transition ; #or / #indices / #portefeuille glissent par-dessus #home puis repartent au retour. */
+  .home, #or, #indices, #portefeuille {
     position: fixed; inset: 0; overflow-y: auto; -webkit-overflow-scrolling: touch;
     background: var(--bg);
     scrollbar-width: none;      /* Firefox */
     -ms-overflow-style: none;   /* vieux Edge */
   }
-  .home::-webkit-scrollbar, #or::-webkit-scrollbar, #indices::-webkit-scrollbar { display: none; }
-  #or, #indices {
+  .home::-webkit-scrollbar, #or::-webkit-scrollbar, #indices::-webkit-scrollbar, #portefeuille::-webkit-scrollbar { display: none; }
+  #or, #indices, #portefeuille {
     z-index: 2; transform: translateX(100%);
     transition: transform 0.32s cubic-bezier(.22,1,.36,1);
   }
-  #or.screen-in, #indices.screen-in { transform: translateX(0); }
-  #or.no-anim, #indices.no-anim { transition: none; }
+  #or.screen-in, #indices.screen-in, #portefeuille.screen-in { transform: translateX(0); }
+  #or.no-anim, #indices.no-anim, #portefeuille.no-anim { transition: none; }
 
 
   /* Nav des modules (Or / Minières / Indices) : bouton menu + panneau latéral
@@ -512,6 +512,38 @@
   .company-ticker { color: var(--muted); font-size: var(--text-xs); }
   .company-score { font-family: 'Newsreader', serif; font-weight: 600; font-size: var(--text-xl); }
 
+  .portfolio-totals { display: flex; gap: 12px; margin: 4px 0 20px; flex-wrap: wrap; }
+  .portfolio-total-card {
+    display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 140px;
+    background: var(--bg-2); border: 1px solid var(--border); border-radius: var(--radius-lg);
+    padding: 14px 16px;
+  }
+  .portfolio-total-label { color: var(--muted); font-size: var(--text-xs); }
+  .portfolio-total-value { font-family: 'Newsreader', serif; font-size: var(--text-xl); }
+  .portfolio-total-pnl { font-size: var(--text-sm); font-weight: 500; }
+
+  .portfolio-position-list { display: flex; flex-direction: column; gap: 10px; margin: 4px 0 24px; }
+  .portfolio-position-row {
+    display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px;
+    background: var(--bg-2); border: 1px solid var(--border); border-radius: var(--radius-lg);
+    padding: 14px 16px;
+  }
+  .portfolio-position-degraded { opacity: .7; }
+  .portfolio-position-main { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .portfolio-position-pnl { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; font-size: var(--text-sm); }
+  .portfolio-position-actions { display: flex; gap: 8px; }
+  .portfolio-position-actions .toggle-btn { flex: none; padding: 6px 12px; font-size: var(--text-xs); }
+
+  .portfolio-form {
+    display: flex; flex-direction: column; gap: 10px; margin: 4px 0 24px;
+    background: var(--bg-2); border: 1px solid var(--border); border-radius: var(--radius-lg);
+    padding: 16px;
+  }
+  .portfolio-form h2 { margin: 0; }
+  .portfolio-form-row { display: flex; gap: 8px; flex-wrap: wrap; }
+  .portfolio-form-row input { flex: 1; min-width: 110px; }
+  .portfolio-form-error { color: var(--rust); font-size: var(--text-sm); margin: 0; }
+
   /* Repère "profil financier" (banques/assurances) : méthodologie de
      calcul adaptée (ROE, ratio de levier, P/E+P/B) — voir .financial-notice. */
   .financial-tag {
@@ -722,6 +754,7 @@
   <symbol id="icon-or" viewBox="0 0 24 24"><path d="M6.5 8h11l3 9h-17z"/></symbol>
   <symbol id="icon-minieres" viewBox="0 0 24 24"><path d="M12 3l6.5 6.5L12 21 5.5 9.5z M6.5 9.5h11"/></symbol>
   <symbol id="icon-indices" viewBox="0 0 24 24"><path d="M4 20h16M6.5 20v-5.5M12 20V8M17.5 20v-9.5"/></symbol>
+  <symbol id="icon-portefeuille" viewBox="0 0 24 24"><path d="M4 8h16v11a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z M9 8V6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2 M4 13h16"/></symbol>
   <symbol id="icon-menu" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></symbol>
   <symbol id="icon-close" viewBox="0 0 24 24"><path d="M5 5l14 14M19 5L5 19"/></symbol>
   <symbol id="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.6M12 18.9v2.6M4.6 4.6l1.8 1.8M17.6 17.6l1.8 1.8M2.5 12h2.6M18.9 12h2.6M4.6 19.4l1.8-1.8M17.6 6.4l1.8-1.8"/></symbol>
@@ -742,6 +775,10 @@
   <button class="nav-item" data-route="indices">
     <svg class="nav-icon"><use href="#icon-indices"/></svg>
     <span>Indices</span>
+  </button>
+  <button class="nav-item" data-route="portefeuille">
+    <svg class="nav-icon"><use href="#icon-portefeuille"/></svg>
+    <span>Portefeuille</span>
   </button>
   <button class="theme-toggle" id="themeToggleDesktop" type="button" aria-label="Basculer mode jour/nuit">
     <svg class="nav-icon" id="themeToggleDesktopIcon"><use href="#icon-sun"/></svg>
@@ -766,6 +803,10 @@
   <button class="nav-item" data-route="indices">
     <svg class="nav-icon"><use href="#icon-indices"/></svg>
     <span>Indices</span>
+  </button>
+  <button class="nav-item" data-route="portefeuille">
+    <svg class="nav-icon"><use href="#icon-portefeuille"/></svg>
+    <span>Portefeuille</span>
   </button>
   <button class="nav-item" id="themeToggleDrawer" type="button">
     <svg class="nav-icon" id="themeToggleDrawerIcon"><use href="#icon-sun"/></svg>
@@ -793,6 +834,11 @@
       <svg class="module-card-icon"><use href="#icon-indices"/></svg>
       <span class="module-card-name">Indices</span>
       <span class="module-card-desc">Scoring fondamental CAC 40 / DAX, analyses IA.</span>
+    </a>
+    <a href="#portefeuille" class="module-card">
+      <svg class="module-card-icon"><use href="#icon-portefeuille"/></svg>
+      <span class="module-card-name">Portefeuille</span>
+      <span class="module-card-desc">Suivi de tes positions, P&amp;L, opportunités.</span>
     </a>
   </div>
 </div>
@@ -852,6 +898,22 @@
   </header>
 
   <main id="indicesContent">
+    <div class="skeleton">
+      <div class="skeleton-line"></div>
+      <div class="skeleton-line"></div>
+      <div class="skeleton-line"></div>
+      <div class="skeleton-line"></div>
+    </div>
+  </main>
+</div>
+
+<div id="portefeuille" class="screen app" hidden>
+  <header>
+    <div class="eyebrow">Suivi personnel</div>
+    <h1>Portefeuille</h1>
+  </header>
+
+  <main id="portefeuilleContent">
     <div class="skeleton">
       <div class="skeleton-line"></div>
       <div class="skeleton-line"></div>
@@ -939,6 +1001,298 @@ function loadScalpingModule() {
     script.onload = () => { scalpingJsLoaded = true; resolve(); };
     script.onerror = () => reject(new Error('scalping.js n\'a pas pu être chargé'));
     document.body.appendChild(script);
+  });
+}
+
+let portfolioJsLoaded = false;
+
+function loadPortfolioModule() {
+  // Charge docs/portfolio.js à la demande (premier passage sur l'onglet
+  // Portefeuille), même logique paresseuse que loadScalpingModule.
+  return new Promise((resolve, reject) => {
+    if (portfolioJsLoaded) { resolve(); return; }
+    const script = document.createElement('script');
+    script.src = 'portfolio.js';
+    script.onload = () => { portfolioJsLoaded = true; resolve(); };
+    script.onerror = () => reject(new Error("portfolio.js n'a pas pu être chargé"));
+    document.body.appendChild(script);
+  });
+}
+
+async function loadPortfolioScreen() {
+  const content = document.getElementById('portefeuilleContent');
+  try {
+    await loadPortfolioModule();
+  } catch (e) {
+    content.innerHTML = `<div class="empty">Portefeuille indisponible pour l'instant.<br>${e.message}</div>`;
+    return;
+  }
+  if (!indicesData) {
+    // Même pattern que loadIndices : le portefeuille dépend des mêmes
+    // données (companies/scores/alertes/prix), partagées via la variable
+    // globale indicesData — si l'utilisateur ouvre Portefeuille avant
+    // Indices, ce fetch alimente les deux ; s'il l'a déjà fait, on
+    // réutilise ce qui est déjà chargé sans re-fetcher.
+    try {
+      const res = await fetch('indices.json?t=' + Date.now());
+      if (!res.ok) throw new Error('indices.json introuvable');
+      indicesData = await res.json();
+    } catch (e) {
+      content.innerHTML = `<div class="empty">Données indisponibles pour l'instant.<br>${e.message}</div>`;
+      return;
+    }
+  }
+  if (!realPortfolioData) {
+    try {
+      const res = await fetch('real_portfolio.json?t=' + Date.now());
+      realPortfolioData = res.ok ? await res.json() : null;
+    } catch (e) {
+      realPortfolioData = null;
+    }
+  }
+  renderPortfolioScreen();
+}
+
+function renderPortfolioScreen() {
+  const companiesByTicker = {};
+  indicesData.companies.forEach(c => { companiesByTicker[c.ticker] = c; });
+  const currencyByIndex = { ...INDEX_CURRENCY_BY_KEY, ...(indicesData.index_currency || {}) };
+  const positions = loadPortfolio();
+  const totals = computePortfolioTotals(positions, companiesByTicker, currencyByIndex);
+
+  const heldTickers = new Set(positions.map(p => p.ticker));
+  const opportunities = findOpportunities(indicesData.companies, heldTickers);
+
+  document.getElementById('portefeuilleContent').innerHTML = `
+    ${portfolioTotalsHtml(totals)}
+    ${portfolioFormHtml(indicesData.companies)}
+    <h2>Tes positions</h2>
+    ${portfolioPositionsHtml(positions, companiesByTicker, currencyByIndex)}
+    ${realPortfolioHtml(companiesByTicker)}
+    ${portfolioOpportunitiesHtml(opportunities)}
+  `;
+  wirePortfolioForm();
+  wirePortfolioPositionActions(companiesByTicker);
+}
+
+function portfolioTotalsHtml(totals) {
+  const rows = [
+    ['EUR', totals.EUR, formatPrice],
+    ['USD', totals.USD, formatPriceUsd],
+  ].filter(([, t]) => t.value !== 0 || t.pnlAbs !== 0);
+  if (!rows.length) return '';
+  return `
+    <div class="portfolio-totals">
+      ${rows.map(([label, t, fmt]) => `
+        <div class="portfolio-total-card">
+          <span class="portfolio-total-label">Total ${label}</span>
+          <span class="portfolio-total-value">${fmt(t.value)}</span>
+          <span class="portfolio-total-pnl" style="color:${t.pnlAbs >= 0 ? 'var(--gold)' : 'var(--rust)'}">${t.pnlAbs >= 0 ? '+' : ''}${fmt(t.pnlAbs)}</span>
+        </div>`).join('')}
+    </div>`;
+}
+
+function portfolioPositionsHtml(positions, companiesByTicker, currencyByIndex) {
+  if (!positions.length) {
+    return '<div class="empty">Aucune position pour l\'instant — ajoute ta première ligne ci-dessous.</div>';
+  }
+  return `<div class="portfolio-position-list">${positions.map(position => {
+    const company = companiesByTicker[position.ticker];
+    if (!company) {
+      return `
+        <div class="portfolio-position-row portfolio-position-degraded" data-id="${position.id}">
+          <div class="portfolio-position-main">
+            <span class="company-name">${position.ticker}</span>
+            <span class="hero-sub">Cette entreprise n'est plus suivie — cours et score indisponibles.</span>
+          </div>
+          <div class="portfolio-position-actions">
+            <button class="toggle-btn portfolio-edit-btn" type="button" data-id="${position.id}">Modifier</button>
+            <button class="toggle-btn portfolio-delete-btn" type="button" data-id="${position.id}">Supprimer</button>
+          </div>
+        </div>`;
+    }
+    const pnl = computePositionPnL(position, company.current_price);
+    const currency = currencyByIndex[company.index] === 'USD' ? 'USD' : 'EUR';
+    const fmt = v => formatPriceForIndex(v, company.index);
+    return `
+      <div class="portfolio-position-row" data-id="${position.id}">
+        <div class="portfolio-position-main">
+          <a class="company-name" href="#indices/${company.ticker}">${company.name}</a>
+          <span class="company-ticker">${company.ticker}${company.is_financial ? '<span class="financial-tag">Profil financier</span>' : ''}${hasMajorNewsAlert(company) ? '<span class="financial-tag majeure-tag">Actu majeure</span>' : ''}${allIndicesBadgesHtml(company)}</span>
+          <span class="hero-sub">${position.quantity} × ${fmt(position.buy_price)} (${position.buy_date})</span>
+          <span class="hero-sub">Cours actuel : ${fmt(company.current_price)}</span>
+        </div>
+        <div class="portfolio-position-pnl">
+          <span class="price-value">${pnl ? fmt(pnl.value) : 'Cours indisponible'}</span>
+          ${pnl ? `<span style="color:${pnl.pnlAbs >= 0 ? 'var(--gold)' : 'var(--rust)'}">${pnl.pnlAbs >= 0 ? '+' : ''}${fmt(pnl.pnlAbs)} (${formatPct(pnl.pnlPct)})</span>` : ''}
+          <span class="company-score" style="color:${company.score >= 0 ? 'var(--gold)' : 'var(--rust)'};">${company.score > 0 ? '+' : ''}${company.score}</span>
+        </div>
+        <div class="portfolio-position-actions">
+          <button class="toggle-btn portfolio-edit-btn" type="button" data-id="${position.id}">Modifier</button>
+          <button class="toggle-btn portfolio-delete-btn" type="button" data-id="${position.id}">Supprimer</button>
+        </div>
+      </div>`;
+  }).join('')}</div>`;
+}
+
+function portfolioFormHtml(companies) {
+  const grouped = {};
+  companies.forEach(c => { (grouped[c.index] = grouped[c.index] || []).push(c); });
+  const indexNames = { ...INDEX_DISPLAY_NAMES, ...(indicesData.index_names || {}) };
+  const optionsHtml = Object.keys(grouped).sort().map(key => `
+    <optgroup label="${indexNames[key] || key}">
+      ${grouped[key]
+        .slice().sort((a, b) => a.name.localeCompare(b.name, 'fr'))
+        .map(c => `<option value="${c.ticker}">${c.name} (${c.ticker})</option>`).join('')}
+    </optgroup>`).join('');
+  return `
+    <form class="portfolio-form" id="portfolioAddForm">
+      <h2>Ajouter une position</h2>
+      <select class="list-sort" id="portfolioFormTicker" required>
+        <option value="" disabled selected>Choisir une entreprise…</option>
+        ${optionsHtml}
+      </select>
+      <div class="portfolio-form-row">
+        <input class="list-search" type="number" id="portfolioFormQuantity" placeholder="Quantité" min="0" step="any" required>
+        <input class="list-search" type="number" id="portfolioFormPrice" placeholder="Prix d'achat" min="0" step="any" required>
+        <input class="list-search" type="date" id="portfolioFormDate" required>
+      </div>
+      <p class="portfolio-form-error" id="portfolioFormError" hidden></p>
+      <button class="toggle-btn" type="submit">Ajouter</button>
+    </form>`;
+}
+
+function portfolioOpportunitiesHtml(opportunities) {
+  if (!opportunities.length) return '';
+  return `
+    <h2>Opportunités</h2>
+    <p class="hero-sub">Entreprises suivies avec un signal d'entrée actif que tu ne détiens pas encore.</p>
+    <div class="index-card-list">${opportunities.map(c => `
+      <a class="company-row" href="#indices/${c.ticker}">
+        <div class="company-row-left">
+          <span class="company-name">${c.name}</span>
+          <span class="company-ticker">${c.ticker}${allIndicesBadgesHtml(c)}</span>
+        </div>
+        <span class="company-score" style="color:${c.score >= 0 ? 'var(--gold)' : 'var(--rust)'};">${c.score > 0 ? '+' : ''}${c.score}</span>
+      </a>`).join('')}</div>`;
+}
+
+function realPortfolioHtml(companiesByTicker) {
+  if (!realPortfolioData) {
+    return `
+      <h2>Positions réelles (IBKR)</h2>
+      <div class="empty">Synchronisation IBKR pas encore disponible.</div>`;
+  }
+  if (realPortfolioData.sync_status === 'not_configured') {
+    return `
+      <h2>Positions réelles (IBKR)</h2>
+      <div class="empty">Synchronisation IBKR pas encore configurée.</div>`;
+  }
+  const warningHtml = realPortfolioData.sync_status === 'error'
+    ? `<p class="portfolio-form-error">Dernière synchronisation IBKR échouée : ${escHtml(realPortfolioData.sync_error)}</p>`
+    : '';
+  const positions = realPortfolioData.positions || [];
+  if (!positions.length) {
+    return `
+      <h2>Positions réelles (IBKR)</h2>
+      ${warningHtml}
+      <div class="empty">Aucune position détenue chez IBKR pour l'instant.</div>`;
+  }
+  const rowsHtml = positions.map(p => {
+    const company = p.matched_ticker ? companiesByTicker[p.matched_ticker] : null;
+    const badgesHtml = company
+      ? `${company.is_financial ? '<span class="financial-tag">Profil financier</span>' : ''}${hasMajorNewsAlert(company) ? '<span class="financial-tag majeure-tag">Actu majeure</span>' : ''}${allIndicesBadgesHtml(company)}`
+      : '';
+    const nameHtml = company
+      ? `<a class="company-name" href="#indices/${company.ticker}">${company.name}</a>`
+      : `<span class="company-name">${escHtml(p.description || p.ibkr_symbol)}</span>`;
+    const pnlHtml = p.pnl_pct == null
+      ? '<span class="hero-sub">Performance indisponible</span>'
+      : `<span style="color:${p.pnl_pct >= 0 ? 'var(--gold)' : 'var(--rust)'}">${formatPct(p.pnl_pct)}</span>`;
+    return `
+      <div class="portfolio-position-row">
+        <div class="portfolio-position-main">
+          ${nameHtml}
+          <span class="company-ticker">${escHtml(p.ibkr_symbol)}${badgesHtml}</span>
+        </div>
+        <div class="portfolio-position-pnl">
+          ${pnlHtml}
+          ${company ? `<span class="company-score" style="color:${company.score >= 0 ? 'var(--gold)' : 'var(--rust)'};">${company.score > 0 ? '+' : ''}${company.score}</span>` : ''}
+        </div>
+      </div>`;
+  }).join('');
+  return `
+    <h2>Positions réelles (IBKR)</h2>
+    ${warningHtml}
+    <div class="portfolio-position-list">${rowsHtml}</div>`;
+}
+
+function wirePortfolioForm() {
+  const form = document.getElementById('portfolioAddForm');
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const ticker = document.getElementById('portfolioFormTicker').value;
+    const quantity = parseFloat(document.getElementById('portfolioFormQuantity').value);
+    const buyPrice = parseFloat(document.getElementById('portfolioFormPrice').value);
+    const buyDate = document.getElementById('portfolioFormDate').value;
+    const errorEl = document.getElementById('portfolioFormError');
+    if (!ticker) {
+      errorEl.textContent = 'Choisis une entreprise.';
+      errorEl.hidden = false;
+      return;
+    }
+    const result = addPosition(ticker, quantity, buyPrice, buyDate);
+    if (!result.ok) {
+      errorEl.textContent = result.error;
+      errorEl.hidden = false;
+      return;
+    }
+    renderPortfolioScreen();
+  });
+}
+
+function wirePortfolioPositionActions(companiesByTicker) {
+  document.querySelectorAll('.portfolio-delete-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const result = removePosition(btn.dataset.id);
+      if (!result.ok) {
+        alert(result.error);
+        return;
+      }
+      renderPortfolioScreen();
+    });
+  });
+  document.querySelectorAll('.portfolio-edit-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const row = document.querySelector(`.portfolio-position-row[data-id="${btn.dataset.id}"]`);
+      const position = loadPortfolio().find(p => p.id === btn.dataset.id);
+      if (!position || !row) return;
+      row.innerHTML = `
+        <div class="portfolio-form-row">
+          <input class="list-search" type="number" value="${position.quantity}" id="portfolioEditQuantity-${position.id}" min="0" step="any">
+          <input class="list-search" type="number" value="${position.buy_price}" id="portfolioEditPrice-${position.id}" min="0" step="any">
+          <input class="list-search" type="date" value="${position.buy_date}" id="portfolioEditDate-${position.id}">
+        </div>
+        <p class="portfolio-form-error" id="portfolioEditError-${position.id}" hidden></p>
+        <div class="portfolio-position-actions">
+          <button class="toggle-btn" type="button" id="portfolioEditSave-${position.id}">Enregistrer</button>
+          <button class="toggle-btn" type="button" id="portfolioEditCancel-${position.id}">Annuler</button>
+        </div>`;
+      document.getElementById(`portfolioEditCancel-${position.id}`).addEventListener('click', () => renderPortfolioScreen());
+      document.getElementById(`portfolioEditSave-${position.id}`).addEventListener('click', () => {
+        const quantity = parseFloat(document.getElementById(`portfolioEditQuantity-${position.id}`).value);
+        const buyPrice = parseFloat(document.getElementById(`portfolioEditPrice-${position.id}`).value);
+        const buyDate = document.getElementById(`portfolioEditDate-${position.id}`).value;
+        const result = updatePosition(position.id, quantity, buyPrice, buyDate);
+        const errorEl = document.getElementById(`portfolioEditError-${position.id}`);
+        if (!result.ok) {
+          errorEl.textContent = result.error;
+          errorEl.hidden = false;
+          return;
+        }
+        renderPortfolioScreen();
+      });
+    });
   });
 }
 
@@ -1357,9 +1711,10 @@ function render(data) {
   if (matchMedia('(min-width: 1024px)').matches) animateFactorBars();
 }
 
-const SLIDING_PANES = ['or', 'indices'];
+const SLIDING_PANES = ['or', 'indices', 'portefeuille'];
 let indicesLoaded = false;
 let indicesData = null;
+let realPortfolioData = null;
 
 async function loadIndices(ticker, view) {
   const content = document.getElementById('indicesContent');
@@ -1639,6 +1994,12 @@ function renderIndicesList(companies) {
   });
 }
 
+function escHtml(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+  }[c]));
+}
+
 function formatPrice(v) {
   return v != null ? `${v.toLocaleString('fr-FR', {maximumFractionDigits:2})} €` : 'indisponible';
 }
@@ -1904,6 +2265,7 @@ function renderCompanyAnalysis(company) {
 function parseRoute() {
   const hash = location.hash.slice(1);
   if (hash === 'or') return { screen: 'or' };
+  if (hash === 'portefeuille') return { screen: 'portefeuille' };
   if (hash === 'indices') return { screen: 'indices', ticker: null };
   if (hash === 'indices/suivi') return { screen: 'indices', ticker: null, view: 'suivi' };
   if (hash.startsWith('indices/')) {
@@ -1968,6 +2330,9 @@ function renderRoute(animate) {
   }
   if (route.screen === 'indices') {
     loadIndices(route.ticker, route.view);
+  }
+  if (route.screen === 'portefeuille') {
+    loadPortfolioScreen();
   }
 }
 

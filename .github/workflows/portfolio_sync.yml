@@ -1,0 +1,43 @@
+name: Synchronisation portefeuille IBKR
+
+on:
+  schedule:
+    - cron: "0 7 * * *"   # une fois par jour, 07h00 UTC (décalé du cron Indices à 06h00)
+  workflow_dispatch: {}
+
+concurrency:
+  group: portfolio-sync
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Récupérer le dépôt
+        uses: actions/checkout@v4
+
+      - name: Installer Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Installer les dépendances
+        run: pip install -r requirements.txt
+
+      - name: Synchroniser les positions IBKR
+        run: python3 portfolio_sync.py
+        env:
+          IBKR_FLEX_TOKEN: ${{ secrets.IBKR_FLEX_TOKEN }}
+          IBKR_FLEX_QUERY_ID: ${{ secrets.IBKR_FLEX_QUERY_ID }}
+
+      - name: Publier les données mises à jour sur le site
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add docs/real_portfolio.json
+          git diff --staged --quiet || git commit -m "Mise à jour de la synchronisation portefeuille IBKR"
+          git pull --rebase --autostash
+          git push

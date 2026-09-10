@@ -1,3 +1,5 @@
+import json
+
 import pytest
 import portfolio_sync
 
@@ -201,3 +203,80 @@ def test_match_tickers_returns_none_when_bare_symbol_is_ambiguous():
     ]
     result = portfolio_sync.match_tickers(positions, companies)
     assert result[0]["matched_ticker"] is None
+
+
+def test_main_writes_error_status_when_credentials_missing(monkeypatch, tmp_path):
+    monkeypatch.delenv("IBKR_FLEX_TOKEN", raising=False)
+    monkeypatch.delenv("IBKR_FLEX_QUERY_ID", raising=False)
+    output_path = tmp_path / "real_portfolio.json"
+    monkeypatch.setattr(portfolio_sync, "REAL_PORTFOLIO_JSON_PATH", str(output_path))
+
+    portfolio_sync.main()
+
+    written = json.loads(output_path.read_text(encoding="utf-8"))
+    assert written["sync_status"] == "error"
+    assert "IBKR_FLEX_TOKEN" in written["sync_error"]
+    assert written["positions"] == []
+
+
+def test_main_writes_ok_status_and_matched_positions_on_success(monkeypatch, tmp_path):
+    monkeypatch.setenv("IBKR_FLEX_TOKEN", "tok")
+    monkeypatch.setenv("IBKR_FLEX_QUERY_ID", "qid")
+    output_path = tmp_path / "real_portfolio.json"
+    indices_path = tmp_path / "indices.json"
+    indices_path.write_text(
+        json.dumps({"companies": [{"ticker": "MC.PA", "index": "CAC40"}]}), encoding="utf-8"
+    )
+    monkeypatch.setattr(portfolio_sync, "REAL_PORTFOLIO_JSON_PATH", str(output_path))
+    monkeypatch.setattr(portfolio_sync, "INDICES_JSON_PATH", str(indices_path))
+    monkeypatch.setattr(portfolio_sync, "fetch_flex_reference_code", lambda token, query_id: "ref123")
+    monkeypatch.setattr(
+        portfolio_sync, "fetch_flex_statement", lambda token, reference_code: _SAMPLE_FLEX_XML
+    )
+
+    portfolio_sync.main()
+
+    written = json.loads(output_path.read_text(encoding="utf-8"))
+    assert written["sync_status"] == "ok"
+    assert written["sync_error"] is None
+    assert len(written["positions"]) == 2
+    by_symbol = {p["ibkr_symbol"]: p for p in written["positions"]}
+    assert by_symbol["MC"]["matched_ticker"] == "MC.PA"
+    assert by_symbol["AAPL"]["matched_ticker"] is None  # pas dans indices.json de ce test
+
+
+def test_main_keeps_previous_positions_and_sets_error_on_fetch_failure(monkeypatch, tmp_path):
+    monkeypatch.setenv("IBKR_FLEX_TOKEN", "tok")
+    monkeypatch.setenv("IBKR_FLEX_QUERY_ID", "qid")
+    output_path = tmp_path / "real_portfolio.json"
+    output_path.write_text(
+        json.dumps({
+            "updated": "2026-09-09T07:00:00Z", "sync_status": "ok", "sync_error": None,
+            "positions": [{"ibkr_symbol": "MC", "matched_ticker": "MC.PA"}],
+        }),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(portfolio_sync, "REAL_PORTFOLIO_JSON_PATH", str(output_path))
+
+    def _raise(token, query_id):
+        raise RuntimeError("Token has expired.")
+
+    monkeypatch.setattr(portfolio_sync, "fetch_flex_reference_code", _raise)
+
+    portfolio_sync.main()
+
+    written = json.loads(output_path.read_text(encoding="utf-8"))
+    assert written["sync_status"] == "error"
+    assert "Token has expired" in written["sync_error"]
+    assert written["positions"] == [{"ibkr_symbol": "MC", "matched_ticker": "MC.PA"}]
+
+
+def test_main_starts_from_empty_state_when_output_file_absent(monkeypatch, tmp_path):
+    monkeypatch.delenv("IBKR_FLEX_TOKEN", raising=False)
+    output_path = tmp_path / "does_not_exist" / "real_portfolio.json"
+    monkeypatch.setattr(portfolio_sync, "REAL_PORTFOLIO_JSON_PATH", str(output_path))
+
+    portfolio_sync.main()
+
+    written = json.loads(output_path.read_text(encoding="utf-8"))
+    assert written["positions"] == []

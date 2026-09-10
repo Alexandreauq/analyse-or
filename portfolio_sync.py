@@ -118,5 +118,77 @@ def match_tickers(positions: list[dict], companies: list[dict]) -> list[dict]:
     return result
 
 
+REAL_PORTFOLIO_JSON_PATH = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "docs", "real_portfolio.json"
+)
+
+INDICES_JSON_PATH = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "docs", "indices.json"
+)
+
+
+def _load_existing_real_portfolio() -> dict:
+    """État de repli si le fichier n'existe pas encore ou est illisible —
+    jamais d'exception au démarrage du script."""
+    try:
+        with open(REAL_PORTFOLIO_JSON_PATH, "r", encoding="utf-8") as fh:
+            return json.load(fh)
+    except Exception:
+        return {"updated": None, "sync_status": "ok", "sync_error": None, "positions": []}
+
+
+def _load_tracked_companies() -> list[dict]:
+    """Companies suivies pour le rapprochement des tickers — liste vide
+    si indices.json est absent/illisible (le rapprochement échoue alors
+    pour toutes les positions, sans bloquer la synchronisation)."""
+    try:
+        with open(INDICES_JSON_PATH, "r", encoding="utf-8") as fh:
+            return json.load(fh)["companies"]
+    except Exception:
+        return []
+
+
+def _write_real_portfolio(payload: dict) -> None:
+    os.makedirs(os.path.dirname(REAL_PORTFOLIO_JSON_PATH), exist_ok=True)
+    with open(REAL_PORTFOLIO_JSON_PATH, "w", encoding="utf-8") as fh:
+        json.dump(payload, fh, ensure_ascii=False, indent=2)
+
+
+def main():
+    token = os.environ.get("IBKR_FLEX_TOKEN")
+    query_id = os.environ.get("IBKR_FLEX_QUERY_ID")
+    payload = _load_existing_real_portfolio()
+    payload["updated"] = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+    if not token or not query_id:
+        payload["sync_status"] = "error"
+        payload["sync_error"] = (
+            "IBKR_FLEX_TOKEN ou IBKR_FLEX_QUERY_ID manquant dans l'environnement."
+        )
+        _write_real_portfolio(payload)
+        print(f"Erreur synchronisation IBKR : {payload['sync_error']}")
+        return
+
+    try:
+        reference_code = fetch_flex_reference_code(token, query_id)
+        xml_text = fetch_flex_statement(token, reference_code)
+        positions = parse_open_positions(xml_text)
+        companies = _load_tracked_companies()
+        positions = match_tickers(positions, companies)
+    except Exception as e:
+        payload["sync_status"] = "error"
+        payload["sync_error"] = str(e)
+        _write_real_portfolio(payload)
+        print(f"Erreur synchronisation IBKR : {e}")
+        traceback.print_exc()
+        return
+
+    payload["sync_status"] = "ok"
+    payload["sync_error"] = None
+    payload["positions"] = positions
+    _write_real_portfolio(payload)
+    print(f"Synchronisation IBKR réussie : {len(positions)} position(s).")
+
+
 if __name__ == "__main__":
-    pass
+    main()

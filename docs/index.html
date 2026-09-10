@@ -4,12 +4,13 @@
 <meta charset="UTF-8">
 <script>
   // Posé avant le CSS pour éviter un flash du mauvais thème au chargement.
-  if (localStorage.getItem('theme') === 'light') {
+  // Mode jour par défaut — le mode nuit ne s'applique que si explicitement choisi.
+  if (localStorage.getItem('theme') !== 'dark') {
     document.documentElement.setAttribute('data-theme', 'light');
   }
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" id="themeColorMeta" content="#1c1f19">
+<meta name="theme-color" id="themeColorMeta" content="#f2f3ec">
 <title>AI Investment</title>
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icons/icon-192.png">
@@ -25,12 +26,12 @@
      réécrit par thème ; seuls les neutres (fond/texte) changent vraiment
      de nature entre les deux. */
   :root {
-    /* Neutres / élévation — anthracite */
-    --bg-0: #1c1f19; --bg-1: #23261f; --bg-2: #2c2f27; --bg-3: #383b32; --bg-4: #45483d;
-    --border: #3a3d34; --border-strong: #52564a; --border-subtle: #2f3229;
+    /* Neutres / élévation — bleu très foncé (mode nuit d'origine) */
+    --bg-0: #101118; --bg-1: #15161c; --bg-2: #1b1d25; --bg-3: #22242e; --bg-4: #292c37;
+    --border: #2a2d38; --border-strong: #3a3e4d; --border-subtle: #23252f;
 
     /* Texte */
-    --text: #eceee7; --muted: #b7a695; --text-faint: #6e6455;
+    --text: #edeef3; --muted: #b7a695; --text-faint: #5b6070;
 
     /* Vert forêt — accent de marque + positif (échelle) */
     --green-100: #d9e9db; --green-300: #8fc29e; --green-500: #4f8a64;
@@ -74,8 +75,8 @@
     --lh-tight: 1.1; --lh-snug: 1.3; --lh-normal: 1.5; --lh-relaxed: 1.65;
 
     /* Layout */
-    --topbar-h: 76px; --drawer-w: min(280px, 80vw);
-    --bg-translucent: rgba(35,38,31,.9);
+    --topbar-h: 76px; --drawer-w: min(280px, 80vw); --gutter: clamp(20px, 7vw, 32px);
+    --bg-translucent: rgba(21,22,28,.9);
 
     /* Breakpoints (référence — non utilisables en valeur CSS, documentés pour cohérence media queries) */
   }
@@ -214,7 +215,7 @@
     z-index: 1;
     display: flex; flex-direction: column;
     align-items: center; justify-content: center; text-align: center;
-    padding: 40px 20px; gap: 48px;
+    padding: 40px var(--gutter); gap: 48px;
     background:
       radial-gradient(ellipse 600px 420px at 15% -5%, rgba(79,138,100,.14), transparent 60%),
       radial-gradient(ellipse 500px 420px at 105% 105%, rgba(163,95,69,.08), transparent 60%);
@@ -260,8 +261,8 @@
   }
 
   /* Écran d'un module (Or) */
-  .screen main { padding: 0 20px 40px; }
-  header { padding: 64px 20px 0; }
+  .screen main { padding: 0 var(--gutter) 40px; }
+  header { padding: 64px var(--gutter) 0; }
   @media (min-width: 1024px) {
     header { padding-top: calc(var(--topbar-h) + 36px); }
     .home { padding-top: calc(var(--topbar-h) + 36px); }
@@ -273,11 +274,6 @@
 
   .hero {
     display:flex; align-items:center; gap: 24px; padding: 20px 0 28px; position: relative;
-  }
-  .hero::before {
-    content: ''; position: absolute; top: -40px; left: -20px; width: 280px; height: 220px;
-    background: radial-gradient(ellipse at top left, rgba(79,138,100,.14), transparent 65%);
-    pointer-events: none; z-index: -1;
   }
   .hero-number {
     font-family: 'Newsreader', serif; font-weight: 400; font-size: var(--text-hero); line-height: 1;
@@ -369,7 +365,10 @@
     content: ''; position: absolute; inset: 0 0 auto 0; height: 40%;
     background: linear-gradient(180deg, rgba(255,255,255,.025), transparent); pointer-events: none;
   }
-  .scalp-panel { margin: 16px 0 8px; }
+  /* Hors de <main> dans le markup (chargé/affiché avant le reste du contenu),
+     n'hérite donc pas du padding latéral de .screen main — recalé ici pour
+     ne pas toucher les bords de l'écran sur mobile. */
+  .scalp-panel { margin: 16px 0 8px; padding: 0 var(--gutter); }
   .scalp-panel-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 0 0 10px; }
   .scalp-panel-head h2 { margin: 0; }
   .scalp-expand-btn {
@@ -390,6 +389,9 @@
   @media (min-width: 768px) {
     .scalp-chart-box, .scalp-chart-box.expanded { height: 500px; }
     .scalp-expand-btn { display: none; }
+  }
+  @media (min-width: 1024px) {
+    .scalp-chart-box, .scalp-chart-box.expanded { height: 400px; }
   }
   .scalp-note { color: var(--muted); font-size: 11px; line-height: 1.5; margin: 8px 0 0; }
 
@@ -414,8 +416,8 @@
      scroll des news/détail — équivalent mobile de la colonne sticky desktop. */
   .mobile-key-bar {
     display: flex; align-items: center; justify-content: space-between; gap: 10px;
-    position: sticky; top: 0; z-index: 5; margin: 0 -20px 16px;
-    padding: 10px 20px 10px 64px;
+    position: sticky; top: 0; z-index: 5; margin: 0 calc(var(--gutter) * -1) 16px;
+    padding: 10px var(--gutter) 10px 64px;
     background: var(--bg-translucent); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
     border-bottom: 1px solid var(--border);
   }
@@ -528,9 +530,18 @@
   }
   @keyframes content-fade-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 
-  .indices-filters { display: none; }
+  /* Panneau de filtres partagé (recherche/tri/case à cocher) — remplace les
+     contrôles par carte, masqués partout (voir .index-card-body .list-controls
+     plus bas) : plus simple qu'un filtre par carte à ouvrir un par un. */
+  .indices-filters {
+    display: flex; flex-direction: column; gap: 10px; margin: 18px 0 4px;
+    padding: 14px; background: var(--bg-2); border: 1px solid var(--border); border-radius: var(--radius-lg);
+  }
+  .indices-filters h2 { margin: 0; }
+  .indices-filters .list-search, .indices-filters .list-sort { width: 100%; }
+  .index-card-body .list-controls, .index-card-body .list-filter-toggle { display: none; }
 
-  .index-card-list { display: flex; flex-direction: column; gap: 12px; margin: 4px 0 20px; }
+  .index-card-list { display: flex; flex-direction: column; gap: 18px; margin: 4px 0 24px; }
   .index-card {
     background: var(--bg-2); border: 1px solid var(--border); border-radius: var(--radius-lg);
     overflow: hidden; box-shadow: var(--shadow-1); transition: box-shadow .2s ease, border-color .2s ease;
@@ -538,7 +549,7 @@
   .index-card:has(.index-card-header[aria-expanded="true"]) { box-shadow: var(--shadow-2); border-color: var(--border-strong); }
   .index-card-header {
     width: 100%; display: flex; align-items: center; gap: 10px;
-    background: none; border: none; color: var(--text); padding: 16px; text-align: left;
+    background: none; border: none; color: var(--text); padding: 18px 18px 16px; text-align: left;
     transition: transform .12s ease;
   }
   .index-card-header:active { transform: scale(.99); }
@@ -547,32 +558,41 @@
   .index-card-header .chevron { color: var(--muted); transition: transform 0.15s ease; flex-shrink: 0; }
   .index-card-header[aria-expanded="true"] .chevron { color: var(--green-300); transform: rotate(180deg); }
   .index-card-header[aria-expanded="true"] .index-card-name { color: var(--green-300); }
+
+  /* Aperçu des 3 meilleurs scores, visible carte repliée (mobile et desktop)
+     — pour que la carte ne se résume pas qu'à sa ligne de titre. Masqué à
+     l'ouverture, le panneau déplié (recherche/tri/liste + widget) prend le relais. */
+  .index-card-peek {
+    display: flex; flex-direction: column; gap: 14px; padding: 16px 18px 18px;
+    border-top: 1px solid var(--border);
+  }
+  .index-card-peek-row { display: flex; justify-content: space-between; gap: 10px; font-size: var(--text-sm); }
+  .index-card-peek-name { color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .index-card-peek-score { font-family: 'Newsreader', serif; font-weight: 500; flex-shrink: 0; }
+  .index-card-peek-empty { color: var(--muted); font-size: var(--text-sm); margin: 0; }
+  .index-card:has(.index-card-header[aria-expanded="true"]) .index-card-peek { display: none; }
+
   .index-card-body {
-    padding: 0 16px; max-height: 0; overflow: hidden; opacity: 0;
+    padding: 0 18px; max-height: 0; overflow: hidden; opacity: 0;
     border-top: 1px solid transparent;
     transition: max-height .35s cubic-bezier(.22,1,.36,1), opacity .25s ease,
                 padding-bottom .35s cubic-bezier(.22,1,.36,1), border-color .35s ease;
   }
-  .index-card-body.is-open { padding-bottom: 16px; max-height: 6000px; opacity: 1; border-top-color: var(--border); }
+  .index-card-body.is-open { padding-bottom: 18px; max-height: 6000px; opacity: 1; border-top-color: var(--border); }
   .index-card-body .list-controls { margin-top: 16px; }
 
-  /* Page Indices (≥1024px) : grille de cartes-indice + panneau de filtres
-     persistant à gauche, plutôt qu'un accordéon à ouvrir un par un avec
-     des contrôles de recherche/tri dupliqués dans chaque panneau. */
+  /* Page Indices (≥1024px) : grille de cartes-indice (repliées par défaut,
+     comme sur mobile — indispensable dès qu'il y aura beaucoup plus
+     d'indices, impossible de tous les afficher dépliés) + panneau de
+     filtres persistant à gauche qui remplace les contrôles par carte. */
   @media (min-width: 1024px) {
     .app:has(.indices-layout) { max-width: 1440px; }
     .indices-layout { display: grid; grid-template-columns: 240px 1fr; gap: 32px; align-items: start; }
     .indices-filters {
-      display: flex; flex-direction: column; gap: 12px; position: sticky; top: 20px;
-      padding-top: 17px; /* aligne "Filtrer" avec le texte des en-têtes de carte (bordure+padding du .index-card) */
+      gap: 12px; position: sticky; top: 20px; margin: 0;
+      padding-top: 19px; /* aligne "Filtrer" avec le texte des en-têtes de carte (bordure+padding du .index-card) */
     }
-    .indices-filters h2 { margin: 0; }
-    .indices-filters .list-search, .indices-filters .list-sort { width: 100%; }
-    .index-card-list { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-    .index-card-header { pointer-events: none; }
-    .index-card-header .chevron { display: none; }
-    .index-card-body { max-height: none; opacity: 1; padding-bottom: 16px; border-top-color: var(--border); }
-    .index-card-body .list-controls, .index-card-body .list-filter-toggle { display: none; }
+    .index-card-list { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
   }
 
   .alert-row {
@@ -1146,6 +1166,19 @@ function sortedFilteredCompanies(companies) {
   return visible;
 }
 
+// Aperçu (3 meilleurs scores) d'une carte repliée — respecte les mêmes
+// filtres (recherche, profil financier) que la liste complète, pour que la
+// case "Profil financier uniquement" ait un effet visible même carte fermée.
+function peekRowsHtml(companies) {
+  const top3 = sortedFilteredCompanies(companies).slice(0, 3);
+  if (!top3.length) return '<p class="index-card-peek-empty">Aucun résultat pour ce filtre.</p>';
+  return top3.map(c => `
+    <div class="index-card-peek-row">
+      <span class="index-card-peek-name">${c.name}</span>
+      <span class="index-card-peek-score" style="color:${c.score >= 0 ? 'var(--accent)' : 'var(--rust)'}">${c.score > 0 ? '+' : ''}${c.score}</span>
+    </div>`).join('');
+}
+
 function renderIndicesRows(companies, rowsContainerId) {
   const panel = document.getElementById(rowsContainerId);
   if (!panel) return;
@@ -1231,6 +1264,7 @@ function renderIndicesList(companies) {
         <span class="index-card-count">${groups[key].length} entreprise${groups[key].length > 1 ? 's' : ''}</span>
         <span class="chevron">▾</span>
       </button>
+      <div class="index-card-peek" id="indexPeek-${key}">${peekRowsHtml(groups[key])}</div>
       <div class="index-card-body" id="indexBody-${key}"></div>
     </div>`).join('');
 
@@ -1254,8 +1288,8 @@ function renderIndicesList(companies) {
     </div>
   `;
 
-  // Le contenu de chaque panneau n'est construit qu'à sa première ouverture
-  // (renderedKeys) — sur mobile au clic, sur desktop immédiatement (voir plus bas).
+  // Le contenu de chaque panneau (widget + recherche/tri/liste) n'est
+  // construit qu'à sa première ouverture (renderedKeys), pas au chargement.
   const renderedKeys = new Set();
   function renderGroupIfNeeded(key, wrap) {
     if (renderedKeys.has(key)) return;
@@ -1268,21 +1302,20 @@ function renderIndicesList(companies) {
     (key, wrap) => renderGroupIfNeeded(key, wrap)
   );
 
-  if (matchMedia('(min-width: 1024px)').matches) {
-    // Desktop : grille avec panneau de filtres persistant — tous les groupes
-    // sont visibles d'emblée, pas d'accordéon à ouvrir un par un.
-    indexKeys.forEach(key => renderGroupIfNeeded(key, document.getElementById(`indexBody-${key}`)));
-  } else if (indexKeys.length === 1) {
-    // Mobile, un seul indice aujourd'hui : on l'ouvre par défaut, pour ne
-    // pas ajouter un clic obligatoire là où il n'y avait qu'une liste avant.
+  // Repliés par défaut sur mobile ET desktop — sauf s'il n'y a qu'un seul
+  // indice, auquel cas pas la peine d'imposer un clic pour le déplier.
+  if (indexKeys.length === 1) {
     document.getElementById(`indexToggle-${indexKeys[0]}`).click();
   }
 
-  // Panneau de filtres persistant (desktop) : une recherche/tri/case à
-  // cocher partagée qui rafraîchit tous les groupes déjà rendus, plutôt que
-  // les contrôles par groupe (mobile, cachés à ce format — voir CSS).
+  // Panneau de filtres partagé : une recherche/tri/case à cocher qui
+  // rafraîchit à la fois l'aperçu (carte repliée) et la liste complète
+  // (carte ouverte, si déjà rendue) de chaque groupe.
   function refreshAllVisibleGroups() {
-    indexKeys.forEach(key => renderIndicesRows(groups[key], `indicesRows-${key}`));
+    indexKeys.forEach(key => {
+      document.getElementById(`indexPeek-${key}`).innerHTML = peekRowsHtml(groups[key]);
+      renderIndicesRows(groups[key], `indicesRows-${key}`);
+    });
   }
   document.getElementById('filterSearch').addEventListener('input', (e) => {
     indicesListSearch = e.target.value;
@@ -1567,13 +1600,13 @@ document.addEventListener('keydown', (e) => {
 
 // Bascule jour/nuit : persistée (localStorage), deux boutons (barre desktop
 // + panneau latéral mobile) restent synchronisés entre eux.
-const THEME_COLOR_BY_MODE = { dark: '#1c1f19', light: '#f2f3ec' };
+const THEME_COLOR_BY_MODE = { dark: '#101118', light: '#f2f3ec' };
 
 function applyTheme(theme) {
   document.documentElement.setAttribute('data-theme', theme === 'light' ? 'light' : 'dark');
   localStorage.setItem('theme', theme);
   document.getElementById('themeColorMeta').setAttribute('content', THEME_COLOR_BY_MODE[theme]);
-  const icon = theme === 'light' ? '#icon-sun' : '#icon-moon';
+  const icon = theme === 'light' ? '#icon-moon' : '#icon-sun';
   document.getElementById('themeToggleDesktopIcon').querySelector('use').setAttribute('href', icon);
   document.getElementById('themeToggleDrawerIcon').querySelector('use').setAttribute('href', icon);
   document.getElementById('themeToggleDrawerLabel').textContent = theme === 'light' ? 'Mode nuit' : 'Mode jour';

@@ -1050,6 +1050,9 @@ async function loadPortfolioScreen() {
       realPortfolioData = null;
     }
   }
+  if (!botStatusData) {
+    await loadBotStatus();
+  }
   renderPortfolioScreen();
 }
 
@@ -1069,10 +1072,12 @@ function renderPortfolioScreen() {
     <h2>Tes positions</h2>
     ${portfolioPositionsHtml(positions, companiesByTicker, currencyByIndex)}
     ${realPortfolioHtml()}
+    ${botStatusHtml()}
     ${portfolioOpportunitiesHtml(opportunities)}
   `;
   wirePortfolioForm();
   wirePortfolioPositionActions(companiesByTicker);
+  wireBotControls();
 }
 
 function portfolioTotalsHtml(totals) {
@@ -1212,6 +1217,74 @@ function realPortfolioHtml() {
     <h2>Positions réelles (MT5)</h2>
     ${warningHtml}
     <div class="portfolio-position-list">${rowsHtml}</div>`;
+}
+
+async function loadBotStatus() {
+  if (BOT_API_BASE_URL.includes('DOMAINE_A_REMPLACER')) {
+    botStatusData = null;
+    return;
+  }
+  try {
+    const res = await fetch(`${BOT_API_BASE_URL}/status`);
+    botStatusData = res.ok ? await res.json() : null;
+  } catch (e) {
+    botStatusData = null;
+  }
+}
+
+function getBotToken() {
+  let token = localStorage.getItem('goldBotToken');
+  if (!token) {
+    token = prompt('Jeton d\'accès au bot (demandé une seule fois, conservé sur cet appareil) :');
+    if (token) localStorage.setItem('goldBotToken', token);
+  }
+  return token;
+}
+
+function botStatusHtml() {
+  if (!botStatusData) {
+    return `
+      <h2>Bot Or</h2>
+      <div class="empty">Statut du bot indisponible.</div>`;
+  }
+  const label = botStatusData.kill_switch ? 'Coupé' : (botStatusData.dry_run ? 'Simulation' : 'Actif');
+  const color = botStatusData.kill_switch ? 'var(--rust)' : 'var(--gold)';
+  const actionLabel = botStatusData.kill_switch ? 'Relancer' : 'Arrêter';
+  return `
+    <h2>Bot Or</h2>
+    <div class="portfolio-position-row">
+      <div class="portfolio-position-main">
+        <span class="company-name" style="color:${color}">${label}</span>
+        <span class="hero-sub">${botStatusData.dry_run ? 'Mode simulation — aucun ordre réel' : 'Mode réel'}</span>
+      </div>
+      <div class="portfolio-position-actions">
+        <button class="toggle-btn" type="button" id="botKillBtn">${actionLabel}</button>
+      </div>
+    </div>`;
+}
+
+function wireBotControls() {
+  const btn = document.getElementById('botKillBtn');
+  if (!btn || !botStatusData) return;
+  btn.addEventListener('click', async () => {
+    const token = getBotToken();
+    if (!token) return;
+    const action = botStatusData.kill_switch ? 'resume' : 'kill';
+    try {
+      const res = await fetch(`${BOT_API_BASE_URL}/${action}`, {
+        method: 'POST',
+        headers: { 'X-Bot-Token': token },
+      });
+      if (!res.ok) {
+        if (res.status === 401) localStorage.removeItem('goldBotToken');
+        throw new Error('échec de la requête');
+      }
+      await loadBotStatus();
+      renderPortfolioScreen();
+    } catch (e) {
+      alert('Action impossible : ' + e.message);
+    }
+  });
 }
 
 function wirePortfolioForm() {
@@ -1702,6 +1775,8 @@ const SLIDING_PANES = ['or', 'indices', 'portefeuille'];
 let indicesLoaded = false;
 let indicesData = null;
 let realPortfolioData = null;
+let botStatusData = null;
+const BOT_API_BASE_URL = 'https://DOMAINE_A_REMPLACER:8443'; // remplacer après le déploiement (Task 4)
 
 async function loadIndices(ticker, view) {
   const content = document.getElementById('indicesContent');

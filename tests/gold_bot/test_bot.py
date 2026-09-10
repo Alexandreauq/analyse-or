@@ -95,6 +95,62 @@ def test_decide_and_act_never_calls_real_broker_order_functions(monkeypatch):
     assert called == {"place": False, "close": False}
 
 
+def test_decide_and_act_closes_all_matching_positions_on_reversal(monkeypatch):
+    monkeypatch.setattr(
+        bot.confluence, "compute_signal",
+        lambda candles: _signal("vente", entry=2100, stop_loss=2110, take_profit=2085),
+    )
+    existing = [
+        {"id": "1", "symbol": "XAUUSD", "type": "POSITION_TYPE_BUY"},
+        {"id": "2", "symbol": "XAUUSD", "type": "POSITION_TYPE_BUY"},
+    ]
+    result = bot.decide_and_act([], 100, 10000, existing, _open_circuit_breaker())
+    assert result["action"] == "simulation"
+    close_steps = [s for s in result["steps"] if s["type"] == "clôture_simulee"]
+    assert len(close_steps) == 2
+    assert {s["position_id"] for s in close_steps} == {"1", "2"}
+    assert result["steps"][-1]["type"] == "ouverture_simulee"
+
+
+def test_decide_and_act_no_action_when_any_matching_position_is_same_direction(monkeypatch):
+    monkeypatch.setattr(
+        bot.confluence, "compute_signal",
+        lambda candles: _signal("achat", entry=2100, stop_loss=2095, take_profit=2115),
+    )
+    existing = [
+        {"id": "1", "symbol": "XAUUSD", "type": "POSITION_TYPE_SELL"},
+        {"id": "2", "symbol": "XAUUSD", "type": "POSITION_TYPE_BUY"},
+    ]
+    result = bot.decide_and_act([], 100, 10000, existing, _open_circuit_breaker())
+    assert result["action"] == "aucune"
+
+
+def test_decide_and_act_no_action_when_position_type_unrecognized(monkeypatch):
+    monkeypatch.setattr(
+        bot.confluence, "compute_signal",
+        lambda candles: _signal("achat", entry=2100, stop_loss=2095, take_profit=2115),
+    )
+    existing = [{"id": "1", "symbol": "XAUUSD", "type": "POSITION_TYPE_UNKNOWN"}]
+    result = bot.decide_and_act([], 100, 10000, existing, _open_circuit_breaker())
+    assert result["action"] == "aucune"
+    assert "non reconnu" in result["reason"]
+
+
+def test_decide_and_act_never_calls_real_broker_order_functions_on_reversal(monkeypatch):
+    monkeypatch.setattr(
+        bot.confluence, "compute_signal",
+        lambda candles: _signal("vente", entry=2100, stop_loss=2110, take_profit=2085),
+    )
+    existing = [{"id": "1", "symbol": "XAUUSD", "type": "POSITION_TYPE_BUY"}]
+    called = {"place": False, "close": False}
+    monkeypatch.setattr(bot.broker, "place_market_order", lambda *a, **k: called.__setitem__("place", True))
+    monkeypatch.setattr(bot.broker, "close_position", lambda *a, **k: called.__setitem__("close", True))
+
+    bot.decide_and_act([], 100, 10000, existing, _open_circuit_breaker())
+
+    assert called == {"place": False, "close": False}
+
+
 def test_reconcile_positions_calls_broker(monkeypatch):
     captured = {}
 

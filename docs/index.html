@@ -119,20 +119,20 @@
   .app { max-width: 720px; margin: 0 auto; }
 
   /* Les écrans occupent tout le viewport et se superposent pendant
-     la transition ; #or / #indices glissent par-dessus #home puis repartent au retour. */
-  .home, #or, #indices {
+     la transition ; #or / #indices / #portefeuille glissent par-dessus #home puis repartent au retour. */
+  .home, #or, #indices, #portefeuille {
     position: fixed; inset: 0; overflow-y: auto; -webkit-overflow-scrolling: touch;
     background: var(--bg);
     scrollbar-width: none;      /* Firefox */
     -ms-overflow-style: none;   /* vieux Edge */
   }
-  .home::-webkit-scrollbar, #or::-webkit-scrollbar, #indices::-webkit-scrollbar { display: none; }
-  #or, #indices {
+  .home::-webkit-scrollbar, #or::-webkit-scrollbar, #indices::-webkit-scrollbar, #portefeuille::-webkit-scrollbar { display: none; }
+  #or, #indices, #portefeuille {
     z-index: 2; transform: translateX(100%);
     transition: transform 0.32s cubic-bezier(.22,1,.36,1);
   }
-  #or.screen-in, #indices.screen-in { transform: translateX(0); }
-  #or.no-anim, #indices.no-anim { transition: none; }
+  #or.screen-in, #indices.screen-in, #portefeuille.screen-in { transform: translateX(0); }
+  #or.no-anim, #indices.no-anim, #portefeuille.no-anim { transition: none; }
 
 
   /* Nav des modules (Or / Minières / Indices) : bouton menu + panneau latéral

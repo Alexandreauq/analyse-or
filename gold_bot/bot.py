@@ -21,26 +21,46 @@ def decide_and_act(candles: list[dict], contract_size: float, balance: float,
     token/account_id : elle ne parle jamais elle-même au broker — le
     code de câblage réel (Plan B) appellera broker.place_market_order/
     close_position séparément, avec les champs déjà présents dans
-    `steps` ci-dessous."""
-    signal = confluence.compute_signal(candles)
+    `steps` ci-dessous.
 
-    existing = next((p for p in open_positions if p.get("symbol") == symbol), None)
-    existing_direction = None
-    if existing is not None:
-        existing_direction = "achat" if existing.get("type") == "POSITION_TYPE_BUY" else "vente"
+    Gère toutes les positions correspondant à `symbol`, pas seulement la
+    première trouvée (un redémarrage/crash pourrait en laisser
+    plusieurs) — une position au type non reconnu bloque toute action
+    par prudence plutôt que d'être devinée."""
+    signal = confluence.compute_signal(candles)
+    # Fixe le solde de référence du jour dès le premier cycle, même sur
+    # un signal neutre — sinon la référence ne serait fixée qu'au
+    # premier cycle *actionnable* du jour, potentiellement bien après
+    # l'ouverture UTC et sur un solde déjà dérivé.
+    circuit_breaker.check(balance)
+
+    matching = [p for p in open_positions if p.get("symbol") == symbol]
+
+    def _direction(p):
+        raw_type = p.get("type")
+        if raw_type == "POSITION_TYPE_BUY":
+            return "achat"
+        if raw_type == "POSITION_TYPE_SELL":
+            return "vente"
+        return None
 
     if signal["status"] == "neutre":
         return {"action": "aucune", "reason": "signal neutre"}
 
-    if existing_direction == signal["status"]:
+    directions = {_direction(p) for p in matching}
+
+    if None in directions:
+        return {"action": "aucune", "reason": "type de position non reconnu, aucune action par prudence"}
+
+    if signal["status"] in directions:
         return {"action": "aucune", "reason": "position déjà ouverte dans le même sens"}
 
     if not circuit_breaker.can_open_position(balance):
         return {"action": "aucune", "reason": "coupe-circuit journalier déclenché"}
 
     steps = []
-    if existing_direction is not None and existing_direction != signal["status"]:
-        steps.append({"type": "clôture_simulee", "position_id": existing.get("id"), "symbol": symbol})
+    for p in matching:
+        steps.append({"type": "clôture_simulee", "position_id": p.get("id"), "symbol": symbol})
 
     size = risk.compute_position_size(balance, signal["entry"], signal["stop_loss"], contract_size)
     steps.append({

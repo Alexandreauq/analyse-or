@@ -108,6 +108,9 @@ def test_run_cycle_no_action_when_kill_switch_engaged(monkeypatch, tmp_path):
 def test_run_cycle_logs_dry_run_without_executing(monkeypatch, tmp_path):
     monkeypatch.setattr(loop.state, "load_state", lambda *a, **k: {"kill_switch": False, "dry_run": True})
     monkeypatch.setattr(loop, "DECISIONS_LOG_PATH", str(tmp_path / "decisions_log.jsonl"))
+    monkeypatch.setattr(loop, "LATEST_CANDLES_PATH", str(tmp_path / "latest_candles.json"))
+    monkeypatch.setattr(loop, "LATEST_BALANCE_PATH", str(tmp_path / "latest_balance.json"))
+    monkeypatch.setattr(loop, "LATEST_POSITIONS_PATH", str(tmp_path / "latest_positions.json"))
     monkeypatch.setattr(loop.confluence, "fetch_gold_candles", lambda api_key: [{"close": 2100}])
     monkeypatch.setattr(loop.broker, "get_account_balance", lambda *a, **k: 10000)
     monkeypatch.setattr(loop.bot, "reconcile_positions", lambda *a, **k: [])
@@ -125,6 +128,9 @@ def test_run_cycle_logs_dry_run_without_executing(monkeypatch, tmp_path):
 def test_run_cycle_executes_when_not_dry_run(monkeypatch, tmp_path):
     monkeypatch.setattr(loop.state, "load_state", lambda *a, **k: {"kill_switch": False, "dry_run": False})
     monkeypatch.setattr(loop, "DECISIONS_LOG_PATH", str(tmp_path / "decisions_log.jsonl"))
+    monkeypatch.setattr(loop, "LATEST_CANDLES_PATH", str(tmp_path / "latest_candles.json"))
+    monkeypatch.setattr(loop, "LATEST_BALANCE_PATH", str(tmp_path / "latest_balance.json"))
+    monkeypatch.setattr(loop, "LATEST_POSITIONS_PATH", str(tmp_path / "latest_positions.json"))
     monkeypatch.setattr(loop.confluence, "fetch_gold_candles", lambda api_key: [{"close": 2100}])
     monkeypatch.setattr(loop.broker, "get_account_balance", lambda *a, **k: 10000)
     monkeypatch.setattr(loop.bot, "reconcile_positions", lambda *a, **k: [])
@@ -146,6 +152,9 @@ def test_run_cycle_re_checks_kill_switch_before_executing(monkeypatch, tmp_path)
     données (avant decide_and_act) : run_cycle doit relire l'état juste
     avant d'exécuter, pas seulement au tout début du cycle."""
     monkeypatch.setattr(loop, "DECISIONS_LOG_PATH", str(tmp_path / "decisions_log.jsonl"))
+    monkeypatch.setattr(loop, "LATEST_CANDLES_PATH", str(tmp_path / "latest_candles.json"))
+    monkeypatch.setattr(loop, "LATEST_BALANCE_PATH", str(tmp_path / "latest_balance.json"))
+    monkeypatch.setattr(loop, "LATEST_POSITIONS_PATH", str(tmp_path / "latest_positions.json"))
     monkeypatch.setattr(loop.confluence, "fetch_gold_candles", lambda api_key: [{"close": 2100}])
     monkeypatch.setattr(loop.broker, "get_account_balance", lambda *a, **k: 10000)
     monkeypatch.setattr(loop.bot, "reconcile_positions", lambda *a, **k: [])
@@ -190,6 +199,9 @@ def test_run_cycle_logs_error_when_decide_and_act_raises(monkeypatch, tmp_path):
     — ce cas doit être capturé et journalisé, jamais laissé remonter."""
     monkeypatch.setattr(loop.state, "load_state", lambda *a, **k: {"kill_switch": False, "dry_run": True})
     monkeypatch.setattr(loop, "DECISIONS_LOG_PATH", str(tmp_path / "decisions_log.jsonl"))
+    monkeypatch.setattr(loop, "LATEST_CANDLES_PATH", str(tmp_path / "latest_candles.json"))
+    monkeypatch.setattr(loop, "LATEST_BALANCE_PATH", str(tmp_path / "latest_balance.json"))
+    monkeypatch.setattr(loop, "LATEST_POSITIONS_PATH", str(tmp_path / "latest_positions.json"))
     monkeypatch.setattr(loop.confluence, "fetch_gold_candles", lambda api_key: [{"close": 2100}])
     monkeypatch.setattr(loop.broker, "get_account_balance", lambda *a, **k: 10000)
     monkeypatch.setattr(loop.bot, "reconcile_positions", lambda *a, **k: [])

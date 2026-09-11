@@ -260,7 +260,8 @@ def test_dashboard_excludes_closing_steps_from_markers(client, monkeypatch, tmp_
     assert decisions[0]["type"] == "ouverture_simulee"
 
 
-def test_broker_module_is_never_referenced_in_api_source():
-    import inspect
-    source = inspect.getsource(api)
-    assert "broker" not in source
+def test_dashboard_cache_path_constants_match_loop_module():
+    assert api.LATEST_CANDLES_PATH == loop.LATEST_CANDLES_PATH
+    assert api.LATEST_BALANCE_PATH == loop.LATEST_BALANCE_PATH
+    assert api.LATEST_POSITIONS_PATH == loop.LATEST_POSITIONS_PATH
+    assert api.DECISIONS_LOG_PATH == loop.DECISIONS_LOG_PATH

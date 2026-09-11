@@ -72,17 +72,23 @@ def _read_cache(path: str) -> dict:
 
 
 def _read_recent_decisions(path: str, limit: int = RECENT_DECISIONS_LIMIT) -> list[dict]:
-    """Dernières lignes de decisions_log.jsonl portant une ouverture de
-    position (simulée ou réelle) — voir la spec pour pourquoi seul le
-    step "ouverture_simulee" (jamais "clôture_simulee") sert de
-    marqueur, et pourquoi ce nom de type reste le même en mode réel."""
+    """Dernières décisions marquées par une ouverture de position (simulée
+    ou réelle) dans decisions_log.jsonl — voir la spec pour pourquoi seul
+    le step "ouverture_simulee" (jamais "clôture_simulee") sert de
+    marqueur, et pourquoi ce nom de type reste le même en mode réel.
+    Filtre TOUTES les lignes avant de ne garder que les `limit`
+    dernières décisions : avec ~1 ligne par minute et des cycles très
+    majoritairement "aucune" en production, trancher les lignes brutes
+    avant de filtrer viderait quasi toujours ce résultat. Une ligne, une
+    entrée ou un step individuellement malformé est ignoré sans jamais
+    faire échouer le reste de la réponse."""
     try:
         with open(path, "r", encoding="utf-8") as fh:
             lines = fh.readlines()
     except Exception:
         return []
     decisions = []
-    for line in lines[-limit:]:
+    for line in lines:
         line = line.strip()
         if not line:
             continue
@@ -90,21 +96,30 @@ def _read_recent_decisions(path: str, limit: int = RECENT_DECISIONS_LIMIT) -> li
             entry = json.loads(line)
         except json.JSONDecodeError:
             continue
-        if entry.get("action") not in ("simulation_dry_run", "exécuté"):
-            continue
-        for step in entry.get("steps", []):
-            if step.get("type") != "ouverture_simulee":
+        try:
+            if not isinstance(entry, dict) or entry.get("action") not in ("simulation_dry_run", "exécuté"):
                 continue
-            decisions.append({
-                "timestamp": entry.get("timestamp"),
-                "type": step.get("type"),
-                "symbol": step.get("symbol"),
-                "direction": step.get("direction"),
-                "entry": step.get("entry"),
-                "stop_loss": step.get("stop_loss"),
-                "take_profit": step.get("take_profit"),
-            })
-    return decisions
+            steps = entry.get("steps") or []
+        except Exception:
+            continue
+        if not isinstance(steps, list):
+            continue
+        for step in steps:
+            try:
+                if not isinstance(step, dict) or step.get("type") != "ouverture_simulee":
+                    continue
+                decisions.append({
+                    "timestamp": entry.get("timestamp"),
+                    "type": step.get("type"),
+                    "symbol": step.get("symbol"),
+                    "direction": step.get("direction"),
+                    "entry": step.get("entry"),
+                    "stop_loss": step.get("stop_loss"),
+                    "take_profit": step.get("take_profit"),
+                })
+            except Exception:
+                continue
+    return decisions[-limit:]
 
 
 @app.get("/status")
@@ -126,6 +141,14 @@ def dashboard(x_bot_token: str | None = Header(default=None)):
     positions_cache = _read_cache(LATEST_POSITIONS_PATH)
     candles_cache = _read_cache(LATEST_CANDLES_PATH)
 
+    # La forme du cache positions reflète verbatim la réponse HTTP
+    # amont (voir gold_bot/loop.py) : si celle-ci dérive un jour vers
+    # `null` ou une forme inattendue, on dégrade en liste vide plutôt
+    # que de faire échouer toute la réponse /dashboard.
+    raw_positions = positions_cache.get("positions", [])
+    if not isinstance(raw_positions, list):
+        raw_positions = []
+
     positions = [
         {
             "symbol": p.get("symbol"),
@@ -137,7 +160,8 @@ def dashboard(x_bot_token: str | None = Header(default=None)):
             "stop_loss": p.get("stopLoss"),
             "take_profit": p.get("takeProfit"),
         }
-        for p in positions_cache.get("positions", [])
+        for p in raw_positions
+        if isinstance(p, dict)
     ]
 
     return {

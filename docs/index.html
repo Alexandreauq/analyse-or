@@ -1326,150 +1326,69 @@ function renderBotStatusBlock() {
   wireBotKillSwitch();
 }
 
-function buildBotChartSvg(candles, recentDecisions, positions) {
-  if (!candles || candles.length < 2) {
-    return '<div class="empty">Graphique indisponible pour l\'instant.</div>';
-  }
-  const width = 640, height = 260;
-  const padL = 54, padR = 12, padT = 14, padB = 28;
-  const innerW = width - padL - padR;
-  const innerH = height - padT - padB;
+let botTvChartLoaded = false;
 
-  const candleTimes = candles.map(c => new Date(c.time.replace(' ', 'T') + 'Z').getTime());
-  const rangeStart = Math.min(candleTimes[0], candleTimes[candleTimes.length - 1]);
-  const rangeEnd = Math.max(candleTimes[0], candleTimes[candleTimes.length - 1]);
-  // Seules les décisions dont l'horodatage tombe dans la plage de
-  // bougies affichée participent au graphique (échelle des prix et
-  // marqueurs) — une décision plus ancienne fausserait l'échelle et
-  // son marqueur s'écraserait sur la bougie la plus à gauche.
-  const visibleDecisions = (recentDecisions || []).filter(d => {
-    if (!d.timestamp) return false;
-    const t = new Date(d.timestamp).getTime();
-    return Number.isFinite(t) && t >= rangeStart && t <= rangeEnd;
-  });
-
-  // Seules les positions ouvertes sur XAUUSD ont un sens sur ce
-  // graphique — le bot ne trade que ce symbole, mais un manuel sur un
-  // autre instrument ne doit jamais s'y superposer.
-  const xauPositions = (positions || []).filter(p => p.symbol === 'XAUUSD' && p.open_price != null);
-
-  const pricePool = [];
-  candles.forEach(c => {
-    if (c.high != null) pricePool.push(c.high);
-    if (c.low != null) pricePool.push(c.low);
-    if (c.high == null && c.low == null && c.close != null) pricePool.push(c.close);
-  });
-  visibleDecisions.forEach(d => { if (d.entry != null) pricePool.push(d.entry); });
-  xauPositions.forEach(p => {
-    pricePool.push(p.open_price);
-    if (p.stop_loss != null) pricePool.push(p.stop_loss);
-    if (p.take_profit != null) pricePool.push(p.take_profit);
-  });
-  if (pricePool.length === 0) {
-    return '<div class="empty">Graphique indisponible pour l\'instant.</div>';
-  }
-  const min = Math.min(...pricePool);
-  const max = Math.max(...pricePool);
-  const range = (max - min) || 1;
-
-  const xAt = i => padL + (i / (candles.length - 1)) * innerW;
-  const yAt = price => padT + innerH - ((price - min) / range) * innerH;
-
-  const slotW = innerW / candles.length;
-  const bodyW = Math.max(1.5, Math.min(6, slotW * 0.6));
-
-  const priceGrid = [max, (max + min) / 2, min].map((p, idx) => {
-    const y = padT + (idx / 2) * innerH;
-    return `<line x1="${padL}" y1="${y}" x2="${width - padR}" y2="${y}" stroke="var(--border)" stroke-width="0.5" stroke-dasharray="2,2"/>
-      <text x="${padL - 6}" y="${y + 3}" text-anchor="end" font-size="9" fill="var(--muted)">${p.toFixed(1)}</text>`;
-  }).join('');
-
-  const timeIdxs = [0, Math.floor((candles.length - 1) / 2), candles.length - 1];
-  const timeLabels = timeIdxs.map(i => `
-    <text x="${xAt(i)}" y="${height - padB + 14}" text-anchor="middle" font-size="9" fill="var(--muted)">${candles[i].time.slice(11, 16)}</text>
-  `).join('');
-
-  const candleShapes = candles.map((c, i) => {
-    const x = xAt(i);
-    if (c.open != null && c.high != null && c.low != null && c.close != null) {
-      const up = c.close >= c.open;
-      const color = up ? 'var(--gold)' : 'var(--rust)';
-      const yOpen = yAt(c.open), yClose = yAt(c.close);
-      const bodyTop = Math.min(yOpen, yClose);
-      const bodyH = Math.max(1, Math.abs(yClose - yOpen));
-      return `<g>
-        <title>${c.time} — O:${c.open.toFixed(2)} H:${c.high.toFixed(2)} L:${c.low.toFixed(2)} C:${c.close.toFixed(2)}</title>
-        <line x1="${x}" y1="${yAt(c.high)}" x2="${x}" y2="${yAt(c.low)}" stroke="${color}" stroke-width="1"/>
-        <rect x="${x - bodyW / 2}" y="${bodyTop}" width="${bodyW}" height="${bodyH}" fill="${color}"/>
-      </g>`;
-    }
-    if (c.close != null) {
-      return `<g>
-        <title>${c.time} — C:${c.close.toFixed(2)}</title>
-        <line x1="${x - bodyW / 2}" y1="${yAt(c.close)}" x2="${x + bodyW / 2}" y2="${yAt(c.close)}" stroke="var(--muted)" stroke-width="1.5"/>
-      </g>`;
-    }
-    return '';
-  }).join('');
-
-  const positionLines = xauPositions.map(p => {
-    const color = p.direction === 'achat' ? 'var(--gold)' : p.direction === 'vente' ? 'var(--rust)' : 'var(--muted)';
-    const dirLabel = p.direction === 'achat' ? 'Achat' : p.direction === 'vente' ? 'Vente' : 'Position';
-    const label = `${dirLabel}${p.volume != null ? ' ' + p.volume + ' lot(s)' : ''} @ ${p.open_price.toFixed(2)}`;
-    const yEntry = yAt(p.open_price);
-    let html = `
-      <line x1="${padL}" y1="${yEntry}" x2="${width - padR}" y2="${yEntry}" stroke="${color}" stroke-width="1.25"><title>${label}</title></line>
-      <text x="${width - padR - 2}" y="${yEntry - 3}" text-anchor="end" font-size="9" fill="${color}">${label}</text>`;
-    if (p.stop_loss != null) {
-      const ySl = yAt(p.stop_loss);
-      html += `<line x1="${padL}" y1="${ySl}" x2="${width - padR}" y2="${ySl}" stroke="var(--rust)" stroke-width="1" stroke-dasharray="4,3"><title>Stop-loss ${p.stop_loss.toFixed(2)}</title></line>`;
-    }
-    if (p.take_profit != null) {
-      const yTp = yAt(p.take_profit);
-      html += `<line x1="${padL}" y1="${yTp}" x2="${width - padR}" y2="${yTp}" stroke="var(--gold)" stroke-width="1" stroke-dasharray="4,3"><title>Take-profit ${p.take_profit.toFixed(2)}</title></line>`;
-    }
-    return html;
-  }).join('');
-
-  const markers = visibleDecisions
-    .filter(d => d.entry != null)
-    .map(d => {
-      const t = new Date(d.timestamp).getTime();
-      let closestIdx = 0, closestDiff = Infinity;
-      candleTimes.forEach((ct, i) => {
-        const diff = Math.abs(ct - t);
-        if (diff < closestDiff) { closestDiff = diff; closestIdx = i; }
-      });
-      const color = d.direction === 'achat' ? 'var(--gold)' : 'var(--rust)';
-      const dirLabel = d.direction === 'achat' ? 'Achat' : 'Vente';
-      const detail = [
-        dirLabel + ' à ' + d.entry.toFixed(2),
-        d.stop_loss != null ? 'SL ' + d.stop_loss.toFixed(2) : null,
-        d.take_profit != null ? 'TP ' + d.take_profit.toFixed(2) : null,
-      ].filter(Boolean).join(' · ');
-      return `<circle cx="${xAt(closestIdx)}" cy="${yAt(d.entry)}" r="4" fill="${color}" stroke="var(--bg)" stroke-width="1.5"><title>${detail}</title></circle>`;
-    })
-    .join('');
-
-  return `
-    <svg viewBox="0 0 ${width} ${height}" style="width:100%;height:auto;display:block;" role="img" aria-label="Cours XAUUSD en chandeliers, avec positions ouvertes et points d'entrée du bot">
-      ${priceGrid}
-      ${positionLines}
-      ${candleShapes}
-      ${markers}
-      ${timeLabels}
-    </svg>`;
+function loadBotTvChart() {
+  // Widget TradingView en lecture seule (cours réel, plus lisible que
+  // notre graphique maison) — mêmes conventions que loadScalpChart :
+  // chargé une seule fois, à la demande, jamais avant que l'onglet ne
+  // soit visible. Ne peut pas superposer les positions/décisions du
+  // bot (iframe cross-origin, hors de portée de notre JS) — celles-ci
+  // sont donc listées à part, sous le graphique.
+  if (botTvChartLoaded) return;
+  botTvChartLoaded = true;
+  const script = document.createElement('script');
+  script.src = 'https://s3.tradingview.com/tv.js';
+  script.onload = () => {
+    new TradingView.widget({
+      autosize: true,
+      symbol: 'OANDA:XAUUSD',
+      interval: '1',
+      timezone: 'Etc/UTC',
+      theme: isLightTheme() ? 'light' : 'dark',
+      style: '1',
+      locale: 'fr',
+      toolbar_bg: isLightTheme() ? '#eceee3' : '#383b32',
+      enable_publishing: false,
+      allow_symbol_change: false,
+      withdateranges: true,
+      container_id: 'tv-bot-chart',
+    });
+  };
+  document.body.appendChild(script);
 }
 
-function botChartLegendHtml() {
-  const dot = (color) => `<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${color};margin-right:4px;vertical-align:middle;"></span>`;
-  const dash = (color) => `<span style="display:inline-block;width:10px;height:0;border-top:1px dashed ${color};margin-right:4px;vertical-align:middle;"></span>`;
-  return `<div style="display:flex;flex-wrap:wrap;gap:14px;font-size:11px;color:var(--muted);margin:0 0 6px;">
-    <span>${dot('var(--gold)')}Achat</span>
-    <span>${dot('var(--rust)')}Vente</span>
-    <span>${dash('var(--rust)')}Stop-loss</span>
-    <span>${dash('var(--gold)')}Take-profit</span>
-  </div>`;
+function botChartHtml() {
+  return `<div class="scalp-chart-box" id="botChartBox"><div id="tv-bot-chart" style="height:100%;"></div></div>`;
+}
+
+function botDecisionsHtml(data) {
+  const decisions = data.recent_decisions || [];
+  if (decisions.length === 0) {
+    return `<div class="empty">Aucune décision récente.</div>`;
+  }
+  return decisions.slice().reverse().map(d => {
+    const label = d.direction === 'achat' ? 'Achat' : d.direction === 'vente' ? 'Vente' : '—';
+    const color = d.direction === 'achat' ? 'var(--gold)' : d.direction === 'vente' ? 'var(--rust)' : 'var(--muted)';
+    const detail = [
+      d.entry != null ? 'Entrée ' + d.entry.toFixed(2) : null,
+      d.stop_loss != null ? 'SL ' + d.stop_loss.toFixed(2) : null,
+      d.take_profit != null ? 'TP ' + d.take_profit.toFixed(2) : null,
+    ].filter(Boolean).join(' · ');
+    const when = d.timestamp ? new Date(d.timestamp).toLocaleString('fr-FR', {
+      day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit', timeZone: 'UTC',
+    }) + ' UTC' : '';
+    return `
+    <div class="portfolio-position-row">
+      <div class="portfolio-position-main">
+        <span class="company-name" style="color:${color}">${label}</span>
+        <span class="hero-sub">${escHtml(d.symbol || '')} · ${detail}</span>
+      </div>
+      <div class="portfolio-position-pnl">
+        <span class="hero-sub">${when}</span>
+      </div>
+    </div>`;
+  }).join('');
 }
 
 function formatFetchedAgo(iso) {
@@ -1522,27 +1441,20 @@ function botPositionsHtml(data) {
   }).join('');
 }
 
-function botChartHtml(data) {
-  const chartHtml = buildBotChartSvg(data.candles, data.recent_decisions, data.positions);
-  if (!data.candles || data.candles.length < 2) {
-    return chartHtml;
-  }
-  const freshness = formatFetchedAgo(data.candles_fetched_at);
-  const freshnessHtml = freshness ? `<p class="hero-sub">${freshness}</p>` : '';
-  return `${botChartLegendHtml()}${freshnessHtml}${chartHtml}`;
-}
-
 function renderBotDashboard(data) {
   document.getElementById('botContent').innerHTML = `
     <h2>Solde</h2>
     ${botBalanceHtml(data)}
     <h2>Positions ouvertes</h2>
     ${botPositionsHtml(data)}
-    <h2>Cours &amp; décisions récentes</h2>
-    ${botChartHtml(data)}
+    <h2>Cours</h2>
+    ${botChartHtml()}
+    <h2>Décisions récentes</h2>
+    ${botDecisionsHtml(data)}
     <button class="toggle-btn" type="button" id="botRefreshBtn">Actualiser</button>
   `;
   wireBotDashboardRefresh();
+  loadBotTvChart();
 }
 
 async function fetchBotDashboard() {

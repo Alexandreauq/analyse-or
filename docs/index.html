@@ -120,19 +120,19 @@
 
   /* Les écrans occupent tout le viewport et se superposent pendant
      la transition ; #or / #indices / #portefeuille glissent par-dessus #home puis repartent au retour. */
-  .home, #or, #indices, #portefeuille {
+  .home, #or, #indices, #portefeuille, #bot {
     position: fixed; inset: 0; overflow-y: auto; -webkit-overflow-scrolling: touch;
     background: var(--bg);
     scrollbar-width: none;      /* Firefox */
     -ms-overflow-style: none;   /* vieux Edge */
   }
-  .home::-webkit-scrollbar, #or::-webkit-scrollbar, #indices::-webkit-scrollbar, #portefeuille::-webkit-scrollbar { display: none; }
-  #or, #indices, #portefeuille {
+  .home::-webkit-scrollbar, #or::-webkit-scrollbar, #indices::-webkit-scrollbar, #portefeuille::-webkit-scrollbar, #bot::-webkit-scrollbar { display: none; }
+  #or, #indices, #portefeuille, #bot {
     z-index: 2; transform: translateX(100%);
     transition: transform 0.32s cubic-bezier(.22,1,.36,1);
   }
-  #or.screen-in, #indices.screen-in, #portefeuille.screen-in { transform: translateX(0); }
-  #or.no-anim, #indices.no-anim, #portefeuille.no-anim { transition: none; }
+  #or.screen-in, #indices.screen-in, #portefeuille.screen-in, #bot.screen-in { transform: translateX(0); }
+  #or.no-anim, #indices.no-anim, #portefeuille.no-anim, #bot.no-anim { transition: none; }
 
 
   /* Nav des modules (Or / Minières / Indices) : bouton menu + panneau latéral
@@ -755,6 +755,7 @@
   <symbol id="icon-minieres" viewBox="0 0 24 24"><path d="M12 3l6.5 6.5L12 21 5.5 9.5z M6.5 9.5h11"/></symbol>
   <symbol id="icon-indices" viewBox="0 0 24 24"><path d="M4 20h16M6.5 20v-5.5M12 20V8M17.5 20v-9.5"/></symbol>
   <symbol id="icon-portefeuille" viewBox="0 0 24 24"><path d="M4 8h16v11a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z M9 8V6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2 M4 13h16"/></symbol>
+  <symbol id="icon-bot" viewBox="0 0 24 24"><path d="M12 3v3 M6 9h12a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-9a1 1 0 0 1 1-1z M9 13v2 M15 13v2 M4 12h2 M18 12h2"/></symbol>
   <symbol id="icon-menu" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></symbol>
   <symbol id="icon-close" viewBox="0 0 24 24"><path d="M5 5l14 14M19 5L5 19"/></symbol>
   <symbol id="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.6M12 18.9v2.6M4.6 4.6l1.8 1.8M17.6 17.6l1.8 1.8M2.5 12h2.6M18.9 12h2.6M4.6 19.4l1.8-1.8M17.6 6.4l1.8-1.8"/></symbol>
@@ -779,6 +780,10 @@
   <button class="nav-item" data-route="portefeuille">
     <svg class="nav-icon"><use href="#icon-portefeuille"/></svg>
     <span>Portefeuille</span>
+  </button>
+  <button class="nav-item" data-route="bot">
+    <svg class="nav-icon"><use href="#icon-bot"/></svg>
+    <span>Bot</span>
   </button>
   <button class="theme-toggle" id="themeToggleDesktop" type="button" aria-label="Basculer mode jour/nuit">
     <svg class="nav-icon" id="themeToggleDesktopIcon"><use href="#icon-sun"/></svg>
@@ -807,6 +812,10 @@
   <button class="nav-item" data-route="portefeuille">
     <svg class="nav-icon"><use href="#icon-portefeuille"/></svg>
     <span>Portefeuille</span>
+  </button>
+  <button class="nav-item" data-route="bot">
+    <svg class="nav-icon"><use href="#icon-bot"/></svg>
+    <span>Bot</span>
   </button>
   <button class="nav-item" id="themeToggleDrawer" type="button">
     <svg class="nav-icon" id="themeToggleDrawerIcon"><use href="#icon-sun"/></svg>
@@ -839,6 +848,11 @@
       <svg class="module-card-icon"><use href="#icon-portefeuille"/></svg>
       <span class="module-card-name">Portefeuille</span>
       <span class="module-card-desc">Suivi de tes positions, P&amp;L, opportunités.</span>
+    </a>
+    <a href="#bot" class="module-card">
+      <svg class="module-card-icon"><use href="#icon-bot"/></svg>
+      <span class="module-card-name">Bot</span>
+      <span class="module-card-desc">Solde, positions et cours du bot de trading or.</span>
     </a>
   </div>
 </div>
@@ -914,6 +928,22 @@
   </header>
 
   <main id="portefeuilleContent">
+    <div class="skeleton">
+      <div class="skeleton-line"></div>
+      <div class="skeleton-line"></div>
+      <div class="skeleton-line"></div>
+      <div class="skeleton-line"></div>
+    </div>
+  </main>
+</div>
+
+<div id="bot" class="screen app" hidden>
+  <header>
+    <div class="eyebrow">Trading automatique</div>
+    <h1>Bot</h1>
+  </header>
+
+  <main id="botContent">
     <div class="skeleton">
       <div class="skeleton-line"></div>
       <div class="skeleton-line"></div>
@@ -1281,6 +1311,130 @@ function wireBotControls() {
       alert('Action impossible : ' + e.message);
     }
   });
+}
+
+function buildBotChartSvg(candles, recentDecisions) {
+  if (!candles || candles.length < 2) {
+    return '<div class="empty">Graphique indisponible pour l\'instant.</div>';
+  }
+  const width = 600, height = 220, padding = 24;
+  const closes = candles.map(c => c.close).filter(v => v != null);
+  const decisionPrices = (recentDecisions || []).map(d => d.entry).filter(v => v != null);
+  const allPrices = closes.concat(decisionPrices);
+  const min = Math.min(...allPrices);
+  const max = Math.max(...allPrices);
+  const range = (max - min) || 1;
+
+  const xAt = i => padding + (i / (candles.length - 1)) * (width - 2 * padding);
+  const yAt = price => height - padding - ((price - min) / range) * (height - 2 * padding);
+
+  const points = candles.map((c, i) => `${xAt(i)},${yAt(c.close)}`).join(' ');
+
+  const candleTimes = candles.map(c => new Date(c.time.replace(' ', 'T') + 'Z').getTime());
+  const markers = (recentDecisions || [])
+    .filter(d => d.entry != null && d.timestamp)
+    .map(d => {
+      const t = new Date(d.timestamp).getTime();
+      let closestIdx = 0, closestDiff = Infinity;
+      candleTimes.forEach((ct, i) => {
+        const diff = Math.abs(ct - t);
+        if (diff < closestDiff) { closestDiff = diff; closestIdx = i; }
+      });
+      const color = d.direction === 'achat' ? 'var(--gold)' : 'var(--rust)';
+      return `<circle cx="${xAt(closestIdx)}" cy="${yAt(d.entry)}" r="4" fill="${color}" stroke="var(--bg)" stroke-width="1.5"/>`;
+    })
+    .join('');
+
+  return `
+    <svg viewBox="0 0 ${width} ${height}" style="width:100%;height:auto;display:block;" role="img" aria-label="Cours XAUUSD avec points d'entrée/sortie du bot">
+      <polyline points="${points}" fill="none" stroke="var(--muted)" stroke-width="1.5"/>
+      ${markers}
+    </svg>`;
+}
+
+function botBalanceHtml(data) {
+  if (data.balance == null) {
+    return `<div class="empty">Solde indisponible pour l'instant.</div>`;
+  }
+  return `
+    <div class="portfolio-position-row">
+      <div class="portfolio-position-main">
+        <span class="company-name">${formatPrice(data.balance)}</span>
+        <span class="hero-sub">Solde disponible</span>
+      </div>
+    </div>`;
+}
+
+function botPositionsHtml(data) {
+  if (!data.positions || data.positions.length === 0) {
+    return `<div class="empty">Aucune position ouverte.</div>`;
+  }
+  return data.positions.map(p => {
+    const color = p.direction === 'achat' ? 'var(--gold)' : 'var(--rust)';
+    const profitColor = (p.profit ?? 0) >= 0 ? 'var(--gold)' : 'var(--rust)';
+    const profitSign = (p.profit ?? 0) >= 0 ? '+' : '';
+    return `
+    <div class="portfolio-position-row">
+      <div class="portfolio-position-main">
+        <span class="company-name">${p.symbol}</span>
+        <span class="hero-sub" style="color:${color}">${p.direction === 'achat' ? 'Achat' : 'Vente'} · ${p.volume} lot(s)</span>
+      </div>
+      <div class="portfolio-position-pnl">
+        <span class="price-value">${formatPriceUsd(p.current_price)}</span>
+        <span style="color:${profitColor}">${profitSign}${formatPrice(p.profit)}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function botChartHtml(data) {
+  if (!data.candles || data.candles.length < 2) {
+    return `<div class="empty">Graphique indisponible pour l'instant.</div>`;
+  }
+  return buildBotChartSvg(data.candles, data.recent_decisions);
+}
+
+function renderBotDashboard(data) {
+  document.getElementById('botContent').innerHTML = `
+    <h2>Solde</h2>
+    ${botBalanceHtml(data)}
+    <h2>Positions ouvertes</h2>
+    ${botPositionsHtml(data)}
+    <h2>Cours &amp; décisions récentes</h2>
+    ${botChartHtml(data)}
+    <button class="toggle-btn" type="button" id="botRefreshBtn">Actualiser</button>
+  `;
+  wireBotDashboardRefresh();
+}
+
+async function fetchBotDashboard() {
+  const content = document.getElementById('botContent');
+  const token = getBotToken();
+  if (!token) {
+    content.innerHTML = `<div class="empty">Jeton requis pour afficher le tableau de bord du bot.</div>`;
+    return;
+  }
+  try {
+    const res = await fetch(`${BOT_API_BASE_URL}/dashboard`, { headers: { 'X-Bot-Token': token } });
+    if (!res.ok) {
+      if (res.status === 401) localStorage.removeItem('goldBotToken');
+      throw new Error('échec de la requête (' + res.status + ')');
+    }
+    const data = await res.json();
+    renderBotDashboard(data);
+  } catch (e) {
+    content.innerHTML = `<div class="empty">Tableau de bord indisponible pour l'instant.<br>${e.message}</div>`;
+  }
+}
+
+function wireBotDashboardRefresh() {
+  const btn = document.getElementById('botRefreshBtn');
+  if (!btn) return;
+  btn.addEventListener('click', () => fetchBotDashboard());
+}
+
+function loadBotScreen() {
+  fetchBotDashboard();
 }
 
 function wirePortfolioForm() {
@@ -1767,7 +1921,7 @@ function render(data) {
   if (matchMedia('(min-width: 1024px)').matches) animateFactorBars();
 }
 
-const SLIDING_PANES = ['or', 'indices', 'portefeuille'];
+const SLIDING_PANES = ['or', 'indices', 'portefeuille', 'bot'];
 let indicesLoaded = false;
 let indicesData = null;
 let realPortfolioData = null;
@@ -2324,6 +2478,7 @@ function parseRoute() {
   const hash = location.hash.slice(1);
   if (hash === 'or') return { screen: 'or' };
   if (hash === 'portefeuille') return { screen: 'portefeuille' };
+  if (hash === 'bot') return { screen: 'bot' };
   if (hash === 'indices') return { screen: 'indices', ticker: null };
   if (hash === 'indices/suivi') return { screen: 'indices', ticker: null, view: 'suivi' };
   if (hash.startsWith('indices/')) {
@@ -2391,6 +2546,9 @@ function renderRoute(animate) {
   }
   if (route.screen === 'portefeuille') {
     loadPortfolioScreen();
+  }
+  if (route.screen === 'bot') {
+    loadBotScreen();
   }
 }
 

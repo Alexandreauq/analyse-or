@@ -187,8 +187,9 @@ disponible plutôt que de tout perdre) :
   inchangée) — si aucun jeton en `localStorage`, prompt comme pour
   Arrêter/Relancer aujourd'hui. Si l'appel `/dashboard` renvoie `401`
   (jeton invalide/expiré), effacer le jeton stocké et re-proposer le
-  prompt au prochain essai (aujourd'hui un jeton invalide resterait
-  silencieusement stocké et jamais re-demandé).
+  prompt au prochain essai — même comportement que `wireBotControls()`
+  applique déjà à `/kill`/`/resume` (`localStorage.removeItem`
+  sur `401`), à répliquer ici pour `/dashboard`.
 - Un bouton "Actualiser" recharge `/dashboard` à la demande (pas de
   polling automatique, cf. Hors périmètre).
 - **Montant disponible** : affiché seulement après authentification

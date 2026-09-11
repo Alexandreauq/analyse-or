@@ -327,3 +327,30 @@ def test_run_cycle_does_not_write_candles_cache_when_fetch_itself_fails(monkeypa
     assert not (tmp_path / "latest_candles.json").exists()
     assert not (tmp_path / "latest_balance.json").exists()
     assert not (tmp_path / "latest_positions.json").exists()
+
+
+def test_run_cycle_continues_when_a_dashboard_cache_write_fails(monkeypatch, tmp_path):
+    """Une panne disque sur un cache de tableau de bord (LATEST_*_PATH,
+    purement cosmétique) ne doit jamais interrompre le cycle avant que
+    la décision/exécution réelle n'ait eu lieu — même contrat que
+    _log_decision pour son propre fichier."""
+    monkeypatch.setattr(loop.state, "load_state", lambda *a, **k: {"kill_switch": False, "dry_run": True})
+    monkeypatch.setattr(loop, "DECISIONS_LOG_PATH", str(tmp_path / "decisions_log.jsonl"))
+    monkeypatch.setattr(loop, "LATEST_CANDLES_PATH", str(tmp_path / "latest_candles.json"))
+    monkeypatch.setattr(loop, "LATEST_BALANCE_PATH", str(tmp_path / "latest_balance.json"))
+    monkeypatch.setattr(loop, "LATEST_POSITIONS_PATH", str(tmp_path / "latest_positions.json"))
+    monkeypatch.setattr(loop.confluence, "fetch_gold_candles", lambda api_key: [{"close": 2100}])
+    monkeypatch.setattr(loop.broker, "get_account_balance", lambda *a, **k: 10000.0)
+    monkeypatch.setattr(loop.bot, "reconcile_positions", lambda *a, **k: [])
+    monkeypatch.setattr(loop.broker, "get_symbol_specification", lambda *a, **k: {"contractSize": 100})
+    monkeypatch.setattr(loop.bot, "decide_and_act", lambda *a, **k: {"action": "aucune", "reason": "signal neutre"})
+    monkeypatch.setattr(
+        loop.state, "save_state",
+        lambda *a, **k: (_ for _ in ()).throw(OSError("disque plein")),
+    )
+
+    result = loop.run_cycle("tok", "acc", "td-key", loop.risk.CircuitBreaker())
+
+    assert result == {"action": "aucune", "reason": "signal neutre"}
+    logged = json.loads((tmp_path / "decisions_log.jsonl").read_text(encoding="utf-8").strip())
+    assert logged["action"] == "aucune"

@@ -1,3 +1,4 @@
+import email
 import pytest
 import requests
 from datetime import datetime
@@ -2345,17 +2346,6 @@ def test_attach_alerts_and_update_history_persists_actu_majeure_alert_but_does_n
     assert "actu_majeure" in [a["kind"] for a in companies[0]["alerts"]]
 
 
-def test_send_entry_alert_email_returns_false_when_companies_empty():
-    assert indices_score.send_entry_alert_email([]) is False
-
-
-def test_send_entry_alert_email_returns_false_when_smtp_credentials_missing(monkeypatch):
-    monkeypatch.delenv("SMTP_USER", raising=False)
-    monkeypatch.delenv("SMTP_PASSWORD", raising=False)
-    companies = [{"ticker": "BN.PA", "name": "Danone", "score": 20.0, "current_price": 100.0, "entry_price": 100.0}]
-    assert indices_score.send_entry_alert_email(companies) is False
-
-
 def _fake_entry_alert_company(**overrides):
     company = {
         "ticker": "BN.PA", "name": "Danone", "index": "CAC40",
@@ -2367,66 +2357,9 @@ def _fake_entry_alert_company(**overrides):
     return company
 
 
-def test_send_entry_alert_email_sends_via_smtp_when_configured(monkeypatch):
-    monkeypatch.setenv("SMTP_USER", "bot@example.com")
-    monkeypatch.setenv("SMTP_PASSWORD", "secret")
-    monkeypatch.delenv("MAIL_TO", raising=False)
-    companies = [_fake_entry_alert_company()]
-
-    sent = {}
-
-    class _FakeSMTP:
-        def __init__(self, host, port):
-            sent["host"] = host
-            sent["port"] = port
-
-        def __enter__(self):
-            return self
-
-        def __exit__(self, *exc):
-            return False
-
-        def starttls(self):
-            sent["starttls"] = True
-
-        def login(self, user, password):
-            sent["login"] = (user, password)
-
-        def sendmail(self, from_addr, to_addrs, message):
-            sent["from_addr"] = from_addr
-            sent["to_addrs"] = to_addrs
-            sent["message"] = message
-
-    monkeypatch.setattr(indices_score.smtplib, "SMTP", _FakeSMTP)
-
-    result = indices_score.send_entry_alert_email(companies)
-
-    assert result is True
-    assert sent["host"] == indices_score.SMTP_HOST
-    assert sent["login"] == ("bot@example.com", "secret")
-    assert sent["to_addrs"] == ["bot@example.com"]  # repli sur SMTP_USER si MAIL_TO absent
-    assert sent["from_addr"] == "bot@example.com"
-    assert sent["message"]  # le message MIME a bien été construit et envoyé
-
-
-def test_send_entry_alert_email_returns_false_on_smtp_error(monkeypatch):
-    """Une panne SMTP (identifiants invalides, réseau...) ne doit jamais
-    faire lever d'exception ni faire échouer le run."""
-    monkeypatch.setenv("SMTP_USER", "bot@example.com")
-    monkeypatch.setenv("SMTP_PASSWORD", "secret")
-    companies = [{"ticker": "BN.PA", "name": "Danone", "score": 20.0, "current_price": 100.0, "entry_price": 100.0}]
-
-    def _raise(host, port):
-        raise OSError("connexion refusée")
-
-    monkeypatch.setattr(indices_score.smtplib, "SMTP", _raise)
-
-    assert indices_score.send_entry_alert_email(companies) is False
-
-
-def test_build_entry_alert_email_html_includes_company_details():
+def test_entry_alert_item_html_includes_company_details():
     company = _fake_entry_alert_company(current_price=63.5, entry_price=60.0)
-    html = indices_score.build_entry_alert_email_html(company)
+    html = indices_score._entry_alert_item_html(company)
     assert "Danone" in html
     assert "BN.PA" in html
     assert "CAC 40" in html  # nom affiché de l'indice, pas la clé brute
@@ -2458,9 +2391,9 @@ def test_entry_alert_context_empty_when_no_data():
     assert indices_score._entry_alert_context(company) == ""
 
 
-def test_build_entry_alert_email_html_omits_context_heading_when_no_context():
+def test_entry_alert_item_html_omits_context_heading_when_no_context():
     company = _fake_entry_alert_company(factors=[], news=[])
-    html = indices_score.build_entry_alert_email_html(company)
+    html = indices_score._entry_alert_item_html(company)
     assert "Pourquoi ce signal" not in html
 
 
@@ -2485,9 +2418,9 @@ def _fake_major_news_alert(**overrides):
     return company, alert
 
 
-def test_build_major_news_alert_email_html_includes_article_details():
+def test_major_news_alert_item_html_includes_article_details():
     company, alert = _fake_major_news_alert()
-    html = indices_score.build_major_news_alert_email_html(company, alert)
+    html = indices_score._major_news_alert_item_html(company, alert)
     assert "Danone" in html
     assert "CAC 40" in html  # nom affiché de l'indice, pas la clé brute
     assert "Danone annonce une OPA sur un concurrent" in html
@@ -2497,38 +2430,56 @@ def test_build_major_news_alert_email_html_includes_article_details():
     assert "#indices/BN.PA" in html
 
 
-def test_build_major_news_alert_email_html_defaults_when_news_item_not_found():
+def test_major_news_alert_item_html_defaults_when_news_item_not_found():
     """Si le lien de l'alerte ne correspond à aucune actu de company["news"]
     (ne devrait pas arriver en pratique, mais ne doit jamais planter), le
     mail reste construit avec un sentiment neutre par défaut."""
     company, alert = _fake_major_news_alert(link="https://example.com/inconnu")
-    html = indices_score.build_major_news_alert_email_html(company, alert)
+    html = indices_score._major_news_alert_item_html(company, alert)
     assert "Neutre" in html
 
 
-def test_send_major_news_alert_email_returns_false_when_triggered_empty():
-    assert indices_score.send_major_news_alert_email([]) is False
+def test_build_daily_digest_email_html_includes_both_kinds():
+    entry_company = _fake_entry_alert_company()
+    news_company, news_alert = _fake_major_news_alert()
+    html = indices_score.build_daily_digest_email_html([entry_company], [(news_company, news_alert)])
+    assert "1 signal d'entrée" in html
+    assert "1 actu majeure" in html
+    assert "Danone" in html
+    assert "Score favorable" in html  # carte du signal d'entrée
+    assert "Danone annonce une OPA sur un concurrent" in html  # carte de l'actu majeure
 
 
-def test_send_major_news_alert_email_returns_false_when_smtp_credentials_missing(monkeypatch):
+def test_build_daily_digest_email_html_omits_empty_section():
+    entry_company = _fake_entry_alert_company()
+    html = indices_score.build_daily_digest_email_html([entry_company], [])
+    assert "Actus majeures" not in html
+
+
+def test_send_daily_digest_email_returns_false_when_both_empty():
+    assert indices_score.send_daily_digest_email([], []) is False
+
+
+def test_send_daily_digest_email_returns_false_when_smtp_credentials_missing(monkeypatch):
     monkeypatch.delenv("SMTP_USER", raising=False)
     monkeypatch.delenv("SMTP_PASSWORD", raising=False)
-    company, alert = _fake_major_news_alert()
-    assert indices_score.send_major_news_alert_email([(company, alert)]) is False
+    company = _fake_entry_alert_company()
+    assert indices_score.send_daily_digest_email([company], []) is False
 
 
-def test_send_major_news_alert_email_sends_via_smtp_when_configured(monkeypatch):
+def test_send_daily_digest_email_sends_a_single_email_via_smtp_when_configured(monkeypatch):
     monkeypatch.setenv("SMTP_USER", "bot@example.com")
     monkeypatch.setenv("SMTP_PASSWORD", "secret")
     monkeypatch.delenv("MAIL_TO", raising=False)
-    company, alert = _fake_major_news_alert()
+    entry_company = _fake_entry_alert_company()
+    news_company, news_alert = _fake_major_news_alert()
 
-    sent = {}
+    sent_messages = []
 
     class _FakeSMTP:
         def __init__(self, host, port):
-            sent["host"] = host
-            sent["port"] = port
+            self.host = host
+            self.port = port
 
         def __enter__(self):
             return self
@@ -2537,42 +2488,49 @@ def test_send_major_news_alert_email_sends_via_smtp_when_configured(monkeypatch)
             return False
 
         def starttls(self):
-            sent["starttls"] = True
+            pass
 
         def login(self, user, password):
-            sent["login"] = (user, password)
+            pass
 
         def sendmail(self, from_addr, to_addrs, message):
-            sent["from_addr"] = from_addr
-            sent["to_addrs"] = to_addrs
-            sent["message"] = message
-            sent["subject"] = "OPA" in message and "Danone" in message
+            sent_messages.append({"from_addr": from_addr, "to_addrs": to_addrs, "message": message})
 
     monkeypatch.setattr(indices_score.smtplib, "SMTP", _FakeSMTP)
 
-    result = indices_score.send_major_news_alert_email([(company, alert)])
+    result = indices_score.send_daily_digest_email([entry_company], [(news_company, news_alert)])
 
     assert result is True
-    assert sent["host"] == indices_score.SMTP_HOST
-    assert sent["login"] == ("bot@example.com", "secret")
-    assert sent["to_addrs"] == ["bot@example.com"]  # repli sur SMTP_USER si MAIL_TO absent
-    assert sent["from_addr"] == "bot@example.com"
-    assert sent["message"]  # le message MIME a bien été construit et envoyé
+    assert len(sent_messages) == 1  # un seul email, pas un par alerte
+    message = sent_messages[0]
+    assert message["to_addrs"] == ["bot@example.com"]  # repli sur SMTP_USER si MAIL_TO absent
+    assert message["from_addr"] == "bot@example.com"
+
+    # Sujet/corps encodés MIME (accents) — on décode avant de comparer,
+    # une comparaison sur la chaîne brute échouerait sur le base64.
+    parsed = email.message_from_string(message["message"])
+    subject = str(email.header.make_header(email.header.decode_header(parsed["Subject"])))
+    body = parsed.get_payload()[0].get_payload(decode=True).decode("utf-8")
+
+    assert "Résumé Indices" in subject
+    assert "signal d'entrée" in subject  # garde le filtre Gmail existant fonctionnel
+    assert "actu majeure" in subject
+    assert "Danone" in body
 
 
-def test_send_major_news_alert_email_returns_false_on_smtp_error(monkeypatch):
+def test_send_daily_digest_email_returns_false_on_smtp_error(monkeypatch):
     """Une panne SMTP ne doit jamais faire lever d'exception ni faire
     échouer le run."""
     monkeypatch.setenv("SMTP_USER", "bot@example.com")
     monkeypatch.setenv("SMTP_PASSWORD", "secret")
-    company, alert = _fake_major_news_alert()
+    company = _fake_entry_alert_company()
 
     def _raise(host, port):
         raise OSError("connexion refusée")
 
     monkeypatch.setattr(indices_score.smtplib, "SMTP", _raise)
 
-    assert indices_score.send_major_news_alert_email([(company, alert)]) is False
+    assert indices_score.send_daily_digest_email([company], []) is False
 
 
 def test_main_writes_alerts_key_for_every_company(monkeypatch, tmp_path):

@@ -2798,11 +2798,10 @@ def _entry_alert_context(company: dict) -> str:
     return "".join(parts)
 
 
-def build_entry_alert_email_html(company: dict) -> str:
-    """Un email par entreprise (pas un digest groupé) : objet et contenu
-    portent sur cette seule entreprise, dans le même langage visuel que
-    le site (Fraunces remplacé par une police sans-serif — non
-    disponible dans un email — mais mêmes couleurs et hiérarchie)."""
+def _entry_alert_item_html(company: dict) -> str:
+    """Carte compacte d'un signal "entree" pour le digest groupé (pas un
+    email autonome) — mêmes données que l'ancien email par entreprise,
+    condensées."""
     index_name = INDEX_NAMES.get(company.get("index"), company.get("index", ""))
     score = company["score"]
     score_color = "#b99a68" if score >= 0 else "#a35540"
@@ -2811,87 +2810,29 @@ def build_entry_alert_email_html(company: dict) -> str:
     fiche_url = f"{SITE_BASE_URL}#indices/{company['ticker']}"
 
     return f"""
-    <html><body style="background:#15161c;margin:0;padding:0;">
-      <div style="max-width:480px;margin:0 auto;padding:32px 24px;font-family:Arial,Helvetica,sans-serif;">
-        <p style="color:#8a90a3;font-size:11px;letter-spacing:0.08em;text-transform:uppercase;margin:0 0 10px;">
-          {index_name} — Signal d'entrée
-        </p>
-        <h1 style="color:#edeef3;font-size:24px;font-weight:bold;margin:0 0 2px;">{company['name']}</h1>
-        <p style="color:#8a90a3;font-size:13px;margin:0 0 24px;">{company['ticker']}</p>
-
-        <div style="background:#1b1d25;border:1px solid #2a2d38;border-radius:10px;padding:20px 20px 16px;margin:0 0 20px;">
-          <p style="color:{score_color};font-size:42px;font-weight:bold;margin:0;line-height:1;">{score:+.1f}</p>
-          <p style="color:#edeef3;font-size:14px;margin:8px 0 0;">{company['interpretation']}</p>
-        </div>
-
-        <table style="width:100%;border-collapse:collapse;margin:0 0 20px;">
-          <tr>
-            <td style="padding:9px 0;border-bottom:1px solid #2a2d38;color:#8a90a3;font-size:13px;font-family:Arial,sans-serif;">Cours actuel</td>
-            <td style="padding:9px 0;border-bottom:1px solid #2a2d38;color:#edeef3;font-size:13px;font-family:Arial,sans-serif;text-align:right;">{company['current_price']:.2f} €</td>
-          </tr>
-          <tr>
-            <td style="padding:9px 0;border-bottom:1px solid #2a2d38;color:#8a90a3;font-size:13px;font-family:Arial,sans-serif;">Repère d'entrée</td>
-            <td style="padding:9px 0;border-bottom:1px solid #2a2d38;color:#b99a68;font-size:13px;font-family:Arial,sans-serif;text-align:right;">{company['entry_price']:.2f} €</td>
-          </tr>
-          <tr>
-            <td style="padding:9px 0;color:#8a90a3;font-size:13px;font-family:Arial,sans-serif;">Repère de sortie</td>
-            <td style="padding:9px 0;color:#a35540;font-size:13px;font-family:Arial,sans-serif;text-align:right;">{company['exit_price']:.2f} €</td>
-          </tr>
-        </table>
-
-        <p style="color:#8a90a3;font-size:13px;line-height:1.6;margin:0 0 20px;">{detail}</p>
-
-        {f'''<p style="color:#8a90a3;font-size:11px;letter-spacing:0.06em;text-transform:uppercase;margin:0 0 12px;">
-          Pourquoi ce signal ?
-        </p>
-        {context_html}''' if context_html else ''}
-
-        <a href="{fiche_url}" style="display:inline-block;background:#b99a68;color:#15161c;
-           font-weight:bold;font-size:14px;padding:13px 26px;border-radius:8px;text-decoration:none;">
-          Voir la fiche complète →
-        </a>
-
-        <p style="color:#8a90a3;font-size:11px;line-height:1.5;margin:32px 0 0;">
-          Score composite favorable et cours proche du repère d'entrée — pas un conseil d'investissement.
-        </p>
-      </div>
-    </body></html>
-    """
-
-
-def send_entry_alert_email(companies: list[dict]) -> bool:
-    """Envoie un email par entreprise dont le signal "entree" vient
-    d'apparaître aujourd'hui (pas un digest groupé). Ignoré
-    silencieusement (avec un message) si les identifiants SMTP ne sont
-    pas configurés ou si `companies` est vide — jamais d'exception,
-    même contrat que gold_score.send_email."""
-    if not companies:
-        return False
-    smtp_user = os.environ.get("SMTP_USER")
-    smtp_password = os.environ.get("SMTP_PASSWORD")
-    mail_to = os.environ.get("MAIL_TO") or smtp_user
-    if not smtp_user or not smtp_password:
-        print("\n(Envoi d'email d'alerte entrée ignoré : SMTP_USER / SMTP_PASSWORD non configurés.)")
-        return False
-
-    try:
-        with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
-            server.starttls()
-            server.login(smtp_user, smtp_password)
-            for company in companies:
-                index_name = INDEX_NAMES.get(company.get("index"), company.get("index", ""))
-                msg = MIMEMultipart("mixed")
-                msg["Subject"] = f"{company['name']} ({index_name}) — signal d'entrée"
-                msg["From"] = smtp_user
-                msg["To"] = mail_to
-                msg.attach(MIMEText(build_entry_alert_email_html(company), "html"))
-                server.sendmail(smtp_user, [mail_to], msg.as_string())
-        tickers = ", ".join(c["ticker"] for c in companies)
-        print(f"\nEmail(s) d'alerte entrée envoyé(s) à {mail_to} ({tickers})")
-        return True
-    except Exception as e:
-        print(f"Erreur envoi email d'alerte entrée : {e}")
-        return False
+        <div style="background:#1b1d25;border:1px solid #2a2d38;border-radius:10px;padding:18px 20px;margin:0 0 14px;">
+          <p style="color:#8a90a3;font-size:11px;letter-spacing:0.06em;text-transform:uppercase;margin:0 0 6px;">{index_name}</p>
+          <h2 style="color:#edeef3;font-size:16px;font-weight:bold;margin:0 0 2px;">{company['name']}
+            <span style="color:#8a90a3;font-weight:normal;font-size:12px;">({company['ticker']})</span>
+          </h2>
+          <p style="color:{score_color};font-size:22px;font-weight:bold;margin:6px 0 8px;">{score:+.1f}</p>
+          <p style="color:#8a90a3;font-size:12px;line-height:1.5;margin:0 0 10px;">{detail}</p>
+          <table style="width:100%;border-collapse:collapse;margin:0 0 10px;">
+            <tr>
+              <td style="padding:3px 0;color:#8a90a3;font-size:12px;font-family:Arial,sans-serif;">Cours actuel</td>
+              <td style="padding:3px 0;color:#edeef3;font-size:12px;font-family:Arial,sans-serif;text-align:right;">{company['current_price']:.2f} €</td>
+            </tr>
+            <tr>
+              <td style="padding:3px 0;color:#8a90a3;font-size:12px;font-family:Arial,sans-serif;">Repère d'entrée / sortie</td>
+              <td style="padding:3px 0;color:#edeef3;font-size:12px;font-family:Arial,sans-serif;text-align:right;">{company['entry_price']:.2f} € / {company['exit_price']:.2f} €</td>
+            </tr>
+          </table>
+          {f'''<p style="color:#8a90a3;font-size:11px;letter-spacing:0.06em;text-transform:uppercase;margin:0 0 8px;">
+            Pourquoi ce signal ?
+          </p>
+          {context_html}''' if context_html else ''}
+          <a href="{fiche_url}" style="color:#b99a68;font-size:12px;font-weight:bold;text-decoration:none;">Voir la fiche complète →</a>
+        </div>"""
 
 
 def _find_news_item_by_link(company: dict, link: str) -> dict | None:
@@ -2901,9 +2842,9 @@ def _find_news_item_by_link(company: dict, link: str) -> dict | None:
     return None
 
 
-def build_major_news_alert_email_html(company: dict, alert: dict) -> str:
-    """Email centré sur l'actu elle-même (pas le score/prix, contrairement
-    à l'alerte entrée) : titre, source, résumé, lien direct vers la fiche."""
+def _major_news_alert_item_html(company: dict, alert: dict) -> str:
+    """Carte compacte d'une actu majeure pour le digest groupé (pas un
+    email autonome)."""
     index_name = INDEX_NAMES.get(company.get("index"), company.get("index", ""))
     news_item = _find_news_item_by_link(company, alert.get("link", "")) or {}
     sentiment = news_item.get("sentiment", 0)
@@ -2913,69 +2854,101 @@ def build_major_news_alert_email_html(company: dict, alert: dict) -> str:
     fiche_url = f"{SITE_BASE_URL}#indices/{company['ticker']}"
 
     return f"""
-    <html><body style="background:#15161c;margin:0;padding:0;">
-      <div style="max-width:480px;margin:0 auto;padding:32px 24px;font-family:Arial,Helvetica,sans-serif;">
-        <p style="color:#8a90a3;font-size:11px;letter-spacing:0.08em;text-transform:uppercase;margin:0 0 10px;">
-          {company['name']} ({index_name}) — Actu majeure
+        <div style="background:#1b1d25;border:1px solid #2a2d38;border-radius:10px;padding:18px 20px;margin:0 0 14px;">
+          <p style="color:#8a90a3;font-size:11px;letter-spacing:0.06em;text-transform:uppercase;margin:0 0 6px;">{company['name']} ({index_name})</p>
+          <span style="display:inline-block;background:{sentiment_color};color:#15161c;
+             font-size:10px;font-weight:bold;padding:2px 9px;border-radius:999px;margin:0 0 8px;">
+            {sentiment_label}
+          </span>
+          <h2 style="color:#edeef3;font-size:15px;font-weight:bold;margin:6px 0 4px;line-height:1.3;">{alert['title']}</h2>
+          <p style="color:#8a90a3;font-size:11px;margin:0 0 8px;">{meta}</p>
+          <p style="color:#edeef3;font-size:12px;line-height:1.5;margin:0 0 10px;">{alert['detail']}</p>
+          <a href="{fiche_url}" style="color:#b99a68;font-size:12px;font-weight:bold;text-decoration:none;">Voir la fiche complète →</a>
+        </div>"""
+
+
+def build_daily_digest_email_html(
+    newly_triggered_entree: list[dict], newly_triggered_major_news: list[tuple],
+) -> str:
+    """Un seul email regroupant tous les signaux "entree" et toutes les
+    actus majeures nouvellement déclenchés au run du jour — remplace
+    l'ancien envoi d'un email par entreprise/actu pour éviter d'inonder la
+    boîte mail (jusqu'à un email par société suivie auparavant)."""
+    entree_html = "".join(_entry_alert_item_html(c) for c in newly_triggered_entree)
+    news_html = "".join(_major_news_alert_item_html(c, a) for c, a in newly_triggered_major_news)
+
+    entree_section = f"""
+        <p style="color:#8a90a3;font-size:11px;letter-spacing:0.06em;text-transform:uppercase;margin:24px 0 12px;">
+          Signaux d'entrée ({len(newly_triggered_entree)})
         </p>
-        <span style="display:inline-block;background:{sentiment_color};color:#15161c;
-           font-size:11px;font-weight:bold;padding:3px 10px;border-radius:999px;margin:0 0 14px;">
-          {sentiment_label}
-        </span>
+        {entree_html}""" if newly_triggered_entree else ""
 
-        <h1 style="color:#edeef3;font-size:20px;font-weight:bold;margin:0 0 6px;line-height:1.3;">{alert['title']}</h1>
-        <p style="color:#8a90a3;font-size:12px;margin:0 0 20px;">{meta}</p>
+    news_section = f"""
+        <p style="color:#8a90a3;font-size:11px;letter-spacing:0.06em;text-transform:uppercase;margin:24px 0 12px;">
+          Actus majeures ({len(newly_triggered_major_news)})
+        </p>
+        {news_html}""" if newly_triggered_major_news else ""
 
-        <div style="background:#1b1d25;border:1px solid #2a2d38;border-radius:10px;padding:16px 18px;margin:0 0 24px;">
-          <p style="color:#edeef3;font-size:13px;line-height:1.6;margin:0;">{alert['detail']}</p>
-        </div>
-
-        <a href="{fiche_url}" style="display:inline-block;background:#b99a68;color:#15161c;
-           font-weight:bold;font-size:14px;padding:13px 26px;border-radius:8px;text-decoration:none;">
-          Voir la fiche complète →
-        </a>
-
+    return f"""
+    <html><body style="background:#15161c;margin:0;padding:0;">
+      <div style="max-width:560px;margin:0 auto;padding:32px 24px;font-family:Arial,Helvetica,sans-serif;">
+        <p style="color:#8a90a3;font-size:11px;letter-spacing:0.08em;text-transform:uppercase;margin:0 0 6px;">
+          Indices — Résumé quotidien
+        </p>
+        <h1 style="color:#edeef3;font-size:22px;font-weight:bold;margin:0 0 4px;">
+          {len(newly_triggered_entree)} signal d'entrée · {len(newly_triggered_major_news)} actu majeure
+        </h1>
+        {entree_section}
+        {news_section}
         <p style="color:#8a90a3;font-size:11px;line-height:1.5;margin:32px 0 0;">
-          Actualité classée automatiquement comme majeure pour cette entreprise — pas un conseil d'investissement.
+          Résumé quotidien automatique — pas un conseil d'investissement.
         </p>
       </div>
     </body></html>
     """
 
 
-def send_major_news_alert_email(triggered: list[tuple]) -> bool:
-    """Envoie un email par (entreprise, alerte "actu_majeure") nouvellement
-    apparue aujourd'hui — chaque alerte de ce type est déjà garantie
-    nouvelle par construction (compute_company_alerts ne l'émet que pour
-    un lien pas encore signalé). Ignoré silencieusement (avec un message)
-    si les identifiants SMTP ne sont pas configurés ou si `triggered` est
-    vide — jamais d'exception, même contrat que send_entry_alert_email."""
-    if not triggered:
+def send_daily_digest_email(
+    newly_triggered_entree: list[dict], newly_triggered_major_news: list[tuple],
+) -> bool:
+    """Envoie un unique email quotidien regroupant tous les signaux
+    "entree" et toutes les actus majeures nouvellement déclenchés
+    (remplace un email par société/actu). Ignoré silencieusement (avec un
+    message) si les identifiants SMTP ne sont pas configurés ou si les
+    deux listes sont vides — jamais d'exception, même contrat que
+    gold_score.send_email."""
+    if not newly_triggered_entree and not newly_triggered_major_news:
         return False
     smtp_user = os.environ.get("SMTP_USER")
     smtp_password = os.environ.get("SMTP_PASSWORD")
     mail_to = os.environ.get("MAIL_TO") or smtp_user
     if not smtp_user or not smtp_password:
-        print("\n(Envoi d'email d'alerte actu majeure ignoré : SMTP_USER / SMTP_PASSWORD non configurés.)")
+        print("\n(Envoi du résumé quotidien ignoré : SMTP_USER / SMTP_PASSWORD non configurés.)")
         return False
+
+    subject_parts = []
+    if newly_triggered_entree:
+        subject_parts.append(f"{len(newly_triggered_entree)} signal d'entrée")
+    if newly_triggered_major_news:
+        subject_parts.append(f"{len(newly_triggered_major_news)} actu majeure")
+    subject = "Résumé Indices — " + ", ".join(subject_parts)
 
     try:
         with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
             server.starttls()
             server.login(smtp_user, smtp_password)
-            for company, alert in triggered:
-                index_name = INDEX_NAMES.get(company.get("index"), company.get("index", ""))
-                msg = MIMEMultipart("mixed")
-                msg["Subject"] = f"{company['name']} ({index_name}) — actu majeure"
-                msg["From"] = smtp_user
-                msg["To"] = mail_to
-                msg.attach(MIMEText(build_major_news_alert_email_html(company, alert), "html"))
-                server.sendmail(smtp_user, [mail_to], msg.as_string())
-        tickers = ", ".join(c["ticker"] for c, _ in triggered)
-        print(f"\nEmail(s) d'alerte actu majeure envoyé(s) à {mail_to} ({tickers})")
+            msg = MIMEMultipart("mixed")
+            msg["Subject"] = subject
+            msg["From"] = smtp_user
+            msg["To"] = mail_to
+            msg.attach(MIMEText(
+                build_daily_digest_email_html(newly_triggered_entree, newly_triggered_major_news), "html",
+            ))
+            server.sendmail(smtp_user, [mail_to], msg.as_string())
+        print(f"\nRésumé quotidien envoyé à {mail_to} ({subject})")
         return True
     except Exception as e:
-        print(f"Erreur envoi email d'alerte actu majeure : {e}")
+        print(f"Erreur envoi du résumé quotidien : {e}")
         return False
 
 
@@ -3026,8 +2999,7 @@ def main():
             traceback.print_exc()
 
     newly_triggered_entree, newly_triggered_major_news = _attach_alerts_and_update_history(companies)
-    send_entry_alert_email(newly_triggered_entree)
-    send_major_news_alert_email(newly_triggered_major_news)
+    send_daily_digest_email(newly_triggered_entree, newly_triggered_major_news)
     update_signal_tracking(companies, newly_triggered_entree)
 
     payload = {

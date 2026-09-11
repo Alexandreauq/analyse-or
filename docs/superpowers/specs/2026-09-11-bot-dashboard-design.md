@@ -27,10 +27,12 @@ avant ce document.
 - Nouvelle route `GET /dashboard` sur `gold_bot/api.py`, protégée par
   le même jeton `X-Bot-Token` que `/kill`/`/resume` — renvoie solde,
   positions ouvertes, et historique récent des décisions du bot.
-- Le solde et les positions sont toujours interrogés en direct auprès
-  de MetaApi (jamais mis en cache), le graphique de prix réutilise le
-  dernier lot de bougies déjà récupéré par le cycle courant du bot
-  (voir Mécanisme — aucun appel Twelve Data supplémentaire).
+- Solde, positions et bougies sont tous les trois lus depuis un cache
+  local écrit par `gold_bot/loop.py` à chaque cycle — `gold_bot/api.py`
+  n'appelle **jamais** MetaApi ni Twelve Data lui-même (voir Mécanisme).
+  Conséquence assumée : la donnée affichée a jusqu'à ~1 minute de
+  retard (durée d'un cycle), jamais interrogée en direct au moment où
+  l'utilisateur ouvre l'onglet.
 - Nouvel onglet "Bot" dans `docs/index.html`, au même niveau que
   Indices/Or/Portefeuille : montant disponible, liste des positions
   ouvertes (avec chiffres, contrairement à la synchro MT5 publique),
@@ -64,27 +66,43 @@ avant ce document.
 
 ## Mécanisme
 
-### Cache des bougies (`gold_bot/loop.py`)
+### Cache local (`gold_bot/loop.py`)
 
-Le bot appelle déjà `confluence.fetch_gold_candles(twelve_data_api_key)`
-à chaque cycle (~1×/min). Pour que le graphique n'ajoute **aucune**
-requête Twelve Data supplémentaire (la clé dédiée du bot tourne déjà
-près de sa limite quotidienne, voir Contexte de la spec Plan B), le
-loop écrit ce même lot de bougies dans un fichier de cache local après
-chaque récupération réussie :
+Le bot appelle déjà, à chaque cycle (~1×/min), dans `run_cycle` :
+`confluence.fetch_gold_candles(...)`, `broker.get_account_balance(...)`,
+et `bot.reconcile_positions(...)` (→ `broker.get_open_positions`). Pour
+que `gold_bot/api.py` n'ait **jamais** besoin d'appeler MetaApi ni
+Twelve Data lui-même (voir Sécurité — `api.py` ne doit jamais importer
+`gold_bot.broker`), le loop écrit chacun de ces trois résultats dans
+son propre fichier de cache, **immédiatement après son propre appel
+réussi** — pas après la fin du cycle entier, pour qu'un échec plus loin
+dans le cycle (ex. les `504` déjà observés sur
+`get_symbol_specification`) n'empêche pas de mettre à jour les caches
+des appels qui, eux, ont réussi :
 
-- Fichier : `gold_bot/latest_candles.json`, même dossier que
-  `state.py`/`decisions_log.jsonl`.
-- Écriture atomique (fichier temporaire + `os.replace`), même pattern
-  que `state.save_state` — jamais de fichier tronqué si le processus
-  est interrompu en cours d'écriture.
-- Contenu : `{"candles": [...], "fetched_at": "<ISO 8601 UTC>"}` — le
-  format brut renvoyé par `fetch_gold_candles` (mêmes clés que celles
-  déjà consommées par `confluence.compute_signal`), pas de
-  transformation.
-- Écrit uniquement en cas de succès de la récupération ; si le cycle
-  échoue avant d'atteindre cette étape, le fichier précédent reste en
-  place tel quel (donnée légèrement périodique plutôt qu'absente).
+- `gold_bot/latest_candles.json` — `{"candles": [...], "fetched_at":
+  "<ISO 8601 UTC>"}`, écrit juste après la ligne `candles =
+  confluence.fetch_gold_candles(...)` dans `run_cycle`.
+- `gold_bot/latest_balance.json` — `{"balance": <float>, "fetched_at":
+  "<ISO 8601 UTC>"}`, écrit juste après la ligne `balance =
+  broker.get_account_balance(...)`.
+- `gold_bot/latest_positions.json` — `{"positions": [...],
+  "fetched_at": "<ISO 8601 UTC>"}`, écrit juste après la ligne
+  `open_positions = bot.reconcile_positions(...)` — `positions` est la
+  liste brute renvoyée par MetaApi (mêmes clés que
+  `portfolio_sync_mt5.to_public_positions` consomme), pas encore
+  traduite achat/vente ; cette traduction se fait côté `api.py` à la
+  lecture (voir plus bas), pas à l'écriture.
+
+Les trois fichiers vivent dans le même dossier que `state.py`/
+`decisions_log.jsonl`. Écriture atomique via `state.save_state(...)`
+réutilisée telle quelle (fichier temporaire + `os.replace`, déjà
+générique sur n'importe quel dict/chemin — aucun nouveau code
+d'écriture atomique nécessaire). Chacun des trois fichiers n'est écrit
+qu'en cas de succès de **son** appel ; si un cycle échoue avant
+d'atteindre un appel donné, le fichier correspondant reste tel quel
+(donnée légèrement périmée plutôt qu'absente, avec son propre
+`fetched_at` pour que le frontend puisse dater ce qu'il affiche).
 
 ### Route protégée `GET /dashboard` (`gold_bot/api.py`)
 
@@ -98,65 +116,58 @@ def dashboard(x_bot_token: str | None = Header(default=None)):
 Réutilise `_check_token` tel quel (même comparaison à temps constant,
 même échec fermé si `BOT_API_TOKEN` absent). Le docstring en tête de
 fichier doit être ajusté : la garantie "aucune route ne peut déclencher
-un ordre" reste intacte (`/dashboard` ne fait que lire), mais la phrase
-"la SEULE action possible... est d'arrêter le bot" devient trompeuse
-une fois `/dashboard` ajoutée — à reformuler en distinguant explicitement
-les routes de lecture (`/status`, `/dashboard`) des routes de mutation
-(`/kill`, `/resume`, seules routes qui changent un état, et seul
-`kill_switch` peut être modifié — jamais `dry_run`).
+un ordre" reste intacte et se renforce même (`/dashboard` ne fait que
+lire des fichiers locaux, `api.py` n'importe toujours pas
+`gold_bot.broker` — `tests/gold_bot/test_api.py::
+test_broker_module_is_never_referenced_in_api_source` doit rester vert
+sans modification), mais la phrase "la SEULE action possible... est
+d'arrêter le bot" devient trompeuse une fois `/dashboard` ajoutée — à
+reformuler en distinguant explicitement les routes de lecture
+(`/status`, `/dashboard`) des routes de mutation (`/kill`, `/resume`,
+seules routes qui changent un état, et seul `kill_switch` peut être
+modifié — jamais `dry_run`).
 
-Trois sources de données, chacune tolérante à l'échec indépendamment
-des deux autres (une panne MetaApi ne doit pas empêcher d'afficher les
-décisions déjà journalisées, et vice-versa) :
+`/dashboard` lit les trois fichiers de cache ci-dessus (chacun
+indépendamment absent/illisible → sa section vaut `null`/liste vide,
+jamais d'exception — même convention que `notify.read_todays_decisions`)
+et les `N=50` dernières lignes non triviales de `decisions_log.jsonl`
+(`action` dans `{"simulation_dry_run", "exécuté"}` — les
+`"aucune"`/`"erreur"`/`"ignore"` sont exclues, elles n'ont pas
+d'entrée/sortie à marquer). Pour chaque ligne retenue, seuls les
+`steps` de type `"ouverture_simulee"` sont utilisés pour les marqueurs
+(entrée/sortie) — `bot.decide_and_act` n'émet que
+`"ouverture_simulee"`/`"clôture_simulee"` comme types de step, **y
+compris une fois en mode réel** (nom hérité du Plan A, non renommé en
+Plan B ; ne pas s'y fier pour distinguer simulé/réel, c'est le champ
+`action` de la ligne — `"simulation_dry_run"` vs `"exécuté"` — qui
+porte cette information).
 
-1. **Solde** — `broker.get_account_balance(token, account_id)`
-   (`METAAPI_TRADE_TOKEN`/`METAAPI_TRADE_ACCOUNT_ID`, déjà dans
-   `.env`). En cas d'échec (ex. `504` déjà observés en production),
-   capturer l'exception et renvoyer `"balance": null, "balance_error":
-   "<message assaini>"` plutôt que de faire échouer toute la réponse.
-2. **Positions** — `broker.get_open_positions(token, account_id)`,
-   transformées en dicts publics-mais-privés (le point d'accès est
-   protégé, donc les chiffres bruts sont acceptables ici,
-   contrairement à `portfolio_sync_mt5.to_public_positions` qui les
-   masque pour un fichier public) : `{symbol, direction ("achat"/
-   "vente", même traduction que to_public_positions), volume,
-   open_price, current_price, profit, stop_loss, take_profit}`. Même
-   traitement d'erreur indépendant que le solde.
-3. **Bougies + décisions récentes** — lit `latest_candles.json` (voir
-   ci-dessus ; absent ou périmé de plus de
-   `SCALP_STALE_THRESHOLD_MS`-équivalent → `"candles": null`) et les
-   `N=50` dernières lignes non triviales de `decisions_log.jsonl`
-   (`action` dans `{"simulation_dry_run", "exécuté"}` — les
-   `"aucune"`/`"erreur"`/`"ignore"` sont exclues, elles n'ont pas
-   d'entrée/sortie à marquer). Pour chaque ligne retenue, seuls les
-   `steps` de type `"ouverture_simulee"` sont utilisés pour les
-   marqueurs (entrée/sortie) — `bot.decide_and_act` n'émet que
-   `"ouverture_simulee"`/`"clôture_simulee"` comme types de step,
-   **y compris une fois en mode réel** (nom hérité du Plan A, non
-   renommé en Plan B ; ne pas s'y fier pour distinguer simulé/réel,
-   c'est le champ `action` de la ligne — `"simulation_dry_run"` vs
-   `"exécuté"` — qui porte cette information). Fichier absent ou
-   illisible → liste vide, jamais d'exception (même convention que
-   `notify.read_todays_decisions`).
+Le contenu de `latest_positions.json` est traduit à la lecture avec la
+même correspondance que `portfolio_sync_mt5.to_public_positions`
+(`POSITION_TYPE_BUY`/`POSITION_TYPE_SELL` → `"achat"`/`"vente"`), mais
+**sans** masquer les chiffres cette fois (le point d'accès est
+protégé, contrairement au fichier public que lit cette fonction) :
+`{symbol, direction, volume, open_price, current_price, profit,
+stop_loss, take_profit}`.
 
-Réponse `200 OK` (toujours 200 si le jeton est valide — les pannes
-partielles sont dans le corps, pas dans le code HTTP, pour que le
-frontend affiche ce qui est disponible plutôt que de tout perdre sur
-une erreur MetaApi) :
+Réponse `200 OK` (toujours 200 si le jeton est valide — un cache
+absent/périmé se traduit par `null`/liste vide dans le corps, jamais
+par un code d'erreur, pour que le frontend affiche ce qui est
+disponible plutôt que de tout perdre) :
 
 ```json
 {
   "balance": 9140.10,
-  "balance_error": null,
+  "balance_fetched_at": "2026-09-11T16:40:05Z",
   "positions": [
     {"symbol": "XAUUSD", "direction": "vente", "volume": 2.0,
      "open_price": 4316.28, "current_price": 4316.49,
      "profit": -36.18, "stop_loss": null, "take_profit": null}
   ],
-  "positions_error": null,
+  "positions_fetched_at": "2026-09-11T16:40:06Z",
   "candles": [{"time": "2026-09-11 16:40:00", "open": 3651.2, "high": 3652.0,
                "low": 3650.8, "close": 3651.5}, ...],
-  "candles_fetched_at": "2026-09-11T16:40:43Z",
+  "candles_fetched_at": "2026-09-11T16:40:04Z",
   "recent_decisions": [
     {"timestamp": "2026-09-11T14:22:03Z", "type": "ouverture_simulee",
      "symbol": "XAUUSD", "direction": "achat", "entry": 3648.2,
@@ -197,9 +208,9 @@ une erreur MetaApi) :
   Si `candles` est `null` (cache pas encore écrit, ex. juste après un
   redémarrage du bot), afficher un état vide explicite plutôt qu'un
   graphique cassé.
-- États d'erreur indépendants par section (solde/positions/graphique)
-  — une panne MetaApi n'empêche pas d'afficher l'historique des
-  décisions déjà connu, et inversement.
+- États vides indépendants par section (solde/positions/graphique) —
+  un cache absent ou périmé sur l'une des trois n'empêche pas
+  d'afficher les deux autres ni l'historique des décisions.
 
 ## Sécurité
 
@@ -212,21 +223,34 @@ une erreur MetaApi) :
 - CORS : `allow_origins`/`allow_methods`/`allow_headers` déjà en place
   (`GET`, `POST`, `X-Bot-Token`) couvrent `/dashboard` sans
   modification.
-- `/dashboard` reste **strictement en lecture** — même garantie
-  structurelle que le reste de l'API HTTPS (voir spec Plan B) : aucun
-  chemin de code vers `broker.place_market_order`/`close_position`.
+- `/dashboard` reste **strictement en lecture** — garantie renforcée
+  par rapport au reste de l'API HTTPS (voir spec Plan B) : `api.py`
+  n'importe toujours pas `gold_bot.broker` du tout (ni pour lire ni
+  pour écrire), donc aucun chemin de code vers
+  `broker.place_market_order`/`close_position` **ni même vers un appel
+  MetaApi en lecture** — `/dashboard` ne lit que des fichiers locaux
+  écrits par `loop.py`. Le test existant
+  `test_broker_module_is_never_referenced_in_api_source` doit rester
+  vert sans modification ; c'est un signal fort si l'implémentation
+  dévie de ce mécanisme.
 
 ## Tests
 
-- `gold_bot/loop.py` : le cache `latest_candles.json` est écrit après
-  un cycle réussi, laissé intact après un cycle en échec (mêmes
-  conventions de test que l'existant : `tmp_path`, monkeypatch).
+- `gold_bot/loop.py` : chacun des trois caches
+  (`latest_candles.json`/`latest_balance.json`/`latest_positions.json`)
+  est écrit après le succès de son propre appel, indépendamment des
+  deux autres — en particulier, un échec de `get_symbol_specification`
+  (le point de défaillance déjà observé en production) laisse les
+  trois caches déjà écrits ce cycle-là intacts, il ne les efface pas
+  rétroactivement (mêmes conventions de test que l'existant :
+  `tmp_path`, monkeypatch).
 - `gold_bot/api.py` : `/dashboard` sans jeton → `401` ; avec jeton
-  valide et les trois sources en succès → `200` avec le corps complet ;
-  avec une ou plusieurs sources en échec → `200` avec les champs
-  `*_error` renseignés et les autres sections intactes (pannes
-  indépendantes, testées séparément) ; cache de bougies absent →
-  `"candles": null` sans exception.
+  valide et les trois caches présents → `200` avec le corps complet ;
+  avec un ou plusieurs caches absents/illisibles → `200` avec les
+  champs correspondants à `null`/liste vide et les autres sections
+  intactes (testé pour chaque cache indépendamment) ; le test
+  `test_broker_module_is_never_referenced_in_api_source` existant doit
+  rester vert sans modification.
 - Frontend : pas de suite Node existante pour `docs/index.html` au-delà
   de `docs/*.test.js` (le fichier HTML lui-même n'a pas de tests
   automatisés aujourd'hui) — vérification manuelle dans un navigateur

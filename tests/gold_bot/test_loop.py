@@ -212,3 +212,106 @@ def test_circuit_breaker_uses_separate_persist_path_from_kill_switch_state():
     deux fichiers ne puisse jamais écraser silencieusement une
     modification en cours sur l'autre."""
     assert loop.CIRCUIT_BREAKER_STATE_PATH != loop.state.STATE_PATH
+
+
+def test_run_cycle_caches_candles_after_successful_fetch(monkeypatch, tmp_path):
+    monkeypatch.setattr(loop.state, "load_state", lambda *a, **k: {"kill_switch": False, "dry_run": True})
+    monkeypatch.setattr(loop, "DECISIONS_LOG_PATH", str(tmp_path / "decisions_log.jsonl"))
+    monkeypatch.setattr(loop, "LATEST_CANDLES_PATH", str(tmp_path / "latest_candles.json"))
+    monkeypatch.setattr(loop, "LATEST_BALANCE_PATH", str(tmp_path / "latest_balance.json"))
+    monkeypatch.setattr(loop, "LATEST_POSITIONS_PATH", str(tmp_path / "latest_positions.json"))
+    fake_candles = [{"time": "2026-09-11 16:40:00", "close": 3651.5}]
+    monkeypatch.setattr(loop.confluence, "fetch_gold_candles", lambda api_key: fake_candles)
+    monkeypatch.setattr(loop.broker, "get_account_balance", lambda *a, **k: 10000.0)
+    monkeypatch.setattr(loop.bot, "reconcile_positions", lambda *a, **k: [])
+    monkeypatch.setattr(loop.broker, "get_symbol_specification", lambda *a, **k: {"contractSize": 100})
+    monkeypatch.setattr(loop.bot, "decide_and_act", lambda *a, **k: {"action": "aucune", "reason": "signal neutre"})
+
+    loop.run_cycle("tok", "acc", "td-key", loop.risk.CircuitBreaker())
+
+    cached = json.loads((tmp_path / "latest_candles.json").read_text(encoding="utf-8"))
+    assert cached["candles"] == fake_candles
+    assert "fetched_at" in cached
+
+
+def test_run_cycle_caches_balance_after_successful_fetch(monkeypatch, tmp_path):
+    monkeypatch.setattr(loop.state, "load_state", lambda *a, **k: {"kill_switch": False, "dry_run": True})
+    monkeypatch.setattr(loop, "DECISIONS_LOG_PATH", str(tmp_path / "decisions_log.jsonl"))
+    monkeypatch.setattr(loop, "LATEST_CANDLES_PATH", str(tmp_path / "latest_candles.json"))
+    monkeypatch.setattr(loop, "LATEST_BALANCE_PATH", str(tmp_path / "latest_balance.json"))
+    monkeypatch.setattr(loop, "LATEST_POSITIONS_PATH", str(tmp_path / "latest_positions.json"))
+    monkeypatch.setattr(loop.confluence, "fetch_gold_candles", lambda api_key: [{"close": 2100}])
+    monkeypatch.setattr(loop.broker, "get_account_balance", lambda *a, **k: 9140.10)
+    monkeypatch.setattr(loop.bot, "reconcile_positions", lambda *a, **k: [])
+    monkeypatch.setattr(loop.broker, "get_symbol_specification", lambda *a, **k: {"contractSize": 100})
+    monkeypatch.setattr(loop.bot, "decide_and_act", lambda *a, **k: {"action": "aucune", "reason": "signal neutre"})
+
+    loop.run_cycle("tok", "acc", "td-key", loop.risk.CircuitBreaker())
+
+    cached = json.loads((tmp_path / "latest_balance.json").read_text(encoding="utf-8"))
+    assert cached["balance"] == 9140.10
+    assert "fetched_at" in cached
+
+
+def test_run_cycle_caches_positions_after_successful_fetch(monkeypatch, tmp_path):
+    monkeypatch.setattr(loop.state, "load_state", lambda *a, **k: {"kill_switch": False, "dry_run": True})
+    monkeypatch.setattr(loop, "DECISIONS_LOG_PATH", str(tmp_path / "decisions_log.jsonl"))
+    monkeypatch.setattr(loop, "LATEST_CANDLES_PATH", str(tmp_path / "latest_candles.json"))
+    monkeypatch.setattr(loop, "LATEST_BALANCE_PATH", str(tmp_path / "latest_balance.json"))
+    monkeypatch.setattr(loop, "LATEST_POSITIONS_PATH", str(tmp_path / "latest_positions.json"))
+    fake_positions = [{"symbol": "XAUUSD", "type": "POSITION_TYPE_SELL", "volume": 2.0,
+                        "openPrice": 4316.28, "currentPrice": 4316.49, "profit": -36.18}]
+    monkeypatch.setattr(loop.confluence, "fetch_gold_candles", lambda api_key: [{"close": 2100}])
+    monkeypatch.setattr(loop.broker, "get_account_balance", lambda *a, **k: 10000.0)
+    monkeypatch.setattr(loop.bot, "reconcile_positions", lambda *a, **k: fake_positions)
+    monkeypatch.setattr(loop.broker, "get_symbol_specification", lambda *a, **k: {"contractSize": 100})
+    monkeypatch.setattr(loop.bot, "decide_and_act", lambda *a, **k: {"action": "aucune", "reason": "signal neutre"})
+
+    loop.run_cycle("tok", "acc", "td-key", loop.risk.CircuitBreaker())
+
+    cached = json.loads((tmp_path / "latest_positions.json").read_text(encoding="utf-8"))
+    assert cached["positions"] == fake_positions
+    assert "fetched_at" in cached
+
+
+def test_run_cycle_leaves_earlier_caches_intact_when_a_later_call_fails(monkeypatch, tmp_path):
+    """Le 504 déjà observé en production tombe sur get_symbol_specification,
+    APRÈS candles/balance/positions dans run_cycle — ces trois caches
+    doivent rester écrits même quand ce dernier appel échoue."""
+    monkeypatch.setattr(loop.state, "load_state", lambda *a, **k: {"kill_switch": False, "dry_run": True})
+    monkeypatch.setattr(loop, "DECISIONS_LOG_PATH", str(tmp_path / "decisions_log.jsonl"))
+    monkeypatch.setattr(loop, "LATEST_CANDLES_PATH", str(tmp_path / "latest_candles.json"))
+    monkeypatch.setattr(loop, "LATEST_BALANCE_PATH", str(tmp_path / "latest_balance.json"))
+    monkeypatch.setattr(loop, "LATEST_POSITIONS_PATH", str(tmp_path / "latest_positions.json"))
+    monkeypatch.setattr(loop.confluence, "fetch_gold_candles", lambda api_key: [{"close": 2100}])
+    monkeypatch.setattr(loop.broker, "get_account_balance", lambda *a, **k: 10000.0)
+    monkeypatch.setattr(loop.bot, "reconcile_positions", lambda *a, **k: [])
+    monkeypatch.setattr(
+        loop.broker, "get_symbol_specification",
+        lambda *a, **k: (_ for _ in ()).throw(RuntimeError("504 Server Error: Gateway Timeout")),
+    )
+
+    result = loop.run_cycle("tok", "acc", "td-key", loop.risk.CircuitBreaker())
+
+    assert result["action"] == "erreur"
+    assert (tmp_path / "latest_candles.json").exists()
+    assert (tmp_path / "latest_balance.json").exists()
+    assert (tmp_path / "latest_positions.json").exists()
+
+
+def test_run_cycle_does_not_write_candles_cache_when_fetch_itself_fails(monkeypatch, tmp_path):
+    monkeypatch.setattr(loop.state, "load_state", lambda *a, **k: {"kill_switch": False, "dry_run": True})
+    monkeypatch.setattr(loop, "DECISIONS_LOG_PATH", str(tmp_path / "decisions_log.jsonl"))
+    monkeypatch.setattr(loop, "LATEST_CANDLES_PATH", str(tmp_path / "latest_candles.json"))
+    monkeypatch.setattr(loop, "LATEST_BALANCE_PATH", str(tmp_path / "latest_balance.json"))
+    monkeypatch.setattr(loop, "LATEST_POSITIONS_PATH", str(tmp_path / "latest_positions.json"))
+    monkeypatch.setattr(
+        loop.confluence, "fetch_gold_candles",
+        lambda api_key: (_ for _ in ()).throw(RuntimeError("Twelve Data indisponible")),
+    )
+
+    loop.run_cycle("tok", "acc", "td-key", loop.risk.CircuitBreaker())
+
+    assert not (tmp_path / "latest_candles.json").exists()
+    assert not (tmp_path / "latest_balance.json").exists()
+    assert not (tmp_path / "latest_positions.json").exists()

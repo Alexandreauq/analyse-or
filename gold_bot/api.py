@@ -110,9 +110,9 @@ def _read_recent_decisions(path: str, limit: int = RECENT_DECISIONS_LIMIT) -> li
                 "type": step.get("type"),
                 "symbol": step.get("symbol"),
                 "direction": step.get("direction"),
-                "entry": step.get("entry"),
-                "stop_loss": step.get("stop_loss"),
-                "take_profit": step.get("take_profit"),
+                "entry": _sanitize_number(step.get("entry")),
+                "stop_loss": _sanitize_number(step.get("stop_loss")),
+                "take_profit": _sanitize_number(step.get("take_profit")),
             })
     return decisions[-limit:]
 
@@ -160,12 +160,12 @@ def dashboard(x_bot_token: str | None = Header(default=None)):
         {
             "symbol": p.get("symbol"),
             "direction": _position_direction(p.get("type")),
-            "volume": p.get("volume"),
-            "open_price": p.get("openPrice"),
-            "current_price": p.get("currentPrice"),
-            "profit": p.get("profit"),
-            "stop_loss": p.get("stopLoss"),
-            "take_profit": p.get("takeProfit"),
+            "volume": _sanitize_number(p.get("volume")),
+            "open_price": _sanitize_number(p.get("openPrice")),
+            "current_price": _sanitize_number(p.get("currentPrice")),
+            "profit": _sanitize_number(p.get("profit")),
+            "stop_loss": _sanitize_number(p.get("stopLoss")),
+            "take_profit": _sanitize_number(p.get("takeProfit")),
         }
         for p in raw_positions
         if isinstance(p, dict)
@@ -177,7 +177,7 @@ def dashboard(x_bot_token: str | None = Header(default=None)):
         candles = [c for c in (_sanitize_candle(c) for c in raw_candles) if c is not None]
 
     return {
-        "balance": balance_cache.get("balance"),
+        "balance": _sanitize_number(balance_cache.get("balance")),
         "balance_fetched_at": balance_cache.get("fetched_at"),
         "positions": positions,
         "positions_fetched_at": positions_cache.get("fetched_at"),

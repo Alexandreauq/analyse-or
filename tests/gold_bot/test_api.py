@@ -370,3 +370,57 @@ def test_dashboard_skips_non_dict_position_entries(client, monkeypatch, tmp_path
     assert len(positions) == 1
     assert positions[0]["symbol"] == "XAUUSD"
     assert positions[0]["direction"] == "achat"
+
+
+def test_dashboard_sanitizes_non_finite_balance(client, monkeypatch, tmp_path):
+    # Même risque que pour les bougies (voir
+    # test_dashboard_sanitizes_non_finite_candle_fields_without_dropping_the_candle)
+    # mais côté solde : un NaN écrit un jour dans latest_balance.json
+    # ne doit jamais faire échouer toute la réponse /dashboard.
+    _seed_dashboard_caches(monkeypatch, tmp_path, balance={
+        "balance": float("nan"), "fetched_at": "2026-09-11T16:40:05Z",
+    })
+
+    response = client.get("/dashboard", headers={"X-Bot-Token": "secret-token"})
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["balance"] is None
+    assert body["balance_fetched_at"] == "2026-09-11T16:40:05Z"
+
+
+def test_dashboard_sanitizes_non_finite_decision_fields(client, monkeypatch, tmp_path):
+    _seed_dashboard_caches(monkeypatch, tmp_path, decisions_lines=[
+        {"action": "simulation_dry_run", "timestamp": "2026-09-11T14:22:03Z",
+         "steps": [{"type": "ouverture_simulee", "symbol": "XAUUSD", "direction": "achat",
+                    "entry": float("nan"), "stop_loss": 3644.0, "take_profit": 3656.0}]},
+    ])
+
+    response = client.get("/dashboard", headers={"X-Bot-Token": "secret-token"})
+
+    assert response.status_code == 200
+    decisions = response.json()["recent_decisions"]
+    assert len(decisions) == 1
+    assert decisions[0]["entry"] is None
+    assert decisions[0]["stop_loss"] == 3644.0
+    assert decisions[0]["take_profit"] == 3656.0
+
+
+def test_dashboard_sanitizes_non_finite_position_fields(client, monkeypatch, tmp_path):
+    # Les positions viennent du même aller-retour JSON que le solde et
+    # les bougies (cache écrit par loop.py depuis une réponse MetaApi
+    # non validée) — même risque, même traitement.
+    _seed_dashboard_caches(monkeypatch, tmp_path, positions={
+        "positions": [{"symbol": "XAUUSD", "type": "POSITION_TYPE_SELL", "volume": 2.0,
+                        "openPrice": 4316.28, "currentPrice": float("nan"), "profit": -36.18}],
+        "fetched_at": "2026-09-11T16:40:06Z",
+    })
+
+    response = client.get("/dashboard", headers={"X-Bot-Token": "secret-token"})
+
+    assert response.status_code == 200
+    positions = response.json()["positions"]
+    assert len(positions) == 1
+    assert positions[0]["current_price"] is None
+    assert positions[0]["open_price"] == 4316.28
+    assert positions[0]["profit"] == -36.18

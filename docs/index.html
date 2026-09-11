@@ -781,10 +781,6 @@
     <svg class="nav-icon"><use href="#icon-portefeuille"/></svg>
     <span>Portefeuille</span>
   </button>
-  <button class="nav-item" data-route="bot">
-    <svg class="nav-icon"><use href="#icon-bot"/></svg>
-    <span>Bot</span>
-  </button>
   <button class="theme-toggle" id="themeToggleDesktop" type="button" aria-label="Basculer mode jour/nuit">
     <svg class="nav-icon" id="themeToggleDesktopIcon"><use href="#icon-sun"/></svg>
   </button>
@@ -812,10 +808,6 @@
   <button class="nav-item" data-route="portefeuille">
     <svg class="nav-icon"><use href="#icon-portefeuille"/></svg>
     <span>Portefeuille</span>
-  </button>
-  <button class="nav-item" data-route="bot">
-    <svg class="nav-icon"><use href="#icon-bot"/></svg>
-    <span>Bot</span>
   </button>
   <button class="nav-item" id="themeToggleDrawer" type="button">
     <svg class="nav-icon" id="themeToggleDrawerIcon"><use href="#icon-sun"/></svg>
@@ -848,11 +840,6 @@
       <svg class="module-card-icon"><use href="#icon-portefeuille"/></svg>
       <span class="module-card-name">Portefeuille</span>
       <span class="module-card-desc">Suivi de tes positions, P&amp;L, opportunités.</span>
-    </a>
-    <a href="#bot" class="module-card">
-      <svg class="module-card-icon"><use href="#icon-bot"/></svg>
-      <span class="module-card-name">Bot</span>
-      <span class="module-card-desc">Solde, positions et cours du bot de trading or.</span>
     </a>
   </div>
 </div>
@@ -942,6 +929,8 @@
     <div class="eyebrow">Trading automatique</div>
     <h1>Bot</h1>
   </header>
+
+  <div id="botStatusBlock"></div>
 
   <main id="botContent">
     <div class="skeleton">
@@ -1102,12 +1091,11 @@ function renderPortfolioScreen() {
     <h2>Tes positions</h2>
     ${portfolioPositionsHtml(positions, companiesByTicker, currencyByIndex)}
     ${realPortfolioHtml()}
-    ${botStatusHtml()}
+    ${botLinkHtml()}
     ${portfolioOpportunitiesHtml(opportunities)}
   `;
   wirePortfolioForm();
   wirePortfolioPositionActions(companiesByTicker);
-  wireBotControls();
 }
 
 function portfolioTotalsHtml(totals) {
@@ -1267,7 +1255,7 @@ function getBotToken() {
   return token;
 }
 
-function botStatusHtml() {
+function botLinkHtml() {
   if (!botStatusData) {
     return `
       <h2>Bot Or</h2>
@@ -1275,9 +1263,27 @@ function botStatusHtml() {
   }
   const label = botStatusData.kill_switch ? 'Coupé' : (botStatusData.dry_run ? 'Simulation' : 'Actif');
   const color = botStatusData.kill_switch ? 'var(--rust)' : 'var(--gold)';
-  const actionLabel = botStatusData.kill_switch ? 'Relancer' : 'Arrêter';
   return `
     <h2>Bot Or</h2>
+    <div class="portfolio-position-row">
+      <div class="portfolio-position-main">
+        <span class="company-name" style="color:${color}">${label}</span>
+        <span class="hero-sub">${botStatusData.dry_run ? 'Mode simulation — aucun ordre réel' : 'Mode réel'}</span>
+      </div>
+      <div class="portfolio-position-actions">
+        <a href="#bot" class="toggle-btn">Voir le Bot →</a>
+      </div>
+    </div>`;
+}
+
+function botKillSwitchHtml() {
+  if (!botStatusData) {
+    return `<div class="empty">Statut du bot indisponible.</div>`;
+  }
+  const label = botStatusData.kill_switch ? 'Coupé' : (botStatusData.dry_run ? 'Simulation' : 'Actif');
+  const color = botStatusData.kill_switch ? 'var(--rust)' : 'var(--gold)';
+  const actionLabel = botStatusData.kill_switch ? 'Relancer' : 'Arrêter';
+  return `
     <div class="portfolio-position-row">
       <div class="portfolio-position-main">
         <span class="company-name" style="color:${color}">${label}</span>
@@ -1289,7 +1295,7 @@ function botStatusHtml() {
     </div>`;
 }
 
-function wireBotControls() {
+function wireBotKillSwitch() {
   const btn = document.getElementById('botKillBtn');
   if (!btn || !botStatusData) return;
   btn.addEventListener('click', async () => {
@@ -1306,11 +1312,18 @@ function wireBotControls() {
         throw new Error('échec de la requête');
       }
       await loadBotStatus();
-      renderPortfolioScreen();
+      renderBotStatusBlock();
     } catch (e) {
       alert('Action impossible : ' + e.message);
     }
   });
+}
+
+function renderBotStatusBlock() {
+  const el = document.getElementById('botStatusBlock');
+  if (!el) return;
+  el.innerHTML = botKillSwitchHtml();
+  wireBotKillSwitch();
 }
 
 function buildBotChartSvg(candles, recentDecisions, positions) {
@@ -1559,6 +1572,10 @@ function wireBotDashboardRefresh() {
 }
 
 function loadBotScreen() {
+  // Indépendant du tableau de bord (protégé par jeton) : le statut et
+  // l'interrupteur d'urgence viennent de /status, public, pour rester
+  // visibles même avant que l'utilisateur ait fourni son jeton.
+  loadBotStatus().then(renderBotStatusBlock);
   fetchBotDashboard();
 }
 

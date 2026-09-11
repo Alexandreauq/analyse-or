@@ -69,7 +69,7 @@ def _log_decision(entry: dict, path: str = DECISIONS_LOG_PATH) -> None:
     résumé quotidien (gold_bot.notify). N'interrompt jamais le cycle si
     l'écriture échoue."""
     record = dict(entry)
-    record["timestamp"] = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    record["timestamp"] = _now_iso()
     try:
         with open(path, "a", encoding="utf-8") as fh:
             fh.write(json.dumps(record, ensure_ascii=False) + "\n")
@@ -79,6 +79,17 @@ def _log_decision(entry: dict, path: str = DECISIONS_LOG_PATH) -> None:
 
 def _now_iso() -> str:
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def _save_cache(data: dict, path: str) -> None:
+    """Ne doit jamais interrompre le cycle si l'écriture du cache
+    échoue (même contrat que _log_decision) — une panne disque sur
+    ce cache, purement pour le tableau de bord, ne doit jamais
+    empêcher la décision/exécution réelle de continuer."""
+    try:
+        state.save_state(data, path)
+    except Exception as e:
+        print(f"Erreur écriture cache ({path}) : {e}")
 
 
 def run_cycle(token: str, account_id: str, twelve_data_api_key: str,
@@ -98,11 +109,11 @@ def run_cycle(token: str, account_id: str, twelve_data_api_key: str,
 
     try:
         candles = confluence.fetch_gold_candles(twelve_data_api_key)
-        state.save_state({"candles": candles, "fetched_at": _now_iso()}, LATEST_CANDLES_PATH)
+        _save_cache({"candles": candles, "fetched_at": _now_iso()}, LATEST_CANDLES_PATH)
         balance = broker.get_account_balance(token, account_id, region)
-        state.save_state({"balance": balance, "fetched_at": _now_iso()}, LATEST_BALANCE_PATH)
+        _save_cache({"balance": balance, "fetched_at": _now_iso()}, LATEST_BALANCE_PATH)
         open_positions = bot.reconcile_positions(token, account_id, region)
-        state.save_state({"positions": open_positions, "fetched_at": _now_iso()}, LATEST_POSITIONS_PATH)
+        _save_cache({"positions": open_positions, "fetched_at": _now_iso()}, LATEST_POSITIONS_PATH)
         spec = broker.get_symbol_specification(token, account_id, symbol, region)
         contract_size = spec["contractSize"]
         decision = bot.decide_and_act(

@@ -1318,8 +1318,25 @@ function buildBotChartSvg(candles, recentDecisions) {
     return '<div class="empty">Graphique indisponible pour l\'instant.</div>';
   }
   const width = 600, height = 220, padding = 24;
-  const closes = candles.map(c => c.close).filter(v => v != null);
-  const decisionPrices = (recentDecisions || []).map(d => d.entry).filter(v => v != null);
+
+  const candleTimes = candles.map(c => new Date(c.time.replace(' ', 'T') + 'Z').getTime());
+  const rangeStart = Math.min(candleTimes[0], candleTimes[candleTimes.length - 1]);
+  const rangeEnd = Math.max(candleTimes[0], candleTimes[candleTimes.length - 1]);
+  // Seules les décisions dont l'horodatage tombe dans la plage de
+  // bougies affichée participent au graphique (échelle des prix et
+  // marqueurs) — une décision plus ancienne fausserait l'échelle et
+  // son marqueur s'écraserait sur la bougie la plus à gauche.
+  const visibleDecisions = (recentDecisions || []).filter(d => {
+    if (!d.timestamp) return false;
+    const t = new Date(d.timestamp).getTime();
+    return Number.isFinite(t) && t >= rangeStart && t <= rangeEnd;
+  });
+
+  const validClosePoints = candles
+    .map((c, i) => ({ c, i }))
+    .filter(({ c }) => c.close != null);
+  const closes = validClosePoints.map(({ c }) => c.close);
+  const decisionPrices = visibleDecisions.map(d => d.entry).filter(v => v != null);
   const allPrices = closes.concat(decisionPrices);
   const min = Math.min(...allPrices);
   const max = Math.max(...allPrices);
@@ -1328,11 +1345,10 @@ function buildBotChartSvg(candles, recentDecisions) {
   const xAt = i => padding + (i / (candles.length - 1)) * (width - 2 * padding);
   const yAt = price => height - padding - ((price - min) / range) * (height - 2 * padding);
 
-  const points = candles.map((c, i) => `${xAt(i)},${yAt(c.close)}`).join(' ');
+  const points = validClosePoints.map(({ c, i }) => `${xAt(i)},${yAt(c.close)}`).join(' ');
 
-  const candleTimes = candles.map(c => new Date(c.time.replace(' ', 'T') + 'Z').getTime());
-  const markers = (recentDecisions || [])
-    .filter(d => d.entry != null && d.timestamp)
+  const markers = visibleDecisions
+    .filter(d => d.entry != null)
     .map(d => {
       const t = new Date(d.timestamp).getTime();
       let closestIdx = 0, closestDiff = Infinity;
@@ -1346,38 +1362,53 @@ function buildBotChartSvg(candles, recentDecisions) {
     .join('');
 
   return `
-    <svg viewBox="0 0 ${width} ${height}" style="width:100%;height:auto;display:block;" role="img" aria-label="Cours XAUUSD avec points d'entrée/sortie du bot">
+    <svg viewBox="0 0 ${width} ${height}" style="width:100%;height:auto;display:block;" role="img" aria-label="Cours XAUUSD avec points d'entrée du bot">
       <polyline points="${points}" fill="none" stroke="var(--muted)" stroke-width="1.5"/>
       ${markers}
     </svg>`;
+}
+
+function formatFetchedAgo(iso) {
+  if (!iso) return null;
+  const ms = Date.now() - new Date(iso).getTime();
+  if (!Number.isFinite(ms) || ms < 0) return null;
+  const min = Math.round(ms / 60000);
+  return min < 1 ? 'à jour' : `il y a ${min} min`;
 }
 
 function botBalanceHtml(data) {
   if (data.balance == null) {
     return `<div class="empty">Solde indisponible pour l'instant.</div>`;
   }
+  const freshness = formatFetchedAgo(data.balance_fetched_at);
   return `
     <div class="portfolio-position-row">
       <div class="portfolio-position-main">
         <span class="company-name">${formatPrice(data.balance)}</span>
         <span class="hero-sub">Solde disponible</span>
+        ${freshness ? `<span class="hero-sub">${freshness}</span>` : ''}
       </div>
     </div>`;
 }
 
 function botPositionsHtml(data) {
-  if (!data.positions || data.positions.length === 0) {
+  if (data.positions_fetched_at == null) {
+    return `<div class="empty">Positions indisponibles pour l'instant.</div>`;
+  }
+  const positions = data.positions || [];
+  if (positions.length === 0) {
     return `<div class="empty">Aucune position ouverte.</div>`;
   }
-  return data.positions.map(p => {
-    const color = p.direction === 'achat' ? 'var(--gold)' : 'var(--rust)';
+  return positions.map(p => {
+    const label = p.direction === 'achat' ? 'Achat' : p.direction === 'vente' ? 'Vente' : '—';
+    const color = p.direction === 'achat' ? 'var(--gold)' : p.direction === 'vente' ? 'var(--rust)' : 'var(--muted)';
     const profitColor = (p.profit ?? 0) >= 0 ? 'var(--gold)' : 'var(--rust)';
-    const profitSign = (p.profit ?? 0) >= 0 ? '+' : '';
+    const profitSign = p.profit != null && p.profit >= 0 ? '+' : '';
     return `
     <div class="portfolio-position-row">
       <div class="portfolio-position-main">
-        <span class="company-name">${p.symbol}</span>
-        <span class="hero-sub" style="color:${color}">${p.direction === 'achat' ? 'Achat' : 'Vente'} · ${p.volume} lot(s)</span>
+        <span class="company-name">${escHtml(p.symbol)}</span>
+        <span class="hero-sub" style="color:${color}">${label} · ${p.volume} lot(s)</span>
       </div>
       <div class="portfolio-position-pnl">
         <span class="price-value">${formatPriceUsd(p.current_price)}</span>
@@ -1388,10 +1419,13 @@ function botPositionsHtml(data) {
 }
 
 function botChartHtml(data) {
+  const chartHtml = buildBotChartSvg(data.candles, data.recent_decisions);
   if (!data.candles || data.candles.length < 2) {
-    return `<div class="empty">Graphique indisponible pour l'instant.</div>`;
+    return chartHtml;
   }
-  return buildBotChartSvg(data.candles, data.recent_decisions);
+  const freshness = formatFetchedAgo(data.candles_fetched_at);
+  const freshnessHtml = freshness ? `<p class="hero-sub">${freshness}</p>` : '';
+  return `${freshnessHtml}${chartHtml}`;
 }
 
 function renderBotDashboard(data) {

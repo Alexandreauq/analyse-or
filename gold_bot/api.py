@@ -12,6 +12,7 @@
 # docs/superpowers/specs/2026-09-10-bot-trading-or-design.md.
 import hmac
 import json
+import math
 import os
 
 from fastapi import FastAPI, Header, HTTPException
@@ -96,30 +97,36 @@ def _read_recent_decisions(path: str, limit: int = RECENT_DECISIONS_LIMIT) -> li
             entry = json.loads(line)
         except json.JSONDecodeError:
             continue
-        try:
-            if not isinstance(entry, dict) or entry.get("action") not in ("simulation_dry_run", "exécuté"):
-                continue
-            steps = entry.get("steps") or []
-        except Exception:
+        if not isinstance(entry, dict) or entry.get("action") not in ("simulation_dry_run", "exécuté"):
             continue
+        steps = entry.get("steps") or []
         if not isinstance(steps, list):
             continue
         for step in steps:
-            try:
-                if not isinstance(step, dict) or step.get("type") != "ouverture_simulee":
-                    continue
-                decisions.append({
-                    "timestamp": entry.get("timestamp"),
-                    "type": step.get("type"),
-                    "symbol": step.get("symbol"),
-                    "direction": step.get("direction"),
-                    "entry": step.get("entry"),
-                    "stop_loss": step.get("stop_loss"),
-                    "take_profit": step.get("take_profit"),
-                })
-            except Exception:
+            if not isinstance(step, dict) or step.get("type") != "ouverture_simulee":
                 continue
+            decisions.append({
+                "timestamp": entry.get("timestamp"),
+                "type": step.get("type"),
+                "symbol": step.get("symbol"),
+                "direction": step.get("direction"),
+                "entry": step.get("entry"),
+                "stop_loss": step.get("stop_loss"),
+                "take_profit": step.get("take_profit"),
+            })
     return decisions[-limit:]
+
+
+def _sanitize_number(v):
+    if isinstance(v, float) and not math.isfinite(v):
+        return None
+    return v
+
+
+def _sanitize_candle(c):
+    if not isinstance(c, dict):
+        return None
+    return {k: _sanitize_number(v) for k, v in c.items()}
 
 
 @app.get("/status")
@@ -164,12 +171,17 @@ def dashboard(x_bot_token: str | None = Header(default=None)):
         if isinstance(p, dict)
     ]
 
+    raw_candles = candles_cache.get("candles")
+    candles = None
+    if isinstance(raw_candles, list):
+        candles = [c for c in (_sanitize_candle(c) for c in raw_candles) if c is not None]
+
     return {
         "balance": balance_cache.get("balance"),
         "balance_fetched_at": balance_cache.get("fetched_at"),
         "positions": positions,
         "positions_fetched_at": positions_cache.get("fetched_at"),
-        "candles": candles_cache.get("candles"),
+        "candles": candles,
         "candles_fetched_at": candles_cache.get("fetched_at"),
         "recent_decisions": _read_recent_decisions(DECISIONS_LOG_PATH),
     }

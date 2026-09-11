@@ -24,6 +24,9 @@ DECISIONS_LOG_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "d
 # entre deux processus sur le même fichier ne puisse jamais écraser
 # silencieusement un changement de l'interrupteur d'urgence.
 CIRCUIT_BREAKER_STATE_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "circuit_breaker_state.json")
+LATEST_CANDLES_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "latest_candles.json")
+LATEST_BALANCE_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "latest_balance.json")
+LATEST_POSITIONS_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "latest_positions.json")
 
 
 def execute_steps(token: str, account_id: str, steps: list[dict],
@@ -74,6 +77,10 @@ def _log_decision(entry: dict, path: str = DECISIONS_LOG_PATH) -> None:
         print(f"Erreur journalisation décision : {e}")
 
 
+def _now_iso() -> str:
+    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
 def run_cycle(token: str, account_id: str, twelve_data_api_key: str,
               circuit_breaker: "risk.CircuitBreaker", region: str = broker.DEFAULT_MT5_REGION,
               symbol: str = SYMBOL) -> dict:
@@ -91,8 +98,11 @@ def run_cycle(token: str, account_id: str, twelve_data_api_key: str,
 
     try:
         candles = confluence.fetch_gold_candles(twelve_data_api_key)
+        state.save_state({"candles": candles, "fetched_at": _now_iso()}, LATEST_CANDLES_PATH)
         balance = broker.get_account_balance(token, account_id, region)
+        state.save_state({"balance": balance, "fetched_at": _now_iso()}, LATEST_BALANCE_PATH)
         open_positions = bot.reconcile_positions(token, account_id, region)
+        state.save_state({"positions": open_positions, "fetched_at": _now_iso()}, LATEST_POSITIONS_PATH)
         spec = broker.get_symbol_specification(token, account_id, symbol, region)
         contract_size = spec["contractSize"]
         decision = bot.decide_and_act(

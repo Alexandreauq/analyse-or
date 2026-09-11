@@ -3,3 +3,6 @@ __pycache__/
 gold_bot/state.json
 gold_bot/circuit_breaker_state.json
 gold_bot/decisions_log.jsonl
+gold_bot/latest_candles.json
+gold_bot/latest_balance.json
+gold_bot/latest_positions.json

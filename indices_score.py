@@ -1799,7 +1799,25 @@ def extract_ratios_financial(financials, balance_sheet, cashflow, closes_by_year
     equity = get_row(balance_sheet, "Stockholders Equity", "Common Stock Equity")
     total_debt = _get_row_or_nan(balance_sheet, "Total Debt")
 
-    op_cash_flow = get_row(cashflow, "Operating Cash Flow")
+    # "Operating Cash Flow" absent chez certaines entreprises (trouvé en
+    # échec de production sur Swiss Life Holding SLHN.SW et Mapfre MAP.MC,
+    # toutes deux méthodologie financière) — dérivé depuis "Free Cash Flow"
+    # (= OCF + capex, capex déjà négatif) quand disponible, même repli que
+    # dans extract_ratios plutôt que de faire échouer toute l'entreprise.
+    op_cash_flow = _try_get_row(cashflow, "Operating Cash Flow")
+    if op_cash_flow is None:
+        capex = _get_row_or_nan(
+            cashflow, "Capital Expenditure", "Net PPE Purchase And Sale",
+            "Net Investment Properties Purchase And Sale",
+        )
+        free_cash_flow = _try_get_row(cashflow, "Free Cash Flow")
+        if free_cash_flow is not None:
+            op_cash_flow = free_cash_flow - capex
+        else:
+            raise KeyError(
+                f"Aucune des lignes ('Operating Cash Flow',) ni du repli "
+                f"('Free Cash Flow',) trouvée (lignes disponibles : {list(cashflow.index)})"
+            )
 
     equity_latest = _safe_value(equity, latest)
     total_assets_latest = _safe_value(total_assets, latest)

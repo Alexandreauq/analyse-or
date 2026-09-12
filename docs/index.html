@@ -1701,8 +1701,8 @@ function renderScalpTracking(data) {
 // sont toutes cotées au NYSE — les 9 composants du Dow cotés Nasdaq
 // (Apple, Microsoft...) sont déjà suivis côté NASDAQ, pas dupliqués ici,
 // donc un seul préfixe suffit comme pour les 3 autres indices.
-const TV_EXCHANGE_PREFIX_BY_INDEX = { CAC40: 'EURONEXT:', DAX: 'XETR:', NASDAQ: 'NASDAQ:', DOW: 'NYSE:' };
-const TV_TICKER_SUFFIX_BY_INDEX = { CAC40: '.PA', DAX: '.DE', NASDAQ: '', DOW: '' };
+const TV_EXCHANGE_PREFIX_BY_INDEX = { CAC40: 'EURONEXT:', DAX: 'XETR:', NASDAQ: 'NASDAQ:', DOW: 'NYSE:', FTSE: 'LSE:' };
+const TV_TICKER_SUFFIX_BY_INDEX = { CAC40: '.PA', DAX: '.DE', NASDAQ: '', DOW: '', FTSE: '.L' };
 
 function loadSideQuoteWidget(ticker, indexKey) {
   // Widget TradingView compact (cours + mini-graphique), injecté après coup
@@ -2058,14 +2058,25 @@ const INDEX_CURRENCY_BY_KEY = {
   DAX: 'EUR',
   NASDAQ: 'USD',
   DOW: 'USD',
+  FTSE: 'GBP',
 };
 
+// Symbole affiché par devise — un nouvel indice dans une devise pas
+// encore vue n'a qu'une ligne à ajouter ici (voir aussi INDEX_CURRENCY
+// côté backend et RISK_FREE_SERIES_BY_CURRENCY pour le taux sans risque).
+const CURRENCY_SYMBOL = { EUR: '€', USD: '$', GBP: '£' };
+
 // Formate un prix d'entreprise dans la devise de SON indice (€ pour
-// CAC40/DAX, $ pour NASDAQ) — corrige le bug de fond où tout était
-// affiché en € indépendamment de la devise réelle des comptes publiés.
+// CAC40/DAX, $ pour NASDAQ/DOW, £ pour FTSE) — corrige le bug de fond où
+// tout était affiché en € indépendamment de la devise réelle des comptes
+// publiés. Généralisé (dictionnaire devise→symbole) plutôt qu'un simple
+// ternaire EUR/USD, pour qu'un futur indice dans une nouvelle devise
+// n'ait qu'une entrée à ajouter dans CURRENCY_SYMBOL/INDEX_CURRENCY_BY_KEY.
 function formatPriceForIndex(v, indexKey) {
   const currencies = { ...INDEX_CURRENCY_BY_KEY, ...(indicesData.index_currency || {}) };
-  return currencies[indexKey] === 'USD' ? formatPriceUsd(v) : formatPrice(v);
+  const currency = currencies[indexKey] || 'EUR';
+  const symbol = CURRENCY_SYMBOL[currency] || currency;
+  return v != null ? `${v.toLocaleString('fr-FR', {maximumFractionDigits:2})} ${symbol}` : 'indisponible';
 }
 
 function sortedFilteredCompanies(companies) {

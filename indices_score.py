@@ -225,7 +225,7 @@ NASDAQ_COMPANIES = [
     {"ticker": "CDNS", "name": "Cadence Design Systems"},
     {"ticker": "CTAS", "name": "Cintas"},
     {"ticker": "CSCO", "name": "Cisco Systems", "also_indices": ["DOW"]},
-    {"ticker": "CCEP", "name": "Coca-Cola Europacific Partners"},
+    {"ticker": "CCEP", "name": "Coca-Cola Europacific Partners", "also_indices": ["FTSE"]},
     {"ticker": "CMCSA", "name": "Comcast"},
     {"ticker": "CEG", "name": "Constellation Energy"},
     {"ticker": "CPRT", "name": "Copart"},
@@ -340,6 +340,116 @@ DOW_COMPANIES = [
     {"ticker": "V", "name": "Visa"},
 ]
 
+# FTSE 100 (London Stock Exchange) — 99/100 constituants réels : Coca-Cola
+# Europacific Partners (CCEP) est un constituant FTSE 100 mais n'est pas
+# dupliquée ici, déjà suivie dans NASDAQ_COMPANIES avec
+# also_indices=["FTSE"] (même convention que Airbus CAC40/DAX et les 9
+# chevauchements NASDAQ/DOW). Sourcé le 2026-09-12 via Wikipédia (version
+# au 19/06/2026) + recoupement iShares ISF/topforeignstocks — voir
+# docs/superpowers/ftse100-research-report.md pour le détail complet des
+# sources et la confiance par ticker.
+FTSE_COMPANIES = [
+    {"ticker": "III.L", "name": "3i Group"},
+    {"ticker": "ABDN.L", "name": "Aberdeen Group"},
+    {"ticker": "ADM.L", "name": "Admiral Group"},
+    {"ticker": "AAF.L", "name": "Airtel Africa"},
+    {"ticker": "ALW.L", "name": "Alliance Witan"},
+    {"ticker": "AAL.L", "name": "Anglo American"},
+    {"ticker": "ANTO.L", "name": "Antofagasta"},
+    {"ticker": "ABF.L", "name": "Associated British Foods"},
+    {"ticker": "AZN.L", "name": "AstraZeneca"},
+    {"ticker": "AUTO.L", "name": "Auto Trader Group"},
+    {"ticker": "AV.L", "name": "Aviva"},
+    {"ticker": "BAB.L", "name": "Babcock International"},
+    {"ticker": "BA.L", "name": "BAE Systems"},
+    {"ticker": "BARC.L", "name": "Barclays"},
+    {"ticker": "BTRW.L", "name": "Barratt Redrow"},
+    {"ticker": "BEZ.L", "name": "Beazley"},
+    {"ticker": "BP.L", "name": "BP"},
+    {"ticker": "BATS.L", "name": "British American Tobacco"},
+    {"ticker": "BLND.L", "name": "British Land"},
+    {"ticker": "BT-A.L", "name": "BT Group"},
+    {"ticker": "BNZL.L", "name": "Bunzl"},
+    {"ticker": "BRBY.L", "name": "Burberry Group"},
+    {"ticker": "CNA.L", "name": "Centrica"},
+    {"ticker": "CCH.L", "name": "Coca-Cola HBC"},
+    {"ticker": "CPG.L", "name": "Compass Group"},
+    {"ticker": "CCC.L", "name": "Computacenter"},
+    {"ticker": "CTEC.L", "name": "Convatec Group"},
+    {"ticker": "CRDA.L", "name": "Croda International"},
+    {"ticker": "DCC.L", "name": "DCC"},
+    {"ticker": "DGE.L", "name": "Diageo"},
+    {"ticker": "DPLM.L", "name": "Diploma"},
+    {"ticker": "EDV.L", "name": "Endeavour Mining"},
+    {"ticker": "ENT.L", "name": "Entain"},
+    {"ticker": "EXPN.L", "name": "Experian"},
+    {"ticker": "FCIT.L", "name": "F&C Investment Trust"},
+    {"ticker": "FRES.L", "name": "Fresnillo"},
+    {"ticker": "GAW.L", "name": "Games Workshop"},
+    {"ticker": "GLEN.L", "name": "Glencore"},
+    {"ticker": "GSK.L", "name": "GSK"},
+    {"ticker": "HLN.L", "name": "Haleon"},
+    {"ticker": "HLMA.L", "name": "Halma"},
+    {"ticker": "HSX.L", "name": "Hiscox"},
+    {"ticker": "HWDN.L", "name": "Howden Joinery Group"},
+    {"ticker": "HSBA.L", "name": "HSBC Holdings"},
+    {"ticker": "ICG.L", "name": "ICG"},
+    {"ticker": "IGG.L", "name": "IG Group"},
+    {"ticker": "IHG.L", "name": "IHG Hotels & Resorts"},
+    {"ticker": "IMI.L", "name": "IMI"},
+    {"ticker": "IMB.L", "name": "Imperial Brands"},
+    {"ticker": "INF.L", "name": "Informa"},
+    {"ticker": "IAG.L", "name": "International Airlines Group"},
+    {"ticker": "ITRK.L", "name": "Intertek Group"},
+    {"ticker": "INVP.L", "name": "Investec"},
+    {"ticker": "JD.L", "name": "JD Sports Fashion"},
+    {"ticker": "KGF.L", "name": "Kingfisher"},
+    {"ticker": "LAND.L", "name": "Land Securities Group"},
+    {"ticker": "LGEN.L", "name": "Legal & General"},
+    {"ticker": "BGEO.L", "name": "Lion Finance Group"},
+    {"ticker": "LLOY.L", "name": "Lloyds Banking Group"},
+    {"ticker": "LSEG.L", "name": "London Stock Exchange Group"},
+    {"ticker": "LMP.L", "name": "LondonMetric Property"},
+    {"ticker": "MNG.L", "name": "M&G"},
+    {"ticker": "MKS.L", "name": "Marks & Spencer Group"},
+    {"ticker": "MRO.L", "name": "Melrose Industries"},
+    {"ticker": "MTLN.L", "name": "Metlen Energy & Metals"},
+    {"ticker": "NG.L", "name": "National Grid"},
+    {"ticker": "NWG.L", "name": "NatWest Group"},
+    {"ticker": "NXT.L", "name": "Next"},
+    {"ticker": "PSON.L", "name": "Pearson"},
+    {"ticker": "PSH.L", "name": "Pershing Square Holdings"},
+    {"ticker": "PSN.L", "name": "Persimmon"},
+    {"ticker": "PCT.L", "name": "Polar Capital Technology Trust"},
+    {"ticker": "PRU.L", "name": "Prudential"},
+    {"ticker": "RKT.L", "name": "Reckitt"},
+    {"ticker": "REL.L", "name": "RELX"},
+    {"ticker": "RTO.L", "name": "Rentokil Initial"},
+    {"ticker": "RIO.L", "name": "Rio Tinto"},
+    {"ticker": "RR.L", "name": "Rolls-Royce Holdings"},
+    {"ticker": "SGE.L", "name": "Sage Group"},
+    {"ticker": "SBRY.L", "name": "Sainsbury's"},
+    {"ticker": "SDR.L", "name": "Schroders"},
+    {"ticker": "SMT.L", "name": "Scottish Mortgage Investment Trust"},
+    {"ticker": "SGRO.L", "name": "Segro"},
+    {"ticker": "SVT.L", "name": "Severn Trent"},
+    {"ticker": "SHEL.L", "name": "Shell plc"},
+    {"ticker": "SN.L", "name": "Smith & Nephew"},
+    {"ticker": "SMIN.L", "name": "Smiths Group"},
+    {"ticker": "SPX.L", "name": "Spirax Group"},
+    {"ticker": "SSE.L", "name": "SSE"},
+    {"ticker": "STJ.L", "name": "St. James's Place"},
+    {"ticker": "STAN.L", "name": "Standard Chartered"},
+    {"ticker": "SDLF.L", "name": "Standard Life"},
+    {"ticker": "TSCO.L", "name": "Tesco"},
+    {"ticker": "BBOX.L", "name": "Tritax Big Box REIT"},
+    {"ticker": "ULVR.L", "name": "Unilever"},
+    {"ticker": "UU.L", "name": "United Utilities"},
+    {"ticker": "VOD.L", "name": "Vodafone Group"},
+    {"ticker": "WEIR.L", "name": "Weir Group"},
+    {"ticker": "WTB.L", "name": "Whitbread"},
+]
+
 # Chaque entreprise de COMPANIES porte son propre indice ("index" ajouté
 # ici, pas dans CAC40_COMPANIES/DAX_COMPANIES/NASDAQ_COMPANIES/
 # DOW_COMPANIES eux-mêmes, pour garder ces listes lisibles) — remplace
@@ -355,15 +465,16 @@ COMPANIES = (
     + [{**c, "index": "DAX"} for c in DAX_COMPANIES]
     + [{**c, "index": "NASDAQ"} for c in NASDAQ_COMPANIES]
     + [{**c, "index": "DOW"} for c in DOW_COMPANIES]
+    + [{**c, "index": "FTSE"} for c in FTSE_COMPANIES]
 )
-INDEX_NAMES = {"CAC40": "CAC 40", "DAX": "DAX", "NASDAQ": "Nasdaq 100", "DOW": "Dow Jones"}
+INDEX_NAMES = {"CAC40": "CAC 40", "DAX": "DAX", "NASDAQ": "Nasdaq 100", "DOW": "Dow Jones", "FTSE": "FTSE 100"}
 
 # Devise native de chaque indice — CAC40/DAX publient en euros, le
 # Nasdaq-100 et le Dow Jones en dollars. Consommé côté frontend
 # (docs/index.html) pour afficher le bon symbole plutôt que de supposer
 # € partout (bug de fond corrigé à l'occasion de l'ajout du Nasdaq, pas
 # seulement étendu).
-INDEX_CURRENCY = {"CAC40": "EUR", "DAX": "EUR", "NASDAQ": "USD", "DOW": "USD"}
+INDEX_CURRENCY = {"CAC40": "EUR", "DAX": "EUR", "NASDAQ": "USD", "DOW": "USD", "FTSE": "GBP"}
 
 SECTOR_PROFILES = {
     "Utilities": "defensif",
@@ -442,6 +553,18 @@ FINANCIAL_SECTOR_TICKERS = {
     # de dépôt/crédit), EBITDA/EBIT standard disponibles chez yfinance —
     # même choix que PayPal (PYPL) côté Nasdaq-100.
     "GS", "JPM", "AXP", "TRV",
+    # FTSE 100 : banques de réseau/internationales et assureurs/réassureurs
+    # qui souscrivent du risque, sourcés et confirmés dans
+    # docs/superpowers/ftse100-research-report.md (§4). Volontairement
+    # exclus : gestionnaires d'actifs, trusts d'investissement fermés,
+    # opérateur de marché (LSEG, même traitement que Deutsche Börse/
+    # Euronext) et courtier CFD (IG Group) — pas des banques/assureurs au
+    # sens du projet. St. James's Place (STJ.L) est un cas limite signalé
+    # par la recherche (produits enveloppés en polices d'assurance vie
+    # mais métier économique = gestion de patrimoine) : laissé en
+    # méthodologie standard, pas ajouté ici.
+    "HSBA.L", "BARC.L", "LLOY.L", "NWG.L", "STAN.L", "INVP.L", "BGEO.L",
+    "PRU.L", "LGEN.L", "AV.L", "MNG.L", "SDLF.L", "ADM.L", "BEZ.L", "HSX.L",
 }
 
 
@@ -1717,7 +1840,7 @@ SIGNAL_TRACKING_PATH = os.path.join(
 )
 # Indices utilisés comme benchmark de chaque position (voir "index" sur
 # chaque société — CAC40/DAX) : tickers yfinance correspondants.
-INDEX_YFINANCE_TICKERS = {"CAC40": "^FCHI", "DAX": "^GDAXI", "NASDAQ": "^NDX", "DOW": "^DJI"}
+INDEX_YFINANCE_TICKERS = {"CAC40": "^FCHI", "DAX": "^GDAXI", "NASDAQ": "^NDX", "DOW": "^DJI", "FTSE": "^FTSE"}
 SIGNAL_STOP_LOSS_PCT = -20.0     # % perte déclenchant une clôture anticipée
 SIGNAL_SHADOW_DELAY_MONTHS = 6   # délai max avant clôture forcée du signal
                                   # ET date du benchmark "tenir 6 mois pleins"
@@ -2300,13 +2423,18 @@ def estimate_entry_exit_prices(
 
 FRED_RISK_FREE_SERIES = "IRLTLT01FRM156N"  # OAT 10 ans (France), FRED/OCDE, mensuel
 FRED_RISK_FREE_SERIES_US = "DGS10"  # Treasury 10 ans (US), FRED, quotidien — ajouté avec le Nasdaq-100 : le taux sans risque du CAPM doit correspondre à la devise des cash-flows valorisés (dollars pour le Nasdaq), pas être le taux France appliqué partout par défaut.
+FRED_RISK_FREE_SERIES_UK = "IRLTLT01GBM156N"  # Gilt 10 ans (UK), FRED/OCDE, mensuel — même série/fréquence que la France, ajouté avec le FTSE 100.
 
 # Taux sans risque à utiliser selon la devise de l'entreprise (voir
 # INDEX_CURRENCY) — CAC40/DAX (EUR) gardent le taux France historique,
-# NASDAQ (USD) utilise le Treasury US. Rempli dans main() une fois les
-# deux taux récupérés (un seul appel FRED par série et par run, pas par
-# entreprise).
-RISK_FREE_SERIES_BY_CURRENCY = {"EUR": FRED_RISK_FREE_SERIES, "USD": FRED_RISK_FREE_SERIES_US}
+# NASDAQ/DOW (USD) utilisent le Treasury US, FTSE (GBP) utilise le gilt
+# UK. Rempli dans main() une fois les taux récupérés (un seul appel FRED
+# par série et par run, pas par entreprise).
+RISK_FREE_SERIES_BY_CURRENCY = {
+    "EUR": FRED_RISK_FREE_SERIES,
+    "USD": FRED_RISK_FREE_SERIES_US,
+    "GBP": FRED_RISK_FREE_SERIES_UK,
+}
 
 
 def fetch_risk_free_rate(series_id: str = FRED_RISK_FREE_SERIES) -> float | None:

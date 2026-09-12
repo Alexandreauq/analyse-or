@@ -16,7 +16,12 @@ import gold_bot.confluence as confluence
 import gold_bot.risk as risk
 import gold_bot.state as state
 
-POLL_INTERVAL_SECONDS = 60
+# 120s (pas 60s) pour rester sous le quota gratuit Twelve Data (800
+# requêtes/jour) : à 1 appel/cycle, 60s donnerait ~1440 requêtes/jour
+# (dépassement garanti, confirmé en production le 2026-09-11 — ~100
+# erreurs "429" sur la journée) ; 120s donne ~720/jour, marge de
+# sécurité sous les 800.
+POLL_INTERVAL_SECONDS = 120
 SYMBOL = "XAUUSD"
 DECISIONS_LOG_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "decisions_log.jsonl")
 # Fichier séparé de state.STATE_PATH (qui porte kill_switch/dry_run,

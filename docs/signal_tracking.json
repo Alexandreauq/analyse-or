@@ -566,6 +566,48 @@
       "shadow_resolved": false,
       "shadow_price": null,
       "shadow_return_pct": null
+    },
+    {
+      "id": "9502.T-2026-09-12",
+      "ticker": "9502.T",
+      "name": "Chubu Electric Power",
+      "index": "NIKKEI225",
+      "status": "open",
+      "entry_date": "2026-09-12",
+      "entry_price": 2992.0,
+      "target_exit_price": 3559.212115025494,
+      "index_price_at_entry": 64011.33984375,
+      "close_date": null,
+      "close_price": null,
+      "close_reason": null,
+      "return_pct": null,
+      "index_price_at_close": null,
+      "index_return_pct": null,
+      "shadow_close_date": "2027-03-12",
+      "shadow_resolved": false,
+      "shadow_price": null,
+      "shadow_return_pct": null
+    },
+    {
+      "id": "9503.T-2026-09-12",
+      "ticker": "9503.T",
+      "name": "Kansai Electric Power",
+      "index": "NIKKEI225",
+      "status": "open",
+      "entry_date": "2026-09-12",
+      "entry_price": 2964.5,
+      "target_exit_price": 3592.3321921169772,
+      "index_price_at_entry": 64011.33984375,
+      "close_date": null,
+      "close_price": null,
+      "close_reason": null,
+      "return_pct": null,
+      "index_price_at_close": null,
+      "index_return_pct": null,
+      "shadow_close_date": "2027-03-12",
+      "shadow_resolved": false,
+      "shadow_price": null,
+      "shadow_return_pct": null
     }
   ]
 }

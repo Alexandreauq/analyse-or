@@ -2603,13 +2603,17 @@ def test_main_payload_includes_index_metadata(monkeypatch, tmp_path):
     indices_score.main()
 
     written = json.loads(output_path.read_text(encoding="utf-8"))
-    assert written["index_names"] == {"CAC40": "CAC 40", "DAX": "DAX", "NASDAQ": "Nasdaq 100", "DOW": "Dow Jones"}
-    assert written["index_currency"] == {"CAC40": "EUR", "DAX": "EUR", "NASDAQ": "USD", "DOW": "USD"}
+    assert written["index_names"] == {
+        "CAC40": "CAC 40", "DAX": "DAX", "NASDAQ": "Nasdaq 100", "DOW": "Dow Jones", "FTSE": "FTSE 100",
+    }
+    assert written["index_currency"] == {
+        "CAC40": "EUR", "DAX": "EUR", "NASDAQ": "USD", "DOW": "USD", "FTSE": "GBP",
+    }
     assert written["index_prices"] == fake_index_prices
     written_by_ticker = {c["ticker"]: c["index"] for c in written["companies"]}
     for company in indices_score.COMPANIES:
         assert written_by_ticker[company["ticker"]] == company["index"]
-    assert {c["index"] for c in written["companies"]} == {"CAC40", "DAX", "NASDAQ", "DOW"}
+    assert {c["index"] for c in written["companies"]} == {"CAC40", "DAX", "NASDAQ", "DOW", "FTSE"}
 
 
 def test_main_routes_risk_free_rate_by_currency(monkeypatch, tmp_path):
@@ -2624,6 +2628,7 @@ def test_main_routes_risk_free_rate_by_currency(monkeypatch, tmp_path):
         return {
             indices_score.FRED_RISK_FREE_SERIES: 3.68,
             indices_score.FRED_RISK_FREE_SERIES_US: 4.20,
+            indices_score.FRED_RISK_FREE_SERIES_UK: 4.55,
         }[series_id]
 
     monkeypatch.setattr(indices_score, "fetch_risk_free_rate", _fake_fetch_risk_free_rate)
@@ -2642,7 +2647,7 @@ def test_main_routes_risk_free_rate_by_currency(monkeypatch, tmp_path):
     monkeypatch.setattr(indices_score, "load_indices_history", lambda: [])
     monkeypatch.setattr(indices_score, "append_indices_history", lambda entries: entries)
     monkeypatch.setattr(indices_score, "update_signal_tracking", lambda companies, newly_triggered_entree: [])
-    monkeypatch.setattr(indices_score, "fetch_index_prices", lambda: {"CAC40": None, "DAX": None, "NASDAQ": None, "DOW": None})
+    monkeypatch.setattr(indices_score, "fetch_index_prices", lambda: {"CAC40": None, "DAX": None, "NASDAQ": None, "DOW": None, "FTSE": None})
     output_path = tmp_path / "indices.json"
     monkeypatch.setattr(indices_score, "OUTPUT_JSON_PATH", str(output_path))
 
@@ -2650,8 +2655,10 @@ def test_main_routes_risk_free_rate_by_currency(monkeypatch, tmp_path):
 
     cac40_ticker = indices_score.CAC40_COMPANIES[0]["ticker"]
     nasdaq_ticker = indices_score.NASDAQ_COMPANIES[0]["ticker"]
+    ftse_ticker = indices_score.FTSE_COMPANIES[0]["ticker"]
     assert received_rates[cac40_ticker] == 3.68
     assert received_rates[nasdaq_ticker] == 4.20
+    assert received_rates[ftse_ticker] == 4.55
 
 
 import pandas as pd
@@ -3418,16 +3425,17 @@ def test_financial_sector_tickers_are_in_companies():
     assert indices_score.FINANCIAL_SECTOR_TICKERS <= company_tickers
 
 
-def test_companies_combines_cac40_dax_nasdaq_and_dow_with_correct_index_tag():
+def test_companies_combines_cac40_dax_nasdaq_dow_and_ftse_with_correct_index_tag():
     """COMPANIES doit être l'union de CAC40_COMPANIES, DAX_COMPANIES,
-    NASDAQ_COMPANIES et DOW_COMPANIES, chaque entreprise gardant son
-    propre indice — pas une seule valeur globale (l'ancien bug qu'INDEX_KEY
-    représentait)."""
+    NASDAQ_COMPANIES, DOW_COMPANIES et FTSE_COMPANIES, chaque entreprise
+    gardant son propre indice — pas une seule valeur globale (l'ancien bug
+    qu'INDEX_KEY représentait)."""
     assert len(indices_score.COMPANIES) == (
         len(indices_score.CAC40_COMPANIES)
         + len(indices_score.DAX_COMPANIES)
         + len(indices_score.NASDAQ_COMPANIES)
         + len(indices_score.DOW_COMPANIES)
+        + len(indices_score.FTSE_COMPANIES)
     )
     by_ticker = {c["ticker"]: c["index"] for c in indices_score.COMPANIES}
     for c in indices_score.CAC40_COMPANIES:
@@ -3438,7 +3446,9 @@ def test_companies_combines_cac40_dax_nasdaq_and_dow_with_correct_index_tag():
         assert by_ticker[c["ticker"]] == "NASDAQ"
     for c in indices_score.DOW_COMPANIES:
         assert by_ticker[c["ticker"]] == "DOW"
-    assert set(indices_score.INDEX_NAMES) >= {"CAC40", "DAX", "NASDAQ", "DOW"}
+    for c in indices_score.FTSE_COMPANIES:
+        assert by_ticker[c["ticker"]] == "FTSE"
+    assert set(indices_score.INDEX_NAMES) >= {"CAC40", "DAX", "NASDAQ", "DOW", "FTSE"}
 
 
 def test_dow_companies_does_not_duplicate_tickers_already_in_nasdaq():
@@ -3449,6 +3459,25 @@ def test_dow_companies_does_not_duplicate_tickers_already_in_nasdaq():
     nasdaq_tickers = {c["ticker"] for c in indices_score.NASDAQ_COMPANIES}
     dow_tickers = {c["ticker"] for c in indices_score.DOW_COMPANIES}
     assert nasdaq_tickers & dow_tickers == set()
+
+
+def test_ftse_companies_does_not_duplicate_ticker_already_in_nasdaq():
+    """Coca-Cola Europacific Partners (CCEP) est un constituant FTSE 100
+    réel mais reste suivie uniquement côté NASDAQ_COMPANIES, avec
+    also_indices=["FTSE"] — pas dupliquée dans FTSE_COMPANIES (même
+    convention que les chevauchements CAC40/DAX et NASDAQ/DOW)."""
+    nasdaq_tickers = {c["ticker"] for c in indices_score.NASDAQ_COMPANIES}
+    ftse_tickers = {c["ticker"] for c in indices_score.FTSE_COMPANIES}
+    assert nasdaq_tickers & ftse_tickers == set()
+    ccep = next(c for c in indices_score.NASDAQ_COMPANIES if c["ticker"] == "CCEP")
+    assert ccep.get("also_indices") == ["FTSE"]
+
+
+def test_ftse_financial_sector_tickers_are_in_ftse_companies():
+    ftse_tickers = {c["ticker"] for c in indices_score.FTSE_COMPANIES}
+    ftse_financial_tickers = {t for t in indices_score.FINANCIAL_SECTOR_TICKERS if t.endswith(".L")}
+    assert ftse_financial_tickers <= ftse_tickers
+    assert len(ftse_financial_tickers) == 15
 
 
 def test_shares_outstanding_override_tickers_are_in_companies():
@@ -3616,7 +3645,7 @@ def test_fetch_index_prices_returns_latest_close_per_index(monkeypatch):
 
     monkeypatch.setattr(indices_score.yf, "Ticker", FakeTicker)
     result = indices_score.fetch_index_prices()
-    assert result == {"CAC40": 7850.0, "DAX": 7850.0, "NASDAQ": 7850.0, "DOW": 7850.0}
+    assert result == {"CAC40": 7850.0, "DAX": 7850.0, "NASDAQ": 7850.0, "DOW": 7850.0, "FTSE": 7850.0}
 
 
 def test_fetch_index_prices_degrades_to_none_per_index_on_failure(monkeypatch):
@@ -3640,7 +3669,9 @@ def test_fetch_index_prices_degrades_to_none_per_index_on_failure(monkeypatch):
 
 def test_fetch_index_prices_returns_all_none_when_yfinance_unavailable(monkeypatch):
     monkeypatch.setattr(indices_score, "yf", None)
-    assert indices_score.fetch_index_prices() == {"CAC40": None, "DAX": None, "NASDAQ": None, "DOW": None}
+    assert indices_score.fetch_index_prices() == {
+        "CAC40": None, "DAX": None, "NASDAQ": None, "DOW": None, "FTSE": None,
+    }
 
 
 def test_open_new_signal_positions_creates_position_for_newly_triggered_company():

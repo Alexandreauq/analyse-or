@@ -59,7 +59,7 @@ CAC40_COMPANIES = [
     # vérifiés individuellement — plusieurs diffèrent du mnémonique
     # Euronext naïf + suffixe .PA, ex : STMicroelectronics/Stellantis).
     {"ticker": "AIR.PA", "name": "Airbus"},
-    {"ticker": "MT.PA", "name": "ArcelorMittal"},
+    {"ticker": "MT.PA", "name": "ArcelorMittal", "also_indices": ["IBEX35"]},
     {"ticker": "OR.PA", "name": "L'Oréal"},
     {"ticker": "DG.PA", "name": "Vinci"},
     {"ticker": "RMS.PA", "name": "Hermès International"},
@@ -239,7 +239,7 @@ NASDAQ_COMPANIES = [
     {"ticker": "DASH", "name": "DoorDash"},
     {"ticker": "EXC", "name": "Exelon"},
     {"ticker": "FAST", "name": "Fastenal"},
-    {"ticker": "FER", "name": "Ferrovial"},
+    {"ticker": "FER", "name": "Ferrovial", "also_indices": ["IBEX35"]},
     {"ticker": "FTNT", "name": "Fortinet"},
     {"ticker": "GEHC", "name": "GE HealthCare"},
     {"ticker": "GILD", "name": "Gilead Sciences"},
@@ -399,7 +399,7 @@ FTSE_COMPANIES = [
     {"ticker": "IMI.L", "name": "IMI"},
     {"ticker": "IMB.L", "name": "Imperial Brands"},
     {"ticker": "INF.L", "name": "Informa"},
-    {"ticker": "IAG.L", "name": "International Airlines Group"},
+    {"ticker": "IAG.L", "name": "International Airlines Group", "also_indices": ["IBEX35"]},
     {"ticker": "ITRK.L", "name": "Intertek Group"},
     {"ticker": "INVP.L", "name": "Investec"},
     {"ticker": "JD.L", "name": "JD Sports Fashion"},
@@ -479,6 +479,48 @@ SMI_COMPANIES = [
     {"ticker": "ZURN.SW", "name": "Zurich Insurance Group"},
 ]
 
+# IBEX 35 (Bolsa de Madrid) — 32/35 constituants réels : ArcelorMittal
+# (MT.PA, CAC40), Ferrovial (FER, NASDAQ) et International Airlines Group
+# (IAG.L, FTSE) sont déjà suivies ailleurs (also_indices=["IBEX35"] sur
+# leurs entrées d'origine), pas dupliquées ici. Sourcé le 2026-09-12 via
+# Wikipédia + le document officiel BME (composition figée depuis la revue
+# extraordinaire du 22/07/2024) — voir
+# docs/superpowers/ibex35-research-report.md pour le détail complet.
+IBEX35_COMPANIES = [
+    {"ticker": "ANA.MC", "name": "Acciona"},
+    {"ticker": "ANE.MC", "name": "Acciona Energía"},
+    {"ticker": "ACX.MC", "name": "Acerinox"},
+    {"ticker": "ACS.MC", "name": "ACS"},
+    {"ticker": "AENA.MC", "name": "Aena"},
+    {"ticker": "AMS.MC", "name": "Amadeus IT Group"},
+    {"ticker": "SAB.MC", "name": "Banco Sabadell"},
+    {"ticker": "SAN.MC", "name": "Banco Santander"},
+    {"ticker": "BKT.MC", "name": "Bankinter"},
+    {"ticker": "BBVA.MC", "name": "BBVA"},
+    {"ticker": "CABK.MC", "name": "CaixaBank"},
+    {"ticker": "CLNX.MC", "name": "Cellnex Telecom"},
+    {"ticker": "ENG.MC", "name": "Enagás"},
+    {"ticker": "ELE.MC", "name": "Endesa"},
+    {"ticker": "FDR.MC", "name": "Fluidra"},
+    {"ticker": "GRF.MC", "name": "Grifols"},
+    {"ticker": "IBE.MC", "name": "Iberdrola"},
+    {"ticker": "ITX.MC", "name": "Inditex"},
+    {"ticker": "IDR.MC", "name": "Indra Sistemas"},
+    {"ticker": "COL.MC", "name": "Inmobiliaria Colonial"},
+    {"ticker": "ROVI.MC", "name": "Laboratorios Rovi"},
+    {"ticker": "LOG.MC", "name": "Logista"},
+    {"ticker": "MAP.MC", "name": "Mapfre"},
+    {"ticker": "MRL.MC", "name": "Merlin Properties"},
+    {"ticker": "NTGY.MC", "name": "Naturgy"},
+    {"ticker": "PUIG.MC", "name": "Puig Brands"},
+    {"ticker": "RED.MC", "name": "Redeia"},
+    {"ticker": "REP.MC", "name": "Repsol"},
+    {"ticker": "SCYR.MC", "name": "Sacyr"},
+    {"ticker": "SLR.MC", "name": "Solaria Energía y Medio Ambiente"},
+    {"ticker": "TEF.MC", "name": "Telefónica"},
+    {"ticker": "UNI.MC", "name": "Unicaja Banco"},
+]
+
 # Chaque entreprise de COMPANIES porte son propre indice ("index" ajouté
 # ici, pas dans CAC40_COMPANIES/DAX_COMPANIES/NASDAQ_COMPANIES/
 # DOW_COMPANIES eux-mêmes, pour garder ces listes lisibles) — remplace
@@ -496,10 +538,11 @@ COMPANIES = (
     + [{**c, "index": "DOW"} for c in DOW_COMPANIES]
     + [{**c, "index": "FTSE"} for c in FTSE_COMPANIES]
     + [{**c, "index": "SMI"} for c in SMI_COMPANIES]
+    + [{**c, "index": "IBEX35"} for c in IBEX35_COMPANIES]
 )
 INDEX_NAMES = {
     "CAC40": "CAC 40", "DAX": "DAX", "NASDAQ": "Nasdaq 100", "DOW": "Dow Jones",
-    "FTSE": "FTSE 100", "SMI": "SMI",
+    "FTSE": "FTSE 100", "SMI": "SMI", "IBEX35": "IBEX 35",
 }
 
 # Devise native de chaque indice — CAC40/DAX publient en euros, le
@@ -509,7 +552,7 @@ INDEX_NAMES = {
 # seulement étendu).
 INDEX_CURRENCY = {
     "CAC40": "EUR", "DAX": "EUR", "NASDAQ": "USD", "DOW": "USD",
-    "FTSE": "GBP", "SMI": "CHF",
+    "FTSE": "GBP", "SMI": "CHF", "IBEX35": "EUR",
 }
 
 SECTOR_PROFILES = {
@@ -605,6 +648,12 @@ FINANCIAL_SECTOR_TICKERS = {
     # Partners Group (PGHN.SW, gestionnaire d'actifs alternatifs) exclue,
     # même logique que les gestionnaires d'actifs déjà exclus côté FTSE.
     "UBSG.SW", "ZURN.SW", "SREN.SW", "SLHN.SW",
+    # IBEX 35 : banques de réseau/investissement et assureur qui
+    # souscrivent du risque. Exclues : Merlin Properties/Inmobiliaria
+    # Colonial (foncières cotées), Cellnex Telecom (opérateur
+    # d'infrastructures), Amadeus IT Group (GDS voyage) — même logique que
+    # les foncières/opérateurs déjà exclus côté FTSE/DAX.
+    "SAN.MC", "BBVA.MC", "CABK.MC", "SAB.MC", "BKT.MC", "UNI.MC", "MAP.MC",
 }
 
 
@@ -1882,7 +1931,7 @@ SIGNAL_TRACKING_PATH = os.path.join(
 # chaque société — CAC40/DAX) : tickers yfinance correspondants.
 INDEX_YFINANCE_TICKERS = {
     "CAC40": "^FCHI", "DAX": "^GDAXI", "NASDAQ": "^NDX", "DOW": "^DJI",
-    "FTSE": "^FTSE", "SMI": "^SSMI",
+    "FTSE": "^FTSE", "SMI": "^SSMI", "IBEX35": "^IBEX",
 }
 SIGNAL_STOP_LOSS_PCT = -20.0     # % perte déclenchant une clôture anticipée
 SIGNAL_SHADOW_DELAY_MONTHS = 6   # délai max avant clôture forcée du signal

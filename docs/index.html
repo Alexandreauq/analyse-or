@@ -1701,8 +1701,8 @@ function renderScalpTracking(data) {
 // sont toutes cotées au NYSE — les 9 composants du Dow cotés Nasdaq
 // (Apple, Microsoft...) sont déjà suivis côté NASDAQ, pas dupliqués ici,
 // donc un seul préfixe suffit comme pour les 3 autres indices.
-const TV_EXCHANGE_PREFIX_BY_INDEX = { CAC40: 'EURONEXT:', DAX: 'XETR:', NASDAQ: 'NASDAQ:', DOW: 'NYSE:', FTSE: 'LSE:', SMI: 'SIX:', IBEX35: 'BME:' };
-const TV_TICKER_SUFFIX_BY_INDEX = { CAC40: '.PA', DAX: '.DE', NASDAQ: '', DOW: '', FTSE: '.L', SMI: '.SW', IBEX35: '.MC' };
+const TV_EXCHANGE_PREFIX_BY_INDEX = { CAC40: 'EURONEXT:', DAX: 'XETR:', NASDAQ: 'NASDAQ:', DOW: 'NYSE:', FTSE: 'LSE:', SMI: 'SIX:', IBEX35: 'BME:', FTSEMIB: 'MIL:' };
+const TV_TICKER_SUFFIX_BY_INDEX = { CAC40: '.PA', DAX: '.DE', NASDAQ: '', DOW: '', FTSE: '.L', SMI: '.SW', IBEX35: '.MC', FTSEMIB: '.MI' };
 
 function loadSideQuoteWidget(ticker, indexKey) {
   // Widget TradingView compact (cours + mini-graphique), injecté après coup
@@ -2061,6 +2061,7 @@ const INDEX_CURRENCY_BY_KEY = {
   FTSE: 'GBP',
   SMI: 'CHF',
   IBEX35: 'EUR',
+  FTSEMIB: 'EUR',
 };
 
 // Symbole affiché par devise — un nouvel indice dans une devise pas

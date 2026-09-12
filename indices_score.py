@@ -65,8 +65,8 @@ CAC40_COMPANIES = [
     {"ticker": "RMS.PA", "name": "Hermès International"},
     {"ticker": "ENGI.PA", "name": "Engie"},
     {"ticker": "ORA.PA", "name": "Orange"},
-    {"ticker": "STMPA.PA", "name": "STMicroelectronics"},
-    {"ticker": "STLAP.PA", "name": "Stellantis"},
+    {"ticker": "STMPA.PA", "name": "STMicroelectronics", "also_indices": ["FTSEMIB"]},
+    {"ticker": "STLAP.PA", "name": "Stellantis", "also_indices": ["FTSEMIB"]},
     {"ticker": "CA.PA", "name": "Carrefour"},
     # Lot 2 d'extension CAC 40 (10 entreprises), tickers Yahoo Finance
     # vérifiés individuellement comme le lot 1.
@@ -521,6 +521,57 @@ IBEX35_COMPANIES = [
     {"ticker": "UNI.MC", "name": "Unicaja Banco"},
 ]
 
+# FTSE MIB (Borsa Italiana / Euronext Milan) — 38/40 constituants réels :
+# STMicroelectronics (STMPA.PA) et Stellantis (STLAP.PA) sont déjà suivies
+# côté CAC40_COMPANIES (also_indices=["FTSEMIB"] sur leurs entrées
+# d'origine), pas dupliquées ici. Ticker de l'indice benchmark
+# volontairement pas un "^XXX" (FTSEMIB.MI) — seule exception à cette
+# convention parmi les indices suivis, voir
+# docs/superpowers/ftsemib-research-report.md. FinecoBank, Banca
+# Mediolanum et Poste Italiane sont des cas limites signalés (banques
+# hybrides courtage/distribution) volontairement laissés en méthodologie
+# standard, pas tranchés unilatéralement.
+FTSEMIB_COMPANIES = [
+    {"ticker": "A2A.MI", "name": "A2A"},
+    {"ticker": "AMP.MI", "name": "Amplifon"},
+    {"ticker": "AVIO.MI", "name": "Avio"},
+    {"ticker": "AZM.MI", "name": "Azimut Holding"},
+    {"ticker": "BMED.MI", "name": "Banca Mediolanum"},
+    {"ticker": "BMPS.MI", "name": "Banca Monte dei Paschi di Siena"},
+    {"ticker": "BAMI.MI", "name": "Banco BPM"},
+    {"ticker": "BPE.MI", "name": "BPER Banca"},
+    {"ticker": "BC.MI", "name": "Brunello Cucinelli"},
+    {"ticker": "BZU.MI", "name": "Buzzi"},
+    {"ticker": "CPR.MI", "name": "Campari"},
+    {"ticker": "DIA.MI", "name": "DiaSorin"},
+    {"ticker": "ENEL.MI", "name": "Enel"},
+    {"ticker": "ENI.MI", "name": "Eni"},
+    {"ticker": "RACE.MI", "name": "Ferrari"},
+    {"ticker": "FCT.MI", "name": "Fincantieri"},
+    {"ticker": "FBK.MI", "name": "FinecoBank"},
+    {"ticker": "G.MI", "name": "Generali"},
+    {"ticker": "HER.MI", "name": "Hera"},
+    {"ticker": "ISP.MI", "name": "Intesa Sanpaolo"},
+    {"ticker": "INW.MI", "name": "INWIT"},
+    {"ticker": "IG.MI", "name": "Italgas"},
+    {"ticker": "IVG.MI", "name": "Iveco Group"},
+    {"ticker": "LDO.MI", "name": "Leonardo"},
+    {"ticker": "LTMC.MI", "name": "Lottomatica Group"},
+    {"ticker": "MB.MI", "name": "Mediobanca"},
+    {"ticker": "MONC.MI", "name": "Moncler"},
+    {"ticker": "NEXI.MI", "name": "Nexi"},
+    {"ticker": "PST.MI", "name": "Poste Italiane"},
+    {"ticker": "PRY.MI", "name": "Prysmian"},
+    {"ticker": "REC.MI", "name": "Recordati"},
+    {"ticker": "SPM.MI", "name": "Saipem"},
+    {"ticker": "SRG.MI", "name": "Snam"},
+    {"ticker": "TIT.MI", "name": "Telecom Italia"},
+    {"ticker": "TEN.MI", "name": "Tenaris"},
+    {"ticker": "TRN.MI", "name": "Terna"},
+    {"ticker": "UCG.MI", "name": "UniCredit"},
+    {"ticker": "UNI.MI", "name": "Unipol"},
+]
+
 # Chaque entreprise de COMPANIES porte son propre indice ("index" ajouté
 # ici, pas dans CAC40_COMPANIES/DAX_COMPANIES/NASDAQ_COMPANIES/
 # DOW_COMPANIES eux-mêmes, pour garder ces listes lisibles) — remplace
@@ -539,10 +590,11 @@ COMPANIES = (
     + [{**c, "index": "FTSE"} for c in FTSE_COMPANIES]
     + [{**c, "index": "SMI"} for c in SMI_COMPANIES]
     + [{**c, "index": "IBEX35"} for c in IBEX35_COMPANIES]
+    + [{**c, "index": "FTSEMIB"} for c in FTSEMIB_COMPANIES]
 )
 INDEX_NAMES = {
     "CAC40": "CAC 40", "DAX": "DAX", "NASDAQ": "Nasdaq 100", "DOW": "Dow Jones",
-    "FTSE": "FTSE 100", "SMI": "SMI", "IBEX35": "IBEX 35",
+    "FTSE": "FTSE 100", "SMI": "SMI", "IBEX35": "IBEX 35", "FTSEMIB": "FTSE MIB",
 }
 
 # Devise native de chaque indice — CAC40/DAX publient en euros, le
@@ -552,7 +604,7 @@ INDEX_NAMES = {
 # seulement étendu).
 INDEX_CURRENCY = {
     "CAC40": "EUR", "DAX": "EUR", "NASDAQ": "USD", "DOW": "USD",
-    "FTSE": "GBP", "SMI": "CHF", "IBEX35": "EUR",
+    "FTSE": "GBP", "SMI": "CHF", "IBEX35": "EUR", "FTSEMIB": "EUR",
 }
 
 SECTOR_PROFILES = {
@@ -654,6 +706,15 @@ FINANCIAL_SECTOR_TICKERS = {
     # d'infrastructures), Amadeus IT Group (GDS voyage) — même logique que
     # les foncières/opérateurs déjà exclus côté FTSE/DAX.
     "SAN.MC", "BBVA.MC", "CABK.MC", "SAB.MC", "BKT.MC", "UNI.MC", "MAP.MC",
+    # FTSE MIB : banques de réseau/investissement et assureurs qui
+    # souscrivent du risque. FinecoBank (FBK.MI), Banca Mediolanum
+    # (BMED.MI) et Poste Italiane (PST.MI) sont des cas limites signalés
+    # (banques hybrides courtage/distribution/logistique) volontairement
+    # exclues, pas tranchées unilatéralement — même prudence que St.
+    # James's Place (FTSE). Azimut Holding (gestionnaire d'actifs) et Nexi
+    # (opérateur de paiement) exclus pour la même raison que les
+    # gestionnaires d'actifs/opérateurs déjà exclus ailleurs.
+    "ISP.MI", "UCG.MI", "BAMI.MI", "BPE.MI", "BMPS.MI", "MB.MI", "G.MI", "UNI.MI",
 }
 
 
@@ -1931,7 +1992,7 @@ SIGNAL_TRACKING_PATH = os.path.join(
 # chaque société — CAC40/DAX) : tickers yfinance correspondants.
 INDEX_YFINANCE_TICKERS = {
     "CAC40": "^FCHI", "DAX": "^GDAXI", "NASDAQ": "^NDX", "DOW": "^DJI",
-    "FTSE": "^FTSE", "SMI": "^SSMI", "IBEX35": "^IBEX",
+    "FTSE": "^FTSE", "SMI": "^SSMI", "IBEX35": "^IBEX", "FTSEMIB": "FTSEMIB.MI",
 }
 SIGNAL_STOP_LOSS_PCT = -20.0     # % perte déclenchant une clôture anticipée
 SIGNAL_SHADOW_DELAY_MONTHS = 6   # délai max avant clôture forcée du signal

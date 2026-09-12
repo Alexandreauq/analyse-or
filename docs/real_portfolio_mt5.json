@@ -1,16 +1,16 @@
 {
-  "updated": "2026-09-11T12:33:06Z",
-  "sync_status": "error",
-  "sync_error": "Erreur réseau MT5 (HTTP 504)",
+  "updated": "2026-09-12T08:32:38Z",
+  "sync_status": "ok",
+  "sync_error": null,
   "positions": [
     {
       "symbol": "XAUUSD",
-      "type": "achat",
-      "pnl_sign": "positif"
+      "type": "vente",
+      "pnl_sign": "négatif"
     },
     {
       "symbol": "XAUUSD",
-      "type": "achat",
+      "type": "vente",
       "pnl_sign": "positif"
     }
   ]

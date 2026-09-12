@@ -1701,8 +1701,8 @@ function renderScalpTracking(data) {
 // sont toutes cotées au NYSE — les 9 composants du Dow cotés Nasdaq
 // (Apple, Microsoft...) sont déjà suivis côté NASDAQ, pas dupliqués ici,
 // donc un seul préfixe suffit comme pour les 3 autres indices.
-const TV_EXCHANGE_PREFIX_BY_INDEX = { CAC40: 'EURONEXT:', DAX: 'XETR:', NASDAQ: 'NASDAQ:', DOW: 'NYSE:', FTSE: 'LSE:' };
-const TV_TICKER_SUFFIX_BY_INDEX = { CAC40: '.PA', DAX: '.DE', NASDAQ: '', DOW: '', FTSE: '.L' };
+const TV_EXCHANGE_PREFIX_BY_INDEX = { CAC40: 'EURONEXT:', DAX: 'XETR:', NASDAQ: 'NASDAQ:', DOW: 'NYSE:', FTSE: 'LSE:', SMI: 'SIX:' };
+const TV_TICKER_SUFFIX_BY_INDEX = { CAC40: '.PA', DAX: '.DE', NASDAQ: '', DOW: '', FTSE: '.L', SMI: '.SW' };
 
 function loadSideQuoteWidget(ticker, indexKey) {
   // Widget TradingView compact (cours + mini-graphique), injecté après coup
@@ -2059,12 +2059,13 @@ const INDEX_CURRENCY_BY_KEY = {
   NASDAQ: 'USD',
   DOW: 'USD',
   FTSE: 'GBP',
+  SMI: 'CHF',
 };
 
 // Symbole affiché par devise — un nouvel indice dans une devise pas
 // encore vue n'a qu'une ligne à ajouter ici (voir aussi INDEX_CURRENCY
 // côté backend et RISK_FREE_SERIES_BY_CURRENCY pour le taux sans risque).
-const CURRENCY_SYMBOL = { EUR: '€', USD: '$', GBP: '£' };
+const CURRENCY_SYMBOL = { EUR: '€', USD: '$', GBP: '£', CHF: 'CHF' };
 
 // Formate un prix d'entreprise dans la devise de SON indice (€ pour
 // CAC40/DAX, $ pour NASDAQ/DOW, £ pour FTSE) — corrige le bug de fond où

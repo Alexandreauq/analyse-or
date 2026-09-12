@@ -1,6 +1,6 @@
 {
-  "date": "2026-09-11",
-  "composite_score": 25.9,
+  "date": "2026-09-12",
+  "composite_score": 22.9,
   "interpretation": "Favorable — en attente d'un déclencheur technique",
   "factors": [
     {
@@ -17,9 +17,9 @@
     },
     {
       "name": "Anticipations d'inflation",
-      "score": 5.333333333333323,
+      "score": 3.3333333333333366,
       "weight": 0.15,
-      "raw_value": "2.36% (il y a ~45j : 2.20%)"
+      "raw_value": "2.36% (il y a ~45j : 2.26%)"
     },
     {
       "name": "Ton de la Fed",
@@ -53,11 +53,6 @@
   },
   "calendar": [
     {
-      "date": "11/09/2026",
-      "label": "CPI (Indice des prix à la consommation)",
-      "kind": "Donnée"
-    },
-    {
       "date": "15/09–16/09/2026",
       "label": "Réunion FOMC",
       "kind": "Fed"
@@ -88,6 +83,11 @@
       "kind": "Donnée"
     },
     {
+      "date": "14/10/2026",
+      "label": "CPI (Indice des prix à la consommation)",
+      "kind": "Donnée"
+    },
+    {
       "date": "15/10/2026",
       "label": "PPI (prix à la production)",
       "kind": "Donnée"
@@ -98,7 +98,7 @@
       "kind": "info",
       "title": "Pas de signal actif",
       "detail": "Aucune des conditions de veille, d'entrée ou de risque n'est réunie aujourd'hui.",
-      "date": "11/09/2026"
+      "date": "12/09/2026"
     }
   ]
 }

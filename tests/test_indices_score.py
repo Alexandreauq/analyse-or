@@ -3273,16 +3273,59 @@ def _make_financial_fixture_statements():
     return financials, balance_sheet, cashflow, closes_by_year
 
 
-def test_extract_ratios_raises_on_financial_sector_statements_without_ebitda():
+def test_extract_ratios_raises_on_financial_sector_statements_without_ebit():
     """Documente la raison d'être d'extract_ratios_financial : la fonction
-    standard plante sur des comptes sans EBITDA, comme observé en
-    diagnostic pour BNP/SocGen/Crédit Agricole/AXA."""
+    standard plante toujours sur de vrais comptes bancaires (ni EBITDA ni
+    EBIT, comme BNP/SocGen/Crédit Agricole/AXA) — mais désormais sur EBIT,
+    pas EBITDA (EBITDA seule est devenue optionnelle, voir
+    test_extract_ratios_degrades_gracefully_when_ebitda_missing_but_ebit_present,
+    trouvé en échec de production sur le Nikkei 225 où EBITDA peut manquer
+    sans que l'entreprise soit un établissement financier)."""
     financials, balance_sheet, cashflow, closes_by_year = _make_financial_fixture_statements()
     try:
         extract_ratios(financials, balance_sheet, cashflow, closes_by_year, shares_outstanding=100.0)
         assert False, "expected KeyError"
-    except KeyError:
-        pass
+    except KeyError as e:
+        assert "EBIT" in str(e)
+
+
+def test_extract_ratios_degrades_gracefully_when_ebitda_missing_but_ebit_present():
+    """Reproduit Kyowa Hakko Kirin (4151.T, Nikkei 225) en production :
+    aucune ligne EBITDA/Normalized EBITDA chez yfinance, mais EBIT bien
+    présent, et ce n'est pas un établissement financier. Ne doit pas faire
+    lever KeyError sur toute l'entreprise — les facteurs dépendant
+    d'EBITDA (dette nette/EBITDA, CAGR EBITDA, conversion FCF/EBITDA,
+    EV/EBITDA) dégradent vers leurs valeurs neutres (0.0) au lieu."""
+    financials, balance_sheet, cashflow, closes_by_year = _make_fixture_statements()
+    financials = financials.drop(index="EBITDA")
+
+    ratios = extract_ratios(
+        financials, balance_sheet, cashflow, closes_by_year, shares_outstanding=10.0
+    )  # ne doit pas lever KeyError
+
+    assert ratios["net_debt_ebitda"] == 0.0
+    assert ratios["cagr_ebitda"] == 0.0
+    assert ratios["fcf_conversion"] == 0.0
+    assert ratios["current_ev_ebitda"] == 0.0
+    assert ratios["avg_ev_ebitda_5y"] == 0.0
+
+
+def test_extract_ratios_degrades_gracefully_when_capex_entirely_missing():
+    """Reproduit une quinzaine d'entreprises du Nikkei 225 en production
+    (Aeon, Chubu Electric Power, Japan Airlines, Tokyu...) : aucune des 3
+    lignes de repli capex (Capital Expenditure/Net PPE Purchase And
+    Sale/Net Investment Properties Purchase And Sale) chez yfinance, sans
+    point commun sectoriel avec les établissements financiers. Ne doit pas
+    faire lever KeyError — fcf/fcf_normalized dégradent vers 0.0."""
+    financials, balance_sheet, cashflow, closes_by_year = _make_fixture_statements()
+    cashflow = cashflow.drop(index="Capital Expenditure")
+
+    ratios = extract_ratios(
+        financials, balance_sheet, cashflow, closes_by_year, shares_outstanding=10.0
+    )  # ne doit pas lever KeyError
+
+    assert ratios["fcf"] == 0.0
+    assert ratios["fcf_normalized"] == 0.0
 
 
 def test_extract_ratios_financial_computes_expected_keys():
@@ -3509,10 +3552,14 @@ def test_nikkei225_has_no_overlap_with_other_indices():
 
 
 def test_nikkei225_financial_sector_tickers_are_in_nikkei225_companies():
+    """19, pas 15 : Nomura Holdings/Daiwa Securities Group/Orix/Japan Post
+    Holdings ont été reclassées après le premier run réel (2026-09-12) —
+    aucune ligne EBITDA ni EBIT chez yfinance, même trou de données que
+    les banques de dépôt classiques."""
     nikkei_tickers = {c["ticker"] for c in indices_score.NIKKEI225_COMPANIES}
     nikkei_financial_tickers = {t for t in indices_score.FINANCIAL_SECTOR_TICKERS if t.endswith(".T")}
     assert nikkei_financial_tickers <= nikkei_tickers
-    assert len(nikkei_financial_tickers) == 15
+    assert len(nikkei_financial_tickers) == 19
 
 
 def test_hangseng_does_not_duplicate_ticker_already_in_ftse():

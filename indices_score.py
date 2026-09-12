@@ -1090,6 +1090,17 @@ FINANCIAL_SECTOR_TICKERS = {
     # méthodologie standard. HSBC déjà comptée côté FTSE (HSBA.L).
     "0939.HK", "1299.HK", "1398.HK", "3988.HK", "2318.HK", "2628.HK",
     "3968.HK", "2388.HK",
+    # Nikkei 225 : reclassées après le premier run réel (2026-09-12) — pas
+    # une décision de modèle économique comme pour le reste du fichier,
+    # mais un constat empirique : Nomura/Daiwa Securities (courtiers/
+    # banques d'investissement, initialement laissées en méthodologie
+    # standard, cf. rapport de recherche) et Orix (conglomérat financier
+    # diversifié, également laissé en standard) n'ont en réalité AUCUNE
+    # ligne EBITDA ni EBIT chez yfinance — même trou de données que les
+    # banques de dépôt classiques, donc même traitement nécessaire pour
+    # produire un score au lieu d'échouer. Japan Post Holdings idem (sa
+    # banque/assurance filiales dominent son bilan consolidé).
+    "8604.T", "8601.T", "8591.T", "6178.T",
 }
 
 
@@ -1576,7 +1587,16 @@ def extract_ratios(financials, balance_sheet, cashflow, closes_by_year, shares_o
     latest = years_cols[0]
 
     revenue = get_row(financials, "Total Revenue", "Operating Revenue")
-    ebitda = get_row(financials, "EBITDA", "Normalized EBITDA")
+    # _get_row_or_nan (pas get_row) : trouvé en échec de production sur le
+    # Nikkei 225 (ex : Kyowa Hakko Kirin, 4151.T) — EBIT présent mais aucune
+    # ligne EBITDA/Normalized EBITDA chez yfinance pour cette entreprise,
+    # sans que ce soit un établissement financier (pas dans
+    # FINANCIAL_SECTOR_TICKERS). Un NaN isolé ici dégrade proprement
+    # net_debt_ebitda/cagr_ebitda/fcf_conversion/EV-EBITDA vers leurs valeurs
+    # neutres (0.0, gardes _is_missing déjà en place plus bas) plutôt que de
+    # faire échouer toute l'entreprise — jugé préférable à un score partiel
+    # manquant purement et simplement.
+    ebitda = _get_row_or_nan(financials, "EBITDA", "Normalized EBITDA")
     ebit = get_row(financials, "EBIT", "Operating Income", "Total Operating Income As Reported")
     net_income = get_row(financials, "Net Income", "Net Income Common Stockholders")
     tax_rate = get_row(financials, "Tax Rate For Calcs")
@@ -1591,8 +1611,14 @@ def extract_ratios(financials, balance_sheet, cashflow, closes_by_year, shares_o
     # tant que les cessions restent marginales) puis "Net Investment
     # Properties Purchase And Sale" (ex : Vonovia — une foncière investit
     # en achetant des immeubles de placement, pas des PPE industrielles ;
-    # même convention de signe négatif pour les deux replis).
-    capex = get_row(
+    # même convention de signe négatif pour les deux replis). _get_row_or_nan
+    # (pas get_row) : trouvé en échec de production sur le Nikkei 225 — une
+    # quinzaine d'entreprises très diverses (utilities, foncières,
+    # ferroviaires, cimentiers...) n'ont AUCUNE des 3 lignes chez yfinance,
+    # sans point commun sectoriel identifié (pas un cas "établissement
+    # financier" comme pour extract_ratios_financial). fcf/fcf_normalized
+    # dégradent déjà proprement vers 0.0 via leurs gardes _is_missing.
+    capex = _get_row_or_nan(
         cashflow, "Capital Expenditure", "Net PPE Purchase And Sale",
         "Net Investment Properties Purchase And Sale",
     )

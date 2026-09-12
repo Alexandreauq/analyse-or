@@ -2605,16 +2605,19 @@ def test_main_payload_includes_index_metadata(monkeypatch, tmp_path):
     written = json.loads(output_path.read_text(encoding="utf-8"))
     assert written["index_names"] == {
         "CAC40": "CAC 40", "DAX": "DAX", "NASDAQ": "Nasdaq 100", "DOW": "Dow Jones",
-        "FTSE": "FTSE 100", "SMI": "SMI", "IBEX35": "IBEX 35",
+        "FTSE": "FTSE 100", "SMI": "SMI", "IBEX35": "IBEX 35", "FTSEMIB": "FTSE MIB",
     }
     assert written["index_currency"] == {
-        "CAC40": "EUR", "DAX": "EUR", "NASDAQ": "USD", "DOW": "USD", "FTSE": "GBP", "SMI": "CHF", "IBEX35": "EUR",
+        "CAC40": "EUR", "DAX": "EUR", "NASDAQ": "USD", "DOW": "USD", "FTSE": "GBP",
+        "SMI": "CHF", "IBEX35": "EUR", "FTSEMIB": "EUR",
     }
     assert written["index_prices"] == fake_index_prices
     written_by_ticker = {c["ticker"]: c["index"] for c in written["companies"]}
     for company in indices_score.COMPANIES:
         assert written_by_ticker[company["ticker"]] == company["index"]
-    assert {c["index"] for c in written["companies"]} == {"CAC40", "DAX", "NASDAQ", "DOW", "FTSE", "SMI", "IBEX35"}
+    assert {c["index"] for c in written["companies"]} == {
+        "CAC40", "DAX", "NASDAQ", "DOW", "FTSE", "SMI", "IBEX35", "FTSEMIB",
+    }
 
 
 def test_main_routes_risk_free_rate_by_currency(monkeypatch, tmp_path):
@@ -2649,7 +2652,13 @@ def test_main_routes_risk_free_rate_by_currency(monkeypatch, tmp_path):
     monkeypatch.setattr(indices_score, "load_indices_history", lambda: [])
     monkeypatch.setattr(indices_score, "append_indices_history", lambda entries: entries)
     monkeypatch.setattr(indices_score, "update_signal_tracking", lambda companies, newly_triggered_entree: [])
-    monkeypatch.setattr(indices_score, "fetch_index_prices", lambda: {"CAC40": None, "DAX": None, "NASDAQ": None, "DOW": None, "FTSE": None, "SMI": None, "IBEX35": None})
+    monkeypatch.setattr(
+        indices_score, "fetch_index_prices",
+        lambda: {
+            "CAC40": None, "DAX": None, "NASDAQ": None, "DOW": None,
+            "FTSE": None, "SMI": None, "IBEX35": None, "FTSEMIB": None,
+        },
+    )
     output_path = tmp_path / "indices.json"
     monkeypatch.setattr(indices_score, "OUTPUT_JSON_PATH", str(output_path))
 
@@ -2660,11 +2669,13 @@ def test_main_routes_risk_free_rate_by_currency(monkeypatch, tmp_path):
     ftse_ticker = indices_score.FTSE_COMPANIES[0]["ticker"]
     smi_ticker = indices_score.SMI_COMPANIES[0]["ticker"]
     ibex_ticker = indices_score.IBEX35_COMPANIES[0]["ticker"]
+    ftsemib_ticker = indices_score.FTSEMIB_COMPANIES[0]["ticker"]
     assert received_rates[cac40_ticker] == 3.68
     assert received_rates[nasdaq_ticker] == 4.20
     assert received_rates[ftse_ticker] == 4.55
     assert received_rates[smi_ticker] == 0.31
     assert received_rates[ibex_ticker] == 3.68
+    assert received_rates[ftsemib_ticker] == 3.68
 
 
 import pandas as pd
@@ -3431,11 +3442,12 @@ def test_financial_sector_tickers_are_in_companies():
     assert indices_score.FINANCIAL_SECTOR_TICKERS <= company_tickers
 
 
-def test_companies_combines_cac40_dax_nasdaq_dow_ftse_smi_and_ibex35_with_correct_index_tag():
+def test_companies_combines_all_indices_with_correct_index_tag():
     """COMPANIES doit être l'union de CAC40_COMPANIES, DAX_COMPANIES,
-    NASDAQ_COMPANIES, DOW_COMPANIES, FTSE_COMPANIES, SMI_COMPANIES et
-    IBEX35_COMPANIES, chaque entreprise gardant son propre indice — pas une
-    seule valeur globale (l'ancien bug qu'INDEX_KEY représentait)."""
+    NASDAQ_COMPANIES, DOW_COMPANIES, FTSE_COMPANIES, SMI_COMPANIES,
+    IBEX35_COMPANIES et FTSEMIB_COMPANIES, chaque entreprise gardant son
+    propre indice — pas une seule valeur globale (l'ancien bug qu'INDEX_KEY
+    représentait)."""
     assert len(indices_score.COMPANIES) == (
         len(indices_score.CAC40_COMPANIES)
         + len(indices_score.DAX_COMPANIES)
@@ -3444,6 +3456,7 @@ def test_companies_combines_cac40_dax_nasdaq_dow_ftse_smi_and_ibex35_with_correc
         + len(indices_score.FTSE_COMPANIES)
         + len(indices_score.SMI_COMPANIES)
         + len(indices_score.IBEX35_COMPANIES)
+        + len(indices_score.FTSEMIB_COMPANIES)
     )
     by_ticker = {c["ticker"]: c["index"] for c in indices_score.COMPANIES}
     for c in indices_score.CAC40_COMPANIES:
@@ -3460,7 +3473,11 @@ def test_companies_combines_cac40_dax_nasdaq_dow_ftse_smi_and_ibex35_with_correc
         assert by_ticker[c["ticker"]] == "SMI"
     for c in indices_score.IBEX35_COMPANIES:
         assert by_ticker[c["ticker"]] == "IBEX35"
-    assert set(indices_score.INDEX_NAMES) >= {"CAC40", "DAX", "NASDAQ", "DOW", "FTSE", "SMI", "IBEX35"}
+    for c in indices_score.FTSEMIB_COMPANIES:
+        assert by_ticker[c["ticker"]] == "FTSEMIB"
+    assert set(indices_score.INDEX_NAMES) >= {
+        "CAC40", "DAX", "NASDAQ", "DOW", "FTSE", "SMI", "IBEX35", "FTSEMIB",
+    }
 
 
 def test_dow_companies_does_not_duplicate_tickers_already_in_nasdaq():
@@ -3542,6 +3559,28 @@ def test_ibex35_financial_sector_tickers_are_in_ibex35_companies():
     ibex_financial_tickers = {t for t in indices_score.FINANCIAL_SECTOR_TICKERS if t.endswith(".MC")}
     assert ibex_financial_tickers <= ibex_tickers
     assert len(ibex_financial_tickers) == 7
+
+
+def test_ftsemib_does_not_duplicate_tickers_already_tracked_in_cac40():
+    """STMicroelectronics (STMPA.PA) et Stellantis (STLAP.PA) sont des
+    constituants FTSE MIB réels mais restent suivis uniquement côté
+    CAC40_COMPANIES, avec also_indices=["FTSEMIB"] — pas dupliqués dans
+    FTSEMIB_COMPANIES."""
+    cac40_tickers = {c["ticker"] for c in indices_score.CAC40_COMPANIES}
+    ftsemib_tickers = {c["ticker"] for c in indices_score.FTSEMIB_COMPANIES}
+    assert cac40_tickers & ftsemib_tickers == set()
+
+    stm = next(c for c in indices_score.CAC40_COMPANIES if c["ticker"] == "STMPA.PA")
+    stl = next(c for c in indices_score.CAC40_COMPANIES if c["ticker"] == "STLAP.PA")
+    assert stm.get("also_indices") == ["FTSEMIB"]
+    assert stl.get("also_indices") == ["FTSEMIB"]
+
+
+def test_ftsemib_financial_sector_tickers_are_in_ftsemib_companies():
+    ftsemib_tickers = {c["ticker"] for c in indices_score.FTSEMIB_COMPANIES}
+    ftsemib_financial_tickers = {t for t in indices_score.FINANCIAL_SECTOR_TICKERS if t.endswith(".MI")}
+    assert ftsemib_financial_tickers <= ftsemib_tickers
+    assert len(ftsemib_financial_tickers) == 8
 
 
 def test_shares_outstanding_override_tickers_are_in_companies():
@@ -3711,7 +3750,7 @@ def test_fetch_index_prices_returns_latest_close_per_index(monkeypatch):
     result = indices_score.fetch_index_prices()
     assert result == {
         "CAC40": 7850.0, "DAX": 7850.0, "NASDAQ": 7850.0, "DOW": 7850.0,
-        "FTSE": 7850.0, "SMI": 7850.0, "IBEX35": 7850.0,
+        "FTSE": 7850.0, "SMI": 7850.0, "IBEX35": 7850.0, "FTSEMIB": 7850.0,
     }
 
 
@@ -3737,7 +3776,8 @@ def test_fetch_index_prices_degrades_to_none_per_index_on_failure(monkeypatch):
 def test_fetch_index_prices_returns_all_none_when_yfinance_unavailable(monkeypatch):
     monkeypatch.setattr(indices_score, "yf", None)
     assert indices_score.fetch_index_prices() == {
-        "CAC40": None, "DAX": None, "NASDAQ": None, "DOW": None, "FTSE": None, "SMI": None, "IBEX35": None,
+        "CAC40": None, "DAX": None, "NASDAQ": None, "DOW": None, "FTSE": None,
+        "SMI": None, "IBEX35": None, "FTSEMIB": None,
     }
 
 

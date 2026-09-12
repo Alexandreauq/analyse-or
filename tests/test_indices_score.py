@@ -3328,6 +3328,28 @@ def test_extract_ratios_degrades_gracefully_when_capex_entirely_missing():
     assert ratios["fcf_normalized"] == 0.0
 
 
+def test_extract_ratios_financial_derives_operating_cash_flow_from_free_cash_flow_when_missing():
+    """Reproduit Swiss Life Holding (SLHN.SW) et Mapfre (MAP.MC) en
+    production : pas de ligne 'Operating Cash Flow' chez yfinance pour ces
+    deux entreprises (méthodologie financière), mais 'Free Cash Flow' et
+    'Capital Expenditure' sont bien présentes — doit être utilisée pour
+    reconstituer OCF plutôt que de faire lever KeyError, même repli que
+    extract_ratios."""
+    financials, balance_sheet, cashflow, closes_by_year = _make_financial_fixture_statements()
+    # FCF = OCF + capex (capex déjà négatif) sur chaque exercice de la
+    # fixture d'origine (OCF=[320,300,280,260], capex=[-10,-9,-8,-7]).
+    cashflow = cashflow.rename(index={"Operating Cash Flow": "Free Cash Flow"})
+    cashflow.loc["Free Cash Flow"] = [310.0, 291.0, 272.0, 253.0]
+
+    ratios = indices_score.extract_ratios_financial(
+        financials, balance_sheet, cashflow, closes_by_year, shares_outstanding=100.0
+    )  # ne doit pas lever KeyError
+
+    # OCF reconstitué = FCF - capex = 310 - (-10) = 320 (exercice le plus
+    # récent) -> cash_conversion = OCF / net_income = 320 / 300 * 100.
+    assert ratios["cash_conversion"] == pytest.approx(320.0 / 300.0 * 100)
+
+
 def test_extract_ratios_financial_computes_expected_keys():
     financials, balance_sheet, cashflow, closes_by_year = _make_financial_fixture_statements()
 

@@ -392,7 +392,7 @@ FTSE_COMPANIES = [
     {"ticker": "HLMA.L", "name": "Halma"},
     {"ticker": "HSX.L", "name": "Hiscox"},
     {"ticker": "HWDN.L", "name": "Howden Joinery Group"},
-    {"ticker": "HSBA.L", "name": "HSBC Holdings"},
+    {"ticker": "HSBA.L", "name": "HSBC Holdings", "also_indices": ["HANGSENG"]},
     {"ticker": "ICG.L", "name": "ICG"},
     {"ticker": "IGG.L", "name": "IG Group"},
     {"ticker": "IHG.L", "name": "IHG Hotels & Resorts"},
@@ -810,6 +810,116 @@ NIKKEI225_COMPANIES = [
     {"ticker": "3092.T", "name": "ZOZO"},
 ]
 
+# Hang Seng Index (Hong Kong Stock Exchange) — 94/95 constituants réels :
+# HSBC Holdings (HSBA.L) est déjà suivie côté FTSE_COMPANIES
+# (also_indices=["HANGSENG"] sur son entrée d'origine), pas dupliquée
+# ici. Format ticker Yahoo = code HKEX zero-paddé sur 4 chiffres + ".HK"
+# (confirmé : "700.HK" sans padding renvoie 404, "0700.HK" fonctionne).
+# Devise HKD : Hong Kong n'étant pas membre de l'OCDE, aucune série FRED
+# de taux long terme n'existe pour le HKD (confirmé, IRLTLT01HKM156N
+# renvoie 404) — RISK_FREE_SERIES_BY_CURRENCY n'a donc volontairement
+# aucune entrée "HKD", le code retombe déjà proprement sur
+# COST_OF_CAPITAL_PROXY via risk_free_rate_by_currency.get(). Sourcé le
+# 2026-09-12 via le communiqué officiel Hang Seng Indexes Company du
+# 21/08/2026 (révision effective au 07/09/2026) — voir
+# docs/superpowers/hangseng-research-report.md pour le détail complet.
+HANGSENG_COMPANIES = [
+    {"ticker": "1299.HK", "name": "AIA Group"},
+    {"ticker": "9988.HK", "name": "Alibaba Group Holding"},
+    {"ticker": "0241.HK", "name": "Alibaba Health Information Technology"},
+    {"ticker": "2600.HK", "name": "Aluminum Corporation of China (Chalco)"},
+    {"ticker": "2020.HK", "name": "Anta Sports Products"},
+    {"ticker": "9888.HK", "name": "Baidu"},
+    {"ticker": "3988.HK", "name": "Bank of China"},
+    {"ticker": "6160.HK", "name": "BeOne Medicines"},
+    {"ticker": "2388.HK", "name": "BOC Hong Kong (Holdings)"},
+    {"ticker": "1876.HK", "name": "Budweiser Brewing Company APAC"},
+    {"ticker": "1211.HK", "name": "BYD Company"},
+    {"ticker": "0285.HK", "name": "BYD Electronic (International)"},
+    {"ticker": "0939.HK", "name": "China Construction Bank"},
+    {"ticker": "1378.HK", "name": "China Hongqiao Group"},
+    {"ticker": "2628.HK", "name": "China Life Insurance Company"},
+    {"ticker": "2319.HK", "name": "China Mengniu Dairy"},
+    {"ticker": "3968.HK", "name": "China Merchants Bank"},
+    {"ticker": "0941.HK", "name": "China Mobile Limited"},
+    {"ticker": "3993.HK", "name": "China Molybdenum (CMOC)"},
+    {"ticker": "0688.HK", "name": "China Overseas Land & Investment"},
+    {"ticker": "0291.HK", "name": "China Resources Beer (Holdings)"},
+    {"ticker": "1109.HK", "name": "China Resources Land"},
+    {"ticker": "1209.HK", "name": "China Resources Mixc Lifestyle Services"},
+    {"ticker": "0836.HK", "name": "China Resources Power Holdings"},
+    {"ticker": "1088.HK", "name": "China Shenhua Energy"},
+    {"ticker": "0728.HK", "name": "China Telecom Corporation"},
+    {"ticker": "0762.HK", "name": "China Unicom (Hong Kong)"},
+    {"ticker": "1929.HK", "name": "Chow Tai Fook Jewellery Group"},
+    {"ticker": "0267.HK", "name": "CITIC Limited"},
+    {"ticker": "1113.HK", "name": "CK Asset Holdings"},
+    {"ticker": "0001.HK", "name": "CK Hutchison Holdings"},
+    {"ticker": "1038.HK", "name": "CK Infrastructure Holdings"},
+    {"ticker": "0002.HK", "name": "CLP Holdings"},
+    {"ticker": "0883.HK", "name": "CNOOC Limited"},
+    {"ticker": "3750.HK", "name": "Contemporary Amperex Technology (CATL)"},
+    {"ticker": "1093.HK", "name": "CSPC Pharmaceutical Group"},
+    {"ticker": "2688.HK", "name": "ENN Energy Holdings"},
+    {"ticker": "0027.HK", "name": "Galaxy Entertainment Group"},
+    {"ticker": "0175.HK", "name": "Geely Automobile Holdings"},
+    {"ticker": "6862.HK", "name": "Haidilao International Holding"},
+    {"ticker": "6690.HK", "name": "Haier Smart Home"},
+    {"ticker": "0101.HK", "name": "Hang Lung Properties"},
+    {"ticker": "3692.HK", "name": "Hansoh Pharmaceutical Group"},
+    {"ticker": "0012.HK", "name": "Henderson Land Development"},
+    {"ticker": "1044.HK", "name": "Hengan International Group"},
+    {"ticker": "0003.HK", "name": "Hong Kong and China Gas Company (Towngas)"},
+    {"ticker": "0388.HK", "name": "Hong Kong Exchanges and Clearing"},
+    {"ticker": "1347.HK", "name": "Hua Hong Semiconductor"},
+    {"ticker": "1398.HK", "name": "Industrial and Commercial Bank of China (ICBC)"},
+    {"ticker": "1801.HK", "name": "Innovent Biologics"},
+    {"ticker": "1519.HK", "name": "J&T Global Express"},
+    {"ticker": "6618.HK", "name": "JD Health International"},
+    {"ticker": "2618.HK", "name": "JD Logistics"},
+    {"ticker": "9618.HK", "name": "JD.com"},
+    {"ticker": "1024.HK", "name": "Kuaishou Technology"},
+    {"ticker": "6181.HK", "name": "Laopu Gold"},
+    {"ticker": "0992.HK", "name": "Lenovo Group"},
+    {"ticker": "2015.HK", "name": "Li Auto"},
+    {"ticker": "2331.HK", "name": "Li Ning Company"},
+    {"ticker": "0823.HK", "name": "Link Real Estate Investment Trust"},
+    {"ticker": "0960.HK", "name": "Longfor Group Holdings"},
+    {"ticker": "3690.HK", "name": "Meituan"},
+    {"ticker": "0300.HK", "name": "Midea Group"},
+    {"ticker": "0066.HK", "name": "MTR Corporation"},
+    {"ticker": "9999.HK", "name": "NetEase"},
+    {"ticker": "9901.HK", "name": "New Oriental Education & Technology Group"},
+    {"ticker": "9633.HK", "name": "Nongfu Spring"},
+    {"ticker": "0316.HK", "name": "Orient Overseas (International)"},
+    {"ticker": "0857.HK", "name": "PetroChina Company"},
+    {"ticker": "2318.HK", "name": "Ping An Insurance (Group) Company of China"},
+    {"ticker": "9992.HK", "name": "Pop Mart International Group"},
+    {"ticker": "0006.HK", "name": "Power Assets Holdings"},
+    {"ticker": "1928.HK", "name": "Sands China"},
+    {"ticker": "0981.HK", "name": "Semiconductor Manufacturing International Corporation (SMIC)"},
+    {"ticker": "2313.HK", "name": "Shenzhou International Group Holdings"},
+    {"ticker": "1177.HK", "name": "Sino Biopharmaceutical"},
+    {"ticker": "0386.HK", "name": "Sinopec Corp (China Petroleum & Chemical)"},
+    {"ticker": "1099.HK", "name": "Sinopharm Group"},
+    {"ticker": "0016.HK", "name": "Sun Hung Kai Properties"},
+    {"ticker": "2382.HK", "name": "Sunny Optical Technology (Group)"},
+    {"ticker": "0669.HK", "name": "Techtronic Industries"},
+    {"ticker": "0700.HK", "name": "Tencent Holdings"},
+    {"ticker": "0322.HK", "name": "Tingyi (Cayman Islands) Holding"},
+    {"ticker": "9961.HK", "name": "Trip.com Group"},
+    {"ticker": "2338.HK", "name": "Weichai Power"},
+    {"ticker": "0288.HK", "name": "WH Group"},
+    {"ticker": "1997.HK", "name": "Wharf Real Estate Investment Company"},
+    {"ticker": "2359.HK", "name": "WuXi AppTec"},
+    {"ticker": "2269.HK", "name": "WuXi Biologics (Cayman)"},
+    {"ticker": "1810.HK", "name": "Xiaomi Corporation"},
+    {"ticker": "0868.HK", "name": "Xinyi Glass Holdings"},
+    {"ticker": "0968.HK", "name": "Xinyi Solar Holdings"},
+    {"ticker": "2899.HK", "name": "Zijin Mining Group"},
+    {"ticker": "2057.HK", "name": "ZTO Express (Cayman)"},
+]
+
 # Chaque entreprise de COMPANIES porte son propre indice ("index" ajouté
 # ici, pas dans CAC40_COMPANIES/DAX_COMPANIES/NASDAQ_COMPANIES/
 # DOW_COMPANIES eux-mêmes, pour garder ces listes lisibles) — remplace
@@ -830,11 +940,12 @@ COMPANIES = (
     + [{**c, "index": "IBEX35"} for c in IBEX35_COMPANIES]
     + [{**c, "index": "FTSEMIB"} for c in FTSEMIB_COMPANIES]
     + [{**c, "index": "NIKKEI225"} for c in NIKKEI225_COMPANIES]
+    + [{**c, "index": "HANGSENG"} for c in HANGSENG_COMPANIES]
 )
 INDEX_NAMES = {
     "CAC40": "CAC 40", "DAX": "DAX", "NASDAQ": "Nasdaq 100", "DOW": "Dow Jones",
     "FTSE": "FTSE 100", "SMI": "SMI", "IBEX35": "IBEX 35", "FTSEMIB": "FTSE MIB",
-    "NIKKEI225": "Nikkei 225",
+    "NIKKEI225": "Nikkei 225", "HANGSENG": "Hang Seng",
 }
 
 # Devise native de chaque indice — CAC40/DAX publient en euros, le
@@ -845,7 +956,7 @@ INDEX_NAMES = {
 INDEX_CURRENCY = {
     "CAC40": "EUR", "DAX": "EUR", "NASDAQ": "USD", "DOW": "USD",
     "FTSE": "GBP", "SMI": "CHF", "IBEX35": "EUR", "FTSEMIB": "EUR",
-    "NIKKEI225": "JPY",
+    "NIKKEI225": "JPY", "HANGSENG": "HKD",
 }
 
 SECTOR_PROFILES = {
@@ -969,6 +1080,16 @@ FINANCIAL_SECTOR_TICKERS = {
     "8306.T", "8316.T", "8411.T", "8308.T", "8309.T", "8331.T", "8354.T",
     "5831.T", "7186.T", "8304.T",  # banques
     "8766.T", "8725.T", "8630.T", "8750.T", "8795.T",  # assureurs
+    # Hang Seng : banques de réseau/d'État chinoises et assureurs qui
+    # souscrivent du risque, classification reprise de la catégorisation
+    # officielle Hang Seng Indexes Company (sous-indice "Financials").
+    # HKEX (opérateur de marché) exclu — même logique que LSEG/Deutsche
+    # Börse/Euronext. CITIC Limited (conglomérat, classé "Energy,
+    # Materials, Industrials and Conglomerates" par l'indice lui-même) et
+    # Link REIT (société d'investissement immobilier) laissés en
+    # méthodologie standard. HSBC déjà comptée côté FTSE (HSBA.L).
+    "0939.HK", "1299.HK", "1398.HK", "3988.HK", "2318.HK", "2628.HK",
+    "3968.HK", "2388.HK",
 }
 
 
@@ -2247,7 +2368,7 @@ SIGNAL_TRACKING_PATH = os.path.join(
 INDEX_YFINANCE_TICKERS = {
     "CAC40": "^FCHI", "DAX": "^GDAXI", "NASDAQ": "^NDX", "DOW": "^DJI",
     "FTSE": "^FTSE", "SMI": "^SSMI", "IBEX35": "^IBEX", "FTSEMIB": "FTSEMIB.MI",
-    "NIKKEI225": "^N225",
+    "NIKKEI225": "^N225", "HANGSENG": "^HSI",
 }
 SIGNAL_STOP_LOSS_PCT = -20.0     # % perte déclenchant une clôture anticipée
 SIGNAL_SHADOW_DELAY_MONTHS = 6   # délai max avant clôture forcée du signal

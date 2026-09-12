@@ -1,5 +1,22 @@
 {
   "trial_start": "2026-09-09T17:18:30.529Z",
   "trial_ended": false,
-  "positions": []
+  "positions": [
+    {
+      "id": "scalp-2026-09-12T15:47:18.126Z",
+      "direction": "vente",
+      "status": "open",
+      "entry_time": "2026-09-12T15:47:18.126Z",
+      "entry_price": 4348.33191,
+      "stop_loss": 4350.05678,
+      "take_profit": 4348.29904,
+      "trend_at_entry": "haussier",
+      "pattern_at_entry": "Étoile filante",
+      "close_time": null,
+      "close_price": null,
+      "close_reason": null,
+      "return_usd": null,
+      "return_pct": null
+    }
+  ]
 }

@@ -3273,20 +3273,32 @@ def _make_financial_fixture_statements():
     return financials, balance_sheet, cashflow, closes_by_year
 
 
-def test_extract_ratios_raises_on_financial_sector_statements_without_ebit():
-    """Documente la raison d'être d'extract_ratios_financial : la fonction
-    standard plante toujours sur de vrais comptes bancaires (ni EBITDA ni
-    EBIT, comme BNP/SocGen/Crédit Agricole/AXA) — mais désormais sur EBIT,
-    pas EBITDA (EBITDA seule est devenue optionnelle, voir
-    test_extract_ratios_degrades_gracefully_when_ebitda_missing_but_ebit_present,
-    trouvé en échec de production sur le Nikkei 225 où EBITDA peut manquer
-    sans que l'entreprise soit un établissement financier)."""
+def test_extract_ratios_degrades_but_stays_meaningless_on_financial_sector_statements():
+    """EBIT est devenu optionnel comme EBITDA (voir
+    test_extract_ratios_degrades_gracefully_when_ebit_missing_but_ebitda_absent_too,
+    trouvé en échec de production sur des gestionnaires d'actifs/trusts
+    fermés/REIT du FTSE 100/FTSE MIB) : extract_ratios ne plante plus du
+    tout sur de vrais comptes bancaires (ni EBITDA ni EBIT, comme BNP/
+    SocGen/Crédit Agricole/AXA) — roce/icr/net_debt_ebitda/cagr_ebitda/
+    fcf_conversion/EV-EBITDA dégradent tous vers leurs valeurs neutres.
+    Documente pourquoi extract_ratios_financial reste malgré tout le bon
+    choix pour un établissement financier : elle calcule de VRAIS ratios
+    (ROE, levier, P/B) là où extract_ratios ne renverrait que des
+    placeholders neutres sans aucun signal — une dégradation propre n'est
+    pas la même chose qu'une évaluation correcte."""
     financials, balance_sheet, cashflow, closes_by_year = _make_financial_fixture_statements()
-    try:
-        extract_ratios(financials, balance_sheet, cashflow, closes_by_year, shares_outstanding=100.0)
-        assert False, "expected KeyError"
-    except KeyError as e:
-        assert "EBIT" in str(e)
+
+    ratios = extract_ratios(
+        financials, balance_sheet, cashflow, closes_by_year, shares_outstanding=100.0
+    )  # ne doit plus lever KeyError
+
+    assert ratios["roce"] == 0.0
+    assert ratios["icr"] == 10.0
+    assert ratios["net_debt_ebitda"] == 0.0
+    assert ratios["cagr_ebitda"] == 0.0
+    assert ratios["fcf_conversion"] == 0.0
+    assert ratios["current_ev_ebitda"] == 0.0
+    assert ratios["avg_ev_ebitda_5y"] == 0.0
 
 
 def test_extract_ratios_degrades_gracefully_when_ebitda_missing_but_ebit_present():
@@ -3303,6 +3315,34 @@ def test_extract_ratios_degrades_gracefully_when_ebitda_missing_but_ebit_present
         financials, balance_sheet, cashflow, closes_by_year, shares_outstanding=10.0
     )  # ne doit pas lever KeyError
 
+    assert ratios["net_debt_ebitda"] == 0.0
+    assert ratios["cagr_ebitda"] == 0.0
+    assert ratios["fcf_conversion"] == 0.0
+    assert ratios["current_ev_ebitda"] == 0.0
+    assert ratios["avg_ev_ebitda_5y"] == 0.0
+
+
+def test_extract_ratios_degrades_gracefully_when_ebit_missing_but_ebitda_absent_too():
+    """Reproduit 3i Group/Aberdeen Group/Alliance Witan/F&C Investment
+    Trust/ICG/Pershing Square Holdings/Polar Capital Technology Trust/
+    Scottish Mortgage/Tritax Big Box REIT (FTSE 100) et Banca Mediolanum/
+    FinecoBank (FTSE MIB) en production : gestionnaires d'actifs, trusts
+    fermés et REIT, aucune ligne EBIT/Operating Income/Total Operating
+    Income As Reported chez yfinance (ni EBITDA), sans être des
+    établissements financiers au sens de FINANCIAL_SECTOR_TICKERS
+    (exclusion volontaire). Ne doit pas faire lever KeyError — roce/icr
+    dégradent vers leurs valeurs neutres (0.0 / 10.0) en plus des facteurs
+    déjà couverts par le test EBITDA ci-dessus, l'entreprise reste notée
+    sur ses autres facteurs (croissance, valorisation, momentum, actualité)."""
+    financials, balance_sheet, cashflow, closes_by_year = _make_fixture_statements()
+    financials = financials.drop(index=["EBITDA", "EBIT"])
+
+    ratios = extract_ratios(
+        financials, balance_sheet, cashflow, closes_by_year, shares_outstanding=10.0
+    )  # ne doit pas lever KeyError
+
+    assert ratios["roce"] == 0.0
+    assert ratios["icr"] == 10.0
     assert ratios["net_debt_ebitda"] == 0.0
     assert ratios["cagr_ebitda"] == 0.0
     assert ratios["fcf_conversion"] == 0.0

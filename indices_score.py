@@ -1597,7 +1597,20 @@ def extract_ratios(financials, balance_sheet, cashflow, closes_by_year, shares_o
     # faire échouer toute l'entreprise — jugé préférable à un score partiel
     # manquant purement et simplement.
     ebitda = _get_row_or_nan(financials, "EBITDA", "Normalized EBITDA")
-    ebit = get_row(financials, "EBIT", "Operating Income", "Total Operating Income As Reported")
+    # _get_row_or_nan (pas get_row) : trouvé en échec de production sur le
+    # FTSE 100/FTSE MIB — gestionnaires d'actifs, trusts fermés et REIT
+    # (3i Group, Aberdeen Group, Alliance Witan, F&C Investment Trust, ICG,
+    # Pershing Square Holdings, Polar Capital Technology Trust, Scottish
+    # Mortgage, Tritax Big Box REIT, Banca Mediolanum, FinecoBank) n'ont
+    # AUCUNE ligne EBIT/Operating Income chez yfinance — leur compte de
+    # résultat n'a pas la forme d'une entreprise opérationnelle classique,
+    # sans pour autant être des banques/assureurs au sens de
+    # FINANCIAL_SECTOR_TICKERS (exclues de cette méthodologie à dessein).
+    # ROCE/ICR dégradent vers leurs valeurs neutres ci-dessous (gardes
+    # _is_missing ajoutées) — ces entreprises restent notées sur leurs
+    # autres facteurs (croissance, valorisation, momentum, actualité)
+    # plutôt que d'être exclues entièrement du scoring.
+    ebit = _get_row_or_nan(financials, "EBIT", "Operating Income", "Total Operating Income As Reported")
     net_income = get_row(financials, "Net Income", "Net Income Common Stockholders")
     tax_rate = get_row(financials, "Tax Rate For Calcs")
 
@@ -1657,7 +1670,8 @@ def extract_ratios(financials, balance_sheet, cashflow, closes_by_year, shares_o
     # score final via une division silencieusement invalide.
     roce = (
         (ebit[latest] * (1 - tax_rate[latest]) / economic_assets_latest) * 100
-        if economic_assets_latest and not _is_missing(economic_assets_latest) else 0.0
+        if economic_assets_latest and not _is_missing(economic_assets_latest)
+        and not _is_missing(ebit[latest]) else 0.0
     )
     roe = (
         (net_income[latest] / equity_latest) * 100
@@ -1670,7 +1684,8 @@ def extract_ratios(financials, balance_sheet, cashflow, closes_by_year, shares_o
     )
     icr = (
         ebit[latest] / (total_debt_latest * (DEBT_INTEREST_RATE_PROXY / 100))
-        if total_debt_latest and not _is_missing(total_debt_latest) else 10.0
+        if total_debt_latest and not _is_missing(total_debt_latest)
+        and not _is_missing(ebit[latest]) else 10.0
     )  # proxy frais financiers si non isolés (DEBT_INTEREST_RATE_PROXY) — parenthèses
     # nécessaires pour rester strictement identique à l'ancien littéral `* 0.03`
     # (l'associativité par défaut donnait `(total_debt * 3.0) / 100`, qui diffère

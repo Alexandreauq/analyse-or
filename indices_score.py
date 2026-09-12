@@ -450,6 +450,35 @@ FTSE_COMPANIES = [
     {"ticker": "WTB.L", "name": "Whitbread"},
 ]
 
+# SMI (SIX Swiss Exchange) — SMI cœur, 20/20 constituants, aucun
+# chevauchement avec les autres indices (vérifié y compris pour les
+# doubles cotations US : Alcon/Amrize/Logitech). Sourcé le 2026-09-12 via
+# Wikipédia + recoupement marketscreener/iShares CSSMI — voir
+# docs/superpowers/smi-research-report.md pour le détail complet. Roche
+# se négocie sous "ROP.SW" depuis mars 2026, pas l'ancien "ROG.SW".
+SMI_COMPANIES = [
+    {"ticker": "ABBN.SW", "name": "ABB"},
+    {"ticker": "ALC.SW", "name": "Alcon"},
+    {"ticker": "AMRZ.SW", "name": "Amrize"},
+    {"ticker": "GEBN.SW", "name": "Geberit"},
+    {"ticker": "GIVN.SW", "name": "Givaudan"},
+    {"ticker": "HOLN.SW", "name": "Holcim"},
+    {"ticker": "KNIN.SW", "name": "Kuehne + Nagel"},
+    {"ticker": "LOGN.SW", "name": "Logitech"},
+    {"ticker": "LONN.SW", "name": "Lonza Group"},
+    {"ticker": "NESN.SW", "name": "Nestlé"},
+    {"ticker": "NOVN.SW", "name": "Novartis"},
+    {"ticker": "PGHN.SW", "name": "Partners Group"},
+    {"ticker": "CFR.SW", "name": "Richemont"},
+    {"ticker": "ROP.SW", "name": "Roche Holding"},
+    {"ticker": "SIKA.SW", "name": "Sika"},
+    {"ticker": "SLHN.SW", "name": "Swiss Life Holding"},
+    {"ticker": "SREN.SW", "name": "Swiss Re"},
+    {"ticker": "SCMN.SW", "name": "Swisscom"},
+    {"ticker": "UBSG.SW", "name": "UBS Group"},
+    {"ticker": "ZURN.SW", "name": "Zurich Insurance Group"},
+]
+
 # Chaque entreprise de COMPANIES porte son propre indice ("index" ajouté
 # ici, pas dans CAC40_COMPANIES/DAX_COMPANIES/NASDAQ_COMPANIES/
 # DOW_COMPANIES eux-mêmes, pour garder ces listes lisibles) — remplace
@@ -466,15 +495,22 @@ COMPANIES = (
     + [{**c, "index": "NASDAQ"} for c in NASDAQ_COMPANIES]
     + [{**c, "index": "DOW"} for c in DOW_COMPANIES]
     + [{**c, "index": "FTSE"} for c in FTSE_COMPANIES]
+    + [{**c, "index": "SMI"} for c in SMI_COMPANIES]
 )
-INDEX_NAMES = {"CAC40": "CAC 40", "DAX": "DAX", "NASDAQ": "Nasdaq 100", "DOW": "Dow Jones", "FTSE": "FTSE 100"}
+INDEX_NAMES = {
+    "CAC40": "CAC 40", "DAX": "DAX", "NASDAQ": "Nasdaq 100", "DOW": "Dow Jones",
+    "FTSE": "FTSE 100", "SMI": "SMI",
+}
 
 # Devise native de chaque indice — CAC40/DAX publient en euros, le
 # Nasdaq-100 et le Dow Jones en dollars. Consommé côté frontend
 # (docs/index.html) pour afficher le bon symbole plutôt que de supposer
 # € partout (bug de fond corrigé à l'occasion de l'ajout du Nasdaq, pas
 # seulement étendu).
-INDEX_CURRENCY = {"CAC40": "EUR", "DAX": "EUR", "NASDAQ": "USD", "DOW": "USD", "FTSE": "GBP"}
+INDEX_CURRENCY = {
+    "CAC40": "EUR", "DAX": "EUR", "NASDAQ": "USD", "DOW": "USD",
+    "FTSE": "GBP", "SMI": "CHF",
+}
 
 SECTOR_PROFILES = {
     "Utilities": "defensif",
@@ -565,6 +601,10 @@ FINANCIAL_SECTOR_TICKERS = {
     # méthodologie standard, pas ajouté ici.
     "HSBA.L", "BARC.L", "LLOY.L", "NWG.L", "STAN.L", "INVP.L", "BGEO.L",
     "PRU.L", "LGEN.L", "AV.L", "MNG.L", "SDLF.L", "ADM.L", "BEZ.L", "HSX.L",
+    # SMI : banque et assureurs/réassureurs qui souscrivent du risque —
+    # Partners Group (PGHN.SW, gestionnaire d'actifs alternatifs) exclue,
+    # même logique que les gestionnaires d'actifs déjà exclus côté FTSE.
+    "UBSG.SW", "ZURN.SW", "SREN.SW", "SLHN.SW",
 }
 
 
@@ -1840,7 +1880,10 @@ SIGNAL_TRACKING_PATH = os.path.join(
 )
 # Indices utilisés comme benchmark de chaque position (voir "index" sur
 # chaque société — CAC40/DAX) : tickers yfinance correspondants.
-INDEX_YFINANCE_TICKERS = {"CAC40": "^FCHI", "DAX": "^GDAXI", "NASDAQ": "^NDX", "DOW": "^DJI", "FTSE": "^FTSE"}
+INDEX_YFINANCE_TICKERS = {
+    "CAC40": "^FCHI", "DAX": "^GDAXI", "NASDAQ": "^NDX", "DOW": "^DJI",
+    "FTSE": "^FTSE", "SMI": "^SSMI",
+}
 SIGNAL_STOP_LOSS_PCT = -20.0     # % perte déclenchant une clôture anticipée
 SIGNAL_SHADOW_DELAY_MONTHS = 6   # délai max avant clôture forcée du signal
                                   # ET date du benchmark "tenir 6 mois pleins"
@@ -2424,6 +2467,7 @@ def estimate_entry_exit_prices(
 FRED_RISK_FREE_SERIES = "IRLTLT01FRM156N"  # OAT 10 ans (France), FRED/OCDE, mensuel
 FRED_RISK_FREE_SERIES_US = "DGS10"  # Treasury 10 ans (US), FRED, quotidien — ajouté avec le Nasdaq-100 : le taux sans risque du CAPM doit correspondre à la devise des cash-flows valorisés (dollars pour le Nasdaq), pas être le taux France appliqué partout par défaut.
 FRED_RISK_FREE_SERIES_UK = "IRLTLT01GBM156N"  # Gilt 10 ans (UK), FRED/OCDE, mensuel — même série/fréquence que la France, ajouté avec le FTSE 100.
+FRED_RISK_FREE_SERIES_CH = "IRLTLT01CHM156N"  # Emprunt confédéral 10 ans (Suisse), FRED/OCDE, mensuel — même famille de série que France/UK, ajouté avec le SMI.
 
 # Taux sans risque à utiliser selon la devise de l'entreprise (voir
 # INDEX_CURRENCY) — CAC40/DAX (EUR) gardent le taux France historique,
@@ -2434,6 +2478,7 @@ RISK_FREE_SERIES_BY_CURRENCY = {
     "EUR": FRED_RISK_FREE_SERIES,
     "USD": FRED_RISK_FREE_SERIES_US,
     "GBP": FRED_RISK_FREE_SERIES_UK,
+    "CHF": FRED_RISK_FREE_SERIES_CH,
 }
 
 

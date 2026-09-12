@@ -2606,17 +2606,18 @@ def test_main_payload_includes_index_metadata(monkeypatch, tmp_path):
     assert written["index_names"] == {
         "CAC40": "CAC 40", "DAX": "DAX", "NASDAQ": "Nasdaq 100", "DOW": "Dow Jones",
         "FTSE": "FTSE 100", "SMI": "SMI", "IBEX35": "IBEX 35", "FTSEMIB": "FTSE MIB",
+        "NIKKEI225": "Nikkei 225",
     }
     assert written["index_currency"] == {
         "CAC40": "EUR", "DAX": "EUR", "NASDAQ": "USD", "DOW": "USD", "FTSE": "GBP",
-        "SMI": "CHF", "IBEX35": "EUR", "FTSEMIB": "EUR",
+        "SMI": "CHF", "IBEX35": "EUR", "FTSEMIB": "EUR", "NIKKEI225": "JPY",
     }
     assert written["index_prices"] == fake_index_prices
     written_by_ticker = {c["ticker"]: c["index"] for c in written["companies"]}
     for company in indices_score.COMPANIES:
         assert written_by_ticker[company["ticker"]] == company["index"]
     assert {c["index"] for c in written["companies"]} == {
-        "CAC40", "DAX", "NASDAQ", "DOW", "FTSE", "SMI", "IBEX35", "FTSEMIB",
+        "CAC40", "DAX", "NASDAQ", "DOW", "FTSE", "SMI", "IBEX35", "FTSEMIB", "NIKKEI225",
     }
 
 
@@ -2634,6 +2635,7 @@ def test_main_routes_risk_free_rate_by_currency(monkeypatch, tmp_path):
             indices_score.FRED_RISK_FREE_SERIES_US: 4.20,
             indices_score.FRED_RISK_FREE_SERIES_UK: 4.55,
             indices_score.FRED_RISK_FREE_SERIES_CH: 0.31,
+            indices_score.FRED_RISK_FREE_SERIES_JP: 2.67,
         }[series_id]
 
     monkeypatch.setattr(indices_score, "fetch_risk_free_rate", _fake_fetch_risk_free_rate)
@@ -2656,7 +2658,7 @@ def test_main_routes_risk_free_rate_by_currency(monkeypatch, tmp_path):
         indices_score, "fetch_index_prices",
         lambda: {
             "CAC40": None, "DAX": None, "NASDAQ": None, "DOW": None,
-            "FTSE": None, "SMI": None, "IBEX35": None, "FTSEMIB": None,
+            "FTSE": None, "SMI": None, "IBEX35": None, "FTSEMIB": None, "NIKKEI225": None,
         },
     )
     output_path = tmp_path / "indices.json"
@@ -2670,11 +2672,13 @@ def test_main_routes_risk_free_rate_by_currency(monkeypatch, tmp_path):
     smi_ticker = indices_score.SMI_COMPANIES[0]["ticker"]
     ibex_ticker = indices_score.IBEX35_COMPANIES[0]["ticker"]
     ftsemib_ticker = indices_score.FTSEMIB_COMPANIES[0]["ticker"]
+    nikkei_ticker = indices_score.NIKKEI225_COMPANIES[0]["ticker"]
     assert received_rates[cac40_ticker] == 3.68
     assert received_rates[nasdaq_ticker] == 4.20
     assert received_rates[ftse_ticker] == 4.55
     assert received_rates[smi_ticker] == 0.31
     assert received_rates[ibex_ticker] == 3.68
+    assert received_rates[nikkei_ticker] == 2.67
     assert received_rates[ftsemib_ticker] == 3.68
 
 
@@ -3445,9 +3449,9 @@ def test_financial_sector_tickers_are_in_companies():
 def test_companies_combines_all_indices_with_correct_index_tag():
     """COMPANIES doit être l'union de CAC40_COMPANIES, DAX_COMPANIES,
     NASDAQ_COMPANIES, DOW_COMPANIES, FTSE_COMPANIES, SMI_COMPANIES,
-    IBEX35_COMPANIES et FTSEMIB_COMPANIES, chaque entreprise gardant son
-    propre indice — pas une seule valeur globale (l'ancien bug qu'INDEX_KEY
-    représentait)."""
+    IBEX35_COMPANIES, FTSEMIB_COMPANIES et NIKKEI225_COMPANIES, chaque
+    entreprise gardant son propre indice — pas une seule valeur globale
+    (l'ancien bug qu'INDEX_KEY représentait)."""
     assert len(indices_score.COMPANIES) == (
         len(indices_score.CAC40_COMPANIES)
         + len(indices_score.DAX_COMPANIES)
@@ -3457,6 +3461,7 @@ def test_companies_combines_all_indices_with_correct_index_tag():
         + len(indices_score.SMI_COMPANIES)
         + len(indices_score.IBEX35_COMPANIES)
         + len(indices_score.FTSEMIB_COMPANIES)
+        + len(indices_score.NIKKEI225_COMPANIES)
     )
     by_ticker = {c["ticker"]: c["index"] for c in indices_score.COMPANIES}
     for c in indices_score.CAC40_COMPANIES:
@@ -3475,9 +3480,31 @@ def test_companies_combines_all_indices_with_correct_index_tag():
         assert by_ticker[c["ticker"]] == "IBEX35"
     for c in indices_score.FTSEMIB_COMPANIES:
         assert by_ticker[c["ticker"]] == "FTSEMIB"
+    for c in indices_score.NIKKEI225_COMPANIES:
+        assert by_ticker[c["ticker"]] == "NIKKEI225"
     assert set(indices_score.INDEX_NAMES) >= {
-        "CAC40", "DAX", "NASDAQ", "DOW", "FTSE", "SMI", "IBEX35", "FTSEMIB",
+        "CAC40", "DAX", "NASDAQ", "DOW", "FTSE", "SMI", "IBEX35", "FTSEMIB", "NIKKEI225",
     }
+
+
+def test_nikkei225_has_no_overlap_with_other_indices():
+    nikkei_tickers = {c["ticker"] for c in indices_score.NIKKEI225_COMPANIES}
+    other_tickers = {
+        c["ticker"] for c in (
+            indices_score.CAC40_COMPANIES + indices_score.DAX_COMPANIES
+            + indices_score.NASDAQ_COMPANIES + indices_score.DOW_COMPANIES
+            + indices_score.FTSE_COMPANIES + indices_score.SMI_COMPANIES
+            + indices_score.IBEX35_COMPANIES + indices_score.FTSEMIB_COMPANIES
+        )
+    }
+    assert nikkei_tickers & other_tickers == set()
+
+
+def test_nikkei225_financial_sector_tickers_are_in_nikkei225_companies():
+    nikkei_tickers = {c["ticker"] for c in indices_score.NIKKEI225_COMPANIES}
+    nikkei_financial_tickers = {t for t in indices_score.FINANCIAL_SECTOR_TICKERS if t.endswith(".T")}
+    assert nikkei_financial_tickers <= nikkei_tickers
+    assert len(nikkei_financial_tickers) == 15
 
 
 def test_dow_companies_does_not_duplicate_tickers_already_in_nasdaq():
@@ -3751,6 +3778,7 @@ def test_fetch_index_prices_returns_latest_close_per_index(monkeypatch):
     assert result == {
         "CAC40": 7850.0, "DAX": 7850.0, "NASDAQ": 7850.0, "DOW": 7850.0,
         "FTSE": 7850.0, "SMI": 7850.0, "IBEX35": 7850.0, "FTSEMIB": 7850.0,
+        "NIKKEI225": 7850.0,
     }
 
 
@@ -3777,7 +3805,7 @@ def test_fetch_index_prices_returns_all_none_when_yfinance_unavailable(monkeypat
     monkeypatch.setattr(indices_score, "yf", None)
     assert indices_score.fetch_index_prices() == {
         "CAC40": None, "DAX": None, "NASDAQ": None, "DOW": None, "FTSE": None,
-        "SMI": None, "IBEX35": None, "FTSEMIB": None,
+        "SMI": None, "IBEX35": None, "FTSEMIB": None, "NIKKEI225": None,
     }
 
 

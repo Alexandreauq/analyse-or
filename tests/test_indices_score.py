@@ -2606,18 +2606,19 @@ def test_main_payload_includes_index_metadata(monkeypatch, tmp_path):
     assert written["index_names"] == {
         "CAC40": "CAC 40", "DAX": "DAX", "NASDAQ": "Nasdaq 100", "DOW": "Dow Jones",
         "FTSE": "FTSE 100", "SMI": "SMI", "IBEX35": "IBEX 35", "FTSEMIB": "FTSE MIB",
-        "NIKKEI225": "Nikkei 225",
+        "NIKKEI225": "Nikkei 225", "HANGSENG": "Hang Seng",
     }
     assert written["index_currency"] == {
         "CAC40": "EUR", "DAX": "EUR", "NASDAQ": "USD", "DOW": "USD", "FTSE": "GBP",
-        "SMI": "CHF", "IBEX35": "EUR", "FTSEMIB": "EUR", "NIKKEI225": "JPY",
+        "SMI": "CHF", "IBEX35": "EUR", "FTSEMIB": "EUR", "NIKKEI225": "JPY", "HANGSENG": "HKD",
     }
     assert written["index_prices"] == fake_index_prices
     written_by_ticker = {c["ticker"]: c["index"] for c in written["companies"]}
     for company in indices_score.COMPANIES:
         assert written_by_ticker[company["ticker"]] == company["index"]
     assert {c["index"] for c in written["companies"]} == {
-        "CAC40", "DAX", "NASDAQ", "DOW", "FTSE", "SMI", "IBEX35", "FTSEMIB", "NIKKEI225",
+        "CAC40", "DAX", "NASDAQ", "DOW", "FTSE", "SMI", "IBEX35", "FTSEMIB",
+        "NIKKEI225", "HANGSENG",
     }
 
 
@@ -2658,7 +2659,8 @@ def test_main_routes_risk_free_rate_by_currency(monkeypatch, tmp_path):
         indices_score, "fetch_index_prices",
         lambda: {
             "CAC40": None, "DAX": None, "NASDAQ": None, "DOW": None,
-            "FTSE": None, "SMI": None, "IBEX35": None, "FTSEMIB": None, "NIKKEI225": None,
+            "FTSE": None, "SMI": None, "IBEX35": None, "FTSEMIB": None,
+            "NIKKEI225": None, "HANGSENG": None,
         },
     )
     output_path = tmp_path / "indices.json"
@@ -2673,6 +2675,7 @@ def test_main_routes_risk_free_rate_by_currency(monkeypatch, tmp_path):
     ibex_ticker = indices_score.IBEX35_COMPANIES[0]["ticker"]
     ftsemib_ticker = indices_score.FTSEMIB_COMPANIES[0]["ticker"]
     nikkei_ticker = indices_score.NIKKEI225_COMPANIES[0]["ticker"]
+    hangseng_ticker = indices_score.HANGSENG_COMPANIES[0]["ticker"]
     assert received_rates[cac40_ticker] == 3.68
     assert received_rates[nasdaq_ticker] == 4.20
     assert received_rates[ftse_ticker] == 4.55
@@ -2680,6 +2683,7 @@ def test_main_routes_risk_free_rate_by_currency(monkeypatch, tmp_path):
     assert received_rates[ibex_ticker] == 3.68
     assert received_rates[nikkei_ticker] == 2.67
     assert received_rates[ftsemib_ticker] == 3.68
+    assert received_rates[hangseng_ticker] is None
 
 
 import pandas as pd
@@ -3449,9 +3453,9 @@ def test_financial_sector_tickers_are_in_companies():
 def test_companies_combines_all_indices_with_correct_index_tag():
     """COMPANIES doit être l'union de CAC40_COMPANIES, DAX_COMPANIES,
     NASDAQ_COMPANIES, DOW_COMPANIES, FTSE_COMPANIES, SMI_COMPANIES,
-    IBEX35_COMPANIES, FTSEMIB_COMPANIES et NIKKEI225_COMPANIES, chaque
-    entreprise gardant son propre indice — pas une seule valeur globale
-    (l'ancien bug qu'INDEX_KEY représentait)."""
+    IBEX35_COMPANIES, FTSEMIB_COMPANIES, NIKKEI225_COMPANIES et
+    HANGSENG_COMPANIES, chaque entreprise gardant son propre indice — pas
+    une seule valeur globale (l'ancien bug qu'INDEX_KEY représentait)."""
     assert len(indices_score.COMPANIES) == (
         len(indices_score.CAC40_COMPANIES)
         + len(indices_score.DAX_COMPANIES)
@@ -3462,6 +3466,7 @@ def test_companies_combines_all_indices_with_correct_index_tag():
         + len(indices_score.IBEX35_COMPANIES)
         + len(indices_score.FTSEMIB_COMPANIES)
         + len(indices_score.NIKKEI225_COMPANIES)
+        + len(indices_score.HANGSENG_COMPANIES)
     )
     by_ticker = {c["ticker"]: c["index"] for c in indices_score.COMPANIES}
     for c in indices_score.CAC40_COMPANIES:
@@ -3482,8 +3487,11 @@ def test_companies_combines_all_indices_with_correct_index_tag():
         assert by_ticker[c["ticker"]] == "FTSEMIB"
     for c in indices_score.NIKKEI225_COMPANIES:
         assert by_ticker[c["ticker"]] == "NIKKEI225"
+    for c in indices_score.HANGSENG_COMPANIES:
+        assert by_ticker[c["ticker"]] == "HANGSENG"
     assert set(indices_score.INDEX_NAMES) >= {
-        "CAC40", "DAX", "NASDAQ", "DOW", "FTSE", "SMI", "IBEX35", "FTSEMIB", "NIKKEI225",
+        "CAC40", "DAX", "NASDAQ", "DOW", "FTSE", "SMI", "IBEX35", "FTSEMIB",
+        "NIKKEI225", "HANGSENG",
     }
 
 
@@ -3505,6 +3513,33 @@ def test_nikkei225_financial_sector_tickers_are_in_nikkei225_companies():
     nikkei_financial_tickers = {t for t in indices_score.FINANCIAL_SECTOR_TICKERS if t.endswith(".T")}
     assert nikkei_financial_tickers <= nikkei_tickers
     assert len(nikkei_financial_tickers) == 15
+
+
+def test_hangseng_does_not_duplicate_ticker_already_in_ftse():
+    """HSBC Holdings (HSBA.L) est un constituant Hang Seng réel mais reste
+    suivie uniquement côté FTSE_COMPANIES, avec also_indices=["HANGSENG"]
+    — pas dupliquée dans HANGSENG_COMPANIES."""
+    ftse_tickers = {c["ticker"] for c in indices_score.FTSE_COMPANIES}
+    hangseng_tickers = {c["ticker"] for c in indices_score.HANGSENG_COMPANIES}
+    assert ftse_tickers & hangseng_tickers == set()
+    hsbc = next(c for c in indices_score.FTSE_COMPANIES if c["ticker"] == "HSBA.L")
+    assert hsbc.get("also_indices") == ["HANGSENG"]
+
+
+def test_hangseng_financial_sector_tickers_are_in_hangseng_companies():
+    hangseng_tickers = {c["ticker"] for c in indices_score.HANGSENG_COMPANIES}
+    hangseng_financial_tickers = {t for t in indices_score.FINANCIAL_SECTOR_TICKERS if t.endswith(".HK")}
+    assert hangseng_financial_tickers <= hangseng_tickers
+    assert len(hangseng_financial_tickers) == 8
+
+
+def test_hkd_has_no_risk_free_series_and_falls_back_gracefully():
+    """Hong Kong n'est pas membre de l'OCDE — aucune série FRED de taux
+    long terme n'existe pour le HKD (IRLTLT01HKM156N confirmé absent).
+    RISK_FREE_SERIES_BY_CURRENCY n'a donc volontairement aucune entrée
+    "HKD" : le code doit retomber sur COST_OF_CAPITAL_PROXY plutôt que
+    planter ou utiliser un faux identifiant de série."""
+    assert "HKD" not in indices_score.RISK_FREE_SERIES_BY_CURRENCY
 
 
 def test_dow_companies_does_not_duplicate_tickers_already_in_nasdaq():
@@ -3778,7 +3813,7 @@ def test_fetch_index_prices_returns_latest_close_per_index(monkeypatch):
     assert result == {
         "CAC40": 7850.0, "DAX": 7850.0, "NASDAQ": 7850.0, "DOW": 7850.0,
         "FTSE": 7850.0, "SMI": 7850.0, "IBEX35": 7850.0, "FTSEMIB": 7850.0,
-        "NIKKEI225": 7850.0,
+        "NIKKEI225": 7850.0, "HANGSENG": 7850.0,
     }
 
 
@@ -3805,7 +3840,7 @@ def test_fetch_index_prices_returns_all_none_when_yfinance_unavailable(monkeypat
     monkeypatch.setattr(indices_score, "yf", None)
     assert indices_score.fetch_index_prices() == {
         "CAC40": None, "DAX": None, "NASDAQ": None, "DOW": None, "FTSE": None,
-        "SMI": None, "IBEX35": None, "FTSEMIB": None, "NIKKEI225": None,
+        "SMI": None, "IBEX35": None, "FTSEMIB": None, "NIKKEI225": None, "HANGSENG": None,
     }
 
 

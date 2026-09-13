@@ -302,15 +302,62 @@ const SCALP_LEVEL_PROXIMITY = 0.5; // $ de tolérance pour juger un "rebond" sur
 const SCALP_MIN_CANDLES = Math.max(SCALP_BOLLINGER_PERIOD, SCALP_MACD_SLOW + SCALP_MACD_SIGNAL) + 1; // MACD(26,9) a besoin de ~35 bougies pour une EMA fiable — Bollinger(20) seul ne suffit pas comme garde-fou
 const SCALP_STOP_BUFFER = SCALP_LEVEL_PROXIMITY * 3; // marge du stop au-delà du niveau, distincte de la tolérance de "rebond" (SCALP_LEVEL_PROXIMITY) — un stop à peine plus loin que le niveau lui-même serait déclenché par le bruit normal du marché plutôt que par une vraie invalidation du scénario de trade
 
+// Fenêtre de black-out autour des publications macro à très fort impact
+// (CPI, Emploi US/NFP, décision FOMC) — l'or peut bouger énormément en
+// quelques minutes sur ces annonces, et une bougie extrême causée par la
+// news peut satisfaire à tort les conditions d'une vraie figure de
+// retournement (ex. Étoile filante), déclenchant une entrée sur du bruit
+// macro plutôt qu'un signal technique. Dates 2026 sourcées directement
+// aux calendriers officiels (bls.gov/schedule/news_release/cpi.htm et
+// .../empsit.htm, federalreserve.gov/monetarypolicy/fomccalendars.htm),
+// converties en UTC (8h30 ET pour CPI/Emploi, 14h00 ET pour la décision
+// FOMC — 2e jour de chaque réunion — en tenant compte de l'heure d'été
+// US, du 08/03/2026 au 01/11/2026 inclus). À mettre à jour quand le
+// calendrier 2027 est publié (généralement fin d'année précédente).
+const SCALP_NEWS_BLACKOUT_MINUTES = 15;
+const SCALP_HIGH_IMPACT_EVENTS_UTC = [
+  // CPI (indice des prix à la consommation US), 8h30 ET
+  '2026-01-13T13:30:00Z', '2026-02-13T13:30:00Z', '2026-03-11T12:30:00Z',
+  '2026-04-10T12:30:00Z', '2026-05-12T12:30:00Z', '2026-06-10T12:30:00Z',
+  '2026-07-14T12:30:00Z', '2026-08-12T12:30:00Z', '2026-09-11T12:30:00Z',
+  '2026-10-14T12:30:00Z', '2026-11-10T13:30:00Z', '2026-12-10T13:30:00Z',
+  // Emploi US / NFP (Employment Situation), 8h30 ET
+  '2026-01-09T13:30:00Z', '2026-02-11T13:30:00Z', '2026-03-06T13:30:00Z',
+  '2026-04-03T12:30:00Z', '2026-05-08T12:30:00Z', '2026-06-05T12:30:00Z',
+  '2026-07-02T12:30:00Z', '2026-08-07T12:30:00Z', '2026-09-04T12:30:00Z',
+  '2026-10-02T12:30:00Z', '2026-11-06T13:30:00Z', '2026-12-04T13:30:00Z',
+  // Décision FOMC (taux directeur), 14h00 ET, 2e jour de chaque réunion
+  '2026-01-28T19:00:00Z', '2026-03-18T18:00:00Z', '2026-04-29T18:00:00Z',
+  '2026-06-17T18:00:00Z', '2026-07-29T18:00:00Z', '2026-09-16T18:00:00Z',
+  '2026-10-28T18:00:00Z', '2026-12-09T19:00:00Z',
+];
+
+/**
+ * `date` tombe-t-elle dans la fenêtre de black-out (±SCALP_NEWS_BLACKOUT_MINUTES)
+ * d'une publication macro à très fort impact ? Utilisé pour neutraliser
+ * computeSignal plutôt que de laisser le moteur technique interpréter le
+ * bruit de la publication comme un vrai signal.
+ */
+function isNewsBlackout(date) {
+  const t = date.getTime();
+  const windowMs = SCALP_NEWS_BLACKOUT_MINUTES * 60 * 1000;
+  return SCALP_HIGH_IMPACT_EVENTS_UTC.some(iso => Math.abs(t - new Date(iso).getTime()) <= windowMs);
+}
+
 /**
  * Moteur de confluence (spec §6) : combine tendance + S/R + indicateurs +
  * chandeliers en un signal Achat/Vente/Neutre, avec Entrée/Stop-loss/TP
  * si un signal est émis. Ne lève jamais d'exception — `candles` trop
- * court renvoie `neutre` avec tous les champs de prix à null.
+ * court renvoie `neutre` avec tous les champs de prix à null, de même
+ * qu'en pleine fenêtre de black-out macro (voir isNewsBlackout).
  */
 function computeSignal(candles) {
   const price = candles.length ? candles[candles.length - 1].close : null;
   if (!price || candles.length < SCALP_MIN_CANDLES) {
+    return { status: 'neutre', price, entry: null, stopLoss: null, takeProfit: null, trend: 'neutre', pattern: null };
+  }
+  const asOf = new Date(candles[candles.length - 1].time.replace(' ', 'T') + 'Z');
+  if (isNewsBlackout(asOf)) {
     return { status: 'neutre', price, entry: null, stopLoss: null, takeProfit: null, trend: 'neutre', pattern: null };
   }
 
@@ -404,6 +451,6 @@ if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
     fetchGoldCandles, detectPivots, classifyTrend, currentLevels,
     computeRSI, computeMACD, computeBollinger, matchCandlestickPattern,
-    computeSignal,
+    computeSignal, isNewsBlackout, SCALP_HIGH_IMPACT_EVENTS_UTC, SCALP_NEWS_BLACKOUT_MINUTES,
   };
 }

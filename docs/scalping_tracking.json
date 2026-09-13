@@ -257,6 +257,22 @@
       "close_reason": "tp_hit",
       "return_usd": 0.03279999999995198,
       "return_pct": 0.0007543122490446148
+    },
+    {
+      "id": "scalp-2026-09-13T01:19:04.676Z",
+      "direction": "vente",
+      "status": "open",
+      "entry_time": "2026-09-13T01:19:04.676Z",
+      "entry_price": 4348.36184,
+      "stop_loss": 4350.05685,
+      "take_profit": 4348.30073,
+      "trend_at_entry": "haussier",
+      "pattern_at_entry": "Étoile filante",
+      "close_time": null,
+      "close_price": null,
+      "close_reason": null,
+      "return_usd": null,
+      "return_pct": null
     }
   ]
 }

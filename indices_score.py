@@ -1471,14 +1471,19 @@ def score_actualite_recente(news_items: list[dict]) -> FactorResult:
     exactement l'ancienne moyenne simple. Mise à l'échelle -10/+10.
     Neutre (0.0) si aucune actu récente exploitable — ni erreur, ni
     biais optimiste/pessimiste par défaut."""
-    cutoff = datetime.now() - timedelta(days=NEWS_SENTIMENT_WINDOW_DAYS)
+    # Comparaison en dates pures (pas datetime.now() brut) : une actu datée
+    # pile à J-14 est à minuit (00:00:00) côté item_date, alors que
+    # datetime.now() - 14j porte l'heure d'exécution courante — un run
+    # après minuit excluait donc à tort les actus du jour pile J-14 (trouvé
+    # en audit le 2026-09-13, 3 tickers concernés : FME.DE, 2269.T, 2382.HK).
+    cutoff = (datetime.now() - timedelta(days=NEWS_SENTIMENT_WINDOW_DAYS)).date()
     recent = []
     for item in news_items:
         try:
             item_date = datetime.strptime(item["date"], "%Y-%m-%d")
         except (ValueError, TypeError, KeyError):
             continue
-        if item_date >= cutoff:
+        if item_date.date() >= cutoff:
             recent.append(item)
     if not recent:
         return FactorResult(

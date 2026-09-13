@@ -264,6 +264,18 @@ def test_score_actualite_recente_ignores_old_news():
     assert result.score == 10.0  # seule l'actu récente (sentiment 1) compte
 
 
+def test_score_actualite_recente_includes_news_dated_exactly_at_window_boundary():
+    """Une actu datée pile à J-14 (NEWS_SENTIMENT_WINDOW_DAYS) doit compter
+    comme "récente" — comparaison en dates pures, pas datetime.now() brut
+    (qui porte l'heure d'exécution courante et excluait à tort ce cas
+    limite un run sur deux selon l'heure du jour). Trouvé en audit le
+    2026-09-13 (FME.DE, 2269.T, 2382.HK concernés en production)."""
+    news = [{"date": _days_ago(14), "sentiment": 1}]
+    result = score_actualite_recente(news)
+    assert result.score == 10.0
+    assert "1 actualités récentes" in result.raw_value
+
+
 def test_score_actualite_recente_neutral_when_no_news():
     result = score_actualite_recente([])
     assert result.score == 0.0

@@ -1147,7 +1147,9 @@ def _safe_value(series, col):
 ROCE_SPREAD_SCALE = 5.0  # points d'écart ROCE - coût du capital pour un score plein
 
 
-def score_rentabilite(roce: float, roe: float, cost_of_capital: float) -> FactorResult:
+def score_rentabilite(
+    roce: float, roe: float, cost_of_capital: float, *, data_available: bool = True,
+) -> FactorResult:
     """
     ROCE = rentabilité économique après IS (Résultat d'exploitation après
     IS / Actif économique). Le signal principal est l'écart entre le ROCE
@@ -1156,7 +1158,20 @@ def score_rentabilite(roce: float, roe: float, cost_of_capital: float) -> Factor
     informatif (permet de repérer si la rentabilité des capitaux propres
     provient surtout de l'effet de levier plutôt que de la performance
     opérationnelle), sans peser directement sur le score.
+
+    `data_available=False` (trouvé en audit 2026-09-13, ex. 3i Group,
+    Scottish Mortgage, Nintendo, Tencent...) : yfinance ne fournit aucune
+    ligne EBIT exploitable pour ces entreprises, et `roce` reçu vaut alors
+    0.0 par convention côté extract_ratios — sans ce garde, un ROCE
+    "manquant" de 0% face à un vrai coût du capital positif se traduisait
+    par un score NÉGATIF (donnée absente lue comme mauvaise performance)
+    plutôt qu'une absence d'opinion.
     """
+    if not data_available:
+        return FactorResult(
+            "Rentabilité / création de valeur", 0.0, WEIGHTS["rentabilite"],
+            "Donnée indisponible (pas de ligne EBIT exploitable chez la source de données)",
+        )
     spread = roce - cost_of_capital
     score = _clamp((spread / ROCE_SPREAD_SCALE) * 10)
     return FactorResult(
@@ -1196,13 +1211,25 @@ def _score_coverage(icr: float, critical: float) -> float:
     return _clamp(10.0 * (icr - critical) / critical, -10.0, 10.0)
 
 
-def score_structure_financiere(net_debt_ebitda: float, icr: float, sector: str | None) -> FactorResult:
+def score_structure_financiere(
+    net_debt_ebitda: float, icr: float, sector: str | None, *, data_available: bool = True,
+) -> FactorResult:
     """
     Dette nette/EBITDA et couverture des intérêts (ICR = EBIT / frais
     financiers nets), seuils Vernimmen ajustés par profil de risque
     sectoriel : un même niveau d'endettement ne représente pas le même
     risque selon la stabilité des flux de trésorerie du secteur.
+
+    `data_available=False` (audit 2026-09-13) : sans EBITDA/EBIT
+    exploitable, `net_debt_ebitda` reçu vaut 0.0 par convention — lu tel
+    quel, un endettement "manquant" donnait à tort le MEILLEUR score
+    possible (+10.0, endettement nul) au lieu d'une absence de donnée.
     """
+    if not data_available:
+        return FactorResult(
+            "Structure financière / solvabilité", 0.0, WEIGHTS["structure_financiere"],
+            "Donnée indisponible (pas de ligne EBITDA/EBIT exploitable chez la source de données)",
+        )
     profile = sector_risk_profile(sector)
     adjustment = SECTOR_ADJUSTMENT[profile]
 
@@ -1248,10 +1275,20 @@ FCF_CONVERSION_NEUTRAL = 50.0   # % de conversion FCF/EBITDA jugé neutre
 FCF_CONVERSION_SCALE = 5.0      # points de conversion % pour 1 point de score
 
 
-def score_generation_cash(fcf_conversion: float) -> FactorResult:
+def score_generation_cash(fcf_conversion: float, *, data_available: bool = True) -> FactorResult:
     """Conversion FCF/EBITDA (%) : au-dessus de 50%, la rentabilité comptable
     se traduit bien en cash réel ; en dessous, le BFR ou les capex absorbent
-    l'essentiel de la génération de cash."""
+    l'essentiel de la génération de cash.
+
+    `data_available=False` (audit 2026-09-13) : sans EBITDA exploitable,
+    `fcf_conversion` reçu vaut 0.0 par convention — lu tel quel, ça
+    donnait le PIRE score possible (-10.0, conversion nulle) au lieu
+    d'une absence de donnée."""
+    if not data_available:
+        return FactorResult(
+            "Génération de cash", 0.0, WEIGHTS["generation_cash"],
+            "Donnée indisponible (pas de ligne EBITDA exploitable chez la source de données)",
+        )
     score = _clamp((fcf_conversion - FCF_CONVERSION_NEUTRAL) / FCF_CONVERSION_SCALE)
     return FactorResult(
         "Génération de cash",
@@ -1286,12 +1323,25 @@ def _premium_score(current: float, avg_5y: float, cagr_ebitda: float) -> float:
 def score_valorisation(
     current_ev_ebitda: float, avg_ev_ebitda_5y: float,
     current_pe: float, avg_pe_5y: float,
-    cagr_ebitda: float,
+    cagr_ebitda: float, *, data_available: bool = True,
 ) -> FactorResult:
     """Multiples EV/EBITDA et P/E actuels comparés à la moyenne 5 ans de
     l'entreprise elle-même (pas de comparaison à des pairs au v1). Une
     prime n'est pénalisée que modérément et seulement si elle n'est pas
-    soutenue par la croissance de l'EBITDA (cf. Méthodologie section 5)."""
+    soutenue par la croissance de l'EBITDA (cf. Méthodologie section 5).
+
+    `data_available=False` (audit 2026-09-13) : sans EBITDA/résultat net
+    exploitable sur aucun exercice, les moyennes 5 ans valent 0.0 par
+    convention — `_premium_score` retombait déjà sur 0.0 (neutre) par le
+    garde `avg_5y == 0`, donc le SCORE n'était pas faussé ici (contrairement
+    aux 3 facteurs ci-dessus), mais le texte affiché ("EV/EBITDA 0.0x...")
+    donnait à tort l'impression d'une vraie donnée à 0. Garde ajouté pour
+    l'honnêteté du message, pas pour corriger un score déjà correct."""
+    if not data_available:
+        return FactorResult(
+            "Valorisation relative", 0.0, WEIGHTS["valorisation"],
+            "Donnée indisponible (pas de ligne EBITDA/résultat net exploitable chez la source de données)",
+        )
     ev_ebitda_score = _premium_score(current_ev_ebitda, avg_ev_ebitda_5y, cagr_ebitda)
     pe_score = _premium_score(current_pe, avg_pe_5y, cagr_ebitda)
     score = _clamp((ev_ebitda_score + pe_score) / 2)
@@ -1694,28 +1744,50 @@ def extract_ratios(financials, balance_sheet, cashflow, closes_by_year, shares_o
     # `ebit[latest] * (1 - nan)` = NaN jusqu'à _clamp (voir _cagr ci-dessus
     # pour le même mécanisme de bug), qui l'attribuait à tort comme score
     # Rentabilité maximal (+10.0) au lieu d'une absence de donnée.
+    # *_available (audit 2026-09-13) : ces conditions étaient déjà là pour
+    # choisir le repli (0.0/10.0) en cas de donnée manquante, mais ce repli
+    # traversait ensuite score_rentabilite/score_structure_financiere/
+    # score_generation_cash SANS distinction avec une vraie donnée — un
+    # ROCE "manquant" (0.0) face à un vrai coût du capital positif donnait
+    # un score NÉGATIF (donnée absente lue comme mauvaise performance), et
+    # une dette nette/EBITDA "manquante" (0.0) donnait au contraire un
+    # score de +10.0 (donnée absente lue comme excellente structure
+    # financière) — jamais neutre, jamais cohérent d'un facteur à l'autre.
+    # Nommer explicitement la condition (au lieu de la laisser implicite
+    # dans le repli) permet de la réutiliser telle quelle pour prévenir
+    # score_rentabilite/score_structure_financiere/score_generation_cash
+    # que la donnée manque, plutôt que de leur faire deviner à partir
+    # d'une simple valeur qui a l'air plausible.
+    roce_available = bool(
+        economic_assets_latest and not _is_missing(economic_assets_latest)
+        and not _is_missing(ebit[latest]) and not _is_missing(tax_rate[latest])
+    )
     roce = (
         (ebit[latest] * (1 - tax_rate[latest]) / economic_assets_latest) * 100
-        if economic_assets_latest and not _is_missing(economic_assets_latest)
-        and not _is_missing(ebit[latest]) and not _is_missing(tax_rate[latest]) else 0.0
+        if roce_available else 0.0
     )
     roe = (
         (net_income[latest] / equity_latest) * 100
         if equity_latest and not _is_missing(equity_latest) else 0.0
     )
 
-    net_debt_ebitda = (
-        net_debt_latest / ebitda[latest]
-        if ebitda[latest] and not _is_missing(ebitda[latest]) else 0.0
+    net_debt_ebitda_available = bool(ebitda[latest] and not _is_missing(ebitda[latest]))
+    net_debt_ebitda = net_debt_latest / ebitda[latest] if net_debt_ebitda_available else 0.0
+    icr_available = bool(
+        total_debt_latest and not _is_missing(total_debt_latest)
+        and not _is_missing(ebit[latest])
     )
     icr = (
         ebit[latest] / (total_debt_latest * (DEBT_INTEREST_RATE_PROXY / 100))
-        if total_debt_latest and not _is_missing(total_debt_latest)
-        and not _is_missing(ebit[latest]) else 10.0
+        if icr_available else 10.0
     )  # proxy frais financiers si non isolés (DEBT_INTEREST_RATE_PROXY) — parenthèses
     # nécessaires pour rester strictement identique à l'ancien littéral `* 0.03`
     # (l'associativité par défaut donnait `(total_debt * 3.0) / 100`, qui diffère
     # de `total_debt * 0.03` d'1 ULP sur ~35% des valeurs)
+    # Neutre dès que l'UN des deux sous-indicateurs manque : moyenner un
+    # score réel avec un repli déguisé donnerait un score à moitié
+    # inventé, plus trompeur qu'une absence de donnée franche.
+    structure_available = net_debt_ebitda_available and icr_available
 
     # CAGR lissé sur les 2 exercices les plus récents vs les 2 plus anciens
     # (plutôt qu'un simple point à point) pour réduire la sensibilité à une
@@ -1744,10 +1816,8 @@ def extract_ratios(financials, balance_sheet, cashflow, closes_by_year, shares_o
         op_cash_flow_latest + capex_latest
         if not _is_missing(op_cash_flow_latest) and not _is_missing(capex_latest) else 0.0
     )
-    fcf_conversion = (
-        (fcf / ebitda[latest]) * 100
-        if ebitda[latest] and not _is_missing(ebitda[latest]) else 0.0
-    )
+    fcf_conversion_available = bool(ebitda[latest] and not _is_missing(ebitda[latest]))
+    fcf_conversion = (fcf / ebitda[latest]) * 100 if fcf_conversion_available else 0.0
 
     # FCF lissé sur la même fenêtre que le CAGR (recent_cols, 1-2 exercices)
     # — utilisé comme point de départ du DCF à la place de `fcf` (le seul
@@ -1788,19 +1858,28 @@ def extract_ratios(financials, balance_sheet, cashflow, closes_by_year, shares_o
     avg_ev_ebitda_5y = sum(ev_ebitda_by_year) / len(ev_ebitda_by_year) if ev_ebitda_by_year else 0.0
     current_pe = pe_by_year[0] if pe_by_year else 0.0
     avg_pe_5y = sum(pe_by_year) / len(pe_by_year) if pe_by_year else 0.0
+    # Les deux listes se remplissent/se vident toujours ensemble (le même
+    # `continue` du bloc ci-dessus saute l'année si ebitda OU net_income
+    # manque), donc une seule condition suffit à couvrir les deux jambes
+    # (EV/EBITDA et PER) du facteur Valorisation.
+    valuation_available = bool(ev_ebitda_by_year)
 
     return {
         "roce": roce,
+        "roce_available": roce_available,
         "roe": roe,
         "net_debt_ebitda": net_debt_ebitda,
         "icr": icr,
+        "structure_available": structure_available,
         "cagr_ca": cagr_ca,
         "cagr_ebitda": cagr_ebitda,
         "fcf_conversion": fcf_conversion,
+        "fcf_conversion_available": fcf_conversion_available,
         "current_ev_ebitda": current_ev_ebitda,
         "avg_ev_ebitda_5y": avg_ev_ebitda_5y,
         "current_pe": current_pe,
         "avg_pe_5y": avg_pe_5y,
+        "valuation_available": valuation_available,
         "fcf": fcf,
         "fcf_normalized": fcf_normalized,
         "net_debt": net_debt_latest,
@@ -3349,12 +3428,22 @@ def build_company_entry(
                 f"coût du capital {cost_of_capital:.1f}%"
             )
         else:
+            # "indisponible" plutôt que le chiffre de repli (audit 2026-09-13,
+            # même motif que les FactorResult ci-dessous) : sans ça, Claude
+            # recevrait un faux "ROCE 0.0%"/"ICR 10.0x" et pourrait écrire une
+            # analyse contredisant le facteur affiché juste à côté (qui dit
+            # maintenant explicitement "Donnée indisponible").
+            roce_text = f"{data['roce']:.1f}%" if data["roce_available"] else "indisponible"
+            structure_available = data["structure_available"]
+            net_debt_ebitda_text = f"{data['net_debt_ebitda']:.1f}x" if structure_available else "indisponible"
+            icr_text = f"{data['icr']:.1f}x" if structure_available else "indisponible"
+            fcf_conversion_text = f"{data['fcf_conversion']:.0f}%" if data["fcf_conversion_available"] else "indisponible"
             ratios_summary = (
-                f"ROCE {data['roce']:.1f}%, ROE {data['roe']:.1f}%, "
-                f"dette nette/EBITDA {data['net_debt_ebitda']:.1f}x, "
-                f"ICR {data['icr']:.1f}x, CAGR CA {data['cagr_ca']:+.1f}%/an, "
+                f"ROCE {roce_text}, ROE {data['roe']:.1f}%, "
+                f"dette nette/EBITDA {net_debt_ebitda_text}, "
+                f"ICR {icr_text}, CAGR CA {data['cagr_ca']:+.1f}%/an, "
                 f"CAGR EBITDA {data['cagr_ebitda']:+.1f}%/an, "
-                f"conversion FCF/EBITDA {data['fcf_conversion']:.0f}%, "
+                f"conversion FCF/EBITDA {fcf_conversion_text}, "
                 f"coût du capital {cost_of_capital:.1f}%"
             )
         generated = generate_financial_analysis(
@@ -3402,13 +3491,22 @@ def build_company_entry(
         ]
     else:
         factors = [
-            score_rentabilite(data["roce"], data["roe"], cost_of_capital),
-            score_structure_financiere(data["net_debt_ebitda"], data["icr"], sector),
+            score_rentabilite(
+                data["roce"], data["roe"], cost_of_capital,
+                data_available=data["roce_available"],
+            ),
+            score_structure_financiere(
+                data["net_debt_ebitda"], data["icr"], sector,
+                data_available=data["structure_available"],
+            ),
             score_croissance(data["cagr_ca"], data["cagr_ebitda"]),
-            score_generation_cash(data["fcf_conversion"]),
+            score_generation_cash(
+                data["fcf_conversion"], data_available=data["fcf_conversion_available"],
+            ),
             score_valorisation(
                 data["current_ev_ebitda"], data["avg_ev_ebitda_5y"],
                 data["current_pe"], data["avg_pe_5y"], data["cagr_ebitda"],
+                data_available=data["valuation_available"],
             ),
             score_dynamique_recente(
                 data["ecart_pct_ma200"], data["quarterly_yoy_growth_ca"], data["cagr_ca"],

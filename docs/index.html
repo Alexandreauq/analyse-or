@@ -1703,6 +1703,17 @@ function renderScalpTracking(data) {
 // donc un seul préfixe suffit comme pour les 3 autres indices.
 const TV_EXCHANGE_PREFIX_BY_INDEX = { CAC40: 'EURONEXT:', DAX: 'XETR:', NASDAQ: 'NASDAQ:', DOW: 'NYSE:', FTSE: 'LSE:', SMI: 'SIX:', IBEX35: 'BME:', FTSEMIB: 'MIL:', NIKKEI225: 'TSE:', HANGSENG: 'HKEX:' };
 const TV_TICKER_SUFFIX_BY_INDEX = { CAC40: '.PA', DAX: '.DE', NASDAQ: '', DOW: '', FTSE: '.L', SMI: '.SW', IBEX35: '.MC', FTSEMIB: '.MI', NIKKEI225: '.T', HANGSENG: '.HK' };
+// LSE : certains codes EPIC "courts" portent un point terminal officiel
+// pour éviter toute collision (ex. Aviva = "AV.", pas "AV"), que Yahoo
+// absorbe dans son propre suffixe ".L" (ticker Yahoo "AV.L") — une fois ce
+// suffixe retiré normalement, TradingView reçoit "AV" au lieu du vrai code
+// et renvoie une 404 (vérifié en direct contre tradingview.com pour les 9
+// entrées ci-dessous). BT Group est un cas à part : le point EPIC est au
+// milieu ("BT.A"), pas en fin. Clé = ticker Yahoo complet.
+const TV_TICKER_OVERRIDE_BY_YAHOO_TICKER = {
+  'AV.L': 'AV.', 'BA.L': 'BA.', 'BP.L': 'BP.', 'JD.L': 'JD.', 'NG.L': 'NG.',
+  'RR.L': 'RR.', 'SN.L': 'SN.', 'UU.L': 'UU.', 'BT-A.L': 'BT.A',
+};
 
 function loadSideQuoteWidget(ticker, indexKey) {
   // Widget TradingView compact (cours + mini-graphique), injecté après coup
@@ -1717,6 +1728,9 @@ function loadSideQuoteWidget(ticker, indexKey) {
   // ("0700"), mais TradingView utilise le code brut sans padding ("700") —
   // "HKEX:0700" renvoie une 404, vérifié directement contre tradingview.com.
   if (indexKey === 'HANGSENG') bareTicker = bareTicker.replace(/^0+(?=\d)/, '');
+  if (Object.prototype.hasOwnProperty.call(TV_TICKER_OVERRIDE_BY_YAHOO_TICKER, ticker)) {
+    bareTicker = TV_TICKER_OVERRIDE_BY_YAHOO_TICKER[ticker];
+  }
   const tvSymbol = prefix ? prefix + bareTicker : null;
   const container = document.getElementById('tv-side-widget');
   if (!tvSymbol || !container) return;

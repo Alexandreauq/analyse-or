@@ -1186,6 +1186,7 @@ def _fake_ratios():
         "financial_context": "Comptes annuels (le plus récent en premier) :\n- ...",
         "latest_quarter_date": "2026-06-30",
         "is_financial": False,
+        "is_trust": False,
     }
 
 
@@ -3543,9 +3544,13 @@ def test_extract_ratios_financial_computes_expected_keys():
     # Valeurs neutres : désactivent proprement le DCF et le multiple EV/EBITDA
     # dans estimate_valuation_targets (fcf <= 0 -> None, current_ev_ebitda == 0 -> None).
     assert ratios["fcf"] == 0.0
-    assert ratios["net_debt"] == 0.0
     assert ratios["current_ev_ebitda"] == 0.0
     assert ratios["avg_ev_ebitda_5y"] == 0.0
+    # net_debt N'EST PAS une valeur neutre (depuis le 2026-09-13, ajout du
+    # profil trust) : vrai calcul Total Debt - Cash sur l'exercice le plus
+    # récent (500.0 - 200.0), sûr pour le DCF (déjà désactivé par fcf=0.0
+    # avant que net_debt ne soit utilisé).
+    assert ratios["net_debt"] == pytest.approx(300.0)
 
 
 def test_build_financial_narrative_context_omits_ebitda_ebit_for_financial_profile():
@@ -3625,6 +3630,71 @@ def test_score_valorisation_financiere_uses_pb_instead_of_ev_ebitda():
     assert result.score > 0  # décote sur les deux multiples -> favorable
 
 
+def test_score_structure_financiere_trust_low_gearing_is_strong():
+    # 3i Group réel (audit 2026-09-13) : dette nette ~626 M£ / capitaux
+    # propres ~30 887 M£ ~= 2% de gearing, bien sous le seuil confort (10%).
+    result = indices_score.score_structure_financiere_trust(net_debt=626.0, equity=30887.0)
+    assert result.name == "Structure financière / solvabilité"
+    assert result.weight == 0.20
+    assert result.score > 7.5  # gearing ~2.0% -> proche du plafond +10
+    assert "profil trust" in result.raw_value.lower()
+
+
+def test_score_structure_financiere_trust_high_gearing_is_weak():
+    # Gearing 45% (au-delà du seuil de vigilance 40%, courant pour une
+    # foncière comme Tritax Big Box) -> score faible/négatif.
+    result = indices_score.score_structure_financiere_trust(net_debt=450.0, equity=1000.0)
+    assert result.score <= -8.0
+
+
+def test_score_structure_financiere_trust_neutral_when_equity_missing():
+    result = indices_score.score_structure_financiere_trust(net_debt=100.0, equity=0.0)
+    assert result.score == 0.0
+    assert result.raw_value == (
+        "Donnée indisponible (capitaux propres non exploitables chez la source de données)"
+    )
+
+
+def test_score_generation_cash_trust_always_neutral():
+    """Pas une donnée manquante à combler : la génération de cash ne
+    s'applique structurellement pas à ce modèle d'affaires (cessions de
+    portefeuille, pas de cycle d'exploitation)."""
+    result = indices_score.score_generation_cash_trust()
+    assert result.name == "Génération de cash"
+    assert result.weight == 0.12
+    assert result.score == 0.0
+    assert "non applicable" in result.raw_value.lower()
+
+
+def test_score_valorisation_trust_discount_to_nav_is_positive():
+    # P/B < 1.0 -> décote sur la NAV -> favorable
+    result = indices_score.score_valorisation_trust(current_pb=0.85)
+    assert result.name == "Valorisation relative"
+    assert result.weight == 0.08
+    assert result.score > 0
+    assert "décote" in result.raw_value.lower()
+
+
+def test_score_valorisation_trust_premium_to_nav_is_negative():
+    # P/B > 1.0 -> prime sur la NAV -> défavorable
+    result = indices_score.score_valorisation_trust(current_pb=1.15)
+    assert result.score < 0
+    assert "prime" in result.raw_value.lower()
+
+
+def test_score_valorisation_trust_at_nav_is_neutral():
+    result = indices_score.score_valorisation_trust(current_pb=1.0)
+    assert result.score == 0.0
+
+
+def test_score_valorisation_trust_neutral_when_pb_unavailable():
+    # Alliance Witan (ALW.L) : aucun P/B exploitable chez yfinance, vérifié
+    # via un diagnostic dédié le 2026-09-13.
+    result = indices_score.score_valorisation_trust(current_pb=0.0)
+    assert result.score == 0.0
+    assert result.raw_value == "Donnée indisponible (pas de P/B exploitable chez la source de données)"
+
+
 def _fake_financial_ratios():
     return {
         "roe": 10.0, "leverage_ratio": 5.5, "cash_conversion": 90.0,
@@ -3639,6 +3709,7 @@ def _fake_financial_ratios():
         "financial_context": "Comptes annuels (le plus récent en premier) :\n- ...",
         "latest_quarter_date": "2026-06-30",
         "is_financial": True,
+        "is_trust": False,
     }
 
 
@@ -3661,6 +3732,35 @@ def test_build_company_entry_uses_financial_factors_for_financial_sector_tickers
     # que sur l'approche patrimoniale (equity/shares_outstanding = 25.0),
     # qui doit rester calculable malgré l'absence de FCF/EBITDA.
     assert entry["fair_value"] is not None
+
+
+def _fake_trust_ratios():
+    ratios = _fake_financial_ratios()
+    ratios["is_financial"] = False
+    ratios["is_trust"] = True
+    ratios["current_pb"] = 0.85  # décote de 15% sur la NAV
+    return ratios
+
+
+def test_build_company_entry_uses_trust_factors_for_trust_tickers(monkeypatch):
+    monkeypatch.setattr(indices_score, "fetch_company_financials", lambda ticker: _fake_trust_ratios())
+    monkeypatch.setattr(indices_score, "fetch_news", lambda name, prev=None: [])
+    monkeypatch.setattr(indices_score, "generate_financial_analysis", lambda *a, **k: "<p>Analyse.</p>")
+
+    entry = indices_score.build_company_entry("III.L", "3i Group", 3.0, {}, index_key="FTSE")
+
+    assert entry["is_financial"] is False
+    assert [f["name"] for f in entry["factors"]] == [
+        "Rentabilité / création de valeur", "Structure financière / solvabilité",
+        "Croissance", "Génération de cash", "Valorisation relative",
+        "Dynamique récente", "Actualité récente",
+    ]
+    cash_factor = entry["factors"][3]
+    assert cash_factor["score"] == 0.0
+    assert "non applicable" in cash_factor["raw_value"].lower()
+    valorisation_factor = entry["factors"][4]
+    assert valorisation_factor["score"] > 0  # décote sur la NAV -> favorable
+    assert "nav" in valorisation_factor["raw_value"].lower()
 
 
 def test_build_company_entry_includes_also_indices(monkeypatch):

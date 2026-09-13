@@ -1116,6 +1116,31 @@ FINANCIAL_SECTOR_TICKERS = {
 }
 
 
+# Trusts d'investissement fermés / gestionnaires d'actifs alternatifs sans
+# ligne EBITDA/EBIT exploitable chez yfinance, mais avec une raison
+# d'affaires différente d'une banque (pas de dépôts/crédits) : la "valeur"
+# de l'entreprise est son actif net (portefeuille de participations/actifs),
+# pas un résultat d'exploitation. Profil ajouté le 2026-09-13 après une
+# session de brainstorming dédiée (voir project_indices_cac40, mémoire) —
+# décote/prime sur la NAV (proxy : P/B calculé par extract_ratios_financial,
+# comparé à 1.0) plutôt que ROCE/dette nette-EBITDA. Hétérogène par
+# construction : 3i Group/Alliance Witan/F&C Investment Trust/Pershing
+# Square Holdings/Polar Capital Technology Trust/Scottish Mortgage sont de
+# purs trusts fermés (portefeuille détenu, pas d'activité opérationnelle) ;
+# Aberdeen Group et ICG sont en réalité des gestionnaires d'actifs (revenus
+# de commissions réels) ; Tritax Big Box est une foncière (loyers). Un seul
+# profil leur est appliqué à tous par pragmatisme (décision utilisateur
+# explicite), imparfait pour ces 3 derniers mais très supérieur au score
+# arbitrairement extrême de la méthodologie standard qu'ils recevaient
+# avant. Alliance Witan (ALW.L) n'a même pas de P/B exploitable chez
+# yfinance (vérifié via un diagnostic dédié) — dégrade vers le repli neutre
+# de score_valorisation_trust comme toute autre donnée manquante.
+TRUST_TICKERS = {
+    "III.L", "ABDN.L", "ALW.L", "FCIT.L", "ICG.L",
+    "PSH.L", "PCT.L", "SMT.L", "BBOX.L",
+}
+
+
 @dataclass
 class FactorResult:
     name: str
@@ -1477,6 +1502,85 @@ def score_valorisation_financiere(
         WEIGHTS["valorisation"],
         f"PER {current_pe:.1f}x (moy. 5 ans {avg_pe_5y:.1f}x) — "
         f"P/B {current_pb:.1f}x (moy. 5 ans {avg_pb_5y:.1f}x) — profil financier",
+    )
+
+
+# --- Variante "profil trust d'investissement" -----------------------------
+#
+# Voir TRUST_TICKERS pour le contexte complet. Rentabilité et Croissance
+# réutilisent telles quelles score_rentabilite_financiere/
+# score_croissance_financiere (mêmes formules, ROE/CAGR résultat net déjà
+# disponibles pour ces entreprises) — seuls Structure/Cash/Valorisation ont
+# besoin d'une logique dédiée.
+
+NET_DEBT_EQUITY_COMFORTABLE_TRUST = 10.0   # % dette nette/capitaux propres jugé confortable
+NET_DEBT_EQUITY_RISKY_TRUST = 40.0         # % à partir duquel le gearing est jugé élevé
+
+
+def score_structure_financiere_trust(net_debt: float, equity: float) -> FactorResult:
+    """Dette nette / capitaux propres (gearing), remplace dette nette/EBITDA
+    + ICR (EBITDA/EBIT indisponibles). Seuils bien plus bas que la
+    méthodologie standard (10%/40% contre 3.0x/5.5x d'EBITDA) : un trust
+    fermé est structurellement très peu endetté (pas de dépôts/crédits ni
+    de dette d'exploitation), donc un même niveau de gearing y est jugé
+    "confortable" à un seuil bien inférieur à celui d'une entreprise
+    industrielle — un gearing de 30-40% (courant pour une foncière comme
+    Tritax Big Box) y est déjà considéré élevé, alors qu'il serait neutre
+    en méthodologie standard rapportée à l'EBITDA."""
+    # Neutre (pas gearing=0.0 traité comme "endettement nul" -> +10.0) quand
+    # equity manque — même piège que le fix _cagr/roce du 2026-09-13 : une
+    # donnée absente ne doit jamais se faire passer pour un vrai zéro.
+    if not equity or _is_missing(equity) or _is_missing(net_debt):
+        return FactorResult(
+            "Structure financière / solvabilité", 0.0, WEIGHTS["structure_financiere"],
+            "Donnée indisponible (capitaux propres non exploitables chez la source de données)",
+        )
+    gearing = (net_debt / equity) * 100
+    score = _score_leverage(gearing, NET_DEBT_EQUITY_COMFORTABLE_TRUST, NET_DEBT_EQUITY_RISKY_TRUST)
+    return FactorResult(
+        "Structure financière / solvabilité",
+        score,
+        WEIGHTS["structure_financiere"],
+        f"Dette nette/capitaux propres {gearing:.1f}% (seuil confort "
+        f"{NET_DEBT_EQUITY_COMFORTABLE_TRUST:.0f}%, vigilance au-delà de "
+        f"{NET_DEBT_EQUITY_RISKY_TRUST:.0f}%) — profil trust",
+    )
+
+
+def score_generation_cash_trust() -> FactorResult:
+    """Toujours neutre : la trésorerie d'un trust fermé provient des
+    cessions/arbitrages de portefeuille, pas d'un cycle d'exploitation — un
+    proxy de conversion de cash n'aurait aucun sens économique ici (ce
+    n'est pas une donnée manquante à combler, c'est un facteur qui ne
+    s'applique structurellement pas à ce modèle d'affaires)."""
+    return FactorResult(
+        "Génération de cash", 0.0, WEIGHTS["generation_cash"],
+        "Non applicable pour ce profil (trust d'investissement) — la "
+        "génération de cash dépend des cessions de portefeuille, pas d'un "
+        "cycle d'exploitation",
+    )
+
+
+def score_valorisation_trust(current_pb: float) -> FactorResult:
+    """Décote/prime sur la NAV (proxy : P/B calculé par
+    extract_ratios_financier à partir des capitaux propres réels, pas d'un
+    champ NAV dédié — yfinance n'en expose pas pour les trusts cotés à
+    Londres, vérifié par un diagnostic dédié le 2026-09-13). Comparaison à
+    1.0 (parité avec la NAV), PAS à la moyenne 5 ans du P/B comme pour le
+    profil financier standard — le signal recherché ici est "se négocie
+    sous/sur sa valeur d'actif net aujourd'hui", la référence classique pour
+    un trust fermé, pas "moins cher que d'habitude"."""
+    if not current_pb:
+        return FactorResult(
+            "Valorisation relative", 0.0, WEIGHTS["valorisation"],
+            "Donnée indisponible (pas de P/B exploitable chez la source de données)",
+        )
+    premium_pct = (current_pb - 1.0) * 100
+    score = _clamp(-premium_pct / VALUATION_PREMIUM_SCALE, -10.0, 10.0)
+    return FactorResult(
+        "Valorisation relative", score, WEIGHTS["valorisation"],
+        f"P/B {current_pb:.2f}x vs NAV — "
+        f"{'décote' if premium_pct < 0 else 'prime'} de {abs(premium_pct):.0f}% sur la NAV",
     )
 
 
@@ -1909,8 +2013,8 @@ def extract_ratios_financial(financials, balance_sheet, cashflow, closes_by_year
     propres/actif total), conversion cash (OCF/résultat net), P/E et P/B
     plutôt que ROCE/dette nette-EBITDA/ICR/FCF-EBITDA/EV-EBITDA.
 
-    fcf/cagr_ebitda/net_debt/current_ev_ebitda/avg_ev_ebitda_5y sont tout
-    de même présents dans le dict renvoyé, à des valeurs neutres (0.0) :
+    fcf/cagr_ebitda/current_ev_ebitda/avg_ev_ebitda_5y sont tout de même
+    présents dans le dict renvoyé, à des valeurs neutres (0.0) :
     estimate_valuation_targets() y accède sans condition pour toutes les
     entreprises, et ces valeurs neutres désactivent proprement le DCF et
     la valorisation par multiple EV/EBITDA via leur garde-fou déjà
@@ -1918,7 +2022,12 @@ def extract_ratios_financial(financials, balance_sheet, cashflow, closes_by_year
     valeur repose alors uniquement sur l'approche patrimoniale (valeur
     comptable par action), une ancre usuelle pour ce secteur, plutôt que
     de construire un DCF avec un FCF ou une croissance d'EBITDA qui
-    n'existent pas."""
+    n'existent pas. `net_debt`, en revanche, est un VRAI calcul (dette
+    totale - trésorerie du dernier exercice) depuis le 2026-09-13, pas une
+    valeur neutre — sûr vis-à-vis du DCF (déjà désactivé par fcf=0.0 avant
+    que net_debt ne soit utilisé) et nécessaire pour le profil trust
+    d'investissement (voir TRUST_TICKERS), qui a une vraie notion de
+    gearing contrairement à une banque."""
     years_cols = list(financials.columns)
     n_years = len(years_cols)
     latest = years_cols[0]
@@ -1930,6 +2039,14 @@ def extract_ratios_financial(financials, balance_sheet, cashflow, closes_by_year
     total_assets = get_row(balance_sheet, "Total Assets")
     equity = get_row(balance_sheet, "Stockholders Equity", "Common Stock Equity")
     total_debt = _get_row_or_nan(balance_sheet, "Total Debt")
+    # "cash" n'était pas extrait ici avant le profil trust (2026-09-13) :
+    # net_debt était toujours forcé à 0.0 pour toutes les entreprises de ce
+    # chemin, la dette nette d'une banque n'ayant pas de sens (sa "dette"
+    # est faite de dépôts). Un trust d'investissement, en revanche, a bien
+    # une vraie position de dette nette (voir score_structure_financiere_trust)
+    # — calculée ici pour ne pas dupliquer l'extraction dans une fonction
+    # séparée juste pour ce profil.
+    cash = get_row(balance_sheet, "Cash And Cash Equivalents", "Cash Cash Equivalents And Short Term Investments")
 
     # "Operating Cash Flow" absent chez certaines entreprises (trouvé en
     # échec de production sur Swiss Life Holding SLHN.SW et Mapfre MAP.MC,
@@ -1954,8 +2071,13 @@ def extract_ratios_financial(financials, balance_sheet, cashflow, closes_by_year
     equity_latest = _safe_value(equity, latest)
     total_assets_latest = _safe_value(total_assets, latest)
     total_debt_latest = _safe_value(total_debt, latest)
+    cash_latest = _safe_value(cash, latest)
     net_income_latest = _safe_value(net_income, latest)
     op_cash_flow_latest = _safe_value(op_cash_flow, latest)
+    net_debt_latest = (
+        total_debt_latest - cash_latest
+        if not _is_missing(total_debt_latest) and not _is_missing(cash_latest) else 0.0
+    )
 
     roe = (
         (net_income_latest / equity_latest) * 100
@@ -2016,12 +2138,16 @@ def extract_ratios_financial(financials, balance_sheet, cashflow, closes_by_year
         "equity": equity_latest,
         "tax_rate": tax_rate[latest],
         "total_debt": total_debt_latest,
+        # net_debt réel (pas neutre) depuis le 2026-09-13 : sûr pour le DCF
+        # (déjà désactivé par fcf=0.0 ci-dessous, qui court-circuite
+        # estimate_dcf_price avant que net_debt ne soit utilisé), et
+        # nécessaire pour score_structure_financiere_trust (profil trust).
+        "net_debt": net_debt_latest,
         # Valeurs neutres pour désactiver proprement DCF / multiple EV-EBITDA
         # dans estimate_valuation_targets (voir docstring ci-dessus).
         "fcf": 0.0,
         "fcf_normalized": 0.0,
         "cagr_ebitda": 0.0,
-        "net_debt": 0.0,
         "current_ev_ebitda": 0.0,
         "avg_ev_ebitda_5y": 0.0,
     }
@@ -2244,11 +2370,20 @@ def fetch_company_financials(ticker: str) -> dict:
             shares_outstanding = market_cap / current_price
 
     is_financial = ticker in FINANCIAL_SECTOR_TICKERS
-    if is_financial:
+    is_trust = ticker in TRUST_TICKERS
+    if is_financial or is_trust:
+        # Les trusts partagent l'extraction "profil financier" (ROE, levier,
+        # P/B...) avec les banques/assurances — pas parce que ce sont des
+        # banques, mais parce qu'ils partagent le même trou de données chez
+        # yfinance (pas d'EBITDA/EBIT exploitable) et que extract_ratios_financial
+        # calcule déjà tout ce dont le profil trust a besoin (roe, equity,
+        # cagr_ca/cagr_net_income, current_pb — le proxy de décote/prime sur
+        # NAV). Seul le SCORING diverge ensuite (voir build_company_entry).
         ratios = extract_ratios_financial(financials, balance_sheet, cashflow, closes_by_year, shares_outstanding)
     else:
         ratios = extract_ratios(financials, balance_sheet, cashflow, closes_by_year, shares_outstanding)
     ratios["is_financial"] = is_financial
+    ratios["is_trust"] = is_trust
     ratios["sector"] = SECTOR_OVERRIDE_BY_TICKER.get(ticker) or sector
     ratios["ecart_pct_ma200"] = ecart_pct_ma200
     try:
@@ -3439,6 +3574,20 @@ def build_company_entry(
                 f"conversion cash (OCF/résultat net) {data['cash_conversion']:.0f}%, "
                 f"coût du capital {cost_of_capital:.1f}%"
             )
+        elif data["is_trust"]:
+            # Profil trust d'investissement (voir TRUST_TICKERS) : décote/
+            # prime sur NAV (proxy P/B) plutôt que ROCE/dette nette-EBITDA,
+            # pas de notion de conversion de cash d'exploitation.
+            pb_text = f"{data['current_pb']:.2f}x" if data["current_pb"] else "indisponible"
+            ratios_summary = (
+                f"[Profil trust d'investissement — méthodologie adaptée, "
+                f"EBITDA/EBIT non disponibles, pas de cycle d'exploitation "
+                f"classique] ROE {data['roe']:.1f}%, capitaux propres/actif "
+                f"total {data['leverage_ratio']:.1f}%, CAGR CA "
+                f"{data['cagr_ca']:+.1f}%/an, CAGR résultat net "
+                f"{data['cagr_net_income']:+.1f}%/an, P/B (proxy décote/prime "
+                f"sur NAV) {pb_text}, coût du capital {cost_of_capital:.1f}%"
+            )
         else:
             # "indisponible" plutôt que le chiffre de repli (audit 2026-09-13,
             # même motif que les FactorResult ci-dessous) : sans ça, Claude
@@ -3496,6 +3645,18 @@ def build_company_entry(
                 data["current_pe"], data["avg_pe_5y"],
                 data["current_pb"], data["avg_pb_5y"], data["cagr_net_income"],
             ),
+            score_dynamique_recente(
+                data["ecart_pct_ma200"], data["quarterly_yoy_growth_ca"], data["cagr_ca"],
+            ),
+            score_actualite_recente(news),
+        ]
+    elif data["is_trust"]:
+        factors = [
+            score_rentabilite_financiere(data["roe"], cost_of_capital),
+            score_structure_financiere_trust(data["net_debt"], data["equity"]),
+            score_croissance_financiere(data["cagr_ca"], data["cagr_net_income"]),
+            score_generation_cash_trust(),
+            score_valorisation_trust(data["current_pb"]),
             score_dynamique_recente(
                 data["ecart_pct_ma200"], data["quarterly_yoy_growth_ca"], data["cagr_ca"],
             ),

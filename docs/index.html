@@ -512,6 +512,19 @@
   .company-ticker { color: var(--muted); font-size: var(--text-xs); }
   .company-score { font-family: 'Newsreader', serif; font-weight: 600; font-size: var(--text-xl); }
 
+  /* Repère visuel compact à côté du score chiffré, pour les listes très
+     longues (jusqu'à 225 lignes pour le Nikkei 225) où l'œil ne peut pas
+     comparer 200 chiffres empilés d'un coup d'œil — une barre divergente
+     (centre = 0, remplissage vers la droite/gauche selon le signe) se
+     repère plus vite qu'une colonne de nombres. Le chiffre reste affiché
+     à côté (aria-hidden sur la barre) : la barre est un complément, pas
+     le seul vecteur d'information — cf. "ne jamais transmettre une info
+     par la seule couleur". */
+  .company-score-col { display: flex; flex-direction: column; align-items: flex-end; gap: 5px; }
+  .company-score-bar { position: relative; width: 56px; height: 5px; border-radius: 3px; background: var(--bg-3); overflow: hidden; flex-shrink: 0; }
+  .company-score-bar::after { content: ''; position: absolute; left: 50%; top: 0; bottom: 0; width: 1px; background: var(--border-strong); }
+  .company-score-bar-fill { position: absolute; top: 0; bottom: 0; border-radius: 3px; }
+
   .portfolio-totals { display: flex; gap: 12px; margin: 4px 0 20px; flex-wrap: wrap; }
   .portfolio-total-card {
     display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 140px;
@@ -2154,6 +2167,18 @@ function allIndicesBadgesHtml(company) {
   return keys.map(key => `<span class="financial-tag index-badge">${INDEX_SHORT_CODE_BY_KEY[key] || key}</span>`).join('');
 }
 
+// Barre divergente compacte (centre = score 0, remplissage vers la
+// droite si positif / vers la gauche si négatif) — voir le commentaire
+// sur .company-score-bar. aria-hidden : purement un complément visuel,
+// le chiffre affiché à côté reste la source d'information accessible.
+function companyScoreBarHtml(score) {
+  const clamped = Math.max(-100, Math.min(100, score));
+  const halfWidthPct = Math.abs(clamped) / 2;
+  const color = clamped >= 0 ? 'var(--gold)' : 'var(--rust)';
+  const left = clamped >= 0 ? 50 : 50 - halfWidthPct;
+  return `<span class="company-score-bar" aria-hidden="true"><span class="company-score-bar-fill" style="left:${left}%; width:${halfWidthPct}%; background:${color};"></span></span>`;
+}
+
 function renderIndicesRows(companies, rowsContainerId) {
   const panel = document.getElementById(rowsContainerId);
   if (!panel) return;
@@ -2164,8 +2189,11 @@ function renderIndicesRows(companies, rowsContainerId) {
         <span class="company-name">${c.name}</span>
         <span class="company-ticker">${c.ticker}${c.is_financial ? '<span class="financial-tag">Profil financier</span>' : ''}${hasMajorNewsAlert(c) ? '<span class="financial-tag majeure-tag">Actu majeure</span>' : ''}${alsoIndicesBadgesHtml(c)}</span>
       </div>
-      <span class="company-score" style="color:${c.score >= 0 ? 'var(--gold)' : 'var(--rust)'};">
-        ${c.score > 0 ? '+' : ''}${c.score}
+      <span class="company-score-col">
+        <span class="company-score" style="color:${c.score >= 0 ? 'var(--gold)' : 'var(--rust)'};">
+          ${c.score > 0 ? '+' : ''}${c.score}
+        </span>
+        ${companyScoreBarHtml(c.score)}
       </span>
     </a>`).join('') : '<div class="list-empty">Aucun résultat pour cette recherche.</div>';
 }

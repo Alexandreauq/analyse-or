@@ -3667,23 +3667,28 @@ def test_score_generation_cash_trust_always_neutral():
 
 
 def test_score_valorisation_trust_discount_to_nav_is_positive():
-    # P/B < 1.0 -> décote sur la NAV -> favorable
-    result = indices_score.score_valorisation_trust(current_pb=0.85)
+    # Trouvé en production le 2026-09-13 : current_pb tel que renvoyé par
+    # extract_ratios_financier pour un ticker LSE est gonflé d'un facteur
+    # ~100 (prix historique en pence, bilan en livres — voir
+    # LSE_PENCE_TO_POUND_TRUST_STOPGAP) ; 85.0 ici représente un vrai
+    # P/B de 0.85x une fois le correctif appliqué -> décote sur la NAV -> favorable.
+    result = indices_score.score_valorisation_trust(current_pb=85.0)
     assert result.name == "Valorisation relative"
     assert result.weight == 0.08
     assert result.score > 0
     assert "décote" in result.raw_value.lower()
+    assert "0.85x" in result.raw_value
 
 
 def test_score_valorisation_trust_premium_to_nav_is_negative():
-    # P/B > 1.0 -> prime sur la NAV -> défavorable
-    result = indices_score.score_valorisation_trust(current_pb=1.15)
+    # 115.0 -> vrai P/B 1.15x après correctif -> prime sur la NAV -> défavorable
+    result = indices_score.score_valorisation_trust(current_pb=115.0)
     assert result.score < 0
     assert "prime" in result.raw_value.lower()
 
 
 def test_score_valorisation_trust_at_nav_is_neutral():
-    result = indices_score.score_valorisation_trust(current_pb=1.0)
+    result = indices_score.score_valorisation_trust(current_pb=100.0)
     assert result.score == 0.0
 
 
@@ -3738,7 +3743,11 @@ def _fake_trust_ratios():
     ratios = _fake_financial_ratios()
     ratios["is_financial"] = False
     ratios["is_trust"] = True
-    ratios["current_pb"] = 0.85  # décote de 15% sur la NAV
+    # 85.0, pas 0.85 : reproduit fidèlement ce qu'extract_ratios_financier
+    # renvoie réellement pour un ticker LSE (prix en pence, bilan en
+    # livres — voir LSE_PENCE_TO_POUND_TRUST_STOPGAP), un vrai P/B de
+    # 0.85x (décote de 15% sur la NAV) une fois le correctif appliqué.
+    ratios["current_pb"] = 85.0
     return ratios
 
 

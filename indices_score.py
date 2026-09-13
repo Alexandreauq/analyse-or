@@ -1561,6 +1561,27 @@ def score_generation_cash_trust() -> FactorResult:
     )
 
 
+# Correctif LOCAL temporaire (trouvé et scopé le 2026-09-13, en production,
+# lors de la toute première génération réelle du profil trust) : les 9
+# tickers de TRUST_TICKERS sont tous cotés au LSE, où l'historique de
+# cours yfinance est en PENCE alors que les comptes (bilan/résultat) sont
+# en LIVRES — extract_ratios_financier calcule current_pb via
+# `market_cap = price * shares_outstanding` avec price en pence, gonflant
+# le P/B d'un facteur ~100 (confirmé : HSBC/Barclays/Lloyds, déjà en
+# production sur le profil banques, affichent le même P/B ~100x trop
+# élevé — resté invisible jusqu'ici car score_valorisation_financiere
+# compare current_pb à SA PROPRE moyenne 5 ans, un ratio relatif où le
+# facteur d'échelle s'annule ; score_valorisation_trust compare à une
+# valeur absolue (1.0, parité NAV), ce qui expose le décalage au grand
+# jour la toute première fois). Ce diviseur ne corrige QUE ce facteur
+# précis, pas extract_ratios_financier lui-même (qui reste inchangé pour
+# ne pas modifier les scores déjà en production des banques FTSE) — la
+# vraie cause racine (unité de prix pence vs livre, probablement à
+# corriger dans closes_by_year/fetch_company_financials) doit être
+# investiguée séparément, plus large que ce seul profil.
+LSE_PENCE_TO_POUND_TRUST_STOPGAP = 100.0
+
+
 def score_valorisation_trust(current_pb: float) -> FactorResult:
     """Décote/prime sur la NAV (proxy : P/B calculé par
     extract_ratios_financier à partir des capitaux propres réels, pas d'un
@@ -1569,12 +1590,16 @@ def score_valorisation_trust(current_pb: float) -> FactorResult:
     1.0 (parité avec la NAV), PAS à la moyenne 5 ans du P/B comme pour le
     profil financier standard — le signal recherché ici est "se négocie
     sous/sur sa valeur d'actif net aujourd'hui", la référence classique pour
-    un trust fermé, pas "moins cher que d'habitude"."""
+    un trust fermé, pas "moins cher que d'habitude".
+
+    Voir LSE_PENCE_TO_POUND_TRUST_STOPGAP pour le correctif pence/livre
+    appliqué ici, en attendant une correction à la source."""
     if not current_pb:
         return FactorResult(
             "Valorisation relative", 0.0, WEIGHTS["valorisation"],
             "Donnée indisponible (pas de P/B exploitable chez la source de données)",
         )
+    current_pb = current_pb / LSE_PENCE_TO_POUND_TRUST_STOPGAP
     premium_pct = (current_pb - 1.0) * 100
     score = _clamp(-premium_pct / VALUATION_PREMIUM_SCALE, -10.0, 10.0)
     return FactorResult(

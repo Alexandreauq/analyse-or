@@ -3444,15 +3444,18 @@ def test_extract_ratios_degrades_gracefully_when_ebitda_missing_but_ebit_present
 def test_extract_ratios_degrades_gracefully_when_ebit_missing_but_ebitda_absent_too():
     """Reproduit 3i Group/Aberdeen Group/Alliance Witan/F&C Investment
     Trust/ICG/Pershing Square Holdings/Polar Capital Technology Trust/
-    Scottish Mortgage/Tritax Big Box REIT (FTSE 100) et Banca Mediolanum/
-    FinecoBank (FTSE MIB) en production : gestionnaires d'actifs, trusts
-    fermés et REIT, aucune ligne EBIT/Operating Income/Total Operating
-    Income As Reported chez yfinance (ni EBITDA), sans être des
-    établissements financiers au sens de FINANCIAL_SECTOR_TICKERS
-    (exclusion volontaire). Ne doit pas faire lever KeyError — roce/icr
-    dégradent vers leurs valeurs neutres (0.0 / 10.0) en plus des facteurs
-    déjà couverts par le test EBITDA ci-dessus, l'entreprise reste notée
-    sur ses autres facteurs (croissance, valorisation, momentum, actualité)."""
+    Scottish Mortgage/Tritax Big Box REIT (FTSE 100) en production :
+    gestionnaires d'actifs, trusts fermés et REIT, aucune ligne EBIT/
+    Operating Income/Total Operating Income As Reported chez yfinance (ni
+    EBITDA), sans être des établissements financiers au sens de
+    FINANCIAL_SECTOR_TICKERS (exclusion volontaire). Banca Mediolanum/
+    FinecoBank (FTSE MIB) étaient listées ici jusqu'au 2026-09-13 mais ont
+    depuis été reclassées dans FINANCIAL_SECTOR_TICKERS (profil bancaire
+    classique confirmé sur données réelles), donc plus dans ce cas. Ne
+    doit pas faire lever KeyError — roce/icr dégradent vers leurs valeurs
+    neutres (0.0 / 10.0) en plus des facteurs déjà couverts par le test
+    EBITDA ci-dessus, l'entreprise reste notée sur ses autres facteurs
+    (croissance, valorisation, momentum, actualité)."""
     financials, balance_sheet, cashflow, closes_by_year = _make_fixture_statements()
     financials = financials.drop(index=["EBITDA", "EBIT"])
 
@@ -3881,7 +3884,12 @@ def test_ftsemib_financial_sector_tickers_are_in_ftsemib_companies():
     ftsemib_tickers = {c["ticker"] for c in indices_score.FTSEMIB_COMPANIES}
     ftsemib_financial_tickers = {t for t in indices_score.FINANCIAL_SECTOR_TICKERS if t.endswith(".MI")}
     assert ftsemib_financial_tickers <= ftsemib_tickers
-    assert len(ftsemib_financial_tickers) == 8
+    # 8 -> 10 le 2026-09-13 : FinecoBank (FBK.MI) et Banca Mediolanum
+    # (BMED.MI) reclassées après vérification directe de leurs comptes
+    # réels (profil bancaire classique, pas des cas limites courtage/
+    # distribution comme initialement supposé) — voir le commentaire sur
+    # FINANCIAL_SECTOR_TICKERS.
+    assert len(ftsemib_financial_tickers) == 10
 
 
 def test_shares_outstanding_override_tickers_are_in_companies():

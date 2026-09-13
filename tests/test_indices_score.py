@@ -434,6 +434,28 @@ def test_cagr_returns_neutral_zero_when_latest_value_is_missing():
     assert _cagr(800.0, float("nan"), 4) == 0.0
 
 
+def test_cagr_returns_neutral_zero_when_latest_value_is_negative():
+    """EBITDA passé positif devenu négatif (Boeing, Stellantis, Renault,
+    Porsche SE... constaté en production 2026-09-13) : (last/first) élevé à
+    une puissance fractionnaire n'est pas défini pour un ratio négatif,
+    produit un NaN silencieux qui, non intercepté ici, atteignait _clamp et
+    se voyait attribuer +10.0 (score maximal) au lieu d'une absence de
+    donnée — inversion complète du signe pour une entreprise en réelle
+    difficulté."""
+    result = _cagr(1000.0, -50.0, 4)
+    assert result == 0.0
+    assert not math.isnan(result)
+
+
+def test_cagr_zero_latest_value_is_a_real_minus_100_pct_cagr_not_neutral():
+    """Contre-exemple délibéré : contrairement à une valeur négative
+    (mathématiquement indéfinie), un EBITDA tombé exactement à zéro a un
+    CAGR réel et bien défini (-100%) — ne doit pas être confondu avec le
+    cas "donnée manquante/indéfinie" et forcé à 0.0 neutre."""
+    result = _cagr(1000.0, 0.0, 4)
+    assert result == -100.0
+
+
 def test_extract_ratios_smooths_cagr_over_two_year_windows():
     """Reproduit le cas TotalEnergies 2022 : un pic isolé sur l'exercice le
     plus ancien disponible ne doit pas, seul, déterminer tout le CAGR — le
@@ -598,6 +620,25 @@ def test_extract_ratios_degrades_gracefully_when_latest_year_has_nan_balance_she
     assert ratios["roe"] == 0.0
     assert ratios["icr"] == 10.0  # repli documenté quand total_debt est absent/invalide
     assert ratios["net_debt_ebitda"] == 0.0
+
+
+def test_extract_ratios_degrades_gracefully_when_latest_year_tax_rate_is_nan():
+    """Reproduit ENX.PA/FGR.PA/MBG.DE en production (audit 2026-09-13) :
+    tax_rate manquant sur l'exercice le plus récent laissait passer
+    `ebit[latest] * (1 - nan)` = NaN jusqu'à _clamp (même garde manquant
+    que pour economic_assets_latest/ebit[latest], juste à côté) — attribué
+    à tort comme score Rentabilité maximal (+10.0) au lieu d'une absence
+    de donnée. roce doit dégrader vers 0.0, pas vers NaN."""
+    financials, balance_sheet, cashflow, closes_by_year = _make_fixture_statements()
+    latest_year = list(financials.columns)[0]
+    financials.loc["Tax Rate For Calcs", latest_year] = float("nan")
+
+    ratios = extract_ratios(
+        financials, balance_sheet, cashflow, closes_by_year, shares_outstanding=10.0
+    )
+
+    assert ratios["roce"] == 0.0
+    assert not math.isnan(ratios["roce"])
 
 
 def test_extract_ratios_handles_balance_sheet_entirely_missing_total_debt_row():

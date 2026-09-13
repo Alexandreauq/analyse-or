@@ -1562,8 +1562,23 @@ def _cagr(first_value: float, last_value: float, years: int) -> float:
     fournit pas toujours 5 années pleines pour chaque poste — plutôt que de
     laisser un NaN se propager jusqu'à _clamp, qui le traiterait comme un
     score maximal (+10) au lieu d'une absence de donnée.
-    """
-    if years <= 0 or _is_missing(first_value) or _is_missing(last_value) or first_value <= 0:
+
+    Renvoie aussi 0.0 quand `last_value` est négative (ex. EBITDA passé
+    positif devenu négatif, constaté en production pour Boeing, Stellantis,
+    Renault, Porsche SE...) : `first_value > 0` seul ne suffit pas à garantir
+    un taux de croissance géométrique réel, car (last_value / first_value)
+    élevé à une puissance fractionnaire (1/years) n'est défini que pour un
+    ratio positif ou nul. Avant ce garde, ce cas produisait un NaN
+    silencieux (numpy renvoie NaN + RuntimeWarning plutôt que de lever) qui
+    échappait au garde ci-dessus et atteignait bien _clamp — lui attribuant
+    +10.0 (meilleur score possible) au lieu d'une absence de donnée, soit
+    une inversion complète du signe pour des entreprises en réelle
+    difficulté. Trouvé lors de l'audit du 2026-09-13 (13 tickers concernés,
+    tous avec un score Croissance à +10.0 exactement)."""
+    if (
+        years <= 0 or _is_missing(first_value) or _is_missing(last_value)
+        or first_value <= 0 or last_value < 0
+    ):
         return 0.0
     return ((last_value / first_value) ** (1 / years) - 1) * 100
 
@@ -1668,10 +1683,16 @@ def extract_ratios(financials, balance_sheet, cashflow, closes_by_year, shares_o
     # True en Python) — d'où le `and not _is_missing(X)` en plus du test de
     # vérité déjà présent, pour ne jamais laisser un NaN se propager dans un
     # score final via une division silencieusement invalide.
+    # not _is_missing(tax_rate[latest]) ajouté (trouvé en audit le
+    # 2026-09-13, 3 tickers concernés : ENX.PA, FGR.PA, MBG.DE) : sans ce
+    # garde, un tax_rate manquant laissait passer
+    # `ebit[latest] * (1 - nan)` = NaN jusqu'à _clamp (voir _cagr ci-dessus
+    # pour le même mécanisme de bug), qui l'attribuait à tort comme score
+    # Rentabilité maximal (+10.0) au lieu d'une absence de donnée.
     roce = (
         (ebit[latest] * (1 - tax_rate[latest]) / economic_assets_latest) * 100
         if economic_assets_latest and not _is_missing(economic_assets_latest)
-        and not _is_missing(ebit[latest]) else 0.0
+        and not _is_missing(ebit[latest]) and not _is_missing(tax_rate[latest]) else 0.0
     )
     roe = (
         (net_income[latest] / equity_latest) * 100

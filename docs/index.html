@@ -1759,25 +1759,25 @@ function loadSideQuoteWidget(ticker, indexKey) {
 // Symbole TradingView par indice — INDEX_TV_SYMBOL_BY_KEY, pas une seule
 // constante : quand d'autres indices (S&P 500…) rejoindront
 // indicesData.companies un jour, ce sera la seule ligne à ajouter ici.
-// Pas d'entrée Nasdaq/Dow : NASDAQ:NDX, DJ:DJI, TVC:NDX, TVC:DJI,
-// OANDA:NAS100USD/US30USD et même les ETF NASDAQ:QQQ/AMEX:DIA donnent tous
-// soit "réservé à TradingView" (licence de données bloquée en widget
-// gratuit) soit un prix qui n'est plus celui de l'indice (échelle ETF) —
-// voir loadIndexQuoteWidget, qui bascule sur indicesData.index_prices
-// (indices_score.py/yfinance) quand aucun symbole fiable n'existe ici.
 // FTSE/SMI/IBEX35/FTSEMIB/NIKKEI225/HANGSENG : ajoutées après coup — un vrai
 // oubli lors de l'intégration de ces 6 indices (seul le préfixe TradingView
 // par ENTREPRISE avait été câblé, pas le symbole de l'indice lui-même).
-// FTSE/NIKKEI225/HANGSENG sont passées par un 2e tour : les symboles natifs
-// "officiels" (TVC:UKX, TVC:NI225, TVC:HSI) affichaient bien une page
-// tradingview.com normale mais se sont révélés "réservés à TradingView"
-// une fois embarqués en widget gratuit (constaté en production, pas
-// détectable depuis la page seule) — remplacés par l'équivalent CFD chez
-// Vantage (même broker que le bot Or), dont les flux sont librement
-// embarquables. SMI/IBEX35/FTSEMIB n'ont pas eu ce problème.
+// Plusieurs symboles "officiels" natifs se sont révélés "réservés à
+// TradingView" une fois embarqués en widget gratuit, alors que leur page
+// tradingview.com publique s'affichait normalement (indétectable depuis la
+// page seule, constaté en production) : NASDAQ:NDX/DJ:DJI/TVC:NDX/TVC:DJI/
+// OANDA:NAS100USD/US30USD pour Nasdaq/Dow à l'origine, puis TVC:UKX/
+// TVC:NI225/TVC:HSI pour FTSE/Nikkei/Hang Seng. Remplacés par l'équivalent
+// CFD chez Vantage (même broker que le bot Or), dont les flux sont
+// librement embarquables — voir loadIndexQuoteWidget, qui bascule sur
+// indicesData.index_prices (indices_score.py/yfinance) si un symbole
+// s'avère à son tour réservé. SMI/IBEX35/FTSEMIB (symboles natifs
+// SIX:SMI/BME:IBC/INDEX:FTSEMIB) n'ont pas eu ce problème.
 const INDEX_TV_SYMBOL_BY_KEY = {
   CAC40: 'EURONEXT:PX1',
   DAX: 'XETR:DAX',
+  NASDAQ: 'VANTAGE:NAS100',
+  DOW: 'VANTAGE:DJ30',
   FTSE: 'VANTAGE:UK100',
   SMI: 'SIX:SMI',
   IBEX35: 'BME:IBC',

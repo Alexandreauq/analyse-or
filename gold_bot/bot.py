@@ -4,6 +4,8 @@
 # decide_and_act() ne place et ne clôture JAMAIS de vraie position — il
 # ne fait que journaliser ce qu'il ferait. Voir
 # docs/superpowers/specs/2026-09-10-bot-trading-or-design.md.
+from datetime import datetime, timezone
+
 import gold_bot.broker as broker
 import gold_bot.confluence as confluence
 import gold_bot.risk as risk
@@ -26,7 +28,15 @@ def decide_and_act(candles: list[dict], *, contract_size: float, balance: float,
     Gère toutes les positions correspondant à `symbol`, pas seulement la
     première trouvée (un redémarrage/crash pourrait en laisser
     plusieurs) — une position au type non reconnu bloque toute action
-    par prudence plutôt que d'être devinée."""
+    par prudence plutôt que d'être devinée.
+
+    Publication macro à fort impact (CPI/Emploi US/FOMC) imminente ou en
+    cours (voir confluence.is_news_blackout) : toute position ouverte
+    sur `symbol` est clôturée immédiatement, même sans signal de
+    retournement — le signal lui-même est de toute façon neutre à ce
+    moment (compute_signal applique le même garde), donc sans ce
+    traitement dédié la position resterait ouverte pendant la
+    publication au lieu d'être fermée avant qu'elle n'ait lieu."""
     signal = confluence.compute_signal(candles)
     # Fixe le solde de référence du jour dès le premier cycle, même sur
     # un signal neutre — sinon la référence ne serait fixée qu'au
@@ -43,6 +53,19 @@ def decide_and_act(candles: list[dict], *, contract_size: float, balance: float,
         if raw_type == "POSITION_TYPE_SELL":
             return "vente"
         return None
+
+    news_blackout = False
+    if candles:
+        as_of = datetime.fromisoformat(candles[-1]["time"].replace(" ", "T")).replace(tzinfo=timezone.utc)
+        news_blackout = confluence.is_news_blackout(as_of)
+
+    if news_blackout:
+        if not matching:
+            return {"action": "aucune", "reason": "publication macro imminente, aucune position ouverte à clôturer"}
+        if None in {_direction(p) for p in matching}:
+            return {"action": "aucune", "reason": "type de position non reconnu, aucune action par prudence"}
+        steps = [{"type": "clôture_simulee", "position_id": p.get("id"), "symbol": symbol} for p in matching]
+        return {"action": "simulation", "steps": steps}
 
     if signal["status"] == "neutre":
         return {"action": "aucune", "reason": "signal neutre"}

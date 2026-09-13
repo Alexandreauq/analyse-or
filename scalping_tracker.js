@@ -6,7 +6,7 @@
 const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
-const { fetchGoldCandles, computeSignal } = require('./docs/scalping.js');
+const { fetchGoldCandles, computeSignal, isNewsBlackout } = require('./docs/scalping.js');
 
 const TRACKING_FILE = path.join(__dirname, 'docs', 'scalping_tracking.json');
 const TRIAL_DURATION_MS = 7 * 24 * 60 * 60 * 1000; // 7 jours
@@ -62,9 +62,12 @@ function computeReturn(direction, entryPrice, closePrice) {
  * le SL est vérifié en premier et gagne toujours — hypothèse prudente
  * standard en backtesting, qui évite de surestimer la performance.
  * `candlesSinceEntry` doit déjà être filtré (candle.time > entry_time) par
- * l'appelant.
+ * l'appelant. `isBlackout` (publication macro imminente/en cours, voir
+ * isNewsBlackout) force la clôture même sans SL/TP touché — vérifié
+ * après le scan SL/TP, jamais avant (un vrai toucher déjà survenu reste
+ * plus informatif qu'une clôture générique).
  */
-function decidePositionOutcome(position, candlesSinceEntry, now, trialElapsed, isStale = false) {
+function decidePositionOutcome(position, candlesSinceEntry, now, trialElapsed, isStale = false, isBlackout = false) {
   if (isStale) {
     // Donnees perimees (bougie recente introuvable) OU marche
     // objectivement ferme (week-end XAU/USD, voir isMarketClosed) : les
@@ -92,6 +95,16 @@ function decidePositionOutcome(position, candlesSinceEntry, now, trialElapsed, i
     }
   }
   const lastClose = candlesSinceEntry.length ? candlesSinceEntry[candlesSinceEntry.length - 1].close : position.entry_price;
+  if (isBlackout) {
+    // Publication macro à fort impact imminente ou en cours (CPI/Emploi
+    // US/FOMC, voir isNewsBlackout) : aucune position ne doit rester
+    // ouverte à l'heure de la publication, même sans SL/TP touché —
+    // clôture forcée au dernier prix connu plutôt que d'attendre le
+    // choc de volatilité. Vérifié APRÈS le scan SL/TP ci-dessus : si un
+    // vrai toucher a déjà eu lieu dans les bougies reçues, ce résultat
+    // plus informatif prime sur la clôture forcée générique.
+    return { closed: true, reason: 'news_blackout', price: lastClose };
+  }
   const entryTime = new Date(position.entry_time).getTime();
   if (now - entryTime >= MAX_POSITION_DURATION_MS) {
     return { closed: true, reason: 'max_duration', price: lastClose };
@@ -158,12 +171,14 @@ async function runOnce(apiKey, fetchImpl, now = Date.now(), filePath = TRACKING_
     console.log('Marche XAU/USD ferme (week-end) - pas d\'ouverture ni de cloture forcee ce run, meme si les bougies recues paraissent fraiches.');
   }
 
+  const isBlackout = isNewsBlackout(new Date(now));
+
   const openPosition = data.positions.find(p => p.status === 'open');
 
   if (openPosition) {
     const entryTime = new Date(openPosition.entry_time).getTime();
     const candlesSinceEntry = candles.filter(c => new Date(c.time.replace(' ', 'T') + 'Z').getTime() > entryTime);
-    const outcome = decidePositionOutcome(openPosition, candlesSinceEntry, now, trialElapsed, isStale);
+    const outcome = decidePositionOutcome(openPosition, candlesSinceEntry, now, trialElapsed, isStale, isBlackout);
     if (outcome.closed) {
       openPosition.status = 'closed';
       openPosition.close_time = new Date(now).toISOString();

@@ -12,6 +12,7 @@ const {
   computeReturn,
   decidePositionOutcome,
   buildPositionFromSignal,
+  isMarketClosed,
   runOnce,
   TRIAL_DURATION_MS,
   MAX_POSITION_DURATION_MS,
@@ -224,15 +225,81 @@ function test_decidePositionOutcome_stays_open_when_stale_despite_max_duration()
   console.log('OK: test_decidePositionOutcome_stays_open_when_stale_despite_max_duration');
 }
 
-function test_decidePositionOutcome_sl_still_detected_when_stale() {
-  // isStale=true n'empeche PAS la detection d'un vrai SL touche dans les
-  // bougies recues (donnee historique fiable, independante de la
-  // fraicheur du dernier point).
+function test_decidePositionOutcome_ignores_sl_tp_touches_when_stale() {
+  // Corrige un bug trouve en production le 12-13/09/2026 : le week-end,
+  // Twelve Data a renvoye des bougies a l'horodatage frais mais au prix
+  // quasi fige, ce qui a fait detecter a tort la meme figure ("Etoile
+  // filante") en boucle et cloturer 29 fausses positions sur du bruit
+  // d'API plutot qu'un vrai mouvement. isStale=true doit donc suspendre
+  // TOUTE detection de toucher SL/TP, pas seulement les clotures basees
+  // sur l'horloge murale (max_duration/trial_end) — meme si la bougie
+  // recue franchit numeriquement le SL, comme ici (low=93 <= SL=95).
+  // Un vrai toucher survenu pendant une periode perimee sera redetecte
+  // au prochain run une fois isStale redevenu false (le lot de bougies
+  // recu couvre une fenetre large, pas juste le dernier point).
   const position = { direction: 'achat', stop_loss: 95, take_profit: 110, entry_time: '2026-01-01T00:00:00.000Z' };
   const candles = [{ high: 97, low: 93, close: 94 }];
   const outcome = decidePositionOutcome(position, candles, Date.now(), false, true);
-  assert.deepStrictEqual(outcome, { closed: true, reason: 'sl_hit', price: 95 });
-  console.log('OK: test_decidePositionOutcome_sl_still_detected_when_stale');
+  assert.deepStrictEqual(outcome, { closed: false });
+  console.log('OK: test_decidePositionOutcome_ignores_sl_tp_touches_when_stale');
+}
+
+function test_isMarketClosed_saturday_always_closed() {
+  assert.strictEqual(isMarketClosed(new Date('2026-09-12T12:00:00.000Z')), true); // samedi
+  console.log('OK: test_isMarketClosed_saturday_always_closed');
+}
+
+function test_isMarketClosed_friday_before_22h_open() {
+  assert.strictEqual(isMarketClosed(new Date('2026-09-11T21:59:00.000Z')), false); // vendredi 21h59 UTC
+  console.log('OK: test_isMarketClosed_friday_before_22h_open');
+}
+
+function test_isMarketClosed_friday_after_22h_closed() {
+  assert.strictEqual(isMarketClosed(new Date('2026-09-11T22:00:00.000Z')), true); // vendredi 22h00 UTC
+  console.log('OK: test_isMarketClosed_friday_after_22h_closed');
+}
+
+function test_isMarketClosed_sunday_before_22h_closed() {
+  // Cas reel du bug trouve en production : dimanche matin, marche encore ferme.
+  assert.strictEqual(isMarketClosed(new Date('2026-09-13T10:47:00.000Z')), true);
+  console.log('OK: test_isMarketClosed_sunday_before_22h_closed');
+}
+
+function test_isMarketClosed_sunday_after_22h_open() {
+  assert.strictEqual(isMarketClosed(new Date('2026-09-13T22:00:00.000Z')), false); // dimanche 22h00 UTC
+  console.log('OK: test_isMarketClosed_sunday_after_22h_open');
+}
+
+function test_isMarketClosed_weekday_open() {
+  assert.strictEqual(isMarketClosed(new Date('2026-09-15T12:00:00.000Z')), false); // mardi
+  console.log('OK: test_isMarketClosed_weekday_open');
+}
+
+async function test_runOnce_does_not_close_position_on_weekend_frozen_price_touch() {
+  // Reproduit precisement le bug de production : bougies avec un
+  // horodatage frais (donc dataStale=false) mais un dimanche matin
+  // (marche ferme) et un prix qui franchit numeriquement le TP -> ne
+  // doit PAS cloturer la position, contrairement au comportement d'avant
+  // ce correctif.
+  const f = tempFile();
+  const openPosition = {
+    id: 'scalp-test', direction: 'vente', status: 'open',
+    entry_time: '2026-09-12T15:47:18.126Z', entry_price: 4348.33,
+    stop_loss: 4350.06, take_profit: 4348.30,
+    trend_at_entry: 'haussier', pattern_at_entry: 'Étoile filante',
+    close_time: null, close_price: null, close_reason: null,
+    return_usd: null, return_pct: null,
+  };
+  saveTracking({ trial_start: '2026-09-09T17:18:30.529Z', trial_ended: false, positions: [openPosition] }, f);
+  const now = new Date('2026-09-13T10:47:09.881Z').getTime(); // dimanche matin, marche ferme
+  const values = [{
+    datetime: '2026-09-13 10:46:00', open: '4348.36', high: '4348.36', low: '4348.29', close: '4348.30',
+  }]; // horodatage a jour (dataStale=false) mais low <= take_profit
+  const fakeFetch = async () => ({ ok: true, json: async () => ({ status: 'ok', values }) });
+  const data = await runOnce('fake-key', fakeFetch, now, f);
+  assert.strictEqual(data.positions[0].status, 'open', 'le marche ferme doit empecher la cloture, meme si le TP est numeriquement franchi');
+  if (fs.existsSync(f)) fs.unlinkSync(f);
+  console.log('OK: test_runOnce_does_not_close_position_on_weekend_frozen_price_touch');
 }
 
 async function test_runOnce_does_not_open_position_on_stale_data() {
@@ -305,9 +372,16 @@ async function main() {
   await test_runOnce_opens_position_on_new_signal();
   await test_runOnce_does_not_write_on_fetch_failure();
   test_decidePositionOutcome_stays_open_when_stale_despite_max_duration();
-  test_decidePositionOutcome_sl_still_detected_when_stale();
+  test_decidePositionOutcome_ignores_sl_tp_touches_when_stale();
+  test_isMarketClosed_saturday_always_closed();
+  test_isMarketClosed_friday_before_22h_open();
+  test_isMarketClosed_friday_after_22h_closed();
+  test_isMarketClosed_sunday_before_22h_closed();
+  test_isMarketClosed_sunday_after_22h_open();
+  test_isMarketClosed_weekday_open();
   await test_runOnce_does_not_open_position_on_stale_data();
   await test_runOnce_closes_open_position_on_tp_hit();
+  await test_runOnce_does_not_close_position_on_weekend_frozen_price_touch();
   console.log('Tous les tests scalping_tracker sont passes.');
 }
 

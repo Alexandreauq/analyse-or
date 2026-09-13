@@ -1561,27 +1561,6 @@ def score_generation_cash_trust() -> FactorResult:
     )
 
 
-# Correctif LOCAL temporaire (trouvé et scopé le 2026-09-13, en production,
-# lors de la toute première génération réelle du profil trust) : les 9
-# tickers de TRUST_TICKERS sont tous cotés au LSE, où l'historique de
-# cours yfinance est en PENCE alors que les comptes (bilan/résultat) sont
-# en LIVRES — extract_ratios_financier calcule current_pb via
-# `market_cap = price * shares_outstanding` avec price en pence, gonflant
-# le P/B d'un facteur ~100 (confirmé : HSBC/Barclays/Lloyds, déjà en
-# production sur le profil banques, affichent le même P/B ~100x trop
-# élevé — resté invisible jusqu'ici car score_valorisation_financiere
-# compare current_pb à SA PROPRE moyenne 5 ans, un ratio relatif où le
-# facteur d'échelle s'annule ; score_valorisation_trust compare à une
-# valeur absolue (1.0, parité NAV), ce qui expose le décalage au grand
-# jour la toute première fois). Ce diviseur ne corrige QUE ce facteur
-# précis, pas extract_ratios_financier lui-même (qui reste inchangé pour
-# ne pas modifier les scores déjà en production des banques FTSE) — la
-# vraie cause racine (unité de prix pence vs livre, probablement à
-# corriger dans closes_by_year/fetch_company_financials) doit être
-# investiguée séparément, plus large que ce seul profil.
-LSE_PENCE_TO_POUND_TRUST_STOPGAP = 100.0
-
-
 def score_valorisation_trust(current_pb: float) -> FactorResult:
     """Décote/prime sur la NAV (proxy : P/B calculé par
     extract_ratios_financier à partir des capitaux propres réels, pas d'un
@@ -1592,14 +1571,16 @@ def score_valorisation_trust(current_pb: float) -> FactorResult:
     sous/sur sa valeur d'actif net aujourd'hui", la référence classique pour
     un trust fermé, pas "moins cher que d'habitude".
 
-    Voir LSE_PENCE_TO_POUND_TRUST_STOPGAP pour le correctif pence/livre
-    appliqué ici, en attendant une correction à la source."""
+    (Un correctif local /100 a vécu ici brièvement le 2026-09-13, le temps
+    de corriger la vraie cause racine — le mélange pence/livre des prix
+    LSE, maintenant normalisé à la source dans fetch_company_financials.
+    current_pb arrive donc déjà dans la bonne unité, plus besoin d'ajuster
+    ici.)"""
     if not current_pb:
         return FactorResult(
             "Valorisation relative", 0.0, WEIGHTS["valorisation"],
             "Donnée indisponible (pas de P/B exploitable chez la source de données)",
         )
-    current_pb = current_pb / LSE_PENCE_TO_POUND_TRUST_STOPGAP
     premium_pct = (current_pb - 1.0) * 100
     score = _clamp(-premium_pct / VALUATION_PREMIUM_SCALE, -10.0, 10.0)
     return FactorResult(
@@ -2374,6 +2355,29 @@ def fetch_company_financials(ticker: str) -> dict:
     beta = info.get("beta")
     sector = info.get("sector")
     history = t.history(period="6y")["Close"]
+    if ticker.endswith(".L"):
+        # LSE (bug racine trouvé et corrigé le 2026-09-13) : yfinance
+        # renvoie les prix des tickers londoniens en PENCE (GBp), alors que
+        # les comptes annuels (bilan/résultat) sont en LIVRES (GBP) — un
+        # écart de convention propre à la City, hérité de la période
+        # pré-décimalisation. Sans cette conversion, tout
+        # `market_cap = price * shares_outstanding` calculé en aval (P/E,
+        # P/B, EV/EBITDA, DCF, valorisation par multiple, juste valeur)
+        # mélange les unités d'un facteur ~100. Repéré en production via le
+        # tout nouveau profil trust (score_valorisation_trust, qui compare
+        # à une valeur ABSOLUE — 1.0 — donc n'annule pas l'erreur d'échelle
+        # comme le fait chaque autre facteur en se comparant à sa propre
+        # moyenne 5 ans) : HSBC/Barclays/Lloyds affichaient déjà un P/E et
+        # un P/B ~100x trop élevés (score correct par coïncidence, ratio
+        # auto-référentiel), et fair_value/entry_price/exit_price
+        # mélangeaient carrément une méthode en pence (retour au multiple,
+        # dérivée directement du cours) avec deux méthodes en livres (DCF,
+        # actif net) — un vrai mélange d'unités, incohérent pour les 99
+        # entreprises FTSE. Converti ici, à la source, pour que tout calcul
+        # en aval (closes_by_year, current_price, ma200, et tout ce qui en
+        # dérive) soit cohérent sans replâtrage consommateur par
+        # consommateur.
+        history = history / 100.0
 
     closes_by_year = {}
     for col in financials.columns:

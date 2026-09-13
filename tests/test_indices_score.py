@@ -3667,12 +3667,11 @@ def test_score_generation_cash_trust_always_neutral():
 
 
 def test_score_valorisation_trust_discount_to_nav_is_positive():
-    # Trouvé en production le 2026-09-13 : current_pb tel que renvoyé par
-    # extract_ratios_financier pour un ticker LSE est gonflé d'un facteur
-    # ~100 (prix historique en pence, bilan en livres — voir
-    # LSE_PENCE_TO_POUND_TRUST_STOPGAP) ; 85.0 ici représente un vrai
-    # P/B de 0.85x une fois le correctif appliqué -> décote sur la NAV -> favorable.
-    result = indices_score.score_valorisation_trust(current_pb=85.0)
+    # P/B < 1.0 -> décote sur la NAV -> favorable. current_pb arrive déjà
+    # dans la bonne unité depuis le fix pence/livre du 2026-09-13
+    # (normalisé à la source dans fetch_company_financials, plus besoin
+    # d'ajuster ici).
+    result = indices_score.score_valorisation_trust(current_pb=0.85)
     assert result.name == "Valorisation relative"
     assert result.weight == 0.08
     assert result.score > 0
@@ -3681,14 +3680,14 @@ def test_score_valorisation_trust_discount_to_nav_is_positive():
 
 
 def test_score_valorisation_trust_premium_to_nav_is_negative():
-    # 115.0 -> vrai P/B 1.15x après correctif -> prime sur la NAV -> défavorable
-    result = indices_score.score_valorisation_trust(current_pb=115.0)
+    # P/B > 1.0 -> prime sur la NAV -> défavorable
+    result = indices_score.score_valorisation_trust(current_pb=1.15)
     assert result.score < 0
     assert "prime" in result.raw_value.lower()
 
 
 def test_score_valorisation_trust_at_nav_is_neutral():
-    result = indices_score.score_valorisation_trust(current_pb=100.0)
+    result = indices_score.score_valorisation_trust(current_pb=1.0)
     assert result.score == 0.0
 
 
@@ -3743,11 +3742,7 @@ def _fake_trust_ratios():
     ratios = _fake_financial_ratios()
     ratios["is_financial"] = False
     ratios["is_trust"] = True
-    # 85.0, pas 0.85 : reproduit fidèlement ce qu'extract_ratios_financier
-    # renvoie réellement pour un ticker LSE (prix en pence, bilan en
-    # livres — voir LSE_PENCE_TO_POUND_TRUST_STOPGAP), un vrai P/B de
-    # 0.85x (décote de 15% sur la NAV) une fois le correctif appliqué.
-    ratios["current_pb"] = 85.0
+    ratios["current_pb"] = 0.85  # décote de 15% sur la NAV
     return ratios
 
 
@@ -4110,6 +4105,114 @@ def test_fetch_company_financials_ignores_market_cap_override_for_other_tickers(
     ratios = indices_score.fetch_company_financials("STLAP.PA")
 
     assert ratios["shares_outstanding"] == 2900941252
+
+
+def test_fetch_company_financials_converts_lse_pence_prices_to_pounds(monkeypatch):
+    """Bug racine trouvé le 2026-09-13 via le profil trust (score_valorisation_trust,
+    qui compare current_pb à une valeur ABSOLUE et n'annule donc pas
+    l'erreur d'échelle comme le fait chaque autre facteur en se comparant
+    à sa propre moyenne 5 ans) : yfinance renvoie les prix des tickers
+    londoniens (.L) en PENCE, alors que les comptes annuels sont en
+    LIVRES — sans conversion, market_cap = price * shares_outstanding
+    mélange les unités d'un facteur ~100 pour P/E, P/B, EV/EBITDA, DCF, et
+    fair_value/entry_price/exit_price (qui mélangeaient carrément une
+    méthode en pence avec deux méthodes en livres). Reproduit ici avec un
+    cours constant de 1478.0 (pence, cas réel Scottish Mortgage) : doit
+    ressortir à 14.78 (livres) partout en aval."""
+    financials, balance_sheet, cashflow, _ = _make_fixture_statements()
+    financials.columns = pd.to_datetime(financials.columns)
+    balance_sheet.columns = pd.to_datetime(balance_sheet.columns)
+    cashflow.columns = pd.to_datetime(cashflow.columns)
+    quarterly = _fake_annual_df({"Diluted Average Shares": [100.0]}, [pd.Timestamp("2025-09-30")])
+    history_index = pd.date_range("2024-01-01", periods=250, freq="D")
+    history_close = pd.Series([1478.0] * 250, index=history_index)
+
+    class _FakeTicker:
+        def __init__(self, ticker):
+            pass
+
+        @property
+        def financials(self):
+            return financials
+
+        @property
+        def balance_sheet(self):
+            return balance_sheet
+
+        @property
+        def cashflow(self):
+            return cashflow
+
+        @property
+        def quarterly_financials(self):
+            return quarterly
+
+        @property
+        def info(self):
+            return {"sharesOutstanding": 1000.0, "beta": 0.9, "sector": "Energy"}
+
+        def history(self, period=None):
+            return pd.DataFrame({"Close": history_close})
+
+    monkeypatch.setattr(indices_score.yf, "Ticker", _FakeTicker)
+    monkeypatch.setattr(indices_score.time, "sleep", lambda s: None)
+
+    # Un ticker .L hors TRUST_TICKERS/FINANCIAL_SECTOR_TICKERS (méthodologie
+    # standard) : la conversion pence/livre se fait dans
+    # fetch_company_financials avant tout branchement extract_ratios vs
+    # extract_ratios_financier, donc le choix du chemin d'extraction n'a
+    # pas d'importance ici — seul compte le suffixe .L du ticker.
+    ratios = indices_score.fetch_company_financials("SHEL.L")
+
+    assert ratios["current_price"] == pytest.approx(14.78)
+    assert ratios["ma200"] == pytest.approx(14.78)
+
+
+def test_fetch_company_financials_leaves_non_lse_prices_unconverted(monkeypatch):
+    """Contre-exemple délibéré : la conversion ne doit s'appliquer qu'aux
+    tickers .L — un ticker Euronext/Xetra/NASDAQ à un prix de 1478.0 (déjà
+    dans la bonne unité, en euros/dollars) ne doit pas être divisé par 100."""
+    financials, balance_sheet, cashflow, _ = _make_fixture_statements()
+    financials.columns = pd.to_datetime(financials.columns)
+    balance_sheet.columns = pd.to_datetime(balance_sheet.columns)
+    cashflow.columns = pd.to_datetime(cashflow.columns)
+    quarterly = _fake_annual_df({"Diluted Average Shares": [100.0]}, [pd.Timestamp("2025-09-30")])
+    history_index = pd.date_range("2024-01-01", periods=250, freq="D")
+    history_close = pd.Series([1478.0] * 250, index=history_index)
+
+    class _FakeTicker:
+        def __init__(self, ticker):
+            pass
+
+        @property
+        def financials(self):
+            return financials
+
+        @property
+        def balance_sheet(self):
+            return balance_sheet
+
+        @property
+        def cashflow(self):
+            return cashflow
+
+        @property
+        def quarterly_financials(self):
+            return quarterly
+
+        @property
+        def info(self):
+            return {"sharesOutstanding": 1000.0, "beta": 0.9, "sector": "Technology"}
+
+        def history(self, period=None):
+            return pd.DataFrame({"Close": history_close})
+
+    monkeypatch.setattr(indices_score.yf, "Ticker", _FakeTicker)
+    monkeypatch.setattr(indices_score.time, "sleep", lambda s: None)
+
+    ratios = indices_score.fetch_company_financials("MC.PA")
+
+    assert ratios["current_price"] == pytest.approx(1478.0)
 
 
 def test_load_signal_tracking_returns_empty_list_when_file_absent(monkeypatch, tmp_path):

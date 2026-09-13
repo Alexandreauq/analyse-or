@@ -1712,7 +1712,11 @@ function loadSideQuoteWidget(ticker, indexKey) {
   // widget dupliqué ni de nettoyage à faire d'un rendu à l'autre.
   const prefix = TV_EXCHANGE_PREFIX_BY_INDEX[indexKey];
   const suffix = TV_TICKER_SUFFIX_BY_INDEX[indexKey] || '';
-  const bareTicker = suffix && ticker.endsWith(suffix) ? ticker.slice(0, -suffix.length) : ticker;
+  let bareTicker = suffix && ticker.endsWith(suffix) ? ticker.slice(0, -suffix.length) : ticker;
+  // Hang Seng : yfinance/Yahoo zero-paddent le code HKEX sur 4 chiffres
+  // ("0700"), mais TradingView utilise le code brut sans padding ("700") —
+  // "HKEX:0700" renvoie une 404, vérifié directement contre tradingview.com.
+  if (indexKey === 'HANGSENG') bareTicker = bareTicker.replace(/^0+(?=\d)/, '');
   const tvSymbol = prefix ? prefix + bareTicker : null;
   const container = document.getElementById('tv-side-widget');
   if (!tvSymbol || !container) return;

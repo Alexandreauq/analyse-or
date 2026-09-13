@@ -37,14 +37,25 @@ jobs:
 
       - name: Déterminer si c'est le run quotidien (email + historique)
         id: daily_slot
-        # Un seul des runs horaires de la journée compte comme "run
-        # quotidien" (celui de 07h00 UTC = ~9h à Paris en heure d'été —
-        # passer "07" à "08" fin octobre à l'heure d'hiver). Un
-        # déclenchement manuel (workflow_dispatch) compte toujours comme
-        # quotidien, pour pouvoir tester l'email facilement.
+        # Un seul run par jour doit compter comme "run quotidien" (email +
+        # entrée dans l'historique), visé autour de 07h00 UTC (~9h à Paris
+        # en heure d'été). Le cron horaire dérive fortement en pratique
+        # (écarts de plusieurs heures observés) : tester une heure exacte
+        # ("$HOUR" = "07") fait rater le créneau, et donc toute la journée,
+        # dès que le run de 07h ne tombe pas pile dedans — cause confirmée
+        # de plusieurs jours sans entrée dans score_history.json. On
+        # déclenche donc plutôt le run quotidien au premier passage horaire
+        # à partir de 07h00 UTC qui constate qu'aucune entrée pour la date
+        # du jour n'existe encore dans score_history.json — auto-réparateur
+        # si le créneau exact (ou plusieurs runs) est raté. Un déclenchement
+        # manuel (workflow_dispatch) compte toujours comme quotidien, pour
+        # pouvoir tester l'email facilement (peut créer une entrée en plus
+        # dans l'historique le même jour — comportement voulu pour tester).
         run: |
-          HOUR=$(date -u +%H)
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ] || [ "$HOUR" = "07" ]; then
+          HOUR_NUM=$((10#$(date -u +%H)))
+          TODAY=$(date -u +%F)
+          ALREADY_DONE=$(python3 -c "import json, os; f = 'score_history.json'; h = (json.load(open(f, encoding='utf-8')) if os.path.exists(f) else []); print('true' if any(e.get('date') == '$TODAY' for e in h) else 'false')" 2>/dev/null) || ALREADY_DONE=false
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] || { [ "$HOUR_NUM" -ge 7 ] && [ "$ALREADY_DONE" = "false" ]; }; then
             echo "is_daily=true" >> "$GITHUB_OUTPUT"
           else
             echo "is_daily=false" >> "$GITHUB_OUTPUT"

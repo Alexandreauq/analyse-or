@@ -51,6 +51,15 @@ def test_score_rentabilite_partial_spread_scales_linearly():
     assert result.score == 5.0  # +2.5pp spread / 5.0pp scale * 10 = 5.0
 
 
+def test_score_rentabilite_neutral_when_data_unavailable():
+    """Audit 2026-09-13 : sans ce garde, roce=0.0 (repli de données
+    manquantes) face à un vrai coût du capital positif donnerait un score
+    NÉGATIF (donnée absente lue comme mauvaise performance)."""
+    result = score_rentabilite(roce=0.0, roe=0.0, cost_of_capital=8.0, data_available=False)
+    assert result.score == 0.0
+    assert result.raw_value == "Donnée indisponible (pas de ligne EBIT exploitable chez la source de données)"
+
+
 from indices_score import score_structure_financiere
 
 
@@ -95,6 +104,19 @@ def test_score_structure_financiere_net_cash_position_leverage_capped():
     # sinon le résultat est faussé (5.0 au lieu de ~1.67 dans ce cas précis).
     result = score_structure_financiere(net_debt_ebitda=-2.0, icr=1.0, sector="Industrials")
     assert result.score < 2.0
+
+
+def test_score_structure_financiere_neutral_when_data_unavailable():
+    """Audit 2026-09-13 : sans ce garde, net_debt_ebitda=0.0 (repli de
+    données manquantes) donnerait à tort le MEILLEUR score possible
+    (+10.0, endettement nul) au lieu d'une absence de donnée."""
+    result = score_structure_financiere(
+        net_debt_ebitda=0.0, icr=10.0, sector="Industrials", data_available=False,
+    )
+    assert result.score == 0.0
+    assert result.raw_value == (
+        "Donnée indisponible (pas de ligne EBITDA/EBIT exploitable chez la source de données)"
+    )
 
 
 from indices_score import score_croissance
@@ -144,6 +166,15 @@ def test_score_generation_cash_negative_conversion_floors_at_minus_ten():
     assert result.score == -10.0
 
 
+def test_score_generation_cash_neutral_when_data_unavailable():
+    """Audit 2026-09-13 : sans ce garde, fcf_conversion=0.0 (repli de
+    données manquantes) donnerait à tort le PIRE score possible (-10.0,
+    conversion nulle) au lieu d'une absence de donnée."""
+    result = score_generation_cash(fcf_conversion=0.0, data_available=False)
+    assert result.score == 0.0
+    assert result.raw_value == "Donnée indisponible (pas de ligne EBITDA exploitable chez la source de données)"
+
+
 from indices_score import score_valorisation
 
 
@@ -189,6 +220,22 @@ def test_score_valorisation_at_historical_average_is_neutral():
         cagr_ebitda=5.0,
     )
     assert result.score == 0.0
+
+
+def test_score_valorisation_neutral_when_data_unavailable():
+    """Audit 2026-09-13 : le score était déjà neutre par coïncidence dans
+    ce cas (avg_5y=0.0 déclenche déjà le garde de _premium_score), mais le
+    texte affiché ("EV/EBITDA 0.0x...") donnait à tort l'impression d'une
+    vraie donnée à zéro plutôt que d'une absence de donnée."""
+    result = score_valorisation(
+        current_ev_ebitda=0.0, avg_ev_ebitda_5y=0.0,
+        current_pe=0.0, avg_pe_5y=0.0,
+        cagr_ebitda=0.0, data_available=False,
+    )
+    assert result.score == 0.0
+    assert result.raw_value == (
+        "Donnée indisponible (pas de ligne EBITDA/résultat net exploitable chez la source de données)"
+    )
 
 
 from indices_score import score_dynamique_recente
@@ -1110,16 +1157,20 @@ def test_estimate_dcf_price_returns_none_when_discount_rate_too_close_to_termina
 def _fake_ratios():
     return {
         "roce": 15.0,
+        "roce_available": True,
         "roe": 18.0,
         "net_debt_ebitda": 1.5,
         "icr": 8.0,
+        "structure_available": True,
         "cagr_ca": 6.0,
         "cagr_ebitda": 6.5,
         "fcf_conversion": 70.0,
+        "fcf_conversion_available": True,
         "current_ev_ebitda": 10.0,
         "avg_ev_ebitda_5y": 10.0,
         "current_pe": 20.0,
         "avg_pe_5y": 20.0,
+        "valuation_available": True,
         "ecart_pct_ma200": 5.0,
         "quarterly_yoy_growth_ca": 7.0,
         "fcf": 50.0,
@@ -3373,6 +3424,21 @@ def test_extract_ratios_degrades_gracefully_when_ebitda_missing_but_ebit_present
     assert ratios["fcf_conversion"] == 0.0
     assert ratios["current_ev_ebitda"] == 0.0
     assert ratios["avg_ev_ebitda_5y"] == 0.0
+    # Audit 2026-09-13 : ces valeurs neutres (0.0) doivent aussi porter un
+    # signal explicite "donnée indisponible" — sans lui, score_structure_
+    # financiere/score_generation_cash liraient ce 0.0 comme une vraie
+    # donnée (endettement nul -> +10.0, conversion cash nulle -> -10.0)
+    # au lieu d'une absence d'opinion. roce reste disponible ici (EBIT
+    # présent) ; valuation_available est aussi False bien que net_income
+    # soit disponible pour le P/E — la boucle qui construit ev_ebitda_by_year
+    # ET pe_by_year saute l'année dès qu'EBITDA OU net_income manque (les
+    # deux jambes sont couplées), donc PE devient indisponible avec
+    # EV/EBITDA même si lui seul aurait pu se calculer. Comportement
+    # préexistant, pas modifié par ce fix.
+    assert ratios["structure_available"] is False
+    assert ratios["fcf_conversion_available"] is False
+    assert ratios["roce_available"] is True
+    assert ratios["valuation_available"] is False
 
 
 def test_extract_ratios_degrades_gracefully_when_ebit_missing_but_ebitda_absent_too():
@@ -3401,6 +3467,17 @@ def test_extract_ratios_degrades_gracefully_when_ebit_missing_but_ebitda_absent_
     assert ratios["fcf_conversion"] == 0.0
     assert ratios["current_ev_ebitda"] == 0.0
     assert ratios["avg_ev_ebitda_5y"] == 0.0
+    # Audit 2026-09-13 : les 4 facteurs standard dépendent tous d'EBITDA
+    # et/ou EBIT ici — les 4 doivent donc être marqués indisponibles,
+    # pour que score_rentabilite/score_structure_financiere/
+    # score_generation_cash/score_valorisation retombent sur un vrai 0.0
+    # neutre avec un message honnête plutôt que de lire ces replis comme
+    # une vraie performance (le pire ou le meilleur score selon le
+    # facteur, jamais neutre, avant ce fix).
+    assert ratios["roce_available"] is False
+    assert ratios["structure_available"] is False
+    assert ratios["fcf_conversion_available"] is False
+    assert ratios["valuation_available"] is False
 
 
 def test_extract_ratios_degrades_gracefully_when_capex_entirely_missing():

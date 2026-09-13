@@ -48,6 +48,20 @@ def test_fetch_flex_reference_code_raises_when_no_reference_and_no_error(monkeyp
         portfolio_sync.fetch_flex_reference_code("tok", "qid")
 
 
+def test_fetch_flex_statement_default_retry_window_is_at_least_90_seconds():
+    """Garde-fou de non-régression : la fenêtre initiale (5 tentatives x 3s,
+    ~12s d'attente totale) échouait systématiquement en production contre le
+    vrai Flex Web Service IBKR, bien trop courte pour un service de
+    génération de rapport asynchrone. Les valeurs par défaut doivent rester
+    largement plus généreuses."""
+    import inspect
+    sig = inspect.signature(portfolio_sync.fetch_flex_statement)
+    max_attempts = sig.parameters["max_attempts"].default
+    retry_delay_s = sig.parameters["retry_delay_s"].default
+    total_wait = (max_attempts - 1) * retry_delay_s
+    assert total_wait >= 90
+
+
 def test_fetch_flex_statement_returns_xml_on_immediate_success(monkeypatch):
     xml = "<FlexQueryResponse>ok</FlexQueryResponse>"
     monkeypatch.setattr(portfolio_sync.requests, "get", lambda *a, **k: _FakeFlexResponse(xml))
@@ -273,7 +287,13 @@ def test_main_keeps_previous_positions_and_sets_error_on_fetch_failure(monkeypat
 
     monkeypatch.setattr(portfolio_sync, "fetch_flex_reference_code", _raise)
 
-    portfolio_sync.main()
+    # sys.exit(1) sur un échec réel : sans ça, le job GitHub Actions reste
+    # "success" même quand la synchro échoue (bug constaté en production,
+    # invisible dans gh run list). Le fichier doit rester correctement écrit
+    # AVANT ce code de sortie.
+    with pytest.raises(SystemExit) as exc_info:
+        portfolio_sync.main()
+    assert exc_info.value.code == 1
 
     written = json.loads(output_path.read_text(encoding="utf-8"))
     assert written["sync_status"] == "error"
@@ -309,7 +329,9 @@ def test_main_sanitizes_request_exception_message_to_avoid_leaking_token(monkeyp
 
     monkeypatch.setattr(portfolio_sync, "fetch_flex_reference_code", _raise)
 
-    portfolio_sync.main()
+    with pytest.raises(SystemExit) as exc_info:
+        portfolio_sync.main()
+    assert exc_info.value.code == 1
 
     written = json.loads(output_path.read_text(encoding="utf-8"))
     assert written["sync_status"] == "error"

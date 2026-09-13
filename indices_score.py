@@ -1059,13 +1059,12 @@ FINANCIAL_SECTOR_TICKERS = {
     # les foncières/opérateurs déjà exclus côté FTSE/DAX.
     "SAN.MC", "BBVA.MC", "CABK.MC", "SAB.MC", "BKT.MC", "UNI.MC", "MAP.MC",
     # FTSE MIB : banques de réseau/investissement et assureurs qui
-    # souscrivent du risque. FinecoBank (FBK.MI), Banca Mediolanum
-    # (BMED.MI) et Poste Italiane (PST.MI) sont des cas limites signalés
-    # (banques hybrides courtage/distribution/logistique) volontairement
-    # exclues, pas tranchées unilatéralement — même prudence que St.
-    # James's Place (FTSE). Azimut Holding (gestionnaire d'actifs) et Nexi
-    # (opérateur de paiement) exclus pour la même raison que les
-    # gestionnaires d'actifs/opérateurs déjà exclus ailleurs.
+    # souscrivent du risque. Poste Italiane (PST.MI) reste un cas limite
+    # signalé (banque/assurance/logistique hybride) volontairement exclu,
+    # pas tranché unilatéralement — même prudence que St. James's Place
+    # (FTSE). Azimut Holding (gestionnaire d'actifs) et Nexi (opérateur de
+    # paiement) exclus pour la même raison que les gestionnaires
+    # d'actifs/opérateurs déjà exclus ailleurs.
     "ISP.MI", "UCG.MI", "BAMI.MI", "BPE.MI", "BMPS.MI", "MB.MI", "G.MI", "UNI.MI",
     # Nikkei 225 : banques (mégabanques + banques régionales/spécialisées)
     # et assureurs/réassureurs qui souscrivent du risque, classification
@@ -1101,6 +1100,19 @@ FINANCIAL_SECTOR_TICKERS = {
     # produire un score au lieu d'échouer. Japan Post Holdings idem (sa
     # banque/assurance filiales dominent son bilan consolidé).
     "8604.T", "8601.T", "8591.T", "6178.T",
+    # FTSE MIB : FinecoBank (FBK.MI) et Banca Mediolanum (BMED.MI),
+    # reclassées le 2026-09-13 après vérification directe de leurs
+    # comptes réels (analyse Opus en production) — ce sont bien des
+    # groupes bancaires classiques (marge nette, ROE, dépôts/encours),
+    # pas des cas limites courtage/distribution comme le texte du bloc
+    # FTSE MIB ci-dessus le supposait initialement. Poste Italiane reste
+    # exclue, cas différent (logistique + banque/assurance en parallèle,
+    # pas tranché). Audit ayant motivé ce changement : les 2 tickers
+    # avaient un score Rentabilité/Structure/Cash artificiellement
+    # extrême (méthodologie standard appliquée à des comptes bancaires
+    # sans EBITDA/EBIT), voir project_indices_cac40 (mémoire) pour le
+    # détail complet de l'investigation.
+    "FBK.MI", "BMED.MI",
 }
 
 

@@ -153,7 +153,11 @@ def test_compute_bollinger_with_variance():
 
 
 def _candle(open_, high, low, close):
-    return {"time": "t", "open": open_, "high": high, "low": low, "close": close}
+    # "2026-01-05 12:00:00" (lundi, midi UTC) : date fixe volontairement
+    # loin de tout évènement macro de SCALP_HIGH_IMPACT_EVENTS_UTC (voir
+    # is_news_blackout) — un simple "t" non parseable plantait sur
+    # datetime.fromisoformat() une fois ce garde ajouté à compute_signal.
+    return {"time": "2026-01-05 12:00:00", "open": open_, "high": high, "low": low, "close": close}
 
 
 def test_match_candlestick_pattern_marteau():
@@ -397,3 +401,41 @@ def test_compute_signal_neutre_when_no_confluence():
     result = confluence.compute_signal(candles)
     assert result["status"] == "neutre"
     assert result["entry"] is None
+
+
+def test_is_news_blackout_exactly_at_event():
+    from datetime import datetime, timezone
+    # CPI du 11/09/2026, 8h30 ET = 12h30 UTC (source : bls.gov/schedule/news_release/cpi.htm).
+    assert confluence.is_news_blackout(datetime(2026, 9, 11, 12, 30, tzinfo=timezone.utc)) is True
+
+
+def test_is_news_blackout_within_window_before_event():
+    from datetime import datetime, timezone
+    # 14 min avant le CPI du 11/09 (fenêtre ±15 min) -> toujours en black-out.
+    assert confluence.is_news_blackout(datetime(2026, 9, 11, 12, 16, tzinfo=timezone.utc)) is True
+
+
+def test_is_news_blackout_just_outside_window():
+    from datetime import datetime, timezone
+    # 16 min avant le CPI du 11/09 -> hors fenêtre de 15 min.
+    assert confluence.is_news_blackout(datetime(2026, 9, 11, 12, 14, tzinfo=timezone.utc)) is False
+
+
+def test_is_news_blackout_false_on_quiet_day():
+    from datetime import datetime, timezone
+    # Dimanche, aucune publication macro programmée ce jour-là.
+    assert confluence.is_news_blackout(datetime(2026, 9, 13, 12, 30, tzinfo=timezone.utc)) is False
+
+
+def test_compute_signal_neutre_during_news_blackout():
+    # Reprend le scénario d'achat complet (_build_bearish_then_hammer_candles,
+    # qui produirait normalement 'achat') mais avec la dernière bougie
+    # horodatée pile sur la décision FOMC du 16/09/2026 (14h00 ET =
+    # 18h00 UTC) -> neutre forcé malgré une confluence technique réelle.
+    candles = _build_bearish_then_hammer_candles()
+    candles[-1]["time"] = "2026-09-16 18:00:00"
+    result = confluence.compute_signal(candles)
+    assert result["status"] == "neutre"
+    assert result["entry"] is None
+    assert result["stop_loss"] is None
+    assert result["take_profit"] is None

@@ -303,33 +303,50 @@ const SCALP_MIN_CANDLES = Math.max(SCALP_BOLLINGER_PERIOD, SCALP_MACD_SLOW + SCA
 const SCALP_STOP_BUFFER = SCALP_LEVEL_PROXIMITY * 3; // marge du stop au-delà du niveau, distincte de la tolérance de "rebond" (SCALP_LEVEL_PROXIMITY) — un stop à peine plus loin que le niveau lui-même serait déclenché par le bruit normal du marché plutôt que par une vraie invalidation du scénario de trade
 
 // Fenêtre de black-out autour des publications macro à très fort impact
-// (CPI, Emploi US/NFP, décision FOMC) — l'or peut bouger énormément en
-// quelques minutes sur ces annonces, et une bougie extrême causée par la
-// news peut satisfaire à tort les conditions d'une vraie figure de
-// retournement (ex. Étoile filante), déclenchant une entrée sur du bruit
-// macro plutôt qu'un signal technique. Dates 2026 sourcées directement
-// aux calendriers officiels (bls.gov/schedule/news_release/cpi.htm et
-// .../empsit.htm, federalreserve.gov/monetarypolicy/fomccalendars.htm),
-// converties en UTC (8h30 ET pour CPI/Emploi, 14h00 ET pour la décision
-// FOMC — 2e jour de chaque réunion — en tenant compte de l'heure d'été
-// US, du 08/03/2026 au 01/11/2026 inclus). À mettre à jour quand le
-// calendrier 2027 est publié (généralement fin d'année précédente).
+// (CPI/Emploi US/FOMC, décision BCE, décision Bank of England) — l'or
+// peut bouger énormément en quelques minutes sur ces annonces, et une
+// bougie extrême causée par la news peut satisfaire à tort les
+// conditions d'une vraie figure de retournement (ex. Étoile filante),
+// déclenchant une entrée sur du bruit macro plutôt qu'un signal
+// technique. Périmètre choisi pour couvrir la même portée qu'un
+// calendrier "fort impact, toutes devises" (ex. MyFxBook) sans en
+// dépendre : MyFxBook n'a pas d'API publique pour son calendrier (testé
+// directement le 13/09/2026, endpoint XML non documenté -> 403
+// Forbidden, nécessite une session connectée) — chaque date ci-dessous
+// est sourcée séparément à la banque centrale/agence officielle
+// concernée, jamais à un agrégateur tiers. Dates 2026, converties en
+// UTC en tenant compte des heures d'été respectives. À mettre à jour
+// quand chaque calendrier 2027 est publié (généralement fin d'année
+// précédente pour les 3 US, ~vers l'été précédent pour BCE/BoE).
 const SCALP_NEWS_BLACKOUT_MINUTES = 15;
 const SCALP_HIGH_IMPACT_EVENTS_UTC = [
-  // CPI (indice des prix à la consommation US), 8h30 ET
+  // CPI (indice des prix à la consommation US), 8h30 ET — source :
+  // bls.gov/schedule/news_release/cpi.htm
   '2026-01-13T13:30:00Z', '2026-02-13T13:30:00Z', '2026-03-11T12:30:00Z',
   '2026-04-10T12:30:00Z', '2026-05-12T12:30:00Z', '2026-06-10T12:30:00Z',
   '2026-07-14T12:30:00Z', '2026-08-12T12:30:00Z', '2026-09-11T12:30:00Z',
   '2026-10-14T12:30:00Z', '2026-11-10T13:30:00Z', '2026-12-10T13:30:00Z',
-  // Emploi US / NFP (Employment Situation), 8h30 ET
+  // Emploi US / NFP (Employment Situation), 8h30 ET — source :
+  // bls.gov/schedule/news_release/empsit.htm
   '2026-01-09T13:30:00Z', '2026-02-11T13:30:00Z', '2026-03-06T13:30:00Z',
   '2026-04-03T12:30:00Z', '2026-05-08T12:30:00Z', '2026-06-05T12:30:00Z',
   '2026-07-02T12:30:00Z', '2026-08-07T12:30:00Z', '2026-09-04T12:30:00Z',
   '2026-10-02T12:30:00Z', '2026-11-06T13:30:00Z', '2026-12-04T13:30:00Z',
-  // Décision FOMC (taux directeur), 14h00 ET, 2e jour de chaque réunion
+  // Décision FOMC (taux directeur US), 14h00 ET, 2e jour de chaque
+  // réunion — source : federalreserve.gov/monetarypolicy/fomccalendars.htm
   '2026-01-28T19:00:00Z', '2026-03-18T18:00:00Z', '2026-04-29T18:00:00Z',
   '2026-06-17T18:00:00Z', '2026-07-29T18:00:00Z', '2026-09-16T18:00:00Z',
   '2026-10-28T18:00:00Z', '2026-12-09T19:00:00Z',
+  // Décision BCE (taux directeur zone euro), 14h15 CET/CEST, 2e jour de
+  // chaque réunion — source : ecb.europa.eu/press/calendars/mgcgc
+  '2026-03-19T13:15:00Z', '2026-04-30T12:15:00Z', '2026-06-11T12:15:00Z',
+  '2026-07-23T12:15:00Z', '2026-09-10T12:15:00Z', '2026-10-29T13:15:00Z',
+  '2026-12-17T13:15:00Z',
+  // Décision Bank of England (taux directeur GBP), 12h00 heure de
+  // Londres — source : bankofengland.co.uk/monetary-policy/upcoming-mpc-dates
+  '2026-02-05T12:00:00Z', '2026-03-19T12:00:00Z', '2026-04-30T11:00:00Z',
+  '2026-06-18T11:00:00Z', '2026-07-30T11:00:00Z', '2026-09-17T11:00:00Z',
+  '2026-11-05T12:00:00Z', '2026-12-17T12:00:00Z',
 ];
 
 /**

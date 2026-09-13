@@ -252,27 +252,42 @@ SCALP_MIN_CANDLES = max(SCALP_BOLLINGER_PERIOD, SCALP_MACD_SLOW + SCALP_MACD_SIG
 SCALP_STOP_BUFFER = SCALP_LEVEL_PROXIMITY * 3
 
 # Fenêtre de black-out autour des publications macro à très fort impact
-# (CPI, Emploi US/NFP, décision FOMC) — portage fidèle de la même
-# constante côté docs/scalping.js (voir son commentaire pour le
-# raisonnement complet et les sources officielles). Ces deux listes
-# DOIVENT rester synchronisées — mettre à jour les deux quand le
-# calendrier 2027 est publié.
+# (CPI/Emploi US/FOMC, décision BCE, décision Bank of England) — portage
+# fidèle de la même constante côté docs/scalping.js (voir son commentaire
+# pour le raisonnement complet, les sources officielles, et pourquoi
+# MyFxBook n'est pas utilisé comme source — pas d'API publique, testé le
+# 13/09/2026, 403 Forbidden). Ces deux listes DOIVENT rester
+# synchronisées — mettre à jour les deux quand chaque calendrier 2027 est
+# publié.
 SCALP_NEWS_BLACKOUT_MINUTES = 15
 SCALP_HIGH_IMPACT_EVENTS_UTC = [
-    # CPI (indice des prix à la consommation US), 8h30 ET
+    # CPI (indice des prix à la consommation US), 8h30 ET — source :
+    # bls.gov/schedule/news_release/cpi.htm
     "2026-01-13T13:30:00Z", "2026-02-13T13:30:00Z", "2026-03-11T12:30:00Z",
     "2026-04-10T12:30:00Z", "2026-05-12T12:30:00Z", "2026-06-10T12:30:00Z",
     "2026-07-14T12:30:00Z", "2026-08-12T12:30:00Z", "2026-09-11T12:30:00Z",
     "2026-10-14T12:30:00Z", "2026-11-10T13:30:00Z", "2026-12-10T13:30:00Z",
-    # Emploi US / NFP (Employment Situation), 8h30 ET
+    # Emploi US / NFP (Employment Situation), 8h30 ET — source :
+    # bls.gov/schedule/news_release/empsit.htm
     "2026-01-09T13:30:00Z", "2026-02-11T13:30:00Z", "2026-03-06T13:30:00Z",
     "2026-04-03T12:30:00Z", "2026-05-08T12:30:00Z", "2026-06-05T12:30:00Z",
     "2026-07-02T12:30:00Z", "2026-08-07T12:30:00Z", "2026-09-04T12:30:00Z",
     "2026-10-02T12:30:00Z", "2026-11-06T13:30:00Z", "2026-12-04T13:30:00Z",
-    # Décision FOMC (taux directeur), 14h00 ET, 2e jour de chaque réunion
+    # Décision FOMC (taux directeur US), 14h00 ET, 2e jour de chaque
+    # réunion — source : federalreserve.gov/monetarypolicy/fomccalendars.htm
     "2026-01-28T19:00:00Z", "2026-03-18T18:00:00Z", "2026-04-29T18:00:00Z",
     "2026-06-17T18:00:00Z", "2026-07-29T18:00:00Z", "2026-09-16T18:00:00Z",
     "2026-10-28T18:00:00Z", "2026-12-09T19:00:00Z",
+    # Décision BCE (taux directeur zone euro), 14h15 CET/CEST, 2e jour de
+    # chaque réunion — source : ecb.europa.eu/press/calendars/mgcgc
+    "2026-03-19T13:15:00Z", "2026-04-30T12:15:00Z", "2026-06-11T12:15:00Z",
+    "2026-07-23T12:15:00Z", "2026-09-10T12:15:00Z", "2026-10-29T13:15:00Z",
+    "2026-12-17T13:15:00Z",
+    # Décision Bank of England (taux directeur GBP), 12h00 heure de
+    # Londres — source : bankofengland.co.uk/monetary-policy/upcoming-mpc-dates
+    "2026-02-05T12:00:00Z", "2026-03-19T12:00:00Z", "2026-04-30T11:00:00Z",
+    "2026-06-18T11:00:00Z", "2026-07-30T11:00:00Z", "2026-09-17T11:00:00Z",
+    "2026-11-05T12:00:00Z", "2026-12-17T12:00:00Z",
 ]
 
 

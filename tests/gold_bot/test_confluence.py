@@ -427,6 +427,19 @@ def test_is_news_blackout_false_on_quiet_day():
     assert confluence.is_news_blackout(datetime(2026, 9, 13, 12, 30, tzinfo=timezone.utc)) is False
 
 
+def test_is_news_blackout_exactly_at_ecb_decision():
+    from datetime import datetime, timezone
+    # Décision BCE du 29/10/2026, 14h15 CET = 13h15 UTC (source : ecb.europa.eu/press/calendars/mgcgc).
+    assert confluence.is_news_blackout(datetime(2026, 10, 29, 13, 15, tzinfo=timezone.utc)) is True
+
+
+def test_is_news_blackout_exactly_at_boe_decision():
+    from datetime import datetime, timezone
+    # Décision Bank of England du 18/06/2026, 12h00 heure de Londres = 11h00 UTC (BST)
+    # (source : bankofengland.co.uk/monetary-policy/upcoming-mpc-dates).
+    assert confluence.is_news_blackout(datetime(2026, 6, 18, 11, 0, tzinfo=timezone.utc)) is True
+
+
 def test_compute_signal_neutre_during_news_blackout():
     # Reprend le scénario d'achat complet (_build_bearish_then_hammer_candles,
     # qui produirait normalement 'achat') mais avec la dernière bougie

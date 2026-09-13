@@ -209,6 +209,18 @@ function test_isNewsBlackout_false_on_quiet_day() {
   console.log('OK: test_isNewsBlackout_false_on_quiet_day');
 }
 
+function test_isNewsBlackout_exactly_at_ecb_decision() {
+  // Décision BCE du 29/10/2026, 14h15 CET = 13h15 UTC (source : ecb.europa.eu/press/calendars/mgcgc).
+  assert.strictEqual(isNewsBlackout(new Date('2026-10-29T13:15:00Z')), true);
+  console.log('OK: test_isNewsBlackout_exactly_at_ecb_decision');
+}
+
+function test_isNewsBlackout_exactly_at_boe_decision() {
+  // Décision Bank of England du 18/06/2026, 12h00 heure de Londres = 11h00 UTC (BST) (source : bankofengland.co.uk/monetary-policy/upcoming-mpc-dates).
+  assert.strictEqual(isNewsBlackout(new Date('2026-06-18T11:00:00Z')), true);
+  console.log('OK: test_isNewsBlackout_exactly_at_boe_decision');
+}
+
 function test_computeSignal_neutre_during_news_blackout() {
   // 36 bougies (>= SCALP_MIN_CANDLES), la dernière horodatée pile sur la
   // décision FOMC du 16/09/2026 (14h00 ET = 18h00 UTC) -> neutre forcé,
@@ -251,6 +263,8 @@ async function main() {
   test_isNewsBlackout_within_window_before_event();
   test_isNewsBlackout_just_outside_window();
   test_isNewsBlackout_false_on_quiet_day();
+  test_isNewsBlackout_exactly_at_ecb_decision();
+  test_isNewsBlackout_exactly_at_boe_decision();
   test_computeSignal_neutre_during_news_blackout();
   console.log('Tous les tests scalping.test.js sont passés.');
 }

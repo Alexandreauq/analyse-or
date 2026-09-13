@@ -244,6 +244,28 @@ function test_decidePositionOutcome_ignores_sl_tp_touches_when_stale() {
   console.log('OK: test_decidePositionOutcome_ignores_sl_tp_touches_when_stale');
 }
 
+function test_decidePositionOutcome_force_closes_on_news_blackout_without_touch() {
+  // Aucun SL/TP touché dans les bougies reçues, mais isBlackout=true
+  // (6e argument) -> clôture forcée au dernier prix connu, sans
+  // attendre un stop-loss ou une cible qui n'a jamais été atteinte.
+  const position = { direction: 'achat', stop_loss: 90, take_profit: 120, entry_time: '2026-01-01T00:00:00.000Z' };
+  const candles = [{ high: 100, low: 99, close: 99.5 }];
+  const outcome = decidePositionOutcome(position, candles, Date.now(), false, false, true);
+  assert.deepStrictEqual(outcome, { closed: true, reason: 'news_blackout', price: 99.5 });
+  console.log('OK: test_decidePositionOutcome_force_closes_on_news_blackout_without_touch');
+}
+
+function test_decidePositionOutcome_sl_touch_takes_priority_over_news_blackout() {
+  // Un vrai toucher SL dans les bougies reçues reste plus informatif
+  // qu'une clôture forcée générique -> sl_hit, pas news_blackout, même
+  // avec isBlackout=true.
+  const position = { direction: 'achat', stop_loss: 95, take_profit: 110, entry_time: '2026-01-01T00:00:00.000Z' };
+  const candles = [{ high: 97, low: 93, close: 94 }];
+  const outcome = decidePositionOutcome(position, candles, Date.now(), false, false, true);
+  assert.deepStrictEqual(outcome, { closed: true, reason: 'sl_hit', price: 95 });
+  console.log('OK: test_decidePositionOutcome_sl_touch_takes_priority_over_news_blackout');
+}
+
 function test_isMarketClosed_saturday_always_closed() {
   assert.strictEqual(isMarketClosed(new Date('2026-09-12T12:00:00.000Z')), true); // samedi
   console.log('OK: test_isMarketClosed_saturday_always_closed');
@@ -273,6 +295,38 @@ function test_isMarketClosed_sunday_after_22h_open() {
 function test_isMarketClosed_weekday_open() {
   assert.strictEqual(isMarketClosed(new Date('2026-09-15T12:00:00.000Z')), false); // mardi
   console.log('OK: test_isMarketClosed_weekday_open');
+}
+
+async function test_runOnce_closes_open_position_before_news_release() {
+  // Reproduit la demande explicite : aucune position ne doit rester
+  // ouverte à l'heure d'une publication macro à fort impact. CPI du
+  // 11/09/2026, 12h30 UTC (vendredi, marché ouvert — dataStale=false et
+  // marketClosed=false, pour isoler le garde news_blackout des deux
+  // autres). now = 12h25 UTC, 5 min avant -> dans la fenêtre ±15 min.
+  // La bougie reçue ne touche ni le SL ni le TP, pour prouver que la
+  // clôture vient bien du black-out, pas d'un toucher coïncident.
+  const f = tempFile();
+  const openPosition = {
+    id: 'scalp-test', direction: 'achat', status: 'open',
+    entry_time: '2026-09-11T12:00:00.000Z', entry_price: 2100,
+    stop_loss: 2095, take_profit: 2115,
+    trend_at_entry: 'baissier', pattern_at_entry: 'Marteau',
+    close_time: null, close_price: null, close_reason: null,
+    return_usd: null, return_pct: null,
+  };
+  saveTracking({ trial_start: '2026-09-09T17:18:30.529Z', trial_ended: false, positions: [openPosition] }, f);
+  const now = new Date('2026-09-11T12:25:00.000Z').getTime();
+  const values = [{
+    datetime: '2026-09-11 12:24:00', open: '2102.5', high: '2104', low: '2102', close: '2103',
+  }];
+  const fakeFetch = async () => ({ ok: true, json: async () => ({ status: 'ok', values }) });
+  const data = await runOnce('fake-key', fakeFetch, now, f);
+  const closed = data.positions[0];
+  assert.strictEqual(closed.status, 'closed');
+  assert.strictEqual(closed.close_reason, 'news_blackout');
+  assert.strictEqual(closed.close_price, 2103);
+  if (fs.existsSync(f)) fs.unlinkSync(f);
+  console.log('OK: test_runOnce_closes_open_position_before_news_release');
 }
 
 async function test_runOnce_does_not_close_position_on_weekend_frozen_price_touch() {
@@ -373,6 +427,8 @@ async function main() {
   await test_runOnce_does_not_write_on_fetch_failure();
   test_decidePositionOutcome_stays_open_when_stale_despite_max_duration();
   test_decidePositionOutcome_ignores_sl_tp_touches_when_stale();
+  test_decidePositionOutcome_force_closes_on_news_blackout_without_touch();
+  test_decidePositionOutcome_sl_touch_takes_priority_over_news_blackout();
   test_isMarketClosed_saturday_always_closed();
   test_isMarketClosed_friday_before_22h_open();
   test_isMarketClosed_friday_after_22h_closed();
@@ -381,6 +437,7 @@ async function main() {
   test_isMarketClosed_weekday_open();
   await test_runOnce_does_not_open_position_on_stale_data();
   await test_runOnce_closes_open_position_on_tp_hit();
+  await test_runOnce_closes_open_position_before_news_release();
   await test_runOnce_does_not_close_position_on_weekend_frozen_price_touch();
   console.log('Tous les tests scalping_tracker sont passes.');
 }

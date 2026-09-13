@@ -1768,18 +1768,22 @@ function loadSideQuoteWidget(ticker, indexKey) {
 // FTSE/SMI/IBEX35/FTSEMIB/NIKKEI225/HANGSENG : ajoutées après coup — un vrai
 // oubli lors de l'intégration de ces 6 indices (seul le préfixe TradingView
 // par ENTREPRISE avait été câblé, pas le symbole de l'indice lui-même).
-// Chaque symbole vérifié individuellement contre tradingview.com (page
-// publique, sans mention de données réservées/payantes) avant ajout — pas
-// une simple supposition de motif comme EURONEXT:PX1/XETR:DAX à l'origine.
+// FTSE/NIKKEI225/HANGSENG sont passées par un 2e tour : les symboles natifs
+// "officiels" (TVC:UKX, TVC:NI225, TVC:HSI) affichaient bien une page
+// tradingview.com normale mais se sont révélés "réservés à TradingView"
+// une fois embarqués en widget gratuit (constaté en production, pas
+// détectable depuis la page seule) — remplacés par l'équivalent CFD chez
+// Vantage (même broker que le bot Or), dont les flux sont librement
+// embarquables. SMI/IBEX35/FTSEMIB n'ont pas eu ce problème.
 const INDEX_TV_SYMBOL_BY_KEY = {
   CAC40: 'EURONEXT:PX1',
   DAX: 'XETR:DAX',
-  FTSE: 'TVC:UKX',
+  FTSE: 'VANTAGE:UK100',
   SMI: 'SIX:SMI',
   IBEX35: 'BME:IBC',
   FTSEMIB: 'INDEX:FTSEMIB',
-  NIKKEI225: 'TVC:NI225',
-  HANGSENG: 'TVC:HSI',
+  NIKKEI225: 'VANTAGE:NIKKEI225',
+  HANGSENG: 'VANTAGE:HK50',
 };
 
 // Repli sans widget : affiche juste le niveau du jour de l'indice (voir

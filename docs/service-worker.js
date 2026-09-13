@@ -1,7 +1,7 @@
 // Service worker minimal : met en cache la coquille de l'app pour qu'elle
 // s'ouvre instantanément, sans bloquer les mises à jour de score.json qui
 // doit toujours être rechargé depuis le réseau (données du jour).
-const CACHE_NAME = "analyse-or-shell-v39";
+const CACHE_NAME = "analyse-or-shell-v40";
 const SHELL_FILES = ["./index.html", "./manifest.json"];
 
 self.addEventListener("install", (event) => {

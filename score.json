@@ -1,25 +1,25 @@
 {
-  "date": "2026-09-13",
-  "composite_score": 22.4,
+  "date": "2026-09-14",
+  "composite_score": 25.5,
   "interpretation": "Favorable — en attente d'un déclencheur technique",
   "factors": [
     {
       "name": "Taux réels US 10 ans",
-      "score": -2.7999999999999936,
+      "score": -1.5999999999999925,
       "weight": 0.3,
-      "raw_value": "2.55% (il y a ~45j : 2.41%)"
+      "raw_value": "2.55% (il y a ~45j : 2.47%)"
     },
     {
       "name": "Dollar (DXY)",
       "score": 10,
       "weight": 0.15,
-      "raw_value": "99.15 (il y a 2 mois : 101.28)"
+      "raw_value": "99.19 (il y a 2 mois : 101.28)"
     },
     {
       "name": "Anticipations d'inflation",
-      "score": 2.9999999999999956,
+      "score": 2.6666666666666696,
       "weight": 0.15,
-      "raw_value": "2.36% (il y a ~45j : 2.27%)"
+      "raw_value": "2.36% (il y a ~45j : 2.28%)"
     },
     {
       "name": "Ton de la Fed",
@@ -47,9 +47,9 @@
     }
   ],
   "technical": {
-    "note": "Cours en-dessous de la MM200 (-3.3%) — tendance baissière",
-    "spot": 4381.0,
-    "ma200": 4528.250993652344
+    "note": "Cours en-dessous de la MM200 (-3.0%) — tendance baissière",
+    "spot": 4390.60009765625,
+    "ma200": 4528.298994140625
   },
   "calendar": [
     {
@@ -98,7 +98,7 @@
       "kind": "info",
       "title": "Pas de signal actif",
       "detail": "Aucune des conditions de veille, d'entrée ou de risque n'est réunie aujourd'hui.",
-      "date": "13/09/2026"
+      "date": "14/09/2026"
     }
   ]
 }

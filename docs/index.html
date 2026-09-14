@@ -118,8 +118,12 @@
 
   .app { max-width: 720px; margin: 0 auto; }
 
-  /* Les écrans occupent tout le viewport et se superposent pendant
-     la transition ; #or / #indices / #portefeuille glissent par-dessus #home puis repartent au retour. */
+  /* Vraie navigation "push" façon app native : l'écran entrant glisse de
+     droite à gauche PENDANT que #home recule (léger translateX + assombri),
+     plutôt que de simplement glisser par-dessus une accueil figée — sinon
+     l'accueil reste visible dans l'espace pas encore couvert le temps de
+     l'animation. #home suit exactement le même traitement que les autres
+     écrans, juste avec des valeurs de recul au lieu d'un glissement complet. */
   .home, #or, #indices, #portefeuille {
     position: fixed; inset: 0; overflow-y: auto; -webkit-overflow-scrolling: touch;
     background: var(--bg);
@@ -127,6 +131,11 @@
     -ms-overflow-style: none;   /* vieux Edge */
   }
   .home::-webkit-scrollbar, #or::-webkit-scrollbar, #indices::-webkit-scrollbar, #portefeuille::-webkit-scrollbar { display: none; }
+  .home {
+    transition: transform 0.32s cubic-bezier(.22,1,.36,1), filter 0.32s cubic-bezier(.22,1,.36,1);
+  }
+  .home.screen-back { transform: translateX(-18%) scale(.97); filter: brightness(.82); }
+  .home.no-anim { transition: none; }
   #or, #indices, #portefeuille {
     z-index: 2; transform: translateX(100%);
     transition: transform 0.32s cubic-bezier(.22,1,.36,1);
@@ -544,6 +553,35 @@
   .portfolio-form-row input { flex: 1; min-width: 110px; }
   .portfolio-form-error { color: var(--rust); font-size: var(--text-sm); margin: 0; }
 
+  /* Portefeuille : une seule section affichée à la fois (carrousel), pensée
+     pour tenir dans la fenêtre sans faire défiler la page — seul le
+     contenu de la section active défile si jamais il dépasse. */
+  #portefeuille { overflow-y: hidden; }
+  #portefeuille .app { height: 100%; display: flex; flex-direction: column; }
+  #portefeuille header, #portefeuille .or-tabbar { flex-shrink: 0; }
+  #portefeuille main { flex: 1; min-height: 0; padding-bottom: 0; }
+  #portefeuille #portefeuilleOrView { flex: 1; min-height: 0; padding: 0 20px; }
+
+  .portfolio-pager { display: flex; flex-direction: column; height: 100%; min-height: 0; }
+  .portfolio-pager-nav {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    padding: 4px 0 14px; flex-shrink: 0;
+  }
+  .portfolio-pager-title {
+    font-family: 'Newsreader', serif; font-size: var(--text-lg); font-weight: 500; text-align: center; flex: 1;
+  }
+  .portfolio-pager-arrow {
+    width: 40px; height: 40px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+    background: var(--bg-2); border: 1px solid var(--border); border-radius: var(--radius-pill); color: var(--text);
+    font-size: 20px; line-height: 1; transition: border-color .15s ease, background .15s ease, transform .12s ease;
+  }
+  .portfolio-pager-arrow:hover { border-color: var(--border-strong); background: var(--bg-3); }
+  .portfolio-pager-arrow:active { transform: scale(.94); }
+  .portfolio-pager-content { flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+  .portfolio-pager-dots { display: flex; justify-content: center; gap: 8px; padding: 12px 0 4px; flex-shrink: 0; }
+  .portfolio-pager-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--border-strong); transition: background .2s ease, transform .2s ease; }
+  .portfolio-pager-dot.is-active { background: var(--gold); transform: scale(1.3); }
+
   /* Repère "profil financier" (banques/assurances) : méthodologie de
      calcul adaptée (ROE, ratio de levier, P/E+P/B) — voir .financial-notice. */
   .financial-tag {
@@ -843,7 +881,8 @@
   </div>
 </div>
 
-<div id="or" class="screen app" hidden>
+<div id="or" class="screen" hidden>
+  <div class="app">
   <header>
     <div class="eyebrow">Analyse — phase 1</div>
     <h1>Or</h1>
@@ -888,9 +927,11 @@
       <div class="skeleton-line"></div>
     </div>
   </main>
+  </div>
 </div>
 
-<div id="indices" class="screen app" hidden>
+<div id="indices" class="screen" hidden>
+  <div class="app">
   <header>
     <div class="eyebrow">Indice actions</div>
     <h1 id="indicesTitle">Indices</h1>
@@ -905,22 +946,48 @@
       <div class="skeleton-line"></div>
     </div>
   </main>
+  </div>
 </div>
 
-<div id="portefeuille" class="screen app" hidden>
+<div id="portefeuille" class="screen" hidden>
+  <div class="app">
   <header>
     <div class="eyebrow">Suivi personnel</div>
     <h1>Portefeuille</h1>
   </header>
 
-  <main id="portefeuilleContent">
-    <div class="skeleton">
-      <div class="skeleton-line"></div>
-      <div class="skeleton-line"></div>
-      <div class="skeleton-line"></div>
-      <div class="skeleton-line"></div>
+  <div class="or-tabbar" role="tablist">
+    <button class="or-tab-btn" id="portefeuilleTabActions" role="tab" aria-selected="true" type="button">Actions</button>
+    <button class="or-tab-btn" id="portefeuilleTabOr" role="tab" aria-selected="false" type="button">Or</button>
+  </div>
+
+  <main id="portefeuilleContent" class="portfolio-pager">
+    <div class="portfolio-pager-nav">
+      <button class="portfolio-pager-arrow" id="pfActionsPrev" type="button" aria-label="Section précédente">‹</button>
+      <span class="portfolio-pager-title" id="pfActionsTitle"></span>
+      <button class="portfolio-pager-arrow" id="pfActionsNext" type="button" aria-label="Section suivante">›</button>
     </div>
+    <div class="portfolio-pager-content" id="pfActionsContent">
+      <div class="skeleton">
+        <div class="skeleton-line"></div>
+        <div class="skeleton-line"></div>
+        <div class="skeleton-line"></div>
+        <div class="skeleton-line"></div>
+      </div>
+    </div>
+    <div class="portfolio-pager-dots" id="pfActionsDots"></div>
   </main>
+
+  <div id="portefeuilleOrView" class="portfolio-pager" hidden>
+    <div class="portfolio-pager-nav">
+      <button class="portfolio-pager-arrow" id="pfOrPrev" type="button" aria-label="Section précédente">‹</button>
+      <span class="portfolio-pager-title" id="pfOrTitle"></span>
+      <button class="portfolio-pager-arrow" id="pfOrNext" type="button" aria-label="Section suivante">›</button>
+    </div>
+    <div class="portfolio-pager-content" id="pfOrContent"></div>
+    <div class="portfolio-pager-dots" id="pfOrDots"></div>
+  </div>
+  </div>
 </div>
 
 <script>
@@ -1060,24 +1127,51 @@ function renderPortfolioScreen() {
   const companiesByTicker = {};
   indicesData.companies.forEach(c => { companiesByTicker[c.ticker] = c; });
   const currencyByIndex = { ...INDEX_CURRENCY_BY_KEY, ...(indicesData.index_currency || {}) };
+  renderPortfolioActionsTab(companiesByTicker, currencyByIndex);
+  renderPortfolioOrTab();
+}
+
+// Affiche une seule section à la fois (carrousel) dans un pager donné —
+// partagé entre l'onglet Actions (3 sections) et l'onglet Or (2 sections).
+// `prefix` correspond aux ids statiques posés dans le markup (pfActions*/pfOr*).
+function renderPager(prefix, sections, index) {
+  const section = sections[index];
+  document.getElementById(prefix + 'Title').textContent = section.title;
+  document.getElementById(prefix + 'Content').innerHTML = section.html;
+  document.getElementById(prefix + 'Dots').innerHTML = sections.map((_, i) =>
+    `<span class="portfolio-pager-dot${i === index ? ' is-active' : ''}"></span>`).join('');
+  if (section.wire) section.wire();
+}
+
+// Onglet "Actions" : suivi manuel des positions actions (localStorage, voir
+// portfolio.js) — 3 sections en carrousel : ajout, positions détenues, opportunités.
+function renderPortfolioActionsTab(companiesByTicker, currencyByIndex) {
   const positions = loadPortfolio();
   const totals = computePortfolioTotals(positions, companiesByTicker, currencyByIndex);
 
   const heldTickers = new Set(positions.map(p => p.ticker));
   const opportunities = findOpportunities(indicesData.companies, heldTickers);
 
-  document.getElementById('portefeuilleContent').innerHTML = `
-    ${portfolioTotalsHtml(totals)}
-    ${portfolioFormHtml(indicesData.companies)}
-    <h2>Tes positions</h2>
-    ${portfolioPositionsHtml(positions, companiesByTicker, currencyByIndex)}
-    ${realPortfolioHtml()}
-    ${botStatusHtml()}
-    ${portfolioOpportunitiesHtml(opportunities)}
-  `;
-  wirePortfolioForm();
-  wirePortfolioPositionActions(companiesByTicker);
-  wireBotControls();
+  portfolioActionsSections = [
+    { title: 'Ajouter une position', html: portfolioFormHtml(indicesData.companies), wire: wirePortfolioForm },
+    {
+      title: 'Tes positions',
+      html: `${portfolioTotalsHtml(totals)}${portfolioPositionsHtml(positions, companiesByTicker, currencyByIndex)}`,
+      wire: () => wirePortfolioPositionActions(companiesByTicker),
+    },
+    { title: 'Opportunités', html: portfolioOpportunitiesHtml(opportunities), wire: null },
+  ];
+  renderPager('pfActions', portfolioActionsSections, portfolioActionsSectionIndex);
+}
+
+// Onglet "Or" : état réel (positions MT5 synchronisées + statut/contrôle du
+// Bot Or) — 2 sections en carrousel, indépendant du suivi manuel actions.
+function renderPortfolioOrTab() {
+  portfolioOrSections = [
+    { title: 'Positions réelles (MT5)', html: realPortfolioHtml(), wire: null },
+    { title: 'Bot Or', html: botStatusHtml(), wire: wireBotControls },
+  ];
+  renderPager('pfOr', portfolioOrSections, portfolioOrSectionIndex);
 }
 
 function portfolioTotalsHtml(totals) {
@@ -1152,7 +1246,6 @@ function portfolioFormHtml(companies) {
     </optgroup>`).join('');
   return `
     <form class="portfolio-form" id="portfolioAddForm">
-      <h2>Ajouter une position</h2>
       <select class="list-sort" id="portfolioFormTicker" required>
         <option value="" disabled selected>Choisir une entreprise…</option>
         ${optionsHtml}
@@ -1168,9 +1261,8 @@ function portfolioFormHtml(companies) {
 }
 
 function portfolioOpportunitiesHtml(opportunities) {
-  if (!opportunities.length) return '';
+  if (!opportunities.length) return '<div class="empty">Aucune opportunité pour l\'instant — reviens plus tard.</div>';
   return `
-    <h2>Opportunités</h2>
     <p class="hero-sub">Entreprises suivies avec un signal d'entrée actif que tu ne détiens pas encore.</p>
     <div class="index-card-list">${opportunities.map(c => `
       <a class="company-row" href="#indices/${c.ticker}">
@@ -1184,24 +1276,17 @@ function portfolioOpportunitiesHtml(opportunities) {
 
 function realPortfolioHtml() {
   if (!realPortfolioData) {
-    return `
-      <h2>Positions réelles (MT5)</h2>
-      <div class="empty">Synchronisation MT5 pas encore disponible.</div>`;
+    return '<div class="empty">Synchronisation MT5 pas encore disponible.</div>';
   }
   if (realPortfolioData.sync_status === 'not_configured') {
-    return `
-      <h2>Positions réelles (MT5)</h2>
-      <div class="empty">Synchronisation MT5 pas encore configurée.</div>`;
+    return '<div class="empty">Synchronisation MT5 pas encore configurée.</div>';
   }
   const warningHtml = realPortfolioData.sync_status === 'error'
     ? `<p class="portfolio-form-error">Dernière synchronisation MT5 échouée : ${escHtml(realPortfolioData.sync_error)}</p>`
     : '';
   const positions = realPortfolioData.positions || [];
   if (!positions.length) {
-    return `
-      <h2>Positions réelles (MT5)</h2>
-      ${warningHtml}
-      <div class="empty">Aucune position détenue chez MT5 pour l'instant.</div>`;
+    return `${warningHtml}<div class="empty">Aucune position détenue chez MT5 pour l'instant.</div>`;
   }
   const rowsHtml = positions.map(p => `
     <div class="portfolio-position-row">
@@ -1213,10 +1298,7 @@ function realPortfolioHtml() {
         <span style="color:${p.pnl_sign === 'positif' ? 'var(--gold)' : 'var(--rust)'}">${p.pnl_sign === 'positif' ? '▲' : '▼'}</span>
       </div>
     </div>`).join('');
-  return `
-    <h2>Positions réelles (MT5)</h2>
-    ${warningHtml}
-    <div class="portfolio-position-list">${rowsHtml}</div>`;
+  return `${warningHtml}<div class="portfolio-position-list">${rowsHtml}</div>`;
 }
 
 async function loadBotStatus() {
@@ -1239,15 +1321,12 @@ function getBotToken() {
 
 function botStatusHtml() {
   if (!botStatusData) {
-    return `
-      <h2>Bot Or</h2>
-      <div class="empty">Statut du bot indisponible.</div>`;
+    return '<div class="empty">Statut du bot indisponible.</div>';
   }
   const label = botStatusData.kill_switch ? 'Coupé' : (botStatusData.dry_run ? 'Simulation' : 'Actif');
   const color = botStatusData.kill_switch ? 'var(--rust)' : 'var(--gold)';
   const actionLabel = botStatusData.kill_switch ? 'Relancer' : 'Arrêter';
   return `
-    <h2>Bot Or</h2>
     <div class="portfolio-position-row">
       <div class="portfolio-position-main">
         <span class="company-name" style="color:${color}">${label}</span>
@@ -1773,6 +1852,14 @@ let indicesData = null;
 let realPortfolioData = null;
 let botStatusData = null;
 const BOT_API_BASE_URL = 'https://goldbot.fr:8443';
+
+// Pagination carrousel des sections Portefeuille (voir renderPager) : chaque
+// onglet garde son index de section courante d'un rendu à l'autre (ne
+// revient pas sur la 1ère section après un ajout/modif/suppression).
+let portfolioActionsSectionIndex = 0;
+let portfolioOrSectionIndex = 0;
+let portfolioActionsSections = [];
+let portfolioOrSections = [];
 
 async function loadIndices(ticker, view) {
   const content = document.getElementById('indicesContent');
@@ -2376,6 +2463,14 @@ function renderRoute(animate) {
     if (id === route.screen) showPane(id, animate);
     else hidePane(id, animate);
   });
+  // #home recule (translateX + assombri) dès qu'un écran est ouvert par-dessus,
+  // et revient au premier plan au retour — synchronisé avec le glissement
+  // de l'écran actif ci-dessus pour un vrai effet de "push", pas un simple
+  // recouvrement d'une accueil figée (voir commentaire CSS .home.screen-back).
+  const home = document.getElementById('home');
+  if (!animate) home.classList.add('no-anim');
+  home.classList.toggle('screen-back', route.screen !== 'home');
+  if (!animate) requestAnimationFrame(() => home.classList.remove('no-anim'));
   if (route.screen !== 'or') {
     stopScalpingPolling();
   }
@@ -2427,6 +2522,38 @@ document.getElementById('orTabSuivi').addEventListener('click', () => {
   document.getElementById('orSuiviView').hidden = false;
   stopScalpingPolling();
   loadScalpTracking();
+});
+
+document.getElementById('portefeuilleTabActions').addEventListener('click', () => {
+  document.getElementById('portefeuilleTabActions').setAttribute('aria-selected', 'true');
+  document.getElementById('portefeuilleTabOr').setAttribute('aria-selected', 'false');
+  document.getElementById('portefeuilleOrView').hidden = true;
+  document.getElementById('portefeuilleContent').hidden = false;
+});
+document.getElementById('portefeuilleTabOr').addEventListener('click', () => {
+  document.getElementById('portefeuilleTabOr').setAttribute('aria-selected', 'true');
+  document.getElementById('portefeuilleTabActions').setAttribute('aria-selected', 'false');
+  document.getElementById('portefeuilleContent').hidden = true;
+  document.getElementById('portefeuilleOrView').hidden = false;
+});
+
+// Flèches du carrousel de sections (boutons statiques dans le markup, câblés
+// une seule fois — seul le contenu/titre/points est régénéré à chaque clic).
+document.getElementById('pfActionsPrev').addEventListener('click', () => {
+  portfolioActionsSectionIndex = (portfolioActionsSectionIndex - 1 + portfolioActionsSections.length) % portfolioActionsSections.length;
+  renderPager('pfActions', portfolioActionsSections, portfolioActionsSectionIndex);
+});
+document.getElementById('pfActionsNext').addEventListener('click', () => {
+  portfolioActionsSectionIndex = (portfolioActionsSectionIndex + 1) % portfolioActionsSections.length;
+  renderPager('pfActions', portfolioActionsSections, portfolioActionsSectionIndex);
+});
+document.getElementById('pfOrPrev').addEventListener('click', () => {
+  portfolioOrSectionIndex = (portfolioOrSectionIndex - 1 + portfolioOrSections.length) % portfolioOrSections.length;
+  renderPager('pfOr', portfolioOrSections, portfolioOrSectionIndex);
+});
+document.getElementById('pfOrNext').addEventListener('click', () => {
+  portfolioOrSectionIndex = (portfolioOrSectionIndex + 1) % portfolioOrSections.length;
+  renderPager('pfOr', portfolioOrSections, portfolioOrSectionIndex);
 });
 
 window.addEventListener('hashchange', () => renderRoute(true));

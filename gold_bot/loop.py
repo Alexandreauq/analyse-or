@@ -96,6 +96,35 @@ def _save_cache(data: dict, path: str) -> None:
         print(f"Erreur écriture cache ({path}) : {e}")
 
 
+NETWORK_RETRY_ATTEMPTS = 3
+NETWORK_RETRY_DELAY_SECONDS = 2.0
+
+
+def _with_retry(fn, *, attempts: int = NETWORK_RETRY_ATTEMPTS, delay_s: float = NETWORK_RETRY_DELAY_SECONDS):
+    """Retente un appel réseau jusqu'à `attempts` fois avant de laisser
+    remonter la dernière exception. Trouvé en production le 2026-09-14
+    (27 erreurs sur 1600 cycles en ~1,5 jour, via l'email quotidien) :
+    un timeout Twelve Data, un 429/504 MetaApi ou une résolution DNS
+    ratée sur le VPS annulaient tout le cycle sans seconde chance avant
+    le suivant, 60s plus tard — la boucle externe s'auto-cicatrise déjà
+    cycle après cycle (contrairement au bug scalping_tracker.yml du
+    même jour, où une seule panne tuait 5h40 de collecte d'un coup),
+    donc ce n'est pas un correctif urgent, juste une robustesse en plus
+    à faible coût. Appliqué uniquement aux 4 appels réseau du cycle
+    (candles/solde/positions/spec), PAS à decide_and_act : ce n'est pas
+    un appel réseau, une exception y est un bug logique que retenter ne
+    résoudrait pas."""
+    last_error: Exception | None = None
+    for attempt in range(attempts):
+        try:
+            return fn()
+        except Exception as e:
+            last_error = e
+            if attempt < attempts - 1:
+                time.sleep(delay_s)
+    raise last_error
+
+
 def run_cycle(token: str, account_id: str, twelve_data_api_key: str,
               circuit_breaker: "risk.CircuitBreaker", region: str = broker.DEFAULT_MT5_REGION,
               symbol: str = SYMBOL) -> dict:
@@ -112,13 +141,13 @@ def run_cycle(token: str, account_id: str, twelve_data_api_key: str,
         return decision
 
     try:
-        candles = confluence.fetch_gold_candles(twelve_data_api_key)
+        candles = _with_retry(lambda: confluence.fetch_gold_candles(twelve_data_api_key))
         _save_cache({"candles": candles, "fetched_at": _now_iso()}, LATEST_CANDLES_PATH)
-        balance = broker.get_account_balance(token, account_id, region)
+        balance = _with_retry(lambda: broker.get_account_balance(token, account_id, region))
         _save_cache({"balance": balance, "fetched_at": _now_iso()}, LATEST_BALANCE_PATH)
-        open_positions = bot.reconcile_positions(token, account_id, region)
+        open_positions = _with_retry(lambda: bot.reconcile_positions(token, account_id, region))
         _save_cache({"positions": open_positions, "fetched_at": _now_iso()}, LATEST_POSITIONS_PATH)
-        spec = broker.get_symbol_specification(token, account_id, symbol, region)
+        spec = _with_retry(lambda: broker.get_symbol_specification(token, account_id, symbol, region))
         contract_size = spec["contractSize"]
         decision = bot.decide_and_act(
             candles, contract_size=contract_size, balance=balance,

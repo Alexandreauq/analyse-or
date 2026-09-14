@@ -1,3 +1,4 @@
+import email
 import pytest
 import requests
 from datetime import datetime
@@ -50,6 +51,15 @@ def test_score_rentabilite_partial_spread_scales_linearly():
     assert result.score == 5.0  # +2.5pp spread / 5.0pp scale * 10 = 5.0
 
 
+def test_score_rentabilite_neutral_when_data_unavailable():
+    """Audit 2026-09-13 : sans ce garde, roce=0.0 (repli de données
+    manquantes) face à un vrai coût du capital positif donnerait un score
+    NÉGATIF (donnée absente lue comme mauvaise performance)."""
+    result = score_rentabilite(roce=0.0, roe=0.0, cost_of_capital=8.0, data_available=False)
+    assert result.score == 0.0
+    assert result.raw_value == "Donnée indisponible (pas de ligne EBIT exploitable chez la source de données)"
+
+
 from indices_score import score_structure_financiere
 
 
@@ -94,6 +104,19 @@ def test_score_structure_financiere_net_cash_position_leverage_capped():
     # sinon le résultat est faussé (5.0 au lieu de ~1.67 dans ce cas précis).
     result = score_structure_financiere(net_debt_ebitda=-2.0, icr=1.0, sector="Industrials")
     assert result.score < 2.0
+
+
+def test_score_structure_financiere_neutral_when_data_unavailable():
+    """Audit 2026-09-13 : sans ce garde, net_debt_ebitda=0.0 (repli de
+    données manquantes) donnerait à tort le MEILLEUR score possible
+    (+10.0, endettement nul) au lieu d'une absence de donnée."""
+    result = score_structure_financiere(
+        net_debt_ebitda=0.0, icr=10.0, sector="Industrials", data_available=False,
+    )
+    assert result.score == 0.0
+    assert result.raw_value == (
+        "Donnée indisponible (pas de ligne EBITDA/EBIT exploitable chez la source de données)"
+    )
 
 
 from indices_score import score_croissance
@@ -143,6 +166,15 @@ def test_score_generation_cash_negative_conversion_floors_at_minus_ten():
     assert result.score == -10.0
 
 
+def test_score_generation_cash_neutral_when_data_unavailable():
+    """Audit 2026-09-13 : sans ce garde, fcf_conversion=0.0 (repli de
+    données manquantes) donnerait à tort le PIRE score possible (-10.0,
+    conversion nulle) au lieu d'une absence de donnée."""
+    result = score_generation_cash(fcf_conversion=0.0, data_available=False)
+    assert result.score == 0.0
+    assert result.raw_value == "Donnée indisponible (pas de ligne EBITDA exploitable chez la source de données)"
+
+
 from indices_score import score_valorisation
 
 
@@ -188,6 +220,22 @@ def test_score_valorisation_at_historical_average_is_neutral():
         cagr_ebitda=5.0,
     )
     assert result.score == 0.0
+
+
+def test_score_valorisation_neutral_when_data_unavailable():
+    """Audit 2026-09-13 : le score était déjà neutre par coïncidence dans
+    ce cas (avg_5y=0.0 déclenche déjà le garde de _premium_score), mais le
+    texte affiché ("EV/EBITDA 0.0x...") donnait à tort l'impression d'une
+    vraie donnée à zéro plutôt que d'une absence de donnée."""
+    result = score_valorisation(
+        current_ev_ebitda=0.0, avg_ev_ebitda_5y=0.0,
+        current_pe=0.0, avg_pe_5y=0.0,
+        cagr_ebitda=0.0, data_available=False,
+    )
+    assert result.score == 0.0
+    assert result.raw_value == (
+        "Donnée indisponible (pas de ligne EBITDA/résultat net exploitable chez la source de données)"
+    )
 
 
 from indices_score import score_dynamique_recente
@@ -261,6 +309,18 @@ def test_score_actualite_recente_ignores_old_news():
     ]
     result = score_actualite_recente(news)
     assert result.score == 10.0  # seule l'actu récente (sentiment 1) compte
+
+
+def test_score_actualite_recente_includes_news_dated_exactly_at_window_boundary():
+    """Une actu datée pile à J-14 (NEWS_SENTIMENT_WINDOW_DAYS) doit compter
+    comme "récente" — comparaison en dates pures, pas datetime.now() brut
+    (qui porte l'heure d'exécution courante et excluait à tort ce cas
+    limite un run sur deux selon l'heure du jour). Trouvé en audit le
+    2026-09-13 (FME.DE, 2269.T, 2382.HK concernés en production)."""
+    news = [{"date": _days_ago(14), "sentiment": 1}]
+    result = score_actualite_recente(news)
+    assert result.score == 10.0
+    assert "1 actualités récentes" in result.raw_value
 
 
 def test_score_actualite_recente_neutral_when_no_news():
@@ -433,6 +493,28 @@ def test_cagr_returns_neutral_zero_when_latest_value_is_missing():
     assert _cagr(800.0, float("nan"), 4) == 0.0
 
 
+def test_cagr_returns_neutral_zero_when_latest_value_is_negative():
+    """EBITDA passé positif devenu négatif (Boeing, Stellantis, Renault,
+    Porsche SE... constaté en production 2026-09-13) : (last/first) élevé à
+    une puissance fractionnaire n'est pas défini pour un ratio négatif,
+    produit un NaN silencieux qui, non intercepté ici, atteignait _clamp et
+    se voyait attribuer +10.0 (score maximal) au lieu d'une absence de
+    donnée — inversion complète du signe pour une entreprise en réelle
+    difficulté."""
+    result = _cagr(1000.0, -50.0, 4)
+    assert result == 0.0
+    assert not math.isnan(result)
+
+
+def test_cagr_zero_latest_value_is_a_real_minus_100_pct_cagr_not_neutral():
+    """Contre-exemple délibéré : contrairement à une valeur négative
+    (mathématiquement indéfinie), un EBITDA tombé exactement à zéro a un
+    CAGR réel et bien défini (-100%) — ne doit pas être confondu avec le
+    cas "donnée manquante/indéfinie" et forcé à 0.0 neutre."""
+    result = _cagr(1000.0, 0.0, 4)
+    assert result == -100.0
+
+
 def test_extract_ratios_smooths_cagr_over_two_year_windows():
     """Reproduit le cas TotalEnergies 2022 : un pic isolé sur l'exercice le
     plus ancien disponible ne doit pas, seul, déterminer tout le CAGR — le
@@ -597,6 +679,25 @@ def test_extract_ratios_degrades_gracefully_when_latest_year_has_nan_balance_she
     assert ratios["roe"] == 0.0
     assert ratios["icr"] == 10.0  # repli documenté quand total_debt est absent/invalide
     assert ratios["net_debt_ebitda"] == 0.0
+
+
+def test_extract_ratios_degrades_gracefully_when_latest_year_tax_rate_is_nan():
+    """Reproduit ENX.PA/FGR.PA/MBG.DE en production (audit 2026-09-13) :
+    tax_rate manquant sur l'exercice le plus récent laissait passer
+    `ebit[latest] * (1 - nan)` = NaN jusqu'à _clamp (même garde manquant
+    que pour economic_assets_latest/ebit[latest], juste à côté) — attribué
+    à tort comme score Rentabilité maximal (+10.0) au lieu d'une absence
+    de donnée. roce doit dégrader vers 0.0, pas vers NaN."""
+    financials, balance_sheet, cashflow, closes_by_year = _make_fixture_statements()
+    latest_year = list(financials.columns)[0]
+    financials.loc["Tax Rate For Calcs", latest_year] = float("nan")
+
+    ratios = extract_ratios(
+        financials, balance_sheet, cashflow, closes_by_year, shares_outstanding=10.0
+    )
+
+    assert ratios["roce"] == 0.0
+    assert not math.isnan(ratios["roce"])
 
 
 def test_extract_ratios_handles_balance_sheet_entirely_missing_total_debt_row():
@@ -1056,16 +1157,20 @@ def test_estimate_dcf_price_returns_none_when_discount_rate_too_close_to_termina
 def _fake_ratios():
     return {
         "roce": 15.0,
+        "roce_available": True,
         "roe": 18.0,
         "net_debt_ebitda": 1.5,
         "icr": 8.0,
+        "structure_available": True,
         "cagr_ca": 6.0,
         "cagr_ebitda": 6.5,
         "fcf_conversion": 70.0,
+        "fcf_conversion_available": True,
         "current_ev_ebitda": 10.0,
         "avg_ev_ebitda_5y": 10.0,
         "current_pe": 20.0,
         "avg_pe_5y": 20.0,
+        "valuation_available": True,
         "ecart_pct_ma200": 5.0,
         "quarterly_yoy_growth_ca": 7.0,
         "fcf": 50.0,
@@ -1081,6 +1186,7 @@ def _fake_ratios():
         "financial_context": "Comptes annuels (le plus récent en premier) :\n- ...",
         "latest_quarter_date": "2026-06-30",
         "is_financial": False,
+        "is_trust": False,
     }
 
 
@@ -2345,17 +2451,6 @@ def test_attach_alerts_and_update_history_persists_actu_majeure_alert_but_does_n
     assert "actu_majeure" in [a["kind"] for a in companies[0]["alerts"]]
 
 
-def test_send_entry_alert_email_returns_false_when_companies_empty():
-    assert indices_score.send_entry_alert_email([]) is False
-
-
-def test_send_entry_alert_email_returns_false_when_smtp_credentials_missing(monkeypatch):
-    monkeypatch.delenv("SMTP_USER", raising=False)
-    monkeypatch.delenv("SMTP_PASSWORD", raising=False)
-    companies = [{"ticker": "BN.PA", "name": "Danone", "score": 20.0, "current_price": 100.0, "entry_price": 100.0}]
-    assert indices_score.send_entry_alert_email(companies) is False
-
-
 def _fake_entry_alert_company(**overrides):
     company = {
         "ticker": "BN.PA", "name": "Danone", "index": "CAC40",
@@ -2367,66 +2462,9 @@ def _fake_entry_alert_company(**overrides):
     return company
 
 
-def test_send_entry_alert_email_sends_via_smtp_when_configured(monkeypatch):
-    monkeypatch.setenv("SMTP_USER", "bot@example.com")
-    monkeypatch.setenv("SMTP_PASSWORD", "secret")
-    monkeypatch.delenv("MAIL_TO", raising=False)
-    companies = [_fake_entry_alert_company()]
-
-    sent = {}
-
-    class _FakeSMTP:
-        def __init__(self, host, port):
-            sent["host"] = host
-            sent["port"] = port
-
-        def __enter__(self):
-            return self
-
-        def __exit__(self, *exc):
-            return False
-
-        def starttls(self):
-            sent["starttls"] = True
-
-        def login(self, user, password):
-            sent["login"] = (user, password)
-
-        def sendmail(self, from_addr, to_addrs, message):
-            sent["from_addr"] = from_addr
-            sent["to_addrs"] = to_addrs
-            sent["message"] = message
-
-    monkeypatch.setattr(indices_score.smtplib, "SMTP", _FakeSMTP)
-
-    result = indices_score.send_entry_alert_email(companies)
-
-    assert result is True
-    assert sent["host"] == indices_score.SMTP_HOST
-    assert sent["login"] == ("bot@example.com", "secret")
-    assert sent["to_addrs"] == ["bot@example.com"]  # repli sur SMTP_USER si MAIL_TO absent
-    assert sent["from_addr"] == "bot@example.com"
-    assert sent["message"]  # le message MIME a bien été construit et envoyé
-
-
-def test_send_entry_alert_email_returns_false_on_smtp_error(monkeypatch):
-    """Une panne SMTP (identifiants invalides, réseau...) ne doit jamais
-    faire lever d'exception ni faire échouer le run."""
-    monkeypatch.setenv("SMTP_USER", "bot@example.com")
-    monkeypatch.setenv("SMTP_PASSWORD", "secret")
-    companies = [{"ticker": "BN.PA", "name": "Danone", "score": 20.0, "current_price": 100.0, "entry_price": 100.0}]
-
-    def _raise(host, port):
-        raise OSError("connexion refusée")
-
-    monkeypatch.setattr(indices_score.smtplib, "SMTP", _raise)
-
-    assert indices_score.send_entry_alert_email(companies) is False
-
-
-def test_build_entry_alert_email_html_includes_company_details():
+def test_entry_alert_item_html_includes_company_details():
     company = _fake_entry_alert_company(current_price=63.5, entry_price=60.0)
-    html = indices_score.build_entry_alert_email_html(company)
+    html = indices_score._entry_alert_item_html(company)
     assert "Danone" in html
     assert "BN.PA" in html
     assert "CAC 40" in html  # nom affiché de l'indice, pas la clé brute
@@ -2458,9 +2496,9 @@ def test_entry_alert_context_empty_when_no_data():
     assert indices_score._entry_alert_context(company) == ""
 
 
-def test_build_entry_alert_email_html_omits_context_heading_when_no_context():
+def test_entry_alert_item_html_omits_context_heading_when_no_context():
     company = _fake_entry_alert_company(factors=[], news=[])
-    html = indices_score.build_entry_alert_email_html(company)
+    html = indices_score._entry_alert_item_html(company)
     assert "Pourquoi ce signal" not in html
 
 
@@ -2485,9 +2523,9 @@ def _fake_major_news_alert(**overrides):
     return company, alert
 
 
-def test_build_major_news_alert_email_html_includes_article_details():
+def test_major_news_alert_item_html_includes_article_details():
     company, alert = _fake_major_news_alert()
-    html = indices_score.build_major_news_alert_email_html(company, alert)
+    html = indices_score._major_news_alert_item_html(company, alert)
     assert "Danone" in html
     assert "CAC 40" in html  # nom affiché de l'indice, pas la clé brute
     assert "Danone annonce une OPA sur un concurrent" in html
@@ -2497,38 +2535,56 @@ def test_build_major_news_alert_email_html_includes_article_details():
     assert "#indices/BN.PA" in html
 
 
-def test_build_major_news_alert_email_html_defaults_when_news_item_not_found():
+def test_major_news_alert_item_html_defaults_when_news_item_not_found():
     """Si le lien de l'alerte ne correspond à aucune actu de company["news"]
     (ne devrait pas arriver en pratique, mais ne doit jamais planter), le
     mail reste construit avec un sentiment neutre par défaut."""
     company, alert = _fake_major_news_alert(link="https://example.com/inconnu")
-    html = indices_score.build_major_news_alert_email_html(company, alert)
+    html = indices_score._major_news_alert_item_html(company, alert)
     assert "Neutre" in html
 
 
-def test_send_major_news_alert_email_returns_false_when_triggered_empty():
-    assert indices_score.send_major_news_alert_email([]) is False
+def test_build_daily_digest_email_html_includes_both_kinds():
+    entry_company = _fake_entry_alert_company()
+    news_company, news_alert = _fake_major_news_alert()
+    html = indices_score.build_daily_digest_email_html([entry_company], [(news_company, news_alert)])
+    assert "1 signal d'entrée" in html
+    assert "1 actu majeure" in html
+    assert "Danone" in html
+    assert "Score favorable" in html  # carte du signal d'entrée
+    assert "Danone annonce une OPA sur un concurrent" in html  # carte de l'actu majeure
 
 
-def test_send_major_news_alert_email_returns_false_when_smtp_credentials_missing(monkeypatch):
+def test_build_daily_digest_email_html_omits_empty_section():
+    entry_company = _fake_entry_alert_company()
+    html = indices_score.build_daily_digest_email_html([entry_company], [])
+    assert "Actus majeures" not in html
+
+
+def test_send_daily_digest_email_returns_false_when_both_empty():
+    assert indices_score.send_daily_digest_email([], []) is False
+
+
+def test_send_daily_digest_email_returns_false_when_smtp_credentials_missing(monkeypatch):
     monkeypatch.delenv("SMTP_USER", raising=False)
     monkeypatch.delenv("SMTP_PASSWORD", raising=False)
-    company, alert = _fake_major_news_alert()
-    assert indices_score.send_major_news_alert_email([(company, alert)]) is False
+    company = _fake_entry_alert_company()
+    assert indices_score.send_daily_digest_email([company], []) is False
 
 
-def test_send_major_news_alert_email_sends_via_smtp_when_configured(monkeypatch):
+def test_send_daily_digest_email_sends_a_single_email_via_smtp_when_configured(monkeypatch):
     monkeypatch.setenv("SMTP_USER", "bot@example.com")
     monkeypatch.setenv("SMTP_PASSWORD", "secret")
     monkeypatch.delenv("MAIL_TO", raising=False)
-    company, alert = _fake_major_news_alert()
+    entry_company = _fake_entry_alert_company()
+    news_company, news_alert = _fake_major_news_alert()
 
-    sent = {}
+    sent_messages = []
 
     class _FakeSMTP:
         def __init__(self, host, port):
-            sent["host"] = host
-            sent["port"] = port
+            self.host = host
+            self.port = port
 
         def __enter__(self):
             return self
@@ -2537,42 +2593,49 @@ def test_send_major_news_alert_email_sends_via_smtp_when_configured(monkeypatch)
             return False
 
         def starttls(self):
-            sent["starttls"] = True
+            pass
 
         def login(self, user, password):
-            sent["login"] = (user, password)
+            pass
 
         def sendmail(self, from_addr, to_addrs, message):
-            sent["from_addr"] = from_addr
-            sent["to_addrs"] = to_addrs
-            sent["message"] = message
-            sent["subject"] = "OPA" in message and "Danone" in message
+            sent_messages.append({"from_addr": from_addr, "to_addrs": to_addrs, "message": message})
 
     monkeypatch.setattr(indices_score.smtplib, "SMTP", _FakeSMTP)
 
-    result = indices_score.send_major_news_alert_email([(company, alert)])
+    result = indices_score.send_daily_digest_email([entry_company], [(news_company, news_alert)])
 
     assert result is True
-    assert sent["host"] == indices_score.SMTP_HOST
-    assert sent["login"] == ("bot@example.com", "secret")
-    assert sent["to_addrs"] == ["bot@example.com"]  # repli sur SMTP_USER si MAIL_TO absent
-    assert sent["from_addr"] == "bot@example.com"
-    assert sent["message"]  # le message MIME a bien été construit et envoyé
+    assert len(sent_messages) == 1  # un seul email, pas un par alerte
+    message = sent_messages[0]
+    assert message["to_addrs"] == ["bot@example.com"]  # repli sur SMTP_USER si MAIL_TO absent
+    assert message["from_addr"] == "bot@example.com"
+
+    # Sujet/corps encodés MIME (accents) — on décode avant de comparer,
+    # une comparaison sur la chaîne brute échouerait sur le base64.
+    parsed = email.message_from_string(message["message"])
+    subject = str(email.header.make_header(email.header.decode_header(parsed["Subject"])))
+    body = parsed.get_payload()[0].get_payload(decode=True).decode("utf-8")
+
+    assert "Résumé Indices" in subject
+    assert "signal d'entrée" in subject  # garde le filtre Gmail existant fonctionnel
+    assert "actu majeure" in subject
+    assert "Danone" in body
 
 
-def test_send_major_news_alert_email_returns_false_on_smtp_error(monkeypatch):
+def test_send_daily_digest_email_returns_false_on_smtp_error(monkeypatch):
     """Une panne SMTP ne doit jamais faire lever d'exception ni faire
     échouer le run."""
     monkeypatch.setenv("SMTP_USER", "bot@example.com")
     monkeypatch.setenv("SMTP_PASSWORD", "secret")
-    company, alert = _fake_major_news_alert()
+    company = _fake_entry_alert_company()
 
     def _raise(host, port):
         raise OSError("connexion refusée")
 
     monkeypatch.setattr(indices_score.smtplib, "SMTP", _raise)
 
-    assert indices_score.send_major_news_alert_email([(company, alert)]) is False
+    assert indices_score.send_daily_digest_email([company], []) is False
 
 
 def test_main_writes_alerts_key_for_every_company(monkeypatch, tmp_path):
@@ -2645,13 +2708,23 @@ def test_main_payload_includes_index_metadata(monkeypatch, tmp_path):
     indices_score.main()
 
     written = json.loads(output_path.read_text(encoding="utf-8"))
-    assert written["index_names"] == {"CAC40": "CAC 40", "DAX": "DAX", "NASDAQ": "Nasdaq 100", "DOW": "Dow Jones"}
-    assert written["index_currency"] == {"CAC40": "EUR", "DAX": "EUR", "NASDAQ": "USD", "DOW": "USD"}
+    assert written["index_names"] == {
+        "CAC40": "CAC 40", "DAX": "DAX", "NASDAQ": "Nasdaq 100", "DOW": "Dow Jones",
+        "FTSE": "FTSE 100", "SMI": "SMI", "IBEX35": "IBEX 35", "FTSEMIB": "FTSE MIB",
+        "NIKKEI225": "Nikkei 225", "HANGSENG": "Hang Seng",
+    }
+    assert written["index_currency"] == {
+        "CAC40": "EUR", "DAX": "EUR", "NASDAQ": "USD", "DOW": "USD", "FTSE": "GBP",
+        "SMI": "CHF", "IBEX35": "EUR", "FTSEMIB": "EUR", "NIKKEI225": "JPY", "HANGSENG": "HKD",
+    }
     assert written["index_prices"] == fake_index_prices
     written_by_ticker = {c["ticker"]: c["index"] for c in written["companies"]}
     for company in indices_score.COMPANIES:
         assert written_by_ticker[company["ticker"]] == company["index"]
-    assert {c["index"] for c in written["companies"]} == {"CAC40", "DAX", "NASDAQ", "DOW"}
+    assert {c["index"] for c in written["companies"]} == {
+        "CAC40", "DAX", "NASDAQ", "DOW", "FTSE", "SMI", "IBEX35", "FTSEMIB",
+        "NIKKEI225", "HANGSENG",
+    }
 
 
 def test_main_routes_risk_free_rate_by_currency(monkeypatch, tmp_path):
@@ -2666,6 +2739,9 @@ def test_main_routes_risk_free_rate_by_currency(monkeypatch, tmp_path):
         return {
             indices_score.FRED_RISK_FREE_SERIES: 3.68,
             indices_score.FRED_RISK_FREE_SERIES_US: 4.20,
+            indices_score.FRED_RISK_FREE_SERIES_UK: 4.55,
+            indices_score.FRED_RISK_FREE_SERIES_CH: 0.31,
+            indices_score.FRED_RISK_FREE_SERIES_JP: 2.67,
         }[series_id]
 
     monkeypatch.setattr(indices_score, "fetch_risk_free_rate", _fake_fetch_risk_free_rate)
@@ -2684,7 +2760,14 @@ def test_main_routes_risk_free_rate_by_currency(monkeypatch, tmp_path):
     monkeypatch.setattr(indices_score, "load_indices_history", lambda: [])
     monkeypatch.setattr(indices_score, "append_indices_history", lambda entries: entries)
     monkeypatch.setattr(indices_score, "update_signal_tracking", lambda companies, newly_triggered_entree: [])
-    monkeypatch.setattr(indices_score, "fetch_index_prices", lambda: {"CAC40": None, "DAX": None, "NASDAQ": None, "DOW": None})
+    monkeypatch.setattr(
+        indices_score, "fetch_index_prices",
+        lambda: {
+            "CAC40": None, "DAX": None, "NASDAQ": None, "DOW": None,
+            "FTSE": None, "SMI": None, "IBEX35": None, "FTSEMIB": None,
+            "NIKKEI225": None, "HANGSENG": None,
+        },
+    )
     output_path = tmp_path / "indices.json"
     monkeypatch.setattr(indices_score, "OUTPUT_JSON_PATH", str(output_path))
 
@@ -2692,8 +2775,20 @@ def test_main_routes_risk_free_rate_by_currency(monkeypatch, tmp_path):
 
     cac40_ticker = indices_score.CAC40_COMPANIES[0]["ticker"]
     nasdaq_ticker = indices_score.NASDAQ_COMPANIES[0]["ticker"]
+    ftse_ticker = indices_score.FTSE_COMPANIES[0]["ticker"]
+    smi_ticker = indices_score.SMI_COMPANIES[0]["ticker"]
+    ibex_ticker = indices_score.IBEX35_COMPANIES[0]["ticker"]
+    ftsemib_ticker = indices_score.FTSEMIB_COMPANIES[0]["ticker"]
+    nikkei_ticker = indices_score.NIKKEI225_COMPANIES[0]["ticker"]
+    hangseng_ticker = indices_score.HANGSENG_COMPANIES[0]["ticker"]
     assert received_rates[cac40_ticker] == 3.68
     assert received_rates[nasdaq_ticker] == 4.20
+    assert received_rates[ftse_ticker] == 4.55
+    assert received_rates[smi_ticker] == 0.31
+    assert received_rates[ibex_ticker] == 3.68
+    assert received_rates[nikkei_ticker] == 2.67
+    assert received_rates[ftsemib_ticker] == 3.68
+    assert received_rates[hangseng_ticker] is None
 
 
 import pandas as pd
@@ -3283,16 +3378,150 @@ def _make_financial_fixture_statements():
     return financials, balance_sheet, cashflow, closes_by_year
 
 
-def test_extract_ratios_raises_on_financial_sector_statements_without_ebitda():
-    """Documente la raison d'être d'extract_ratios_financial : la fonction
-    standard plante sur des comptes sans EBITDA, comme observé en
-    diagnostic pour BNP/SocGen/Crédit Agricole/AXA."""
+def test_extract_ratios_degrades_but_stays_meaningless_on_financial_sector_statements():
+    """EBIT est devenu optionnel comme EBITDA (voir
+    test_extract_ratios_degrades_gracefully_when_ebit_missing_but_ebitda_absent_too,
+    trouvé en échec de production sur des gestionnaires d'actifs/trusts
+    fermés/REIT du FTSE 100/FTSE MIB) : extract_ratios ne plante plus du
+    tout sur de vrais comptes bancaires (ni EBITDA ni EBIT, comme BNP/
+    SocGen/Crédit Agricole/AXA) — roce/icr/net_debt_ebitda/cagr_ebitda/
+    fcf_conversion/EV-EBITDA dégradent tous vers leurs valeurs neutres.
+    Documente pourquoi extract_ratios_financial reste malgré tout le bon
+    choix pour un établissement financier : elle calcule de VRAIS ratios
+    (ROE, levier, P/B) là où extract_ratios ne renverrait que des
+    placeholders neutres sans aucun signal — une dégradation propre n'est
+    pas la même chose qu'une évaluation correcte."""
     financials, balance_sheet, cashflow, closes_by_year = _make_financial_fixture_statements()
-    try:
-        extract_ratios(financials, balance_sheet, cashflow, closes_by_year, shares_outstanding=100.0)
-        assert False, "expected KeyError"
-    except KeyError:
-        pass
+
+    ratios = extract_ratios(
+        financials, balance_sheet, cashflow, closes_by_year, shares_outstanding=100.0
+    )  # ne doit plus lever KeyError
+
+    assert ratios["roce"] == 0.0
+    assert ratios["icr"] == 10.0
+    assert ratios["net_debt_ebitda"] == 0.0
+    assert ratios["cagr_ebitda"] == 0.0
+    assert ratios["fcf_conversion"] == 0.0
+    assert ratios["current_ev_ebitda"] == 0.0
+    assert ratios["avg_ev_ebitda_5y"] == 0.0
+
+
+def test_extract_ratios_degrades_gracefully_when_ebitda_missing_but_ebit_present():
+    """Reproduit Kyowa Hakko Kirin (4151.T, Nikkei 225) en production :
+    aucune ligne EBITDA/Normalized EBITDA chez yfinance, mais EBIT bien
+    présent, et ce n'est pas un établissement financier. Ne doit pas faire
+    lever KeyError sur toute l'entreprise — les facteurs dépendant
+    d'EBITDA (dette nette/EBITDA, CAGR EBITDA, conversion FCF/EBITDA,
+    EV/EBITDA) dégradent vers leurs valeurs neutres (0.0) au lieu."""
+    financials, balance_sheet, cashflow, closes_by_year = _make_fixture_statements()
+    financials = financials.drop(index="EBITDA")
+
+    ratios = extract_ratios(
+        financials, balance_sheet, cashflow, closes_by_year, shares_outstanding=10.0
+    )  # ne doit pas lever KeyError
+
+    assert ratios["net_debt_ebitda"] == 0.0
+    assert ratios["cagr_ebitda"] == 0.0
+    assert ratios["fcf_conversion"] == 0.0
+    assert ratios["current_ev_ebitda"] == 0.0
+    assert ratios["avg_ev_ebitda_5y"] == 0.0
+    # Audit 2026-09-13 : ces valeurs neutres (0.0) doivent aussi porter un
+    # signal explicite "donnée indisponible" — sans lui, score_structure_
+    # financiere/score_generation_cash liraient ce 0.0 comme une vraie
+    # donnée (endettement nul -> +10.0, conversion cash nulle -> -10.0)
+    # au lieu d'une absence d'opinion. roce reste disponible ici (EBIT
+    # présent) ; valuation_available est aussi False bien que net_income
+    # soit disponible pour le P/E — la boucle qui construit ev_ebitda_by_year
+    # ET pe_by_year saute l'année dès qu'EBITDA OU net_income manque (les
+    # deux jambes sont couplées), donc PE devient indisponible avec
+    # EV/EBITDA même si lui seul aurait pu se calculer. Comportement
+    # préexistant, pas modifié par ce fix.
+    assert ratios["structure_available"] is False
+    assert ratios["fcf_conversion_available"] is False
+    assert ratios["roce_available"] is True
+    assert ratios["valuation_available"] is False
+
+
+def test_extract_ratios_degrades_gracefully_when_ebit_missing_but_ebitda_absent_too():
+    """Reproduit 3i Group/Aberdeen Group/Alliance Witan/F&C Investment
+    Trust/ICG/Pershing Square Holdings/Polar Capital Technology Trust/
+    Scottish Mortgage/Tritax Big Box REIT (FTSE 100) en production :
+    gestionnaires d'actifs, trusts fermés et REIT, aucune ligne EBIT/
+    Operating Income/Total Operating Income As Reported chez yfinance (ni
+    EBITDA), sans être des établissements financiers au sens de
+    FINANCIAL_SECTOR_TICKERS (exclusion volontaire). Banca Mediolanum/
+    FinecoBank (FTSE MIB) étaient listées ici jusqu'au 2026-09-13 mais ont
+    depuis été reclassées dans FINANCIAL_SECTOR_TICKERS (profil bancaire
+    classique confirmé sur données réelles), donc plus dans ce cas. Ne
+    doit pas faire lever KeyError — roce/icr dégradent vers leurs valeurs
+    neutres (0.0 / 10.0) en plus des facteurs déjà couverts par le test
+    EBITDA ci-dessus, l'entreprise reste notée sur ses autres facteurs
+    (croissance, valorisation, momentum, actualité)."""
+    financials, balance_sheet, cashflow, closes_by_year = _make_fixture_statements()
+    financials = financials.drop(index=["EBITDA", "EBIT"])
+
+    ratios = extract_ratios(
+        financials, balance_sheet, cashflow, closes_by_year, shares_outstanding=10.0
+    )  # ne doit pas lever KeyError
+
+    assert ratios["roce"] == 0.0
+    assert ratios["icr"] == 10.0
+    assert ratios["net_debt_ebitda"] == 0.0
+    assert ratios["cagr_ebitda"] == 0.0
+    assert ratios["fcf_conversion"] == 0.0
+    assert ratios["current_ev_ebitda"] == 0.0
+    assert ratios["avg_ev_ebitda_5y"] == 0.0
+    # Audit 2026-09-13 : les 4 facteurs standard dépendent tous d'EBITDA
+    # et/ou EBIT ici — les 4 doivent donc être marqués indisponibles,
+    # pour que score_rentabilite/score_structure_financiere/
+    # score_generation_cash/score_valorisation retombent sur un vrai 0.0
+    # neutre avec un message honnête plutôt que de lire ces replis comme
+    # une vraie performance (le pire ou le meilleur score selon le
+    # facteur, jamais neutre, avant ce fix).
+    assert ratios["roce_available"] is False
+    assert ratios["structure_available"] is False
+    assert ratios["fcf_conversion_available"] is False
+    assert ratios["valuation_available"] is False
+
+
+def test_extract_ratios_degrades_gracefully_when_capex_entirely_missing():
+    """Reproduit une quinzaine d'entreprises du Nikkei 225 en production
+    (Aeon, Chubu Electric Power, Japan Airlines, Tokyu...) : aucune des 3
+    lignes de repli capex (Capital Expenditure/Net PPE Purchase And
+    Sale/Net Investment Properties Purchase And Sale) chez yfinance, sans
+    point commun sectoriel avec les établissements financiers. Ne doit pas
+    faire lever KeyError — fcf/fcf_normalized dégradent vers 0.0."""
+    financials, balance_sheet, cashflow, closes_by_year = _make_fixture_statements()
+    cashflow = cashflow.drop(index="Capital Expenditure")
+
+    ratios = extract_ratios(
+        financials, balance_sheet, cashflow, closes_by_year, shares_outstanding=10.0
+    )  # ne doit pas lever KeyError
+
+    assert ratios["fcf"] == 0.0
+    assert ratios["fcf_normalized"] == 0.0
+
+
+def test_extract_ratios_financial_derives_operating_cash_flow_from_free_cash_flow_when_missing():
+    """Reproduit Swiss Life Holding (SLHN.SW) et Mapfre (MAP.MC) en
+    production : pas de ligne 'Operating Cash Flow' chez yfinance pour ces
+    deux entreprises (méthodologie financière), mais 'Free Cash Flow' et
+    'Capital Expenditure' sont bien présentes — doit être utilisée pour
+    reconstituer OCF plutôt que de faire lever KeyError, même repli que
+    extract_ratios."""
+    financials, balance_sheet, cashflow, closes_by_year = _make_financial_fixture_statements()
+    # FCF = OCF + capex (capex déjà négatif) sur chaque exercice de la
+    # fixture d'origine (OCF=[320,300,280,260], capex=[-10,-9,-8,-7]).
+    cashflow = cashflow.rename(index={"Operating Cash Flow": "Free Cash Flow"})
+    cashflow.loc["Free Cash Flow"] = [310.0, 291.0, 272.0, 253.0]
+
+    ratios = indices_score.extract_ratios_financial(
+        financials, balance_sheet, cashflow, closes_by_year, shares_outstanding=100.0
+    )  # ne doit pas lever KeyError
+
+    # OCF reconstitué = FCF - capex = 310 - (-10) = 320 (exercice le plus
+    # récent) -> cash_conversion = OCF / net_income = 320 / 300 * 100.
+    assert ratios["cash_conversion"] == pytest.approx(320.0 / 300.0 * 100)
 
 
 def test_extract_ratios_financial_computes_expected_keys():
@@ -3315,9 +3544,13 @@ def test_extract_ratios_financial_computes_expected_keys():
     # Valeurs neutres : désactivent proprement le DCF et le multiple EV/EBITDA
     # dans estimate_valuation_targets (fcf <= 0 -> None, current_ev_ebitda == 0 -> None).
     assert ratios["fcf"] == 0.0
-    assert ratios["net_debt"] == 0.0
     assert ratios["current_ev_ebitda"] == 0.0
     assert ratios["avg_ev_ebitda_5y"] == 0.0
+    # net_debt N'EST PAS une valeur neutre (depuis le 2026-09-13, ajout du
+    # profil trust) : vrai calcul Total Debt - Cash sur l'exercice le plus
+    # récent (500.0 - 200.0), sûr pour le DCF (déjà désactivé par fcf=0.0
+    # avant que net_debt ne soit utilisé).
+    assert ratios["net_debt"] == pytest.approx(300.0)
 
 
 def test_build_financial_narrative_context_omits_ebitda_ebit_for_financial_profile():
@@ -3397,6 +3630,75 @@ def test_score_valorisation_financiere_uses_pb_instead_of_ev_ebitda():
     assert result.score > 0  # décote sur les deux multiples -> favorable
 
 
+def test_score_structure_financiere_trust_low_gearing_is_strong():
+    # 3i Group réel (audit 2026-09-13) : dette nette ~626 M£ / capitaux
+    # propres ~30 887 M£ ~= 2% de gearing, bien sous le seuil confort (10%).
+    result = indices_score.score_structure_financiere_trust(net_debt=626.0, equity=30887.0)
+    assert result.name == "Structure financière / solvabilité"
+    assert result.weight == 0.20
+    assert result.score > 7.5  # gearing ~2.0% -> proche du plafond +10
+    assert "profil trust" in result.raw_value.lower()
+
+
+def test_score_structure_financiere_trust_high_gearing_is_weak():
+    # Gearing 45% (au-delà du seuil de vigilance 40%, courant pour une
+    # foncière comme Tritax Big Box) -> score faible/négatif.
+    result = indices_score.score_structure_financiere_trust(net_debt=450.0, equity=1000.0)
+    assert result.score <= -8.0
+
+
+def test_score_structure_financiere_trust_neutral_when_equity_missing():
+    result = indices_score.score_structure_financiere_trust(net_debt=100.0, equity=0.0)
+    assert result.score == 0.0
+    assert result.raw_value == (
+        "Donnée indisponible (capitaux propres non exploitables chez la source de données)"
+    )
+
+
+def test_score_generation_cash_trust_always_neutral():
+    """Pas une donnée manquante à combler : la génération de cash ne
+    s'applique structurellement pas à ce modèle d'affaires (cessions de
+    portefeuille, pas de cycle d'exploitation)."""
+    result = indices_score.score_generation_cash_trust()
+    assert result.name == "Génération de cash"
+    assert result.weight == 0.12
+    assert result.score == 0.0
+    assert "non applicable" in result.raw_value.lower()
+
+
+def test_score_valorisation_trust_discount_to_nav_is_positive():
+    # P/B < 1.0 -> décote sur la NAV -> favorable. current_pb arrive déjà
+    # dans la bonne unité depuis le fix pence/livre du 2026-09-13
+    # (normalisé à la source dans fetch_company_financials, plus besoin
+    # d'ajuster ici).
+    result = indices_score.score_valorisation_trust(current_pb=0.85)
+    assert result.name == "Valorisation relative"
+    assert result.weight == 0.08
+    assert result.score > 0
+    assert "décote" in result.raw_value.lower()
+    assert "0.85x" in result.raw_value
+
+
+def test_score_valorisation_trust_premium_to_nav_is_negative():
+    # P/B > 1.0 -> prime sur la NAV -> défavorable
+    result = indices_score.score_valorisation_trust(current_pb=1.15)
+    assert result.score < 0
+    assert "prime" in result.raw_value.lower()
+
+
+def test_score_valorisation_trust_at_nav_is_neutral():
+    result = indices_score.score_valorisation_trust(current_pb=1.0)
+    assert result.score == 0.0
+
+
+def test_score_valorisation_trust_neutral_when_pb_unavailable():
+    # Alliance Witan (ALW.L) : aucun P/B exploitable chez yfinance, vérifié
+    # via un diagnostic dédié le 2026-09-13.
+    result = indices_score.score_valorisation_trust(current_pb=0.0)
+    assert result.score == 0.0
+    assert result.raw_value == "Donnée indisponible (pas de P/B exploitable chez la source de données)"
+
+
 def _fake_financial_ratios():
     return {
         "roe": 10.0, "leverage_ratio": 5.5, "cash_conversion": 90.0,
@@ -3411,6 +3713,7 @@ def _fake_financial_ratios():
         "financial_context": "Comptes annuels (le plus récent en premier) :\n- ...",
         "latest_quarter_date": "2026-06-30",
         "is_financial": True,
+        "is_trust": False,
     }
 
 
@@ -3433,6 +3736,35 @@ def test_build_company_entry_uses_financial_factors_for_financial_sector_tickers
     # que sur l'approche patrimoniale (equity/shares_outstanding = 25.0),
     # qui doit rester calculable malgré l'absence de FCF/EBITDA.
     assert entry["fair_value"] is not None
+
+
+def _fake_trust_ratios():
+    ratios = _fake_financial_ratios()
+    ratios["is_financial"] = False
+    ratios["is_trust"] = True
+    ratios["current_pb"] = 0.85  # décote de 15% sur la NAV
+    return ratios
+
+
+def test_build_company_entry_uses_trust_factors_for_trust_tickers(monkeypatch):
+    monkeypatch.setattr(indices_score, "fetch_company_financials", lambda ticker: _fake_trust_ratios())
+    monkeypatch.setattr(indices_score, "fetch_news", lambda name, prev=None: [])
+    monkeypatch.setattr(indices_score, "generate_financial_analysis", lambda *a, **k: "<p>Analyse.</p>")
+
+    entry = indices_score.build_company_entry("III.L", "3i Group", 3.0, {}, index_key="FTSE")
+
+    assert entry["is_financial"] is False
+    assert [f["name"] for f in entry["factors"]] == [
+        "Rentabilité / création de valeur", "Structure financière / solvabilité",
+        "Croissance", "Génération de cash", "Valorisation relative",
+        "Dynamique récente", "Actualité récente",
+    ]
+    cash_factor = entry["factors"][3]
+    assert cash_factor["score"] == 0.0
+    assert "non applicable" in cash_factor["raw_value"].lower()
+    valorisation_factor = entry["factors"][4]
+    assert valorisation_factor["score"] > 0  # décote sur la NAV -> favorable
+    assert "nav" in valorisation_factor["raw_value"].lower()
 
 
 def test_build_company_entry_includes_also_indices(monkeypatch):
@@ -3460,16 +3792,23 @@ def test_financial_sector_tickers_are_in_companies():
     assert indices_score.FINANCIAL_SECTOR_TICKERS <= company_tickers
 
 
-def test_companies_combines_cac40_dax_nasdaq_and_dow_with_correct_index_tag():
+def test_companies_combines_all_indices_with_correct_index_tag():
     """COMPANIES doit être l'union de CAC40_COMPANIES, DAX_COMPANIES,
-    NASDAQ_COMPANIES et DOW_COMPANIES, chaque entreprise gardant son
-    propre indice — pas une seule valeur globale (l'ancien bug qu'INDEX_KEY
-    représentait)."""
+    NASDAQ_COMPANIES, DOW_COMPANIES, FTSE_COMPANIES, SMI_COMPANIES,
+    IBEX35_COMPANIES, FTSEMIB_COMPANIES, NIKKEI225_COMPANIES et
+    HANGSENG_COMPANIES, chaque entreprise gardant son propre indice — pas
+    une seule valeur globale (l'ancien bug qu'INDEX_KEY représentait)."""
     assert len(indices_score.COMPANIES) == (
         len(indices_score.CAC40_COMPANIES)
         + len(indices_score.DAX_COMPANIES)
         + len(indices_score.NASDAQ_COMPANIES)
         + len(indices_score.DOW_COMPANIES)
+        + len(indices_score.FTSE_COMPANIES)
+        + len(indices_score.SMI_COMPANIES)
+        + len(indices_score.IBEX35_COMPANIES)
+        + len(indices_score.FTSEMIB_COMPANIES)
+        + len(indices_score.NIKKEI225_COMPANIES)
+        + len(indices_score.HANGSENG_COMPANIES)
     )
     by_ticker = {c["ticker"]: c["index"] for c in indices_score.COMPANIES}
     for c in indices_score.CAC40_COMPANIES:
@@ -3480,7 +3819,73 @@ def test_companies_combines_cac40_dax_nasdaq_and_dow_with_correct_index_tag():
         assert by_ticker[c["ticker"]] == "NASDAQ"
     for c in indices_score.DOW_COMPANIES:
         assert by_ticker[c["ticker"]] == "DOW"
-    assert set(indices_score.INDEX_NAMES) >= {"CAC40", "DAX", "NASDAQ", "DOW"}
+    for c in indices_score.FTSE_COMPANIES:
+        assert by_ticker[c["ticker"]] == "FTSE"
+    for c in indices_score.SMI_COMPANIES:
+        assert by_ticker[c["ticker"]] == "SMI"
+    for c in indices_score.IBEX35_COMPANIES:
+        assert by_ticker[c["ticker"]] == "IBEX35"
+    for c in indices_score.FTSEMIB_COMPANIES:
+        assert by_ticker[c["ticker"]] == "FTSEMIB"
+    for c in indices_score.NIKKEI225_COMPANIES:
+        assert by_ticker[c["ticker"]] == "NIKKEI225"
+    for c in indices_score.HANGSENG_COMPANIES:
+        assert by_ticker[c["ticker"]] == "HANGSENG"
+    assert set(indices_score.INDEX_NAMES) >= {
+        "CAC40", "DAX", "NASDAQ", "DOW", "FTSE", "SMI", "IBEX35", "FTSEMIB",
+        "NIKKEI225", "HANGSENG",
+    }
+
+
+def test_nikkei225_has_no_overlap_with_other_indices():
+    nikkei_tickers = {c["ticker"] for c in indices_score.NIKKEI225_COMPANIES}
+    other_tickers = {
+        c["ticker"] for c in (
+            indices_score.CAC40_COMPANIES + indices_score.DAX_COMPANIES
+            + indices_score.NASDAQ_COMPANIES + indices_score.DOW_COMPANIES
+            + indices_score.FTSE_COMPANIES + indices_score.SMI_COMPANIES
+            + indices_score.IBEX35_COMPANIES + indices_score.FTSEMIB_COMPANIES
+        )
+    }
+    assert nikkei_tickers & other_tickers == set()
+
+
+def test_nikkei225_financial_sector_tickers_are_in_nikkei225_companies():
+    """19, pas 15 : Nomura Holdings/Daiwa Securities Group/Orix/Japan Post
+    Holdings ont été reclassées après le premier run réel (2026-09-12) —
+    aucune ligne EBITDA ni EBIT chez yfinance, même trou de données que
+    les banques de dépôt classiques."""
+    nikkei_tickers = {c["ticker"] for c in indices_score.NIKKEI225_COMPANIES}
+    nikkei_financial_tickers = {t for t in indices_score.FINANCIAL_SECTOR_TICKERS if t.endswith(".T")}
+    assert nikkei_financial_tickers <= nikkei_tickers
+    assert len(nikkei_financial_tickers) == 19
+
+
+def test_hangseng_does_not_duplicate_ticker_already_in_ftse():
+    """HSBC Holdings (HSBA.L) est un constituant Hang Seng réel mais reste
+    suivie uniquement côté FTSE_COMPANIES, avec also_indices=["HANGSENG"]
+    — pas dupliquée dans HANGSENG_COMPANIES."""
+    ftse_tickers = {c["ticker"] for c in indices_score.FTSE_COMPANIES}
+    hangseng_tickers = {c["ticker"] for c in indices_score.HANGSENG_COMPANIES}
+    assert ftse_tickers & hangseng_tickers == set()
+    hsbc = next(c for c in indices_score.FTSE_COMPANIES if c["ticker"] == "HSBA.L")
+    assert hsbc.get("also_indices") == ["HANGSENG"]
+
+
+def test_hangseng_financial_sector_tickers_are_in_hangseng_companies():
+    hangseng_tickers = {c["ticker"] for c in indices_score.HANGSENG_COMPANIES}
+    hangseng_financial_tickers = {t for t in indices_score.FINANCIAL_SECTOR_TICKERS if t.endswith(".HK")}
+    assert hangseng_financial_tickers <= hangseng_tickers
+    assert len(hangseng_financial_tickers) == 8
+
+
+def test_hkd_has_no_risk_free_series_and_falls_back_gracefully():
+    """Hong Kong n'est pas membre de l'OCDE — aucune série FRED de taux
+    long terme n'existe pour le HKD (IRLTLT01HKM156N confirmé absent).
+    RISK_FREE_SERIES_BY_CURRENCY n'a donc volontairement aucune entrée
+    "HKD" : le code doit retomber sur COST_OF_CAPITAL_PROXY plutôt que
+    planter ou utiliser un faux identifiant de série."""
+    assert "HKD" not in indices_score.RISK_FREE_SERIES_BY_CURRENCY
 
 
 def test_dow_companies_does_not_duplicate_tickers_already_in_nasdaq():
@@ -3491,6 +3896,104 @@ def test_dow_companies_does_not_duplicate_tickers_already_in_nasdaq():
     nasdaq_tickers = {c["ticker"] for c in indices_score.NASDAQ_COMPANIES}
     dow_tickers = {c["ticker"] for c in indices_score.DOW_COMPANIES}
     assert nasdaq_tickers & dow_tickers == set()
+
+
+def test_ftse_companies_does_not_duplicate_ticker_already_in_nasdaq():
+    """Coca-Cola Europacific Partners (CCEP) est un constituant FTSE 100
+    réel mais reste suivie uniquement côté NASDAQ_COMPANIES, avec
+    also_indices=["FTSE"] — pas dupliquée dans FTSE_COMPANIES (même
+    convention que les chevauchements CAC40/DAX et NASDAQ/DOW)."""
+    nasdaq_tickers = {c["ticker"] for c in indices_score.NASDAQ_COMPANIES}
+    ftse_tickers = {c["ticker"] for c in indices_score.FTSE_COMPANIES}
+    assert nasdaq_tickers & ftse_tickers == set()
+    ccep = next(c for c in indices_score.NASDAQ_COMPANIES if c["ticker"] == "CCEP")
+    assert ccep.get("also_indices") == ["FTSE"]
+
+
+def test_ftse_financial_sector_tickers_are_in_ftse_companies():
+    ftse_tickers = {c["ticker"] for c in indices_score.FTSE_COMPANIES}
+    ftse_financial_tickers = {t for t in indices_score.FINANCIAL_SECTOR_TICKERS if t.endswith(".L")}
+    assert ftse_financial_tickers <= ftse_tickers
+    assert len(ftse_financial_tickers) == 15
+
+
+def test_smi_companies_has_no_overlap_with_other_indices():
+    """Le SMI cœur (20 valeurs) n'a aucun chevauchement avec les autres
+    indices déjà suivis — vérifié par la recherche dédiée y compris pour
+    les doubles cotations US (Alcon, Amrize, Logitech)."""
+    smi_tickers = {c["ticker"] for c in indices_score.SMI_COMPANIES}
+    other_tickers = {
+        c["ticker"] for c in (
+            indices_score.CAC40_COMPANIES + indices_score.DAX_COMPANIES
+            + indices_score.NASDAQ_COMPANIES + indices_score.DOW_COMPANIES
+            + indices_score.FTSE_COMPANIES
+        )
+    }
+    assert smi_tickers & other_tickers == set()
+
+
+def test_smi_financial_sector_tickers_are_in_smi_companies():
+    smi_tickers = {c["ticker"] for c in indices_score.SMI_COMPANIES}
+    smi_financial_tickers = {t for t in indices_score.FINANCIAL_SECTOR_TICKERS if t.endswith(".SW")}
+    assert smi_financial_tickers <= smi_tickers
+    assert len(smi_financial_tickers) == 4
+
+
+def test_ibex35_does_not_duplicate_tickers_already_tracked_elsewhere():
+    """ArcelorMittal (CAC40, MT.PA), Ferrovial (NASDAQ, FER) et
+    International Airlines Group (FTSE, IAG.L) sont des constituants IBEX
+    35 réels mais restent suivis uniquement sous leur indice d'origine,
+    avec also_indices=["IBEX35"] — pas dupliqués dans IBEX35_COMPANIES."""
+    other_tickers = {
+        c["ticker"] for c in (
+            indices_score.CAC40_COMPANIES + indices_score.DAX_COMPANIES
+            + indices_score.NASDAQ_COMPANIES + indices_score.DOW_COMPANIES
+            + indices_score.FTSE_COMPANIES + indices_score.SMI_COMPANIES
+        )
+    }
+    ibex_tickers = {c["ticker"] for c in indices_score.IBEX35_COMPANIES}
+    assert other_tickers & ibex_tickers == set()
+
+    mt = next(c for c in indices_score.CAC40_COMPANIES if c["ticker"] == "MT.PA")
+    fer = next(c for c in indices_score.NASDAQ_COMPANIES if c["ticker"] == "FER")
+    iag = next(c for c in indices_score.FTSE_COMPANIES if c["ticker"] == "IAG.L")
+    assert mt.get("also_indices") == ["IBEX35"]
+    assert fer.get("also_indices") == ["IBEX35"]
+    assert iag.get("also_indices") == ["IBEX35"]
+
+
+def test_ibex35_financial_sector_tickers_are_in_ibex35_companies():
+    ibex_tickers = {c["ticker"] for c in indices_score.IBEX35_COMPANIES}
+    ibex_financial_tickers = {t for t in indices_score.FINANCIAL_SECTOR_TICKERS if t.endswith(".MC")}
+    assert ibex_financial_tickers <= ibex_tickers
+    assert len(ibex_financial_tickers) == 7
+
+
+def test_ftsemib_does_not_duplicate_tickers_already_tracked_in_cac40():
+    """STMicroelectronics (STMPA.PA) et Stellantis (STLAP.PA) sont des
+    constituants FTSE MIB réels mais restent suivis uniquement côté
+    CAC40_COMPANIES, avec also_indices=["FTSEMIB"] — pas dupliqués dans
+    FTSEMIB_COMPANIES."""
+    cac40_tickers = {c["ticker"] for c in indices_score.CAC40_COMPANIES}
+    ftsemib_tickers = {c["ticker"] for c in indices_score.FTSEMIB_COMPANIES}
+    assert cac40_tickers & ftsemib_tickers == set()
+
+    stm = next(c for c in indices_score.CAC40_COMPANIES if c["ticker"] == "STMPA.PA")
+    stl = next(c for c in indices_score.CAC40_COMPANIES if c["ticker"] == "STLAP.PA")
+    assert stm.get("also_indices") == ["FTSEMIB"]
+    assert stl.get("also_indices") == ["FTSEMIB"]
+
+
+def test_ftsemib_financial_sector_tickers_are_in_ftsemib_companies():
+    ftsemib_tickers = {c["ticker"] for c in indices_score.FTSEMIB_COMPANIES}
+    ftsemib_financial_tickers = {t for t in indices_score.FINANCIAL_SECTOR_TICKERS if t.endswith(".MI")}
+    assert ftsemib_financial_tickers <= ftsemib_tickers
+    # 8 -> 10 le 2026-09-13 : FinecoBank (FBK.MI) et Banca Mediolanum
+    # (BMED.MI) reclassées après vérification directe de leurs comptes
+    # réels (profil bancaire classique, pas des cas limites courtage/
+    # distribution comme initialement supposé) — voir le commentaire sur
+    # FINANCIAL_SECTOR_TICKERS.
+    assert len(ftsemib_financial_tickers) == 10
 
 
 def test_shares_outstanding_override_tickers_are_in_companies():
@@ -3604,6 +4107,114 @@ def test_fetch_company_financials_ignores_market_cap_override_for_other_tickers(
     assert ratios["shares_outstanding"] == 2900941252
 
 
+def test_fetch_company_financials_converts_lse_pence_prices_to_pounds(monkeypatch):
+    """Bug racine trouvé le 2026-09-13 via le profil trust (score_valorisation_trust,
+    qui compare current_pb à une valeur ABSOLUE et n'annule donc pas
+    l'erreur d'échelle comme le fait chaque autre facteur en se comparant
+    à sa propre moyenne 5 ans) : yfinance renvoie les prix des tickers
+    londoniens (.L) en PENCE, alors que les comptes annuels sont en
+    LIVRES — sans conversion, market_cap = price * shares_outstanding
+    mélange les unités d'un facteur ~100 pour P/E, P/B, EV/EBITDA, DCF, et
+    fair_value/entry_price/exit_price (qui mélangeaient carrément une
+    méthode en pence avec deux méthodes en livres). Reproduit ici avec un
+    cours constant de 1478.0 (pence, cas réel Scottish Mortgage) : doit
+    ressortir à 14.78 (livres) partout en aval."""
+    financials, balance_sheet, cashflow, _ = _make_fixture_statements()
+    financials.columns = pd.to_datetime(financials.columns)
+    balance_sheet.columns = pd.to_datetime(balance_sheet.columns)
+    cashflow.columns = pd.to_datetime(cashflow.columns)
+    quarterly = _fake_annual_df({"Diluted Average Shares": [100.0]}, [pd.Timestamp("2025-09-30")])
+    history_index = pd.date_range("2024-01-01", periods=250, freq="D")
+    history_close = pd.Series([1478.0] * 250, index=history_index)
+
+    class _FakeTicker:
+        def __init__(self, ticker):
+            pass
+
+        @property
+        def financials(self):
+            return financials
+
+        @property
+        def balance_sheet(self):
+            return balance_sheet
+
+        @property
+        def cashflow(self):
+            return cashflow
+
+        @property
+        def quarterly_financials(self):
+            return quarterly
+
+        @property
+        def info(self):
+            return {"sharesOutstanding": 1000.0, "beta": 0.9, "sector": "Energy"}
+
+        def history(self, period=None):
+            return pd.DataFrame({"Close": history_close})
+
+    monkeypatch.setattr(indices_score.yf, "Ticker", _FakeTicker)
+    monkeypatch.setattr(indices_score.time, "sleep", lambda s: None)
+
+    # Un ticker .L hors TRUST_TICKERS/FINANCIAL_SECTOR_TICKERS (méthodologie
+    # standard) : la conversion pence/livre se fait dans
+    # fetch_company_financials avant tout branchement extract_ratios vs
+    # extract_ratios_financier, donc le choix du chemin d'extraction n'a
+    # pas d'importance ici — seul compte le suffixe .L du ticker.
+    ratios = indices_score.fetch_company_financials("SHEL.L")
+
+    assert ratios["current_price"] == pytest.approx(14.78)
+    assert ratios["ma200"] == pytest.approx(14.78)
+
+
+def test_fetch_company_financials_leaves_non_lse_prices_unconverted(monkeypatch):
+    """Contre-exemple délibéré : la conversion ne doit s'appliquer qu'aux
+    tickers .L — un ticker Euronext/Xetra/NASDAQ à un prix de 1478.0 (déjà
+    dans la bonne unité, en euros/dollars) ne doit pas être divisé par 100."""
+    financials, balance_sheet, cashflow, _ = _make_fixture_statements()
+    financials.columns = pd.to_datetime(financials.columns)
+    balance_sheet.columns = pd.to_datetime(balance_sheet.columns)
+    cashflow.columns = pd.to_datetime(cashflow.columns)
+    quarterly = _fake_annual_df({"Diluted Average Shares": [100.0]}, [pd.Timestamp("2025-09-30")])
+    history_index = pd.date_range("2024-01-01", periods=250, freq="D")
+    history_close = pd.Series([1478.0] * 250, index=history_index)
+
+    class _FakeTicker:
+        def __init__(self, ticker):
+            pass
+
+        @property
+        def financials(self):
+            return financials
+
+        @property
+        def balance_sheet(self):
+            return balance_sheet
+
+        @property
+        def cashflow(self):
+            return cashflow
+
+        @property
+        def quarterly_financials(self):
+            return quarterly
+
+        @property
+        def info(self):
+            return {"sharesOutstanding": 1000.0, "beta": 0.9, "sector": "Technology"}
+
+        def history(self, period=None):
+            return pd.DataFrame({"Close": history_close})
+
+    monkeypatch.setattr(indices_score.yf, "Ticker", _FakeTicker)
+    monkeypatch.setattr(indices_score.time, "sleep", lambda s: None)
+
+    ratios = indices_score.fetch_company_financials("MC.PA")
+
+    assert ratios["current_price"] == pytest.approx(1478.0)
+
+
 def test_load_signal_tracking_returns_empty_list_when_file_absent(monkeypatch, tmp_path):
     monkeypatch.setattr(indices_score, "SIGNAL_TRACKING_PATH", str(tmp_path / "does_not_exist.json"))
     assert indices_score.load_signal_tracking() == []
@@ -3658,7 +4269,11 @@ def test_fetch_index_prices_returns_latest_close_per_index(monkeypatch):
 
     monkeypatch.setattr(indices_score.yf, "Ticker", FakeTicker)
     result = indices_score.fetch_index_prices()
-    assert result == {"CAC40": 7850.0, "DAX": 7850.0, "NASDAQ": 7850.0, "DOW": 7850.0}
+    assert result == {
+        "CAC40": 7850.0, "DAX": 7850.0, "NASDAQ": 7850.0, "DOW": 7850.0,
+        "FTSE": 7850.0, "SMI": 7850.0, "IBEX35": 7850.0, "FTSEMIB": 7850.0,
+        "NIKKEI225": 7850.0, "HANGSENG": 7850.0,
+    }
 
 
 def test_fetch_index_prices_degrades_to_none_per_index_on_failure(monkeypatch):
@@ -3682,7 +4297,10 @@ def test_fetch_index_prices_degrades_to_none_per_index_on_failure(monkeypatch):
 
 def test_fetch_index_prices_returns_all_none_when_yfinance_unavailable(monkeypatch):
     monkeypatch.setattr(indices_score, "yf", None)
-    assert indices_score.fetch_index_prices() == {"CAC40": None, "DAX": None, "NASDAQ": None, "DOW": None}
+    assert indices_score.fetch_index_prices() == {
+        "CAC40": None, "DAX": None, "NASDAQ": None, "DOW": None, "FTSE": None,
+        "SMI": None, "IBEX35": None, "FTSEMIB": None, "NIKKEI225": None, "HANGSENG": None,
+    }
 
 
 def test_open_new_signal_positions_creates_position_for_newly_triggered_company():

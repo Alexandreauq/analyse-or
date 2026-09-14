@@ -1,5 +1,7 @@
 import json
 
+import pytest
+
 import gold_bot.loop as loop
 
 
@@ -108,6 +110,9 @@ def test_run_cycle_no_action_when_kill_switch_engaged(monkeypatch, tmp_path):
 def test_run_cycle_logs_dry_run_without_executing(monkeypatch, tmp_path):
     monkeypatch.setattr(loop.state, "load_state", lambda *a, **k: {"kill_switch": False, "dry_run": True})
     monkeypatch.setattr(loop, "DECISIONS_LOG_PATH", str(tmp_path / "decisions_log.jsonl"))
+    monkeypatch.setattr(loop, "LATEST_CANDLES_PATH", str(tmp_path / "latest_candles.json"))
+    monkeypatch.setattr(loop, "LATEST_BALANCE_PATH", str(tmp_path / "latest_balance.json"))
+    monkeypatch.setattr(loop, "LATEST_POSITIONS_PATH", str(tmp_path / "latest_positions.json"))
     monkeypatch.setattr(loop.confluence, "fetch_gold_candles", lambda api_key: [{"close": 2100}])
     monkeypatch.setattr(loop.broker, "get_account_balance", lambda *a, **k: 10000)
     monkeypatch.setattr(loop.bot, "reconcile_positions", lambda *a, **k: [])
@@ -125,6 +130,9 @@ def test_run_cycle_logs_dry_run_without_executing(monkeypatch, tmp_path):
 def test_run_cycle_executes_when_not_dry_run(monkeypatch, tmp_path):
     monkeypatch.setattr(loop.state, "load_state", lambda *a, **k: {"kill_switch": False, "dry_run": False})
     monkeypatch.setattr(loop, "DECISIONS_LOG_PATH", str(tmp_path / "decisions_log.jsonl"))
+    monkeypatch.setattr(loop, "LATEST_CANDLES_PATH", str(tmp_path / "latest_candles.json"))
+    monkeypatch.setattr(loop, "LATEST_BALANCE_PATH", str(tmp_path / "latest_balance.json"))
+    monkeypatch.setattr(loop, "LATEST_POSITIONS_PATH", str(tmp_path / "latest_positions.json"))
     monkeypatch.setattr(loop.confluence, "fetch_gold_candles", lambda api_key: [{"close": 2100}])
     monkeypatch.setattr(loop.broker, "get_account_balance", lambda *a, **k: 10000)
     monkeypatch.setattr(loop.bot, "reconcile_positions", lambda *a, **k: [])
@@ -146,6 +154,9 @@ def test_run_cycle_re_checks_kill_switch_before_executing(monkeypatch, tmp_path)
     données (avant decide_and_act) : run_cycle doit relire l'état juste
     avant d'exécuter, pas seulement au tout début du cycle."""
     monkeypatch.setattr(loop, "DECISIONS_LOG_PATH", str(tmp_path / "decisions_log.jsonl"))
+    monkeypatch.setattr(loop, "LATEST_CANDLES_PATH", str(tmp_path / "latest_candles.json"))
+    monkeypatch.setattr(loop, "LATEST_BALANCE_PATH", str(tmp_path / "latest_balance.json"))
+    monkeypatch.setattr(loop, "LATEST_POSITIONS_PATH", str(tmp_path / "latest_positions.json"))
     monkeypatch.setattr(loop.confluence, "fetch_gold_candles", lambda api_key: [{"close": 2100}])
     monkeypatch.setattr(loop.broker, "get_account_balance", lambda *a, **k: 10000)
     monkeypatch.setattr(loop.bot, "reconcile_positions", lambda *a, **k: [])
@@ -170,9 +181,64 @@ def test_run_cycle_re_checks_kill_switch_before_executing(monkeypatch, tmp_path)
     assert result["action"] == "simulation_dry_run"
 
 
+def test_with_retry_returns_result_on_first_success():
+    calls = {"n": 0}
+
+    def fn():
+        calls["n"] += 1
+        return "ok"
+
+    assert loop._with_retry(fn) == "ok"
+    assert calls["n"] == 1
+
+
+def test_with_retry_recovers_after_a_transient_failure(monkeypatch):
+    """Reproduit le cas réel du 2026-09-14 (timeout Twelve Data isolé,
+    429 MetaApi isolé) : un échec qui ne se reproduit pas au coup
+    suivant ne doit plus faire perdre tout le cycle."""
+    monkeypatch.setattr(loop.time, "sleep", lambda s: None)
+    calls = {"n": 0}
+
+    def fn():
+        calls["n"] += 1
+        if calls["n"] < 2:
+            raise RuntimeError("Read timed out")
+        return "ok"
+
+    assert loop._with_retry(fn) == "ok"
+    assert calls["n"] == 2
+
+
+def test_with_retry_raises_last_error_after_exhausting_attempts(monkeypatch):
+    monkeypatch.setattr(loop.time, "sleep", lambda s: None)
+    calls = {"n": 0}
+
+    def fn():
+        calls["n"] += 1
+        raise RuntimeError(f"échec {calls['n']}")
+
+    with pytest.raises(RuntimeError, match="échec 3"):
+        loop._with_retry(fn)
+    assert calls["n"] == loop.NETWORK_RETRY_ATTEMPTS == 3
+
+
+def test_with_retry_sleeps_between_attempts_but_not_after_the_last(monkeypatch):
+    sleeps = []
+    monkeypatch.setattr(loop.time, "sleep", lambda s: sleeps.append(s))
+
+    def fn():
+        raise RuntimeError("toujours en échec")
+
+    with pytest.raises(RuntimeError):
+        loop._with_retry(fn)
+
+    assert sleeps == [loop.NETWORK_RETRY_DELAY_SECONDS] * (loop.NETWORK_RETRY_ATTEMPTS - 1)
+
+
 def test_run_cycle_logs_error_when_data_fetch_fails(monkeypatch, tmp_path):
     monkeypatch.setattr(loop.state, "load_state", lambda *a, **k: {"kill_switch": False, "dry_run": True})
     monkeypatch.setattr(loop, "DECISIONS_LOG_PATH", str(tmp_path / "decisions_log.jsonl"))
+    monkeypatch.setattr(loop.time, "sleep", lambda s: None)  # échec persistant -> _with_retry épuise ses tentatives
     monkeypatch.setattr(
         loop.confluence, "fetch_gold_candles",
         lambda api_key: (_ for _ in ()).throw(RuntimeError("Twelve Data indisponible")),
@@ -184,12 +250,45 @@ def test_run_cycle_logs_error_when_data_fetch_fails(monkeypatch, tmp_path):
     assert "Twelve Data indisponible" in result["reason"]
 
 
+def test_run_cycle_recovers_from_a_single_transient_network_blip(monkeypatch, tmp_path):
+    """Le cas réel du 2026-09-14 de bout en bout : un premier appel à
+    fetch_gold_candles échoue (timeout), le second (retry) réussit — le
+    cycle doit se dérouler normalement, pas finir en "erreur"."""
+    monkeypatch.setattr(loop.state, "load_state", lambda *a, **k: {"kill_switch": False, "dry_run": True})
+    monkeypatch.setattr(loop, "DECISIONS_LOG_PATH", str(tmp_path / "decisions_log.jsonl"))
+    monkeypatch.setattr(loop, "LATEST_CANDLES_PATH", str(tmp_path / "latest_candles.json"))
+    monkeypatch.setattr(loop, "LATEST_BALANCE_PATH", str(tmp_path / "latest_balance.json"))
+    monkeypatch.setattr(loop, "LATEST_POSITIONS_PATH", str(tmp_path / "latest_positions.json"))
+    monkeypatch.setattr(loop.time, "sleep", lambda s: None)
+    calls = {"n": 0}
+
+    def flaky_fetch_gold_candles(api_key):
+        calls["n"] += 1
+        if calls["n"] < 2:
+            raise RuntimeError("HTTPSConnectionPool: Read timed out")
+        return [{"close": 2100}]
+
+    monkeypatch.setattr(loop.confluence, "fetch_gold_candles", flaky_fetch_gold_candles)
+    monkeypatch.setattr(loop.broker, "get_account_balance", lambda *a, **k: 10000.0)
+    monkeypatch.setattr(loop.bot, "reconcile_positions", lambda *a, **k: [])
+    monkeypatch.setattr(loop.broker, "get_symbol_specification", lambda *a, **k: {"contractSize": 100})
+    monkeypatch.setattr(loop.bot, "decide_and_act", lambda *a, **k: {"action": "aucune", "reason": "signal neutre"})
+
+    result = loop.run_cycle("tok", "acc", "td-key", loop.risk.CircuitBreaker())
+
+    assert result["action"] == "aucune"
+    assert calls["n"] == 2
+
+
 def test_run_cycle_logs_error_when_decide_and_act_raises(monkeypatch, tmp_path):
     """decide_and_act (via risk.compute_position_size) peut lever si le
     solde ou la taille de contrat renvoyés par le broker sont invalides
     — ce cas doit être capturé et journalisé, jamais laissé remonter."""
     monkeypatch.setattr(loop.state, "load_state", lambda *a, **k: {"kill_switch": False, "dry_run": True})
     monkeypatch.setattr(loop, "DECISIONS_LOG_PATH", str(tmp_path / "decisions_log.jsonl"))
+    monkeypatch.setattr(loop, "LATEST_CANDLES_PATH", str(tmp_path / "latest_candles.json"))
+    monkeypatch.setattr(loop, "LATEST_BALANCE_PATH", str(tmp_path / "latest_balance.json"))
+    monkeypatch.setattr(loop, "LATEST_POSITIONS_PATH", str(tmp_path / "latest_positions.json"))
     monkeypatch.setattr(loop.confluence, "fetch_gold_candles", lambda api_key: [{"close": 2100}])
     monkeypatch.setattr(loop.broker, "get_account_balance", lambda *a, **k: 10000)
     monkeypatch.setattr(loop.bot, "reconcile_positions", lambda *a, **k: [])
@@ -212,3 +311,135 @@ def test_circuit_breaker_uses_separate_persist_path_from_kill_switch_state():
     deux fichiers ne puisse jamais écraser silencieusement une
     modification en cours sur l'autre."""
     assert loop.CIRCUIT_BREAKER_STATE_PATH != loop.state.STATE_PATH
+
+
+def test_run_cycle_caches_candles_after_successful_fetch(monkeypatch, tmp_path):
+    monkeypatch.setattr(loop.state, "load_state", lambda *a, **k: {"kill_switch": False, "dry_run": True})
+    monkeypatch.setattr(loop, "DECISIONS_LOG_PATH", str(tmp_path / "decisions_log.jsonl"))
+    monkeypatch.setattr(loop, "LATEST_CANDLES_PATH", str(tmp_path / "latest_candles.json"))
+    monkeypatch.setattr(loop, "LATEST_BALANCE_PATH", str(tmp_path / "latest_balance.json"))
+    monkeypatch.setattr(loop, "LATEST_POSITIONS_PATH", str(tmp_path / "latest_positions.json"))
+    fake_candles = [{"time": "2026-09-11 16:40:00", "close": 3651.5}]
+    monkeypatch.setattr(loop.confluence, "fetch_gold_candles", lambda api_key: fake_candles)
+    monkeypatch.setattr(loop.broker, "get_account_balance", lambda *a, **k: 10000.0)
+    monkeypatch.setattr(loop.bot, "reconcile_positions", lambda *a, **k: [])
+    monkeypatch.setattr(loop.broker, "get_symbol_specification", lambda *a, **k: {"contractSize": 100})
+    monkeypatch.setattr(loop.bot, "decide_and_act", lambda *a, **k: {"action": "aucune", "reason": "signal neutre"})
+
+    loop.run_cycle("tok", "acc", "td-key", loop.risk.CircuitBreaker())
+
+    cached = json.loads((tmp_path / "latest_candles.json").read_text(encoding="utf-8"))
+    assert cached["candles"] == fake_candles
+    assert "fetched_at" in cached
+
+
+def test_run_cycle_caches_balance_after_successful_fetch(monkeypatch, tmp_path):
+    monkeypatch.setattr(loop.state, "load_state", lambda *a, **k: {"kill_switch": False, "dry_run": True})
+    monkeypatch.setattr(loop, "DECISIONS_LOG_PATH", str(tmp_path / "decisions_log.jsonl"))
+    monkeypatch.setattr(loop, "LATEST_CANDLES_PATH", str(tmp_path / "latest_candles.json"))
+    monkeypatch.setattr(loop, "LATEST_BALANCE_PATH", str(tmp_path / "latest_balance.json"))
+    monkeypatch.setattr(loop, "LATEST_POSITIONS_PATH", str(tmp_path / "latest_positions.json"))
+    monkeypatch.setattr(loop.confluence, "fetch_gold_candles", lambda api_key: [{"close": 2100}])
+    monkeypatch.setattr(loop.broker, "get_account_balance", lambda *a, **k: 9140.10)
+    monkeypatch.setattr(loop.bot, "reconcile_positions", lambda *a, **k: [])
+    monkeypatch.setattr(loop.broker, "get_symbol_specification", lambda *a, **k: {"contractSize": 100})
+    monkeypatch.setattr(loop.bot, "decide_and_act", lambda *a, **k: {"action": "aucune", "reason": "signal neutre"})
+
+    loop.run_cycle("tok", "acc", "td-key", loop.risk.CircuitBreaker())
+
+    cached = json.loads((tmp_path / "latest_balance.json").read_text(encoding="utf-8"))
+    assert cached["balance"] == 9140.10
+    assert "fetched_at" in cached
+
+
+def test_run_cycle_caches_positions_after_successful_fetch(monkeypatch, tmp_path):
+    monkeypatch.setattr(loop.state, "load_state", lambda *a, **k: {"kill_switch": False, "dry_run": True})
+    monkeypatch.setattr(loop, "DECISIONS_LOG_PATH", str(tmp_path / "decisions_log.jsonl"))
+    monkeypatch.setattr(loop, "LATEST_CANDLES_PATH", str(tmp_path / "latest_candles.json"))
+    monkeypatch.setattr(loop, "LATEST_BALANCE_PATH", str(tmp_path / "latest_balance.json"))
+    monkeypatch.setattr(loop, "LATEST_POSITIONS_PATH", str(tmp_path / "latest_positions.json"))
+    fake_positions = [{"symbol": "XAUUSD", "type": "POSITION_TYPE_SELL", "volume": 2.0,
+                        "openPrice": 4316.28, "currentPrice": 4316.49, "profit": -36.18}]
+    monkeypatch.setattr(loop.confluence, "fetch_gold_candles", lambda api_key: [{"close": 2100}])
+    monkeypatch.setattr(loop.broker, "get_account_balance", lambda *a, **k: 10000.0)
+    monkeypatch.setattr(loop.bot, "reconcile_positions", lambda *a, **k: fake_positions)
+    monkeypatch.setattr(loop.broker, "get_symbol_specification", lambda *a, **k: {"contractSize": 100})
+    monkeypatch.setattr(loop.bot, "decide_and_act", lambda *a, **k: {"action": "aucune", "reason": "signal neutre"})
+
+    loop.run_cycle("tok", "acc", "td-key", loop.risk.CircuitBreaker())
+
+    cached = json.loads((tmp_path / "latest_positions.json").read_text(encoding="utf-8"))
+    assert cached["positions"] == fake_positions
+    assert "fetched_at" in cached
+
+
+def test_run_cycle_leaves_earlier_caches_intact_when_a_later_call_fails(monkeypatch, tmp_path):
+    """Le 504 déjà observé en production tombe sur get_symbol_specification,
+    APRÈS candles/balance/positions dans run_cycle — ces trois caches
+    doivent rester écrits même quand ce dernier appel échoue."""
+    monkeypatch.setattr(loop.state, "load_state", lambda *a, **k: {"kill_switch": False, "dry_run": True})
+    monkeypatch.setattr(loop, "DECISIONS_LOG_PATH", str(tmp_path / "decisions_log.jsonl"))
+    monkeypatch.setattr(loop, "LATEST_CANDLES_PATH", str(tmp_path / "latest_candles.json"))
+    monkeypatch.setattr(loop, "LATEST_BALANCE_PATH", str(tmp_path / "latest_balance.json"))
+    monkeypatch.setattr(loop, "LATEST_POSITIONS_PATH", str(tmp_path / "latest_positions.json"))
+    monkeypatch.setattr(loop.time, "sleep", lambda s: None)  # échec persistant -> _with_retry épuise ses tentatives
+    monkeypatch.setattr(loop.confluence, "fetch_gold_candles", lambda api_key: [{"close": 2100}])
+    monkeypatch.setattr(loop.broker, "get_account_balance", lambda *a, **k: 10000.0)
+    monkeypatch.setattr(loop.bot, "reconcile_positions", lambda *a, **k: [])
+    monkeypatch.setattr(
+        loop.broker, "get_symbol_specification",
+        lambda *a, **k: (_ for _ in ()).throw(RuntimeError("504 Server Error: Gateway Timeout")),
+    )
+
+    result = loop.run_cycle("tok", "acc", "td-key", loop.risk.CircuitBreaker())
+
+    assert result["action"] == "erreur"
+    assert (tmp_path / "latest_candles.json").exists()
+    assert (tmp_path / "latest_balance.json").exists()
+    assert (tmp_path / "latest_positions.json").exists()
+
+
+def test_run_cycle_does_not_write_candles_cache_when_fetch_itself_fails(monkeypatch, tmp_path):
+    monkeypatch.setattr(loop.state, "load_state", lambda *a, **k: {"kill_switch": False, "dry_run": True})
+    monkeypatch.setattr(loop, "DECISIONS_LOG_PATH", str(tmp_path / "decisions_log.jsonl"))
+    monkeypatch.setattr(loop, "LATEST_CANDLES_PATH", str(tmp_path / "latest_candles.json"))
+    monkeypatch.setattr(loop, "LATEST_BALANCE_PATH", str(tmp_path / "latest_balance.json"))
+    monkeypatch.setattr(loop, "LATEST_POSITIONS_PATH", str(tmp_path / "latest_positions.json"))
+    monkeypatch.setattr(loop.time, "sleep", lambda s: None)  # échec persistant -> _with_retry épuise ses tentatives
+    monkeypatch.setattr(
+        loop.confluence, "fetch_gold_candles",
+        lambda api_key: (_ for _ in ()).throw(RuntimeError("Twelve Data indisponible")),
+    )
+
+    loop.run_cycle("tok", "acc", "td-key", loop.risk.CircuitBreaker())
+
+    assert not (tmp_path / "latest_candles.json").exists()
+    assert not (tmp_path / "latest_balance.json").exists()
+    assert not (tmp_path / "latest_positions.json").exists()
+
+
+def test_run_cycle_continues_when_a_dashboard_cache_write_fails(monkeypatch, tmp_path):
+    """Une panne disque sur un cache de tableau de bord (LATEST_*_PATH,
+    purement cosmétique) ne doit jamais interrompre le cycle avant que
+    la décision/exécution réelle n'ait eu lieu — même contrat que
+    _log_decision pour son propre fichier."""
+    monkeypatch.setattr(loop.state, "load_state", lambda *a, **k: {"kill_switch": False, "dry_run": True})
+    monkeypatch.setattr(loop, "DECISIONS_LOG_PATH", str(tmp_path / "decisions_log.jsonl"))
+    monkeypatch.setattr(loop, "LATEST_CANDLES_PATH", str(tmp_path / "latest_candles.json"))
+    monkeypatch.setattr(loop, "LATEST_BALANCE_PATH", str(tmp_path / "latest_balance.json"))
+    monkeypatch.setattr(loop, "LATEST_POSITIONS_PATH", str(tmp_path / "latest_positions.json"))
+    monkeypatch.setattr(loop.confluence, "fetch_gold_candles", lambda api_key: [{"close": 2100}])
+    monkeypatch.setattr(loop.broker, "get_account_balance", lambda *a, **k: 10000.0)
+    monkeypatch.setattr(loop.bot, "reconcile_positions", lambda *a, **k: [])
+    monkeypatch.setattr(loop.broker, "get_symbol_specification", lambda *a, **k: {"contractSize": 100})
+    monkeypatch.setattr(loop.bot, "decide_and_act", lambda *a, **k: {"action": "aucune", "reason": "signal neutre"})
+    monkeypatch.setattr(
+        loop.state, "save_state",
+        lambda *a, **k: (_ for _ in ()).throw(OSError("disque plein")),
+    )
+
+    result = loop.run_cycle("tok", "acc", "td-key", loop.risk.CircuitBreaker())
+
+    assert result == {"action": "aucune", "reason": "signal neutre"}
+    logged = json.loads((tmp_path / "decisions_log.jsonl").read_text(encoding="utf-8").strip())
+    assert logged["action"] == "aucune"

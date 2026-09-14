@@ -6,6 +6,7 @@
 # IBKR : il est structurellement incapable de passer un ordre.
 import json
 import os
+import sys
 import time
 import traceback
 import xml.etree.ElementTree as ET
@@ -40,14 +41,21 @@ def fetch_flex_reference_code(token: str, query_id: str) -> str:
 
 
 def fetch_flex_statement(
-    token: str, reference_code: str, max_attempts: int = 5, retry_delay_s: float = 3.0
+    token: str, reference_code: str, max_attempts: int = 20, retry_delay_s: float = 5.0
 ) -> str:
     """Étape 2 : récupère le rapport généré. IBKR peut mettre plusieurs
-    secondes à le préparer — dans ce cas la réponse est un texte brut
-    contenant "Statement generation in progress" (pas du XML bien
-    formé), et on retente après retry_delay_s. Lève une RuntimeError si
-    le rapport n'est toujours pas prêt après max_attempts tentatives, ou
-    si IBKR renvoie une erreur explicite."""
+    dizaines de secondes à le préparer (constaté en pratique : la
+    fenêtre initiale de 5 tentatives × 3s, soit ~12s d'attente totale,
+    échouait systématiquement à chaque exécution réelle — bien trop
+    courte face à un service de génération de rapport asynchrone dont
+    IBKR documente des délais pouvant dépasser la minute) — dans ce cas
+    la réponse est un texte brut contenant "Statement generation in
+    progress" (pas du XML bien formé), et on retente après
+    retry_delay_s. 20 tentatives × 5s laisse ~95s d'attente totale, sans
+    risque de dépassement du job (pas de timeout-minutes serré sur ce
+    workflow). Lève une RuntimeError si le rapport n'est toujours pas
+    prêt après max_attempts tentatives, ou si IBKR renvoie une erreur
+    explicite."""
     for attempt in range(max_attempts):
         resp = requests.get(
             f"{FLEX_BASE_URL}/GetStatement",
@@ -210,14 +218,22 @@ def main():
         _write_real_portfolio(payload)
         print(f"Erreur synchronisation IBKR (réseau) : HTTP {status}")
         traceback.print_exc()
-        return
+        # Code de sortie non nul : sans ça, ce script (donc le job GitHub
+        # Actions) se termine toujours en "success" même quand la
+        # synchronisation a réellement échoué (constaté : échec à 100% des
+        # tentatives depuis la création de ce flux, invisible dans
+        # `gh run list`, révélé seulement en inspectant le contenu du JSON
+        # publié). L'état d'erreur reste écrit dans real_portfolio.json
+        # AVANT ce sys.exit — le workflow publie ce fichier même si ce step
+        # échoue (step de publication en `if: always()`).
+        sys.exit(1)
     except Exception as e:
         payload["sync_status"] = "error"
         payload["sync_error"] = str(e)
         _write_real_portfolio(payload)
         print(f"Erreur synchronisation IBKR : {e}")
         traceback.print_exc()
-        return
+        sys.exit(1)
 
     payload["sync_status"] = "ok"
     payload["sync_error"] = None

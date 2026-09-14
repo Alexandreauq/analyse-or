@@ -100,7 +100,7 @@ def build_summary_email_html(decisions: list[dict], day: str) -> str:
 def send_daily_summary(decisions: list[dict], day: str | None = None) -> bool:
     """Envoie le résumé quotidien. Ignoré silencieusement (avec un
     message) si SMTP_USER/SMTP_PASSWORD ne sont pas configurés — même
-    contrat que indices_score.send_entry_alert_email, jamais
+    contrat que indices_score.send_daily_digest_email, jamais
     d'exception."""
     if day is None:
         day = datetime.now(timezone.utc).strftime("%Y-%m-%d")

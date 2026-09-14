@@ -11,6 +11,26 @@
 
 const TWELVE_DATA_URL = 'https://api.twelvedata.com/time_series';
 
+// docs/chart_patterns.js expose detectChartPatterns/CHARTPATTERN_PIVOT_K.
+// Dans le navigateur, chart_patterns.js est chargé en <script> avant tout
+// appel à computeSignal (docs/index.html, loadScalpingModule) — ses
+// déclarations globales (function/const) sont donc directement lisibles
+// ici par identifiant nu, sans import. Pour Node (tests,
+// scalping_tracker.js), chaque fichier require()é est un module isolé
+// sans scope global partagé : require() explicite. Attention à ne PAS
+// redéclarer `CHARTPATTERN_PIVOT_K` ici (collision de nom avec le const
+// global de chart_patterns.js dans le navigateur, SyntaxError) — d'où
+// le passage par une fonction wrapper plutôt qu'une constante.
+const _chartPatternsModule = (typeof require === 'function') ? require('./chart_patterns.js') : null;
+function _detectChartPatterns(pivots, trend, price) {
+  return _chartPatternsModule
+    ? _chartPatternsModule.detectChartPatterns(pivots, trend, price)
+    : detectChartPatterns(pivots, trend, price);
+}
+function _chartPatternPivotK() {
+  return _chartPatternsModule ? _chartPatternsModule.CHARTPATTERN_PIVOT_K : CHARTPATTERN_PIVOT_K;
+}
+
 /**
  * Récupère les dernières bougies 1min XAU/USD via Twelve Data.
  * `fetchImpl` est injectable (tests) — vaut `fetch` par défaut (navigateur).
@@ -282,15 +302,79 @@ const SCALP_LEVEL_PROXIMITY = 0.5; // $ de tolérance pour juger un "rebond" sur
 const SCALP_MIN_CANDLES = Math.max(SCALP_BOLLINGER_PERIOD, SCALP_MACD_SLOW + SCALP_MACD_SIGNAL) + 1; // MACD(26,9) a besoin de ~35 bougies pour une EMA fiable — Bollinger(20) seul ne suffit pas comme garde-fou
 const SCALP_STOP_BUFFER = SCALP_LEVEL_PROXIMITY * 3; // marge du stop au-delà du niveau, distincte de la tolérance de "rebond" (SCALP_LEVEL_PROXIMITY) — un stop à peine plus loin que le niveau lui-même serait déclenché par le bruit normal du marché plutôt que par une vraie invalidation du scénario de trade
 
+// Fenêtre de black-out autour des publications macro à très fort impact
+// (CPI/Emploi US/FOMC, décision BCE, décision Bank of England) — l'or
+// peut bouger énormément en quelques minutes sur ces annonces, et une
+// bougie extrême causée par la news peut satisfaire à tort les
+// conditions d'une vraie figure de retournement (ex. Étoile filante),
+// déclenchant une entrée sur du bruit macro plutôt qu'un signal
+// technique. Périmètre choisi pour couvrir la même portée qu'un
+// calendrier "fort impact, toutes devises" (ex. MyFxBook) sans en
+// dépendre : MyFxBook n'a pas d'API publique pour son calendrier (testé
+// directement le 13/09/2026, endpoint XML non documenté -> 403
+// Forbidden, nécessite une session connectée) — chaque date ci-dessous
+// est sourcée séparément à la banque centrale/agence officielle
+// concernée, jamais à un agrégateur tiers. Dates 2026, converties en
+// UTC en tenant compte des heures d'été respectives. À mettre à jour
+// quand chaque calendrier 2027 est publié (généralement fin d'année
+// précédente pour les 3 US, ~vers l'été précédent pour BCE/BoE).
+const SCALP_NEWS_BLACKOUT_MINUTES = 15;
+const SCALP_HIGH_IMPACT_EVENTS_UTC = [
+  // CPI (indice des prix à la consommation US), 8h30 ET — source :
+  // bls.gov/schedule/news_release/cpi.htm
+  '2026-01-13T13:30:00Z', '2026-02-13T13:30:00Z', '2026-03-11T12:30:00Z',
+  '2026-04-10T12:30:00Z', '2026-05-12T12:30:00Z', '2026-06-10T12:30:00Z',
+  '2026-07-14T12:30:00Z', '2026-08-12T12:30:00Z', '2026-09-11T12:30:00Z',
+  '2026-10-14T12:30:00Z', '2026-11-10T13:30:00Z', '2026-12-10T13:30:00Z',
+  // Emploi US / NFP (Employment Situation), 8h30 ET — source :
+  // bls.gov/schedule/news_release/empsit.htm
+  '2026-01-09T13:30:00Z', '2026-02-11T13:30:00Z', '2026-03-06T13:30:00Z',
+  '2026-04-03T12:30:00Z', '2026-05-08T12:30:00Z', '2026-06-05T12:30:00Z',
+  '2026-07-02T12:30:00Z', '2026-08-07T12:30:00Z', '2026-09-04T12:30:00Z',
+  '2026-10-02T12:30:00Z', '2026-11-06T13:30:00Z', '2026-12-04T13:30:00Z',
+  // Décision FOMC (taux directeur US), 14h00 ET, 2e jour de chaque
+  // réunion — source : federalreserve.gov/monetarypolicy/fomccalendars.htm
+  '2026-01-28T19:00:00Z', '2026-03-18T18:00:00Z', '2026-04-29T18:00:00Z',
+  '2026-06-17T18:00:00Z', '2026-07-29T18:00:00Z', '2026-09-16T18:00:00Z',
+  '2026-10-28T18:00:00Z', '2026-12-09T19:00:00Z',
+  // Décision BCE (taux directeur zone euro), 14h15 CET/CEST, 2e jour de
+  // chaque réunion — source : ecb.europa.eu/press/calendars/mgcgc
+  '2026-03-19T13:15:00Z', '2026-04-30T12:15:00Z', '2026-06-11T12:15:00Z',
+  '2026-07-23T12:15:00Z', '2026-09-10T12:15:00Z', '2026-10-29T13:15:00Z',
+  '2026-12-17T13:15:00Z',
+  // Décision Bank of England (taux directeur GBP), 12h00 heure de
+  // Londres — source : bankofengland.co.uk/monetary-policy/upcoming-mpc-dates
+  '2026-02-05T12:00:00Z', '2026-03-19T12:00:00Z', '2026-04-30T11:00:00Z',
+  '2026-06-18T11:00:00Z', '2026-07-30T11:00:00Z', '2026-09-17T11:00:00Z',
+  '2026-11-05T12:00:00Z', '2026-12-17T12:00:00Z',
+];
+
+/**
+ * `date` tombe-t-elle dans la fenêtre de black-out (±SCALP_NEWS_BLACKOUT_MINUTES)
+ * d'une publication macro à très fort impact ? Utilisé pour neutraliser
+ * computeSignal plutôt que de laisser le moteur technique interpréter le
+ * bruit de la publication comme un vrai signal.
+ */
+function isNewsBlackout(date) {
+  const t = date.getTime();
+  const windowMs = SCALP_NEWS_BLACKOUT_MINUTES * 60 * 1000;
+  return SCALP_HIGH_IMPACT_EVENTS_UTC.some(iso => Math.abs(t - new Date(iso).getTime()) <= windowMs);
+}
+
 /**
  * Moteur de confluence (spec §6) : combine tendance + S/R + indicateurs +
  * chandeliers en un signal Achat/Vente/Neutre, avec Entrée/Stop-loss/TP
  * si un signal est émis. Ne lève jamais d'exception — `candles` trop
- * court renvoie `neutre` avec tous les champs de prix à null.
+ * court renvoie `neutre` avec tous les champs de prix à null, de même
+ * qu'en pleine fenêtre de black-out macro (voir isNewsBlackout).
  */
 function computeSignal(candles) {
   const price = candles.length ? candles[candles.length - 1].close : null;
   if (!price || candles.length < SCALP_MIN_CANDLES) {
+    return { status: 'neutre', price, entry: null, stopLoss: null, takeProfit: null, trend: 'neutre', pattern: null };
+  }
+  const asOf = new Date(candles[candles.length - 1].time.replace(' ', 'T') + 'Z');
+  if (isNewsBlackout(asOf)) {
     return { status: 'neutre', price, entry: null, stopLoss: null, takeProfit: null, trend: 'neutre', pattern: null };
   }
 
@@ -300,33 +384,81 @@ function computeSignal(candles) {
   const closes = candles.map(c => c.close);
   const rsi = computeRSI(closes, SCALP_RSI_PERIOD);
   const macd = computeMACD(closes, SCALP_MACD_FAST, SCALP_MACD_SLOW, SCALP_MACD_SIGNAL);
-  const pattern = matchCandlestickPattern(candles, trend);
+  const candlestickPattern = matchCandlestickPattern(candles, trend);
+  const chartPivots = detectPivots(candles, _chartPatternPivotK());
+  const chartPattern = _detectChartPatterns(chartPivots, trend, price);
 
   const nearSupport = levels.support !== null && Math.abs(price - levels.support) <= SCALP_LEVEL_PROXIMITY;
   const nearResistance = levels.resistance !== null && Math.abs(price - levels.resistance) <= SCALP_LEVEL_PROXIMITY;
   const brokeResistance = levels.resistance !== null && price > levels.resistance;
   const brokeSupport = levels.support !== null && price < levels.support;
 
-  const structurelAchat = trend === 'baissier' && (nearSupport || brokeResistance);
-  const structurelVente = trend === 'haussier' && (nearResistance || brokeSupport);
+  const chartRetournementHaussier = chartPattern && chartPattern.kind === 'retournement' && chartPattern.direction === 'haussier';
+  const chartRetournementBaissier = chartPattern && chartPattern.kind === 'retournement' && chartPattern.direction === 'baissier';
+  const chartContinuationHaussier = chartPattern && chartPattern.kind === 'continuation' && chartPattern.direction === 'haussier';
+  const chartContinuationBaissier = chartPattern && chartPattern.kind === 'continuation' && chartPattern.direction === 'baissier';
 
-  const confirmationAchat = rsi < 70 && macd.macd > macd.signal && pattern && pattern.direction === 'haussier';
-  const confirmationVente = rsi > 30 && macd.macd < macd.signal && pattern && pattern.direction === 'baissier';
+  // Deux déclencheurs structurels : retournement (logique existante,
+  // élargie aux figures chartistes de retournement) et continuation
+  // (nouveau, uniquement pour les triangles). Note : structurelAchat et
+  // structurelVente ne sont plus strictement mutuellement exclusifs pris
+  // isolément (un même `trend` peut désormais satisfaire l'un via le
+  // chemin retournement et l'autre via le chemin continuation) — ce n'est
+  // pas un bug : confirmationAchat/confirmationVente restent, elles,
+  // mutuellement exclusives par construction (`macd.macd` ne peut pas
+  // être à la fois > et < `macd.signal`), donc au plus UN des deux blocs
+  // `if` plus bas peut jamais renvoyer un signal.
+  const structurelAchat = (trend === 'baissier' && (nearSupport || brokeResistance || chartRetournementHaussier))
+    || (trend === 'haussier' && chartContinuationHaussier);
+  const structurelVente = (trend === 'haussier' && (nearResistance || brokeSupport || chartRetournementBaissier))
+    || (trend === 'baissier' && chartContinuationBaissier);
+
+  // Le pattern de confirmation peut venir du chandelier OU de la figure
+  // chartiste. Sélection par SENS (jamais l'un ne doit masquer l'autre
+  // s'ils vont dans des sens différents), priorité à la figure chartiste
+  // quand les deux vont dans le même sens (poids ×2 au barème du cours,
+  // contre ×1 pour les chandeliers).
+  const patternHaussier = (chartPattern && chartPattern.direction === 'haussier') ? chartPattern
+    : (candlestickPattern && candlestickPattern.direction === 'haussier') ? candlestickPattern
+    : null;
+  const patternBaissier = (chartPattern && chartPattern.direction === 'baissier') ? chartPattern
+    : (candlestickPattern && candlestickPattern.direction === 'baissier') ? candlestickPattern
+    : null;
+
+  const confirmationAchat = rsi < 70 && macd.macd > macd.signal && patternHaussier !== null;
+  const confirmationVente = rsi > 30 && macd.macd < macd.signal && patternBaissier !== null;
 
   if (structurelAchat && confirmationAchat) {
-    const stopLoss = levels.support !== null ? levels.support - SCALP_STOP_BUFFER : price - price * 0.001;
-    const risk = price - stopLoss;
-    const takeProfit = levels.resistance !== null && levels.resistance > price
-      ? levels.resistance
-      : price + risk * SCALP_TAKEPROFIT_RISK_MULTIPLE;
+    const pattern = patternHaussier;
+    let stopLoss, takeProfit;
+    if (pattern === chartPattern) {
+      // Règle du cours spécifique aux figures chartistes : objectif =
+      // hauteur de la figure projetée depuis la cassure ; stop juste
+      // au-delà du point le plus extrême de la figure.
+      stopLoss = chartPattern.extremityPrice - SCALP_STOP_BUFFER;
+      takeProfit = chartPattern.breakoutPrice + chartPattern.patternHeight;
+    } else {
+      stopLoss = levels.support !== null ? levels.support - SCALP_STOP_BUFFER : price - price * 0.001;
+      const risk = price - stopLoss;
+      takeProfit = levels.resistance !== null && levels.resistance > price
+        ? levels.resistance
+        : price + risk * SCALP_TAKEPROFIT_RISK_MULTIPLE;
+    }
     return { status: 'achat', price, entry: price, stopLoss, takeProfit, trend, pattern };
   }
   if (structurelVente && confirmationVente) {
-    const stopLoss = levels.resistance !== null ? levels.resistance + SCALP_STOP_BUFFER : price + price * 0.001;
-    const risk = stopLoss - price;
-    const takeProfit = levels.support !== null && levels.support < price
-      ? levels.support
-      : price - risk * SCALP_TAKEPROFIT_RISK_MULTIPLE;
+    const pattern = patternBaissier;
+    let stopLoss, takeProfit;
+    if (pattern === chartPattern) {
+      stopLoss = chartPattern.extremityPrice + SCALP_STOP_BUFFER;
+      takeProfit = chartPattern.breakoutPrice - chartPattern.patternHeight;
+    } else {
+      stopLoss = levels.resistance !== null ? levels.resistance + SCALP_STOP_BUFFER : price + price * 0.001;
+      const risk = stopLoss - price;
+      takeProfit = levels.support !== null && levels.support < price
+        ? levels.support
+        : price - risk * SCALP_TAKEPROFIT_RISK_MULTIPLE;
+    }
     return { status: 'vente', price, entry: price, stopLoss, takeProfit, trend, pattern };
   }
   return { status: 'neutre', price, entry: null, stopLoss: null, takeProfit: null, trend, pattern: null };
@@ -336,6 +468,6 @@ if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
     fetchGoldCandles, detectPivots, classifyTrend, currentLevels,
     computeRSI, computeMACD, computeBollinger, matchCandlestickPattern,
-    computeSignal,
+    computeSignal, isNewsBlackout, SCALP_HIGH_IMPACT_EVENTS_UTC, SCALP_NEWS_BLACKOUT_MINUTES,
   };
 }

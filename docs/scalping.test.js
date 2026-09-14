@@ -5,7 +5,7 @@
 // correspond pas — pas de bibliothèque d'assertion, juste `assert` natif
 // de Node pour rester sans dépendance.
 const assert = require('assert');
-const { fetchGoldCandles, detectPivots, classifyTrend, currentLevels, computeRSI, computeMACD, computeBollinger } = require('./scalping.js');
+const { fetchGoldCandles, detectPivots, classifyTrend, currentLevels, computeRSI, computeMACD, computeBollinger, computeSignal, isNewsBlackout } = require('./scalping.js');
 
 async function test_fetchGoldCandles_parses_and_reverses_to_chronological_order() {
   const fakeResponse = {
@@ -185,6 +185,63 @@ function test_computeBollinger_with_variance() {
   console.log('OK: test_computeBollinger_with_variance');
 }
 
+function test_isNewsBlackout_exactly_at_event() {
+  // CPI du 11/09/2026, 8h30 ET = 12h30 UTC (source : bls.gov/schedule/news_release/cpi.htm).
+  assert.strictEqual(isNewsBlackout(new Date('2026-09-11T12:30:00Z')), true);
+  console.log('OK: test_isNewsBlackout_exactly_at_event');
+}
+
+function test_isNewsBlackout_within_window_before_event() {
+  // 14 min avant le CPI du 11/09 (fenêtre ±15 min) -> toujours en black-out.
+  assert.strictEqual(isNewsBlackout(new Date('2026-09-11T12:16:00Z')), true);
+  console.log('OK: test_isNewsBlackout_within_window_before_event');
+}
+
+function test_isNewsBlackout_just_outside_window() {
+  // 16 min avant le CPI du 11/09 -> hors fenêtre de 15 min.
+  assert.strictEqual(isNewsBlackout(new Date('2026-09-11T12:14:00Z')), false);
+  console.log('OK: test_isNewsBlackout_just_outside_window');
+}
+
+function test_isNewsBlackout_false_on_quiet_day() {
+  // Dimanche, aucune publication macro programmée ce jour-là.
+  assert.strictEqual(isNewsBlackout(new Date('2026-09-13T12:30:00Z')), false);
+  console.log('OK: test_isNewsBlackout_false_on_quiet_day');
+}
+
+function test_isNewsBlackout_exactly_at_ecb_decision() {
+  // Décision BCE du 29/10/2026, 14h15 CET = 13h15 UTC (source : ecb.europa.eu/press/calendars/mgcgc).
+  assert.strictEqual(isNewsBlackout(new Date('2026-10-29T13:15:00Z')), true);
+  console.log('OK: test_isNewsBlackout_exactly_at_ecb_decision');
+}
+
+function test_isNewsBlackout_exactly_at_boe_decision() {
+  // Décision Bank of England du 18/06/2026, 12h00 heure de Londres = 11h00 UTC (BST) (source : bankofengland.co.uk/monetary-policy/upcoming-mpc-dates).
+  assert.strictEqual(isNewsBlackout(new Date('2026-06-18T11:00:00Z')), true);
+  console.log('OK: test_isNewsBlackout_exactly_at_boe_decision');
+}
+
+function test_computeSignal_neutre_during_news_blackout() {
+  // 36 bougies (>= SCALP_MIN_CANDLES), la dernière horodatée pile sur la
+  // décision FOMC du 16/09/2026 (14h00 ET = 18h00 UTC) -> neutre forcé,
+  // quel que soit ce que le moteur technique aurait sinon calculé.
+  const candles = [];
+  for (let i = 0; i < 36; i++) {
+    const t = new Date(Date.UTC(2026, 8, 16, 17, 24, 0) + i * 60000); // se termine à 18h00 UTC pile
+    const p = 2050 + Math.sin(i) * 2;
+    candles.push({
+      time: t.toISOString().slice(0, 19).replace('T', ' '),
+      open: p, high: p + 0.5, low: p - 0.5, close: p,
+    });
+  }
+  const signal = computeSignal(candles);
+  assert.deepStrictEqual(signal, {
+    status: 'neutre', price: candles[35].close, entry: null,
+    stopLoss: null, takeProfit: null, trend: 'neutre', pattern: null,
+  });
+  console.log('OK: test_computeSignal_neutre_during_news_blackout');
+}
+
 async function main() {
   await test_fetchGoldCandles_parses_and_reverses_to_chronological_order();
   await test_fetchGoldCandles_rejects_on_error_status();
@@ -202,6 +259,13 @@ async function main() {
   test_computeMACD_constant_offset_on_linear_series();
   test_computeBollinger_zero_variance();
   test_computeBollinger_with_variance();
+  test_isNewsBlackout_exactly_at_event();
+  test_isNewsBlackout_within_window_before_event();
+  test_isNewsBlackout_just_outside_window();
+  test_isNewsBlackout_false_on_quiet_day();
+  test_isNewsBlackout_exactly_at_ecb_decision();
+  test_isNewsBlackout_exactly_at_boe_decision();
+  test_computeSignal_neutre_during_news_blackout();
   console.log('Tous les tests scalping.test.js sont passés.');
 }
 

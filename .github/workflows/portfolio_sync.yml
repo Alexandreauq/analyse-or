@@ -32,6 +32,13 @@ jobs:
           IBKR_FLEX_QUERY_ID: ${{ secrets.IBKR_FLEX_QUERY_ID }}
 
       - name: Publier les données mises à jour sur le site
+        # if: always() car l'étape précédente termine désormais en échec
+        # (code de sortie non nul) quand la synchro échoue réellement — le
+        # fichier real_portfolio.json contient déjà le statut "error" écrit
+        # avant ce code de sortie, et doit être publié même dans ce cas
+        # (sinon le job échoue silencieusement sans même publier l'état
+        # d'erreur, régression pire que l'ancien comportement).
+        if: always()
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"

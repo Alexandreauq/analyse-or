@@ -1256,7 +1256,7 @@ function portfolioFormHtml(companies) {
   companies.forEach(c => { (grouped[c.index] = grouped[c.index] || []).push(c); });
   const indexNames = { ...INDEX_DISPLAY_NAMES, ...(indicesData.index_names || {}) };
   const optionsHtml = Object.keys(grouped).sort().map(key => `
-    <optgroup label="${indexNames[key] || key}">
+    <optgroup label="${indexNames[key] || key}${INDEX_COUNTRY_BY_KEY[key] ? ` (${INDEX_COUNTRY_BY_KEY[key]})` : ''}">
       ${grouped[key]
         .slice().sort((a, b) => a.name.localeCompare(b.name, 'fr'))
         .map(c => `<option value="${c.ticker}">${c.name} (${c.ticker})</option>`).join('')}
@@ -2154,6 +2154,24 @@ const INDEX_DISPLAY_NAMES = {
   DOW: 'Dow Jones',
 };
 
+// Pays par indice, affiché entre parenthèses à côté du nom (sélecteur de
+// liste, menu déroulant du formulaire portefeuille) — pas de champ pays
+// côté backend (indices_score.py n'a que INDEX_NAMES), et le pays d'un
+// indice ne change jamais, donc pas besoin du mécanisme de repli
+// indicesData.xxx utilisé par INDEX_DISPLAY_NAMES/INDEX_CURRENCY_BY_KEY.
+const INDEX_COUNTRY_BY_KEY = {
+  CAC40: 'France',
+  DAX: 'Allemagne',
+  NASDAQ: 'États-Unis',
+  DOW: 'États-Unis',
+  FTSE: 'Royaume-Uni',
+  SMI: 'Suisse',
+  IBEX35: 'Espagne',
+  FTSEMIB: 'Italie',
+  NIKKEI225: 'Japon',
+  HANGSENG: 'Hong Kong',
+};
+
 // Code court par indice, pour les badges (fiche entreprise, liste) — DJ
 // pour le Dow Jones (pas "DOW", trop proche du ticker Dow Inc. lui-même),
 // les autres reprennent la clé telle quelle.
@@ -2329,7 +2347,7 @@ function renderIndicesList(companies) {
   const cardsHtml = indexKeys.map(key => `
     <div class="index-card">
       <button class="index-card-header" id="indexToggle-${key}" type="button" aria-expanded="false">
-        <span class="index-card-name">${indexNames[key] || key}</span>
+        <span class="index-card-name">${indexNames[key] || key}${INDEX_COUNTRY_BY_KEY[key] ? ` (${INDEX_COUNTRY_BY_KEY[key]})` : ''}</span>
         <span class="index-card-count">${groups[key].length} entreprise${groups[key].length > 1 ? 's' : ''}</span>
         <span class="chevron">▾</span>
       </button>

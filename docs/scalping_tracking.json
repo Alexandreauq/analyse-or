@@ -113,6 +113,54 @@
       "close_reason": "sl_hit",
       "return_usd": -8.1918799999994,
       "return_pct": -0.1906567482712094
+    },
+    {
+      "id": "scalp-2026-09-14T13:36:00.662Z",
+      "direction": "achat",
+      "status": "closed",
+      "entry_time": "2026-09-14T13:36:00.662Z",
+      "entry_price": 4277.10465,
+      "stop_loss": 4252.29055,
+      "take_profit": 4293.05473,
+      "trend_at_entry": "haussier",
+      "pattern_at_entry": "Triangle ascendant",
+      "close_time": "2026-09-14T15:36:29.002Z",
+      "close_price": 4290.8662,
+      "close_reason": "max_duration",
+      "return_usd": 13.76155000000017,
+      "return_pct": 0.32174920012771185
+    },
+    {
+      "id": "scalp-2026-09-14T16:16:39.184Z",
+      "direction": "achat",
+      "status": "closed",
+      "entry_time": "2026-09-14T16:16:39.184Z",
+      "entry_price": 4295.27863,
+      "stop_loss": 4285.00943,
+      "take_profit": 4303.93617,
+      "trend_at_entry": "haussier",
+      "pattern_at_entry": "Triangle symétrique",
+      "close_time": "2026-09-14T16:26:42.129Z",
+      "close_price": 4303.93617,
+      "close_reason": "tp_hit",
+      "return_usd": 8.657540000000154,
+      "return_pct": 0.20155945040520348
+    },
+    {
+      "id": "scalp-2026-09-14T17:57:19.864Z",
+      "direction": "achat",
+      "status": "closed",
+      "entry_time": "2026-09-14T17:57:19.864Z",
+      "entry_price": 4311.93379,
+      "stop_loss": 4306.8021,
+      "take_profit": 4315.361239999999,
+      "trend_at_entry": "baissier",
+      "pattern_at_entry": "Double Bottom",
+      "close_time": "2026-09-14T18:52:33.277Z",
+      "close_price": 4306.8021,
+      "close_reason": "sl_hit",
+      "return_usd": -5.131690000000162,
+      "return_pct": -0.11901133574688219
     }
   ]
 }

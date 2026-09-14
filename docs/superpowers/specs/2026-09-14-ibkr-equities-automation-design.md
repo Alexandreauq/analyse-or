@@ -2,22 +2,22 @@
 
 ## Statut
 
-**DESIGN EN ATTENTE DE VALIDATION — aucun code n'a été écrit, rien n'est
-approuvé pour implémentation.**
+**DESIGN VALIDÉ (2026-09-14) — aucun code n'a encore été écrit.** Tous
+les points bloquants de la section 9 ont été arbitrés avec l'utilisateur.
+Reste une vérification manuelle non bloquante (coûts de données de
+marché, 9.2) à faire avant le lancement en réel, pas avant le plan
+d'implémentation.
 
 Ce document est le compte rendu structuré d'une session de brainstorming
 menée avec l'utilisateur : tous les paramètres de la section « Paramètres
 de trading » et de la section « Périmètre v1 » ont été décidés
-explicitement par lui et ne sont pas rediscutés ici. Tout ce qui est
-marqué **[Proposé — non validé]** est au contraire une proposition
-technique de l'auteur du document, jamais discutée avec l'utilisateur :
-ces points doivent être arbitrés lors de la revue de cette spec, avant
-qu'un plan d'implémentation ne soit écrit.
-
-La section 9 (« Points non résolus ») liste les questions qui bloquent
-ou conditionnent l'implémentation. Certaines exigent une vérification
-factuelle côté IBKR (compte réel ou support) que ce document
-n'invente délibérément pas.
+explicitement par lui. Les points marqués **[Proposé — non validé]**
+ailleurs dans le document sont des propositions techniques de détail
+d'implémentation (structure de fichiers, résolution des contrats,
+stratégie de test...), jamais individuellement discutées avec
+l'utilisateur — elles se règlent normalement lors de l'écriture du plan
+d'implémentation, à la différence des 9 points structurants de la
+section 9, tous explicitement arbitrés.
 
 ## 1. Contexte et objectif
 
@@ -124,9 +124,13 @@ change est un coût accepté. Pas de couverture.
 Exemple : signal sur une action cotée en CHF → 500 € convertis au taux
 EUR/CHF du moment → budget en CHF → arrondi (voir ci-dessous).
 
-*(Le mécanisme exact de cette conversion dans un compte **cash** est un
-point non résolu — voir section 9.1. C'est le point ouvert le plus
-structurant de cette spec.)*
+**Mécanisme confirmé (vérifié le 2026-09-14, voir 9.1)** : IBKR route les
+conversions sous 25 000 $ via **IDEAL** (distinct d'IDEALPRO, réservé aux
+montants au-delà de ce seuil) — conversion automatique à un spread de
+0,03 %, ou FX manuel avec une commission minimale de l'ordre de 2 $. Les
+conversions de ~500 € sont donc normalement traitées, à un coût marginal
+(quelques centimes à ~2 $ par conversion), pas refusées. Le périmètre à
+8 indices / 4 devises (section 2) est confirmé sur cette base.
 
 ### 3.3 Arrondi aux actions entières
 
@@ -307,21 +311,18 @@ Deux principes de découpage repris de `gold_bot`, à conserver :
    l'appelant l'a déjà fait (défense en profondeur — c'est exactement ce
    que fait `gold_bot/loop.py:execute_steps`).
 
-### 4.4 Le Gateway IBKR **[Proposé — non validé]**
+### 4.4 Le Gateway IBKR
 
-Proposition : **IBKR Client Portal Web API Gateway** (le paquet Java
-fourni par IBKR), lancé en service systemd `ibkr-gateway.service`, à
+**Décidé (2026-09-14) : IBKR Client Portal Web API Gateway** (le paquet
+Java fourni par IBKR), lancé en service systemd `ibkr-gateway.service`, à
 l'écoute sur **127.0.0.1 uniquement** (jamais exposé sur Internet, pas
 d'ouverture de port dans ufw). Le batch quotidien l'interroge en HTTP
 local.
 
-Pourquoi le Client Portal Gateway plutôt que TWS/IB Gateway + l'API
-socket (`ib_insync`) : pas d'interface graphique à maintenir, footprint
-plus léger sur un petit VPS, et API HTTP — donc testable avec exactement
-les mêmes conventions `monkeypatch`/faux-objet-réponse que
-`tests/gold_bot/test_broker.py`. **Le choix reste à arbitrer** : TWS +
-`ib_insync` est une alternative défendable (API plus riche, meilleure
-gestion des ordres), au prix d'un composant plus lourd.
+Choisi plutôt que TWS/IB Gateway + l'API socket (`ib_insync`) : pas
+d'interface graphique à maintenir, footprint plus léger sur un petit VPS,
+et API HTTP — donc testable avec exactement les mêmes conventions
+`monkeypatch`/faux-objet-réponse que `tests/gold_bot/test_broker.py`.
 
 **Ré-authentification** : c'est la vraie contrainte opérationnelle. La
 session du Gateway expire (historiquement ~24 h) et sa réactivation peut
@@ -352,7 +353,7 @@ n'est passé ce jour-là** — ni entrée ni sortie. Le bot journalise
 Trader sur les scores d'hier reviendrait à ouvrir des positions sur des
 signaux déjà consommés par le paper-trading.
 
-**Horaire du batch : 14:45 UTC** **[Proposé — non validé]**. Ce n'est
+**Horaire du batch : 14:45 UTC** (décidé, voir 9.6). Ce n'est
 pas un détail cosmétique, c'est la seule fenêtre où les marchés des 8
 indices sont ouverts **simultanément toute l'année** :
 
@@ -454,18 +455,16 @@ Deux pièges à traiter explicitement dans l'implémentation :
    `conid` résolus sont mis en cache (`conid_cache.json`) pour éviter de
    refaire la recherche chaque jour.
 
-### 4.8 Type d'ordre **[Proposé — non validé]**
+### 4.8 Type d'ordre
 
-Proposition : **ordre au marché (MKT)**, passé dans la fenêtre
+**Décidé (2026-09-14) : ordre au marché (MKT)**, passé dans la fenêtre
 14:30–15:30 UTC où toutes les places concernées sont ouvertes et
 liquides, sur des constituants d'indices majeurs. C'est le choix le plus
 simple et celui dont le comportement se rapproche le plus du
-paper-trading (qui suppose une exécution immédiate au prix observé).
-
-Alternative à arbitrer : un ordre limite légèrement au-dessus du dernier
-prix (protection contre un écart anormal, au risque d'une non-exécution
-— et une non-exécution silencieuse serait pire qu'un léger slippage, car
-elle ferait diverger le réel du paper sans trace évidente).
+paper-trading (qui suppose une exécution immédiate au prix observé) —
+préféré à un ordre limite pour éviter le risque de non-exécution
+silencieuse, qui ferait diverger le réel du paper sans trace évidente,
+pire qu'un léger slippage.
 
 ### 4.9 Journalisation
 
@@ -521,11 +520,13 @@ Variables attendues **[Proposé — non validé]** :
 ```
 IBKR_GATEWAY_URL=https://127.0.0.1:5000   # Gateway local, jamais exposé
 IBKR_ACCOUNT_ID=...                       # compte sur lequel trader
-IBKR_BOT_API_TOKEN=...                    # jeton de l'interrupteur d'urgence (si l'API est retenue)
 SMTP_USER=...
 SMTP_PASSWORD=...
 MAIL_TO=...
 ```
+
+(Pas de `IBKR_BOT_API_TOKEN` : l'interrupteur d'urgence est un fichier
+d'état modifié en SSH, pas une route API — voir 5.2.)
 
 Le **login et le mot de passe IBKR ne figurent pas dans le `.env`** : ils
 sont saisis à la main dans l'interface d'authentification du Gateway
@@ -537,32 +538,27 @@ forme.
 Le jeton Flex existant (`portfolio_sync.py`) reste totalement séparé et
 conserve son rôle de lecture seule.
 
-### 5.2 Interrupteur d'urgence **[Proposé — non validé]**
+### 5.2 Interrupteur d'urgence
 
-Deux options, à arbitrer :
-
-**Option A (recommandée pour la v1) — fichier d'état, pas d'API.**
+**Décidé (2026-09-14) : option A — fichier d'état, pas d'API HTTPS.**
 L'interrupteur est `ibkr_bot/state.json` (`kill_switch`, `dry_run`),
 modifié en SSH, exactement comme la bascule `dry_run` du bot Or décrite
-en `deploy/README.md` §9. Justification : un batch quotidien n'a qu'**une
-seule fenêtre d'action par jour**, connue à l'avance. Il n'y a pas
-d'urgence à la minute comme pour un bot qui trade en continu — on a
-toujours plusieurs heures pour couper avant le prochain batch. Ajouter un
-service HTTPS supplémentaire (port, certificat, authentification, surface
-d'attaque) pour un besoin que la cadence quotidienne rend non urgent
-serait de la complexité non justifiée.
+en `deploy/README.md` §9.
 
-**Option B — miroir de `gold_bot/api.py`.** Un second service FastAPI,
-sur un port distinct (8443 est déjà pris par `gold-bot-api`), avec un
-**jeton séparé** (`IBKR_BOT_API_TOKEN`, jamais le même que
-`BOT_API_TOKEN` : deux bots, deux périmètres, deux secrets). Avantage :
-coupure depuis le site, sans SSH. À retenir si l'utilisateur veut
-piloter ce bot depuis son téléphone comme le bot Or.
+Justification, retenue explicitement après l'incident du 2026-09-14 sur
+`gold_bot` (jeton `BOT_API_TOKEN` perdu, récupération nécessitant un
+accès root Hetzner) : un batch quotidien n'a qu'**une seule fenêtre
+d'action par jour**, connue à l'avance — pas d'urgence à la minute comme
+pour un bot qui trade en continu, toujours plusieurs heures pour couper
+avant le prochain batch. Ajouter un second service HTTPS (port,
+certificat, jeton, surface d'attaque) pour un besoin que la cadence
+quotidienne rend non urgent aurait été de la complexité non justifiée, et
+un secret de plus à perdre. Pas de service FastAPI dédié pour ce bot.
 
-Dans les deux cas, les propriétés de `gold_bot` sont conservées :
-l'interrupteur ne peut que **bloquer** des actions futures, jamais en
-déclencher ; il n'existe aucune route ni aucun fichier capable de forcer
-un achat ; et `dry_run` n'est jamais modifiable autrement qu'en SSH.
+Les propriétés de `gold_bot` sont conservées : l'interrupteur ne peut que
+**bloquer** des actions futures, jamais en déclencher ; il n'existe
+aucune route ni aucun fichier capable de forcer un achat ; et `dry_run`
+n'est jamais modifiable autrement qu'en SSH.
 
 ### 5.3 Mode simulation par défaut
 
@@ -764,102 +760,82 @@ principale servitude opérationnelle de ce chantier, et elle doit être
 acceptée en connaissance de cause avant le lancement — pas découverte
 après.
 
-## 9. Points explicitement non résolus
+## 9. Points arbitrés le 2026-09-14
 
-À trancher **avant** l'écriture du plan d'implémentation.
+Tous les points bloquants ont été tranchés avec l'utilisateur (en
+continuité de la session de brainstorming initiale). Un seul reste une
+vérification manuelle à faire avant lancement, sans bloquer l'écriture du
+plan d'implémentation.
 
-### 9.1 Change dans un compte cash — point bloquant potentiel
+### 9.1 Change dans un compte cash — résolu, non bloquant
 
-Dans un compte **cash** (sans marge), on ne peut en principe pas laisser
-un solde négatif dans une devise : acheter une action américaine en ne
-détenant que des euros reviendrait à emprunter des dollars, ce qui relève
-du compte sur marge. Il faudrait donc, avant chaque achat hors zone euro,
-**convertir explicitement** les euros en devise locale.
+Vérifié le 2026-09-14 (voir 3.2) : IBKR route les conversions sous
+25 000 $ via **IDEAL**, pas IDEALPRO — spread de 0,03 % en automatique,
+ou quelques dollars en manuel. Les conversions de ~500 € sont traitées
+normalement. Le périmètre à 8 indices / 4 devises (section 2) est
+confirmé, aucun repli sur un périmètre EUR-only.
 
-Or les conversions de change chez IBKR passent par IDEALPRO, dont la
-taille minimale d'ordre est usuellement citée autour de **25 000 USD
-d'équivalent**, en-dessous de laquelle le traitement diffère (routage ou
-tarification moins favorable). Convertir ~500 € à la fois pourrait donc
-être inefficace, voire refusé.
+### 9.2 Coûts de données de marché — non bloquant, à vérifier avant lancement
 
-**Ce point n'a pas été vérifié** et conditionne directement le mécanisme
-de la section 3.2. Pistes à évaluer avec l'utilisateur, une fois les
-règles IBKR vérifiées :
+Reste un point ouvert, mais **n'empêche pas l'écriture du plan
+d'implémentation** : les montants exacts par place et le seuil de
+dispense doivent être relevés manuellement sur le compte IBKR (ou auprès
+du support) avant le passage en réel, pas avant le plan. Voir section 6
+pour la piste d'atténuation (décisions sur prix yfinance, IBKR requis
+seulement pour l'exécution) et sa question associée (ordre au marché
+possible sans abonnement data ?).
 
-- accepter le traitement des petits montants de change tel qu'il est
-  (si IBKR l'autorise, et à quel coût) ;
-- maintenir des **soldes de travail par devise** (convertir une tranche
-  plus large une fois, puis puiser dedans signal par signal) — plus
-  efficace, mais introduit une exposition de change permanente que la
-  règle « pas de hedging » n'avait pas anticipée ;
-- restreindre la v1 aux indices en EUR (CAC40, DAX, IBEX35, FTSEMIB) et
-  ajouter USD/GBP/CHF dans un second temps — contredit le périmètre acté
-  en section 2, donc à ne retenir que si les deux premières pistes
-  échouent.
+### 9.3 Choix du Gateway — résolu
 
-**À vérifier factuellement avant le plan d'implémentation.**
+**Client Portal Web API Gateway.** Voir 4.4.
 
-### 9.2 Coûts de données de marché
+### 9.4 Interrupteur d'urgence — résolu
 
-Montants et seuils de dispense par place, à relever manuellement sur le
-compte IBKR ou auprès du support (voir section 6). Question associée : un
-ordre au marché peut-il être passé sans abonnement de données sur la
-place concernée ?
+**Option A : fichier d'état + SSH, pas de service HTTPS dédié.** Décidé
+explicitement à la lumière de l'incident `BOT_API_TOKEN` du 2026-09-14
+sur `gold_bot` — un jeton de moins à perdre, une cadence quotidienne qui
+ne justifie pas la réactivité d'une API. Voir 5.2.
 
-### 9.3 Choix du Gateway
+### 9.5 Périmètre d'action sur le compte — résolu
 
-Client Portal Web API Gateway (proposé) ou TWS/IB Gateway + `ib_insync` ?
-Arbitrage entre légèreté et testabilité HTTP d'un côté, richesse
-fonctionnelle de l'autre (voir 4.4).
+Le bot **n'agit que sur les positions qu'il a lui-même ouvertes** (le
+comportement de sécurité, section 5.4, est indépendant de la réponse).
+Le tableau de bord (hors périmètre v1, voir section 2) affichera en
+lecture seule l'ensemble des positions du compte, même celles que le bot
+n'a pas ouvertes, sur le même principe que le tableau de bord MT5 de
+`gold_bot`. Le plafond de 10 (3.4) s'entend comme 10 positions **du
+bot**, pas 10 positions au total sur le compte.
 
-### 9.4 Interrupteur d'urgence
+### 9.6 Horaire du batch — résolu
 
-Option A (fichier d'état + SSH, proposée) ou option B (service HTTPS
-séparé avec jeton dédié) — voir 5.2.
+**14:45 UTC**, confirmé. Conséquence assumée : le prix d'exécution réel
+diffère structurellement du prix de décision du paper-trading (cours de
+clôture de la veille) — voir 4.5.
 
-### 9.5 Périmètre d'action sur le compte
+### 9.7 Type d'ordre — résolu
 
-La v1 propose que le bot **n'agisse que sur les positions qu'il a
-lui-même ouvertes**, et ignore toute autre position du compte. À
-confirmer : l'utilisateur utilise-t-il ce compte IBKR pour d'autres
-positions, et le bot doit-il pouvoir les voir sans jamais y toucher ?
-Point connexe : le plafond de 10 positions doit-il s'entendre comme 10
-positions **du bot**, ou 10 positions **au total** sur le compte ?
+**Ordre au marché (MKT).** Voir 4.8.
 
-### 9.6 Horaire du batch
+### 9.8 Comportement en cas de vente impossible — résolu
 
-14:45 UTC est proposé comme seule fenêtre commune à toutes les places
-toute l'année (voir 4.5). À valider — ainsi que la conséquence assumée :
-le prix d'exécution réel diffère structurellement du prix de décision du
-paper-trading (cours de clôture de la veille).
+**Décalage au batch suivant, accepté explicitement**, en connaissance de
+cause qu'un stop-loss à -20 % pourrait rester ouvert un jour de plus en
+cas de panne technique — propriété déjà partagée avec le paper-trading
+(évalué une fois par jour lui aussi). Pas de mécanisme d'urgence pour
+forcer une vente.
 
-### 9.7 Type d'ordre
+### 9.9 Financement et suivi du solde — résolu
 
-Marché (proposé) ou limite avec marge de protection — voir 4.8.
-
-### 9.8 Comportement en cas de vente impossible
-
-Si une condition de sortie est remplie mais que la vente échoue
-(Gateway indisponible, ordre rejeté, marché fermé), la v1 propose de
-**décaler la sortie au batch suivant**. Il n'y a pas de mécanisme
-d'urgence pour forcer une vente. À confirmer explicitement : c'est
-acceptable pour un stop-loss à -20 % évalué une fois par jour (le
-paper-trading a exactement la même propriété), mais il faut que ce soit
-un choix conscient, pas un défaut découvert après coup.
-
-### 9.9 Financement et suivi du solde
-
-Le bot ne vérifie pas, dans la conception actuelle, que le compte
-dispose du cash nécessaire avant de classer les signaux : il découvrira
-un manque de liquidités au moment du rejet de l'ordre. Faut-il ajouter
-un garde-fou explicite (lire le solde, et ne retenir que les signaux
-finançables) ? **Proposition : oui** — c'est peu coûteux et cela évite une
-série de rejets bruyants en fin de classement. À valider.
+**Garde-fou de solde ajouté** : le bot lit le solde disponible par devise
+avant de classer les signaux, et ne retient que ceux finançables — évite
+une série de rejets bruyants en fin de classement.
 
 ## 10. Prochaine étape
 
-Revue de ce document par l'utilisateur, arbitrage des points de la
-section 9 (en particulier **9.1**, qui peut modifier la section 3.2 et
-donc le périmètre), puis rédaction du plan d'implémentation.
+Tous les points de la section 9 sont arbitrés. **Reste, avant le
+lancement en réel (pas avant le plan d'implémentation)** : la
+vérification manuelle des coûts de données de marché (9.2/section 6).
 
-**Aucun code ne doit être écrit avant cet arbitrage.**
+**Prochaine étape immédiate : invoquer `superpowers:writing-plans` pour
+transformer cette spec en plan d'implémentation détaillé, tâche par
+tâche.** Aucun code n'a encore été écrit.

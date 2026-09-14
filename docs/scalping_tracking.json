@@ -177,6 +177,22 @@
       "close_reason": "sl_hit",
       "return_usd": -6.851990000000114,
       "return_pct": -0.15934875658835196
+    },
+    {
+      "id": "scalp-2026-09-14T23:19:00.118Z",
+      "direction": "vente",
+      "status": "open",
+      "entry_time": "2026-09-14T23:19:00.118Z",
+      "entry_price": 4291.0714,
+      "stop_loss": 4299.06328,
+      "take_profit": 4290.2075,
+      "trend_at_entry": "baissier",
+      "pattern_at_entry": "Triangle descendant",
+      "close_time": null,
+      "close_price": null,
+      "close_reason": null,
+      "return_usd": null,
+      "return_pct": null
     }
   ]
 }

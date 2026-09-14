@@ -1052,22 +1052,34 @@ function loadScalpChart() {
   document.body.appendChild(script);
 }
 
-const TWELVE_DATA_API_KEY = '8e2de649868b408ba09c21926c414556';
+const TWELVE_DATA_API_KEY = '2983c5231e5c459fafb4376e4ccf183f';
 
 let scalpingJsLoaded = false;
 let scalpingPollTimer = null;
 let scalpRefreshInFlight = false;
 
 function loadScalpingModule() {
-  // Charge docs/scalping.js à la demande (premier clic sur l'onglet
-  // Scalping), même logique paresseuse que loadScalpChart/loadIndices.
+  // Charge docs/chart_patterns.js puis docs/scalping.js à la demande
+  // (premier clic sur l'onglet Scalping), même logique paresseuse que
+  // loadScalpChart/loadIndices. chart_patterns.js en premier (ordre de
+  // dépendance conceptuelle — computeSignal, dans scalping.js, appelle
+  // detectChartPatterns) ; l'ordre d'exécution n'a pas d'importance
+  // stricte ici (aucune des deux fonctions n'est appelée avant que les
+  // deux scripts aient fini de charger), mais garder cet ordre de
+  // lecture évite toute confusion.
   return new Promise((resolve, reject) => {
     if (scalpingJsLoaded) { resolve(); return; }
-    const script = document.createElement('script');
-    script.src = 'scalping.js';
-    script.onload = () => { scalpingJsLoaded = true; resolve(); };
-    script.onerror = () => reject(new Error('scalping.js n\'a pas pu être chargé'));
-    document.body.appendChild(script);
+    const chartPatternsScript = document.createElement('script');
+    chartPatternsScript.src = 'chart_patterns.js';
+    chartPatternsScript.onload = () => {
+      const scalpingScript = document.createElement('script');
+      scalpingScript.src = 'scalping.js';
+      scalpingScript.onload = () => { scalpingJsLoaded = true; resolve(); };
+      scalpingScript.onerror = () => reject(new Error('scalping.js n\'a pas pu être chargé'));
+      document.body.appendChild(scalpingScript);
+    };
+    chartPatternsScript.onerror = () => reject(new Error('chart_patterns.js n\'a pas pu être chargé'));
+    document.body.appendChild(chartPatternsScript);
   });
 }
 
@@ -1164,12 +1176,17 @@ function renderPortfolioActionsTab(companiesByTicker, currencyByIndex) {
   renderPager('pfActions', portfolioActionsSections, portfolioActionsSectionIndex);
 }
 
-// Onglet "Or" : état réel (positions MT5 synchronisées + statut/contrôle du
-// Bot Or) — 2 sections en carrousel, indépendant du suivi manuel actions.
+// Onglet "Or" : état réel (positions MT5 synchronisées + tableau de bord
+// complet du Bot Or — solde, positions ouvertes, graphique, décisions,
+// interrupteur d'urgence) — 2 sections en carrousel, indépendant du suivi
+// manuel actions. Le tableau de bord Bot vient de main (écran dédié #bot
+// là-bas) ; on garde notre carrousel Portefeuille plutôt qu'un écran séparé,
+// donc son contenu est rehébergé tel quel dans la section "Bot Or" ci-dessous
+// (voir botDashboardSectionHtml/wireBotDashboardSection).
 function renderPortfolioOrTab() {
   portfolioOrSections = [
     { title: 'Positions réelles (MT5)', html: realPortfolioHtml(), wire: null },
-    { title: 'Bot Or', html: botStatusHtml(), wire: wireBotControls },
+    { title: 'Bot Or', html: botDashboardSectionHtml(), wire: wireBotDashboardSection },
   ];
   renderPager('pfOr', portfolioOrSections, portfolioOrSectionIndex);
 }
@@ -1319,9 +1336,27 @@ function getBotToken() {
   return token;
 }
 
-function botStatusHtml() {
+// Coquille de la section "Bot Or" du carrousel Portefeuille : statut public
+// (kill-switch, visible sans jeton) + tableau de bord complet (protégé par
+// jeton) — voir wireBotDashboardSection ci-dessous, qui réutilise telles
+// quelles les fonctions de rendu du tableau de bord (venues de l'écran #bot
+// dédié sur main, rehébergées ici plutôt que dans un écran séparé).
+function botDashboardSectionHtml() {
+  return `
+    <div id="botStatusBlock"></div>
+    <main id="botContent">
+      <div class="skeleton">
+        <div class="skeleton-line"></div>
+        <div class="skeleton-line"></div>
+        <div class="skeleton-line"></div>
+        <div class="skeleton-line"></div>
+      </div>
+    </main>`;
+}
+
+function botKillSwitchHtml() {
   if (!botStatusData) {
-    return '<div class="empty">Statut du bot indisponible.</div>';
+    return `<div class="empty">Statut du bot indisponible.</div>`;
   }
   const label = botStatusData.kill_switch ? 'Coupé' : (botStatusData.dry_run ? 'Simulation' : 'Actif');
   const color = botStatusData.kill_switch ? 'var(--rust)' : 'var(--gold)';
@@ -1338,7 +1373,7 @@ function botStatusHtml() {
     </div>`;
 }
 
-function wireBotControls() {
+function wireBotKillSwitch() {
   const btn = document.getElementById('botKillBtn');
   if (!btn || !botStatusData) return;
   btn.addEventListener('click', async () => {
@@ -1355,11 +1390,189 @@ function wireBotControls() {
         throw new Error('échec de la requête');
       }
       await loadBotStatus();
-      renderPortfolioScreen();
+      renderBotStatusBlock();
     } catch (e) {
       alert('Action impossible : ' + e.message);
     }
   });
+}
+
+function renderBotStatusBlock() {
+  const el = document.getElementById('botStatusBlock');
+  if (!el) return;
+  el.innerHTML = botKillSwitchHtml();
+  wireBotKillSwitch();
+}
+
+let botTvChartLoaded = false;
+
+function loadBotTvChart() {
+  // Widget TradingView en lecture seule (cours réel, plus lisible que
+  // notre graphique maison) — mêmes conventions que loadScalpChart :
+  // chargé une seule fois, à la demande, jamais avant que l'onglet ne
+  // soit visible. Ne peut pas superposer les positions/décisions du
+  // bot (iframe cross-origin, hors de portée de notre JS) — celles-ci
+  // sont donc listées à part, sous le graphique.
+  if (botTvChartLoaded) return;
+  botTvChartLoaded = true;
+  const script = document.createElement('script');
+  script.src = 'https://s3.tradingview.com/tv.js';
+  script.onload = () => {
+    new TradingView.widget({
+      autosize: true,
+      symbol: 'OANDA:XAUUSD',
+      interval: '1',
+      timezone: 'Etc/UTC',
+      theme: isLightTheme() ? 'light' : 'dark',
+      style: '1',
+      locale: 'fr',
+      toolbar_bg: isLightTheme() ? '#eceee3' : '#383b32',
+      enable_publishing: false,
+      allow_symbol_change: false,
+      withdateranges: true,
+      container_id: 'tv-bot-chart',
+    });
+  };
+  document.body.appendChild(script);
+}
+
+function botChartHtml() {
+  return `<div class="scalp-chart-box" id="botChartBox"><div id="tv-bot-chart" style="height:100%;"></div></div>`;
+}
+
+function botDecisionsHtml(data) {
+  const decisions = data.recent_decisions || [];
+  if (decisions.length === 0) {
+    return `<div class="empty">Aucune décision récente.</div>`;
+  }
+  return decisions.slice().reverse().map(d => {
+    const label = d.direction === 'achat' ? 'Achat' : d.direction === 'vente' ? 'Vente' : '—';
+    const color = d.direction === 'achat' ? 'var(--gold)' : d.direction === 'vente' ? 'var(--rust)' : 'var(--muted)';
+    const detail = [
+      d.entry != null ? 'Entrée ' + d.entry.toFixed(2) : null,
+      d.stop_loss != null ? 'SL ' + d.stop_loss.toFixed(2) : null,
+      d.take_profit != null ? 'TP ' + d.take_profit.toFixed(2) : null,
+    ].filter(Boolean).join(' · ');
+    const when = d.timestamp ? new Date(d.timestamp).toLocaleString('fr-FR', {
+      day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit', timeZone: 'UTC',
+    }) + ' UTC' : '';
+    return `
+    <div class="portfolio-position-row">
+      <div class="portfolio-position-main">
+        <span class="company-name" style="color:${color}">${label}</span>
+        <span class="hero-sub">${escHtml(d.symbol || '')} · ${detail}</span>
+      </div>
+      <div class="portfolio-position-pnl">
+        <span class="hero-sub">${when}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function formatFetchedAgo(iso) {
+  if (!iso) return null;
+  const ms = Date.now() - new Date(iso).getTime();
+  if (!Number.isFinite(ms) || ms < 0) return null;
+  const min = Math.round(ms / 60000);
+  return min < 1 ? 'à jour' : `il y a ${min} min`;
+}
+
+function botBalanceHtml(data) {
+  if (data.balance == null) {
+    return `<div class="empty">Solde indisponible pour l'instant.</div>`;
+  }
+  const freshness = formatFetchedAgo(data.balance_fetched_at);
+  return `
+    <div class="portfolio-position-row">
+      <div class="portfolio-position-main">
+        <span class="company-name">${formatPrice(data.balance)}</span>
+        <span class="hero-sub">Solde disponible</span>
+        ${freshness ? `<span class="hero-sub">${freshness}</span>` : ''}
+      </div>
+    </div>`;
+}
+
+function botPositionsHtml(data) {
+  if (data.positions_fetched_at == null) {
+    return `<div class="empty">Positions indisponibles pour l'instant.</div>`;
+  }
+  const positions = data.positions || [];
+  if (positions.length === 0) {
+    return `<div class="empty">Aucune position ouverte.</div>`;
+  }
+  return positions.map(p => {
+    const label = p.direction === 'achat' ? 'Achat' : p.direction === 'vente' ? 'Vente' : '—';
+    const color = p.direction === 'achat' ? 'var(--gold)' : p.direction === 'vente' ? 'var(--rust)' : 'var(--muted)';
+    const profitColor = (p.profit ?? 0) >= 0 ? 'var(--gold)' : 'var(--rust)';
+    const profitSign = p.profit != null && p.profit >= 0 ? '+' : '';
+    return `
+    <div class="portfolio-position-row">
+      <div class="portfolio-position-main">
+        <span class="company-name">${escHtml(p.symbol)}</span>
+        <span class="hero-sub" style="color:${color}">${label} · ${p.volume} lot(s)</span>
+      </div>
+      <div class="portfolio-position-pnl">
+        <span class="price-value">${formatPriceUsd(p.current_price)}</span>
+        <span style="color:${profitColor}">${profitSign}${formatPrice(p.profit)}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderBotDashboard(data) {
+  document.getElementById('botContent').innerHTML = `
+    <h2>Solde</h2>
+    ${botBalanceHtml(data)}
+    <h2>Positions ouvertes</h2>
+    ${botPositionsHtml(data)}
+    <h2>Cours</h2>
+    ${botChartHtml()}
+    <h2>Décisions récentes</h2>
+    ${botDecisionsHtml(data)}
+    <button class="toggle-btn" type="button" id="botRefreshBtn">Actualiser</button>
+  `;
+  wireBotDashboardRefresh();
+  loadBotTvChart();
+}
+
+async function fetchBotDashboard() {
+  const content = document.getElementById('botContent');
+  if (!content) return;
+  const token = getBotToken();
+  if (!token) {
+    content.innerHTML = `<div class="empty">Jeton requis pour afficher le tableau de bord du bot.</div>`;
+    return;
+  }
+  try {
+    const res = await fetch(`${BOT_API_BASE_URL}/dashboard`, { headers: { 'X-Bot-Token': token } });
+    if (!res.ok) {
+      if (res.status === 401) localStorage.removeItem('goldBotToken');
+      throw new Error('échec de la requête (' + res.status + ')');
+    }
+    const data = await res.json();
+    // À l'écran dédié sur main, #botContent était toujours en DOM (juste
+    // masqué) ; ici, la section peut avoir été quittée (carrousel) pendant
+    // le fetch — #botContent disparaît alors avec le reste de la section.
+    if (!document.getElementById('botContent')) return;
+    renderBotDashboard(data);
+  } catch (e) {
+    const el = document.getElementById('botContent');
+    if (el) el.innerHTML = `<div class="empty">Tableau de bord indisponible pour l'instant.<br>${e.message}</div>`;
+  }
+}
+
+function wireBotDashboardRefresh() {
+  const btn = document.getElementById('botRefreshBtn');
+  if (!btn) return;
+  btn.addEventListener('click', () => fetchBotDashboard());
+}
+
+function wireBotDashboardSection() {
+  // Indépendant du tableau de bord (protégé par jeton) : le statut et
+  // l'interrupteur d'urgence viennent de /status, public, pour rester
+  // visibles même avant que l'utilisateur ait fourni son jeton.
+  loadBotStatus().then(renderBotStatusBlock);
+  fetchBotDashboard();
 }
 
 function wirePortfolioForm() {
@@ -1560,8 +1773,19 @@ function renderScalpTracking(data) {
 // sont toutes cotées au NYSE — les 9 composants du Dow cotés Nasdaq
 // (Apple, Microsoft...) sont déjà suivis côté NASDAQ, pas dupliqués ici,
 // donc un seul préfixe suffit comme pour les 3 autres indices.
-const TV_EXCHANGE_PREFIX_BY_INDEX = { CAC40: 'EURONEXT:', DAX: 'XETR:', NASDAQ: 'NASDAQ:', DOW: 'NYSE:' };
-const TV_TICKER_SUFFIX_BY_INDEX = { CAC40: '.PA', DAX: '.DE', NASDAQ: '', DOW: '' };
+const TV_EXCHANGE_PREFIX_BY_INDEX = { CAC40: 'EURONEXT:', DAX: 'XETR:', NASDAQ: 'NASDAQ:', DOW: 'NYSE:', FTSE: 'LSE:', SMI: 'SIX:', IBEX35: 'BME:', FTSEMIB: 'MIL:', NIKKEI225: 'TSE:', HANGSENG: 'HKEX:' };
+const TV_TICKER_SUFFIX_BY_INDEX = { CAC40: '.PA', DAX: '.DE', NASDAQ: '', DOW: '', FTSE: '.L', SMI: '.SW', IBEX35: '.MC', FTSEMIB: '.MI', NIKKEI225: '.T', HANGSENG: '.HK' };
+// LSE : certains codes EPIC "courts" portent un point terminal officiel
+// pour éviter toute collision (ex. Aviva = "AV.", pas "AV"), que Yahoo
+// absorbe dans son propre suffixe ".L" (ticker Yahoo "AV.L") — une fois ce
+// suffixe retiré normalement, TradingView reçoit "AV" au lieu du vrai code
+// et renvoie une 404 (vérifié en direct contre tradingview.com pour les 9
+// entrées ci-dessous). BT Group est un cas à part : le point EPIC est au
+// milieu ("BT.A"), pas en fin. Clé = ticker Yahoo complet.
+const TV_TICKER_OVERRIDE_BY_YAHOO_TICKER = {
+  'AV.L': 'AV.', 'BA.L': 'BA.', 'BP.L': 'BP.', 'JD.L': 'JD.', 'NG.L': 'NG.',
+  'RR.L': 'RR.', 'SN.L': 'SN.', 'UU.L': 'UU.', 'BT-A.L': 'BT.A',
+};
 
 function loadSideQuoteWidget(ticker, indexKey) {
   // Widget TradingView compact (cours + mini-graphique), injecté après coup
@@ -1571,7 +1795,14 @@ function loadSideQuoteWidget(ticker, indexKey) {
   // widget dupliqué ni de nettoyage à faire d'un rendu à l'autre.
   const prefix = TV_EXCHANGE_PREFIX_BY_INDEX[indexKey];
   const suffix = TV_TICKER_SUFFIX_BY_INDEX[indexKey] || '';
-  const bareTicker = suffix && ticker.endsWith(suffix) ? ticker.slice(0, -suffix.length) : ticker;
+  let bareTicker = suffix && ticker.endsWith(suffix) ? ticker.slice(0, -suffix.length) : ticker;
+  // Hang Seng : yfinance/Yahoo zero-paddent le code HKEX sur 4 chiffres
+  // ("0700"), mais TradingView utilise le code brut sans padding ("700") —
+  // "HKEX:0700" renvoie une 404, vérifié directement contre tradingview.com.
+  if (indexKey === 'HANGSENG') bareTicker = bareTicker.replace(/^0+(?=\d)/, '');
+  if (Object.prototype.hasOwnProperty.call(TV_TICKER_OVERRIDE_BY_YAHOO_TICKER, ticker)) {
+    bareTicker = TV_TICKER_OVERRIDE_BY_YAHOO_TICKER[ticker];
+  }
   const tvSymbol = prefix ? prefix + bareTicker : null;
   const container = document.getElementById('tv-side-widget');
   if (!tvSymbol || !container) return;
@@ -1614,15 +1845,31 @@ function loadSideQuoteWidget(ticker, indexKey) {
 // Symbole TradingView par indice — INDEX_TV_SYMBOL_BY_KEY, pas une seule
 // constante : quand d'autres indices (S&P 500…) rejoindront
 // indicesData.companies un jour, ce sera la seule ligne à ajouter ici.
-// Pas d'entrée Nasdaq/Dow : NASDAQ:NDX, DJ:DJI, TVC:NDX, TVC:DJI,
-// OANDA:NAS100USD/US30USD et même les ETF NASDAQ:QQQ/AMEX:DIA donnent tous
-// soit "réservé à TradingView" (licence de données bloquée en widget
-// gratuit) soit un prix qui n'est plus celui de l'indice (échelle ETF) —
-// voir loadIndexQuoteWidget, qui bascule sur indicesData.index_prices
-// (indices_score.py/yfinance) quand aucun symbole fiable n'existe ici.
+// FTSE/SMI/IBEX35/FTSEMIB/NIKKEI225/HANGSENG : ajoutées après coup — un vrai
+// oubli lors de l'intégration de ces 6 indices (seul le préfixe TradingView
+// par ENTREPRISE avait été câblé, pas le symbole de l'indice lui-même).
+// Plusieurs symboles "officiels" natifs se sont révélés "réservés à
+// TradingView" une fois embarqués en widget gratuit, alors que leur page
+// tradingview.com publique s'affichait normalement (indétectable depuis la
+// page seule, constaté en production) : NASDAQ:NDX/DJ:DJI/TVC:NDX/TVC:DJI/
+// OANDA:NAS100USD/US30USD pour Nasdaq/Dow à l'origine, puis TVC:UKX/
+// TVC:NI225/TVC:HSI pour FTSE/Nikkei/Hang Seng. Remplacés par l'équivalent
+// CFD chez Vantage (même broker que le bot Or), dont les flux sont
+// librement embarquables — voir loadIndexQuoteWidget, qui bascule sur
+// indicesData.index_prices (indices_score.py/yfinance) si un symbole
+// s'avère à son tour réservé. SMI/IBEX35/FTSEMIB (symboles natifs
+// SIX:SMI/BME:IBC/INDEX:FTSEMIB) n'ont pas eu ce problème.
 const INDEX_TV_SYMBOL_BY_KEY = {
   CAC40: 'EURONEXT:PX1',
   DAX: 'XETR:DAX',
+  NASDAQ: 'VANTAGE:NAS100',
+  DOW: 'VANTAGE:DJ30',
+  FTSE: 'VANTAGE:UK100',
+  SMI: 'SIX:SMI',
+  IBEX35: 'BME:IBC',
+  FTSEMIB: 'INDEX:FTSEMIB',
+  NIKKEI225: 'VANTAGE:NIKKEI225',
+  HANGSENG: 'VANTAGE:HK50',
 };
 
 // Repli sans widget : affiche juste le niveau du jour de l'indice (voir
@@ -1925,14 +2172,30 @@ const INDEX_CURRENCY_BY_KEY = {
   DAX: 'EUR',
   NASDAQ: 'USD',
   DOW: 'USD',
+  FTSE: 'GBP',
+  SMI: 'CHF',
+  IBEX35: 'EUR',
+  FTSEMIB: 'EUR',
+  NIKKEI225: 'JPY',
+  HANGSENG: 'HKD',
 };
 
+// Symbole affiché par devise — un nouvel indice dans une devise pas
+// encore vue n'a qu'une ligne à ajouter ici (voir aussi INDEX_CURRENCY
+// côté backend et RISK_FREE_SERIES_BY_CURRENCY pour le taux sans risque).
+const CURRENCY_SYMBOL = { EUR: '€', USD: '$', GBP: '£', CHF: 'CHF', JPY: '¥', HKD: 'HK$' };
+
 // Formate un prix d'entreprise dans la devise de SON indice (€ pour
-// CAC40/DAX, $ pour NASDAQ) — corrige le bug de fond où tout était
-// affiché en € indépendamment de la devise réelle des comptes publiés.
+// CAC40/DAX, $ pour NASDAQ/DOW, £ pour FTSE) — corrige le bug de fond où
+// tout était affiché en € indépendamment de la devise réelle des comptes
+// publiés. Généralisé (dictionnaire devise→symbole) plutôt qu'un simple
+// ternaire EUR/USD, pour qu'un futur indice dans une nouvelle devise
+// n'ait qu'une entrée à ajouter dans CURRENCY_SYMBOL/INDEX_CURRENCY_BY_KEY.
 function formatPriceForIndex(v, indexKey) {
   const currencies = { ...INDEX_CURRENCY_BY_KEY, ...(indicesData.index_currency || {}) };
-  return currencies[indexKey] === 'USD' ? formatPriceUsd(v) : formatPrice(v);
+  const currency = currencies[indexKey] || 'EUR';
+  const symbol = CURRENCY_SYMBOL[currency] || currency;
+  return v != null ? `${v.toLocaleString('fr-FR', {maximumFractionDigits:2})} ${symbol}` : 'indisponible';
 }
 
 function sortedFilteredCompanies(companies) {

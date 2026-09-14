@@ -6,12 +6,32 @@
 const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
-const { fetchGoldCandles, computeSignal } = require('./docs/scalping.js');
+const { fetchGoldCandles, computeSignal, isNewsBlackout } = require('./docs/scalping.js');
 
 const TRACKING_FILE = path.join(__dirname, 'docs', 'scalping_tracking.json');
 const TRIAL_DURATION_MS = 7 * 24 * 60 * 60 * 1000; // 7 jours
 const MAX_POSITION_DURATION_MS = 2 * 60 * 60 * 1000; // 2 heures
 const STALE_THRESHOLD_MS = 5 * 60 * 1000; // aligne sur SCALP_STALE_THRESHOLD_MS du navigateur (docs/index.html)
+
+/**
+ * XAU/USD (comme le forex) est ferme du vendredi ~22h UTC au dimanche
+ * ~22h UTC — bornes volontairement prudentes (les brokers varient de
+ * quelques dizaines de minutes selon le fournisseur de liquidite),
+ * mieux vaut rater un peu de marche reel aux bords que trader du bruit
+ * sur un marche ferme. Independant de la fraicheur annoncee par l'API
+ * (voir le commentaire dans decidePositionOutcome) : Twelve Data peut
+ * renvoyer une bougie a l'horodatage a jour meme marche ferme, donc ce
+ * garde-fou se base uniquement sur l'horloge murale, jamais sur les
+ * donnees recues.
+ */
+function isMarketClosed(date) {
+  const day = date.getUTCDay(); // 0 = dimanche, 5 = vendredi, 6 = samedi
+  const hour = date.getUTCHours();
+  if (day === 6) return true; // samedi : ferme toute la journee
+  if (day === 5 && hour >= 22) return true; // vendredi a partir de 22h UTC
+  if (day === 0 && hour < 22) return true; // dimanche avant 22h UTC
+  return false;
+}
 
 function loadTracking(filePath = TRACKING_FILE) {
   if (!fs.existsSync(filePath)) {
@@ -42,9 +62,27 @@ function computeReturn(direction, entryPrice, closePrice) {
  * le SL est vérifié en premier et gagne toujours — hypothèse prudente
  * standard en backtesting, qui évite de surestimer la performance.
  * `candlesSinceEntry` doit déjà être filtré (candle.time > entry_time) par
- * l'appelant.
+ * l'appelant. `isBlackout` (publication macro imminente/en cours, voir
+ * isNewsBlackout) force la clôture même sans SL/TP touché — vérifié
+ * après le scan SL/TP, jamais avant (un vrai toucher déjà survenu reste
+ * plus informatif qu'une clôture générique).
  */
-function decidePositionOutcome(position, candlesSinceEntry, now, trialElapsed, isStale = false) {
+function decidePositionOutcome(position, candlesSinceEntry, now, trialElapsed, isStale = false, isBlackout = false) {
+  if (isStale) {
+    // Donnees perimees (bougie recente introuvable) OU marche
+    // objectivement ferme (week-end XAU/USD, voir isMarketClosed) : les
+    // bougies recues ne sont pas des donnees de marche fiables, meme si
+    // leur horodatage parait frais — trouve en production (week-end du
+    // 12-13/09/2026) : Twelve Data a renvoye des bougies a l'horodatage
+    // a jour mais au prix quasi fige, ce qui a fait detecter a tort la
+    // meme figure ("Etoile filante") en boucle et ouvrir/cloturer 29
+    // fausses positions sur du bruit d'API plutot qu'un vrai mouvement
+    // de marche. Ne verifie donc AUCUN toucher SL/TP (ni aucune cloture
+    // basee sur l'horloge murale) tant que la fraicheur n'est pas
+    // confirmee — avant, ce garde ne s'appliquait qu'APRES la recherche
+    // de toucher SL/TP, ce qui ne protegeait pas contre ce cas precis.
+    return { closed: false };
+  }
   const isAchat = position.direction === 'achat';
   for (const c of candlesSinceEntry) {
     const slTouched = isAchat ? c.low <= position.stop_loss : c.high >= position.stop_loss;
@@ -56,14 +94,17 @@ function decidePositionOutcome(position, candlesSinceEntry, now, trialElapsed, i
       return { closed: true, reason: 'tp_hit', price: position.take_profit };
     }
   }
-  if (isStale) {
-    // Donnees perimees : on ne force aucune cloture basee sur l'horloge
-    // murale (max_duration/trial_end) tant qu'on n'a pas de confirmation
-    // fraiche du marche — seul un vrai SL/TP touche dans les bougies
-    // recues (deja verifie ci-dessus) peut clore une position ici.
-    return { closed: false };
-  }
   const lastClose = candlesSinceEntry.length ? candlesSinceEntry[candlesSinceEntry.length - 1].close : position.entry_price;
+  if (isBlackout) {
+    // Publication macro à fort impact imminente ou en cours (CPI/Emploi
+    // US/FOMC, voir isNewsBlackout) : aucune position ne doit rester
+    // ouverte à l'heure de la publication, même sans SL/TP touché —
+    // clôture forcée au dernier prix connu plutôt que d'attendre le
+    // choc de volatilité. Vérifié APRÈS le scan SL/TP ci-dessus : si un
+    // vrai toucher a déjà eu lieu dans les bougies reçues, ce résultat
+    // plus informatif prime sur la clôture forcée générique.
+    return { closed: true, reason: 'news_blackout', price: lastClose };
+  }
   const entryTime = new Date(position.entry_time).getTime();
   if (now - entryTime >= MAX_POSITION_DURATION_MS) {
     return { closed: true, reason: 'max_duration', price: lastClose };
@@ -121,17 +162,23 @@ async function runOnce(apiKey, fetchImpl, now = Date.now(), filePath = TRACKING_
   }
 
   const lastCandleTime = new Date(candles[candles.length - 1].time.replace(' ', 'T') + 'Z').getTime();
-  const isStale = (now - lastCandleTime) > STALE_THRESHOLD_MS;
-  if (isStale) {
+  const dataStale = (now - lastCandleTime) > STALE_THRESHOLD_MS;
+  const marketClosed = isMarketClosed(new Date(now));
+  const isStale = dataStale || marketClosed;
+  if (dataStale) {
     console.log(`Donnees perimees (${Math.round((now - lastCandleTime) / 60000)} min) - pas d'ouverture ni de cloture forcee ce run.`);
+  } else if (marketClosed) {
+    console.log('Marche XAU/USD ferme (week-end) - pas d\'ouverture ni de cloture forcee ce run, meme si les bougies recues paraissent fraiches.');
   }
+
+  const isBlackout = isNewsBlackout(new Date(now));
 
   const openPosition = data.positions.find(p => p.status === 'open');
 
   if (openPosition) {
     const entryTime = new Date(openPosition.entry_time).getTime();
     const candlesSinceEntry = candles.filter(c => new Date(c.time.replace(' ', 'T') + 'Z').getTime() > entryTime);
-    const outcome = decidePositionOutcome(openPosition, candlesSinceEntry, now, trialElapsed, isStale);
+    const outcome = decidePositionOutcome(openPosition, candlesSinceEntry, now, trialElapsed, isStale, isBlackout);
     if (outcome.closed) {
       openPosition.status = 'closed';
       openPosition.close_time = new Date(now).toISOString();
@@ -190,6 +237,7 @@ module.exports = {
   computeReturn,
   decidePositionOutcome,
   buildPositionFromSignal,
+  isMarketClosed,
   runOnce,
   TRIAL_DURATION_MS,
   MAX_POSITION_DURATION_MS,

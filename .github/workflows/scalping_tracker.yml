@@ -40,14 +40,28 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           END=$((SECONDS + 340 * 60))
           while [ "$SECONDS" -lt "$END" ]; do
-            node scalping_tracker.js
+            # Se resynchroniser AVANT de générer de nouvelles données : si le
+            # push précédent a échoué (rejet transitoire côté GitHub) ou si un
+            # run concurrent a poussé entre-temps, ce pull --rebase absorbe
+            # l'écart et retente naturellement la publication au push suivant,
+            # au lieu de laisser un commit local bloqué indéfiniment.
+            if ! git pull --rebase --autostash; then
+              echo "::warning::git pull --rebase a échoué (probable conflit), abandon du rebase — on retentera au cycle suivant"
+              git rebase --abort 2>/dev/null || true
+            fi
+            node scalping_tracker.js || echo "::warning::scalping_tracker.js a échoué pour ce cycle, on continue à la prochaine itération"
             if [ -f docs/scalping_tracking.json ]; then
-              git add docs/scalping_tracking.json
+              git add docs/scalping_tracking.json || true
               if ! git diff --staged --quiet; then
-                git commit -m "Mise a jour du suivi Scalping"
-                git pull --rebase --autostash
-                git push
+                git commit -m "Mise a jour du suivi Scalping" || echo "::warning::échec du commit local, on continue"
               fi
+            fi
+            # Toujours tenter le push (même sans nouveau diff ce cycle-ci) :
+            # publie aussi tout commit resté en attente d'un push précédent
+            # en échec. Une erreur ici (ex. rejet transitoire) ne doit JAMAIS
+            # tuer la boucle de 5h40 — bash -e le ferait sans ce garde-fou.
+            if ! git push; then
+              echo "::warning::git push a échoué (probablement transitoire), retenté au cycle suivant via pull --rebase"
             fi
             sleep 300
           done

@@ -59,14 +59,14 @@ CAC40_COMPANIES = [
     # vérifiés individuellement — plusieurs diffèrent du mnémonique
     # Euronext naïf + suffixe .PA, ex : STMicroelectronics/Stellantis).
     {"ticker": "AIR.PA", "name": "Airbus"},
-    {"ticker": "MT.PA", "name": "ArcelorMittal"},
+    {"ticker": "MT.PA", "name": "ArcelorMittal", "also_indices": ["IBEX35"]},
     {"ticker": "OR.PA", "name": "L'Oréal"},
     {"ticker": "DG.PA", "name": "Vinci"},
     {"ticker": "RMS.PA", "name": "Hermès International"},
     {"ticker": "ENGI.PA", "name": "Engie"},
     {"ticker": "ORA.PA", "name": "Orange"},
-    {"ticker": "STMPA.PA", "name": "STMicroelectronics"},
-    {"ticker": "STLAP.PA", "name": "Stellantis"},
+    {"ticker": "STMPA.PA", "name": "STMicroelectronics", "also_indices": ["FTSEMIB"]},
+    {"ticker": "STLAP.PA", "name": "Stellantis", "also_indices": ["FTSEMIB"]},
     {"ticker": "CA.PA", "name": "Carrefour"},
     # Lot 2 d'extension CAC 40 (10 entreprises), tickers Yahoo Finance
     # vérifiés individuellement comme le lot 1.
@@ -225,7 +225,7 @@ NASDAQ_COMPANIES = [
     {"ticker": "CDNS", "name": "Cadence Design Systems"},
     {"ticker": "CTAS", "name": "Cintas"},
     {"ticker": "CSCO", "name": "Cisco Systems", "also_indices": ["DOW"]},
-    {"ticker": "CCEP", "name": "Coca-Cola Europacific Partners"},
+    {"ticker": "CCEP", "name": "Coca-Cola Europacific Partners", "also_indices": ["FTSE"]},
     {"ticker": "CMCSA", "name": "Comcast"},
     {"ticker": "CEG", "name": "Constellation Energy"},
     {"ticker": "CPRT", "name": "Copart"},
@@ -239,7 +239,7 @@ NASDAQ_COMPANIES = [
     {"ticker": "DASH", "name": "DoorDash"},
     {"ticker": "EXC", "name": "Exelon"},
     {"ticker": "FAST", "name": "Fastenal"},
-    {"ticker": "FER", "name": "Ferrovial"},
+    {"ticker": "FER", "name": "Ferrovial", "also_indices": ["IBEX35"]},
     {"ticker": "FTNT", "name": "Fortinet"},
     {"ticker": "GEHC", "name": "GE HealthCare"},
     {"ticker": "GILD", "name": "Gilead Sciences"},
@@ -340,6 +340,586 @@ DOW_COMPANIES = [
     {"ticker": "V", "name": "Visa"},
 ]
 
+# FTSE 100 (London Stock Exchange) — 99/100 constituants réels : Coca-Cola
+# Europacific Partners (CCEP) est un constituant FTSE 100 mais n'est pas
+# dupliquée ici, déjà suivie dans NASDAQ_COMPANIES avec
+# also_indices=["FTSE"] (même convention que Airbus CAC40/DAX et les 9
+# chevauchements NASDAQ/DOW). Sourcé le 2026-09-12 via Wikipédia (version
+# au 19/06/2026) + recoupement iShares ISF/topforeignstocks — voir
+# docs/superpowers/ftse100-research-report.md pour le détail complet des
+# sources et la confiance par ticker.
+FTSE_COMPANIES = [
+    {"ticker": "III.L", "name": "3i Group"},
+    {"ticker": "ABDN.L", "name": "Aberdeen Group"},
+    {"ticker": "ADM.L", "name": "Admiral Group"},
+    {"ticker": "AAF.L", "name": "Airtel Africa"},
+    {"ticker": "ALW.L", "name": "Alliance Witan"},
+    {"ticker": "AAL.L", "name": "Anglo American"},
+    {"ticker": "ANTO.L", "name": "Antofagasta"},
+    {"ticker": "ABF.L", "name": "Associated British Foods"},
+    {"ticker": "AZN.L", "name": "AstraZeneca"},
+    {"ticker": "AUTO.L", "name": "Auto Trader Group"},
+    {"ticker": "AV.L", "name": "Aviva"},
+    {"ticker": "BAB.L", "name": "Babcock International"},
+    {"ticker": "BA.L", "name": "BAE Systems"},
+    {"ticker": "BARC.L", "name": "Barclays"},
+    {"ticker": "BTRW.L", "name": "Barratt Redrow"},
+    {"ticker": "BEZ.L", "name": "Beazley"},
+    {"ticker": "BP.L", "name": "BP"},
+    {"ticker": "BATS.L", "name": "British American Tobacco"},
+    {"ticker": "BLND.L", "name": "British Land"},
+    {"ticker": "BT-A.L", "name": "BT Group"},
+    {"ticker": "BNZL.L", "name": "Bunzl"},
+    {"ticker": "BRBY.L", "name": "Burberry Group"},
+    {"ticker": "CNA.L", "name": "Centrica"},
+    {"ticker": "CCH.L", "name": "Coca-Cola HBC"},
+    {"ticker": "CPG.L", "name": "Compass Group"},
+    {"ticker": "CCC.L", "name": "Computacenter"},
+    {"ticker": "CTEC.L", "name": "Convatec Group"},
+    {"ticker": "CRDA.L", "name": "Croda International"},
+    {"ticker": "DCC.L", "name": "DCC"},
+    {"ticker": "DGE.L", "name": "Diageo"},
+    {"ticker": "DPLM.L", "name": "Diploma"},
+    {"ticker": "EDV.L", "name": "Endeavour Mining"},
+    {"ticker": "ENT.L", "name": "Entain"},
+    {"ticker": "EXPN.L", "name": "Experian"},
+    {"ticker": "FCIT.L", "name": "F&C Investment Trust"},
+    {"ticker": "FRES.L", "name": "Fresnillo"},
+    {"ticker": "GAW.L", "name": "Games Workshop"},
+    {"ticker": "GLEN.L", "name": "Glencore"},
+    {"ticker": "GSK.L", "name": "GSK"},
+    {"ticker": "HLN.L", "name": "Haleon"},
+    {"ticker": "HLMA.L", "name": "Halma"},
+    {"ticker": "HSX.L", "name": "Hiscox"},
+    {"ticker": "HWDN.L", "name": "Howden Joinery Group"},
+    {"ticker": "HSBA.L", "name": "HSBC Holdings", "also_indices": ["HANGSENG"]},
+    {"ticker": "ICG.L", "name": "ICG"},
+    {"ticker": "IGG.L", "name": "IG Group"},
+    {"ticker": "IHG.L", "name": "IHG Hotels & Resorts"},
+    {"ticker": "IMI.L", "name": "IMI"},
+    {"ticker": "IMB.L", "name": "Imperial Brands"},
+    {"ticker": "INF.L", "name": "Informa"},
+    {"ticker": "IAG.L", "name": "International Airlines Group", "also_indices": ["IBEX35"]},
+    {"ticker": "ITRK.L", "name": "Intertek Group"},
+    {"ticker": "INVP.L", "name": "Investec"},
+    {"ticker": "JD.L", "name": "JD Sports Fashion"},
+    {"ticker": "KGF.L", "name": "Kingfisher"},
+    {"ticker": "LAND.L", "name": "Land Securities Group"},
+    {"ticker": "LGEN.L", "name": "Legal & General"},
+    {"ticker": "BGEO.L", "name": "Lion Finance Group"},
+    {"ticker": "LLOY.L", "name": "Lloyds Banking Group"},
+    {"ticker": "LSEG.L", "name": "London Stock Exchange Group"},
+    {"ticker": "LMP.L", "name": "LondonMetric Property"},
+    {"ticker": "MNG.L", "name": "M&G"},
+    {"ticker": "MKS.L", "name": "Marks & Spencer Group"},
+    {"ticker": "MRO.L", "name": "Melrose Industries"},
+    {"ticker": "MTLN.L", "name": "Metlen Energy & Metals"},
+    {"ticker": "NG.L", "name": "National Grid"},
+    {"ticker": "NWG.L", "name": "NatWest Group"},
+    {"ticker": "NXT.L", "name": "Next"},
+    {"ticker": "PSON.L", "name": "Pearson"},
+    {"ticker": "PSH.L", "name": "Pershing Square Holdings"},
+    {"ticker": "PSN.L", "name": "Persimmon"},
+    {"ticker": "PCT.L", "name": "Polar Capital Technology Trust"},
+    {"ticker": "PRU.L", "name": "Prudential"},
+    {"ticker": "RKT.L", "name": "Reckitt"},
+    {"ticker": "REL.L", "name": "RELX"},
+    {"ticker": "RTO.L", "name": "Rentokil Initial"},
+    {"ticker": "RIO.L", "name": "Rio Tinto"},
+    {"ticker": "RR.L", "name": "Rolls-Royce Holdings"},
+    {"ticker": "SGE.L", "name": "Sage Group"},
+    {"ticker": "SBRY.L", "name": "Sainsbury's"},
+    {"ticker": "SDR.L", "name": "Schroders"},
+    {"ticker": "SMT.L", "name": "Scottish Mortgage Investment Trust"},
+    {"ticker": "SGRO.L", "name": "Segro"},
+    {"ticker": "SVT.L", "name": "Severn Trent"},
+    {"ticker": "SHEL.L", "name": "Shell plc"},
+    {"ticker": "SN.L", "name": "Smith & Nephew"},
+    {"ticker": "SMIN.L", "name": "Smiths Group"},
+    {"ticker": "SPX.L", "name": "Spirax Group"},
+    {"ticker": "SSE.L", "name": "SSE"},
+    {"ticker": "STJ.L", "name": "St. James's Place"},
+    {"ticker": "STAN.L", "name": "Standard Chartered"},
+    {"ticker": "SDLF.L", "name": "Standard Life"},
+    {"ticker": "TSCO.L", "name": "Tesco"},
+    {"ticker": "BBOX.L", "name": "Tritax Big Box REIT"},
+    {"ticker": "ULVR.L", "name": "Unilever"},
+    {"ticker": "UU.L", "name": "United Utilities"},
+    {"ticker": "VOD.L", "name": "Vodafone Group"},
+    {"ticker": "WEIR.L", "name": "Weir Group"},
+    {"ticker": "WTB.L", "name": "Whitbread"},
+]
+
+# SMI (SIX Swiss Exchange) — SMI cœur, 20/20 constituants, aucun
+# chevauchement avec les autres indices (vérifié y compris pour les
+# doubles cotations US : Alcon/Amrize/Logitech). Sourcé le 2026-09-12 via
+# Wikipédia + recoupement marketscreener/iShares CSSMI — voir
+# docs/superpowers/smi-research-report.md pour le détail complet. Roche
+# se négocie sous "ROP.SW" depuis mars 2026, pas l'ancien "ROG.SW".
+SMI_COMPANIES = [
+    {"ticker": "ABBN.SW", "name": "ABB"},
+    {"ticker": "ALC.SW", "name": "Alcon"},
+    {"ticker": "AMRZ.SW", "name": "Amrize"},
+    {"ticker": "GEBN.SW", "name": "Geberit"},
+    {"ticker": "GIVN.SW", "name": "Givaudan"},
+    {"ticker": "HOLN.SW", "name": "Holcim"},
+    {"ticker": "KNIN.SW", "name": "Kuehne + Nagel"},
+    {"ticker": "LOGN.SW", "name": "Logitech"},
+    {"ticker": "LONN.SW", "name": "Lonza Group"},
+    {"ticker": "NESN.SW", "name": "Nestlé"},
+    {"ticker": "NOVN.SW", "name": "Novartis"},
+    {"ticker": "PGHN.SW", "name": "Partners Group"},
+    {"ticker": "CFR.SW", "name": "Richemont"},
+    {"ticker": "ROP.SW", "name": "Roche Holding"},
+    {"ticker": "SIKA.SW", "name": "Sika"},
+    {"ticker": "SLHN.SW", "name": "Swiss Life Holding"},
+    {"ticker": "SREN.SW", "name": "Swiss Re"},
+    {"ticker": "SCMN.SW", "name": "Swisscom"},
+    {"ticker": "UBSG.SW", "name": "UBS Group"},
+    {"ticker": "ZURN.SW", "name": "Zurich Insurance Group"},
+]
+
+# IBEX 35 (Bolsa de Madrid) — 32/35 constituants réels : ArcelorMittal
+# (MT.PA, CAC40), Ferrovial (FER, NASDAQ) et International Airlines Group
+# (IAG.L, FTSE) sont déjà suivies ailleurs (also_indices=["IBEX35"] sur
+# leurs entrées d'origine), pas dupliquées ici. Sourcé le 2026-09-12 via
+# Wikipédia + le document officiel BME (composition figée depuis la revue
+# extraordinaire du 22/07/2024) — voir
+# docs/superpowers/ibex35-research-report.md pour le détail complet.
+IBEX35_COMPANIES = [
+    {"ticker": "ANA.MC", "name": "Acciona"},
+    {"ticker": "ANE.MC", "name": "Acciona Energía"},
+    {"ticker": "ACX.MC", "name": "Acerinox"},
+    {"ticker": "ACS.MC", "name": "ACS"},
+    {"ticker": "AENA.MC", "name": "Aena"},
+    {"ticker": "AMS.MC", "name": "Amadeus IT Group"},
+    {"ticker": "SAB.MC", "name": "Banco Sabadell"},
+    {"ticker": "SAN.MC", "name": "Banco Santander"},
+    {"ticker": "BKT.MC", "name": "Bankinter"},
+    {"ticker": "BBVA.MC", "name": "BBVA"},
+    {"ticker": "CABK.MC", "name": "CaixaBank"},
+    {"ticker": "CLNX.MC", "name": "Cellnex Telecom"},
+    {"ticker": "ENG.MC", "name": "Enagás"},
+    {"ticker": "ELE.MC", "name": "Endesa"},
+    {"ticker": "FDR.MC", "name": "Fluidra"},
+    {"ticker": "GRF.MC", "name": "Grifols"},
+    {"ticker": "IBE.MC", "name": "Iberdrola"},
+    {"ticker": "ITX.MC", "name": "Inditex"},
+    {"ticker": "IDR.MC", "name": "Indra Sistemas"},
+    {"ticker": "COL.MC", "name": "Inmobiliaria Colonial"},
+    {"ticker": "ROVI.MC", "name": "Laboratorios Rovi"},
+    {"ticker": "LOG.MC", "name": "Logista"},
+    {"ticker": "MAP.MC", "name": "Mapfre"},
+    {"ticker": "MRL.MC", "name": "Merlin Properties"},
+    {"ticker": "NTGY.MC", "name": "Naturgy"},
+    {"ticker": "PUIG.MC", "name": "Puig Brands"},
+    {"ticker": "RED.MC", "name": "Redeia"},
+    {"ticker": "REP.MC", "name": "Repsol"},
+    {"ticker": "SCYR.MC", "name": "Sacyr"},
+    {"ticker": "SLR.MC", "name": "Solaria Energía y Medio Ambiente"},
+    {"ticker": "TEF.MC", "name": "Telefónica"},
+    {"ticker": "UNI.MC", "name": "Unicaja Banco"},
+]
+
+# FTSE MIB (Borsa Italiana / Euronext Milan) — 38/40 constituants réels :
+# STMicroelectronics (STMPA.PA) et Stellantis (STLAP.PA) sont déjà suivies
+# côté CAC40_COMPANIES (also_indices=["FTSEMIB"] sur leurs entrées
+# d'origine), pas dupliquées ici. Ticker de l'indice benchmark
+# volontairement pas un "^XXX" (FTSEMIB.MI) — seule exception à cette
+# convention parmi les indices suivis, voir
+# docs/superpowers/ftsemib-research-report.md. FinecoBank, Banca
+# Mediolanum et Poste Italiane sont des cas limites signalés (banques
+# hybrides courtage/distribution) volontairement laissés en méthodologie
+# standard, pas tranchés unilatéralement.
+FTSEMIB_COMPANIES = [
+    {"ticker": "A2A.MI", "name": "A2A"},
+    {"ticker": "AMP.MI", "name": "Amplifon"},
+    {"ticker": "AVIO.MI", "name": "Avio"},
+    {"ticker": "AZM.MI", "name": "Azimut Holding"},
+    {"ticker": "BMED.MI", "name": "Banca Mediolanum"},
+    {"ticker": "BMPS.MI", "name": "Banca Monte dei Paschi di Siena"},
+    {"ticker": "BAMI.MI", "name": "Banco BPM"},
+    {"ticker": "BPE.MI", "name": "BPER Banca"},
+    {"ticker": "BC.MI", "name": "Brunello Cucinelli"},
+    {"ticker": "BZU.MI", "name": "Buzzi"},
+    {"ticker": "CPR.MI", "name": "Campari"},
+    {"ticker": "DIA.MI", "name": "DiaSorin"},
+    {"ticker": "ENEL.MI", "name": "Enel"},
+    {"ticker": "ENI.MI", "name": "Eni"},
+    {"ticker": "RACE.MI", "name": "Ferrari"},
+    {"ticker": "FCT.MI", "name": "Fincantieri"},
+    {"ticker": "FBK.MI", "name": "FinecoBank"},
+    {"ticker": "G.MI", "name": "Generali"},
+    {"ticker": "HER.MI", "name": "Hera"},
+    {"ticker": "ISP.MI", "name": "Intesa Sanpaolo"},
+    {"ticker": "INW.MI", "name": "INWIT"},
+    {"ticker": "IG.MI", "name": "Italgas"},
+    {"ticker": "IVG.MI", "name": "Iveco Group"},
+    {"ticker": "LDO.MI", "name": "Leonardo"},
+    {"ticker": "LTMC.MI", "name": "Lottomatica Group"},
+    {"ticker": "MB.MI", "name": "Mediobanca"},
+    {"ticker": "MONC.MI", "name": "Moncler"},
+    {"ticker": "NEXI.MI", "name": "Nexi"},
+    {"ticker": "PST.MI", "name": "Poste Italiane"},
+    {"ticker": "PRY.MI", "name": "Prysmian"},
+    {"ticker": "REC.MI", "name": "Recordati"},
+    {"ticker": "SPM.MI", "name": "Saipem"},
+    {"ticker": "SRG.MI", "name": "Snam"},
+    {"ticker": "TIT.MI", "name": "Telecom Italia"},
+    {"ticker": "TEN.MI", "name": "Tenaris"},
+    {"ticker": "TRN.MI", "name": "Terna"},
+    {"ticker": "UCG.MI", "name": "UniCredit"},
+    {"ticker": "UNI.MI", "name": "Unipol"},
+]
+
+# Nikkei 225 (Tokyo Stock Exchange) — 225/225 constituants, aucun
+# chevauchement avec les indices déjà suivis. Sourcé le 2026-09-12 via la
+# page officielle Nikkei Indexes (source la plus autoritaire utilisée
+# jusqu'ici pour un indice de ce projet), recoupée avec Wikipédia —
+# Ibiden (4062.T) remplace Nidec depuis cette version, voir
+# docs/superpowers/nikkei225-research-report.md pour le détail complet
+# (dont un changement de composition annoncé pour le 01/10/2026, pas
+# encore effectif à la date de cette recherche). 543A.T (Archion) et
+# 285A.T (Kioxia Holdings) utilisent le nouveau format alphanumérique JPX,
+# fonctionnent normalement avec le suffixe .T.
+NIKKEI225_COMPANIES = [
+    {"ticker": "6857.T", "name": "Advantest"},
+    {"ticker": "8267.T", "name": "Aeon"},
+    {"ticker": "5201.T", "name": "AGC"},
+    {"ticker": "2802.T", "name": "Ajinomoto"},
+    {"ticker": "6770.T", "name": "Alps Alpine"},
+    {"ticker": "6113.T", "name": "Amada"},
+    {"ticker": "9202.T", "name": "ANA Holdings"},
+    {"ticker": "8304.T", "name": "Aozora Bank"},
+    {"ticker": "543A.T", "name": "Archion"},
+    {"ticker": "2502.T", "name": "Asahi Group Holdings"},
+    {"ticker": "3407.T", "name": "Asahi Kasei"},
+    {"ticker": "4503.T", "name": "Astellas Pharma"},
+    {"ticker": "7832.T", "name": "Bandai Namco Holdings"},
+    {"ticker": "6532.T", "name": "Baycurrent"},
+    {"ticker": "5108.T", "name": "Bridgestone"},
+    {"ticker": "7751.T", "name": "Canon"},
+    {"ticker": "9022.T", "name": "Central Japan Railway Company"},
+    {"ticker": "8331.T", "name": "Chiba Bank"},
+    {"ticker": "9502.T", "name": "Chubu Electric Power"},
+    {"ticker": "4519.T", "name": "Chugai Pharmaceutical"},
+    {"ticker": "1721.T", "name": "Comsys Holdings"},
+    {"ticker": "8253.T", "name": "Credit Saison"},
+    {"ticker": "4751.T", "name": "CyberAgent"},
+    {"ticker": "7912.T", "name": "Dai Nippon Printing"},
+    {"ticker": "8750.T", "name": "Daiichi Life Group"},
+    {"ticker": "4568.T", "name": "Daiichi Sankyo"},
+    {"ticker": "6367.T", "name": "Daikin Industries"},
+    {"ticker": "1925.T", "name": "Daiwa House Industry"},
+    {"ticker": "8601.T", "name": "Daiwa Securities Group"},
+    {"ticker": "2432.T", "name": "Dena"},
+    {"ticker": "4061.T", "name": "Denka"},
+    {"ticker": "6902.T", "name": "Denso"},
+    {"ticker": "4324.T", "name": "Dentsu"},
+    {"ticker": "6146.T", "name": "Disco"},
+    {"ticker": "5714.T", "name": "Dowa Holdings"},
+    {"ticker": "9020.T", "name": "East Japan Railway Company"},
+    {"ticker": "6361.T", "name": "Ebara"},
+    {"ticker": "4523.T", "name": "Eisai"},
+    {"ticker": "5020.T", "name": "Eneos Holdings"},
+    {"ticker": "6954.T", "name": "FANUC"},
+    {"ticker": "9983.T", "name": "Fast Retailing"},
+    {"ticker": "6504.T", "name": "Fuji Electric"},
+    {"ticker": "4901.T", "name": "Fujifilm Holdings"},
+    {"ticker": "5803.T", "name": "Fujikura"},
+    {"ticker": "6702.T", "name": "Fujitsu"},
+    {"ticker": "8354.T", "name": "Fukuoka Financial Group"},
+    {"ticker": "5801.T", "name": "Furukawa Electric"},
+    {"ticker": "1808.T", "name": "Haseko"},
+    {"ticker": "6501.T", "name": "Hitachi"},
+    {"ticker": "6305.T", "name": "Hitachi Construction Machinery"},
+    {"ticker": "7267.T", "name": "Honda Motor"},
+    {"ticker": "7741.T", "name": "Hoya"},
+    {"ticker": "4062.T", "name": "Ibiden"},
+    {"ticker": "5019.T", "name": "Idemitsu Kosan"},
+    {"ticker": "7013.T", "name": "IHI"},
+    {"ticker": "1605.T", "name": "Inpex"},
+    {"ticker": "3099.T", "name": "Isetan Mitsukoshi Holdings"},
+    {"ticker": "7202.T", "name": "Isuzu Motors"},
+    {"ticker": "8001.T", "name": "Itochu"},
+    {"ticker": "3086.T", "name": "J. Front Retailing"},
+    {"ticker": "9201.T", "name": "Japan Airlines"},
+    {"ticker": "8697.T", "name": "Japan Exchange Group"},
+    {"ticker": "6178.T", "name": "Japan Post Holdings"},
+    {"ticker": "5631.T", "name": "Japan Steel Works"},
+    {"ticker": "2914.T", "name": "Japan Tobacco"},
+    {"ticker": "5411.T", "name": "JFE Holdings"},
+    {"ticker": "1963.T", "name": "JGC Holdings"},
+    {"ticker": "6473.T", "name": "JTEKT"},
+    {"ticker": "1812.T", "name": "Kajima"},
+    {"ticker": "7004.T", "name": "Kanadevia"},
+    {"ticker": "9503.T", "name": "Kansai Electric Power"},
+    {"ticker": "4452.T", "name": "Kao"},
+    {"ticker": "7012.T", "name": "Kawasaki Heavy Industries"},
+    {"ticker": "9107.T", "name": "Kawasaki Kisen Kaisha"},
+    {"ticker": "9433.T", "name": "KDDI"},
+    {"ticker": "9008.T", "name": "Keio"},
+    {"ticker": "9009.T", "name": "Keisei Electric Railway"},
+    {"ticker": "6861.T", "name": "Keyence"},
+    {"ticker": "2801.T", "name": "Kikkoman"},
+    {"ticker": "285A.T", "name": "Kioxia Holdings"},
+    {"ticker": "2503.T", "name": "Kirin Holdings"},
+    {"ticker": "5406.T", "name": "Kobe Steel"},
+    {"ticker": "6301.T", "name": "Komatsu"},
+    {"ticker": "9766.T", "name": "Konami Group"},
+    {"ticker": "4902.T", "name": "Konica Minolta Holdings"},
+    {"ticker": "6326.T", "name": "Kubota"},
+    {"ticker": "3405.T", "name": "Kuraray"},
+    {"ticker": "6971.T", "name": "Kyocera"},
+    {"ticker": "4151.T", "name": "Kyowa Hakko Kirin"},
+    {"ticker": "6920.T", "name": "Lasertec"},
+    {"ticker": "4689.T", "name": "LY"},
+    {"ticker": "2413.T", "name": "M3"},
+    {"ticker": "8002.T", "name": "Marubeni"},
+    {"ticker": "8252.T", "name": "Marui Group"},
+    {"ticker": "7261.T", "name": "Mazda Motor"},
+    {"ticker": "2269.T", "name": "Meiji Holdings"},
+    {"ticker": "4385.T", "name": "Mercari"},
+    {"ticker": "6479.T", "name": "MinebeaMitsumi"},
+    {"ticker": "4188.T", "name": "Mitsubishi Chemical Group"},
+    {"ticker": "8058.T", "name": "Mitsubishi Corporation"},
+    {"ticker": "6503.T", "name": "Mitsubishi Electric"},
+    {"ticker": "8802.T", "name": "Mitsubishi Estate"},
+    {"ticker": "7011.T", "name": "Mitsubishi Heavy Industries"},
+    {"ticker": "5711.T", "name": "Mitsubishi Materials"},
+    {"ticker": "7211.T", "name": "Mitsubishi Motors"},
+    {"ticker": "8306.T", "name": "Mitsubishi UFJ Financial Group"},
+    {"ticker": "8031.T", "name": "Mitsui & Co."},
+    {"ticker": "4183.T", "name": "Mitsui Chemicals"},
+    {"ticker": "8801.T", "name": "Mitsui Fudosan"},
+    {"ticker": "5706.T", "name": "Mitsui Kinzoku (Mitsui Mining & Smelting)"},
+    {"ticker": "9104.T", "name": "Mitsui O.S.K. Lines"},
+    {"ticker": "8411.T", "name": "Mizuho Financial Group"},
+    {"ticker": "8725.T", "name": "MS&AD Insurance Group"},
+    {"ticker": "6981.T", "name": "Murata Manufacturing"},
+    {"ticker": "6701.T", "name": "NEC"},
+    {"ticker": "3659.T", "name": "Nexon"},
+    {"ticker": "5333.T", "name": "NGK"},
+    {"ticker": "2282.T", "name": "NH Foods"},
+    {"ticker": "2871.T", "name": "Nichirei"},
+    {"ticker": "7731.T", "name": "Nikon"},
+    {"ticker": "7974.T", "name": "Nintendo"},
+    {"ticker": "5214.T", "name": "Nippon Electric Glass"},
+    {"ticker": "9147.T", "name": "Nippon Express Holdings"},
+    {"ticker": "5401.T", "name": "Nippon Steel"},
+    {"ticker": "9101.T", "name": "Nippon Yusen"},
+    {"ticker": "4021.T", "name": "Nissan Chemical"},
+    {"ticker": "7201.T", "name": "Nissan Motor"},
+    {"ticker": "2002.T", "name": "Nisshin Seifun Group"},
+    {"ticker": "1332.T", "name": "Nissui"},
+    {"ticker": "9843.T", "name": "Nitori Holdings"},
+    {"ticker": "6988.T", "name": "Nitto Denko"},
+    {"ticker": "8604.T", "name": "Nomura Holdings"},
+    {"ticker": "4307.T", "name": "Nomura Research Institute"},
+    {"ticker": "6471.T", "name": "NSK"},
+    {"ticker": "6472.T", "name": "NTN"},
+    {"ticker": "9432.T", "name": "NTT"},
+    {"ticker": "1802.T", "name": "Obayashi"},
+    {"ticker": "9007.T", "name": "Odakyu Electric Railway"},
+    {"ticker": "3861.T", "name": "Oji Holdings"},
+    {"ticker": "6103.T", "name": "Okuma"},
+    {"ticker": "7733.T", "name": "Olympus"},
+    {"ticker": "6645.T", "name": "Omron"},
+    {"ticker": "4661.T", "name": "Oriental Land"},
+    {"ticker": "8591.T", "name": "Orix"},
+    {"ticker": "9532.T", "name": "Osaka Gas"},
+    {"ticker": "4578.T", "name": "Otsuka Holdings"},
+    {"ticker": "7532.T", "name": "Pan Pacific International Holdings"},
+    {"ticker": "6752.T", "name": "Panasonic Holdings"},
+    {"ticker": "4755.T", "name": "Rakuten"},
+    {"ticker": "6098.T", "name": "Recruit Holdings"},
+    {"ticker": "6723.T", "name": "Renesas Electronics"},
+    {"ticker": "8308.T", "name": "Resona Holdings"},
+    {"ticker": "4004.T", "name": "Resonac"},
+    {"ticker": "7752.T", "name": "Ricoh"},
+    {"ticker": "6963.T", "name": "Rohm"},
+    {"ticker": "7453.T", "name": "Ryohin Keikaku (Muji)"},
+    {"ticker": "2501.T", "name": "Sapporo Holdings"},
+    {"ticker": "7735.T", "name": "SCREEN Holdings"},
+    {"ticker": "9735.T", "name": "Secom"},
+    {"ticker": "6724.T", "name": "Seiko Epson"},
+    {"ticker": "1928.T", "name": "Sekisui House"},
+    {"ticker": "3382.T", "name": "Seven & I Holdings"},
+    {"ticker": "6753.T", "name": "Sharp"},
+    {"ticker": "3697.T", "name": "SHIFT"},
+    {"ticker": "1803.T", "name": "Shimizu"},
+    {"ticker": "4063.T", "name": "Shin-Etsu Chemical"},
+    {"ticker": "4507.T", "name": "Shionogi & Co."},
+    {"ticker": "4911.T", "name": "Shiseido"},
+    {"ticker": "5831.T", "name": "Shizuoka Financial Group"},
+    {"ticker": "6273.T", "name": "SMC"},
+    {"ticker": "6526.T", "name": "Socionext"},
+    {"ticker": "9434.T", "name": "SoftBank"},
+    {"ticker": "9984.T", "name": "SoftBank Group"},
+    {"ticker": "2768.T", "name": "Sojitz"},
+    {"ticker": "8630.T", "name": "Sompo Holdings"},
+    {"ticker": "6758.T", "name": "Sony Group"},
+    {"ticker": "7270.T", "name": "Subaru"},
+    {"ticker": "3436.T", "name": "SUMCO"},
+    {"ticker": "4005.T", "name": "Sumitomo Chemical"},
+    {"ticker": "8053.T", "name": "Sumitomo Corporation"},
+    {"ticker": "5802.T", "name": "Sumitomo Electric Industries"},
+    {"ticker": "6302.T", "name": "Sumitomo Heavy Industries"},
+    {"ticker": "5713.T", "name": "Sumitomo Metal Mining"},
+    {"ticker": "8316.T", "name": "Sumitomo Mitsui Financial Group"},
+    {"ticker": "8309.T", "name": "Sumitomo Mitsui Trust Group"},
+    {"ticker": "4506.T", "name": "Sumitomo Pharma"},
+    {"ticker": "8830.T", "name": "Sumitomo Realty & Development"},
+    {"ticker": "7269.T", "name": "Suzuki Motor"},
+    {"ticker": "8795.T", "name": "T&D Holdings"},
+    {"ticker": "5233.T", "name": "Taiheiyo Cement"},
+    {"ticker": "1801.T", "name": "Taisei"},
+    {"ticker": "6976.T", "name": "Taiyo Yuden"},
+    {"ticker": "8233.T", "name": "Takashimaya"},
+    {"ticker": "4502.T", "name": "Takeda Pharmaceutical"},
+    {"ticker": "6762.T", "name": "TDK"},
+    {"ticker": "3401.T", "name": "Teijin"},
+    {"ticker": "4543.T", "name": "Terumo"},
+    {"ticker": "9001.T", "name": "Tobu Railway"},
+    {"ticker": "9602.T", "name": "Toho"},
+    {"ticker": "5301.T", "name": "Tokai Carbon"},
+    {"ticker": "8766.T", "name": "Tokio Marine Holdings"},
+    {"ticker": "4043.T", "name": "Tokuyama"},
+    {"ticker": "9501.T", "name": "Tokyo Electric Power Company Holdings"},
+    {"ticker": "8035.T", "name": "Tokyo Electron"},
+    {"ticker": "9531.T", "name": "Tokyo Gas"},
+    {"ticker": "8804.T", "name": "Tokyo Tatemono"},
+    {"ticker": "9005.T", "name": "Tokyu"},
+    {"ticker": "3289.T", "name": "Tokyu Fudosan Holdings"},
+    {"ticker": "7911.T", "name": "Toppan Holdings"},
+    {"ticker": "3402.T", "name": "Toray Industries"},
+    {"ticker": "4042.T", "name": "Tosoh"},
+    {"ticker": "5332.T", "name": "Toto"},
+    {"ticker": "7203.T", "name": "Toyota Motor"},
+    {"ticker": "8015.T", "name": "Toyota Tsusho"},
+    {"ticker": "4704.T", "name": "Trend Micro"},
+    {"ticker": "4208.T", "name": "Ube Industries"},
+    {"ticker": "9021.T", "name": "West Japan Railway Company"},
+    {"ticker": "7951.T", "name": "Yamaha"},
+    {"ticker": "7272.T", "name": "Yamaha Motor"},
+    {"ticker": "9064.T", "name": "Yamato Holdings"},
+    {"ticker": "6506.T", "name": "Yaskawa Electric"},
+    {"ticker": "6841.T", "name": "Yokogawa Electric"},
+    {"ticker": "7186.T", "name": "Yokohama Financial Group"},
+    {"ticker": "5101.T", "name": "Yokohama Rubber"},
+    {"ticker": "3092.T", "name": "ZOZO"},
+]
+
+# Hang Seng Index (Hong Kong Stock Exchange) — 94/95 constituants réels :
+# HSBC Holdings (HSBA.L) est déjà suivie côté FTSE_COMPANIES
+# (also_indices=["HANGSENG"] sur son entrée d'origine), pas dupliquée
+# ici. Format ticker Yahoo = code HKEX zero-paddé sur 4 chiffres + ".HK"
+# (confirmé : "700.HK" sans padding renvoie 404, "0700.HK" fonctionne).
+# Devise HKD : Hong Kong n'étant pas membre de l'OCDE, aucune série FRED
+# de taux long terme n'existe pour le HKD (confirmé, IRLTLT01HKM156N
+# renvoie 404) — RISK_FREE_SERIES_BY_CURRENCY n'a donc volontairement
+# aucune entrée "HKD", le code retombe déjà proprement sur
+# COST_OF_CAPITAL_PROXY via risk_free_rate_by_currency.get(). Sourcé le
+# 2026-09-12 via le communiqué officiel Hang Seng Indexes Company du
+# 21/08/2026 (révision effective au 07/09/2026) — voir
+# docs/superpowers/hangseng-research-report.md pour le détail complet.
+HANGSENG_COMPANIES = [
+    {"ticker": "1299.HK", "name": "AIA Group"},
+    {"ticker": "9988.HK", "name": "Alibaba Group Holding"},
+    {"ticker": "0241.HK", "name": "Alibaba Health Information Technology"},
+    {"ticker": "2600.HK", "name": "Aluminum Corporation of China (Chalco)"},
+    {"ticker": "2020.HK", "name": "Anta Sports Products"},
+    {"ticker": "9888.HK", "name": "Baidu"},
+    {"ticker": "3988.HK", "name": "Bank of China"},
+    {"ticker": "6160.HK", "name": "BeOne Medicines"},
+    {"ticker": "2388.HK", "name": "BOC Hong Kong (Holdings)"},
+    {"ticker": "1876.HK", "name": "Budweiser Brewing Company APAC"},
+    {"ticker": "1211.HK", "name": "BYD Company"},
+    {"ticker": "0285.HK", "name": "BYD Electronic (International)"},
+    {"ticker": "0939.HK", "name": "China Construction Bank"},
+    {"ticker": "1378.HK", "name": "China Hongqiao Group"},
+    {"ticker": "2628.HK", "name": "China Life Insurance Company"},
+    {"ticker": "2319.HK", "name": "China Mengniu Dairy"},
+    {"ticker": "3968.HK", "name": "China Merchants Bank"},
+    {"ticker": "0941.HK", "name": "China Mobile Limited"},
+    {"ticker": "3993.HK", "name": "China Molybdenum (CMOC)"},
+    {"ticker": "0688.HK", "name": "China Overseas Land & Investment"},
+    {"ticker": "0291.HK", "name": "China Resources Beer (Holdings)"},
+    {"ticker": "1109.HK", "name": "China Resources Land"},
+    {"ticker": "1209.HK", "name": "China Resources Mixc Lifestyle Services"},
+    {"ticker": "0836.HK", "name": "China Resources Power Holdings"},
+    {"ticker": "1088.HK", "name": "China Shenhua Energy"},
+    {"ticker": "0728.HK", "name": "China Telecom Corporation"},
+    {"ticker": "0762.HK", "name": "China Unicom (Hong Kong)"},
+    {"ticker": "1929.HK", "name": "Chow Tai Fook Jewellery Group"},
+    {"ticker": "0267.HK", "name": "CITIC Limited"},
+    {"ticker": "1113.HK", "name": "CK Asset Holdings"},
+    {"ticker": "0001.HK", "name": "CK Hutchison Holdings"},
+    {"ticker": "1038.HK", "name": "CK Infrastructure Holdings"},
+    {"ticker": "0002.HK", "name": "CLP Holdings"},
+    {"ticker": "0883.HK", "name": "CNOOC Limited"},
+    {"ticker": "3750.HK", "name": "Contemporary Amperex Technology (CATL)"},
+    {"ticker": "1093.HK", "name": "CSPC Pharmaceutical Group"},
+    {"ticker": "2688.HK", "name": "ENN Energy Holdings"},
+    {"ticker": "0027.HK", "name": "Galaxy Entertainment Group"},
+    {"ticker": "0175.HK", "name": "Geely Automobile Holdings"},
+    {"ticker": "6862.HK", "name": "Haidilao International Holding"},
+    {"ticker": "6690.HK", "name": "Haier Smart Home"},
+    {"ticker": "0101.HK", "name": "Hang Lung Properties"},
+    {"ticker": "3692.HK", "name": "Hansoh Pharmaceutical Group"},
+    {"ticker": "0012.HK", "name": "Henderson Land Development"},
+    {"ticker": "1044.HK", "name": "Hengan International Group"},
+    {"ticker": "0003.HK", "name": "Hong Kong and China Gas Company (Towngas)"},
+    {"ticker": "0388.HK", "name": "Hong Kong Exchanges and Clearing"},
+    {"ticker": "1347.HK", "name": "Hua Hong Semiconductor"},
+    {"ticker": "1398.HK", "name": "Industrial and Commercial Bank of China (ICBC)"},
+    {"ticker": "1801.HK", "name": "Innovent Biologics"},
+    {"ticker": "1519.HK", "name": "J&T Global Express"},
+    {"ticker": "6618.HK", "name": "JD Health International"},
+    {"ticker": "2618.HK", "name": "JD Logistics"},
+    {"ticker": "9618.HK", "name": "JD.com"},
+    {"ticker": "1024.HK", "name": "Kuaishou Technology"},
+    {"ticker": "6181.HK", "name": "Laopu Gold"},
+    {"ticker": "0992.HK", "name": "Lenovo Group"},
+    {"ticker": "2015.HK", "name": "Li Auto"},
+    {"ticker": "2331.HK", "name": "Li Ning Company"},
+    {"ticker": "0823.HK", "name": "Link Real Estate Investment Trust"},
+    {"ticker": "0960.HK", "name": "Longfor Group Holdings"},
+    {"ticker": "3690.HK", "name": "Meituan"},
+    {"ticker": "0300.HK", "name": "Midea Group"},
+    {"ticker": "0066.HK", "name": "MTR Corporation"},
+    {"ticker": "9999.HK", "name": "NetEase"},
+    {"ticker": "9901.HK", "name": "New Oriental Education & Technology Group"},
+    {"ticker": "9633.HK", "name": "Nongfu Spring"},
+    {"ticker": "0316.HK", "name": "Orient Overseas (International)"},
+    {"ticker": "0857.HK", "name": "PetroChina Company"},
+    {"ticker": "2318.HK", "name": "Ping An Insurance (Group) Company of China"},
+    {"ticker": "9992.HK", "name": "Pop Mart International Group"},
+    {"ticker": "0006.HK", "name": "Power Assets Holdings"},
+    {"ticker": "1928.HK", "name": "Sands China"},
+    {"ticker": "0981.HK", "name": "Semiconductor Manufacturing International Corporation (SMIC)"},
+    {"ticker": "2313.HK", "name": "Shenzhou International Group Holdings"},
+    {"ticker": "1177.HK", "name": "Sino Biopharmaceutical"},
+    {"ticker": "0386.HK", "name": "Sinopec Corp (China Petroleum & Chemical)"},
+    {"ticker": "1099.HK", "name": "Sinopharm Group"},
+    {"ticker": "0016.HK", "name": "Sun Hung Kai Properties"},
+    {"ticker": "2382.HK", "name": "Sunny Optical Technology (Group)"},
+    {"ticker": "0669.HK", "name": "Techtronic Industries"},
+    {"ticker": "0700.HK", "name": "Tencent Holdings"},
+    {"ticker": "0322.HK", "name": "Tingyi (Cayman Islands) Holding"},
+    {"ticker": "9961.HK", "name": "Trip.com Group"},
+    {"ticker": "2338.HK", "name": "Weichai Power"},
+    {"ticker": "0288.HK", "name": "WH Group"},
+    {"ticker": "1997.HK", "name": "Wharf Real Estate Investment Company"},
+    {"ticker": "2359.HK", "name": "WuXi AppTec"},
+    {"ticker": "2269.HK", "name": "WuXi Biologics (Cayman)"},
+    {"ticker": "1810.HK", "name": "Xiaomi Corporation"},
+    {"ticker": "0868.HK", "name": "Xinyi Glass Holdings"},
+    {"ticker": "0968.HK", "name": "Xinyi Solar Holdings"},
+    {"ticker": "2899.HK", "name": "Zijin Mining Group"},
+    {"ticker": "2057.HK", "name": "ZTO Express (Cayman)"},
+]
+
 # Chaque entreprise de COMPANIES porte son propre indice ("index" ajouté
 # ici, pas dans CAC40_COMPANIES/DAX_COMPANIES/NASDAQ_COMPANIES/
 # DOW_COMPANIES eux-mêmes, pour garder ces listes lisibles) — remplace
@@ -355,15 +935,29 @@ COMPANIES = (
     + [{**c, "index": "DAX"} for c in DAX_COMPANIES]
     + [{**c, "index": "NASDAQ"} for c in NASDAQ_COMPANIES]
     + [{**c, "index": "DOW"} for c in DOW_COMPANIES]
+    + [{**c, "index": "FTSE"} for c in FTSE_COMPANIES]
+    + [{**c, "index": "SMI"} for c in SMI_COMPANIES]
+    + [{**c, "index": "IBEX35"} for c in IBEX35_COMPANIES]
+    + [{**c, "index": "FTSEMIB"} for c in FTSEMIB_COMPANIES]
+    + [{**c, "index": "NIKKEI225"} for c in NIKKEI225_COMPANIES]
+    + [{**c, "index": "HANGSENG"} for c in HANGSENG_COMPANIES]
 )
-INDEX_NAMES = {"CAC40": "CAC 40", "DAX": "DAX", "NASDAQ": "Nasdaq 100", "DOW": "Dow Jones"}
+INDEX_NAMES = {
+    "CAC40": "CAC 40", "DAX": "DAX", "NASDAQ": "Nasdaq 100", "DOW": "Dow Jones",
+    "FTSE": "FTSE 100", "SMI": "SMI", "IBEX35": "IBEX 35", "FTSEMIB": "FTSE MIB",
+    "NIKKEI225": "Nikkei 225", "HANGSENG": "Hang Seng",
+}
 
 # Devise native de chaque indice — CAC40/DAX publient en euros, le
 # Nasdaq-100 et le Dow Jones en dollars. Consommé côté frontend
 # (docs/index.html) pour afficher le bon symbole plutôt que de supposer
 # € partout (bug de fond corrigé à l'occasion de l'ajout du Nasdaq, pas
 # seulement étendu).
-INDEX_CURRENCY = {"CAC40": "EUR", "DAX": "EUR", "NASDAQ": "USD", "DOW": "USD"}
+INDEX_CURRENCY = {
+    "CAC40": "EUR", "DAX": "EUR", "NASDAQ": "USD", "DOW": "USD",
+    "FTSE": "GBP", "SMI": "CHF", "IBEX35": "EUR", "FTSEMIB": "EUR",
+    "NIKKEI225": "JPY", "HANGSENG": "HKD",
+}
 
 SECTOR_PROFILES = {
     "Utilities": "defensif",
@@ -442,6 +1036,108 @@ FINANCIAL_SECTOR_TICKERS = {
     # de dépôt/crédit), EBITDA/EBIT standard disponibles chez yfinance —
     # même choix que PayPal (PYPL) côté Nasdaq-100.
     "GS", "JPM", "AXP", "TRV",
+    # FTSE 100 : banques de réseau/internationales et assureurs/réassureurs
+    # qui souscrivent du risque, sourcés et confirmés dans
+    # docs/superpowers/ftse100-research-report.md (§4). Volontairement
+    # exclus : gestionnaires d'actifs, trusts d'investissement fermés,
+    # opérateur de marché (LSEG, même traitement que Deutsche Börse/
+    # Euronext) et courtier CFD (IG Group) — pas des banques/assureurs au
+    # sens du projet. St. James's Place (STJ.L) est un cas limite signalé
+    # par la recherche (produits enveloppés en polices d'assurance vie
+    # mais métier économique = gestion de patrimoine) : laissé en
+    # méthodologie standard, pas ajouté ici.
+    "HSBA.L", "BARC.L", "LLOY.L", "NWG.L", "STAN.L", "INVP.L", "BGEO.L",
+    "PRU.L", "LGEN.L", "AV.L", "MNG.L", "SDLF.L", "ADM.L", "BEZ.L", "HSX.L",
+    # SMI : banque et assureurs/réassureurs qui souscrivent du risque —
+    # Partners Group (PGHN.SW, gestionnaire d'actifs alternatifs) exclue,
+    # même logique que les gestionnaires d'actifs déjà exclus côté FTSE.
+    "UBSG.SW", "ZURN.SW", "SREN.SW", "SLHN.SW",
+    # IBEX 35 : banques de réseau/investissement et assureur qui
+    # souscrivent du risque. Exclues : Merlin Properties/Inmobiliaria
+    # Colonial (foncières cotées), Cellnex Telecom (opérateur
+    # d'infrastructures), Amadeus IT Group (GDS voyage) — même logique que
+    # les foncières/opérateurs déjà exclus côté FTSE/DAX.
+    "SAN.MC", "BBVA.MC", "CABK.MC", "SAB.MC", "BKT.MC", "UNI.MC", "MAP.MC",
+    # FTSE MIB : banques de réseau/investissement et assureurs qui
+    # souscrivent du risque. Poste Italiane (PST.MI) reste un cas limite
+    # signalé (banque/assurance/logistique hybride) volontairement exclu,
+    # pas tranché unilatéralement — même prudence que St. James's Place
+    # (FTSE). Azimut Holding (gestionnaire d'actifs) et Nexi (opérateur de
+    # paiement) exclus pour la même raison que les gestionnaires
+    # d'actifs/opérateurs déjà exclus ailleurs.
+    "ISP.MI", "UCG.MI", "BAMI.MI", "BPE.MI", "BMPS.MI", "MB.MI", "G.MI", "UNI.MI",
+    # Nikkei 225 : banques (mégabanques + banques régionales/spécialisées)
+    # et assureurs/réassureurs qui souscrivent du risque, classification
+    # reprise directement de la catégorisation sectorielle officielle
+    # Nikkei Indexes ("Banking"/"Insurance"). Nomura/Daiwa Securities
+    # (courtiers, catégorie "Securities"), Japan Exchange Group (opérateur
+    # de marché) et Orix (conglomérat financier diversifié, plus
+    # d'activité assurance-vie depuis 2021) exclus — même logique que les
+    # opérateurs/gestionnaires déjà exclus ailleurs. Credit Saison (crédit
+    # à la consommation, pas de dépôts) laissée en méthodologie standard,
+    # cas limite non tranché unilatéralement.
+    "8306.T", "8316.T", "8411.T", "8308.T", "8309.T", "8331.T", "8354.T",
+    "5831.T", "7186.T", "8304.T",  # banques
+    "8766.T", "8725.T", "8630.T", "8750.T", "8795.T",  # assureurs
+    # Hang Seng : banques de réseau/d'État chinoises et assureurs qui
+    # souscrivent du risque, classification reprise de la catégorisation
+    # officielle Hang Seng Indexes Company (sous-indice "Financials").
+    # HKEX (opérateur de marché) exclu — même logique que LSEG/Deutsche
+    # Börse/Euronext. CITIC Limited (conglomérat, classé "Energy,
+    # Materials, Industrials and Conglomerates" par l'indice lui-même) et
+    # Link REIT (société d'investissement immobilier) laissés en
+    # méthodologie standard. HSBC déjà comptée côté FTSE (HSBA.L).
+    "0939.HK", "1299.HK", "1398.HK", "3988.HK", "2318.HK", "2628.HK",
+    "3968.HK", "2388.HK",
+    # Nikkei 225 : reclassées après le premier run réel (2026-09-12) — pas
+    # une décision de modèle économique comme pour le reste du fichier,
+    # mais un constat empirique : Nomura/Daiwa Securities (courtiers/
+    # banques d'investissement, initialement laissées en méthodologie
+    # standard, cf. rapport de recherche) et Orix (conglomérat financier
+    # diversifié, également laissé en standard) n'ont en réalité AUCUNE
+    # ligne EBITDA ni EBIT chez yfinance — même trou de données que les
+    # banques de dépôt classiques, donc même traitement nécessaire pour
+    # produire un score au lieu d'échouer. Japan Post Holdings idem (sa
+    # banque/assurance filiales dominent son bilan consolidé).
+    "8604.T", "8601.T", "8591.T", "6178.T",
+    # FTSE MIB : FinecoBank (FBK.MI) et Banca Mediolanum (BMED.MI),
+    # reclassées le 2026-09-13 après vérification directe de leurs
+    # comptes réels (analyse Opus en production) — ce sont bien des
+    # groupes bancaires classiques (marge nette, ROE, dépôts/encours),
+    # pas des cas limites courtage/distribution comme le texte du bloc
+    # FTSE MIB ci-dessus le supposait initialement. Poste Italiane reste
+    # exclue, cas différent (logistique + banque/assurance en parallèle,
+    # pas tranché). Audit ayant motivé ce changement : les 2 tickers
+    # avaient un score Rentabilité/Structure/Cash artificiellement
+    # extrême (méthodologie standard appliquée à des comptes bancaires
+    # sans EBITDA/EBIT), voir project_indices_cac40 (mémoire) pour le
+    # détail complet de l'investigation.
+    "FBK.MI", "BMED.MI",
+}
+
+
+# Trusts d'investissement fermés / gestionnaires d'actifs alternatifs sans
+# ligne EBITDA/EBIT exploitable chez yfinance, mais avec une raison
+# d'affaires différente d'une banque (pas de dépôts/crédits) : la "valeur"
+# de l'entreprise est son actif net (portefeuille de participations/actifs),
+# pas un résultat d'exploitation. Profil ajouté le 2026-09-13 après une
+# session de brainstorming dédiée (voir project_indices_cac40, mémoire) —
+# décote/prime sur la NAV (proxy : P/B calculé par extract_ratios_financial,
+# comparé à 1.0) plutôt que ROCE/dette nette-EBITDA. Hétérogène par
+# construction : 3i Group/Alliance Witan/F&C Investment Trust/Pershing
+# Square Holdings/Polar Capital Technology Trust/Scottish Mortgage sont de
+# purs trusts fermés (portefeuille détenu, pas d'activité opérationnelle) ;
+# Aberdeen Group et ICG sont en réalité des gestionnaires d'actifs (revenus
+# de commissions réels) ; Tritax Big Box est une foncière (loyers). Un seul
+# profil leur est appliqué à tous par pragmatisme (décision utilisateur
+# explicite), imparfait pour ces 3 derniers mais très supérieur au score
+# arbitrairement extrême de la méthodologie standard qu'ils recevaient
+# avant. Alliance Witan (ALW.L) n'a même pas de P/B exploitable chez
+# yfinance (vérifié via un diagnostic dédié) — dégrade vers le repli neutre
+# de score_valorisation_trust comme toute autre donnée manquante.
+TRUST_TICKERS = {
+    "III.L", "ABDN.L", "ALW.L", "FCIT.L", "ICG.L",
+    "PSH.L", "PCT.L", "SMT.L", "BBOX.L",
 }
 
 
@@ -488,7 +1184,9 @@ def _safe_value(series, col):
 ROCE_SPREAD_SCALE = 5.0  # points d'écart ROCE - coût du capital pour un score plein
 
 
-def score_rentabilite(roce: float, roe: float, cost_of_capital: float) -> FactorResult:
+def score_rentabilite(
+    roce: float, roe: float, cost_of_capital: float, *, data_available: bool = True,
+) -> FactorResult:
     """
     ROCE = rentabilité économique après IS (Résultat d'exploitation après
     IS / Actif économique). Le signal principal est l'écart entre le ROCE
@@ -497,7 +1195,20 @@ def score_rentabilite(roce: float, roe: float, cost_of_capital: float) -> Factor
     informatif (permet de repérer si la rentabilité des capitaux propres
     provient surtout de l'effet de levier plutôt que de la performance
     opérationnelle), sans peser directement sur le score.
+
+    `data_available=False` (trouvé en audit 2026-09-13, ex. 3i Group,
+    Scottish Mortgage, Nintendo, Tencent...) : yfinance ne fournit aucune
+    ligne EBIT exploitable pour ces entreprises, et `roce` reçu vaut alors
+    0.0 par convention côté extract_ratios — sans ce garde, un ROCE
+    "manquant" de 0% face à un vrai coût du capital positif se traduisait
+    par un score NÉGATIF (donnée absente lue comme mauvaise performance)
+    plutôt qu'une absence d'opinion.
     """
+    if not data_available:
+        return FactorResult(
+            "Rentabilité / création de valeur", 0.0, WEIGHTS["rentabilite"],
+            "Donnée indisponible (pas de ligne EBIT exploitable chez la source de données)",
+        )
     spread = roce - cost_of_capital
     score = _clamp((spread / ROCE_SPREAD_SCALE) * 10)
     return FactorResult(
@@ -537,13 +1248,25 @@ def _score_coverage(icr: float, critical: float) -> float:
     return _clamp(10.0 * (icr - critical) / critical, -10.0, 10.0)
 
 
-def score_structure_financiere(net_debt_ebitda: float, icr: float, sector: str | None) -> FactorResult:
+def score_structure_financiere(
+    net_debt_ebitda: float, icr: float, sector: str | None, *, data_available: bool = True,
+) -> FactorResult:
     """
     Dette nette/EBITDA et couverture des intérêts (ICR = EBIT / frais
     financiers nets), seuils Vernimmen ajustés par profil de risque
     sectoriel : un même niveau d'endettement ne représente pas le même
     risque selon la stabilité des flux de trésorerie du secteur.
+
+    `data_available=False` (audit 2026-09-13) : sans EBITDA/EBIT
+    exploitable, `net_debt_ebitda` reçu vaut 0.0 par convention — lu tel
+    quel, un endettement "manquant" donnait à tort le MEILLEUR score
+    possible (+10.0, endettement nul) au lieu d'une absence de donnée.
     """
+    if not data_available:
+        return FactorResult(
+            "Structure financière / solvabilité", 0.0, WEIGHTS["structure_financiere"],
+            "Donnée indisponible (pas de ligne EBITDA/EBIT exploitable chez la source de données)",
+        )
     profile = sector_risk_profile(sector)
     adjustment = SECTOR_ADJUSTMENT[profile]
 
@@ -589,10 +1312,20 @@ FCF_CONVERSION_NEUTRAL = 50.0   # % de conversion FCF/EBITDA jugé neutre
 FCF_CONVERSION_SCALE = 5.0      # points de conversion % pour 1 point de score
 
 
-def score_generation_cash(fcf_conversion: float) -> FactorResult:
+def score_generation_cash(fcf_conversion: float, *, data_available: bool = True) -> FactorResult:
     """Conversion FCF/EBITDA (%) : au-dessus de 50%, la rentabilité comptable
     se traduit bien en cash réel ; en dessous, le BFR ou les capex absorbent
-    l'essentiel de la génération de cash."""
+    l'essentiel de la génération de cash.
+
+    `data_available=False` (audit 2026-09-13) : sans EBITDA exploitable,
+    `fcf_conversion` reçu vaut 0.0 par convention — lu tel quel, ça
+    donnait le PIRE score possible (-10.0, conversion nulle) au lieu
+    d'une absence de donnée."""
+    if not data_available:
+        return FactorResult(
+            "Génération de cash", 0.0, WEIGHTS["generation_cash"],
+            "Donnée indisponible (pas de ligne EBITDA exploitable chez la source de données)",
+        )
     score = _clamp((fcf_conversion - FCF_CONVERSION_NEUTRAL) / FCF_CONVERSION_SCALE)
     return FactorResult(
         "Génération de cash",
@@ -627,12 +1360,25 @@ def _premium_score(current: float, avg_5y: float, cagr_ebitda: float) -> float:
 def score_valorisation(
     current_ev_ebitda: float, avg_ev_ebitda_5y: float,
     current_pe: float, avg_pe_5y: float,
-    cagr_ebitda: float,
+    cagr_ebitda: float, *, data_available: bool = True,
 ) -> FactorResult:
     """Multiples EV/EBITDA et P/E actuels comparés à la moyenne 5 ans de
     l'entreprise elle-même (pas de comparaison à des pairs au v1). Une
     prime n'est pénalisée que modérément et seulement si elle n'est pas
-    soutenue par la croissance de l'EBITDA (cf. Méthodologie section 5)."""
+    soutenue par la croissance de l'EBITDA (cf. Méthodologie section 5).
+
+    `data_available=False` (audit 2026-09-13) : sans EBITDA/résultat net
+    exploitable sur aucun exercice, les moyennes 5 ans valent 0.0 par
+    convention — `_premium_score` retombait déjà sur 0.0 (neutre) par le
+    garde `avg_5y == 0`, donc le SCORE n'était pas faussé ici (contrairement
+    aux 3 facteurs ci-dessus), mais le texte affiché ("EV/EBITDA 0.0x...")
+    donnait à tort l'impression d'une vraie donnée à 0. Garde ajouté pour
+    l'honnêteté du message, pas pour corriger un score déjà correct."""
+    if not data_available:
+        return FactorResult(
+            "Valorisation relative", 0.0, WEIGHTS["valorisation"],
+            "Donnée indisponible (pas de ligne EBITDA/résultat net exploitable chez la source de données)",
+        )
     ev_ebitda_score = _premium_score(current_ev_ebitda, avg_ev_ebitda_5y, cagr_ebitda)
     pe_score = _premium_score(current_pe, avg_pe_5y, cagr_ebitda)
     score = _clamp((ev_ebitda_score + pe_score) / 2)
@@ -759,6 +1505,91 @@ def score_valorisation_financiere(
     )
 
 
+# --- Variante "profil trust d'investissement" -----------------------------
+#
+# Voir TRUST_TICKERS pour le contexte complet. Rentabilité et Croissance
+# réutilisent telles quelles score_rentabilite_financiere/
+# score_croissance_financiere (mêmes formules, ROE/CAGR résultat net déjà
+# disponibles pour ces entreprises) — seuls Structure/Cash/Valorisation ont
+# besoin d'une logique dédiée.
+
+NET_DEBT_EQUITY_COMFORTABLE_TRUST = 10.0   # % dette nette/capitaux propres jugé confortable
+NET_DEBT_EQUITY_RISKY_TRUST = 40.0         # % à partir duquel le gearing est jugé élevé
+
+
+def score_structure_financiere_trust(net_debt: float, equity: float) -> FactorResult:
+    """Dette nette / capitaux propres (gearing), remplace dette nette/EBITDA
+    + ICR (EBITDA/EBIT indisponibles). Seuils bien plus bas que la
+    méthodologie standard (10%/40% contre 3.0x/5.5x d'EBITDA) : un trust
+    fermé est structurellement très peu endetté (pas de dépôts/crédits ni
+    de dette d'exploitation), donc un même niveau de gearing y est jugé
+    "confortable" à un seuil bien inférieur à celui d'une entreprise
+    industrielle — un gearing de 30-40% (courant pour une foncière comme
+    Tritax Big Box) y est déjà considéré élevé, alors qu'il serait neutre
+    en méthodologie standard rapportée à l'EBITDA."""
+    # Neutre (pas gearing=0.0 traité comme "endettement nul" -> +10.0) quand
+    # equity manque — même piège que le fix _cagr/roce du 2026-09-13 : une
+    # donnée absente ne doit jamais se faire passer pour un vrai zéro.
+    if not equity or _is_missing(equity) or _is_missing(net_debt):
+        return FactorResult(
+            "Structure financière / solvabilité", 0.0, WEIGHTS["structure_financiere"],
+            "Donnée indisponible (capitaux propres non exploitables chez la source de données)",
+        )
+    gearing = (net_debt / equity) * 100
+    score = _score_leverage(gearing, NET_DEBT_EQUITY_COMFORTABLE_TRUST, NET_DEBT_EQUITY_RISKY_TRUST)
+    return FactorResult(
+        "Structure financière / solvabilité",
+        score,
+        WEIGHTS["structure_financiere"],
+        f"Dette nette/capitaux propres {gearing:.1f}% (seuil confort "
+        f"{NET_DEBT_EQUITY_COMFORTABLE_TRUST:.0f}%, vigilance au-delà de "
+        f"{NET_DEBT_EQUITY_RISKY_TRUST:.0f}%) — profil trust",
+    )
+
+
+def score_generation_cash_trust() -> FactorResult:
+    """Toujours neutre : la trésorerie d'un trust fermé provient des
+    cessions/arbitrages de portefeuille, pas d'un cycle d'exploitation — un
+    proxy de conversion de cash n'aurait aucun sens économique ici (ce
+    n'est pas une donnée manquante à combler, c'est un facteur qui ne
+    s'applique structurellement pas à ce modèle d'affaires)."""
+    return FactorResult(
+        "Génération de cash", 0.0, WEIGHTS["generation_cash"],
+        "Non applicable pour ce profil (trust d'investissement) — la "
+        "génération de cash dépend des cessions de portefeuille, pas d'un "
+        "cycle d'exploitation",
+    )
+
+
+def score_valorisation_trust(current_pb: float) -> FactorResult:
+    """Décote/prime sur la NAV (proxy : P/B calculé par
+    extract_ratios_financier à partir des capitaux propres réels, pas d'un
+    champ NAV dédié — yfinance n'en expose pas pour les trusts cotés à
+    Londres, vérifié par un diagnostic dédié le 2026-09-13). Comparaison à
+    1.0 (parité avec la NAV), PAS à la moyenne 5 ans du P/B comme pour le
+    profil financier standard — le signal recherché ici est "se négocie
+    sous/sur sa valeur d'actif net aujourd'hui", la référence classique pour
+    un trust fermé, pas "moins cher que d'habitude".
+
+    (Un correctif local /100 a vécu ici brièvement le 2026-09-13, le temps
+    de corriger la vraie cause racine — le mélange pence/livre des prix
+    LSE, maintenant normalisé à la source dans fetch_company_financials.
+    current_pb arrive donc déjà dans la bonne unité, plus besoin d'ajuster
+    ici.)"""
+    if not current_pb:
+        return FactorResult(
+            "Valorisation relative", 0.0, WEIGHTS["valorisation"],
+            "Donnée indisponible (pas de P/B exploitable chez la source de données)",
+        )
+    premium_pct = (current_pb - 1.0) * 100
+    score = _clamp(-premium_pct / VALUATION_PREMIUM_SCALE, -10.0, 10.0)
+    return FactorResult(
+        "Valorisation relative", score, WEIGHTS["valorisation"],
+        f"P/B {current_pb:.2f}x vs NAV — "
+        f"{'décote' if premium_pct < 0 else 'prime'} de {abs(premium_pct):.0f}% sur la NAV",
+    )
+
+
 PRICE_MOMENTUM_SCALE = 20.0    # % d'écart vs MM200 pour un score plein
 QUARTERLY_ACCEL_SCALE = 10.0   # points d'écart de croissance pour un score plein
 
@@ -812,14 +1643,19 @@ def score_actualite_recente(news_items: list[dict]) -> FactorResult:
     exactement l'ancienne moyenne simple. Mise à l'échelle -10/+10.
     Neutre (0.0) si aucune actu récente exploitable — ni erreur, ni
     biais optimiste/pessimiste par défaut."""
-    cutoff = datetime.now() - timedelta(days=NEWS_SENTIMENT_WINDOW_DAYS)
+    # Comparaison en dates pures (pas datetime.now() brut) : une actu datée
+    # pile à J-14 est à minuit (00:00:00) côté item_date, alors que
+    # datetime.now() - 14j porte l'heure d'exécution courante — un run
+    # après minuit excluait donc à tort les actus du jour pile J-14 (trouvé
+    # en audit le 2026-09-13, 3 tickers concernés : FME.DE, 2269.T, 2382.HK).
+    cutoff = (datetime.now() - timedelta(days=NEWS_SENTIMENT_WINDOW_DAYS)).date()
     recent = []
     for item in news_items:
         try:
             item_date = datetime.strptime(item["date"], "%Y-%m-%d")
         except (ValueError, TypeError, KeyError):
             continue
-        if item_date >= cutoff:
+        if item_date.date() >= cutoff:
             recent.append(item)
     if not recent:
         return FactorResult(
@@ -903,8 +1739,23 @@ def _cagr(first_value: float, last_value: float, years: int) -> float:
     fournit pas toujours 5 années pleines pour chaque poste — plutôt que de
     laisser un NaN se propager jusqu'à _clamp, qui le traiterait comme un
     score maximal (+10) au lieu d'une absence de donnée.
-    """
-    if years <= 0 or _is_missing(first_value) or _is_missing(last_value) or first_value <= 0:
+
+    Renvoie aussi 0.0 quand `last_value` est négative (ex. EBITDA passé
+    positif devenu négatif, constaté en production pour Boeing, Stellantis,
+    Renault, Porsche SE...) : `first_value > 0` seul ne suffit pas à garantir
+    un taux de croissance géométrique réel, car (last_value / first_value)
+    élevé à une puissance fractionnaire (1/years) n'est défini que pour un
+    ratio positif ou nul. Avant ce garde, ce cas produisait un NaN
+    silencieux (numpy renvoie NaN + RuntimeWarning plutôt que de lever) qui
+    échappait au garde ci-dessus et atteignait bien _clamp — lui attribuant
+    +10.0 (meilleur score possible) au lieu d'une absence de donnée, soit
+    une inversion complète du signe pour des entreprises en réelle
+    difficulté. Trouvé lors de l'audit du 2026-09-13 (13 tickers concernés,
+    tous avec un score Croissance à +10.0 exactement)."""
+    if (
+        years <= 0 or _is_missing(first_value) or _is_missing(last_value)
+        or first_value <= 0 or last_value < 0
+    ):
         return 0.0
     return ((last_value / first_value) ** (1 / years) - 1) * 100
 
@@ -928,8 +1779,30 @@ def extract_ratios(financials, balance_sheet, cashflow, closes_by_year, shares_o
     latest = years_cols[0]
 
     revenue = get_row(financials, "Total Revenue", "Operating Revenue")
-    ebitda = get_row(financials, "EBITDA", "Normalized EBITDA")
-    ebit = get_row(financials, "EBIT", "Operating Income", "Total Operating Income As Reported")
+    # _get_row_or_nan (pas get_row) : trouvé en échec de production sur le
+    # Nikkei 225 (ex : Kyowa Hakko Kirin, 4151.T) — EBIT présent mais aucune
+    # ligne EBITDA/Normalized EBITDA chez yfinance pour cette entreprise,
+    # sans que ce soit un établissement financier (pas dans
+    # FINANCIAL_SECTOR_TICKERS). Un NaN isolé ici dégrade proprement
+    # net_debt_ebitda/cagr_ebitda/fcf_conversion/EV-EBITDA vers leurs valeurs
+    # neutres (0.0, gardes _is_missing déjà en place plus bas) plutôt que de
+    # faire échouer toute l'entreprise — jugé préférable à un score partiel
+    # manquant purement et simplement.
+    ebitda = _get_row_or_nan(financials, "EBITDA", "Normalized EBITDA")
+    # _get_row_or_nan (pas get_row) : trouvé en échec de production sur le
+    # FTSE 100/FTSE MIB — gestionnaires d'actifs, trusts fermés et REIT
+    # (3i Group, Aberdeen Group, Alliance Witan, F&C Investment Trust, ICG,
+    # Pershing Square Holdings, Polar Capital Technology Trust, Scottish
+    # Mortgage, Tritax Big Box REIT, Banca Mediolanum, FinecoBank) n'ont
+    # AUCUNE ligne EBIT/Operating Income chez yfinance — leur compte de
+    # résultat n'a pas la forme d'une entreprise opérationnelle classique,
+    # sans pour autant être des banques/assureurs au sens de
+    # FINANCIAL_SECTOR_TICKERS (exclues de cette méthodologie à dessein).
+    # ROCE/ICR dégradent vers leurs valeurs neutres ci-dessous (gardes
+    # _is_missing ajoutées) — ces entreprises restent notées sur leurs
+    # autres facteurs (croissance, valorisation, momentum, actualité)
+    # plutôt que d'être exclues entièrement du scoring.
+    ebit = _get_row_or_nan(financials, "EBIT", "Operating Income", "Total Operating Income As Reported")
     net_income = get_row(financials, "Net Income", "Net Income Common Stockholders")
     tax_rate = get_row(financials, "Tax Rate For Calcs")
 
@@ -943,8 +1816,14 @@ def extract_ratios(financials, balance_sheet, cashflow, closes_by_year, shares_o
     # tant que les cessions restent marginales) puis "Net Investment
     # Properties Purchase And Sale" (ex : Vonovia — une foncière investit
     # en achetant des immeubles de placement, pas des PPE industrielles ;
-    # même convention de signe négatif pour les deux replis).
-    capex = get_row(
+    # même convention de signe négatif pour les deux replis). _get_row_or_nan
+    # (pas get_row) : trouvé en échec de production sur le Nikkei 225 — une
+    # quinzaine d'entreprises très diverses (utilities, foncières,
+    # ferroviaires, cimentiers...) n'ont AUCUNE des 3 lignes chez yfinance,
+    # sans point commun sectoriel identifié (pas un cas "établissement
+    # financier" comme pour extract_ratios_financial). fcf/fcf_normalized
+    # dégradent déjà proprement vers 0.0 via leurs gardes _is_missing.
+    capex = _get_row_or_nan(
         cashflow, "Capital Expenditure", "Net PPE Purchase And Sale",
         "Net Investment Properties Purchase And Sale",
     )
@@ -981,26 +1860,56 @@ def extract_ratios(financials, balance_sheet, cashflow, closes_by_year, shares_o
     # True en Python) — d'où le `and not _is_missing(X)` en plus du test de
     # vérité déjà présent, pour ne jamais laisser un NaN se propager dans un
     # score final via une division silencieusement invalide.
+    # not _is_missing(tax_rate[latest]) ajouté (trouvé en audit le
+    # 2026-09-13, 3 tickers concernés : ENX.PA, FGR.PA, MBG.DE) : sans ce
+    # garde, un tax_rate manquant laissait passer
+    # `ebit[latest] * (1 - nan)` = NaN jusqu'à _clamp (voir _cagr ci-dessus
+    # pour le même mécanisme de bug), qui l'attribuait à tort comme score
+    # Rentabilité maximal (+10.0) au lieu d'une absence de donnée.
+    # *_available (audit 2026-09-13) : ces conditions étaient déjà là pour
+    # choisir le repli (0.0/10.0) en cas de donnée manquante, mais ce repli
+    # traversait ensuite score_rentabilite/score_structure_financiere/
+    # score_generation_cash SANS distinction avec une vraie donnée — un
+    # ROCE "manquant" (0.0) face à un vrai coût du capital positif donnait
+    # un score NÉGATIF (donnée absente lue comme mauvaise performance), et
+    # une dette nette/EBITDA "manquante" (0.0) donnait au contraire un
+    # score de +10.0 (donnée absente lue comme excellente structure
+    # financière) — jamais neutre, jamais cohérent d'un facteur à l'autre.
+    # Nommer explicitement la condition (au lieu de la laisser implicite
+    # dans le repli) permet de la réutiliser telle quelle pour prévenir
+    # score_rentabilite/score_structure_financiere/score_generation_cash
+    # que la donnée manque, plutôt que de leur faire deviner à partir
+    # d'une simple valeur qui a l'air plausible.
+    roce_available = bool(
+        economic_assets_latest and not _is_missing(economic_assets_latest)
+        and not _is_missing(ebit[latest]) and not _is_missing(tax_rate[latest])
+    )
     roce = (
         (ebit[latest] * (1 - tax_rate[latest]) / economic_assets_latest) * 100
-        if economic_assets_latest and not _is_missing(economic_assets_latest) else 0.0
+        if roce_available else 0.0
     )
     roe = (
         (net_income[latest] / equity_latest) * 100
         if equity_latest and not _is_missing(equity_latest) else 0.0
     )
 
-    net_debt_ebitda = (
-        net_debt_latest / ebitda[latest]
-        if ebitda[latest] and not _is_missing(ebitda[latest]) else 0.0
+    net_debt_ebitda_available = bool(ebitda[latest] and not _is_missing(ebitda[latest]))
+    net_debt_ebitda = net_debt_latest / ebitda[latest] if net_debt_ebitda_available else 0.0
+    icr_available = bool(
+        total_debt_latest and not _is_missing(total_debt_latest)
+        and not _is_missing(ebit[latest])
     )
     icr = (
         ebit[latest] / (total_debt_latest * (DEBT_INTEREST_RATE_PROXY / 100))
-        if total_debt_latest and not _is_missing(total_debt_latest) else 10.0
+        if icr_available else 10.0
     )  # proxy frais financiers si non isolés (DEBT_INTEREST_RATE_PROXY) — parenthèses
     # nécessaires pour rester strictement identique à l'ancien littéral `* 0.03`
     # (l'associativité par défaut donnait `(total_debt * 3.0) / 100`, qui diffère
     # de `total_debt * 0.03` d'1 ULP sur ~35% des valeurs)
+    # Neutre dès que l'UN des deux sous-indicateurs manque : moyenner un
+    # score réel avec un repli déguisé donnerait un score à moitié
+    # inventé, plus trompeur qu'une absence de donnée franche.
+    structure_available = net_debt_ebitda_available and icr_available
 
     # CAGR lissé sur les 2 exercices les plus récents vs les 2 plus anciens
     # (plutôt qu'un simple point à point) pour réduire la sensibilité à une
@@ -1029,10 +1938,8 @@ def extract_ratios(financials, balance_sheet, cashflow, closes_by_year, shares_o
         op_cash_flow_latest + capex_latest
         if not _is_missing(op_cash_flow_latest) and not _is_missing(capex_latest) else 0.0
     )
-    fcf_conversion = (
-        (fcf / ebitda[latest]) * 100
-        if ebitda[latest] and not _is_missing(ebitda[latest]) else 0.0
-    )
+    fcf_conversion_available = bool(ebitda[latest] and not _is_missing(ebitda[latest]))
+    fcf_conversion = (fcf / ebitda[latest]) * 100 if fcf_conversion_available else 0.0
 
     # FCF lissé sur la même fenêtre que le CAGR (recent_cols, 1-2 exercices)
     # — utilisé comme point de départ du DCF à la place de `fcf` (le seul
@@ -1073,19 +1980,28 @@ def extract_ratios(financials, balance_sheet, cashflow, closes_by_year, shares_o
     avg_ev_ebitda_5y = sum(ev_ebitda_by_year) / len(ev_ebitda_by_year) if ev_ebitda_by_year else 0.0
     current_pe = pe_by_year[0] if pe_by_year else 0.0
     avg_pe_5y = sum(pe_by_year) / len(pe_by_year) if pe_by_year else 0.0
+    # Les deux listes se remplissent/se vident toujours ensemble (le même
+    # `continue` du bloc ci-dessus saute l'année si ebitda OU net_income
+    # manque), donc une seule condition suffit à couvrir les deux jambes
+    # (EV/EBITDA et PER) du facteur Valorisation.
+    valuation_available = bool(ev_ebitda_by_year)
 
     return {
         "roce": roce,
+        "roce_available": roce_available,
         "roe": roe,
         "net_debt_ebitda": net_debt_ebitda,
         "icr": icr,
+        "structure_available": structure_available,
         "cagr_ca": cagr_ca,
         "cagr_ebitda": cagr_ebitda,
         "fcf_conversion": fcf_conversion,
+        "fcf_conversion_available": fcf_conversion_available,
         "current_ev_ebitda": current_ev_ebitda,
         "avg_ev_ebitda_5y": avg_ev_ebitda_5y,
         "current_pe": current_pe,
         "avg_pe_5y": avg_pe_5y,
+        "valuation_available": valuation_available,
         "fcf": fcf,
         "fcf_normalized": fcf_normalized,
         "net_debt": net_debt_latest,
@@ -1103,8 +2019,8 @@ def extract_ratios_financial(financials, balance_sheet, cashflow, closes_by_year
     propres/actif total), conversion cash (OCF/résultat net), P/E et P/B
     plutôt que ROCE/dette nette-EBITDA/ICR/FCF-EBITDA/EV-EBITDA.
 
-    fcf/cagr_ebitda/net_debt/current_ev_ebitda/avg_ev_ebitda_5y sont tout
-    de même présents dans le dict renvoyé, à des valeurs neutres (0.0) :
+    fcf/cagr_ebitda/current_ev_ebitda/avg_ev_ebitda_5y sont tout de même
+    présents dans le dict renvoyé, à des valeurs neutres (0.0) :
     estimate_valuation_targets() y accède sans condition pour toutes les
     entreprises, et ces valeurs neutres désactivent proprement le DCF et
     la valorisation par multiple EV/EBITDA via leur garde-fou déjà
@@ -1112,7 +2028,12 @@ def extract_ratios_financial(financials, balance_sheet, cashflow, closes_by_year
     valeur repose alors uniquement sur l'approche patrimoniale (valeur
     comptable par action), une ancre usuelle pour ce secteur, plutôt que
     de construire un DCF avec un FCF ou une croissance d'EBITDA qui
-    n'existent pas."""
+    n'existent pas. `net_debt`, en revanche, est un VRAI calcul (dette
+    totale - trésorerie du dernier exercice) depuis le 2026-09-13, pas une
+    valeur neutre — sûr vis-à-vis du DCF (déjà désactivé par fcf=0.0 avant
+    que net_debt ne soit utilisé) et nécessaire pour le profil trust
+    d'investissement (voir TRUST_TICKERS), qui a une vraie notion de
+    gearing contrairement à une banque."""
     years_cols = list(financials.columns)
     n_years = len(years_cols)
     latest = years_cols[0]
@@ -1124,14 +2045,45 @@ def extract_ratios_financial(financials, balance_sheet, cashflow, closes_by_year
     total_assets = get_row(balance_sheet, "Total Assets")
     equity = get_row(balance_sheet, "Stockholders Equity", "Common Stock Equity")
     total_debt = _get_row_or_nan(balance_sheet, "Total Debt")
+    # "cash" n'était pas extrait ici avant le profil trust (2026-09-13) :
+    # net_debt était toujours forcé à 0.0 pour toutes les entreprises de ce
+    # chemin, la dette nette d'une banque n'ayant pas de sens (sa "dette"
+    # est faite de dépôts). Un trust d'investissement, en revanche, a bien
+    # une vraie position de dette nette (voir score_structure_financiere_trust)
+    # — calculée ici pour ne pas dupliquer l'extraction dans une fonction
+    # séparée juste pour ce profil.
+    cash = get_row(balance_sheet, "Cash And Cash Equivalents", "Cash Cash Equivalents And Short Term Investments")
 
-    op_cash_flow = get_row(cashflow, "Operating Cash Flow")
+    # "Operating Cash Flow" absent chez certaines entreprises (trouvé en
+    # échec de production sur Swiss Life Holding SLHN.SW et Mapfre MAP.MC,
+    # toutes deux méthodologie financière) — dérivé depuis "Free Cash Flow"
+    # (= OCF + capex, capex déjà négatif) quand disponible, même repli que
+    # dans extract_ratios plutôt que de faire échouer toute l'entreprise.
+    op_cash_flow = _try_get_row(cashflow, "Operating Cash Flow")
+    if op_cash_flow is None:
+        capex = _get_row_or_nan(
+            cashflow, "Capital Expenditure", "Net PPE Purchase And Sale",
+            "Net Investment Properties Purchase And Sale",
+        )
+        free_cash_flow = _try_get_row(cashflow, "Free Cash Flow")
+        if free_cash_flow is not None:
+            op_cash_flow = free_cash_flow - capex
+        else:
+            raise KeyError(
+                f"Aucune des lignes ('Operating Cash Flow',) ni du repli "
+                f"('Free Cash Flow',) trouvée (lignes disponibles : {list(cashflow.index)})"
+            )
 
     equity_latest = _safe_value(equity, latest)
     total_assets_latest = _safe_value(total_assets, latest)
     total_debt_latest = _safe_value(total_debt, latest)
+    cash_latest = _safe_value(cash, latest)
     net_income_latest = _safe_value(net_income, latest)
     op_cash_flow_latest = _safe_value(op_cash_flow, latest)
+    net_debt_latest = (
+        total_debt_latest - cash_latest
+        if not _is_missing(total_debt_latest) and not _is_missing(cash_latest) else 0.0
+    )
 
     roe = (
         (net_income_latest / equity_latest) * 100
@@ -1192,12 +2144,16 @@ def extract_ratios_financial(financials, balance_sheet, cashflow, closes_by_year
         "equity": equity_latest,
         "tax_rate": tax_rate[latest],
         "total_debt": total_debt_latest,
+        # net_debt réel (pas neutre) depuis le 2026-09-13 : sûr pour le DCF
+        # (déjà désactivé par fcf=0.0 ci-dessous, qui court-circuite
+        # estimate_dcf_price avant que net_debt ne soit utilisé), et
+        # nécessaire pour score_structure_financiere_trust (profil trust).
+        "net_debt": net_debt_latest,
         # Valeurs neutres pour désactiver proprement DCF / multiple EV-EBITDA
         # dans estimate_valuation_targets (voir docstring ci-dessus).
         "fcf": 0.0,
         "fcf_normalized": 0.0,
         "cagr_ebitda": 0.0,
-        "net_debt": 0.0,
         "current_ev_ebitda": 0.0,
         "avg_ev_ebitda_5y": 0.0,
     }
@@ -1399,6 +2355,29 @@ def fetch_company_financials(ticker: str) -> dict:
     beta = info.get("beta")
     sector = info.get("sector")
     history = t.history(period="6y")["Close"]
+    if ticker.endswith(".L"):
+        # LSE (bug racine trouvé et corrigé le 2026-09-13) : yfinance
+        # renvoie les prix des tickers londoniens en PENCE (GBp), alors que
+        # les comptes annuels (bilan/résultat) sont en LIVRES (GBP) — un
+        # écart de convention propre à la City, hérité de la période
+        # pré-décimalisation. Sans cette conversion, tout
+        # `market_cap = price * shares_outstanding` calculé en aval (P/E,
+        # P/B, EV/EBITDA, DCF, valorisation par multiple, juste valeur)
+        # mélange les unités d'un facteur ~100. Repéré en production via le
+        # tout nouveau profil trust (score_valorisation_trust, qui compare
+        # à une valeur ABSOLUE — 1.0 — donc n'annule pas l'erreur d'échelle
+        # comme le fait chaque autre facteur en se comparant à sa propre
+        # moyenne 5 ans) : HSBC/Barclays/Lloyds affichaient déjà un P/E et
+        # un P/B ~100x trop élevés (score correct par coïncidence, ratio
+        # auto-référentiel), et fair_value/entry_price/exit_price
+        # mélangeaient carrément une méthode en pence (retour au multiple,
+        # dérivée directement du cours) avec deux méthodes en livres (DCF,
+        # actif net) — un vrai mélange d'unités, incohérent pour les 99
+        # entreprises FTSE. Converti ici, à la source, pour que tout calcul
+        # en aval (closes_by_year, current_price, ma200, et tout ce qui en
+        # dérive) soit cohérent sans replâtrage consommateur par
+        # consommateur.
+        history = history / 100.0
 
     closes_by_year = {}
     for col in financials.columns:
@@ -1420,11 +2399,20 @@ def fetch_company_financials(ticker: str) -> dict:
             shares_outstanding = market_cap / current_price
 
     is_financial = ticker in FINANCIAL_SECTOR_TICKERS
-    if is_financial:
+    is_trust = ticker in TRUST_TICKERS
+    if is_financial or is_trust:
+        # Les trusts partagent l'extraction "profil financier" (ROE, levier,
+        # P/B...) avec les banques/assurances — pas parce que ce sont des
+        # banques, mais parce qu'ils partagent le même trou de données chez
+        # yfinance (pas d'EBITDA/EBIT exploitable) et que extract_ratios_financial
+        # calcule déjà tout ce dont le profil trust a besoin (roe, equity,
+        # cagr_ca/cagr_net_income, current_pb — le proxy de décote/prime sur
+        # NAV). Seul le SCORING diverge ensuite (voir build_company_entry).
         ratios = extract_ratios_financial(financials, balance_sheet, cashflow, closes_by_year, shares_outstanding)
     else:
         ratios = extract_ratios(financials, balance_sheet, cashflow, closes_by_year, shares_outstanding)
     ratios["is_financial"] = is_financial
+    ratios["is_trust"] = is_trust
     ratios["sector"] = SECTOR_OVERRIDE_BY_TICKER.get(ticker) or sector
     ratios["ecart_pct_ma200"] = ecart_pct_ma200
     try:
@@ -1717,7 +2705,11 @@ SIGNAL_TRACKING_PATH = os.path.join(
 )
 # Indices utilisés comme benchmark de chaque position (voir "index" sur
 # chaque société — CAC40/DAX) : tickers yfinance correspondants.
-INDEX_YFINANCE_TICKERS = {"CAC40": "^FCHI", "DAX": "^GDAXI", "NASDAQ": "^NDX", "DOW": "^DJI"}
+INDEX_YFINANCE_TICKERS = {
+    "CAC40": "^FCHI", "DAX": "^GDAXI", "NASDAQ": "^NDX", "DOW": "^DJI",
+    "FTSE": "^FTSE", "SMI": "^SSMI", "IBEX35": "^IBEX", "FTSEMIB": "FTSEMIB.MI",
+    "NIKKEI225": "^N225", "HANGSENG": "^HSI",
+}
 SIGNAL_STOP_LOSS_PCT = -20.0     # % perte déclenchant une clôture anticipée
 SIGNAL_SHADOW_DELAY_MONTHS = 6   # délai max avant clôture forcée du signal
                                   # ET date du benchmark "tenir 6 mois pleins"
@@ -2300,13 +3292,22 @@ def estimate_entry_exit_prices(
 
 FRED_RISK_FREE_SERIES = "IRLTLT01FRM156N"  # OAT 10 ans (France), FRED/OCDE, mensuel
 FRED_RISK_FREE_SERIES_US = "DGS10"  # Treasury 10 ans (US), FRED, quotidien — ajouté avec le Nasdaq-100 : le taux sans risque du CAPM doit correspondre à la devise des cash-flows valorisés (dollars pour le Nasdaq), pas être le taux France appliqué partout par défaut.
+FRED_RISK_FREE_SERIES_UK = "IRLTLT01GBM156N"  # Gilt 10 ans (UK), FRED/OCDE, mensuel — même série/fréquence que la France, ajouté avec le FTSE 100.
+FRED_RISK_FREE_SERIES_CH = "IRLTLT01CHM156N"  # Emprunt confédéral 10 ans (Suisse), FRED/OCDE, mensuel — même famille de série que France/UK, ajouté avec le SMI.
+FRED_RISK_FREE_SERIES_JP = "IRLTLT01JPM156N"  # JGB 10 ans (Japon), FRED/OCDE, mensuel — même famille de série que France/UK/Suisse, ajouté avec le Nikkei 225.
 
 # Taux sans risque à utiliser selon la devise de l'entreprise (voir
 # INDEX_CURRENCY) — CAC40/DAX (EUR) gardent le taux France historique,
-# NASDAQ (USD) utilise le Treasury US. Rempli dans main() une fois les
-# deux taux récupérés (un seul appel FRED par série et par run, pas par
-# entreprise).
-RISK_FREE_SERIES_BY_CURRENCY = {"EUR": FRED_RISK_FREE_SERIES, "USD": FRED_RISK_FREE_SERIES_US}
+# NASDAQ/DOW (USD) utilisent le Treasury US, FTSE (GBP) utilise le gilt
+# UK. Rempli dans main() une fois les taux récupérés (un seul appel FRED
+# par série et par run, pas par entreprise).
+RISK_FREE_SERIES_BY_CURRENCY = {
+    "EUR": FRED_RISK_FREE_SERIES,
+    "USD": FRED_RISK_FREE_SERIES_US,
+    "GBP": FRED_RISK_FREE_SERIES_UK,
+    "CHF": FRED_RISK_FREE_SERIES_CH,
+    "JPY": FRED_RISK_FREE_SERIES_JP,
+}
 
 
 def fetch_risk_free_rate(series_id: str = FRED_RISK_FREE_SERIES) -> float | None:
@@ -2602,13 +3603,37 @@ def build_company_entry(
                 f"conversion cash (OCF/résultat net) {data['cash_conversion']:.0f}%, "
                 f"coût du capital {cost_of_capital:.1f}%"
             )
-        else:
+        elif data["is_trust"]:
+            # Profil trust d'investissement (voir TRUST_TICKERS) : décote/
+            # prime sur NAV (proxy P/B) plutôt que ROCE/dette nette-EBITDA,
+            # pas de notion de conversion de cash d'exploitation.
+            pb_text = f"{data['current_pb']:.2f}x" if data["current_pb"] else "indisponible"
             ratios_summary = (
-                f"ROCE {data['roce']:.1f}%, ROE {data['roe']:.1f}%, "
-                f"dette nette/EBITDA {data['net_debt_ebitda']:.1f}x, "
-                f"ICR {data['icr']:.1f}x, CAGR CA {data['cagr_ca']:+.1f}%/an, "
+                f"[Profil trust d'investissement — méthodologie adaptée, "
+                f"EBITDA/EBIT non disponibles, pas de cycle d'exploitation "
+                f"classique] ROE {data['roe']:.1f}%, capitaux propres/actif "
+                f"total {data['leverage_ratio']:.1f}%, CAGR CA "
+                f"{data['cagr_ca']:+.1f}%/an, CAGR résultat net "
+                f"{data['cagr_net_income']:+.1f}%/an, P/B (proxy décote/prime "
+                f"sur NAV) {pb_text}, coût du capital {cost_of_capital:.1f}%"
+            )
+        else:
+            # "indisponible" plutôt que le chiffre de repli (audit 2026-09-13,
+            # même motif que les FactorResult ci-dessous) : sans ça, Claude
+            # recevrait un faux "ROCE 0.0%"/"ICR 10.0x" et pourrait écrire une
+            # analyse contredisant le facteur affiché juste à côté (qui dit
+            # maintenant explicitement "Donnée indisponible").
+            roce_text = f"{data['roce']:.1f}%" if data["roce_available"] else "indisponible"
+            structure_available = data["structure_available"]
+            net_debt_ebitda_text = f"{data['net_debt_ebitda']:.1f}x" if structure_available else "indisponible"
+            icr_text = f"{data['icr']:.1f}x" if structure_available else "indisponible"
+            fcf_conversion_text = f"{data['fcf_conversion']:.0f}%" if data["fcf_conversion_available"] else "indisponible"
+            ratios_summary = (
+                f"ROCE {roce_text}, ROE {data['roe']:.1f}%, "
+                f"dette nette/EBITDA {net_debt_ebitda_text}, "
+                f"ICR {icr_text}, CAGR CA {data['cagr_ca']:+.1f}%/an, "
                 f"CAGR EBITDA {data['cagr_ebitda']:+.1f}%/an, "
-                f"conversion FCF/EBITDA {data['fcf_conversion']:.0f}%, "
+                f"conversion FCF/EBITDA {fcf_conversion_text}, "
                 f"coût du capital {cost_of_capital:.1f}%"
             )
         generated = generate_financial_analysis(
@@ -2654,15 +3679,36 @@ def build_company_entry(
             ),
             score_actualite_recente(news),
         ]
+    elif data["is_trust"]:
+        factors = [
+            score_rentabilite_financiere(data["roe"], cost_of_capital),
+            score_structure_financiere_trust(data["net_debt"], data["equity"]),
+            score_croissance_financiere(data["cagr_ca"], data["cagr_net_income"]),
+            score_generation_cash_trust(),
+            score_valorisation_trust(data["current_pb"]),
+            score_dynamique_recente(
+                data["ecart_pct_ma200"], data["quarterly_yoy_growth_ca"], data["cagr_ca"],
+            ),
+            score_actualite_recente(news),
+        ]
     else:
         factors = [
-            score_rentabilite(data["roce"], data["roe"], cost_of_capital),
-            score_structure_financiere(data["net_debt_ebitda"], data["icr"], sector),
+            score_rentabilite(
+                data["roce"], data["roe"], cost_of_capital,
+                data_available=data["roce_available"],
+            ),
+            score_structure_financiere(
+                data["net_debt_ebitda"], data["icr"], sector,
+                data_available=data["structure_available"],
+            ),
             score_croissance(data["cagr_ca"], data["cagr_ebitda"]),
-            score_generation_cash(data["fcf_conversion"]),
+            score_generation_cash(
+                data["fcf_conversion"], data_available=data["fcf_conversion_available"],
+            ),
             score_valorisation(
                 data["current_ev_ebitda"], data["avg_ev_ebitda_5y"],
                 data["current_pe"], data["avg_pe_5y"], data["cagr_ebitda"],
+                data_available=data["valuation_available"],
             ),
             score_dynamique_recente(
                 data["ecart_pct_ma200"], data["quarterly_yoy_growth_ca"], data["cagr_ca"],
@@ -2798,11 +3844,10 @@ def _entry_alert_context(company: dict) -> str:
     return "".join(parts)
 
 
-def build_entry_alert_email_html(company: dict) -> str:
-    """Un email par entreprise (pas un digest groupé) : objet et contenu
-    portent sur cette seule entreprise, dans le même langage visuel que
-    le site (Fraunces remplacé par une police sans-serif — non
-    disponible dans un email — mais mêmes couleurs et hiérarchie)."""
+def _entry_alert_item_html(company: dict) -> str:
+    """Carte compacte d'un signal "entree" pour le digest groupé (pas un
+    email autonome) — mêmes données que l'ancien email par entreprise,
+    condensées."""
     index_name = INDEX_NAMES.get(company.get("index"), company.get("index", ""))
     score = company["score"]
     score_color = "#b99a68" if score >= 0 else "#a35540"
@@ -2811,87 +3856,29 @@ def build_entry_alert_email_html(company: dict) -> str:
     fiche_url = f"{SITE_BASE_URL}#indices/{company['ticker']}"
 
     return f"""
-    <html><body style="background:#15161c;margin:0;padding:0;">
-      <div style="max-width:480px;margin:0 auto;padding:32px 24px;font-family:Arial,Helvetica,sans-serif;">
-        <p style="color:#8a90a3;font-size:11px;letter-spacing:0.08em;text-transform:uppercase;margin:0 0 10px;">
-          {index_name} — Signal d'entrée
-        </p>
-        <h1 style="color:#edeef3;font-size:24px;font-weight:bold;margin:0 0 2px;">{company['name']}</h1>
-        <p style="color:#8a90a3;font-size:13px;margin:0 0 24px;">{company['ticker']}</p>
-
-        <div style="background:#1b1d25;border:1px solid #2a2d38;border-radius:10px;padding:20px 20px 16px;margin:0 0 20px;">
-          <p style="color:{score_color};font-size:42px;font-weight:bold;margin:0;line-height:1;">{score:+.1f}</p>
-          <p style="color:#edeef3;font-size:14px;margin:8px 0 0;">{company['interpretation']}</p>
-        </div>
-
-        <table style="width:100%;border-collapse:collapse;margin:0 0 20px;">
-          <tr>
-            <td style="padding:9px 0;border-bottom:1px solid #2a2d38;color:#8a90a3;font-size:13px;font-family:Arial,sans-serif;">Cours actuel</td>
-            <td style="padding:9px 0;border-bottom:1px solid #2a2d38;color:#edeef3;font-size:13px;font-family:Arial,sans-serif;text-align:right;">{company['current_price']:.2f} €</td>
-          </tr>
-          <tr>
-            <td style="padding:9px 0;border-bottom:1px solid #2a2d38;color:#8a90a3;font-size:13px;font-family:Arial,sans-serif;">Repère d'entrée</td>
-            <td style="padding:9px 0;border-bottom:1px solid #2a2d38;color:#b99a68;font-size:13px;font-family:Arial,sans-serif;text-align:right;">{company['entry_price']:.2f} €</td>
-          </tr>
-          <tr>
-            <td style="padding:9px 0;color:#8a90a3;font-size:13px;font-family:Arial,sans-serif;">Repère de sortie</td>
-            <td style="padding:9px 0;color:#a35540;font-size:13px;font-family:Arial,sans-serif;text-align:right;">{company['exit_price']:.2f} €</td>
-          </tr>
-        </table>
-
-        <p style="color:#8a90a3;font-size:13px;line-height:1.6;margin:0 0 20px;">{detail}</p>
-
-        {f'''<p style="color:#8a90a3;font-size:11px;letter-spacing:0.06em;text-transform:uppercase;margin:0 0 12px;">
-          Pourquoi ce signal ?
-        </p>
-        {context_html}''' if context_html else ''}
-
-        <a href="{fiche_url}" style="display:inline-block;background:#b99a68;color:#15161c;
-           font-weight:bold;font-size:14px;padding:13px 26px;border-radius:8px;text-decoration:none;">
-          Voir la fiche complète →
-        </a>
-
-        <p style="color:#8a90a3;font-size:11px;line-height:1.5;margin:32px 0 0;">
-          Score composite favorable et cours proche du repère d'entrée — pas un conseil d'investissement.
-        </p>
-      </div>
-    </body></html>
-    """
-
-
-def send_entry_alert_email(companies: list[dict]) -> bool:
-    """Envoie un email par entreprise dont le signal "entree" vient
-    d'apparaître aujourd'hui (pas un digest groupé). Ignoré
-    silencieusement (avec un message) si les identifiants SMTP ne sont
-    pas configurés ou si `companies` est vide — jamais d'exception,
-    même contrat que gold_score.send_email."""
-    if not companies:
-        return False
-    smtp_user = os.environ.get("SMTP_USER")
-    smtp_password = os.environ.get("SMTP_PASSWORD")
-    mail_to = os.environ.get("MAIL_TO") or smtp_user
-    if not smtp_user or not smtp_password:
-        print("\n(Envoi d'email d'alerte entrée ignoré : SMTP_USER / SMTP_PASSWORD non configurés.)")
-        return False
-
-    try:
-        with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
-            server.starttls()
-            server.login(smtp_user, smtp_password)
-            for company in companies:
-                index_name = INDEX_NAMES.get(company.get("index"), company.get("index", ""))
-                msg = MIMEMultipart("mixed")
-                msg["Subject"] = f"{company['name']} ({index_name}) — signal d'entrée"
-                msg["From"] = smtp_user
-                msg["To"] = mail_to
-                msg.attach(MIMEText(build_entry_alert_email_html(company), "html"))
-                server.sendmail(smtp_user, [mail_to], msg.as_string())
-        tickers = ", ".join(c["ticker"] for c in companies)
-        print(f"\nEmail(s) d'alerte entrée envoyé(s) à {mail_to} ({tickers})")
-        return True
-    except Exception as e:
-        print(f"Erreur envoi email d'alerte entrée : {e}")
-        return False
+        <div style="background:#1b1d25;border:1px solid #2a2d38;border-radius:10px;padding:18px 20px;margin:0 0 14px;">
+          <p style="color:#8a90a3;font-size:11px;letter-spacing:0.06em;text-transform:uppercase;margin:0 0 6px;">{index_name}</p>
+          <h2 style="color:#edeef3;font-size:16px;font-weight:bold;margin:0 0 2px;">{company['name']}
+            <span style="color:#8a90a3;font-weight:normal;font-size:12px;">({company['ticker']})</span>
+          </h2>
+          <p style="color:{score_color};font-size:22px;font-weight:bold;margin:6px 0 8px;">{score:+.1f}</p>
+          <p style="color:#8a90a3;font-size:12px;line-height:1.5;margin:0 0 10px;">{detail}</p>
+          <table style="width:100%;border-collapse:collapse;margin:0 0 10px;">
+            <tr>
+              <td style="padding:3px 0;color:#8a90a3;font-size:12px;font-family:Arial,sans-serif;">Cours actuel</td>
+              <td style="padding:3px 0;color:#edeef3;font-size:12px;font-family:Arial,sans-serif;text-align:right;">{company['current_price']:.2f} €</td>
+            </tr>
+            <tr>
+              <td style="padding:3px 0;color:#8a90a3;font-size:12px;font-family:Arial,sans-serif;">Repère d'entrée / sortie</td>
+              <td style="padding:3px 0;color:#edeef3;font-size:12px;font-family:Arial,sans-serif;text-align:right;">{company['entry_price']:.2f} € / {company['exit_price']:.2f} €</td>
+            </tr>
+          </table>
+          {f'''<p style="color:#8a90a3;font-size:11px;letter-spacing:0.06em;text-transform:uppercase;margin:0 0 8px;">
+            Pourquoi ce signal ?
+          </p>
+          {context_html}''' if context_html else ''}
+          <a href="{fiche_url}" style="color:#b99a68;font-size:12px;font-weight:bold;text-decoration:none;">Voir la fiche complète →</a>
+        </div>"""
 
 
 def _find_news_item_by_link(company: dict, link: str) -> dict | None:
@@ -2901,9 +3888,9 @@ def _find_news_item_by_link(company: dict, link: str) -> dict | None:
     return None
 
 
-def build_major_news_alert_email_html(company: dict, alert: dict) -> str:
-    """Email centré sur l'actu elle-même (pas le score/prix, contrairement
-    à l'alerte entrée) : titre, source, résumé, lien direct vers la fiche."""
+def _major_news_alert_item_html(company: dict, alert: dict) -> str:
+    """Carte compacte d'une actu majeure pour le digest groupé (pas un
+    email autonome)."""
     index_name = INDEX_NAMES.get(company.get("index"), company.get("index", ""))
     news_item = _find_news_item_by_link(company, alert.get("link", "")) or {}
     sentiment = news_item.get("sentiment", 0)
@@ -2913,69 +3900,101 @@ def build_major_news_alert_email_html(company: dict, alert: dict) -> str:
     fiche_url = f"{SITE_BASE_URL}#indices/{company['ticker']}"
 
     return f"""
-    <html><body style="background:#15161c;margin:0;padding:0;">
-      <div style="max-width:480px;margin:0 auto;padding:32px 24px;font-family:Arial,Helvetica,sans-serif;">
-        <p style="color:#8a90a3;font-size:11px;letter-spacing:0.08em;text-transform:uppercase;margin:0 0 10px;">
-          {company['name']} ({index_name}) — Actu majeure
+        <div style="background:#1b1d25;border:1px solid #2a2d38;border-radius:10px;padding:18px 20px;margin:0 0 14px;">
+          <p style="color:#8a90a3;font-size:11px;letter-spacing:0.06em;text-transform:uppercase;margin:0 0 6px;">{company['name']} ({index_name})</p>
+          <span style="display:inline-block;background:{sentiment_color};color:#15161c;
+             font-size:10px;font-weight:bold;padding:2px 9px;border-radius:999px;margin:0 0 8px;">
+            {sentiment_label}
+          </span>
+          <h2 style="color:#edeef3;font-size:15px;font-weight:bold;margin:6px 0 4px;line-height:1.3;">{alert['title']}</h2>
+          <p style="color:#8a90a3;font-size:11px;margin:0 0 8px;">{meta}</p>
+          <p style="color:#edeef3;font-size:12px;line-height:1.5;margin:0 0 10px;">{alert['detail']}</p>
+          <a href="{fiche_url}" style="color:#b99a68;font-size:12px;font-weight:bold;text-decoration:none;">Voir la fiche complète →</a>
+        </div>"""
+
+
+def build_daily_digest_email_html(
+    newly_triggered_entree: list[dict], newly_triggered_major_news: list[tuple],
+) -> str:
+    """Un seul email regroupant tous les signaux "entree" et toutes les
+    actus majeures nouvellement déclenchés au run du jour — remplace
+    l'ancien envoi d'un email par entreprise/actu pour éviter d'inonder la
+    boîte mail (jusqu'à un email par société suivie auparavant)."""
+    entree_html = "".join(_entry_alert_item_html(c) for c in newly_triggered_entree)
+    news_html = "".join(_major_news_alert_item_html(c, a) for c, a in newly_triggered_major_news)
+
+    entree_section = f"""
+        <p style="color:#8a90a3;font-size:11px;letter-spacing:0.06em;text-transform:uppercase;margin:24px 0 12px;">
+          Signaux d'entrée ({len(newly_triggered_entree)})
         </p>
-        <span style="display:inline-block;background:{sentiment_color};color:#15161c;
-           font-size:11px;font-weight:bold;padding:3px 10px;border-radius:999px;margin:0 0 14px;">
-          {sentiment_label}
-        </span>
+        {entree_html}""" if newly_triggered_entree else ""
 
-        <h1 style="color:#edeef3;font-size:20px;font-weight:bold;margin:0 0 6px;line-height:1.3;">{alert['title']}</h1>
-        <p style="color:#8a90a3;font-size:12px;margin:0 0 20px;">{meta}</p>
+    news_section = f"""
+        <p style="color:#8a90a3;font-size:11px;letter-spacing:0.06em;text-transform:uppercase;margin:24px 0 12px;">
+          Actus majeures ({len(newly_triggered_major_news)})
+        </p>
+        {news_html}""" if newly_triggered_major_news else ""
 
-        <div style="background:#1b1d25;border:1px solid #2a2d38;border-radius:10px;padding:16px 18px;margin:0 0 24px;">
-          <p style="color:#edeef3;font-size:13px;line-height:1.6;margin:0;">{alert['detail']}</p>
-        </div>
-
-        <a href="{fiche_url}" style="display:inline-block;background:#b99a68;color:#15161c;
-           font-weight:bold;font-size:14px;padding:13px 26px;border-radius:8px;text-decoration:none;">
-          Voir la fiche complète →
-        </a>
-
+    return f"""
+    <html><body style="background:#15161c;margin:0;padding:0;">
+      <div style="max-width:560px;margin:0 auto;padding:32px 24px;font-family:Arial,Helvetica,sans-serif;">
+        <p style="color:#8a90a3;font-size:11px;letter-spacing:0.08em;text-transform:uppercase;margin:0 0 6px;">
+          Indices — Résumé quotidien
+        </p>
+        <h1 style="color:#edeef3;font-size:22px;font-weight:bold;margin:0 0 4px;">
+          {len(newly_triggered_entree)} signal d'entrée · {len(newly_triggered_major_news)} actu majeure
+        </h1>
+        {entree_section}
+        {news_section}
         <p style="color:#8a90a3;font-size:11px;line-height:1.5;margin:32px 0 0;">
-          Actualité classée automatiquement comme majeure pour cette entreprise — pas un conseil d'investissement.
+          Résumé quotidien automatique — pas un conseil d'investissement.
         </p>
       </div>
     </body></html>
     """
 
 
-def send_major_news_alert_email(triggered: list[tuple]) -> bool:
-    """Envoie un email par (entreprise, alerte "actu_majeure") nouvellement
-    apparue aujourd'hui — chaque alerte de ce type est déjà garantie
-    nouvelle par construction (compute_company_alerts ne l'émet que pour
-    un lien pas encore signalé). Ignoré silencieusement (avec un message)
-    si les identifiants SMTP ne sont pas configurés ou si `triggered` est
-    vide — jamais d'exception, même contrat que send_entry_alert_email."""
-    if not triggered:
+def send_daily_digest_email(
+    newly_triggered_entree: list[dict], newly_triggered_major_news: list[tuple],
+) -> bool:
+    """Envoie un unique email quotidien regroupant tous les signaux
+    "entree" et toutes les actus majeures nouvellement déclenchés
+    (remplace un email par société/actu). Ignoré silencieusement (avec un
+    message) si les identifiants SMTP ne sont pas configurés ou si les
+    deux listes sont vides — jamais d'exception, même contrat que
+    gold_score.send_email."""
+    if not newly_triggered_entree and not newly_triggered_major_news:
         return False
     smtp_user = os.environ.get("SMTP_USER")
     smtp_password = os.environ.get("SMTP_PASSWORD")
     mail_to = os.environ.get("MAIL_TO") or smtp_user
     if not smtp_user or not smtp_password:
-        print("\n(Envoi d'email d'alerte actu majeure ignoré : SMTP_USER / SMTP_PASSWORD non configurés.)")
+        print("\n(Envoi du résumé quotidien ignoré : SMTP_USER / SMTP_PASSWORD non configurés.)")
         return False
+
+    subject_parts = []
+    if newly_triggered_entree:
+        subject_parts.append(f"{len(newly_triggered_entree)} signal d'entrée")
+    if newly_triggered_major_news:
+        subject_parts.append(f"{len(newly_triggered_major_news)} actu majeure")
+    subject = "Résumé Indices — " + ", ".join(subject_parts)
 
     try:
         with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
             server.starttls()
             server.login(smtp_user, smtp_password)
-            for company, alert in triggered:
-                index_name = INDEX_NAMES.get(company.get("index"), company.get("index", ""))
-                msg = MIMEMultipart("mixed")
-                msg["Subject"] = f"{company['name']} ({index_name}) — actu majeure"
-                msg["From"] = smtp_user
-                msg["To"] = mail_to
-                msg.attach(MIMEText(build_major_news_alert_email_html(company, alert), "html"))
-                server.sendmail(smtp_user, [mail_to], msg.as_string())
-        tickers = ", ".join(c["ticker"] for c, _ in triggered)
-        print(f"\nEmail(s) d'alerte actu majeure envoyé(s) à {mail_to} ({tickers})")
+            msg = MIMEMultipart("mixed")
+            msg["Subject"] = subject
+            msg["From"] = smtp_user
+            msg["To"] = mail_to
+            msg.attach(MIMEText(
+                build_daily_digest_email_html(newly_triggered_entree, newly_triggered_major_news), "html",
+            ))
+            server.sendmail(smtp_user, [mail_to], msg.as_string())
+        print(f"\nRésumé quotidien envoyé à {mail_to} ({subject})")
         return True
     except Exception as e:
-        print(f"Erreur envoi email d'alerte actu majeure : {e}")
+        print(f"Erreur envoi du résumé quotidien : {e}")
         return False
 
 
@@ -3026,8 +4045,7 @@ def main():
             traceback.print_exc()
 
     newly_triggered_entree, newly_triggered_major_news = _attach_alerts_and_update_history(companies)
-    send_entry_alert_email(newly_triggered_entree)
-    send_major_news_alert_email(newly_triggered_major_news)
+    send_daily_digest_email(newly_triggered_entree, newly_triggered_major_news)
     update_signal_tracking(companies, newly_triggered_entree)
 
     payload = {

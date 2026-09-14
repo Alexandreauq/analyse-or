@@ -151,6 +151,83 @@ def test_decide_and_act_never_calls_real_broker_order_functions_on_reversal(monk
     assert called == {"place": False, "close": False}
 
 
+def _blackout_candles():
+    # Une seule bougie suffit (compute_signal renvoie neutre via son
+    # garde SCALP_MIN_CANDLES avant de toucher aux autres champs) —
+    # horodatée pile sur le CPI du 11/09/2026 (8h30 ET = 12h30 UTC,
+    # source : bls.gov/schedule/news_release/cpi.htm).
+    return [{"time": "2026-09-11 12:30:00", "close": 2100}]
+
+
+def test_decide_and_act_closes_open_position_during_news_blackout():
+    existing = [{"id": "1", "symbol": "XAUUSD", "type": "POSITION_TYPE_BUY"}]
+    result = bot.decide_and_act(
+        _blackout_candles(), contract_size=100, balance=10000,
+        open_positions=existing, circuit_breaker=_open_circuit_breaker(),
+    )
+    assert result["action"] == "simulation"
+    assert result["steps"] == [{"type": "clôture_simulee", "position_id": "1", "symbol": "XAUUSD"}]
+
+
+def test_decide_and_act_closes_all_matching_positions_during_news_blackout():
+    existing = [
+        {"id": "1", "symbol": "XAUUSD", "type": "POSITION_TYPE_BUY"},
+        {"id": "2", "symbol": "XAUUSD", "type": "POSITION_TYPE_SELL"},
+    ]
+    result = bot.decide_and_act(
+        _blackout_candles(), contract_size=100, balance=10000,
+        open_positions=existing, circuit_breaker=_open_circuit_breaker(),
+    )
+    assert result["action"] == "simulation"
+    close_steps = [s for s in result["steps"] if s["type"] == "clôture_simulee"]
+    assert len(close_steps) == 2
+    assert {s["position_id"] for s in close_steps} == {"1", "2"}
+    assert not any(s["type"] == "ouverture_simulee" for s in result["steps"])
+
+
+def test_decide_and_act_no_action_during_news_blackout_when_no_open_position():
+    result = bot.decide_and_act(
+        _blackout_candles(), contract_size=100, balance=10000,
+        open_positions=[], circuit_breaker=_open_circuit_breaker(),
+    )
+    assert result["action"] == "aucune"
+    assert "publication macro" in result["reason"]
+
+
+def test_decide_and_act_no_action_when_position_type_unrecognized_during_blackout():
+    existing = [{"id": "1", "symbol": "XAUUSD", "type": "POSITION_TYPE_UNKNOWN"}]
+    result = bot.decide_and_act(
+        _blackout_candles(), contract_size=100, balance=10000,
+        open_positions=existing, circuit_breaker=_open_circuit_breaker(),
+    )
+    assert result["action"] == "aucune"
+    assert "non reconnu" in result["reason"]
+
+
+def test_decide_and_act_never_calls_real_broker_order_functions_during_blackout(monkeypatch):
+    existing = [{"id": "1", "symbol": "XAUUSD", "type": "POSITION_TYPE_BUY"}]
+    called = {"place": False, "close": False}
+    monkeypatch.setattr(bot.broker, "place_market_order", lambda *a, **k: called.__setitem__("place", True))
+    monkeypatch.setattr(bot.broker, "close_position", lambda *a, **k: called.__setitem__("close", True))
+
+    bot.decide_and_act(
+        _blackout_candles(), contract_size=100, balance=10000,
+        open_positions=existing, circuit_breaker=_open_circuit_breaker(),
+    )
+
+    assert called == {"place": False, "close": False}
+
+
+def test_decide_and_act_ignores_positions_for_other_symbols_during_blackout():
+    existing = [{"id": "1", "symbol": "EURUSD", "type": "POSITION_TYPE_BUY"}]
+    result = bot.decide_and_act(
+        _blackout_candles(), contract_size=100, balance=10000,
+        open_positions=existing, circuit_breaker=_open_circuit_breaker(), symbol="XAUUSD",
+    )
+    assert result["action"] == "aucune"
+    assert "publication macro" in result["reason"]
+
+
 def test_reconcile_positions_calls_broker(monkeypatch):
     captured = {}
 

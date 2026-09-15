@@ -1,0 +1,14 @@
+[Unit]
+Description=Bot Actions IBKR - declenchement quotidien a 14:45 UTC
+
+[Timer]
+OnCalendar=*-*-* 14:45:00 UTC
+# Persistent=false volontairement : un batch manque (VPS eteint) ne doit
+# PAS se declencher en retard — il trouverait les marches fermes, hors de
+# la fenetre 14:30-15:30 UTC qui est la seule raison d'etre de cet horaire
+# (spec 4.5). Mieux vaut sauter un jour que trader a l'aveugle.
+Persistent=false
+Unit=ibkr-bot-daily.service
+
+[Install]
+WantedBy=timers.target

@@ -432,6 +432,10 @@ def run_batch(today: str | None = None, *, gw=gateway, sleep_fn=time.sleep,
 
     ORDRE DES GARDES, qui est lui-meme une decision :
       1. kill_switch  -> aucun appel reseau du tout ;
+      1bis. jour de bourse (samedi/dimanche exclus, Critical #1 de la
+         revue finale de branche) -> AVANT le preflight, meme raisonnement
+         que la fraicheur ci-dessous : le garde de fraicheur NE DETECTE
+         PAS un week-end (le workflow indices.json tourne 7j/7) ;
       2. git pull     -> non bloquant ;
       3. fraicheur    -> AVANT le preflight : si les donnees ne sont pas
          du jour, le batch ne fera rien de toute facon (spec 4.5), donc
@@ -457,6 +461,30 @@ def run_batch(today: str | None = None, *, gw=gateway, sleep_fn=time.sleep,
     # 1. Interrupteur d'urgence : on ne touche meme pas au reseau.
     if etat["kill_switch"]:
         run["statut"] = "kill_switch"
+        return _terminer(run, chemins)
+
+    # 1bis. Jour de bourse ? (Critical #1 de la revue finale de branche) —
+    # le timer systemd tourne 7j/7, ET le garde de fraicheur juste en
+    # dessous ne detecte PAS un week-end : le workflow GitHub Actions qui
+    # produit docs/indices.json tourne lui aussi 7j/7 et tamponne
+    # inconditionnellement la date du jour, donc indices_are_fresh renvoie
+    # True un samedi ou un dimanche. Or les regles de sortie a date fixe de
+    # portfolio.exit_reason (delai_max a 6 mois, stop_loss compare a un
+    # cours de cloture de vendredi perime) peuvent legitimement se
+    # declencher un jour non ouvre, et la boucle de confirmation IBKR
+    # repondrait automatiquement "confirmed=True" a l'avertissement
+    # "marche ferme". Seuls les week-ends sont couverts ici : les jours
+    # feries sont hors perimetre (voir deploy/README-ibkr.md, section
+    # « Jours feries »), l'operateur doit couper manuellement autour d'eux.
+    # Place AVANT le preflight, meme raisonnement que le garde de
+    # fraicheur juste apres : inutile de bruler 10-20 minutes de tentatives
+    # de reauthentification un jour ou le batch n'agira de toute facon pas.
+    if datetime.strptime(today, "%Y-%m-%d").weekday() >= 5:
+        run["statut"] = "hors_jour_de_bourse"
+        run["signaux_rejetes"].append({
+            "ticker": None, "raison": "hors_jour_de_bourse",
+            "rang": None, "score": None,
+        })
         return _terminer(run, chemins)
 
     # 2. Donnees du jour : git pull sur le clone local (spec 4.5).

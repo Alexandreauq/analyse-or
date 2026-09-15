@@ -274,6 +274,37 @@ def test_kill_switch_stops_everything_before_any_gateway_call(env):
     assert len(env["emails"]["resumes"]) == 1
 
 
+def test_a_weekend_batch_is_abandoned_before_the_gateway_is_touched(env):
+    """Critical #1 (revue finale de branche) : le timer systemd tourne
+    7j/7 et le garde de fraicheur ne detecte PAS un week-end (le workflow
+    indices.json tourne lui aussi 7j/7 et tamponne la date du jour sans
+    condition). 2026-09-19 est un samedi reel."""
+    SAMEDI = "2026-09-19"
+    gw = FakeGateway()
+
+    run = daily.run_batch(SAMEDI, gw=gw, sleep_fn=lambda s: None,
+                          account_id="U1", paths=env["paths"])
+
+    assert run["statut"] == "hors_jour_de_bourse"
+    assert gw.appels == []
+    assert gw.ordres == []
+    assert lire_journal(env)[0]["statut"] == "hors_jour_de_bourse"
+    assert len(env["emails"]["resumes"]) == 1
+    assert env["emails"]["alertes"] == []
+
+
+def test_a_sunday_batch_is_also_abandoned(env):
+    """2026-09-20 est un dimanche reel."""
+    DIMANCHE = "2026-09-20"
+    gw = FakeGateway()
+
+    run = daily.run_batch(DIMANCHE, gw=gw, sleep_fn=lambda s: None,
+                          account_id="U1", paths=env["paths"])
+
+    assert run["statut"] == "hors_jour_de_bourse"
+    assert gw.appels == []
+
+
 def test_stale_indices_json_stops_the_batch_entirely(env):
     """Spec 4.5 : donnees d'hier -> aucun ordre, ni entree ni sortie.
 

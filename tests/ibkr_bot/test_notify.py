@@ -87,6 +87,24 @@ def test_summary_flags_dry_run_prominently():
     assert "dry_run" in html.lower() or "simulation" in html.lower()
 
 
+def test_summary_shows_a_failed_git_pull_detail_prominently():
+    """Important #2 (revue finale de branche) : run["git_pull"] est deja
+    capture par daily.pull_repo (y compris le detail d'un echec), mais
+    jusqu'ici jamais restitue par notify.py — un git pull vraiment en
+    echec et un workflow indices.yml simplement pas execute se
+    ressemblaient tous les deux, dans l'email, sous le seul statut
+    donnees_perimees."""
+    run = {**RUN, "git_pull": {"ok": False, "detail": "fatal: could not read from remote"}}
+    html = notify.build_summary_email_html(run, "2026-09-15")
+    assert "could not read from remote" in html
+
+
+def test_summary_says_nothing_extra_about_a_successful_git_pull():
+    run = {**RUN, "git_pull": {"ok": True, "detail": "Already up to date."}}
+    html = notify.build_summary_email_html(run, "2026-09-15")
+    assert "Already up to date." not in html
+
+
 def test_summary_reports_a_stale_data_batch_without_crashing():
     run = {"date": "2026-09-15", "mode": "dry_run", "statut": "donnees_perimees",
            "sorties": [], "entrees": [], "signaux_rejetes": [], "erreurs": [],

@@ -92,6 +92,20 @@ def build_summary_email_html(run: dict, day: str) -> str:
         f'Mode <b>{_e(mode)}</b> — statut <b>{_e(statut)}</b> — '
         f'Gateway : {_e(etat_gateway)}.</p>'
     )
+
+    # Important #2 (revue finale de branche) : run["git_pull"] est deja
+    # capture par daily.pull_repo (y compris le detail d'un echec), mais
+    # jusqu'ici jamais restitue ici — un git pull vraiment en echec (clone
+    # local diverge, reseau coupe...) et un workflow indices.yml qui n'a
+    # simplement pas tourne se ressemblaient tous les deux, dans l'email,
+    # sous le seul statut `donnees_perimees`, sans que l'operateur puisse
+    # distinguer lequel des deux merite vraiment d'etre corrige.
+    git_pull = run.get("git_pull") or {}
+    if git_pull.get("ok") is False:
+        corps += _carte("#a35540", (
+            f'git pull en échec (cause possible d\'un statut '
+            f'donnees_perimees) : {_e(git_pull.get("detail") or "détail indisponible")}'))
+
     if mode == "dry_run":
         corps += _carte("#7a6a2a",
                         "Mode simulation (dry_run) : aucun ordre réel n'a été envoyé.")

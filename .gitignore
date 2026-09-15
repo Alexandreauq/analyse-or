@@ -6,3 +6,8 @@ gold_bot/decisions_log.jsonl
 gold_bot/latest_candles.json
 gold_bot/latest_balance.json
 gold_bot/latest_positions.json
+ibkr_bot/state.json
+ibkr_bot/positions.json
+ibkr_bot/real_trading_log.jsonl
+ibkr_bot/conid_cache.json
+ibkr_bot/latest_account.json

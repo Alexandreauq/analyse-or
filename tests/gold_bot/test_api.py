@@ -107,6 +107,23 @@ def test_set_profile_rejects_zero_or_negative_value(client):
     assert response.status_code == 422
 
 
+def test_status_reports_resolved_profile_when_stored_value_is_invalid(client, tmp_path):
+    """Finding #3 de la revue finale : state.py ne valide délibérément
+    pas risk_profile (voir son docstring) — un hand-edit SSH peut donc y
+    laisser une valeur invalide. /status doit rapporter le profil
+    RÉSOLU/effectif (celui que run_cycle utilise réellement via
+    risk.risk_profile_params(), repli sur 3), pas la valeur brute
+    invalide, pour ne jamais désynchroniser ce qui est affiché de ce qui
+    est utilisé."""
+    state.save_state({"kill_switch": False, "dry_run": True, "risk_profile": 9}, state.STATE_PATH)
+    response = client.get("/status")
+    assert response.json()["risk_profile"] == 3
+
+    state.save_state({"kill_switch": False, "dry_run": True, "risk_profile": "bogus"}, state.STATE_PATH)
+    response = client.get("/status")
+    assert response.json()["risk_profile"] == 3
+
+
 def test_set_profile_rejects_malformed_json_body(client):
     response = client.post(
         "/profile",

@@ -140,7 +140,13 @@ def get_status():
     return {
         "kill_switch": current["kill_switch"],
         "dry_run": current["dry_run"],
-        "risk_profile": current["risk_profile"],
+        # Profil RÉSOLU/effectif (toujours un entier valide 1-5), pas la
+        # valeur brute de state.json — state.py ne valide délibérément
+        # rien (voir son docstring), donc une édition manuelle invalide
+        # (9, "5", 5.0, clé absente) doit être visible ici comme ce que
+        # le bot utilise RÉELLEMENT (repli sur DEFAULT_RISK_PROFILE),
+        # pas comme la valeur brute mal formée.
+        "risk_profile": risk.resolve_risk_profile(current["risk_profile"]),
         "circuit_breaker_day": circuit_breaker_state.get("circuit_breaker_day"),
     }
 

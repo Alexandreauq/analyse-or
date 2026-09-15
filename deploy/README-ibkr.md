@@ -169,6 +169,45 @@ La cadence quotidienne laisse toujours plusieurs heures pour couper avant
 le prochain batch — c'est exactement l'argument qui a fait écarter une API
 HTTPS dédiée (spec 9.4).
 
+**Couper l'interrupteur EN COURS de batch réel est un scénario prévu, pas
+un cas limite** : si une position réelle doit être vendue et que
+l'opérateur bascule `kill_switch` à `True` pendant que le batch tourne
+encore, l'ordre n'est pas envoyé (la relecture juste avant l'envoi le
+bloque) et la position correspondante est **laissée intacte dans
+`positions.json`** — jamais retirée comme si elle avait été vendue. Elle
+apparaît dans le résumé du jour avec le statut `annule_interruption`, à
+traiter manuellement (vérifier l'état réel chez IBKR, puis relever le
+kill switch pour que le batch du lendemain la reprenne).
+
+## Jours fériés : hors périmètre, kill switch manuel requis
+
+Le timer systemd (`deploy/ibkr-bot-daily.timer`) se déclenche **tous les
+jours**, y compris les week-ends — le bot les détecte lui-même et abandonne
+le batch entier (aucune entrée, aucune sortie, statut
+`hors_jour_de_bourse`) avant même de contacter le Gateway.
+
+**Les jours fériés, eux, ne sont PAS détectés.** `docs/indices.json` est
+généré par un workflow GitHub Actions qui tourne lui aussi 7j/7 et tamponne
+la date du jour sans savoir si les places boursières étaient ouvertes : le
+garde de fraîcheur du bot ne voit donc rien d'anormal un jour férié. Et les
+calendriers de jours fériés des différentes places couvertes par le bot
+(Paris, Francfort, Londres, New York, Milan, Madrid, Zurich...) **ne
+coïncident pas entre eux** (Independence Day n'est pas férié à Paris, le
+Lundi de Pentecôte n'est pas férié à New York, etc.) : coder un vrai
+calendrier par place est un chantier à part entière, volontairement laissé
+hors du périmètre de ce correctif.
+
+**En pratique, jusqu'à ce qu'un calendrier de jours fériés soit implémenté,
+c'est à l'opérateur de couper le bot à la main** autour des jours fériés
+connus (Noël, Jour de l'An, Vendredi saint, et tout autre jour férié propre
+à une des places couvertes) — via l'interrupteur d'urgence décrit en
+section 7 ci-dessus, remis à `False` une fois la place rouverte. Un batch
+qui tourne un jour férié verrait le même risque que sur un week-end non
+détecté : une règle de sortie à date fixe (délai de 6 mois, stop-loss
+comparé à un cours de clôture périmé) peut légitimement se déclencher, et
+la boucle de confirmation IBKR répondrait automatiquement `confirmed=True`
+à un avertissement « marché fermé ».
+
 ## 8. Passage en mode réel (à ne faire qu'après validation de la simulation)
 
 Avant tout passage en réel, deux prérequis manuels :

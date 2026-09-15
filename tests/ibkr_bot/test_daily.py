@@ -1275,3 +1275,162 @@ def test_a_position_missing_conid_at_execution_does_not_crash_the_batch(env):
     assert run["statut"] == "termine"
     assert lire_journal(env)[0]["statut"] == "termine"
     assert len(env["emails"]["resumes"]) == 1
+
+
+# --- revue finale de branche : Critical #2 --------------------------
+
+def test_kill_switch_pulled_mid_batch_blocks_the_order_and_does_not_orphan_the_position(env, monkeypatch):
+    """Critical #2 (revue finale de branche) : symetrique du fix deja fait
+    pour la bascule dry_run -> reel PENDANT le preflight
+    (test_a_dry_run_to_real_switch_during_preflight_is_honored_for_reconciliation
+    ci-dessus). Ici c'est l'AUTRE sens : un batch deja engage en mode REEL
+    voit l'operateur tirer l'interrupteur d'urgence EN COURS D'EXECUTION,
+    entre le debut du batch et l'envoi effectif d'un ordre de vente.
+    _place_order bloque deja l'envoi (defense en profondeur, relecture
+    disque) ; SANS le fix, run_batch traiterait le statut "simule" renvoye
+    comme une simulation authentique et retirerait la position de
+    positions.json comme si elle avait ete vendue, alors qu'elle est
+    toujours bien reelle chez IBKR — orpheline pour toujours
+    (portfolio.reconcile n'adopte jamais une position inconnue du
+    journal, spec 9.5)."""
+    ecrire_etat(env, dry_run=False)
+    _positions_locales(env, [POSITION_MC])   # stop-loss : 90.0 <= 200*0.8
+    gw = FakeGateway(positions_ibkr=[{"conid": 17275, "position": 5.0}])
+
+    appels = {"n": 0}
+
+    def fake_load_state(path):
+        appels["n"] += 1
+        if appels["n"] <= 2:
+            # 1er appel : lecture au tout debut de run_batch (kill_switch).
+            # 2e appel : relecture post-preflight (politique de reconciliation).
+            return {"kill_switch": False, "dry_run": False}
+        # 3e appel et suivants : DANS _place_order, au moment precis de
+        # l'envoi -> l'operateur vient de tirer l'interrupteur d'urgence.
+        return {"kill_switch": True, "dry_run": False}
+
+    monkeypatch.setattr(daily.state, "load_state", fake_load_state)
+
+    run = daily.run_batch(TODAY, gw=gw, sleep_fn=lambda s: None,
+                          account_id="U1", paths=env["paths"])
+
+    # (a) aucun ordre reel envoye : place_market_order n'est jamais appele.
+    assert gw.ordres == []
+    assert appels["n"] >= 3   # preuve que la relecture DANS _place_order a eu lieu
+
+    # (b) la position n'est PAS retiree de positions.json, et pas corrompue.
+    import ibkr_bot.portfolio as portfolio
+    positions_finales = portfolio.load_positions(env["paths"]["positions"])
+    assert [p["ticker"] for p in positions_finales] == ["MC.PA"]
+    assert positions_finales[0]["quantite"] == 5
+    assert positions_finales[0]["prix_execution_reference"] == 200.0
+
+    # (c) l'evenement est visible dans run["erreurs"], pas seulement noye
+    # au milieu des cartes de vente ordinaires du journal/email.
+    assert run["sorties"][0]["statut"] == "annule_interruption"
+    assert any(e["etape"] == "execution_sortie_interrompue" and "MC.PA" in e["detail"]
+              for e in run["erreurs"])
+
+
+def test_a_genuine_dry_run_batch_is_completely_unaffected_by_the_mode_attendu_plumbing(env):
+    """Garde-fou de non-regression pour Critical #2 : mode_attendu ne doit
+    RIEN changer au comportement dry_run d'origine (statut "simule",
+    positions bien retirees/ajoutees normalement)."""
+    ecrire_etat(env, dry_run=True)
+    gw = FakeGateway()
+
+    run = daily.run_batch(TODAY, gw=gw, sleep_fn=lambda s: None,
+                          account_id="U1", paths=env["paths"])
+
+    assert gw.ordres == []
+    assert all(e["statut"] == "simule" for e in run["entrees"])
+    assert not any(e["etape"] in ("execution_sortie_interrompue", "execution_entree_interrompue")
+                  for e in run["erreurs"])
+
+
+# --- revue finale de branche : Important #1 ---------------------------
+
+def test_dry_run_reconciliation_reported_reflects_local_positions_not_ibkr(env):
+    """Important #1 : en dry_run, ce que l'email affiche doit refleter ce
+    que le bot gere REELLEMENT (positions locales), pas le verdict brut de
+    reconcile() qui, lui, ne voit evidemment aucune position simulee chez
+    IBKR et dirait "0 active, tout cloture hors bot" chaque jour pendant
+    toute la periode de validation (spec 7)."""
+    ecrire_etat(env, dry_run=True)
+    simulee = {**POSITION_MC, "ticker": "ZZZ.PA", "conid": 555,
+               "target_exit_price": 999.0, "date_limite": "2027-01-01",
+               "prix_execution_reference": 10.0}
+    _positions_locales(env, [simulee])
+    gw = FakeGateway(positions_ibkr=[])   # IBKR ne connait aucune position simulee
+
+    run = daily.run_batch(TODAY, gw=gw, sleep_fn=lambda s: None,
+                          account_id="U1", paths=env["paths"])
+
+    assert run["reconciliation"]["actives"] == 1
+    assert run["reconciliation"]["cloturees_hors_bot"] == []
+
+
+# --- revue finale de branche : Important #3 ---------------------------
+
+def test_a_currency_mismatch_between_contract_and_sizing_rejects_the_signal(env, monkeypatch):
+    """Important #3 : contracts.py valide la devise du contrat resolu
+    contre EXPECTED_VENUE, sizing.py prend independamment `devise_compte`
+    dans index_currency de docs/indices.json. Les deux ne sont jamais
+    confrontees l'une a l'autre aujourd'hui. On force ici un desaccord
+    (MC.PA resolu en USD alors que sizing.py dit EUR pour le CAC40) pour
+    prouver que le signal est rejete plutot que finance/execute dans la
+    mauvaise devise."""
+    ecrire_etat(env, dry_run=False)
+    resolve_original = daily.contracts.resolve_conid
+
+    def resolve_avec_devise_incoherente(ticker, search_fn, info_fn, cache, today):
+        contrat = resolve_original(ticker, search_fn, info_fn, cache, today)
+        if ticker == "MC.PA" and contrat.get("conid") is not None:
+            return {**contrat, "currency": "USD"}
+        return contrat
+
+    monkeypatch.setattr(daily.contracts, "resolve_conid", resolve_avec_devise_incoherente)
+    gw = FakeGateway()
+
+    run = daily.run_batch(TODAY, gw=gw, sleep_fn=lambda s: None,
+                          account_id="U1", paths=env["paths"])
+
+    assert 17275 not in [o["conid"] for o in gw.ordres]
+    rejets = {r["ticker"]: r["raison"] for r in run["signaux_rejetes"]}
+    assert rejets["MC.PA"] == "devise_incoherente"
+    assert any(e["etape"] == "coherence_devise" and "MC.PA" in e["detail"]
+              for e in run["erreurs"])
+    # ADBE, non affecte par la falsification ci-dessus, est achete normalement.
+    assert 202070 in [o["conid"] for o in gw.ordres]
+
+
+# --- revue finale de branche : Important #4 ----------------------------
+
+def test_a_real_run_batch_result_renders_correctly_through_notify(env, monkeypatch):
+    """Important #4 : jusqu'ici, aucun test ne verifiait que le dict `run`
+    produit par run_batch et ce que notify.py en affiche sont reellement
+    d'accord — chaque module etait teste isolement (fixture a la main
+    cote notify, send_daily_summary monkeypatchee cote daily). On fait
+    tourner un vrai run_batch (dry_run, avec une position locale simulee,
+    et un git pull en echec) puis on rend son `run` reel via
+    build_summary_email_html, pour prouver que Important #1 (compte de
+    positions actives en dry_run) ET Important #2 (detail d'un git pull en
+    echec) apparaissent effectivement dans le HTML produit — pas
+    seulement dans des fixtures isolees de chaque cote."""
+    monkeypatch.setattr(daily, "pull_repo",
+                        lambda *a, **k: {"ok": False, "detail": "fatal: divergent branches"})
+    ecrire_etat(env, dry_run=True)
+    simulee = {**POSITION_MC, "ticker": "ZZZ.PA", "conid": 555,
+               "target_exit_price": 999.0, "date_limite": "2027-01-01",
+               "prix_execution_reference": 10.0}
+    _positions_locales(env, [simulee])
+    gw = FakeGateway(positions_ibkr=[])
+
+    run = daily.run_batch(TODAY, gw=gw, sleep_fn=lambda s: None,
+                          account_id="U1", paths=env["paths"])
+
+    html = daily.notify.build_summary_email_html(run, TODAY)
+
+    assert run["reconciliation"]["actives"] == 1        # Important #1
+    assert "1 position(s) active(s)" in html             # ... et rendu tel quel
+    assert "fatal: divergent branches" in html            # Important #2

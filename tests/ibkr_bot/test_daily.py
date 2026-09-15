@@ -540,3 +540,155 @@ def test_place_order_reports_a_response_without_any_order_id(tmp_path):
 
     assert resultat["statut"] == "erreur"
     assert "no trading permission" in resultat["detail"]
+
+
+# --- corrections de revue (findings Important #1/2/3, Minor #1/2/3) --
+
+class _ExplodingGateway:
+    """Gateway qui leve sur TOUT appel — preuve, plus stricte qu'un
+    FakeGateway ordinaire, que _place_order ne touche JAMAIS le reseau
+    quand l'etat est manquant/corrompu (repli fail-safe de
+    state.load_state vers dry_run=True)."""
+
+    def __getattr__(self, name):
+        def _boom(*args, **kwargs):
+            raise AssertionError(f"gw.{name} n'aurait jamais du etre appele")
+        return _boom
+
+
+def test_place_order_stays_dry_run_when_the_state_file_is_missing(tmp_path):
+    gw = _ExplodingGateway()
+    chemin_absent = str(tmp_path / "nexiste-pas.json")
+
+    resultat = daily._place_order(
+        gw, "u", "U1", ticker="MC.PA", conid=17275, side="BUY", quantity=5,
+        prix_reference_cotation=90.0, state_path=chemin_absent)
+
+    assert resultat["statut"] == "simule"
+    assert resultat["order_id"] is None
+
+
+def test_place_order_stays_dry_run_when_the_state_file_is_corrupt(tmp_path):
+    gw = _ExplodingGateway()
+    chemin = tmp_path / "state.json"
+    chemin.write_text("{ceci n'est pas du json valide", encoding="utf-8")
+
+    resultat = daily._place_order(
+        gw, "u", "U1", ticker="MC.PA", conid=17275, side="BUY", quantity=5,
+        prix_reference_cotation=90.0, state_path=str(chemin))
+
+    assert resultat["statut"] == "simule"
+    assert resultat["order_id"] is None
+
+
+def test_place_order_succeeds_on_a_confirmation_chain_resolved_on_the_boundary_attempt(tmp_path):
+    """La borne MAX_CONFIRMATIONS est un maximum, pas un echec garanti :
+    une chaine qui se resout PILE au dernier essai autorise doit encore
+    reussir normalement."""
+    class _Gw(FakeGateway):
+        def confirm_reply(self, base_url, reply_id, confirmed=True):
+            self.confirmations.append(reply_id)
+            if len(self.confirmations) < daily.MAX_CONFIRMATIONS:
+                return [{"id": f"question-{len(self.confirmations)}", "message": ["encore"]}]
+            return [{"order_id": "9999", "order_status": "Submitted"}]
+
+    gw = _Gw()
+    gw.reponse_ordre = [{"id": "q0", "message": ["premiere question"]}]
+
+    resultat = daily._place_order(
+        gw, "u", "U1", ticker="MC.PA", conid=17275, side="BUY", quantity=5,
+        prix_reference_cotation=90.0, state_path=_etat(tmp_path, dry_run=False))
+
+    assert len(gw.confirmations) == daily.MAX_CONFIRMATIONS
+    assert resultat["statut"] == "execute"
+    assert resultat["order_id"] == "9999"
+
+
+def test_place_order_reports_an_empty_gateway_response_without_raising(tmp_path):
+    gw = FakeGateway()
+    gw.reponse_ordre = []
+
+    resultat = daily._place_order(
+        gw, "u", "U1", ticker="MC.PA", conid=17275, side="BUY", quantity=5,
+        prix_reference_cotation=90.0, state_path=_etat(tmp_path, dry_run=False))
+
+    assert resultat["statut"] == "erreur"
+    assert resultat["order_id"] is None
+
+
+def test_place_order_reports_no_commission_when_the_field_is_absent(tmp_path):
+    gw = FakeGateway()
+    gw.statuts_ordre = {"1234": {"order_status": "Filled", "avgPrice": "91.25"}}
+
+    resultat = daily._place_order(
+        gw, "u", "U1", ticker="MC.PA", conid=17275, side="BUY", quantity=5,
+        prix_reference_cotation=90.0, state_path=_etat(tmp_path, dry_run=False))
+
+    assert resultat["statut"] == "execute"
+    assert resultat["commission"] is None
+
+
+def test_place_order_parses_avgprice_with_a_thousands_separator(tmp_path):
+    gw = FakeGateway()
+    gw.statuts_ordre = {"1234": {"order_status": "Filled", "avgPrice": "1,234.50"}}
+
+    resultat = daily._place_order(
+        gw, "u", "U1", ticker="MC.PA", conid=17275, side="BUY", quantity=5,
+        prix_reference_cotation=90.0, state_path=_etat(tmp_path, dry_run=False))
+
+    assert resultat["prix_execution_cotation"] == pytest.approx(1234.50)
+    assert resultat["prix_execution_estime"] is False
+
+
+def test_place_order_flags_an_unreliable_execution_price_in_detail(tmp_path):
+    """Finding Important #2 : si avgPrice ET le prix de reference du
+    sizing sont tous les deux inutilisables, l'ordre reste 'execute' (il
+    est bien parti) mais `detail` doit porter la trace du probleme —
+    sinon c'est exactement l'Ecart #4 de la Tache 7 (position dont le
+    prix de reference manque, donc jamais fermable)."""
+    gw = FakeGateway()
+    gw.statuts_ordre = {"1234": {"order_status": "Submitted"}}   # avgPrice absent
+
+    resultat = daily._place_order(
+        gw, "u", "U1", ticker="MC.PA", conid=17275, side="BUY", quantity=5,
+        prix_reference_cotation=None, state_path=_etat(tmp_path, dry_run=False))
+
+    assert resultat["statut"] == "execute"
+    assert resultat["prix_execution_estime"] is True
+    assert resultat["prix_execution_cotation"] is None
+    assert resultat["detail"] is not None
+    assert "prix" in resultat["detail"].lower()
+
+
+def test_place_order_records_confirmation_messages_in_detail_on_success(tmp_path):
+    """Finding Important #3 : un confirmed=True automatique sur un
+    avertissement IBKR doit laisser une trace auditable dans le journal,
+    pas disparaitre silencieusement."""
+    gw = FakeGateway()
+    gw.reponse_ordre = [{"id": "e1f2-0001", "message": ["Ordre hors seance : confirmer ?"]}]
+
+    resultat = daily._place_order(
+        gw, "u", "U1", ticker="MC.PA", conid=17275, side="BUY", quantity=5,
+        prix_reference_cotation=90.0, state_path=_etat(tmp_path, dry_run=False))
+
+    assert resultat["statut"] == "execute"
+    assert resultat["detail"] is not None
+    assert "1" in resultat["detail"]
+    assert "hors seance" in resultat["detail"].lower()
+
+
+def test_place_order_treats_a_mixed_response_as_already_resolved(tmp_path):
+    """Finding Minor #1 : une reponse melangeant une question et une
+    confirmation d'ordre doit etre traitee comme resolue (order_id
+    verifie en premier), pas relancee en confirmation superflue."""
+    gw = FakeGateway()
+    gw.reponse_ordre = [{"id": "ignored-question", "message": ["ignorer"]},
+                        {"order_id": "5555", "order_status": "Submitted"}]
+
+    resultat = daily._place_order(
+        gw, "u", "U1", ticker="MC.PA", conid=17275, side="BUY", quantity=5,
+        prix_reference_cotation=90.0, state_path=_etat(tmp_path, dry_run=False))
+
+    assert gw.confirmations == []
+    assert resultat["statut"] == "execute"
+    assert resultat["order_id"] == "5555"

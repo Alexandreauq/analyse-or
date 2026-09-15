@@ -818,6 +818,27 @@
       "shadow_resolved": false,
       "shadow_price": null,
       "shadow_return_pct": null
+    },
+    {
+      "id": "INTU-2026-09-15",
+      "ticker": "INTU",
+      "name": "Intuit",
+      "index": "NASDAQ",
+      "status": "open",
+      "entry_date": "2026-09-15",
+      "entry_price": 339.1499938964844,
+      "target_exit_price": 527.5100730736013,
+      "index_price_at_entry": 29127.16015625,
+      "close_date": null,
+      "close_price": null,
+      "close_reason": null,
+      "return_pct": null,
+      "index_price_at_close": null,
+      "index_return_pct": null,
+      "shadow_close_date": "2027-03-15",
+      "shadow_resolved": false,
+      "shadow_price": null,
+      "shadow_return_pct": null
     }
   ]
 }

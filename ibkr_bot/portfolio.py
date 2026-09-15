@@ -1,15 +1,25 @@
 # ibkr_bot/portfolio.py
 # Plafond de 10 positions, classement des signaux par score composite,
-# selection des entrees sous contrainte de solde. (Les regles de sortie
-# et la reconciliation sont ajoutees par la tache suivante.)
+# selection des entrees sous contrainte de solde, regles de sortie
+# (reproduction fidele du paper-trading) et reconciliation avec IBKR.
 #
 # Ce module DECIDE, il ne passe aucun ordre et ne touche pas au reseau —
 # meme decoupage que gold_bot (un seul module parle au courtier).
 import json
 import math
 import os
+from datetime import datetime
+
+from dateutil.relativedelta import relativedelta
 
 MAX_POSITIONS = 10  # positions ouvertes PAR LE BOT, pas sur le compte (spec 3.4 / 9.5)
+
+# Regles de sortie : valeurs IDENTIQUES a celles du paper-trading
+# (indices_score.SIGNAL_STOP_LOSS_PCT / SIGNAL_SHADOW_DELAY_MONTHS). Un
+# test de non-regression verifie l'egalite des deux jeux de constantes ET
+# l'egalite des decisions produites.
+STOP_LOSS_PCT = -20.0
+DELAY_MONTHS = 6
 
 POSITIONS_PATH = os.path.join(
     os.path.dirname(os.path.abspath(__file__)), "positions.json")
@@ -112,3 +122,127 @@ def select_entries(
         retenus.append({"signal": signal, "plan": plan, "rang": rang})
 
     return retenus, rejets
+
+
+# --- regles de sortie -------------------------------------------------
+# Reproduction fidele de indices_score._close_eligible_positions(). Trois
+# ecarts volontaires, et trois seulement :
+#   1. le prix de reference du stop-loss est le prix d'execution REEL du
+#      bot, pas l'entry_price du paper-trading (spec 3.6) ;
+#   2. le benchmark fantome n'est pas reproduit — c'est un instrument de
+#      mesure du signal, pas une regle de trading (spec 3.6) ;
+#   3. on DECIDE seulement : aucune mutation de la position, aucun calcul
+#      de return_pct — le Plan B executera et journalisera.
+# Tout le reste est identique, inegalites larges comprises.
+
+def deadline_date(entry_date: str) -> str:
+    """Date limite de detention : entree + 6 mois, meme calcul que le
+    paper-trading (relativedelta, qui ramene le 31 aout au 28/29
+    fevrier plutot que de deborder sur mars)."""
+    limite = (datetime.strptime(entry_date, "%Y-%m-%d").date()
+              + relativedelta(months=DELAY_MONTHS))
+    return limite.strftime("%Y-%m-%d")
+
+
+def exit_reason(position: dict, company: dict | None, today: str) -> str | None:
+    """Motif de cloture de `position` aujourd'hui, ou None si aucune
+    condition n'est remplie.
+
+    ORDRE DE PRIORITE STRICT, premiere condition remplie gagne (spec
+    3.6) : stop_loss -> objectif_atteint -> delai_max.
+
+    Une position dont le ticker a disparu des donnees du jour, ou dont
+    le prix courant manque, est laissee INTACTE et reevaluee demain :
+    jamais de vente declenchee par une donnee absente.
+    """
+    if company is None or _is_missing(company.get("current_price")):
+        return None
+    prix_reference = position.get("prix_execution_reference")
+    if _is_missing(prix_reference):
+        return None
+
+    current_price = company["current_price"]
+
+    if current_price <= prix_reference * (1 + STOP_LOSS_PCT / 100):
+        return "stop_loss"
+    if current_price >= position["target_exit_price"]:
+        return "objectif_atteint"
+    today_date = datetime.strptime(today, "%Y-%m-%d").date()
+    if today_date >= datetime.strptime(position["date_limite"], "%Y-%m-%d").date():
+        return "delai_max"
+    return None
+
+
+def positions_to_close(open_positions: list[dict], companies_by_ticker: dict,
+                       today: str) -> list[dict]:
+    """Positions du bot dont une condition de sortie est remplie
+    aujourd'hui, avec leur motif et le prix courant ayant declenche la
+    decision. Ne mute rien."""
+    a_cloturer = []
+    for position in open_positions:
+        company = companies_by_ticker.get(position["ticker"])
+        raison = exit_reason(position, company, today)
+        if raison is None:
+            continue
+        a_cloturer.append({
+            "position": position,
+            "close_reason": raison,
+            "current_price": company["current_price"],
+        })
+    return a_cloturer
+
+
+# --- reconciliation ---------------------------------------------------
+
+def reconcile(local_positions: list[dict], ibkr_positions: list[dict]) -> dict:
+    """Rapproche le journal local de l'etat reel du compte IBKR, AVANT
+    toute decision (spec 5.4). Le bot ne se fie jamais a son seul etat
+    local — c'est aussi ce qui rend le batch idempotent : une relance le
+    meme jour apres un plantage ne peut pas racheter une position deja
+    ouverte.
+
+    - position du journal absente chez IBKR (ou quantite 0) -> vendue
+      hors bot : retiree du decompte des 10, jamais rouverte ;
+    - position chez IBKR inconnue du journal -> IGNOREE : c'est une
+      position de l'utilisateur, le bot n'y touche jamais (spec 9.5) ;
+    - quantite divergente -> la quantite IBKR fait foi, l'ecart est
+      remonte comme anomalie.
+
+    Ne mute aucune position d'entree : les positions actives renvoyees
+    sont des copies.
+    """
+    par_conid = {}
+    for brute in ibkr_positions:
+        conid = brute.get("conid")
+        if conid is not None:
+            par_conid[conid] = brute
+
+    actives, cloturees, anomalies = [], [], []
+    conids_du_bot = set()
+    for position in local_positions:
+        conid = position.get("conid")
+        conids_du_bot.add(conid)
+        brute = par_conid.get(conid)
+        quantite_ibkr = int(brute.get("position", 0)) if brute else 0
+        if brute is None or quantite_ibkr == 0:
+            cloturees.append(position)
+            continue
+        active = dict(position)
+        if quantite_ibkr != position.get("quantite"):
+            anomalies.append({
+                "ticker": position["ticker"],
+                "conid": conid,
+                "quantite_locale": position.get("quantite"),
+                "quantite_ibkr": quantite_ibkr,
+            })
+            active["quantite"] = quantite_ibkr
+        actives.append(active)
+
+    ignorees = [b for conid, b in par_conid.items() if conid not in conids_du_bot]
+
+    return {
+        "actives": actives,
+        "cloturees_hors_bot": cloturees,
+        "anomalies_quantite": anomalies,
+        "ignorees": ignorees,
+    }

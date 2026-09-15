@@ -90,6 +90,65 @@ def test_compute_quantity_with_rate_one_for_eur_is_a_no_op_conversion():
     assert plan["quantite"] == 5
 
 
+# --- tolerance epsilon sur une frontiere entiere en arithmetique
+# flottante (Important #1 du reviewer sur le commit 505da74) ---------
+
+def test_compute_quantity_does_not_underbuy_on_a_float_boundary():
+    """500 * 0.8412 = 420.6 exactement en arithmetique reelle ; en
+    IEEE-754, 500.0 * 0.8412 / 420.6 vaut 0.9999999999999999, pas 1.0.
+    Sans tolerance epsilon, floor() achete 0 action et ecrit un motif
+    "prix superieur au budget" qui est FACTUELLEMENT FAUX (le prix
+    n'excede pas le budget, c'est un artefact de virgule flottante)."""
+    plan = sizing.compute_quantity("X.PA", "EUR", 420.6, 0.8412)
+    assert plan["quantite"] == 1
+    assert plan["motif"] is None
+
+
+def test_compute_quantity_does_not_underbuy_on_another_float_boundary():
+    """500 * 1.08 / 4.32 = 125 exactement en arithmetique reelle ; en
+    flottant, le ratio tombe a 124.99999999999999."""
+    plan = sizing.compute_quantity("X.PA", "EUR", 4.32, 1.08)
+    assert plan["quantite"] == 125
+
+
+def test_compute_quantity_does_not_underbuy_on_a_pence_float_boundary():
+    """Meme piege que ci-dessus mais a travers la conversion pence/livre
+    du LSE : 500 * 0.8734 * 100 / (39.7 * 100) = 11 exactement en
+    arithmetique reelle, 10.999999999999998 en flottant."""
+    plan = sizing.compute_quantity("X.L", "GBP", 39.7, 0.8734)
+    assert plan["quantite"] == 11
+
+
+def test_compute_quantity_epsilon_does_not_let_a_genuinely_over_budget_price_through():
+    """Le garde-fou epsilon ne doit jamais faire passer un prix qui
+    depasse reellement le budget (ratio franchement < 1, pas un artefact
+    de virgule flottante a 1e-16 pres)."""
+    plan = sizing.compute_quantity("MC.PA", "EUR", 600.0, 1.0)  # ratio = 0.833...
+    assert plan["quantite"] == 0
+    assert plan["motif"] == "signal_ignore_prix_unitaire_superieur_au_budget"
+
+
+# --- validation de devise_compte (Important #2 du reviewer sur le
+# commit 505da74) ------------------------------------------------------
+
+@pytest.mark.parametrize("index_currency", [None, "", "   "])
+def test_compute_quantity_rejects_missing_index_currency(index_currency):
+    """index_currency peut arriver vide/None si docs/indices.json perd
+    une entree de index_currency pour un indice (signals.py fait
+    currencies.get(index, "")) : un plan "achetable" avec devise_compte
+    a None/"" degraderait silencieusement le garde-fou de solde par
+    devise en aval (spec 9.9) au lieu d'echouer bruyamment ici."""
+    plan = sizing.compute_quantity("ADBE", index_currency, 50.0, 1.0)
+    assert plan["quantite"] == 0
+    assert plan["motif"] == "prix_ou_taux_invalide"
+
+
+def test_compute_quantity_rejects_non_string_index_currency():
+    plan = sizing.compute_quantity("ADBE", 123, 50.0, 1.0)
+    assert plan["quantite"] == 0
+    assert plan["motif"] == "prix_ou_taux_invalide"
+
+
 # --- GARDE-FOU PENCE / LIVRE (spec 4.7 point 1, spec 7) --------------
 
 def test_compute_quantity_on_london_ticker_is_not_100x_too_large():

@@ -1091,3 +1091,117 @@ def test_main_runs_a_batch(monkeypatch):
     monkeypatch.setattr(daily, "run_batch", lambda *a, **k: appels.append(True))
     daily.main()
     assert appels == [True]
+
+
+# --- revue stricte tache 5 : 3 findings Important ---------------------
+
+def test_positions_json_is_rewritten_after_each_order_not_just_at_the_end(env, monkeypatch):
+    """Decision 4 : la CADENCE d'ecriture, pas seulement le contenu final.
+    Sans ce test, rien ne distingue "sauvegarde apres chaque ordre" de
+    "sauvegarde une fois en fin de batch" — les deux produisent le meme
+    fichier final si rien ne plante entre-temps. On espionne l'appel pour
+    verifier a la fois le NOMBRE d'ecritures et qu'un instantane
+    INTERMEDIAIRE (apres la vente, avant l'achat suivant) reflete deja
+    l'etat partiel."""
+    ecrire_etat(env, dry_run=False)
+    _positions_locales(env, [POSITION_MC])
+    gw = FakeGateway(positions_ibkr=[{"conid": 17275, "position": 5.0}])
+
+    appels = []
+    original = daily.journal.save_positions_safely
+
+    def _espion(positions, path):
+        appels.append([dict(p) for p in positions])
+        return original(positions, path)
+
+    monkeypatch.setattr(daily.journal, "save_positions_safely", _espion)
+
+    run = daily.run_batch(TODAY, gw=gw, sleep_fn=lambda s: None,
+                          account_id="U1", paths=env["paths"])
+
+    # MC.PA stop-losse (1 sortie executee) puis ADBE achete (1 entree
+    # executee ; MC.PA porte bien un nouveau signal aujourd'hui mais est
+    # bloque par le garde `vendu_aujourd_hui`, donc n'ajoute pas d'ecriture).
+    nb_sorties_executees = sum(1 for s in run["sorties"]
+                               if s["statut"] in ("execute", "simule"))
+    nb_entrees_executees = sum(1 for e in run["entrees"]
+                               if e["statut"] in ("execute", "simule"))
+    assert nb_sorties_executees == 1 and nb_entrees_executees == 1
+    # 1 sauvegarde juste apres reconciliation + 1 par ordre execute : la
+    # cadence, pas seulement le resultat final.
+    assert len(appels) == 1 + nb_sorties_executees + nb_entrees_executees
+
+    # Instantane intermediaire (juste apres la vente de MC.PA, avant
+    # l'achat d'ADBE) : deja sans MC.PA, pas encore avec ADBE.
+    tickers_apres_vente = {p["ticker"] for p in appels[1]}
+    assert "MC.PA" not in tickers_apres_vente
+    assert "ADBE" not in tickers_apres_vente
+
+
+def test_a_dry_run_to_real_switch_during_preflight_is_honored_for_reconciliation(env, monkeypatch):
+    """DEFENSE EN PROFONDEUR (spec 4.3 point 2) pour la POLITIQUE DE
+    RECONCILIATION elle-meme, symetrique a celle de _place_order : si
+    dry_run passe a false PENDANT le preflight (bascule operateur
+    plausible sur les ~20 minutes de la fenetre), reconcile() doit faire
+    foi -- pas la lecture d'avant preflight. Sans cette relecture, une
+    position purement simulee (jamais detenue chez IBKR) resterait
+    "active" localement, son stop-loss serait evalue, et _place_order
+    (qui, lui, relit deja l'etat a chaque ordre) enverrait un VRAI ordre
+    de vente a nu pour un conid dont le compte ne detient rien."""
+    ecrire_etat(env, dry_run=True)
+    _positions_locales(env, [POSITION_MC])
+    gw = FakeGateway(positions_ibkr=[])   # IBKR ne detient rien de MC.PA
+
+    preflight_reel = daily.preflight
+
+    def _preflight_qui_bascule_en_reel(*args, **kwargs):
+        ecrire_etat(env, dry_run=False)   # l'operateur bascule en cours de preflight
+        return preflight_reel(*args, **kwargs)
+
+    monkeypatch.setattr(daily, "preflight", _preflight_qui_bascule_en_reel)
+
+    run = daily.run_batch(TODAY, gw=gw, sleep_fn=lambda s: None,
+                          account_id="U1", paths=env["paths"])
+
+    assert run["mode"] == "reel"
+    ventes = [o for o in gw.ordres if o["side"] == "SELL"]
+    assert ventes == []   # pas de vente a nu sur une position jamais detenue
+    import ibkr_bot.portfolio as portfolio
+    assert all(p["ticker"] != "MC.PA"
+              for p in portfolio.load_positions(env["paths"]["positions"]))
+
+
+def test_a_malformed_position_does_not_crash_the_whole_batch(env):
+    """Une ligne corrompue dans positions.json (ex. `date_limite` absent —
+    precisement le champ que l'anomalie `prix_reference_absent` invite un
+    operateur a corriger a la main) ne doit JAMAIS faire perdre tout le
+    batch : aucune ligne de journal, aucun email, silence total serait
+    pire que l'anomalie elle-meme (spec 5.5)."""
+    ecrire_etat(env, dry_run=False)
+    cassee = {**POSITION_MC, "id": "CASSE-2026-03-02", "ticker": "CASSE.PA",
+             "conid": 700}
+    del cassee["date_limite"]
+    _positions_locales(env, [POSITION_MC, cassee])
+
+    indices_augmentes = {**INDICES, "companies": INDICES["companies"] + [
+        {"ticker": "CASSE.PA", "index": "CAC40", "score": 20.0, "current_price": 250.0}]}
+    with open(env["paths"]["indices"], "w", encoding="utf-8") as fh:
+        json.dump(indices_augmentes, fh)
+
+    gw = FakeGateway(positions_ibkr=[
+        {"conid": 17275, "position": 5.0}, {"conid": 700, "position": 5.0}])
+
+    run = daily.run_batch(TODAY, gw=gw, sleep_fn=lambda s: None,
+                          account_id="U1", paths=env["paths"])
+
+    # La position bien formee (MC.PA, stop-loss) est traitee normalement.
+    assert [s["ticker"] for s in run["sorties"]] == ["MC.PA"]
+    assert run["sorties"][0]["close_reason"] == "stop_loss"
+    assert run["sorties"][0]["statut"] == "execute"
+    # La position cassee est signalee, pas silencieusement perdue.
+    assert any(e["etape"] == "positions_to_close" and "CASSE.PA" in e["detail"]
+              for e in run["erreurs"])
+    # Le batch va jusqu'au bout : ligne de journal + email, pas un plantage.
+    assert run["statut"] == "termine"
+    assert lire_journal(env)[0]["statut"] == "termine"
+    assert len(env["emails"]["resumes"]) == 1

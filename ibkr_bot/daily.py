@@ -233,7 +233,7 @@ def _resoudre_confirmations(gw, base_url: str, reponse) -> tuple[list, int, str 
 
 def _place_order(gw, base_url: str, account_id: str, *, ticker: str, conid,
                  side: str, quantity: int, prix_reference_cotation,
-                 state_path: str) -> dict:
+                 state_path: str, mode_attendu: str | None = None) -> dict:
     """LE SEUL ENDROIT DU DEPOT D'OU UN ORDRE ACTIONS REEL PART.
 
     DEFENSE EN PROFONDEUR (spec 4.3 point 2, copie conforme de
@@ -250,9 +250,37 @@ def _place_order(gw, base_url: str, account_id: str, *, ticker: str, conid,
     donne pas encore de prix moyen d'execution. Le resultat renvoye est
     lui aussi en devise de cotation — c'est journal.build_order_record
     qui le ramene en devise de compte.
+
+    `mode_attendu` (Critical #2 de la revue finale de branche) est le mode
+    ("dry_run"/"reel") sur lequel run_batch s'est arrete APRES sa PROPRE
+    relecture (celle qui suit le preflight). Il ne sert JAMAIS a autoriser
+    l'envoi d'un ordre — la relecture ci-dessus reste la SEULE source de
+    verite pour ca. Il sert uniquement a la COMPARAISON juste en dessous,
+    pour distinguer deux situations qui, sans lui, produisent exactement
+    le meme statut "simule" alors qu'elles n'ont pas du tout les memes
+    consequences sur positions.json :
+      - une simulation authentique (le batch entier est dry_run depuis le
+        debut) : la position n'a jamais existe reellement, la retirer de
+        positions.json est correct ;
+      - un batch qui s'etait engage en mode REEL (mode_attendu == "reel")
+        mais dont l'operateur a tire l'interrupteur d'urgence ENTRE deux
+        ordres : la position, elle, est bien reelle chez IBKR. La
+        retirer de positions.json comme un simple "simule" l'orphelinerait
+        silencieusement pour toujours (portfolio.reconcile n'adopte
+        jamais une position inconnue du journal, spec 9.5).
     """
     etat = state.load_state(state_path)
     if etat["kill_switch"] or etat["dry_run"]:
+        if mode_attendu == "reel":
+            return {"statut": "annule_interruption", "order_id": None,
+                    "prix_execution_cotation": None, "prix_execution_estime": False,
+                    "commission": None,
+                    "detail": (
+                        "execution interrompue : kill_switch active (ou dry_run "
+                        "repasse a true) entre le debut du batch, engage en mode "
+                        "reel, et cet envoi d'ordre precis — aucun ordre envoye, "
+                        "position laissee INTACTE dans positions.json pour verification "
+                        "manuelle (ne pas traiter comme une simulation)")}
         return {"statut": "simule", "order_id": None,
                 "prix_execution_cotation": None, "prix_execution_estime": False,
                 "commission": None,
@@ -347,7 +375,8 @@ def _taux_de_change(gw, base_url: str, devise: str, cache: dict, run: dict) -> f
     return taux
 
 
-def _executer_sortie(gw, base_url, account_id, sortie: dict, chemins: dict) -> dict:
+def _executer_sortie(gw, base_url, account_id, sortie: dict, chemins: dict,
+                     *, mode_attendu: str | None = None) -> dict:
     """Vend une position dont une condition de sortie est remplie."""
     position = sortie["position"]
     execution = _place_order(
@@ -355,7 +384,7 @@ def _executer_sortie(gw, base_url, account_id, sortie: dict, chemins: dict) -> d
         conid=position["conid"], side="SELL", quantity=int(position["quantite"]),
         prix_reference_cotation=sizing.to_quotation_price(
             sortie["current_price"], position["ticker"]),
-        state_path=chemins["state"])
+        state_path=chemins["state"], mode_attendu=mode_attendu)
     return journal.build_order_record(
         ticker=position["ticker"], conid=position["conid"], sens="SELL",
         quantite=int(position["quantite"]),
@@ -367,14 +396,14 @@ def _executer_sortie(gw, base_url, account_id, sortie: dict, chemins: dict) -> d
 
 
 def _executer_entree(gw, base_url, account_id, retenu: dict, contrat: dict,
-                     chemins: dict) -> dict:
+                     chemins: dict, *, mode_attendu: str | None = None) -> dict:
     """Achete un signal retenu par portfolio.select_entries."""
     signal, plan = retenu["signal"], retenu["plan"]
     execution = _place_order(
         gw, base_url, account_id, ticker=signal["ticker"], conid=contrat["conid"],
         side="BUY", quantity=int(plan["quantite"]),
         prix_reference_cotation=plan["prix_unitaire_cotation"],
-        state_path=chemins["state"])
+        state_path=chemins["state"], mode_attendu=mode_attendu)
     return journal.build_order_record(
         ticker=signal["ticker"], conid=contrat["conid"], sens="BUY",
         quantite=int(plan["quantite"]),
@@ -621,7 +650,8 @@ def run_batch(today: str | None = None, *, gw=gateway, sleep_fn=time.sleep,
     for sortie in sorties_a_traiter:
         position = sortie["position"]
         try:
-            record = _executer_sortie(gw, base_url, account_id, sortie, chemins)
+            record = _executer_sortie(gw, base_url, account_id, sortie, chemins,
+                                      mode_attendu=run["mode"])
         except Exception as e:
             # Meme isolement que portfolio.positions_to_close() ci-dessus,
             # mais pour l'EXECUTION de la sortie cette fois : `conid` et
@@ -639,6 +669,20 @@ def run_batch(today: str | None = None, *, gw=gateway, sleep_fn=time.sleep,
             })
             continue
         run["sorties"].append(record)
+        if record["statut"] == "annule_interruption":
+            # Critical #2 (revue finale de branche) : ne JAMAIS traiter ce
+            # cas comme un simple "simule" — la position est reelle chez
+            # IBKR et reste dans positions.json intacte (le bloc
+            # ci-dessous, qui retire une position de positions_ouvertes,
+            # est volontairement SAUTE ici). On le remonte aussi dans
+            # run["erreurs"] : sans ca, l'evenement resterait noye au
+            # milieu des cartes de vente ordinaires de l'email au lieu
+            # d'alerter clairement l'operateur qu'une position reelle
+            # attend une verification manuelle.
+            run["erreurs"].append({
+                "etape": "execution_sortie_interrompue",
+                "detail": f"{position.get('ticker', '?')} : {record.get('detail')}",
+            })
         if record["statut"] in ("execute", "simule"):
             identifiant = position.get("id")
             positions_ouvertes = [p for p in positions_ouvertes
@@ -738,8 +782,20 @@ def run_batch(today: str | None = None, *, gw=gateway, sleep_fn=time.sleep,
     for retenu in retenus:
         signal = retenu["signal"]
         contrat = contrats[signal["ticker"]]
-        record = _executer_entree(gw, base_url, account_id, retenu, contrat, chemins)
+        record = _executer_entree(gw, base_url, account_id, retenu, contrat, chemins,
+                                  mode_attendu=run["mode"])
         run["entrees"].append(record)
+        if record["statut"] == "annule_interruption":
+            # Meme raisonnement que cote sorties : un achat interrompu par
+            # une bascule kill_switch/dry_run mid-batch n'a jamais ete
+            # envoye — rien a orpheliner ici puisqu'aucune position n'est
+            # ajoutee (le bloc ci-dessous est saute par le `continue`
+            # suivant) — mais l'evenement doit rester visible dans l'email,
+            # pas se fondre parmi les cartes d'achat ordinaires.
+            run["erreurs"].append({
+                "etape": "execution_entree_interrompue",
+                "detail": f"{signal.get('ticker', '?')} : {record.get('detail')}",
+            })
         if record["statut"] not in ("execute", "simule"):
             continue   # spec 5.5 : pas de reprise, on passe au suivant
         positions_ouvertes.append(journal.build_position_record(

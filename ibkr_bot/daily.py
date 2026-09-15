@@ -478,6 +478,25 @@ def run_batch(today: str | None = None, *, gw=gateway, sleep_fn=time.sleep,
         run["statut"] = "gateway_indisponible"
         return _terminer(run, chemins, alerte_gateway=True)
 
+    # DEFENSE EN PROFONDEUR (spec 4.3 point 2), symetrique a celle de
+    # _place_order mais ICI pour la POLITIQUE DE RECONCILIATION : la
+    # lecture de `etat` au tout debut de cette fonction date d'avant le
+    # preflight, qui peut durer jusqu'a ~20 minutes (spec 5.5). Un
+    # operateur qui bascule dry_run: true -> false PENDANT cette fenetre
+    # ("ok, on passe en reel maintenant") est un scenario plausible. Sans
+    # cette relecture, la politique de reconciliation resterait figee sur
+    # "faire confiance au journal local" (positions simulees, jamais
+    # detenues chez IBKR) alors que _place_order, lui, relit l'etat a
+    # chaque ordre et enverrait de VRAIS ordres — un stop-loss calcule sur
+    # une position purement simulee deviendrait alors une VRAIE vente a nu
+    # sur un conid dont le compte ne detient rien. Cette relecture ne
+    # remplace PAS celle de _place_order (qui reste la seule source de
+    # verite pour l'envoi effectif de chaque ordre) ; elle evite seulement
+    # que la decision de politique ci-dessous reste bloquee sur une
+    # lecture perimee.
+    etat = state.load_state(chemins["state"])
+    run["mode"] = "dry_run" if etat["dry_run"] else "reel"
+
     # --- 5. Reconciliation AVANT toute decision (spec 5.4) ------------
     locales = portfolio.load_positions(chemins["positions"])
     try:
@@ -550,7 +569,28 @@ def run_batch(today: str | None = None, *, gw=gateway, sleep_fn=time.sleep,
     # sont disponibles pour les signaux du jour.
     companies = {c["ticker"]: c for c in indices.get("companies", [])
                  if isinstance(c, dict) and c.get("ticker")}
-    for sortie in portfolio.positions_to_close(positions_ouvertes, companies, today):
+    # portfolio.positions_to_close() est appelee UNE POSITION A LA FOIS
+    # (plutot qu'une seule fois sur toute la liste) pour isoler une ligne
+    # corrompue de positions.json : c'est une fonction pure, sans etat
+    # partage entre positions, donc le resultat agrege est identique tant
+    # que toutes les lignes sont bien formees. Une ligne cassee (ex.
+    # `date_limite` absent — precisement le champ que l'anomalie
+    # `prix_reference_absent` ci-dessus invite un operateur a corriger a
+    # la main) fait lever un KeyError QUE portfolio.py ne rattrape pas :
+    # sans cet isolement, cette seule ligne ferait perdre TOUT le batch —
+    # aucune ligne de journal, aucun email, silence total (spec 5.5 :
+    # jamais une donnee corrompue ne doit en bloquer d'autres).
+    sorties_a_traiter = []
+    for position in positions_ouvertes:
+        try:
+            sorties_a_traiter.extend(
+                portfolio.positions_to_close([position], companies, today))
+        except Exception as e:
+            run["erreurs"].append({
+                "etape": "positions_to_close",
+                "detail": f"{position.get('ticker', '?')} : {e}",
+            })
+    for sortie in sorties_a_traiter:
         record = _executer_sortie(gw, base_url, account_id, sortie, chemins)
         run["sorties"].append(record)
         if record["statut"] in ("execute", "simule"):

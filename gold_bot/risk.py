@@ -6,6 +6,29 @@ from datetime import date, datetime, timezone
 import gold_bot.state as state
 
 
+RISK_PROFILE_PARAMS: dict[int, dict[str, float]] = {
+    1: {"risk_pct": 0.02, "threshold_pct": 0.05},
+    2: {"risk_pct": 0.035, "threshold_pct": 0.075},
+    3: {"risk_pct": 0.05, "threshold_pct": 0.10},
+    4: {"risk_pct": 0.075, "threshold_pct": 0.135},
+    5: {"risk_pct": 0.10, "threshold_pct": 0.175},
+}
+DEFAULT_RISK_PROFILE = 3
+
+
+def risk_profile_params(profile) -> dict[str, float]:
+    """Résout un profil de risque (1-5) vers ses paramètres risk_pct/
+    threshold_pct. Tout profil invalide (absent, None, hors plage,
+    non-entier, ou booléen — bool est une sous-classe d'int en Python,
+    exclue explicitement pour ne jamais résoudre True/False vers un
+    profil numérique) replie sur DEFAULT_RISK_PROFILE, jamais
+    d'exception — même convention que sector_risk_profile() dans
+    indices_score.py."""
+    if isinstance(profile, bool) or not isinstance(profile, int) or profile not in RISK_PROFILE_PARAMS:
+        profile = DEFAULT_RISK_PROFILE
+    return RISK_PROFILE_PARAMS[profile]
+
+
 def compute_position_size(balance: float, entry: float, stop_loss: float,
                            contract_size: float, risk_pct: float = 0.05) -> float:
     """Dimensionnement par le risque : la perte si le stop-loss est

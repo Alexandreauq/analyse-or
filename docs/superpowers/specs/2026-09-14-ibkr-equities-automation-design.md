@@ -824,11 +824,24 @@ cas de panne technique — propriété déjà partagée avec le paper-trading
 (évalué une fois par jour lui aussi). Pas de mécanisme d'urgence pour
 forcer une vente.
 
-### 9.9 Financement et suivi du solde — résolu
+### 9.9 Financement et suivi du solde — résolu, révisé le 2026-09-15
 
-**Garde-fou de solde ajouté** : le bot lit le solde disponible par devise
-avant de classer les signaux, et ne retient que ceux finançables — évite
-une série de rejets bruyants en fin de classement.
+**Garde-fou de solde ajouté**, mais pas par devise. La première version
+de cette décision (« solde disponible par devise ») contredisait 9.1/3.2 :
+puisqu'IBKR convertit automatiquement au moment de l'achat via IDEAL, il
+n'y a pas besoin de cash pré-converti par devise — l'exiger aurait
+bloqué la plupart des signaux sur un compte financé normalement (en EUR),
+comme l'a confirmé la revue finale du Plan A avec des données réelles
+(le signal le mieux noté du jour, en USD, aurait été rejeté à tort sur un
+compte avec 8 000 € de cash disponible).
+
+**Décision corrigée, tranchée par l'utilisateur pendant la revue de Plan A** :
+le garde-fou compare le budget cumulé du classement (à raison de 500 €
+par position retenue, un majorant sûr — l'arrondi aux actions entières ne
+fait que réduire la dépense réelle, jamais l'augmenter) au solde total
+disponible dans la **devise de base du compte**, pas devise par devise.
+Implémenté par `ibkr_bot.gateway.base_currency_cash()` (lit l'agrégat
+`"BASE"` du ledger IBKR) et le garde-fou de `ibkr_bot.portfolio.select_entries`.
 
 ## 10. Prochaine étape
 

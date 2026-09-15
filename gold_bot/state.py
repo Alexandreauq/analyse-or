@@ -10,10 +10,12 @@ STATE_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "state.jso
 def load_state(path: str = STATE_PATH) -> dict:
     """État de repli si le fichier n'existe pas encore, est illisible,
     ou contient du JSON qui parse mais n'est pas le dict attendu — les
-    champs kill_switch/dry_run sont toujours présents et de type bool
-    en sortie, jamais None ou absents. Jamais d'exception au démarrage
-    du bot."""
-    defaults = {"kill_switch": False, "dry_run": True}
+    champs kill_switch/dry_run/risk_profile sont toujours présents en
+    sortie, jamais None ou absents. Jamais d'exception au démarrage
+    du bot. risk_profile n'est délibérément pas validé ici (type/plage)
+    — voir risk.risk_profile_params() qui gère tout profil invalide
+    par un repli explicite plutôt qu'une exception."""
+    defaults = {"kill_switch": False, "dry_run": True, "risk_profile": 3}
     try:
         with open(path, "r", encoding="utf-8") as fh:
             data = json.load(fh)
@@ -25,6 +27,7 @@ def load_state(path: str = STATE_PATH) -> dict:
     merged.update(data)
     merged["kill_switch"] = bool(merged.get("kill_switch", False))
     merged["dry_run"] = bool(merged.get("dry_run", True))
+    merged["risk_profile"] = merged.get("risk_profile", 3)
     return merged
 
 

@@ -1,8 +1,11 @@
 # gold_bot/api.py
 # Point d'accès HTTPS du bot : deux routes de lecture (/status,
-# /dashboard) et deux routes de mutation (/kill, /resume — seules
-# routes qui changent un état, et seul kill_switch peut être modifié,
-# jamais dry_run). Ce module n'importe jamais le module de courtage
+# /dashboard) et trois routes de mutation (/kill, /resume — seules
+# routes qui changent kill_switch, jamais dry_run — et /profile, qui
+# change risk_profile, un réglage de routine plutôt qu'un interrupteur
+# d'urgence, voir
+# docs/superpowers/specs/2026-09-15-gold-bot-risk-profiles-design.md).
+# Ce module n'importe jamais le module de courtage
 # (celui qui peut passer des ordres réels), même pour lire un solde
 # ou des positions : /dashboard ne lit que des fichiers locaux mis en
 # cache par gold_bot/loop.py (voir
@@ -18,6 +21,7 @@ import os
 from fastapi import FastAPI, Header, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
+import gold_bot.risk as risk
 import gold_bot.state as state
 
 CIRCUIT_BREAKER_STATE_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "circuit_breaker_state.json")
@@ -136,6 +140,7 @@ def get_status():
     return {
         "kill_switch": current["kill_switch"],
         "dry_run": current["dry_run"],
+        "risk_profile": current["risk_profile"],
         "circuit_breaker_day": circuit_breaker_state.get("circuit_breaker_day"),
     }
 
@@ -203,3 +208,15 @@ def resume(x_bot_token: str | None = Header(default=None)):
     current["kill_switch"] = False
     state.save_state(current, state.STATE_PATH)
     return {"kill_switch": False}
+
+
+@app.post("/profile")
+def set_profile(payload: dict, x_bot_token: str | None = Header(default=None)):
+    _check_token(x_bot_token)
+    profile = payload.get("profile")
+    if isinstance(profile, bool) or not isinstance(profile, int) or profile not in risk.RISK_PROFILE_PARAMS:
+        raise HTTPException(status_code=422, detail="profile doit être un entier entre 1 et 5")
+    current = state.load_state(state.STATE_PATH)
+    current["risk_profile"] = profile
+    state.save_state(current, state.STATE_PATH)
+    return {"risk_profile": profile}

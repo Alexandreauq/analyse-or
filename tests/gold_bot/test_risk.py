@@ -101,3 +101,42 @@ def test_circuit_breaker_ignores_corrupt_persisted_day(tmp_path):
     state.save_state({"circuit_breaker_day": "not-a-date", "circuit_breaker_starting_balance": 10000}, path)
     cb = risk.CircuitBreaker(persist_path=path)  # ne doit pas lever
     assert cb._day is None
+
+
+def test_risk_profile_params_profile_1_is_most_conservative():
+    assert risk.risk_profile_params(1) == {"risk_pct": 0.02, "threshold_pct": 0.05}
+
+
+def test_risk_profile_params_profile_3_matches_current_defaults():
+    assert risk.risk_profile_params(3) == {"risk_pct": 0.05, "threshold_pct": 0.10}
+
+
+def test_risk_profile_params_profile_5_is_most_aggressive():
+    assert risk.risk_profile_params(5) == {"risk_pct": 0.10, "threshold_pct": 0.175}
+
+
+def test_risk_profile_params_all_five_profiles_present():
+    assert set(risk.RISK_PROFILE_PARAMS.keys()) == {1, 2, 3, 4, 5}
+
+
+def test_risk_profile_params_falls_back_to_default_when_out_of_range():
+    assert risk.risk_profile_params(6) == risk.RISK_PROFILE_PARAMS[3]
+    assert risk.risk_profile_params(0) == risk.RISK_PROFILE_PARAMS[3]
+    assert risk.risk_profile_params(-1) == risk.RISK_PROFILE_PARAMS[3]
+
+
+def test_risk_profile_params_falls_back_to_default_when_none():
+    assert risk.risk_profile_params(None) == risk.RISK_PROFILE_PARAMS[3]
+
+
+def test_risk_profile_params_falls_back_to_default_when_not_int():
+    assert risk.risk_profile_params("3") == risk.RISK_PROFILE_PARAMS[3]
+    assert risk.risk_profile_params(3.0) == risk.RISK_PROFILE_PARAMS[3]
+
+
+def test_risk_profile_params_falls_back_to_default_for_bool():
+    # bool est une sous-classe d'int en Python (True == 1, False == 0) —
+    # doit être explicitement exclu pour ne jamais résoudre un booléen
+    # mal formé vers un vrai profil numérique.
+    assert risk.risk_profile_params(True) == risk.RISK_PROFILE_PARAMS[3]
+    assert risk.risk_profile_params(False) == risk.RISK_PROFILE_PARAMS[3]

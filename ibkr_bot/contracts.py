@@ -114,16 +114,38 @@ def resolve_conid(ticker: str, search_fn, info_fn,
     une base_url. `cache` est le dict renvoye par load_cache() ; il est
     enrichi sur place en cas de succes. Les echecs ne sont jamais mis en
     cache : une resolution peut reussir demain.
+
+    Une entree en cache n'est servie que si elle est encore coherente
+    avec EXPECTED_VENUE au moment de l'appel (bourse ET devise valides
+    pour le suffixe du ticker). Le fichier de cache est persiste sur
+    disque sans date d'expiration — `resolved_on` est ecrit pour l'audit
+    mais jamais relu pour perimer une entree — donc si EXPECTED_VENUE
+    est corrige un jour (ses codes sont verifies contre des listes
+    publiques, pas contre un Gateway en direct), une entree deja
+    resolue sous l'ancienne table ne doit pas rester approuvee pour
+    toujours pour les tickers meme que la correction visait. Une entree
+    qui ne passe plus ce controle est simplement ignoree : on retombe
+    sur une resolution normale plutot que sur un refus immediat, car le
+    ticker peut tres bien rester resolvable — seule l'entree en cache
+    est perimee.
     """
     cache = cache if cache is not None else {}
-    en_cache = cache.get(ticker)
-    if isinstance(en_cache, dict) and en_cache.get("conid"):
-        return {"ticker": ticker, "conid": en_cache["conid"],
-                "exchange": en_cache.get("exchange", ""),
-                "currency": en_cache.get("currency", ""),
-                "motif": None, "detail": "cache"}
-
     venue = expected_venue(ticker)
+
+    en_cache = cache.get(ticker)
+    if (venue is not None and isinstance(en_cache, dict) and en_cache.get("conid")
+            and en_cache.get("exchange") in venue["exchanges"]
+            and en_cache.get("currency") in venue["currencies"]):
+        try:
+            conid_cache = int(en_cache["conid"])
+        except (TypeError, ValueError):
+            conid_cache = None
+        if conid_cache is not None:
+            return {"ticker": ticker, "conid": conid_cache,
+                    "exchange": en_cache.get("exchange", ""),
+                    "currency": en_cache.get("currency", ""),
+                    "motif": None, "detail": "cache"}
+
     if venue is None:
         return _refus(ticker, f"suffixe hors perimetre pour {ticker}")
 
@@ -132,6 +154,9 @@ def resolve_conid(ticker: str, search_fn, info_fn,
         candidats = search_fn(symbole)
     except Exception as exc:
         return _refus(ticker, f"recherche impossible : {exc}")
+    # Un search_fn injecte peut renvoyer None (au lieu de la liste vide
+    # documentee) sans que ce module plante pour autant.
+    candidats = candidats if isinstance(candidats, list) else []
 
     # Filtre 1 : meme symbole, une section action, bourse attendue.
     retenus = [
@@ -142,14 +167,28 @@ def resolve_conid(ticker: str, search_fn, info_fn,
         and c.get("description") in venue["exchanges"]
     ]
 
-    # Filtre 2 : devise attendue, confirmee contrat par contrat.
+    # Filtre 2 : devise attendue ET bourse de cotation confirmee,
+    # contrat par contrat. listingExchange (renvoye par contract_info)
+    # existe precisement pour ce controle croise : la bourse annoncee
+    # par la recherche (description) et celle confirmee par la fiche
+    # detaillee (listingExchange) doivent s'accorder, sinon rien ne
+    # garantit que la fiche detaillee decrit bien le contrat filtre plus
+    # haut. Repli sur `description` quand listingExchange est absent,
+    # pour rester compatible avec des fixtures qui ne le renseignent pas.
     confirmes = []
     for candidat in retenus:
+        candidat_conid = candidat.get("conid")
+        if candidat_conid is None:
+            continue
         try:
-            details = info_fn(candidat["conid"])
+            details = info_fn(candidat_conid)
         except Exception as exc:
             return _refus(ticker, f"details indisponibles : {exc}")
-        if isinstance(details, dict) and details.get("currency") in venue["currencies"]:
+        if not isinstance(details, dict):
+            continue
+        exchange_confirme = details.get("listingExchange", candidat.get("description"))
+        if (details.get("currency") in venue["currencies"]
+                and exchange_confirme in venue["exchanges"]):
             confirmes.append((candidat, details))
 
     # Filtre 3 : unicite. Zero ou plusieurs -> on refuse.
@@ -161,11 +200,18 @@ def resolve_conid(ticker: str, search_fn, info_fn,
             f"({len(candidats)} resultat(s) bruts)",
         )
     if len(confirmes) > 1:
-        conids = ", ".join(str(c["conid"]) for c, _ in confirmes)
+        conids = ", ".join(str(c.get("conid")) for c, _ in confirmes)
         return _refus(ticker, f"ambigu : {len(confirmes)} contrats retenus ({conids})")
 
     candidat, details = confirmes[0]
-    conid = int(candidat["conid"])
+    try:
+        conid = int(candidat["conid"])
+    except (TypeError, ValueError):
+        return _refus(
+            ticker,
+            f"conid non numerique renvoye par IBKR pour {ticker} : "
+            f"{candidat.get('conid')!r}",
+        )
     exchange = candidat.get("description", "")
     currency = details.get("currency", "")
     cache[ticker] = {"conid": conid, "exchange": exchange,

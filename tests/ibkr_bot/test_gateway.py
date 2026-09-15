@@ -450,30 +450,44 @@ def test_order_status_uses_the_documented_path(monkeypatch):
 
 # --- garde structurel du Plan A --------------------------------------
 
-def test_no_other_plan_a_module_references_the_order_routes():
-    """Garantie mecanique du Plan A (voir Global Constraints) : seul
-    gateway.py connait les routes de passage d'ordre. Aucun autre module
-    du paquet ne doit pouvoir en declencher une, meme par erreur.
+def test_only_gateway_and_daily_may_reference_the_order_functions():
+    """Garantie structurelle, elargie AU PLUS ETROIT pour le Plan B.
+
+    - Les NOMS de fonction (place_market_order, confirm_reply) : definis
+      par gateway.py, et appeles par daily.py — le seul appelant legitime
+      (spec 4.3, point 2 : "daily.py est le seul endroit ou un ordre reel
+      part"). Tout AUTRE module du paquet qui les mentionne est un
+      contournement du garde.
+    - Les ROUTES HTTP : interdites PARTOUT hors gateway.py, DAILY.PY
+      COMPRISE. daily.py appelle gateway.py, elle ne reimplemente jamais
+      l'appel HTTP — sinon la garantie "un seul module parle a IBKR"
+      (spec 4.3, point 1) ne vaudrait plus rien.
 
     rglob (recursif) plutot que glob : un futur sous-paquet (ex.
-    ibkr_bot/steps/) doit etre scanne lui aussi, pas seulement le
-    premier niveau de ibkr_bot/."""
+    ibkr_bot/steps/) doit etre scanne lui aussi."""
     import pathlib
 
     package_dir = pathlib.Path(gateway.__file__).parent
-    interdits = ("place_market_order", "confirm_reply", "/iserver/account/")
+    noms_de_fonction = ("place_market_order", "confirm_reply")
+    routes = ("/iserver/account/", "/iserver/reply/")
+    appelants_autorises = {"gateway.py", "daily.py"}
+
     fautifs = []
     for source in sorted(package_dir.rglob("*.py")):
-        if source.name == "gateway.py":
-            continue
         texte = source.read_text(encoding="utf-8")
-        for interdit in interdits:
-            if interdit in texte:
-                fautifs.append(f"{source.name} mentionne {interdit!r}")
+        if source.name != "gateway.py":
+            for route in routes:
+                if route in texte:
+                    fautifs.append(f"{source.name} construit la route {route!r}")
+        if source.name not in appelants_autorises:
+            for nom in noms_de_fonction:
+                if nom in texte:
+                    fautifs.append(f"{source.name} mentionne {nom!r}")
 
     assert fautifs == [], (
-        "Le Plan A interdit tout chemin de passage d'ordre hors gateway.py : "
-        + "; ".join(fautifs)
+        "Seuls gateway.py (definition) et daily.py (appel) peuvent "
+        "reference les fonctions de passage d'ordre, et seul gateway.py "
+        "peut construire leurs routes HTTP : " + "; ".join(fautifs)
     )
 
 

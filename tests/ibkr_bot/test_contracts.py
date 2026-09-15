@@ -155,6 +155,98 @@ def test_resolve_conid_refuses_when_the_currency_does_not_match():
     assert "aucun candidat" in result["detail"]
 
 
+def test_resolve_conid_refuses_when_listing_exchange_disagrees_with_search_result():
+    """La recherche annonce SBF, mais la fiche detaillee (contract_info)
+    contredit avec un listingExchange different : rien ne garantit alors
+    qu'il s'agit du meme contrat, donc on refuse plutot que de faire
+    confiance au premier champ venu."""
+    search = _search_fn({"MC": [_candidat(4901, "MC", "SBF")]})
+    info = _info_fn({"4901": {"conid": 4901, "symbol": "MC", "currency": "EUR",
+                              "listingExchange": "SWB"}})
+
+    result = contracts.resolve_conid("MC.PA", search, info, {}, today="2026-09-14")
+
+    assert result["conid"] is None
+    assert result["motif"] == "contrat_non_resolu"
+
+
+def test_resolve_conid_refuses_ambiguity_between_ibis_and_ibis2():
+    """Xetra expose IBIS (actions) et IBIS2 (ETF), tous deux dans les
+    bourses attendues pour .DE : deux candidats EUR sur ces deux codes
+    doivent rester ambigus, pas se departager par defaut."""
+    search = _search_fn({"SAP": [_candidat(4001, "SAP", "IBIS"),
+                                 _candidat(4002, "SAP", "IBIS2")]})
+    info = _info_fn({
+        "4001": {"conid": 4001, "symbol": "SAP", "currency": "EUR", "listingExchange": "IBIS"},
+        "4002": {"conid": 4002, "symbol": "SAP", "currency": "EUR", "listingExchange": "IBIS2"},
+    })
+
+    result = contracts.resolve_conid("SAP.DE", search, info, {}, today="2026-09-14")
+
+    assert result["conid"] is None
+    assert result["motif"] == "contrat_non_resolu"
+    assert "ambigu" in result["detail"]
+
+
+def test_resolve_conid_picks_the_single_survivor_among_several_venues():
+    """La recherche renvoie des cotations sur plusieurs places a la fois
+    (pas seulement une bonne et une mauvaise) ; une seule est sur la
+    bourse attendue."""
+    search = _search_fn({"MC": [
+        _candidat(101, "MC", "SWB"),
+        _candidat(102, "MC", "FWB"),
+        _candidat(4901, "MC", "SBF"),
+        _candidat(103, "MC", "MUN"),
+    ]})
+    info = _info_fn({"4901": {"conid": 4901, "symbol": "MC", "currency": "EUR",
+                              "listingExchange": "SBF"}})
+
+    result = contracts.resolve_conid("MC.PA", search, info, {}, today="2026-09-14")
+
+    assert result["conid"] == 4901
+    assert result["motif"] is None
+    # les candidats hors bourse attendue sont ecartes par le filtre 1,
+    # avant meme d'appeler info_fn dessus.
+    assert info.appels == ["4901"]
+
+
+def test_resolve_conid_survives_an_info_lookup_that_raises():
+    search = _search_fn({"MC": [_candidat(4901, "MC", "SBF")]})
+
+    def info(conid):
+        raise RuntimeError("gateway injoignable pendant contract_info")
+
+    result = contracts.resolve_conid("MC.PA", search, info, {}, today="2026-09-14")
+
+    assert result["conid"] is None
+    assert result["motif"] == "contrat_non_resolu"
+    assert "gateway injoignable pendant contract_info" in result["detail"]
+
+
+def test_resolve_conid_survives_a_search_fn_returning_none():
+    """Un search_fn injecte qui renvoie None (plutot que la liste vide
+    documentee par gateway.search_contract) ne doit pas faire planter la
+    resolution."""
+    def search(symbol):
+        return None
+
+    result = contracts.resolve_conid("MC.PA", search, _info_fn({}), {}, today="2026-09-14")
+
+    assert result["conid"] is None
+    assert result["motif"] == "contrat_non_resolu"
+
+
+def test_resolve_conid_refuses_rather_than_crashing_on_a_non_numeric_conid():
+    search = _search_fn({"MC": [_candidat("4901A", "MC", "SBF")]})
+    info = _info_fn({"4901A": {"conid": "4901A", "symbol": "MC", "currency": "EUR",
+                               "listingExchange": "SBF"}})
+
+    result = contracts.resolve_conid("MC.PA", search, info, {}, today="2026-09-14")
+
+    assert result["conid"] is None
+    assert result["motif"] == "contrat_non_resolu"
+
+
 def test_resolve_conid_refuses_an_ambiguous_result_instead_of_guessing():
     """Deux contrats survivent aux deux filtres : on refuse. Prendre le
     premier de la liste serait un achat devine."""
@@ -246,6 +338,30 @@ def test_resolve_conid_reuses_the_cache_without_calling_ibkr():
     assert result["motif"] is None
     assert search.appels == []
     assert info.appels == []
+
+
+def test_resolve_conid_ignores_a_stale_cache_entry_with_the_wrong_venue():
+    """Une entree en cache dont la bourse/devise ne correspond plus a
+    EXPECTED_VENUE (ex. apres correction de la table, ou entree
+    corrompue) ne doit JAMAIS etre servie telle quelle : on l'ignore et
+    on retombe sur une resolution normale plutot que de faire confiance
+    a un vieux conid potentiellement sur le mauvais instrument."""
+    search = _search_fn({"MC": [_candidat(4901, "MC", "SBF")]})
+    info = _info_fn({"4901": {"conid": 4901, "symbol": "MC", "currency": "EUR",
+                              "listingExchange": "SBF"}})
+    cache = {"MC.PA": {"conid": 999999, "exchange": "SWB", "currency": "USD",
+                       "resolved_on": "2026-01-01"}}
+
+    result = contracts.resolve_conid("MC.PA", search, info, cache, today="2026-09-14")
+
+    assert result["conid"] == 4901
+    assert result["motif"] is None
+    assert search.appels == ["MC"]
+    assert info.appels == ["4901"]
+    # la resolution fraiche remplace l'entree perimee plutot que de la
+    # laisser trainer.
+    assert cache["MC.PA"]["conid"] == 4901
+    assert cache["MC.PA"]["exchange"] == "SBF"
 
 
 def test_resolve_conid_never_caches_a_failure():

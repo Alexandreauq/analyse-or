@@ -184,3 +184,207 @@ def test_exchange_rate_raises_on_http_error(monkeypatch):
         lambda *a, **k: _FakeIbkrResponse({}, status_code=503))
     with pytest.raises(gateway.requests.exceptions.HTTPError):
         gateway.exchange_rate(BASE, "EUR", "CHF")
+
+
+# --- portefeuille ----------------------------------------------------
+
+def test_ledger_uses_the_portfolio_ledger_path(monkeypatch):
+    captured = {}
+
+    def fake_get(url, params=None, timeout=None, verify=None):
+        captured["url"] = url
+        return _FakeIbkrResponse({
+            "EUR": {"currency": "EUR", "cashbalance": 3120.5, "settledcash": 3120.5},
+            "BASE": {"currency": "BASE", "cashbalance": 3400.0},
+        })
+
+    monkeypatch.setattr(gateway.requests, "get", fake_get)
+    result = gateway.ledger(BASE, "U1234567")
+
+    assert result["EUR"]["cashbalance"] == 3120.5
+    assert captured["url"] == "https://127.0.0.1:5000/v1/api/portfolio/U1234567/ledger"
+
+
+def test_cash_by_currency_keeps_real_currencies_and_drops_base(monkeypatch):
+    monkeypatch.setattr(gateway.requests, "get", lambda *a, **k: _FakeIbkrResponse({
+        "EUR": {"currency": "EUR", "cashbalance": 3120.5},
+        "GBP": {"currency": "GBP", "cashbalance": 430.0},
+        "USD": {"currency": "USD", "cashbalance": 0.0},
+        "BASE": {"currency": "BASE", "cashbalance": 3900.0},
+    }))
+    result = gateway.cash_by_currency(BASE, "U1234567")
+
+    assert result == {"EUR": 3120.5, "GBP": 430.0, "USD": 0.0}
+    assert "BASE" not in result
+
+
+def test_cash_by_currency_ignores_entries_without_a_cash_balance(monkeypatch):
+    monkeypatch.setattr(gateway.requests, "get", lambda *a, **k: _FakeIbkrResponse({
+        "EUR": {"currency": "EUR", "cashbalance": 100.0},
+        "CHF": {"currency": "CHF"},
+        "JPY": "pas un dict",
+    }))
+    assert gateway.cash_by_currency(BASE, "U1234567") == {"EUR": 100.0}
+
+
+def test_positions_fetches_the_first_page(monkeypatch):
+    captured = []
+    raw = [
+        {"conid": 265598, "contractDesc": "AAPL", "position": 10.0,
+         "currency": "USD", "mktPrice": 190.0, "assetClass": "STK"},
+        {"conid": 4901, "contractDesc": "LVMH", "position": 1.0,
+         "currency": "EUR", "mktPrice": 415.0, "assetClass": "STK"},
+    ]
+
+    def fake_get(url, params=None, timeout=None, verify=None):
+        captured.append(url)
+        return _FakeIbkrResponse(raw)
+
+    monkeypatch.setattr(gateway.requests, "get", fake_get)
+    result = gateway.positions(BASE, "U1234567")
+
+    assert result == raw
+    assert captured == ["https://127.0.0.1:5000/v1/api/portfolio/U1234567/positions/0"]
+
+
+def test_positions_follows_pagination_until_a_short_page(monkeypatch):
+    page_0 = [{"conid": i, "position": 1.0, "currency": "EUR"} for i in range(100)]
+    page_1 = [{"conid": 1000, "position": 2.0, "currency": "EUR"}]
+    pages = {"0": page_0, "1": page_1}
+    captured = []
+
+    def fake_get(url, params=None, timeout=None, verify=None):
+        captured.append(url)
+        return _FakeIbkrResponse(pages[url.rsplit("/", 1)[-1]])
+
+    monkeypatch.setattr(gateway.requests, "get", fake_get)
+    result = gateway.positions(BASE, "U1234567")
+
+    assert len(result) == 101
+    assert result[-1]["conid"] == 1000
+    assert captured == [
+        "https://127.0.0.1:5000/v1/api/portfolio/U1234567/positions/0",
+        "https://127.0.0.1:5000/v1/api/portfolio/U1234567/positions/1",
+    ]
+
+
+def test_positions_returns_empty_list_when_api_returns_a_dict(monkeypatch):
+    monkeypatch.setattr(
+        gateway.requests, "get",
+        lambda *a, **k: _FakeIbkrResponse({"error": "not ready"}))
+    assert gateway.positions(BASE, "U1234567") == []
+
+
+# --- ordres (mockes, jamais appeles hors tests dans ce Plan A) --------
+
+def test_place_market_order_sends_the_documented_body(monkeypatch):
+    captured = {}
+
+    def fake_post(url, json=None, timeout=None, verify=None):
+        captured["url"] = url
+        captured["json"] = json
+        return _FakeIbkrResponse([{"order_id": "1234", "order_status": "Submitted"}])
+
+    monkeypatch.setattr(gateway.requests, "post", fake_post)
+    result = gateway.place_market_order(BASE, "U1234567", 4901, "BUY", 6)
+
+    assert result == [{"order_id": "1234", "order_status": "Submitted"}]
+    assert captured["url"] == "https://127.0.0.1:5000/v1/api/iserver/account/U1234567/orders"
+    assert captured["json"] == {
+        "orders": [{
+            "conid": 4901,
+            "orderType": "MKT",
+            "side": "BUY",
+            "quantity": 6,
+            "tif": "DAY",
+            "acctId": "U1234567",
+        }]
+    }
+
+
+def test_place_market_order_accepts_sell_side(monkeypatch):
+    captured = {}
+
+    def fake_post(url, json=None, timeout=None, verify=None):
+        captured["json"] = json
+        return _FakeIbkrResponse([{"order_id": "1235"}])
+
+    monkeypatch.setattr(gateway.requests, "post", fake_post)
+    gateway.place_market_order(BASE, "U1234567", 4901, "SELL", 6)
+
+    assert captured["json"]["orders"][0]["side"] == "SELL"
+    assert captured["json"]["orders"][0]["orderType"] == "MKT"
+
+
+def test_place_market_order_rejects_an_unknown_side():
+    with pytest.raises(ValueError, match="BUY.*SELL"):
+        gateway.place_market_order(BASE, "U1234567", 4901, "achat", 6)
+
+
+def test_place_market_order_rejects_a_non_positive_quantity():
+    with pytest.raises(ValueError, match="quantite"):
+        gateway.place_market_order(BASE, "U1234567", 4901, "BUY", 0)
+
+
+def test_place_market_order_propagates_http_errors(monkeypatch):
+    monkeypatch.setattr(
+        gateway.requests, "post",
+        lambda *a, **k: _FakeIbkrResponse({}, status_code=400))
+    with pytest.raises(gateway.requests.exceptions.HTTPError):
+        gateway.place_market_order(BASE, "U1234567", 4901, "BUY", 6)
+
+
+def test_confirm_reply_posts_confirmed_true(monkeypatch):
+    captured = {}
+
+    def fake_post(url, json=None, timeout=None, verify=None):
+        captured["url"] = url
+        captured["json"] = json
+        return _FakeIbkrResponse([{"order_id": "1234", "order_status": "Submitted"}])
+
+    monkeypatch.setattr(gateway.requests, "post", fake_post)
+    gateway.confirm_reply(BASE, "e1f2a3b4-0000")
+
+    assert captured["url"] == "https://127.0.0.1:5000/v1/api/iserver/reply/e1f2a3b4-0000"
+    assert captured["json"] == {"confirmed": True}
+
+
+def test_order_status_uses_the_documented_path(monkeypatch):
+    captured = {}
+
+    def fake_get(url, params=None, timeout=None, verify=None):
+        captured["url"] = url
+        return _FakeIbkrResponse({"order_status": "Filled", "avgPrice": "415.20"})
+
+    monkeypatch.setattr(gateway.requests, "get", fake_get)
+    result = gateway.order_status(BASE, "1234")
+
+    assert result["order_status"] == "Filled"
+    assert captured["url"] == (
+        "https://127.0.0.1:5000/v1/api/iserver/account/order/status/1234"
+    )
+
+
+# --- garde structurel du Plan A --------------------------------------
+
+def test_no_other_plan_a_module_references_the_order_routes():
+    """Garantie mecanique du Plan A (voir Global Constraints) : seul
+    gateway.py connait les routes de passage d'ordre. Aucun autre module
+    du paquet ne doit pouvoir en declencher une, meme par erreur."""
+    import pathlib
+
+    package_dir = pathlib.Path(gateway.__file__).parent
+    interdits = ("place_market_order", "confirm_reply", "/iserver/account/")
+    fautifs = []
+    for source in sorted(package_dir.glob("*.py")):
+        if source.name == "gateway.py":
+            continue
+        texte = source.read_text(encoding="utf-8")
+        for interdit in interdits:
+            if interdit in texte:
+                fautifs.append(f"{source.name} mentionne {interdit!r}")
+
+    assert fautifs == [], (
+        "Le Plan A interdit tout chemin de passage d'ordre hors gateway.py : "
+        + "; ".join(fautifs)
+    )

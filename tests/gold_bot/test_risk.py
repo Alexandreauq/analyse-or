@@ -103,6 +103,52 @@ def test_circuit_breaker_ignores_corrupt_persisted_day(tmp_path):
     assert cb._day is None
 
 
+def test_circuit_breaker_stays_tripped_after_threshold_raised_mid_day():
+    """Reproduit le scénario du finding #1 de la revue finale : le
+    coupe-circuit se déclenche au profil 3 (threshold_pct=0.10), puis
+    quelqu'un relève le profil à 5 (threshold_pct=0.175) le même jour —
+    comme le fait gold_bot.loop.run_cycle en mutant threshold_pct en
+    place sur l'instance partagée. Le coupe-circuit ne doit jamais se
+    "dé-déclencher" silencieusement à cause de ce relèvement."""
+    cb = risk.CircuitBreaker(threshold_pct=0.10, now_fn=lambda: datetime(2026, 9, 10, tzinfo=timezone.utc))
+    cb.check(10000)
+    assert cb.can_open_position(8800) is False  # -12%, dépasse le seuil du profil 3 (10%)
+    cb.threshold_pct = 0.175  # relèvement au profil 5, même jour UTC
+    assert cb.can_open_position(8800) is False  # -12% est SOUS 17.5% mais doit rester bloqué
+
+
+def test_circuit_breaker_tripped_flag_resets_on_new_day_even_after_profile_raise():
+    clock = {"now": datetime(2026, 9, 10, 23, 0, tzinfo=timezone.utc)}
+    cb = risk.CircuitBreaker(threshold_pct=0.10, now_fn=lambda: clock["now"])
+    cb.check(10000)
+    assert cb.can_open_position(8800) is False  # déclenché le 10 au profil 3
+    cb.threshold_pct = 0.175  # relevé au profil 5, toujours le 10
+    assert cb.can_open_position(8800) is False  # reste bloqué le 10
+    clock["now"] = datetime(2026, 9, 11, 1, 0, tzinfo=timezone.utc)  # jour suivant UTC
+    # Nouveau jour : solde de référence refixé au solde courant (8800),
+    # donc plus aucune perte accumulée — et le flag tripped doit avoir
+    # été réinitialisé, pas être resté collé du jour précédent.
+    assert cb.can_open_position(8800) is True
+
+
+def test_circuit_breaker_tripped_flag_persists_across_instances(tmp_path):
+    """Un redémarrage du process (nouvelle instance CircuitBreaker sur le
+    même persist_path) en pleine journée, APRÈS un déclenchement et un
+    relèvement de profil, ne doit pas silencieusement dé-déclencher le
+    coupe-circuit — sinon un redémarrage de service ordinaire suffirait à
+    contourner la protection."""
+    path = str(tmp_path / "state.json")
+    cb1 = risk.CircuitBreaker(threshold_pct=0.10, now_fn=lambda: datetime(2026, 9, 10, tzinfo=timezone.utc), persist_path=path)
+    cb1.check(10000)
+    assert cb1.can_open_position(8800) is False  # déclenché au profil 3
+
+    # Nouvelle instance (redémarrage), même jour UTC, DÉJÀ au profil 5
+    # (threshold_pct plus large) : doit retrouver le flag déclenché
+    # persisté, pas repartir à zéro.
+    cb2 = risk.CircuitBreaker(threshold_pct=0.175, now_fn=lambda: datetime(2026, 9, 10, 18, tzinfo=timezone.utc), persist_path=path)
+    assert cb2.can_open_position(8800) is False
+
+
 def test_risk_profile_params_profile_1_is_most_conservative():
     assert risk.risk_profile_params(1) == {"risk_pct": 0.02, "threshold_pct": 0.05}
 
@@ -140,3 +186,15 @@ def test_risk_profile_params_falls_back_to_default_for_bool():
     # mal formé vers un vrai profil numérique.
     assert risk.risk_profile_params(True) == risk.RISK_PROFILE_PARAMS[3]
     assert risk.risk_profile_params(False) == risk.RISK_PROFILE_PARAMS[3]
+
+
+def test_resolve_risk_profile_returns_valid_profile_unchanged():
+    assert risk.resolve_risk_profile(5) == 5
+
+
+def test_resolve_risk_profile_falls_back_to_default_for_invalid_values():
+    assert risk.resolve_risk_profile(9) == risk.DEFAULT_RISK_PROFILE
+    assert risk.resolve_risk_profile("5") == risk.DEFAULT_RISK_PROFILE
+    assert risk.resolve_risk_profile(5.0) == risk.DEFAULT_RISK_PROFILE
+    assert risk.resolve_risk_profile(None) == risk.DEFAULT_RISK_PROFILE
+    assert risk.resolve_risk_profile(True) == risk.DEFAULT_RISK_PROFILE

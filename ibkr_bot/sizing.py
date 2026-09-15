@@ -36,6 +36,17 @@ def _is_positive_number(value) -> bool:
     return value > 0
 
 
+def _is_valid_currency(value) -> bool:
+    """True seulement pour une devise non vide, sous forme de chaine.
+    `index_currency` peut arriver vide ou None si docs/indices.json perd
+    une entree de `index_currency` pour un indice (voir
+    signals.py:101, `currencies.get(..., "")`) : laisser passer ce cas
+    produirait un plan "achetable" avec `devise_compte` a None/"", qui
+    degraderait silencieusement le garde-fou de solde par devise en aval
+    (spec 9.9) au lieu d'echouer bruyamment ici."""
+    return isinstance(value, str) and value.strip() != ""
+
+
 def is_pence_quoted(ticker: str) -> bool:
     """True pour les tickers du LSE, cotes en pence (GBp) chez IBKR."""
     return isinstance(ticker, str) and ticker.endswith(PENCE_SUFFIX)
@@ -90,7 +101,8 @@ def compute_quantity(
 
     if not (_is_positive_number(unit_price_indices)
             and _is_positive_number(fx_rate)
-            and _is_positive_number(budget_eur)):
+            and _is_positive_number(budget_eur)
+            and _is_valid_currency(index_currency)):
         plan["motif"] = "prix_ou_taux_invalide"
         return plan
 
@@ -103,7 +115,18 @@ def compute_quantity(
     plan["budget_converti"] = budget_cotation
     plan["prix_unitaire_cotation"] = prix_cotation
 
-    quantite = math.floor(budget_cotation / prix_cotation)
+    # Tolerance epsilon : en arithmetique flottante, un ratio
+    # mathematiquement entier (ex. 420.6 / 0.8412 -> exactement 1) peut
+    # atterrir a 0.9999999999999999. Sans cette tolerance, floor()
+    # sous-achete de 1 action ET ecrit un motif "prix superieur au
+    # budget" FACTUELLEMENT FAUX dans le journal d'audit (le prix ne
+    # depasse pas reellement le budget). La tolerance est volontairement
+    # minuscule (1e-9, mise a l'echelle du ratio) : elle ne peut arrondir
+    # a la hausse qu'un ratio deja a une distance negligeable d'un
+    # entier — jamais un ratio reellement inferieur (ex. 0.86), qui reste
+    # rejete comme il se doit (spec 3.3 : jamais "1 action au moins").
+    ratio = budget_cotation / prix_cotation
+    quantite = math.floor(ratio + 1e-9 * max(1.0, ratio))
     if quantite < 1:
         plan["motif"] = "signal_ignore_prix_unitaire_superieur_au_budget"
         return plan

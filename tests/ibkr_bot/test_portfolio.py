@@ -457,6 +457,12 @@ _SCENARIOS_SORTIE = [
     (100.0, 50.0, 79.0, "2027-03-09", "2026-09-14", "stop_loss"),
     (100.0, 130.0, 131.0, "2026-09-13", "2026-09-14", "objectif_atteint"),
     (100.0, 130.0, 110.0, "2027-03-09", "2026-09-14", None),
+    # stop_loss et delai_max se declenchent tous les deux (objectif non
+    # atteint) : stop_loss gagne, premier de l'ordre de priorite.
+    (100.0, 200.0, 79.0, "2026-09-01", "2026-09-14", "stop_loss"),
+    # les trois conditions se declenchent en meme temps : stop_loss gagne
+    # toujours, quel que soit le nombre de conditions vraies simultanement.
+    (100.0, 50.0, 79.0, "2026-01-01", "2026-09-14", "stop_loss"),
 ]
 
 
@@ -526,6 +532,39 @@ def test_reconcile_treats_a_zero_quantity_ibkr_position_as_closed():
     result = portfolio.reconcile(locales, chez_ibkr)
 
     assert result["actives"] == []
+    assert [p["ticker"] for p in result["cloturees_hors_bot"]] == ["A.PA"]
+
+
+def test_reconcile_treats_a_negative_ibkr_quantity_as_closed():
+    """Le bot ne doit jamais detenir de position negative (pas de short) :
+    une quantite negative signale un probleme et est traitee comme une
+    cloture hors bot, jamais comme active — sinon elle compterait dans le
+    plafond de 10 et pourrait devenir candidate a une vente qui
+    augmenterait le short au lieu de le clore."""
+    locales = [_bot_position("A.PA", conid=4901)]
+    chez_ibkr = [{"conid": 4901, "position": -5.0, "currency": "EUR"}]
+
+    result = portfolio.reconcile(locales, chez_ibkr)
+
+    assert result["actives"] == []
+    assert [p["ticker"] for p in result["cloturees_hors_bot"]] == ["A.PA"]
+    assert result["anomalies_quantite"] == []
+
+
+def test_reconcile_treats_an_explicit_null_ibkr_quantity_as_closed():
+    """`"position": null` (par opposition a une cle absente) ne doit pas
+    faire planter int(None) et interrompre toute la reconciliation du
+    batch — une seule ligne corrompue ne doit jamais bloquer les autres
+    (spec 5.4)."""
+    locales = [_bot_position("A.PA", conid=4901), _bot_position("B.PA", conid=4902)]
+    chez_ibkr = [
+        {"conid": 4901, "position": None, "currency": "EUR"},
+        {"conid": 4902, "position": 5.0, "currency": "EUR"},
+    ]
+
+    result = portfolio.reconcile(locales, chez_ibkr)
+
+    assert [p["ticker"] for p in result["actives"]] == ["B.PA"]
     assert [p["ticker"] for p in result["cloturees_hors_bot"]] == ["A.PA"]
 
 

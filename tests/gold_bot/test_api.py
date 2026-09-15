@@ -89,6 +89,33 @@ def test_set_profile_rejects_missing_profile_key(client):
     assert response.status_code == 422
 
 
+def test_set_profile_rejects_boolean_value(client):
+    # bool is an int subclass in Python — without an explicit isinstance(...,
+    # bool) guard checked before the int check, True/False would silently
+    # resolve to a numeric profile (True == 1). Regression test for that
+    # guard, matching the same pattern used by risk.risk_profile_params().
+    response = client.post("/profile", json={"profile": True}, headers={"X-Bot-Token": "secret-token"})
+    assert response.status_code == 422
+    response = client.post("/profile", json={"profile": False}, headers={"X-Bot-Token": "secret-token"})
+    assert response.status_code == 422
+
+
+def test_set_profile_rejects_zero_or_negative_value(client):
+    response = client.post("/profile", json={"profile": 0}, headers={"X-Bot-Token": "secret-token"})
+    assert response.status_code == 422
+    response = client.post("/profile", json={"profile": -1}, headers={"X-Bot-Token": "secret-token"})
+    assert response.status_code == 422
+
+
+def test_set_profile_rejects_malformed_json_body(client):
+    response = client.post(
+        "/profile",
+        content=b"not-json",
+        headers={"X-Bot-Token": "secret-token", "Content-Type": "application/json"},
+    )
+    assert response.status_code == 422
+
+
 def test_status_reports_circuit_breaker_fields_from_separate_file(client, monkeypatch, tmp_path):
     cb_path = str(tmp_path / "circuit_breaker_state.json")
     monkeypatch.setattr(api, "CIRCUIT_BREAKER_STATE_PATH", cb_path)

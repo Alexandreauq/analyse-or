@@ -257,6 +257,38 @@ def test_cash_by_currency_ignores_entries_without_a_cash_balance(monkeypatch):
     assert gateway.cash_by_currency(BASE, "U1234567") == {"EUR": 100.0}
 
 
+def test_base_currency_cash_reads_the_base_ledger_entry(monkeypatch):
+    monkeypatch.setattr(gateway.requests, "get", lambda *a, **k: _FakeIbkrResponse({
+        "EUR": {"currency": "EUR", "cashbalance": 3120.5},
+        "BASE": {"currency": "BASE", "cashbalance": 8000.0},
+    }))
+    assert gateway.base_currency_cash(BASE, "U1234567") == 8000.0
+
+
+def test_base_currency_cash_is_zero_when_the_base_entry_is_missing(monkeypatch):
+    monkeypatch.setattr(gateway.requests, "get", lambda *a, **k: _FakeIbkrResponse({
+        "EUR": {"currency": "EUR", "cashbalance": 3120.5},
+    }))
+    assert gateway.base_currency_cash(BASE, "U1234567") == 0.0
+
+
+def test_base_currency_cash_is_zero_when_the_cashbalance_field_is_missing_or_invalid(monkeypatch):
+    monkeypatch.setattr(gateway.requests, "get", lambda *a, **k: _FakeIbkrResponse({
+        "BASE": {"currency": "BASE"},
+    }))
+    assert gateway.base_currency_cash(BASE, "U1234567") == 0.0
+
+    monkeypatch.setattr(gateway.requests, "get", lambda *a, **k: _FakeIbkrResponse({
+        "BASE": "pas un dict",
+    }))
+    assert gateway.base_currency_cash(BASE, "U1234567") == 0.0
+
+    monkeypatch.setattr(gateway.requests, "get", lambda *a, **k: _FakeIbkrResponse({
+        "BASE": {"currency": "BASE", "cashbalance": "8000"},
+    }))
+    assert gateway.base_currency_cash(BASE, "U1234567") == 0.0
+
+
 def test_positions_fetches_the_first_page(monkeypatch):
     captured = []
     raw = [

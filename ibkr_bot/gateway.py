@@ -165,6 +165,20 @@ def cash_by_currency(base_url: str, account_id: str) -> dict[str, float]:
     return soldes
 
 
+def base_currency_cash(base_url: str, account_id: str) -> float:
+    """Solde en especes dans la devise de base du compte (agregat "BASE"
+    du ledger IBKR) — utilise pour le garde-fou de solde global, coherent
+    avec la conversion automatique a l'achat (spec 9.1, mecanisme IDEAL) :
+    le bot n'a pas besoin de cash pre-converti par devise, seulement d'un
+    solde suffisant dans la devise de base du compte."""
+    data = ledger(base_url, account_id)
+    entree = data.get("BASE") if isinstance(data, dict) else None
+    if not isinstance(entree, dict):
+        return 0.0
+    solde = entree.get("cashbalance")
+    return solde if isinstance(solde, (int, float)) and not isinstance(solde, bool) else 0.0
+
+
 def positions(base_url: str, account_id: str) -> list[dict]:
     """GET /portfolio/{accountId}/positions/{pageId} — toutes les
     positions du compte, pagination suivie jusqu'a une page incomplete.

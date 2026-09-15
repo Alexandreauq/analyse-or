@@ -56,7 +56,23 @@ def _bot_position(ticker, **overrides):
     return position
 
 
-_CASH_ILLIMITE = {"EUR": 1e9, "USD": 1e9, "GBP": 1e9, "CHF": 1e9}
+def _contrat(ticker, conid=4901, motif=None, **overrides):
+    contrat = {
+        "ticker": ticker, "conid": conid if motif is None else None,
+        "exchange": "SBF", "currency": "EUR", "motif": motif,
+        "detail": "resolu" if motif is None else "test",
+    }
+    contrat.update(overrides)
+    return contrat
+
+
+def _contrats(tickers):
+    """Contrats resolus par defaut pour une liste de tickers — pratique
+    pour les tests qui ne portent pas sur le filtre contrat lui-meme."""
+    return {t: _contrat(t, conid=4900 + i) for i, t in enumerate(tickers)}
+
+
+_CASH_ILLIMITE = 1e9
 
 
 # --- classement ------------------------------------------------------
@@ -106,8 +122,9 @@ def test_max_positions_is_ten():
 def test_select_entries_fills_free_slots_in_rank_order():
     signaux = [_signal("A.PA", 10.0), _signal("B.PA", 48.8), _signal("C.PA", 26.9)]
     plans = {t: _plan(t) for t in ("A.PA", "B.PA", "C.PA")}
+    contrats = _contrats(["A.PA", "B.PA", "C.PA"])
 
-    retenus, rejets = portfolio.select_entries(signaux, [], plans, _CASH_ILLIMITE)
+    retenus, rejets = portfolio.select_entries(signaux, [], plans, contrats, _CASH_ILLIMITE)
 
     assert [r["signal"]["ticker"] for r in retenus] == ["B.PA", "C.PA", "A.PA"]
     assert [r["rang"] for r in retenus] == [1, 2, 3]
@@ -120,8 +137,10 @@ def test_select_entries_drops_surplus_signals_when_the_cap_is_reached():
     ouvertes = [_bot_position(f"OPEN{i}.PA") for i in range(9)]
     signaux = [_signal("A.PA", 10.0), _signal("B.PA", 48.8), _signal("C.PA", 26.9)]
     plans = {t: _plan(t) for t in ("A.PA", "B.PA", "C.PA")}
+    contrats = _contrats(["A.PA", "B.PA", "C.PA"])
 
-    retenus, rejets = portfolio.select_entries(signaux, ouvertes, plans, _CASH_ILLIMITE)
+    retenus, rejets = portfolio.select_entries(
+        signaux, ouvertes, plans, contrats, _CASH_ILLIMITE)
 
     assert [r["signal"]["ticker"] for r in retenus] == ["B.PA"]
     assert rejets == [
@@ -137,7 +156,7 @@ def test_select_entries_takes_nothing_when_the_cap_is_already_reached():
     signaux = [_signal("A.PA", 10.0)]
 
     retenus, rejets = portfolio.select_entries(
-        signaux, ouvertes, {"A.PA": _plan("A.PA")}, _CASH_ILLIMITE)
+        signaux, ouvertes, {"A.PA": _plan("A.PA")}, _contrats(["A.PA"]), _CASH_ILLIMITE)
 
     assert retenus == []
     assert rejets == [{"ticker": "A.PA", "rang": 1, "score": 10.0,
@@ -155,8 +174,10 @@ def test_select_entries_zero_share_signal_does_not_consume_a_slot():
                          motif="signal_ignore_prix_unitaire_superieur_au_budget"),
         "B.PA": _plan("B.PA"),
     }
+    contrats = _contrats(["CHER.PA", "B.PA"])
 
-    retenus, rejets = portfolio.select_entries(signaux, ouvertes, plans, _CASH_ILLIMITE)
+    retenus, rejets = portfolio.select_entries(
+        signaux, ouvertes, plans, contrats, _CASH_ILLIMITE)
 
     assert [r["signal"]["ticker"] for r in retenus] == ["B.PA"]
     assert rejets == [{
@@ -168,9 +189,10 @@ def test_select_entries_zero_share_signal_does_not_consume_a_slot():
 def test_select_entries_skips_a_ticker_already_held_by_the_bot():
     signaux = [_signal("A.PA", 48.8), _signal("B.PA", 10.0)]
     plans = {"A.PA": _plan("A.PA"), "B.PA": _plan("B.PA")}
+    contrats = _contrats(["A.PA", "B.PA"])
 
     retenus, rejets = portfolio.select_entries(
-        signaux, [_bot_position("A.PA")], plans, _CASH_ILLIMITE)
+        signaux, [_bot_position("A.PA")], plans, contrats, _CASH_ILLIMITE)
 
     assert [r["signal"]["ticker"] for r in retenus] == ["B.PA"]
     assert rejets == [{"ticker": "A.PA", "rang": 1, "score": 48.8,
@@ -179,7 +201,8 @@ def test_select_entries_skips_a_ticker_already_held_by_the_bot():
 
 def test_select_entries_rejects_a_signal_without_a_plan():
     signaux = [_signal("A.PA", 48.8)]
-    retenus, rejets = portfolio.select_entries(signaux, [], {}, _CASH_ILLIMITE)
+    retenus, rejets = portfolio.select_entries(
+        signaux, [], {}, _contrats(["A.PA"]), _CASH_ILLIMITE)
 
     assert retenus == []
     assert rejets == [{"ticker": "A.PA", "rang": 1, "score": 48.8,
@@ -190,38 +213,123 @@ def test_select_entries_propagates_an_invalid_price_reason():
     signaux = [_signal("A.PA", 48.8)]
     plans = {"A.PA": _plan("A.PA", quantite=0, cout=0.0, motif="prix_ou_taux_invalide")}
 
-    retenus, rejets = portfolio.select_entries(signaux, [], plans, _CASH_ILLIMITE)
+    retenus, rejets = portfolio.select_entries(
+        signaux, [], plans, _contrats(["A.PA"]), _CASH_ILLIMITE)
 
     assert retenus == []
     assert rejets[0]["raison"] == "prix_ou_taux_invalide"
 
 
-# --- garde-fou de solde (spec 9.9) -----------------------------------
+# --- resolution de contrat (spec Global Constraints) ------------------
 
-def test_select_entries_rejects_a_signal_the_cash_cannot_fund():
-    signaux = [_signal("A.PA", 48.8)]
-    plans = {"A.PA": _plan("A.PA", cout=500.0)}
+def test_select_entries_rejects_a_signal_with_no_contract_entry_at_all():
+    """Un ticker jamais passe par contracts.resolve_conid (ou absent du
+    dict par erreur) doit etre refuse, pas traite comme achetable."""
+    signaux = [_signal("A.PA", 48.8), _signal("B.PA", 10.0)]
+    plans = {t: _plan(t) for t in ("A.PA", "B.PA")}
+    contrats = {"B.PA": _contrat("B.PA")}  # A.PA absent du dict
 
-    retenus, rejets = portfolio.select_entries(signaux, [], plans, {"EUR": 100.0})
+    retenus, rejets = portfolio.select_entries(
+        signaux, [], plans, contrats, _CASH_ILLIMITE)
 
-    assert retenus == []
+    assert [r["signal"]["ticker"] for r in retenus] == ["B.PA"]
     assert rejets == [{"ticker": "A.PA", "rang": 1, "score": 48.8,
-                       "raison": "solde_insuffisant"}]
+                       "raison": "contrat_non_resolu"}]
 
 
-def test_select_entries_decrements_the_cash_cumulatively():
+def test_select_entries_rejects_a_signal_whose_contract_failed_to_resolve():
+    signaux = [_signal("A.PA", 48.8), _signal("B.PA", 10.0)]
+    plans = {t: _plan(t) for t in ("A.PA", "B.PA")}
+    contrats = {
+        "A.PA": _contrat("A.PA", motif="contrat_non_resolu"),
+        "B.PA": _contrat("B.PA"),
+    }
+
+    retenus, rejets = portfolio.select_entries(
+        signaux, [], plans, contrats, _CASH_ILLIMITE)
+
+    assert [r["signal"]["ticker"] for r in retenus] == ["B.PA"]
+    assert rejets == [{"ticker": "A.PA", "rang": 1, "score": 48.8,
+                       "raison": "contrat_non_resolu"}]
+
+
+def test_select_entries_missing_contract_does_not_consume_a_cap_slot():
+    """Comme le filtre 0 action, un contrat non resolu ne doit pas
+    consommer de place : le signal suivant du classement doit toujours
+    pouvoir la prendre."""
+    ouvertes = [_bot_position(f"OPEN{i}.PA") for i in range(9)]
+    signaux = [_signal("A.PA", 48.8), _signal("B.PA", 10.0)]
+    plans = {t: _plan(t) for t in ("A.PA", "B.PA")}
+    contrats = {"B.PA": _contrat("B.PA")}
+
+    retenus, rejets = portfolio.select_entries(
+        signaux, ouvertes, plans, contrats, _CASH_ILLIMITE)
+
+    assert [r["signal"]["ticker"] for r in retenus] == ["B.PA"]
+    assert rejets == [{"ticker": "A.PA", "rang": 1, "score": 48.8,
+                       "raison": "contrat_non_resolu"}]
+
+
+def test_select_entries_missing_contract_does_not_consume_budget():
+    """Meme principe cote budget : un contrat non resolu ne doit pas
+    engager de budget vis-a-vis du garde-fou de solde."""
+    signaux = [_signal("A.PA", 48.8), _signal("B.PA", 10.0)]
+    plans = {t: _plan(t) for t in ("A.PA", "B.PA")}
+    contrats = {"B.PA": _contrat("B.PA")}
+
+    retenus, rejets = portfolio.select_entries(
+        signaux, [], plans, contrats, base_cash=500.0)
+
+    assert [r["signal"]["ticker"] for r in retenus] == ["B.PA"]
+    assert rejets == [{"ticker": "A.PA", "rang": 1, "score": 48.8,
+                       "raison": "contrat_non_resolu"}]
+
+
+# --- garde-fou de solde (spec 9.9, revu : cash total en devise de base) -
+
+def test_select_entries_accepts_all_signals_when_base_cash_is_plentiful():
     signaux = [_signal("A.PA", 48.8), _signal("B.PA", 26.9), _signal("C.PA", 10.0)]
-    plans = {t: _plan(t, cout=500.0) for t in ("A.PA", "B.PA", "C.PA")}
+    plans = {t: _plan(t) for t in ("A.PA", "B.PA", "C.PA")}
+    contrats = _contrats(["A.PA", "B.PA", "C.PA"])
 
-    retenus, rejets = portfolio.select_entries(signaux, [], plans, {"EUR": 1100.0})
+    retenus, rejets = portfolio.select_entries(
+        signaux, [], plans, contrats, base_cash=3 * portfolio.BUDGET_EUR)
+
+    assert [r["signal"]["ticker"] for r in retenus] == ["A.PA", "B.PA", "C.PA"]
+    assert rejets == []
+
+
+def test_select_entries_accepts_exactly_n_signals_and_rejects_the_next():
+    """base_cash finance exactement 2 positions a BUDGET_EUR (500) chacune
+    : la 3e, moins bien classee, est rejetee faute de solde."""
+    signaux = [_signal("A.PA", 48.8), _signal("B.PA", 26.9), _signal("C.PA", 10.0)]
+    plans = {t: _plan(t) for t in ("A.PA", "B.PA", "C.PA")}
+    contrats = _contrats(["A.PA", "B.PA", "C.PA"])
+
+    retenus, rejets = portfolio.select_entries(
+        signaux, [], plans, contrats, base_cash=2 * portfolio.BUDGET_EUR)
 
     assert [r["signal"]["ticker"] for r in retenus] == ["A.PA", "B.PA"]
     assert rejets == [{"ticker": "C.PA", "rang": 3, "score": 10.0,
                        "raison": "solde_insuffisant"}]
 
 
-def test_select_entries_keeps_currencies_independent():
-    """Un EUR epuise ne doit pas bloquer un signal finance en USD."""
+def test_select_entries_rejects_everything_with_zero_base_cash():
+    signaux = [_signal("A.PA", 48.8), _signal("B.PA", 26.9)]
+    plans = {t: _plan(t) for t in ("A.PA", "B.PA")}
+    contrats = _contrats(["A.PA", "B.PA"])
+
+    retenus, rejets = portfolio.select_entries(
+        signaux, [], plans, contrats, base_cash=0.0)
+
+    assert retenus == []
+    assert [r["raison"] for r in rejets] == ["solde_insuffisant", "solde_insuffisant"]
+
+
+def test_select_entries_uses_a_fixed_budget_per_position_regardless_of_currency():
+    """Le modele revu (spec 9.1, IDEAL) engage BUDGET_EUR par position sur
+    un seul pool de cash en devise de base, quelle que soit la devise du
+    signal — plus d'independance par devise."""
     signaux = [
         _signal("A.PA", 48.8, currency="EUR"),
         _signal("ADBE", 26.9, index="NASDAQ", currency="USD"),
@@ -230,29 +338,22 @@ def test_select_entries_keeps_currencies_independent():
         "A.PA": _plan("A.PA", devise_compte="EUR", cout=500.0),
         "ADBE": _plan("ADBE", devise_compte="USD", cout=540.0),
     }
+    contrats = _contrats(["A.PA", "ADBE"])
 
     retenus, rejets = portfolio.select_entries(
-        signaux, [], plans, {"EUR": 100.0, "USD": 1000.0})
+        signaux, [], plans, contrats, base_cash=portfolio.BUDGET_EUR)
 
-    assert [r["signal"]["ticker"] for r in retenus] == ["ADBE"]
-    assert rejets[0]["raison"] == "solde_insuffisant"
-
-
-def test_select_entries_treats_an_unknown_currency_as_zero_cash():
-    signaux = [_signal("ABBN.SW", 48.8, index="SMI", currency="CHF")]
-    plans = {"ABBN.SW": _plan("ABBN.SW", devise_compte="CHF", cout=470.0)}
-
-    retenus, rejets = portfolio.select_entries(signaux, [], plans, {"EUR": 5000.0})
-
-    assert retenus == []
-    assert rejets[0]["raison"] == "solde_insuffisant"
+    assert [r["signal"]["ticker"] for r in retenus] == ["A.PA"]
+    assert rejets == [{"ticker": "ADBE", "rang": 2, "score": 26.9,
+                       "raison": "solde_insuffisant"}]
 
 
-def test_select_entries_accepts_a_cost_exactly_equal_to_the_cash():
+def test_select_entries_accepts_a_cost_exactly_equal_to_the_base_cash():
     signaux = [_signal("A.PA", 48.8)]
     plans = {"A.PA": _plan("A.PA", cout=500.0)}
 
-    retenus, rejets = portfolio.select_entries(signaux, [], plans, {"EUR": 500.0})
+    retenus, rejets = portfolio.select_entries(
+        signaux, [], plans, _contrats(["A.PA"]), base_cash=portfolio.BUDGET_EUR)
 
     assert len(retenus) == 1
     assert rejets == []
@@ -511,6 +612,21 @@ def test_reconcile_keeps_positions_still_present_at_ibkr():
     assert result["cloturees_hors_bot"] == []
     assert result["anomalies_quantite"] == []
     assert result["ignorees"] == []
+
+
+def test_reconcile_matches_conids_across_int_and_string_types():
+    """L'API IBKR est documentee comme incoherente sur le type du conid
+    (secdef/search le renvoie parfois en chaine, /portfolio/.../positions
+    en nombre). Une position locale avec un conid int doit toujours etre
+    appariee a une position IBKR qui rapporte le meme conid en chaine —
+    sinon elle disparaitrait a tort en cloturees_hors_bot."""
+    locales = [_bot_position("A.PA", conid=4901, quantite=5)]
+    chez_ibkr = [{"conid": "4901", "position": 5.0, "currency": "EUR"}]
+
+    result = portfolio.reconcile(locales, chez_ibkr)
+
+    assert [p["ticker"] for p in result["actives"]] == ["A.PA"]
+    assert result["cloturees_hors_bot"] == []
 
 
 def test_reconcile_marks_a_position_sold_outside_the_bot():

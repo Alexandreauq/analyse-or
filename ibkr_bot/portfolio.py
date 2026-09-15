@@ -12,6 +12,8 @@ from datetime import datetime
 
 from dateutil.relativedelta import relativedelta
 
+from ibkr_bot.sizing import BUDGET_EUR
+
 MAX_POSITIONS = 10  # positions ouvertes PAR LE BOT, pas sur le compte (spec 3.4 / 9.5)
 
 # Regles de sortie : valeurs IDENTIQUES a celles du paper-trading
@@ -72,20 +74,38 @@ def free_slots(open_positions: list[dict]) -> int:
 
 def select_entries(
     signals: list[dict], open_positions: list[dict],
-    plans: dict[str, dict], cash_by_currency: dict[str, float],
+    plans: dict[str, dict], contrats: dict[str, dict], base_cash: float,
 ) -> tuple[list[dict], list[dict]]:
     """Signaux du jour effectivement retenus a l'achat, et rejets motives.
 
     ORDRE DES FILTRES, qui est lui-meme une regle de la spec :
-    deja detenu -> plan absent -> quantite nulle -> plafond -> solde.
-    Le cas 0 action passe AVANT le plafond parce que "la place ainsi
-    liberee reste disponible pour le signal suivant du classement"
-    (spec 3.3) : inverser les deux perdrait un signal financable au
-    profit d'un signal inachetable.
+    deja detenu -> contrat non resolu -> plan absent -> quantite nulle ->
+    plafond -> solde. Le cas 0 action passe AVANT le plafond parce que
+    "la place ainsi liberee reste disponible pour le signal suivant du
+    classement" (spec 3.3) : inverser les deux perdrait un signal
+    financable au profit d'un signal inachetable. Le contrat non resolu
+    est verifie tot, avec les autres cas "ce signal ne peut fondamentale-
+    ment pas etre achete", pour la meme raison : Plan B ne pourra jamais
+    passer l'ordre sans conid, ce rejet ne doit donc jamais consommer une
+    place ni du budget.
+
+    GARDE-FOU DE SOLDE (spec 9.9, revu) : IBKR convertit automatiquement
+    le budget EUR vers la devise locale au moment de l'achat (mecanisme
+    IDEAL, spec 9.1) — il n'est donc pas necessaire de detenir du cash
+    deja converti dans la devise de chaque signal. Le garde-fou compare
+    a la place le cash total dans la devise de BASE du compte
+    (`base_cash`, typiquement gateway.base_currency_cash()) au budget
+    cumule engage au fil du classement. Chaque position retenue engage
+    au plus BUDGET_EUR (le cout reel, arrondi a l'action entiere
+    inferieure, ne peut etre que <= BUDGET_EUR) : utiliser ce montant
+    fixe plutot que `cout_estime_devise_compte` (dans une devise
+    etrangere, non directement comparable a `base_cash` sans un taux de
+    conversion que cette fonction n'a pas) est le choix conservateur et
+    simple retenu ici.
     """
     tickers_detenus = {p["ticker"] for p in open_positions}
     places = free_slots(open_positions)
-    soldes = dict(cash_by_currency)
+    engage = 0.0
 
     retenus: list[dict] = []
     rejets: list[dict] = []
@@ -95,6 +115,11 @@ def select_entries(
 
         if ticker in tickers_detenus:
             rejets.append({**base, "raison": "deja_en_portefeuille"})
+            continue
+
+        contrat = contrats.get(ticker)
+        if contrat is None or contrat.get("motif") is not None:
+            rejets.append({**base, "raison": "contrat_non_resolu"})
             continue
 
         plan = plans.get(ticker)
@@ -110,13 +135,11 @@ def select_entries(
             rejets.append({**base, "raison": "signal_ignore_plafond_atteint"})
             continue
 
-        devise = plan["devise_compte"]
-        cout = plan["cout_estime_devise_compte"]
-        if soldes.get(devise, 0.0) < cout:
+        if base_cash - engage < BUDGET_EUR:
             rejets.append({**base, "raison": "solde_insuffisant"})
             continue
 
-        soldes[devise] = soldes.get(devise, 0.0) - cout
+        engage += BUDGET_EUR
         places -= 1
         tickers_detenus.add(ticker)
         retenus.append({"signal": signal, "plan": plan, "rang": rang})
@@ -223,17 +246,32 @@ def reconcile(local_positions: list[dict], ibkr_positions: list[dict]) -> dict:
 
     Ne mute aucune position d'entree : les positions actives renvoyees
     sont des copies.
+
+    Les conids sont normalises en int avant tout appariement : l'API
+    IBKR est documentee comme incoherente ici (secdef/search renvoie
+    parfois le conid en chaine dans ses exemples, /portfolio/.../
+    positions en nombre) — sans coercion, un simple mismatch de type
+    ferait disparaitre silencieusement une position pourtant bien
+    detenue (classee a tort `cloturees_hors_bot`, sa place liberee, plus
+    jamais geree en sortie). Un conid non numerique, d'un cote comme de
+    l'autre, est traite comme non appariable plutot que de lever.
     """
+    def _conid_int(valeur):
+        try:
+            return int(valeur)
+        except (TypeError, ValueError):
+            return None
+
     par_conid = {}
     for brute in ibkr_positions:
-        conid = brute.get("conid")
+        conid = _conid_int(brute.get("conid"))
         if conid is not None:
             par_conid[conid] = brute
 
     actives, cloturees, anomalies = [], [], []
     conids_du_bot = set()
     for position in local_positions:
-        conid = position.get("conid")
+        conid = _conid_int(position.get("conid"))
         conids_du_bot.add(conid)
         brute = par_conid.get(conid)
         # .get("position") (sans defaut) renvoie None si la cle est

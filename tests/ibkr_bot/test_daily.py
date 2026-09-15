@@ -376,3 +376,167 @@ def test_resolve_paths_merges_over_the_defaults():
     resolus = daily.resolve_paths({"journal": "/tmp/x.jsonl"})
     assert resolus["journal"] == "/tmp/x.jsonl"
     assert resolus["state"] == daily.DEFAULT_PATHS["state"]
+
+
+# --- _place_order : le seul chemin d'ordre reel ----------------------
+
+def _etat(tmp_path, **champs):
+    import json as _json
+    chemin = tmp_path / "state.json"
+    chemin.write_text(_json.dumps({"kill_switch": False, "dry_run": True, **champs}),
+                      encoding="utf-8")
+    return str(chemin)
+
+
+def test_place_order_sends_nothing_in_dry_run(tmp_path):
+    gw = FakeGateway()
+    resultat = daily._place_order(
+        gw, "https://127.0.0.1:5000", "U1", ticker="MC.PA", conid=17275,
+        side="BUY", quantity=5, prix_reference_cotation=90.0,
+        state_path=_etat(tmp_path, dry_run=True))
+
+    assert gw.ordres == []
+    assert gw.confirmations == []
+    assert resultat["statut"] == "simule"
+    assert resultat["order_id"] is None
+
+
+def test_place_order_sends_nothing_when_the_kill_switch_is_on(tmp_path):
+    gw = FakeGateway()
+    resultat = daily._place_order(
+        gw, "https://127.0.0.1:5000", "U1", ticker="MC.PA", conid=17275,
+        side="BUY", quantity=5, prix_reference_cotation=90.0,
+        state_path=_etat(tmp_path, dry_run=False, kill_switch=True))
+
+    assert gw.ordres == []
+    assert resultat["statut"] == "simule"
+
+
+def test_place_order_rereads_the_state_from_disk_at_each_call(tmp_path):
+    """DEFENSE EN PROFONDEUR : l'etat lu au demarrage du batch a pu
+    changer pendant les 20 minutes de preflight. La valeur qui compte est
+    celle du disque AU MOMENT de l'envoi."""
+    gw = FakeGateway()
+    chemin = _etat(tmp_path, dry_run=False)
+
+    premier = daily._place_order(
+        gw, "u", "U1", ticker="MC.PA", conid=17275, side="BUY", quantity=5,
+        prix_reference_cotation=90.0, state_path=chemin)
+    assert premier["statut"] == "execute"
+    assert len(gw.ordres) == 1
+
+    _etat(tmp_path, dry_run=False, kill_switch=True)
+    second = daily._place_order(
+        gw, "u", "U1", ticker="ADBE", conid=202070, side="BUY", quantity=1,
+        prix_reference_cotation=400.0, state_path=chemin)
+    assert second["statut"] == "simule"
+    assert len(gw.ordres) == 1   # aucun ordre supplementaire
+
+
+def test_place_order_sends_the_right_side_conid_and_quantity(tmp_path):
+    gw = FakeGateway()
+    daily._place_order(gw, "u", "U1", ticker="SAP.DE", conid=40000, side="SELL",
+                       quantity=2, prix_reference_cotation=100.0,
+                       state_path=_etat(tmp_path, dry_run=False))
+
+    assert gw.ordres == [{"conid": 40000, "side": "SELL", "quantity": 2}]
+
+
+def test_place_order_answers_a_confirmation_question(tmp_path):
+    gw = FakeGateway()
+    gw.reponse_ordre = [{"id": "e1f2-0001", "message": ["Confirmez l'ordre au marché"]}]
+
+    resultat = daily._place_order(
+        gw, "u", "U1", ticker="MC.PA", conid=17275, side="BUY", quantity=5,
+        prix_reference_cotation=90.0, state_path=_etat(tmp_path, dry_run=False))
+
+    assert gw.confirmations == ["e1f2-0001"]
+    assert resultat["statut"] == "execute"
+    assert resultat["order_id"] == "1234"
+
+
+def test_place_order_gives_up_on_an_endless_confirmation_chain(tmp_path):
+    class _Gw(FakeGateway):
+        def confirm_reply(self, base_url, reply_id, confirmed=True):
+            self.confirmations.append(reply_id)
+            return [{"id": f"question-{len(self.confirmations)}", "message": ["encore"]}]
+
+    gw = _Gw()
+    gw.reponse_ordre = [{"id": "q0", "message": ["?"]}]
+
+    resultat = daily._place_order(
+        gw, "u", "U1", ticker="MC.PA", conid=17275, side="BUY", quantity=5,
+        prix_reference_cotation=90.0, state_path=_etat(tmp_path, dry_run=False))
+
+    assert len(gw.confirmations) == daily.MAX_CONFIRMATIONS
+    assert resultat["statut"] == "erreur"
+    assert "confirmation" in resultat["detail"].lower()
+
+
+def test_place_order_reads_the_average_fill_price(tmp_path):
+    gw = FakeGateway()
+    gw.statuts_ordre = {"1234": {"order_status": "Filled", "avgPrice": "91.25",
+                                 "commission": "1.10"}}
+
+    resultat = daily._place_order(
+        gw, "u", "U1", ticker="MC.PA", conid=17275, side="BUY", quantity=5,
+        prix_reference_cotation=90.0, state_path=_etat(tmp_path, dry_run=False))
+
+    assert resultat["prix_execution_cotation"] == pytest.approx(91.25)
+    assert resultat["prix_execution_estime"] is False
+    assert resultat["commission"] == pytest.approx(1.10)
+
+
+def test_place_order_falls_back_to_the_reference_price_when_avgprice_is_missing(tmp_path):
+    """Ce prix devient la reference du stop-loss : il ne doit jamais rester
+    None en silence. Le repli est signale par prix_execution_estime."""
+    gw = FakeGateway()
+    gw.statuts_ordre = {"1234": {"order_status": "Submitted"}}
+
+    resultat = daily._place_order(
+        gw, "u", "U1", ticker="MC.PA", conid=17275, side="BUY", quantity=5,
+        prix_reference_cotation=90.0, state_path=_etat(tmp_path, dry_run=False))
+
+    assert resultat["prix_execution_cotation"] == pytest.approx(90.0)
+    assert resultat["prix_execution_estime"] is True
+    assert resultat["statut"] == "execute"
+
+
+def test_place_order_falls_back_when_order_status_raises(tmp_path):
+    class _Gw(FakeGateway):
+        def order_status(self, base_url, order_id):
+            raise RuntimeError("504 Gateway Timeout")
+
+    gw = _Gw()
+    resultat = daily._place_order(
+        gw, "u", "U1", ticker="MC.PA", conid=17275, side="BUY", quantity=5,
+        prix_reference_cotation=90.0, state_path=_etat(tmp_path, dry_run=False))
+
+    # L'ordre est parti : on ne doit SURTOUT pas le declarer en echec.
+    assert resultat["statut"] == "execute"
+    assert resultat["prix_execution_estime"] is True
+
+
+def test_place_order_reports_a_rejected_order_without_raising(tmp_path):
+    gw = FakeGateway()
+    gw.echecs = {17275}
+
+    resultat = daily._place_order(
+        gw, "u", "U1", ticker="MC.PA", conid=17275, side="BUY", quantity=5,
+        prix_reference_cotation=90.0, state_path=_etat(tmp_path, dry_run=False))
+
+    assert resultat["statut"] == "erreur"
+    assert "rejet IBKR" in resultat["detail"]
+    assert resultat["order_id"] is None
+
+
+def test_place_order_reports_a_response_without_any_order_id(tmp_path):
+    gw = FakeGateway()
+    gw.reponse_ordre = [{"error": "no trading permission"}]
+
+    resultat = daily._place_order(
+        gw, "u", "U1", ticker="MC.PA", conid=17275, side="BUY", quantity=5,
+        prix_reference_cotation=90.0, state_path=_etat(tmp_path, dry_run=False))
+
+    assert resultat["statut"] == "erreur"
+    assert "no trading permission" in resultat["detail"]

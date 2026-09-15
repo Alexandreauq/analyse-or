@@ -123,6 +123,129 @@ def preflight(base_url: str, *, gw=gateway, sleep_fn=time.sleep,
     return {"ok": False, "tentatives": attempts, "detail": detail}
 
 
+# Borne de la boucle de confirmation : le CPAPI peut repondre a un ordre
+# par une question (marche ferme, ordre au marche hors seance, taille
+# inhabituelle...), et la reponse a une question peut elle-meme etre une
+# question. Sans borne, une chaine sans fin bloquerait le batch dans la
+# fenetre de marche.
+MAX_CONFIRMATIONS = 5
+
+
+def _nombre(valeur):
+    """float(valeur) ou None — le CPAPI renvoie avgPrice et commission
+    tantot en nombre, tantot en CHAINE ("415.20" dans les fixtures de
+    tests/ibkr_bot/test_gateway.py)."""
+    if isinstance(valeur, bool) or valeur is None:
+        return None
+    try:
+        nombre = float(valeur)
+    except (TypeError, ValueError):
+        return None
+    return None if nombre != nombre else nombre  # NaN -> None
+
+
+def _premier_order_id(reponse) -> str | None:
+    for entree in reponse or []:
+        if isinstance(entree, dict) and entree.get("order_id"):
+            return str(entree["order_id"])
+    return None
+
+
+def _premiere_question(reponse) -> str | None:
+    """replyId d'une question de confirmation, ou None. Une question porte
+    `id` + `message` ; une confirmation d'ordre porte `order_id`."""
+    for entree in reponse or []:
+        if (isinstance(entree, dict) and entree.get("id")
+                and not entree.get("order_id")):
+            return str(entree["id"])
+    return None
+
+
+def _resoudre_confirmations(gw, base_url: str, reponse) -> tuple[list, int, str | None]:
+    """Repond aux eventuelles questions de confirmation, au plus
+    MAX_CONFIRMATIONS fois. Renvoie (derniere reponse, nombre de
+    confirmations, erreur)."""
+    confirmations = 0
+    while confirmations < MAX_CONFIRMATIONS:
+        reply_id = _premiere_question(reponse)
+        if reply_id is None:
+            return reponse, confirmations, None
+        reponse = gw.confirm_reply(base_url, reply_id)
+        confirmations += 1
+    if _premiere_question(reponse) is not None:
+        return reponse, confirmations, (
+            f"chaine de confirmation non resolue apres {confirmations} reponses")
+    return reponse, confirmations, None
+
+
+def _place_order(gw, base_url: str, account_id: str, *, ticker: str, conid,
+                 side: str, quantity: int, prix_reference_cotation,
+                 state_path: str) -> dict:
+    """LE SEUL ENDROIT DU DEPOT D'OU UN ORDRE ACTIONS REEL PART.
+
+    DEFENSE EN PROFONDEUR (spec 4.3 point 2, copie conforme de
+    gold_bot.loop.execute_steps) : l'etat est RELU SUR LE DISQUE ici, a
+    chaque appel, meme si run_batch l'a deja verifie au demarrage. Entre
+    les deux, il a pu se passer 20 minutes de preflight et plusieurs
+    autres ordres. Ne jamais remplacer cette relecture par un booleen
+    passe en parametre.
+
+    `prix_reference_cotation` est le prix de reference du sizing, DANS LA
+    DEVISE DE COTATION (pence pour le LSE) : il sert de repli si IBKR ne
+    donne pas encore de prix moyen d'execution. Le resultat renvoye est
+    lui aussi en devise de cotation — c'est journal.build_order_record
+    qui le ramene en devise de compte.
+    """
+    etat = state.load_state(state_path)
+    if etat["kill_switch"] or etat["dry_run"]:
+        return {"statut": "simule", "order_id": None,
+                "prix_execution_cotation": None, "prix_execution_estime": False,
+                "commission": None,
+                "detail": "dry_run ou kill_switch actif : aucun ordre envoye"}
+
+    try:
+        reponse = gw.place_market_order(base_url, account_id, conid, side, quantity)
+    except Exception as e:
+        return {"statut": "erreur", "order_id": None,
+                "prix_execution_cotation": None, "prix_execution_estime": False,
+                "commission": None, "detail": f"{ticker} : {e}"}
+
+    try:
+        reponse, _, erreur = _resoudre_confirmations(gw, base_url, reponse)
+    except Exception as e:
+        return {"statut": "erreur", "order_id": None,
+                "prix_execution_cotation": None, "prix_execution_estime": False,
+                "commission": None, "detail": f"{ticker} : confirmation refusee : {e}"}
+    if erreur is not None:
+        return {"statut": "erreur", "order_id": None,
+                "prix_execution_cotation": None, "prix_execution_estime": False,
+                "commission": None, "detail": f"{ticker} : {erreur}"}
+
+    order_id = _premier_order_id(reponse)
+    if order_id is None:
+        return {"statut": "erreur", "order_id": None,
+                "prix_execution_cotation": None, "prix_execution_estime": False,
+                "commission": None,
+                "detail": f"{ticker} : reponse sans order_id : {reponse}"}
+
+    # L'ORDRE EST PARTI. A partir d'ici, plus aucune erreur ne doit faire
+    # renvoyer "erreur" : le declarer en echec alors qu'il est execute
+    # ferait croire au lendemain que la position n'existe pas.
+    prix, estime, commission = prix_reference_cotation, True, None
+    try:
+        statut = gw.order_status(base_url, order_id)
+        prix_moyen = _nombre(statut.get("avgPrice"))
+        if prix_moyen is not None and prix_moyen > 0:
+            prix, estime = prix_moyen, False
+        commission = _nombre(statut.get("commission"))
+    except Exception as e:
+        print(f"Prix d'execution indisponible pour {ticker} ({order_id}) : {e}")
+
+    return {"statut": "execute", "order_id": order_id,
+            "prix_execution_cotation": prix, "prix_execution_estime": estime,
+            "commission": commission, "detail": None}
+
+
 def _nouveau_run(today: str, mode: str) -> dict:
     return {
         "timestamp": journal.now_iso(),

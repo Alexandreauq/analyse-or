@@ -275,7 +275,13 @@ def test_kill_switch_stops_everything_before_any_gateway_call(env):
 
 
 def test_stale_indices_json_stops_the_batch_entirely(env):
-    """Spec 4.5 : donnees d'hier -> aucun ordre, ni entree ni sortie."""
+    """Spec 4.5 : donnees d'hier -> aucun ordre, ni entree ni sortie.
+
+    gw est ici delibarement authentifie (FakeGateway() par defaut) : si un
+    bug inversait l'ordre des gardes (preflight avant fraicheur), ce
+    preflight REUSSIRAIT silencieusement et le statut final ressemblerait
+    quand meme a "donnees_perimees" en apparence — seule l'assertion sur
+    gw.appels prouve que le Gateway n'a jamais ete touche du tout."""
     perime = {**INDICES, "updated": "2026-09-14"}
     with open(env["paths"]["indices"], "w", encoding="utf-8") as fh:
         json.dump(perime, fh)
@@ -285,6 +291,7 @@ def test_stale_indices_json_stops_the_batch_entirely(env):
                           account_id="U1", paths=env["paths"])
 
     assert run["statut"] == "donnees_perimees"
+    assert gw.appels == []
     assert gw.ordres == []
     assert lire_journal(env)[0]["statut"] == "donnees_perimees"
     assert len(env["emails"]["resumes"]) == 1
@@ -346,10 +353,11 @@ def test_a_failed_git_pull_is_recorded_but_not_fatal(env, monkeypatch):
                           account_id="U1", paths=env["paths"])
 
     assert run["git_pull"]["ok"] is False
-    assert run["statut"] != "kill_switch"
     # Le garde de fraicheur, pas le git pull, decide s'il y a lieu d'agir :
-    # les donnees du depot local sont ici encore du jour.
-    assert run["statut"] != "donnees_perimees"
+    # les donnees du depot local sont ici encore du jour, et le Gateway
+    # s'authentifie -> le batch va jusqu'au bout de ses gardes (assertion
+    # positive, strictement plus forte que deux negations).
+    assert run["statut"] == "termine"
 
 
 def test_the_run_records_the_mode_read_from_the_state_file(env):

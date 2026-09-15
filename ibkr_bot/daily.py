@@ -581,6 +581,22 @@ def run_batch(today: str | None = None, *, gw=gateway, sleep_fn=time.sleep,
     # reel, la reconciliation fait foi, sans exception.
     if etat["dry_run"]:
         positions_ouvertes = list(locales)
+        # Important #1 (revue finale de branche) : run["reconciliation"]
+        # ci-dessus vient de reconcile(), qui ne voit evidemment aucune
+        # position simulee chez IBKR — son verdict brut dirait "0 position
+        # active, tout clôture hors bot", chaque jour, pendant TOUTES les
+        # semaines de validation en dry_run (spec 7). notify.py restitue
+        # ce dict verbatim dans le resume quotidien : sans cette
+        # surcharge, l'email mentirait sur le nombre de positions gerees
+        # exactement pendant la periode ou ce chiffre compte le plus. On
+        # ecrase seulement `actives`/`cloturees_hors_bot` (ce que dry_run
+        # gere REELLEMENT), en gardant `anomalies_quantite`/`ignorees` de
+        # la vraie reconciliation pour l'audit/debug.
+        run["reconciliation"] = {
+            **run["reconciliation"],
+            "actives": len(positions_ouvertes),
+            "cloturees_hors_bot": [],
+        }
     else:
         positions_ouvertes = list(reconciliation["actives"])
 
@@ -760,6 +776,35 @@ def run_batch(today: str | None = None, *, gw=gateway, sleep_fn=time.sleep,
         if contrat.get("conid") is not None and contrat["conid"] in conids_detenus:
             run["signaux_rejetes"].append({
                 "ticker": ticker, "raison": "deja_detenu_hors_journal",
+                "rang": None, "score": signal.get("score"),
+            })
+            continue
+        # Important #3 (revue finale de branche) : contracts.py valide la
+        # devise du contrat resolu contre EXPECTED_VENUE (suffixe du
+        # ticker), sizing.py prend independamment `devise_compte` dans
+        # index_currency de docs/indices.json. Les deux sources ne sont
+        # aujourd'hui jamais confrontees l'une a l'autre — elles
+        # coincident pour les 8 indices actuels, mais rien n'empecherait
+        # un futur indice ou elles divergent de dimensionner un budget
+        # dans une devise et d'executer dans une autre, exactement l'erreur
+        # que le garde-fou pence/livre existe deja pour empecher. On ne
+        # compare que lorsque les deux devises sont effectivement connues
+        # (un contrat non resolu porte deja une devise vide et sera rejete
+        # plus loin par select_entries via `contrat_non_resolu`).
+        plan = plans.get(ticker) or {}
+        devise_contrat = contrat.get("currency")
+        devise_sizing = plan.get("devise_compte")
+        if devise_contrat and devise_sizing and devise_contrat != devise_sizing:
+            run["erreurs"].append({
+                "etape": "coherence_devise",
+                "detail": (f"{ticker} : devise du contrat resolu "
+                           f"({devise_contrat}) differente de la devise de "
+                           f"sizing ({devise_sizing}) — signal rejete par "
+                           f"prudence plutot que d'executer dans une devise "
+                           f"differente de celle du budget"),
+            })
+            run["signaux_rejetes"].append({
+                "ticker": ticker, "raison": "devise_incoherente",
                 "rang": None, "score": signal.get("score"),
             })
             continue

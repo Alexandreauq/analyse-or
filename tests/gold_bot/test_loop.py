@@ -127,6 +127,56 @@ def test_run_cycle_logs_dry_run_without_executing(monkeypatch, tmp_path):
     assert result["action"] == "simulation_dry_run"
 
 
+def test_run_cycle_applies_active_risk_profile_to_sizing_and_circuit_breaker(monkeypatch, tmp_path):
+    monkeypatch.setattr(loop.state, "load_state", lambda *a, **k: {"kill_switch": False, "dry_run": True, "risk_profile": 5})
+    monkeypatch.setattr(loop, "DECISIONS_LOG_PATH", str(tmp_path / "decisions_log.jsonl"))
+    monkeypatch.setattr(loop, "LATEST_CANDLES_PATH", str(tmp_path / "latest_candles.json"))
+    monkeypatch.setattr(loop, "LATEST_BALANCE_PATH", str(tmp_path / "latest_balance.json"))
+    monkeypatch.setattr(loop, "LATEST_POSITIONS_PATH", str(tmp_path / "latest_positions.json"))
+    monkeypatch.setattr(loop.confluence, "fetch_gold_candles", lambda api_key: [{"close": 2100}])
+    monkeypatch.setattr(loop.broker, "get_account_balance", lambda *a, **k: 10000)
+    monkeypatch.setattr(loop.bot, "reconcile_positions", lambda *a, **k: [])
+    monkeypatch.setattr(loop.broker, "get_symbol_specification", lambda *a, **k: {"contractSize": 100})
+    captured = {}
+
+    def fake_decide_and_act(*args, **kwargs):
+        captured["risk_pct"] = kwargs.get("risk_pct")
+        return {"action": "aucune", "reason": "signal neutre"}
+
+    monkeypatch.setattr(loop.bot, "decide_and_act", fake_decide_and_act)
+
+    cb = loop.risk.CircuitBreaker()
+    loop.run_cycle("tok", "acc", "td-key", cb)
+
+    assert captured["risk_pct"] == 0.10
+    assert cb.threshold_pct == 0.175
+
+
+def test_run_cycle_defaults_to_profile_3_when_risk_profile_absent_from_state(monkeypatch, tmp_path):
+    monkeypatch.setattr(loop.state, "load_state", lambda *a, **k: {"kill_switch": False, "dry_run": True})
+    monkeypatch.setattr(loop, "DECISIONS_LOG_PATH", str(tmp_path / "decisions_log.jsonl"))
+    monkeypatch.setattr(loop, "LATEST_CANDLES_PATH", str(tmp_path / "latest_candles.json"))
+    monkeypatch.setattr(loop, "LATEST_BALANCE_PATH", str(tmp_path / "latest_balance.json"))
+    monkeypatch.setattr(loop, "LATEST_POSITIONS_PATH", str(tmp_path / "latest_positions.json"))
+    monkeypatch.setattr(loop.confluence, "fetch_gold_candles", lambda api_key: [{"close": 2100}])
+    monkeypatch.setattr(loop.broker, "get_account_balance", lambda *a, **k: 10000)
+    monkeypatch.setattr(loop.bot, "reconcile_positions", lambda *a, **k: [])
+    monkeypatch.setattr(loop.broker, "get_symbol_specification", lambda *a, **k: {"contractSize": 100})
+    captured = {}
+
+    def fake_decide_and_act(*args, **kwargs):
+        captured["risk_pct"] = kwargs.get("risk_pct")
+        return {"action": "aucune", "reason": "signal neutre"}
+
+    monkeypatch.setattr(loop.bot, "decide_and_act", fake_decide_and_act)
+
+    cb = loop.risk.CircuitBreaker()
+    loop.run_cycle("tok", "acc", "td-key", cb)
+
+    assert captured["risk_pct"] == 0.05
+    assert cb.threshold_pct == 0.10
+
+
 def test_run_cycle_executes_when_not_dry_run(monkeypatch, tmp_path):
     monkeypatch.setattr(loop.state, "load_state", lambda *a, **k: {"kill_switch": False, "dry_run": False})
     monkeypatch.setattr(loop, "DECISIONS_LOG_PATH", str(tmp_path / "decisions_log.jsonl"))

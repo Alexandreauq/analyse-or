@@ -1,6 +1,6 @@
 {
   "date": "2026-09-15",
-  "composite_score": 12.5,
+  "composite_score": 13.3,
   "interpretation": "Neutre — pas d'action",
   "factors": [
     {
@@ -11,15 +11,15 @@
     },
     {
       "name": "Dollar (DXY)",
-      "score": 4.2449951171875,
+      "score": 4.44000244140625,
       "weight": 0.15,
-      "raw_value": "99.65 (il y a 2 mois : 100.50)"
+      "raw_value": "99.61 (il y a 2 mois : 100.50)"
     },
     {
       "name": "Anticipations d'inflation",
-      "score": 3.3333333333333366,
+      "score": 3.6666666666666625,
       "weight": 0.15,
-      "raw_value": "2.37% (il y a ~45j : 2.27%)"
+      "raw_value": "2.38% (il y a ~45j : 2.27%)"
     },
     {
       "name": "Ton de la Fed",
@@ -47,9 +47,9 @@
     }
   ],
   "technical": {
-    "note": "Cours en-dessous de la MM200 (-4.8%) — tendance baissière",
-    "spot": 4332.2001953125,
-    "ma200": 4550.762003173828
+    "note": "Cours en-dessous de la MM200 (-4.9%) — tendance baissière",
+    "spot": 4326.60009765625,
+    "ma200": 4550.734002685547
   },
   "calendar": [
     {
@@ -97,7 +97,7 @@
     {
       "kind": "risque",
       "title": "Chute rapide du score composite",
-      "detail": "Repricing de -22.9 points en moins de 5 jours.",
+      "detail": "Repricing de -22.1 points en moins de 5 jours.",
       "date": "15/09/2026"
     }
   ]

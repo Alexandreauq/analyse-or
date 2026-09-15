@@ -1205,3 +1205,42 @@ def test_a_malformed_position_does_not_crash_the_whole_batch(env):
     assert run["statut"] == "termine"
     assert lire_journal(env)[0]["statut"] == "termine"
     assert len(env["emails"]["resumes"]) == 1
+
+
+def test_a_position_missing_conid_at_execution_does_not_crash_the_batch(env):
+    """Un cran plus loin que le test precedent : `conid` et `quantite` ne
+    sont lus qu'a l'EXECUTION de la sortie (_executer_sortie), jamais par
+    sa DECISION (portfolio.positions_to_close) -- une ligne corrompue sur
+    CES champs precis passe donc le premier garde intacte. Teste en
+    dry_run, le chemin le PLUS expose : la reconciliation reelle
+    filtrerait une ligne pareille avant qu'elle n'atteigne ce stade, et
+    dry_run est le mode que les operateurs feront tourner pendant les
+    semaines de validation (spec 5.3)."""
+    ecrire_etat(env, dry_run=True)
+    cassee = {**POSITION_MC, "id": "CASSE-2026-03-02", "ticker": "CASSE.PA",
+             "prix_execution_reference": 50.0, "target_exit_price": 999.0}
+    del cassee["conid"]
+    _positions_locales(env, [POSITION_MC, cassee])
+
+    indices_augmentes = {**INDICES, "companies": INDICES["companies"] + [
+        {"ticker": "CASSE.PA", "index": "CAC40", "score": 20.0, "current_price": 30.0}]}
+    with open(env["paths"]["indices"], "w", encoding="utf-8") as fh:
+        json.dump(indices_augmentes, fh)
+
+    gw = FakeGateway()
+
+    run = daily.run_batch(TODAY, gw=gw, sleep_fn=lambda s: None,
+                          account_id="U1", paths=env["paths"])
+
+    # La position bien formee (MC.PA, stop-loss) est traitee normalement.
+    assert [s["ticker"] for s in run["sorties"]] == ["MC.PA"]
+    assert run["sorties"][0]["close_reason"] == "stop_loss"
+    assert run["sorties"][0]["statut"] == "simule"
+    # La position cassee (decision de sortie declenchee : 30 <= 50*0.8) est
+    # signalee a l'EXECUTION, pas silencieusement perdue.
+    assert any(e["etape"] == "executer_sortie" and "CASSE.PA" in e["detail"]
+              for e in run["erreurs"])
+    # Le batch va jusqu'au bout : ligne de journal + email, pas un plantage.
+    assert run["statut"] == "termine"
+    assert lire_journal(env)[0]["statut"] == "termine"
+    assert len(env["emails"]["resumes"]) == 1

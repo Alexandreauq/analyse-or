@@ -591,17 +591,35 @@ def run_batch(today: str | None = None, *, gw=gateway, sleep_fn=time.sleep,
                 "detail": f"{position.get('ticker', '?')} : {e}",
             })
     for sortie in sorties_a_traiter:
-        record = _executer_sortie(gw, base_url, account_id, sortie, chemins)
+        position = sortie["position"]
+        try:
+            record = _executer_sortie(gw, base_url, account_id, sortie, chemins)
+        except Exception as e:
+            # Meme isolement que portfolio.positions_to_close() ci-dessus,
+            # mais pour l'EXECUTION de la sortie cette fois : `conid` et
+            # `quantite` ne sont lus qu'ICI (dans _executer_sortie), jamais
+            # par la decision de sortie elle-meme — une ligne de
+            # positions.json corrompue sur CES champs precis passe le
+            # premier garde intacte (positions_to_close ne les touche pas)
+            # et ne serait attrapee nulle part sans celui-ci. Meme risque
+            # que ci-dessus : un typo lors de la correction manuelle
+            # recommandee par l'anomalie `prix_reference_absent` peut tout
+            # aussi bien toucher `conid` ou `quantite` que `date_limite`.
+            run["erreurs"].append({
+                "etape": "executer_sortie",
+                "detail": f"{position.get('ticker', '?')} : {e}",
+            })
+            continue
         run["sorties"].append(record)
         if record["statut"] in ("execute", "simule"):
-            identifiant = sortie["position"].get("id")
+            identifiant = position.get("id")
             positions_ouvertes = [p for p in positions_ouvertes
                                   if p.get("id") != identifiant]
             # Racheter dans la minute un titre qu'on vient de stop-losser
             # serait absurde, et le filtre `deja_en_portefeuille` de
             # select_entries ne peut plus le voir : il vient d'etre retire
             # de positions_ouvertes juste au-dessus.
-            tickers_indisponibles[sortie["position"]["ticker"]] = "vendu_aujourd_hui"
+            tickers_indisponibles[position["ticker"]] = "vendu_aujourd_hui"
             # Reecrit apres CHAQUE ordre, pas en fin de batch : un plantage
             # entre les deux laisserait positions.json en desaccord avec la
             # realite du compte.

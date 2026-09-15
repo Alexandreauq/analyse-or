@@ -52,6 +52,43 @@ def test_resume_requires_valid_token(client):
     assert response.status_code == 401
 
 
+def test_status_includes_risk_profile(client):
+    response = client.get("/status")
+    assert response.json()["risk_profile"] == 3
+
+
+def test_set_profile_requires_valid_token(client):
+    response = client.post("/profile", json={"profile": 5}, headers={"X-Bot-Token": "wrong-token"})
+    assert response.status_code == 401
+
+
+def test_set_profile_without_token_header_is_rejected(client):
+    response = client.post("/profile", json={"profile": 5})
+    assert response.status_code == 401
+
+
+def test_set_profile_updates_state_and_is_reflected_in_status(client):
+    response = client.post("/profile", json={"profile": 5}, headers={"X-Bot-Token": "secret-token"})
+    assert response.status_code == 200
+    assert response.json()["risk_profile"] == 5
+    assert client.get("/status").json()["risk_profile"] == 5
+
+
+def test_set_profile_rejects_out_of_range_value(client):
+    response = client.post("/profile", json={"profile": 6}, headers={"X-Bot-Token": "secret-token"})
+    assert response.status_code == 422
+
+
+def test_set_profile_rejects_non_integer_value(client):
+    response = client.post("/profile", json={"profile": "5"}, headers={"X-Bot-Token": "secret-token"})
+    assert response.status_code == 422
+
+
+def test_set_profile_rejects_missing_profile_key(client):
+    response = client.post("/profile", json={}, headers={"X-Bot-Token": "secret-token"})
+    assert response.status_code == 422
+
+
 def test_status_reports_circuit_breaker_fields_from_separate_file(client, monkeypatch, tmp_path):
     cb_path = str(tmp_path / "circuit_breaker_state.json")
     monkeypatch.setattr(api, "CIRCUIT_BREAKER_STATE_PATH", cb_path)

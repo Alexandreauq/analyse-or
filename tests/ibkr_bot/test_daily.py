@@ -1404,6 +1404,42 @@ def test_a_currency_mismatch_between_contract_and_sizing_rejects_the_signal(env,
     assert 202070 in [o["conid"] for o in gw.ordres]
 
 
+def test_a_london_contract_reported_as_gbp_pence_is_not_rejected_by_the_currency_check(env, monkeypatch):
+    """Regression trouvee a la re-revue du round de correctifs de la
+    revue finale : le garde-fou de coherence de devise (Important #3)
+    comparait devise_contrat/devise_sizing en sensible-a-la-casse, ce qui
+    rejetait a tort TOUT contrat FTSE resolu en "GBp" (contracts.py
+    accepte explicitement les deux graphies pour le LSE, voir
+    EXPECTED_VENUE et test_resolve_conid_accepts_a_london_contract_reported_as_gbp_pence
+    dans test_contracts.py) alors que sizing.py utilise toujours "GBP"
+    (index_currency). III.L doit toujours pouvoir s'acheter dans ce cas."""
+    import json as _json
+    ecrire_etat(env, dry_run=False)
+    tracking = {"positions": [
+        {"id": "III.L-2026-09-15", "ticker": "III.L", "name": "3i", "index": "FTSE",
+         "status": "open", "entry_date": TODAY, "entry_price": 2.93,
+         "target_exit_price": 4.0}]}
+    with open(env["paths"]["tracking"], "w", encoding="utf-8") as fh:
+        _json.dump(tracking, fh)
+    resolve_original = daily.contracts.resolve_conid
+
+    def resolve_avec_gbp_pence(ticker, search_fn, info_fn, cache, today):
+        contrat = resolve_original(ticker, search_fn, info_fn, cache, today)
+        if ticker == "III.L" and contrat.get("conid") is not None:
+            return {**contrat, "currency": "GBp"}
+        return contrat
+
+    monkeypatch.setattr(daily.contracts, "resolve_conid", resolve_avec_gbp_pence)
+    gw = FakeGateway()
+
+    run = daily.run_batch(TODAY, gw=gw, sleep_fn=lambda s: None,
+                          account_id="U1", paths=env["paths"])
+
+    assert 98765 in [o["conid"] for o in gw.ordres]
+    assert not any(r["ticker"] == "III.L" for r in run["signaux_rejetes"])
+    assert not any(e["etape"] == "coherence_devise" for e in run["erreurs"])
+
+
 # --- revue finale de branche : Important #4 ----------------------------
 
 def test_a_real_run_batch_result_renders_correctly_through_notify(env, monkeypatch):

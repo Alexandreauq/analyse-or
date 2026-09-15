@@ -794,7 +794,14 @@ def run_batch(today: str | None = None, *, gw=gateway, sleep_fn=time.sleep,
         plan = plans.get(ticker) or {}
         devise_contrat = contrat.get("currency")
         devise_sizing = plan.get("devise_compte")
-        if devise_contrat and devise_sizing and devise_contrat != devise_sizing:
+        # Comparaison insensible a la casse : le LSE annonce sa devise
+        # tantot "GBP", tantot "GBp" (contracts.py accepte les deux
+        # explicitement, voir EXPECTED_VENUE) — une comparaison stricte
+        # rejetterait a tort tout contrat FTSE resolu en "GBp" alors que
+        # sizing.py utilise toujours "GBP" (index_currency), un faux
+        # positif trouve a la revue finale de branche.
+        if (devise_contrat and devise_sizing
+                and devise_contrat.upper() != devise_sizing.upper()):
             run["erreurs"].append({
                 "etape": "coherence_devise",
                 "detail": (f"{ticker} : devise du contrat resolu "

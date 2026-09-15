@@ -1,5 +1,9 @@
 # Déploiement du Bot Or sur un VPS
 
+> Ce guide concerne le **Bot Or** (`gold_bot/`, MetaApi/MT5, boucle
+> continue). Pour le **Bot Actions IBKR** (`ibkr_bot/`, batch quotidien,
+> utilisateur `ibkrbot`), voir `deploy/README-ibkr.md`.
+
 Guide d'installation initiale (à faire une fois). Les mises à jour
 suivantes se font avec `deploy.sh` (voir en bas).
 

@@ -9,10 +9,15 @@
 # journalise. Toute regle metier ajoutee ici serait au mauvais endroit.
 #
 # DEFENSE EN PROFONDEUR (spec 4.3, point 2) : l'etat (kill_switch,
-# dry_run) est RECHARGE DEPUIS LE DISQUE juste avant chaque envoi d'ordre,
-# meme si run_batch l'a deja verifie au demarrage — exactement ce que fait
-# gold_bot/loop.py:execute_steps. Un batch peut durer 20 minutes
+# dry_run) DOIT ETRE RECHARGE DEPUIS LE DISQUE juste avant chaque envoi
+# d'ordre, meme si run_batch l'a deja verifie au demarrage — exactement ce
+# que fait gold_bot/loop.py:execute_steps. Un batch peut durer 20 minutes
 # (preflight) : l'etat lu au debut est potentiellement perime.
+# CE RECHARGEMENT N'EST PAS ENCORE IMPLEMENTE ICI — cette tache (3) ne
+# passe aucun ordre ; c'est aux taches 4/5, qui ajoutent l'envoi d'ordres
+# a ce module, de le faire juste avant chaque envoi reel vers le Gateway.
+# Ne pas lire ce commentaire comme une garantie deja en place dans le
+# code ci-dessous.
 import os
 import subprocess
 import time
@@ -24,7 +29,6 @@ import ibkr_bot.journal as journal
 import ibkr_bot.notify as notify
 import ibkr_bot.portfolio as portfolio
 import ibkr_bot.signals as signals
-import ibkr_bot.sizing as sizing
 import ibkr_bot.state as state
 
 # Preflight : 3 tentatives espacees de 10 minutes (spec 5.5). Le batch
@@ -140,7 +144,16 @@ def _terminer(run: dict, chemins: dict, *, alerte_gateway: bool = False) -> dict
     """Sortie unique du batch : journal puis email. Le journal AVANT
     l'email pour qu'une panne SMTP ne fasse jamais perdre la trace d'un
     batch qui a reellement passe des ordres."""
-    journal.append_run(run, chemins["journal"])
+    if not journal.append_run(run, chemins["journal"]):
+        # journal.append_run ne leve jamais (voir journal.py) : une panne
+        # disque sur le journal ne doit pas interrompre le batch, mais elle
+        # ne doit pas non plus disparaitre sans laisser de trace — d'autant
+        # plus une fois que les taches 4/5 feront transiter de vrais
+        # remplissages par cette meme sortie.
+        run["erreurs"].append({
+            "etape": "journalisation",
+            "detail": f"echec d'ecriture dans {chemins['journal']}",
+        })
     if alerte_gateway:
         # Le corps de l'alerte dit deja qu'aucun ordre n'a ete passe : un
         # resume vide en plus ne ferait que noyer l'alerte.
@@ -166,8 +179,14 @@ def run_batch(today: str | None = None, *, gw=gateway, sleep_fn=time.sleep,
     """
     chemins = resolve_paths(paths)
     today = today or _today()
-    base_url = base_url or os.environ.get("IBKR_GATEWAY_URL",
-                                          gateway.DEFAULT_GATEWAY_URL)
+    # gw.DEFAULT_GATEWAY_URL plutot que gateway.DEFAULT_GATEWAY_URL : le
+    # module gateway reste le repli, mais si un `gw` injecte (tests, ou un
+    # futur client alternatif) porte sa propre URL par defaut, c'est elle
+    # qui doit gouverner — pas la constante du module reel qu'on a
+    # justement injecte `gw` pour court-circuiter.
+    base_url = base_url or os.environ.get(
+        "IBKR_GATEWAY_URL",
+        getattr(gw, "DEFAULT_GATEWAY_URL", gateway.DEFAULT_GATEWAY_URL))
     account_id = account_id or os.environ.get("IBKR_ACCOUNT_ID", "")
 
     etat = state.load_state(chemins["state"])

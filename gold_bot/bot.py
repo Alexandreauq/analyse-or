@@ -13,7 +13,7 @@ import gold_bot.risk as risk
 
 def decide_and_act(candles: list[dict], *, contract_size: float, balance: float,
                     open_positions: list[dict], circuit_breaker: "risk.CircuitBreaker",
-                    symbol: str = "XAUUSD") -> dict:
+                    symbol: str = "XAUUSD", risk_pct: float = 0.05) -> dict:
     """Cœur de la boucle : évalue le signal, applique les règles de
     renversement/empilement, et — dans ce plan, TOUJOURS en simulation —
     journalise ce qu'il ferait sans jamais appeler
@@ -24,6 +24,14 @@ def decide_and_act(candles: list[dict], *, contract_size: float, balance: float,
     code de câblage réel (Plan B) appellera broker.place_market_order/
     close_position séparément, avec les champs déjà présents dans
     `steps` ci-dessous.
+
+    `risk_pct` détermine la taille de la position ouverte, selon le
+    profil de risque actif — mais decide_and_act() elle-même ne connaît
+    pas la notion de "profil" : c'est l'appelant (gold_bot.loop) qui
+    résout le profil courant en `risk_pct` via
+    risk.risk_profile_params() avant d'appeler cette fonction. Défaut
+    inchangé (0.05, le profil 3) pour ne casser aucun appelant existant
+    qui ne fournit pas ce paramètre.
 
     Gère toutes les positions correspondant à `symbol`, pas seulement la
     première trouvée (un redémarrage/crash pourrait en laisser
@@ -85,7 +93,7 @@ def decide_and_act(candles: list[dict], *, contract_size: float, balance: float,
     for p in matching:
         steps.append({"type": "clôture_simulee", "position_id": p.get("id"), "symbol": symbol})
 
-    size = risk.compute_position_size(balance, signal["entry"], signal["stop_loss"], contract_size)
+    size = risk.compute_position_size(balance, signal["entry"], signal["stop_loss"], contract_size, risk_pct=risk_pct)
     steps.append({
         "type": "ouverture_simulee",
         "symbol": symbol,

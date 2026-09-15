@@ -19,6 +19,7 @@
 # dupliquer cette relecture ailleurs dans le module, et ne jamais la
 # remplacer par un booleen passe en parametre depuis run_batch — la seule
 # valeur qui compte est celle du disque AU MOMENT de l'envoi.
+import math
 import os
 import re
 import subprocess
@@ -31,6 +32,7 @@ import ibkr_bot.journal as journal
 import ibkr_bot.notify as notify
 import ibkr_bot.portfolio as portfolio
 import ibkr_bot.signals as signals
+import ibkr_bot.sizing as sizing
 import ibkr_bot.state as state
 
 # Preflight : 3 tentatives espacees de 10 minutes (spec 5.5). Le batch
@@ -317,6 +319,72 @@ def _place_order(gw, base_url: str, account_id: str, *, ticker: str, conid,
             "detail": "; ".join(details) if details else None}
 
 
+def _prix_reference_absent(valeur) -> bool:
+    """True si une valeur numerique est absente ou NaN — meme garde que
+    portfolio._is_missing (fonction privee de Plan A), duplique ici plutot
+    qu'importee : ce plan ne restructure pas Plan A, et daily.py n'a pas a
+    dependre d'un symbole prive d'un autre module."""
+    try:
+        return math.isnan(valeur)
+    except TypeError:
+        return valeur is None
+
+
+def _taux_de_change(gw, base_url: str, devise: str, cache: dict, run: dict) -> float:
+    """Taux EUR -> devise de l'indice, mis en cache par devise sur la
+    duree du batch. Un echec renvoie 0.0, que sizing.compute_quantity
+    traduit en motif `prix_ou_taux_invalide` et select_entries en rejet :
+    on echoue bruyamment plutot que d'acheter sur un taux devine."""
+    if devise in cache:
+        return cache[devise]
+    try:
+        taux = gw.exchange_rate(base_url, "EUR", devise)
+    except Exception as e:
+        run["erreurs"].append({"etape": "taux_de_change",
+                               "detail": f"EUR->{devise} : {e}"})
+        taux = 0.0
+    cache[devise] = taux
+    return taux
+
+
+def _executer_sortie(gw, base_url, account_id, sortie: dict, chemins: dict) -> dict:
+    """Vend une position dont une condition de sortie est remplie."""
+    position = sortie["position"]
+    execution = _place_order(
+        gw, base_url, account_id, ticker=position["ticker"],
+        conid=position["conid"], side="SELL", quantity=int(position["quantite"]),
+        prix_reference_cotation=sizing.to_quotation_price(
+            sortie["current_price"], position["ticker"]),
+        state_path=chemins["state"])
+    return journal.build_order_record(
+        ticker=position["ticker"], conid=position["conid"], sens="SELL",
+        quantite=int(position["quantite"]),
+        devise_compte=position.get("devise", ""),
+        devise_cotation=sizing.quotation_currency(
+            position.get("devise", ""), position["ticker"]),
+        prix_reference_sizing=sortie["current_price"],
+        execution=execution, close_reason=sortie["close_reason"])
+
+
+def _executer_entree(gw, base_url, account_id, retenu: dict, contrat: dict,
+                     chemins: dict) -> dict:
+    """Achete un signal retenu par portfolio.select_entries."""
+    signal, plan = retenu["signal"], retenu["plan"]
+    execution = _place_order(
+        gw, base_url, account_id, ticker=signal["ticker"], conid=contrat["conid"],
+        side="BUY", quantity=int(plan["quantite"]),
+        prix_reference_cotation=plan["prix_unitaire_cotation"],
+        state_path=chemins["state"])
+    return journal.build_order_record(
+        ticker=signal["ticker"], conid=contrat["conid"], sens="BUY",
+        quantite=int(plan["quantite"]),
+        devise_compte=plan["devise_compte"], devise_cotation=plan["devise_cotation"],
+        taux_de_change=plan["taux_de_change"], budget_converti=plan["budget_converti"],
+        prix_reference_sizing=signal["current_price"],
+        prix_paper=signal.get("paper_entry_price"),
+        execution=execution, rang=retenu["rang"])
+
+
 def _nouveau_run(today: str, mode: str) -> dict:
     return {
         "timestamp": journal.now_iso(),
@@ -410,7 +478,191 @@ def run_batch(today: str | None = None, *, gw=gateway, sleep_fn=time.sleep,
         run["statut"] = "gateway_indisponible"
         return _terminer(run, chemins, alerte_gateway=True)
 
-    # Les taches 4 et 5 inserent ici : reconciliation, sorties, entrees.
+    # --- 5. Reconciliation AVANT toute decision (spec 5.4) ------------
+    locales = portfolio.load_positions(chemins["positions"])
+    try:
+        brutes = gw.positions(base_url, account_id)
+    except Exception as e:
+        # Agir sans savoir ce que le compte detient, c'est risquer de
+        # racheter une ligne deja detenue (spec 5.4 / 5.5).
+        run["erreurs"].append({"etape": "positions_ibkr", "detail": str(e)})
+        run["statut"] = "reconciliation_impossible"
+        return _terminer(run, chemins)
+
+    reconciliation = portfolio.reconcile(locales, brutes)
+    run["reconciliation"] = {
+        "actives": len(reconciliation["actives"]),
+        "cloturees_hors_bot": [p.get("id") for p in reconciliation["cloturees_hors_bot"]],
+        "anomalies_quantite": reconciliation["anomalies_quantite"],
+        "ignorees": len(reconciliation["ignorees"]),
+    }
+
+    # En dry_run, les positions simulees n'existent evidemment pas chez
+    # IBKR : laisser la reconciliation les fermer viderait positions.json
+    # chaque jour et rendrait la validation en simulation (spec 5.3) sans
+    # objet — aucune sortie ne serait jamais observee. On journalise donc
+    # ce que la reconciliation DIRAIT, mais on garde l'etat local. En mode
+    # reel, la reconciliation fait foi, sans exception.
+    if etat["dry_run"]:
+        positions_ouvertes = list(locales)
+    else:
+        positions_ouvertes = list(reconciliation["actives"])
+
+    # Alerte operateur : portfolio.exit_reason laisse volontairement
+    # inclosable une position sans prix de reference (ecart #4 documente
+    # dans portfolio.py), et dit explicitement que c'est au Plan B de la
+    # signaler. Sans ca, elle occuperait une place pour toujours, en
+    # silence.
+    for position in positions_ouvertes:
+        if _prix_reference_absent(position.get("prix_execution_reference")):
+            run["anomalies"].append({
+                "type": "prix_reference_absent",
+                "ticker": position.get("ticker"),
+                "detail": ("position inclosable par toute regle de sortie tant "
+                           "que son prix d'execution de reference n'est pas "
+                           "restaure dans positions.json"),
+            })
+
+    def _sauver_positions():
+        if not journal.save_positions_safely(positions_ouvertes, chemins["positions"]):
+            run["erreurs"].append({
+                "etape": "positions.json",
+                "detail": "ecriture impossible — etat local potentiellement perime",
+            })
+
+    _sauver_positions()
+
+    # Un ticker qui quitte le portefeuille aujourd'hui n'est JAMAIS
+    # rachete dans le meme batch. Pour les clotures hors bot, la spec 5.4
+    # est explicite : "Le bot ne la rouvre jamais". La sortie du bot
+    # lui-meme est remplie plus bas, au fil des ventes.
+    # En dry_run, cloturees_hors_bot contient TOUTES les positions
+    # simulees (IBKR n'en connait aucune) : l'appliquer bloquerait tous
+    # les tickers du portefeuille simule pour rien.
+    tickers_indisponibles = {
+        p.get("ticker"): "cloturee_hors_bot"
+        for p in reconciliation["cloturees_hors_bot"]
+    } if not etat["dry_run"] else {}
+
+    # --- 6. Sorties (spec 3.6), AVANT les entrees ---------------------
+    # Meme enchainement que le paper-trading (_close_eligible_positions
+    # puis _open_new_signal_positions) : les places liberees aujourd'hui
+    # sont disponibles pour les signaux du jour.
+    companies = {c["ticker"]: c for c in indices.get("companies", [])
+                 if isinstance(c, dict) and c.get("ticker")}
+    for sortie in portfolio.positions_to_close(positions_ouvertes, companies, today):
+        record = _executer_sortie(gw, base_url, account_id, sortie, chemins)
+        run["sorties"].append(record)
+        if record["statut"] in ("execute", "simule"):
+            identifiant = sortie["position"].get("id")
+            positions_ouvertes = [p for p in positions_ouvertes
+                                  if p.get("id") != identifiant]
+            # Racheter dans la minute un titre qu'on vient de stop-losser
+            # serait absurde, et le filtre `deja_en_portefeuille` de
+            # select_entries ne peut plus le voir : il vient d'etre retire
+            # de positions_ouvertes juste au-dessus.
+            tickers_indisponibles[sortie["position"]["ticker"]] = "vendu_aujourd_hui"
+            # Reecrit apres CHAQUE ordre, pas en fin de batch : un plantage
+            # entre les deux laisserait positions.json en desaccord avec la
+            # realite du compte.
+            _sauver_positions()
+
+    # --- 7. Entrees ---------------------------------------------------
+    paper_positions = signals.load_signal_tracking(chemins["tracking"])
+    signaux, rejets = signals.collect_new_signals(indices, paper_positions, today)
+    for rejet in rejets:
+        run["signaux_rejetes"].append({"ticker": rejet.get("ticker"),
+                                       "raison": rejet.get("raison"),
+                                       "rang": None, "score": None})
+
+    try:
+        base_cash = gw.base_currency_cash(base_url, account_id)
+    except Exception as e:
+        # Solde inconnu -> 0.0 : le garde-fou de select_entries rejettera
+        # tout, ce qui est le sens sur (spec 9.9).
+        run["erreurs"].append({"etape": "base_currency_cash", "detail": str(e)})
+        base_cash = 0.0
+    journal.save_account_snapshot({"base_cash": base_cash},
+                                  chemins["account_snapshot"])
+
+    cache_conid = contracts.load_cache(chemins["conid_cache"])
+    taux_par_devise: dict[str, float] = {}
+    plans: dict[str, dict] = {}
+    contrats: dict[str, dict] = {}
+    for signal in signaux:
+        ticker = signal["ticker"]
+        taux = _taux_de_change(gw, base_url, signal["currency"], taux_par_devise, run)
+        plans[ticker] = sizing.compute_quantity(
+            ticker, signal["currency"], signal["current_price"], taux)
+        contrats[ticker] = contracts.resolve_conid(
+            ticker,
+            lambda symbole: gw.search_contract(base_url, symbole),
+            lambda conid: gw.contract_info(base_url, conid),
+            cache_conid, today)
+    try:
+        contracts.save_cache(cache_conid, chemins["conid_cache"])
+    except Exception as e:
+        print(f"Erreur ecriture du cache de conid : {e}")
+
+    # Garde d'idempotence supplementaire : un conid deja detenu sur le
+    # compte mais absent de positions.json (batch plante entre l'ordre et
+    # la sauvegarde) serait classe `ignorees` par la reconciliation —
+    # c'est-a-dire "position de l'utilisateur" — et rien n'empecherait un
+    # rachat. On refuse d'en acheter davantage ; on n'y touche pas pour
+    # autant (spec 9.5).
+    conids_detenus = set()
+    for brute in reconciliation["ignorees"]:
+        try:
+            conids_detenus.add(int(brute.get("conid")))
+        except (TypeError, ValueError):
+            continue
+    signaux_financables = []
+    for signal in signaux:
+        ticker = signal["ticker"]
+        raison_indisponible = tickers_indisponibles.get(ticker)
+        if raison_indisponible is not None:
+            run["signaux_rejetes"].append({
+                "ticker": ticker, "raison": raison_indisponible,
+                "rang": None, "score": signal.get("score"),
+            })
+            continue
+        contrat = contrats.get(ticker) or {}
+        if contrat.get("conid") is not None and contrat["conid"] in conids_detenus:
+            run["signaux_rejetes"].append({
+                "ticker": ticker, "raison": "deja_detenu_hors_journal",
+                "rang": None, "score": signal.get("score"),
+            })
+            continue
+        signaux_financables.append(signal)
+
+    # NOTE : les signaux ecartes ci-dessus ne sont pas passes a
+    # select_entries, donc les `rang` renvoyes se comptent sur les seuls
+    # signaux finançables. C'est voulu : un signal inachetable ne doit ni
+    # consommer une place sous le plafond, ni du budget (meme raisonnement
+    # que l'ordre des filtres de select_entries, spec 3.3). Les rejets
+    # ecartes ici portent donc `rang: None`.
+    retenus, rejets_selection = portfolio.select_entries(
+        signaux_financables, positions_ouvertes, plans, contrats, base_cash)
+    for rejet in rejets_selection:
+        run["signaux_rejetes"].append({"ticker": rejet["ticker"],
+                                       "raison": rejet["raison"],
+                                       "rang": rejet.get("rang"),
+                                       "score": rejet.get("score")})
+
+    for retenu in retenus:
+        signal = retenu["signal"]
+        contrat = contrats[signal["ticker"]]
+        record = _executer_entree(gw, base_url, account_id, retenu, contrat, chemins)
+        run["entrees"].append(record)
+        if record["statut"] not in ("execute", "simule"):
+            continue   # spec 5.5 : pas de reprise, on passe au suivant
+        positions_ouvertes.append(journal.build_position_record(
+            signal, retenu["plan"], contrat, int(retenu["plan"]["quantite"]),
+            record["prix_execution"] if record["prix_execution"] is not None
+            else signal["current_price"],
+            today))
+        _sauver_positions()
+
     return _terminer(run, chemins)
 
 

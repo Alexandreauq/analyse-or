@@ -748,3 +748,346 @@ def test_place_order_treats_a_mixed_response_as_already_resolved(tmp_path):
     assert gw.confirmations == []
     assert resultat["statut"] == "execute"
     assert resultat["order_id"] == "5555"
+
+
+# --- run_batch complet : sorties et entrees ---------------------------
+
+def _positions_locales(env, positions):
+    import json as _json
+    with open(env["paths"]["positions"], "w", encoding="utf-8") as fh:
+        _json.dump({"positions": positions}, fh)
+
+
+POSITION_MC = {
+    "id": "MC.PA-2026-03-02", "ticker": "MC.PA", "name": "LVMH", "index": "CAC40",
+    "conid": 17275, "devise": "EUR", "quantite": 5,
+    "prix_execution_reference": 200.0, "paper_entry_price": 198.0,
+    "date_entree": "2026-03-02", "target_exit_price": 300.0,
+    "date_limite": "2026-09-02",
+}
+
+
+def test_dry_run_places_no_order_but_journals_everything(env):
+    """LE TEST LE PLUS IMPORTANT DE TOUTE LA SUITE (spec 7) : en dry_run,
+    aucun appel de passage d'ordre, et pourtant un journal complet."""
+    ecrire_etat(env, dry_run=True)
+    gw = FakeGateway()
+
+    run = daily.run_batch(TODAY, gw=gw, sleep_fn=lambda s: None,
+                          account_id="U1", paths=env["paths"])
+
+    assert gw.ordres == []
+    assert gw.confirmations == []
+    assert run["mode"] == "dry_run"
+    assert run["statut"] == "termine"
+    assert [e["ticker"] for e in run["entrees"]] == ["MC.PA", "ADBE"]
+    assert all(e["statut"] == "simule" for e in run["entrees"])
+    assert run["entrees"][0]["quantite"] == 5          # floor(500 / 90)
+    assert run["entrees"][0]["rang"] == 1              # score 55.2 > 40.0
+    assert run["entrees"][0]["conid"] == 17275
+    assert run["entrees"][0]["prix_reference_sizing"] == 90.0
+    assert run["entrees"][0]["prix_paper"] == 88.0
+    journalise = lire_journal(env)[0]
+    assert [e["ticker"] for e in journalise["entrees"]] == ["MC.PA", "ADBE"]
+
+
+def test_real_mode_buys_the_selected_signals(env):
+    ecrire_etat(env, dry_run=False)
+    gw = FakeGateway()
+
+    run = daily.run_batch(TODAY, gw=gw, sleep_fn=lambda s: None,
+                          account_id="U1", paths=env["paths"])
+
+    assert [(o["conid"], o["side"], o["quantity"]) for o in gw.ordres] == [
+        (17275, "BUY", 5), (202070, "BUY", 1)]
+    assert all(e["statut"] == "execute" for e in run["entrees"])
+    import ibkr_bot.portfolio as portfolio
+    enregistrees = portfolio.load_positions(env["paths"]["positions"])
+    assert {p["ticker"] for p in enregistrees} == {"MC.PA", "ADBE"}
+    assert enregistrees[0]["date_limite"] == "2027-03-15"
+
+
+def test_a_failed_order_does_not_stop_the_following_ones(env):
+    """Spec 5.5 / 7 : un ordre en echec n'interrompt pas le batch."""
+    ecrire_etat(env, dry_run=False)
+    gw = FakeGateway()
+    gw.echecs = {17275}   # MC.PA, le mieux classe, echoue
+
+    run = daily.run_batch(TODAY, gw=gw, sleep_fn=lambda s: None,
+                          account_id="U1", paths=env["paths"])
+
+    par_ticker = {e["ticker"]: e for e in run["entrees"]}
+    assert par_ticker["MC.PA"]["statut"] == "erreur"
+    assert par_ticker["ADBE"]["statut"] == "execute"
+    import ibkr_bot.portfolio as portfolio
+    enregistrees = portfolio.load_positions(env["paths"]["positions"])
+    assert [p["ticker"] for p in enregistrees] == ["ADBE"]
+
+
+def test_a_failed_order_is_never_retried(env):
+    """Spec 5.5 : pas de reprise automatique d'un ordre echoue."""
+    ecrire_etat(env, dry_run=False)
+    gw = FakeGateway()
+    gw.echecs = {17275}
+
+    daily.run_batch(TODAY, gw=gw, sleep_fn=lambda s: None,
+                    account_id="U1", paths=env["paths"])
+
+    assert [o["conid"] for o in gw.ordres].count(17275) == 1
+
+
+def test_a_position_already_in_the_journal_is_not_bought_again(env):
+    """Spec 7 : relance du batch le meme jour -> pas de double achat."""
+    ecrire_etat(env, dry_run=False)
+    deja = {**POSITION_MC, "id": "MC.PA-2026-09-15", "date_entree": TODAY,
+            "date_limite": "2027-03-15", "prix_execution_reference": 90.5}
+    _positions_locales(env, [deja])
+    gw = FakeGateway(positions_ibkr=[{"conid": 17275, "position": 5.0}])
+
+    run = daily.run_batch(TODAY, gw=gw, sleep_fn=lambda s: None,
+                          account_id="U1", paths=env["paths"])
+
+    assert [o["conid"] for o in gw.ordres] == [202070]   # ADBE seulement
+    rejets = {r["ticker"]: r["raison"] for r in run["signaux_rejetes"]}
+    assert rejets["MC.PA"] == "deja_en_portefeuille"
+
+
+def test_a_position_held_at_ibkr_but_absent_from_the_journal_is_not_bought(env):
+    """Ceinture de la bretelle : si le batch a plante entre l'envoi de
+    l'ordre et l'ecriture de positions.json, la ligne existe chez IBKR mais
+    pas dans le journal. reconcile la classerait `ignorees` (position de
+    l'utilisateur) et rien n'empecherait un rachat."""
+    ecrire_etat(env, dry_run=False)
+    _positions_locales(env, [])
+    gw = FakeGateway(positions_ibkr=[{"conid": 17275, "position": 5.0}])
+
+    run = daily.run_batch(TODAY, gw=gw, sleep_fn=lambda s: None,
+                          account_id="U1", paths=env["paths"])
+
+    assert [o["conid"] for o in gw.ordres] == [202070]
+    rejets = {r["ticker"]: r["raison"] for r in run["signaux_rejetes"]}
+    assert rejets["MC.PA"] == "deja_detenu_hors_journal"
+
+
+def test_a_stop_loss_position_is_sold(env):
+    """docs/indices.json donne MC.PA a 90 EUR ; la position a ete ouverte a
+    200 EUR -> -55 %, bien au-dela du stop-loss a -20 %."""
+    ecrire_etat(env, dry_run=False)
+    _positions_locales(env, [POSITION_MC])
+    gw = FakeGateway(positions_ibkr=[{"conid": 17275, "position": 5.0}])
+
+    run = daily.run_batch(TODAY, gw=gw, sleep_fn=lambda s: None,
+                          account_id="U1", paths=env["paths"])
+
+    ventes = [o for o in gw.ordres if o["side"] == "SELL"]
+    assert ventes == [{"conid": 17275, "side": "SELL", "quantity": 5}]
+    assert run["sorties"][0]["close_reason"] == "stop_loss"
+    assert run["sorties"][0]["statut"] == "execute"
+    import ibkr_bot.portfolio as portfolio
+    assert all(p["ticker"] != "MC.PA"
+               for p in portfolio.load_positions(env["paths"]["positions"]))
+
+
+def test_exits_run_before_entries_and_free_a_slot(env):
+    """Enchainement identique au paper-trading (clotures puis ouvertures) :
+    le plafond de 10 est atteint, mais une position sort aujourd'hui, donc
+    exactement un signal doit pouvoir entrer."""
+    ecrire_etat(env, dry_run=False)
+    occupees = [POSITION_MC] + [
+        {**POSITION_MC, "id": f"X{i}-2026-03-02", "ticker": f"X{i}.PA",
+         "conid": 900 + i, "prix_execution_reference": 10.0,
+         "target_exit_price": 999.0, "date_limite": "2027-01-01"}
+        for i in range(9)
+    ]
+    _positions_locales(env, occupees)
+    gw = FakeGateway(positions_ibkr=[{"conid": p["conid"], "position": 5.0}
+                                     for p in occupees])
+
+    run = daily.run_batch(TODAY, gw=gw, sleep_fn=lambda s: None,
+                          account_id="U1", paths=env["paths"])
+
+    assert [o["side"] for o in gw.ordres].count("SELL") == 1
+    achats = [o for o in gw.ordres if o["side"] == "BUY"]
+    assert [o["conid"] for o in achats] == [202070]   # ADBE, le seul restant
+
+
+def test_a_ticker_sold_today_is_never_bought_back_in_the_same_batch(env):
+    """MC.PA sort en stop_loss aujourd'hui ET porte un nouveau signal
+    d'entree du jour. Sans garde, la sequence sorties-puis-entrees le
+    rachete dans la minute : deux commissions pour revenir au point de
+    depart, sur un titre qu'on vient justement de stop-losser."""
+    ecrire_etat(env, dry_run=False)
+    _positions_locales(env, [POSITION_MC])
+    gw = FakeGateway(positions_ibkr=[{"conid": 17275, "position": 5.0}])
+
+    run = daily.run_batch(TODAY, gw=gw, sleep_fn=lambda s: None,
+                          account_id="U1", paths=env["paths"])
+
+    assert [(o["conid"], o["side"]) for o in gw.ordres] == [
+        (17275, "SELL"), (202070, "BUY")]
+    rejets = {r["ticker"]: r["raison"] for r in run["signaux_rejetes"]}
+    assert rejets["MC.PA"] == "vendu_aujourd_hui"
+
+
+def test_a_london_fill_price_is_stored_in_pounds(env):
+    """GARDE-FOU PENCE/LIVRE de bout en bout (spec 4.7) : IBKR renvoie
+    296 PENCE, docs/indices.json parle en LIVRES. Si 296 atterrissait dans
+    positions.json, le stop-loss serait declenche des le lendemain et la
+    quantite achetee serait fausse d'un facteur 100."""
+    import json as _json
+    ecrire_etat(env, dry_run=False)
+    tracking = {"positions": [
+        {"id": "III.L-2026-09-15", "ticker": "III.L", "name": "3i", "index": "FTSE",
+         "status": "open", "entry_date": TODAY, "entry_price": 2.93,
+         "target_exit_price": 4.0}]}
+    with open(env["paths"]["tracking"], "w", encoding="utf-8") as fh:
+        _json.dump(tracking, fh)
+    gw = FakeGateway()
+    gw.statuts_ordre = {"1234": {"order_status": "Filled", "avgPrice": "296.0"}}
+
+    run = daily.run_batch(TODAY, gw=gw, sleep_fn=lambda s: None,
+                          account_id="U1", paths=env["paths"])
+
+    # Budget 500 EUR * 0.86 = 430 GBP = 43000 GBp ; 43000 / 295 -> 145.
+    assert gw.ordres == [{"conid": 98765, "side": "BUY", "quantity": 145}]
+    entree = run["entrees"][0]
+    assert entree["prix_execution_cotation"] == pytest.approx(296.0)
+    assert entree["prix_execution"] == pytest.approx(2.96)
+    assert entree["devise_cotation"] == "GBp"
+    assert entree["devise_compte"] == "GBP"
+    import ibkr_bot.portfolio as portfolio
+    position = portfolio.load_positions(env["paths"]["positions"])[0]
+    assert position["prix_execution_reference"] == pytest.approx(2.96)
+
+
+def test_unreadable_ibkr_positions_abort_the_batch(env):
+    """Spec 5.4 : jamais de decision sans savoir ce que le compte detient."""
+    ecrire_etat(env, dry_run=False)
+
+    class _Gw(FakeGateway):
+        def positions(self, base_url, account_id):
+            raise RuntimeError("500 Internal Server Error")
+
+    gw = _Gw()
+    run = daily.run_batch(TODAY, gw=gw, sleep_fn=lambda s: None,
+                          account_id="U1", paths=env["paths"])
+
+    assert run["statut"] == "reconciliation_impossible"
+    assert gw.ordres == []
+    assert run["erreurs"][0]["etape"] == "positions_ibkr"
+
+
+def test_dry_run_keeps_simulated_positions_across_days(env):
+    """En dry_run, les positions simulees n'existent pas chez IBKR :
+    laisser reconcile les fermer viderait positions.json chaque jour et
+    rendrait la validation en simulation (spec 5.3) sans objet."""
+    ecrire_etat(env, dry_run=True)
+    simulee = {**POSITION_MC, "ticker": "ZZZ.PA", "conid": 555,
+               "target_exit_price": 999.0, "date_limite": "2027-01-01",
+               "prix_execution_reference": 10.0}
+    _positions_locales(env, [simulee])
+    gw = FakeGateway(positions_ibkr=[])
+
+    daily.run_batch(TODAY, gw=gw, sleep_fn=lambda s: None,
+                    account_id="U1", paths=env["paths"])
+
+    import ibkr_bot.portfolio as portfolio
+    restantes = portfolio.load_positions(env["paths"]["positions"])
+    assert "ZZZ.PA" in {p["ticker"] for p in restantes}
+
+
+def test_real_mode_drops_a_position_sold_outside_the_bot(env):
+    """Spec 5.4 : vendue a la main par l'utilisateur -> retiree du decompte
+    des 10, et « le bot ne la rouvre JAMAIS » — pas meme sur un nouveau
+    signal du jour portant le meme ticker."""
+    ecrire_etat(env, dry_run=False)
+    _positions_locales(env, [POSITION_MC])
+    gw = FakeGateway(positions_ibkr=[])   # plus rien chez IBKR
+
+    run = daily.run_batch(TODAY, gw=gw, sleep_fn=lambda s: None,
+                          account_id="U1", paths=env["paths"])
+
+    assert run["reconciliation"]["cloturees_hors_bot"] == ["MC.PA-2026-03-02"]
+    assert [o["side"] for o in gw.ordres].count("SELL") == 0
+    assert 17275 not in [o["conid"] for o in gw.ordres]
+    rejets = {r["ticker"]: r["raison"] for r in run["signaux_rejetes"]}
+    assert rejets["MC.PA"] == "cloturee_hors_bot"
+    import ibkr_bot.portfolio as portfolio
+    assert all(p["ticker"] != "MC.PA"
+               for p in portfolio.load_positions(env["paths"]["positions"]))
+
+
+def test_a_position_without_a_reference_price_raises_an_anomaly(env):
+    """portfolio.exit_reason laisse volontairement une telle position
+    INCLOSABLE (ecart #4 documente dans portfolio.py) et dit explicitement
+    que c'est au Plan B de la signaler a un operateur."""
+    ecrire_etat(env, dry_run=False)
+    cassee = {**POSITION_MC, "prix_execution_reference": None}
+    _positions_locales(env, [cassee])
+    gw = FakeGateway(positions_ibkr=[{"conid": 17275, "position": 5.0}])
+
+    run = daily.run_batch(TODAY, gw=gw, sleep_fn=lambda s: None,
+                          account_id="U1", paths=env["paths"])
+
+    types = {a["type"] for a in run["anomalies"]}
+    assert "prix_reference_absent" in types
+    assert [o["side"] for o in gw.ordres].count("SELL") == 0
+
+
+def test_an_unavailable_exchange_rate_rejects_the_signal_without_buying(env):
+    ecrire_etat(env, dry_run=False)
+
+    class _Gw(FakeGateway):
+        def exchange_rate(self, base_url, source, target):
+            raise RuntimeError("503 Service Unavailable")
+
+    gw = _Gw()
+    run = daily.run_batch(TODAY, gw=gw, sleep_fn=lambda s: None,
+                          account_id="U1", paths=env["paths"])
+
+    assert gw.ordres == []
+    raisons = {r["raison"] for r in run["signaux_rejetes"]}
+    assert "prix_ou_taux_invalide" in raisons
+    assert any(e["etape"] == "taux_de_change" for e in run["erreurs"])
+
+
+def test_the_account_snapshot_is_written(env):
+    ecrire_etat(env, dry_run=False)
+    daily.run_batch(TODAY, gw=FakeGateway(), sleep_fn=lambda s: None,
+                    account_id="U1", paths=env["paths"])
+
+    with open(env["paths"]["account_snapshot"], encoding="utf-8") as fh:
+        instantane = json.load(fh)
+    assert instantane["base_cash"] == 10000.0
+    assert instantane["fetched_at"].endswith("Z")
+
+
+def test_a_positions_save_failure_is_reported_in_the_run(env, monkeypatch):
+    """positions.json est un ETAT, pas un log : son echec d'ecriture doit
+    remonter dans l'email, contrairement a append_run."""
+    ecrire_etat(env, dry_run=False)
+    monkeypatch.setattr(daily.journal, "save_positions_safely",
+                        lambda positions, path: False)
+    gw = FakeGateway()
+
+    run = daily.run_batch(TODAY, gw=gw, sleep_fn=lambda s: None,
+                          account_id="U1", paths=env["paths"])
+
+    assert any(e["etape"] == "positions.json" for e in run["erreurs"])
+
+
+def test_the_conid_cache_is_persisted_between_runs(env):
+    ecrire_etat(env, dry_run=True)
+    daily.run_batch(TODAY, gw=FakeGateway(), sleep_fn=lambda s: None,
+                    account_id="U1", paths=env["paths"])
+
+    with open(env["paths"]["conid_cache"], encoding="utf-8") as fh:
+        cache = json.load(fh)
+    assert cache["MC.PA"]["conid"] == 17275
+
+
+def test_main_runs_a_batch(monkeypatch):
+    appels = []
+    monkeypatch.setattr(daily, "run_batch", lambda *a, **k: appels.append(True))
+    daily.main()
+    assert appels == [True]

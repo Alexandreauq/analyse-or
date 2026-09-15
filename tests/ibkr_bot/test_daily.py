@@ -473,6 +473,29 @@ def test_place_order_gives_up_on_an_endless_confirmation_chain(tmp_path):
     assert "confirmation" in resultat["detail"].lower()
 
 
+def test_place_order_keeps_the_confirmation_audit_trail_on_an_exhausted_chain(tmp_path):
+    """Re-revue du round de correctifs de la tache 4 : les messages des
+    confirmations deja auto-validees (confirmed=True) avant l'abandon ne
+    doivent pas disparaitre du detail — ce sont les seuls avertissements
+    IBKR reellement acceptes sur cet ordre."""
+    class _Gw(FakeGateway):
+        def confirm_reply(self, base_url, reply_id, confirmed=True):
+            self.confirmations.append(reply_id)
+            return [{"id": f"question-{len(self.confirmations)}",
+                     "message": [f"avertissement {len(self.confirmations)}"]}]
+
+    gw = _Gw()
+    gw.reponse_ordre = [{"id": "q0", "message": ["avertissement 0"]}]
+
+    resultat = daily._place_order(
+        gw, "u", "U1", ticker="MC.PA", conid=17275, side="BUY", quantity=5,
+        prix_reference_cotation=90.0, state_path=_etat(tmp_path, dry_run=False))
+
+    assert resultat["statut"] == "erreur"
+    assert "avertissement 0" in resultat["detail"]
+    assert "avertissement 1" in resultat["detail"]
+
+
 def test_place_order_reads_the_average_fill_price(tmp_path):
     gw = FakeGateway()
     gw.statuts_ordre = {"1234": {"order_status": "Filled", "avgPrice": "91.25",
@@ -485,6 +508,39 @@ def test_place_order_reads_the_average_fill_price(tmp_path):
     assert resultat["prix_execution_cotation"] == pytest.approx(91.25)
     assert resultat["prix_execution_estime"] is False
     assert resultat["commission"] == pytest.approx(1.10)
+
+
+def test_place_order_strips_a_genuine_thousands_separator(tmp_path):
+    gw = FakeGateway()
+    gw.statuts_ordre = {"1234": {"order_status": "Filled", "avgPrice": "1,234.50"}}
+
+    resultat = daily._place_order(
+        gw, "u", "U1", ticker="MC.PA", conid=17275, side="BUY", quantity=5,
+        prix_reference_cotation=90.0, state_path=_etat(tmp_path, dry_run=False))
+
+    assert resultat["prix_execution_cotation"] == pytest.approx(1234.50)
+    assert resultat["prix_execution_estime"] is False
+
+
+def test_place_order_never_mistakes_a_decimal_comma_for_a_thousands_separator(tmp_path):
+    """Regression du round de correctifs de la tache 4 : un retrait
+    inconditionnel de la virgule confondrait "1234,50" (virgule
+    decimale, format europeen plausible sur un futur fournisseur) avec
+    un separateur de milliers et produirait un prix 100x trop grand,
+    pris a tort pour un prix d'execution REEL (estime=False). La chaine
+    ne correspond pas au format milliers anglo-saxon (pas de groupes de
+    3 chiffres) : elle doit echouer au parsing et retomber, signalee,
+    sur le prix de reference."""
+    gw = FakeGateway()
+    gw.statuts_ordre = {"1234": {"order_status": "Filled", "avgPrice": "1234,50"}}
+
+    resultat = daily._place_order(
+        gw, "u", "U1", ticker="MC.PA", conid=17275, side="BUY", quantity=5,
+        prix_reference_cotation=90.0, state_path=_etat(tmp_path, dry_run=False))
+
+    assert resultat["prix_execution_cotation"] == pytest.approx(90.0)
+    assert resultat["prix_execution_estime"] is True
+    assert resultat["statut"] == "execute"
 
 
 def test_place_order_falls_back_to_the_reference_price_when_avgprice_is_missing(tmp_path):

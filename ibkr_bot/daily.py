@@ -20,6 +20,7 @@
 # remplacer par un booleen passe en parametre depuis run_batch — la seule
 # valeur qui compte est celle du disque AU MOMENT de l'envoi.
 import os
+import re
 import subprocess
 import time
 from datetime import datetime, timezone
@@ -132,16 +133,24 @@ def preflight(base_url: str, *, gw=gateway, sleep_fn=time.sleep,
 MAX_CONFIRMATIONS = 5
 
 
+_SEPARATEUR_MILLIERS = re.compile(r"^-?\d{1,3}(,\d{3})+(\.\d+)?$")
+
+
 def _nombre(valeur):
     """float(valeur) ou None — le CPAPI renvoie avgPrice et commission
     tantot en nombre, tantot en CHAINE ("415.20" dans les fixtures de
     tests/ibkr_bot/test_gateway.py), et parfois avec un separateur de
-    milliers ("1,234.50") sur certains champs numeriques — la virgule est
-    retiree avant conversion plutot que de perdre silencieusement un prix
-    d'execution reel au profit du repli estime."""
+    milliers ("1,234.50") sur certains champs numeriques. La virgule
+    n'est retiree QUE si la chaine entiere a la forme d'un separateur de
+    milliers anglo-saxon (finding de la revue du round de correctifs de
+    la tache 4) : un retrait inconditionnel confondrait une virgule
+    decimale ("1234,50", un format europeen plausible sur un futur
+    fournisseur de donnees) avec un separateur de milliers et
+    produirait un prix 100x trop grand, silencieusement pris pour un
+    prix d'execution reel plutot que pour le repli estime."""
     if isinstance(valeur, bool) or valeur is None:
         return None
-    if isinstance(valeur, str):
+    if isinstance(valeur, str) and _SEPARATEUR_MILLIERS.match(valeur):
         valeur = valeur.replace(",", "")
     try:
         nombre = float(valeur)
@@ -210,8 +219,13 @@ def _resoudre_confirmations(gw, base_url: str, reponse) -> tuple[list, int, str 
         reponse = gw.confirm_reply(base_url, str(question["id"]))
         confirmations += 1
     if _premiere_question(reponse) is not None:
+        detail_confirmations = (
+            f" ({confirmations} confirmation(s) auto-validee(s) avant l'abandon : "
+            + " | ".join(messages) + ")" if messages else ""
+        )
         return reponse, confirmations, (
-            f"chaine de confirmation non resolue apres {confirmations} reponses"), messages
+            f"chaine de confirmation non resolue apres {confirmations} reponses"
+            f"{detail_confirmations}"), messages
     return reponse, confirmations, None, messages
 
 

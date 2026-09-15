@@ -125,14 +125,20 @@ def select_entries(
 
 
 # --- regles de sortie -------------------------------------------------
-# Reproduction fidele de indices_score._close_eligible_positions(). Trois
-# ecarts volontaires, et trois seulement :
+# Reproduction fidele de indices_score._close_eligible_positions(). Quatre
+# ecarts volontaires :
 #   1. le prix de reference du stop-loss est le prix d'execution REEL du
 #      bot, pas l'entry_price du paper-trading (spec 3.6) ;
 #   2. le benchmark fantome n'est pas reproduit — c'est un instrument de
 #      mesure du signal, pas une regle de trading (spec 3.6) ;
 #   3. on DECIDE seulement : aucune mutation de la position, aucun calcul
-#      de return_pct — le Plan B executera et journalisera.
+#      de return_pct — le Plan B executera et journalisera ;
+#   4. le garde `_is_missing(prix_execution_reference)` ci-dessous n'a
+#      PAS d'equivalent dans la fonction reelle. Effet fail-safe voulu
+#      (jamais de vente forcee sur un prix de reference corrompu), mais
+#      consequence a connaitre : une position dont le prix de reference
+#      est absent/NaN devient INCLOSABLE par toute regle, pour toujours,
+#      tant que ce prix n'est pas restaure — voir la note pres du garde.
 # Tout le reste est identique, inegalites larges comprises.
 
 def deadline_date(entry_date: str) -> str:
@@ -159,6 +165,10 @@ def exit_reason(position: dict, company: dict | None, today: str) -> str | None:
         return None
     prix_reference = position.get("prix_execution_reference")
     if _is_missing(prix_reference):
+        # Ecart #4 (voir commentaire de module) : sans alerte externe, une
+        # position bloquee ici occupe une place indefiniment sans jamais
+        # se clore. C'est au Plan B de detecter et signaler ce cas a un
+        # operateur — rien ne le fait aujourd'hui.
         return None
 
     current_price = company["current_price"]
@@ -201,12 +211,15 @@ def reconcile(local_positions: list[dict], ibkr_positions: list[dict]) -> dict:
     meme jour apres un plantage ne peut pas racheter une position deja
     ouverte.
 
-    - position du journal absente chez IBKR (ou quantite 0) -> vendue
-      hors bot : retiree du decompte des 10, jamais rouverte ;
+    - position du journal absente chez IBKR (ou quantite nulle, negative
+      ou absente/NaN cote IBKR) -> vendue hors bot : retiree du decompte
+      des 10, jamais rouverte. Le bot ne doit jamais detenir de position
+      negative (pas de short) : une quantite negative signale un probleme
+      et est traitee comme une cloture hors bot plutot que comme active ;
     - position chez IBKR inconnue du journal -> IGNOREE : c'est une
       position de l'utilisateur, le bot n'y touche jamais (spec 9.5) ;
-    - quantite divergente -> la quantite IBKR fait foi, l'ecart est
-      remonte comme anomalie.
+    - quantite divergente (mais positive) -> la quantite IBKR fait foi,
+      l'ecart est remonte comme anomalie.
 
     Ne mute aucune position d'entree : les positions actives renvoyees
     sont des copies.
@@ -223,8 +236,22 @@ def reconcile(local_positions: list[dict], ibkr_positions: list[dict]) -> dict:
         conid = position.get("conid")
         conids_du_bot.add(conid)
         brute = par_conid.get(conid)
-        quantite_ibkr = int(brute.get("position", 0)) if brute else 0
-        if brute is None or quantite_ibkr == 0:
+        # .get("position") (sans defaut) renvoie None si la cle est
+        # absente ET si IBKR envoie explicitement `"position": null` —
+        # _is_missing() couvre les deux, ainsi que NaN. int(None) leverait
+        # sinon un TypeError qui interromprait toute la reconciliation du
+        # batch (spec 5.4 : jamais une ligne corrompue ne doit en bloquer
+        # d'autres).
+        quantite_brute = brute.get("position") if brute else None
+        if brute is None or _is_missing(quantite_brute):
+            cloturees.append(position)
+            continue
+        quantite_ibkr = int(quantite_brute)
+        if quantite_ibkr <= 0:
+            # Une quantite negative (short) ne doit jamais arriver pour
+            # une position ouverte par ce bot : traitee comme fermee hors
+            # bot plutot que comme active, jamais comme candidate a une
+            # vente qui augmenterait le short.
             cloturees.append(position)
             continue
         active = dict(position)

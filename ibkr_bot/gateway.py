@@ -11,6 +11,8 @@
 # PLAN A : place_market_order() et confirm_reply() sont ecrites et
 # testees (mockees), mais AUCUN autre module de ibkr_bot/ ne les appelle
 # — un test structurel le verifie. Le chemin reel arrive au Plan B.
+import uuid
+
 import urllib3
 
 import requests
@@ -98,9 +100,18 @@ def search_contract(base_url: str, symbol: str) -> list[dict]:
 def contract_info(base_url: str, conid) -> dict:
     """GET /iserver/secdef/info — details du contrat (porte notamment
     currency et listingExchange, les deux champs qui permettent de
-    refuser un contrat ambigu plutot que de le deviner)."""
+    refuser un contrat ambigu plutot que de le deviner).
+
+    Envoie a la fois `secType` (camelCase, documente pour
+    /iserver/secdef/search) et `sectype` (tout en minuscules, celui que
+    le client open-source `ibind` envoie pour cette route precise) : la
+    doc publique du Client Portal Web API est incoherente entre les deux
+    routes sur la casse de ce parametre, et un Gateway qui ignore la
+    mauvaise cle laisserait le param manquant — sans `currency` ni
+    `listingExchange` en retour, tout contrat serait a tort traite comme
+    ambigu par la resolution de contrat (Tache 5)."""
     data = _get(base_url, "/iserver/secdef/info",
-                {"conid": str(conid), "secType": "STK"})
+                {"conid": str(conid), "secType": "STK", "sectype": "STK"})
     if isinstance(data, list):
         return data[0] if data else {}
     return data if isinstance(data, dict) else {}
@@ -116,6 +127,21 @@ def exchange_rate(base_url: str, source: str, target: str) -> float:
 
 
 # --- portefeuille ----------------------------------------------------
+
+def portfolio_accounts(base_url: str = DEFAULT_GATEWAY_URL) -> list[dict]:
+    """GET /portfolio/accounts — pendant cote portefeuille du prealable
+    deja impose cote ordres par brokerage_accounts()/GET /iserver/accounts.
+    Le CPAPI exige que cette route ait ete appelee au moins une fois dans
+    la session avant que /portfolio/{accountId}/... (ledger(), positions())
+    ne renvoie des donnees reelles ; sans cet appel, ces routes renvoient
+    silencieusement une reponse vide plutot qu'une erreur, ce qui est le
+    sens dangereux pour portfolio.reconcile() (Tache 7) — "le bot ne
+    detient rien" pourrait a tort justifier un rachat d'une ligne deja
+    detenue. Renvoie toujours une liste, meme forme que search_contract()
+    et positions()."""
+    data = _get(base_url, "/portfolio/accounts")
+    return data if isinstance(data, list) else []
+
 
 def ledger(base_url: str, account_id: str) -> dict:
     """GET /portfolio/{accountId}/ledger — soldes indexes par devise.
@@ -171,7 +197,13 @@ def place_market_order(base_url: str, account_id: str, conid: int,
 
     La reponse peut etre une confirmation d'ordre OU une question a
     confirmer via confirm_reply() ; l'appelant (Plan B) doit traiter les
-    deux formes."""
+    deux formes.
+
+    Le corps porte un `cOID` (client order id, champ documente du CPAPI)
+    genere ici via uuid.uuid4() : sans identifiant client, un retry apres
+    timeout HTTP (Plan B) ne pourrait pas distinguer "l'ordre est bien
+    arrive au Gateway" de "l'ordre ne l'a jamais atteint", au risque d'un
+    double envoi sur un compte reel."""
     if side not in ("BUY", "SELL"):
         raise ValueError(f"side doit valoir 'BUY' ou 'SELL', recu {side!r}")
     if not isinstance(quantity, int) or isinstance(quantity, bool) or quantity < 1:
@@ -184,6 +216,7 @@ def place_market_order(base_url: str, account_id: str, conid: int,
             "quantity": quantity,
             "tif": "DAY",
             "acctId": account_id,
+            "cOID": str(uuid.uuid4()),
         }]
     })
     return data if isinstance(data, list) else [data]

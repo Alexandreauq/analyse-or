@@ -89,11 +89,13 @@ def test_tickle_and_reauthenticate_use_their_documented_paths(monkeypatch):
     ]
 
 
-def test_brokerage_accounts_uses_iserver_accounts(monkeypatch):
+def test_brokerage_accounts_uses_iserver_accounts_and_disables_cert_check(monkeypatch):
     captured = {}
 
     def fake_get(url, params=None, timeout=None, verify=None):
         captured["url"] = url
+        captured["timeout"] = timeout
+        captured["verify"] = verify
         return _FakeIbkrResponse({"accounts": ["U1234567"], "selectedAccount": "U1234567"})
 
     monkeypatch.setattr(gateway.requests, "get", fake_get)
@@ -101,6 +103,8 @@ def test_brokerage_accounts_uses_iserver_accounts(monkeypatch):
 
     assert result["accounts"] == ["U1234567"]
     assert captured["url"] == "https://127.0.0.1:5000/v1/api/iserver/accounts"
+    assert captured["timeout"] == gateway.TIMEOUT
+    assert captured["verify"] is False
 
 
 def test_search_contract_sends_symbol_and_stk_sectype(monkeypatch):
@@ -149,7 +153,9 @@ def test_contract_info_sends_conid_and_stk_sectype(monkeypatch):
 
     assert result["currency"] == "USD"
     assert captured["url"] == "https://127.0.0.1:5000/v1/api/iserver/secdef/info"
-    assert captured["params"] == {"conid": "265598", "secType": "STK"}
+    assert captured["params"] == {
+        "conid": "265598", "secType": "STK", "sectype": "STK",
+    }
 
 
 def test_exchange_rate_reads_the_rate_field(monkeypatch):
@@ -187,6 +193,30 @@ def test_exchange_rate_raises_on_http_error(monkeypatch):
 
 
 # --- portefeuille ----------------------------------------------------
+
+def test_portfolio_accounts_uses_the_portfolio_accounts_path(monkeypatch):
+    """Pendant cote portefeuille du prealable brokerage_accounts()/
+    /iserver/accounts : le CPAPI exige un appel a /portfolio/accounts
+    avant que ledger()/positions() renvoient des donnees reelles."""
+    captured = {}
+
+    def fake_get(url, params=None, timeout=None, verify=None):
+        captured["url"] = url
+        return _FakeIbkrResponse([{"id": "U1234567", "accountId": "U1234567"}])
+
+    monkeypatch.setattr(gateway.requests, "get", fake_get)
+    result = gateway.portfolio_accounts(BASE)
+
+    assert result == [{"id": "U1234567", "accountId": "U1234567"}]
+    assert captured["url"] == "https://127.0.0.1:5000/v1/api/portfolio/accounts"
+
+
+def test_portfolio_accounts_returns_empty_list_when_api_returns_a_dict(monkeypatch):
+    monkeypatch.setattr(
+        gateway.requests, "get",
+        lambda *a, **k: _FakeIbkrResponse({"error": "not ready"}))
+    assert gateway.portfolio_accounts(BASE) == []
+
 
 def test_ledger_uses_the_portfolio_ledger_path(monkeypatch):
     captured = {}
@@ -290,16 +320,37 @@ def test_place_market_order_sends_the_documented_body(monkeypatch):
 
     assert result == [{"order_id": "1234", "order_status": "Submitted"}]
     assert captured["url"] == "https://127.0.0.1:5000/v1/api/iserver/account/U1234567/orders"
-    assert captured["json"] == {
-        "orders": [{
-            "conid": 4901,
-            "orderType": "MKT",
-            "side": "BUY",
-            "quantity": 6,
-            "tif": "DAY",
-            "acctId": "U1234567",
-        }]
+    sent_order = captured["json"]["orders"][0]
+    coid = sent_order.pop("cOID", None)
+    assert sent_order == {
+        "conid": 4901,
+        "orderType": "MKT",
+        "side": "BUY",
+        "quantity": 6,
+        "tif": "DAY",
+        "acctId": "U1234567",
     }
+    assert isinstance(coid, str) and coid
+
+
+def test_place_market_order_sends_a_distinct_coid_on_each_call(monkeypatch):
+    """cOID (client order id) doit permettre a un futur retry (Plan B)
+    de distinguer un ordre deja envoye d'un ordre jamais parti apres un
+    timeout HTTP — deux appels ne doivent donc jamais partager le meme
+    identifiant."""
+    captured = []
+
+    def fake_post(url, json=None, timeout=None, verify=None):
+        captured.append(json["orders"][0]["cOID"])
+        return _FakeIbkrResponse([{"order_id": "1234"}])
+
+    monkeypatch.setattr(gateway.requests, "post", fake_post)
+    gateway.place_market_order(BASE, "U1234567", 4901, "BUY", 6)
+    gateway.place_market_order(BASE, "U1234567", 4901, "BUY", 6)
+
+    assert len(captured) == 2
+    assert captured[0] != captured[1]
+    assert all(coid for coid in captured)
 
 
 def test_place_market_order_accepts_sell_side(monkeypatch):
@@ -370,13 +421,17 @@ def test_order_status_uses_the_documented_path(monkeypatch):
 def test_no_other_plan_a_module_references_the_order_routes():
     """Garantie mecanique du Plan A (voir Global Constraints) : seul
     gateway.py connait les routes de passage d'ordre. Aucun autre module
-    du paquet ne doit pouvoir en declencher une, meme par erreur."""
+    du paquet ne doit pouvoir en declencher une, meme par erreur.
+
+    rglob (recursif) plutot que glob : un futur sous-paquet (ex.
+    ibkr_bot/steps/) doit etre scanne lui aussi, pas seulement le
+    premier niveau de ibkr_bot/."""
     import pathlib
 
     package_dir = pathlib.Path(gateway.__file__).parent
     interdits = ("place_market_order", "confirm_reply", "/iserver/account/")
     fautifs = []
-    for source in sorted(package_dir.glob("*.py")):
+    for source in sorted(package_dir.rglob("*.py")):
         if source.name == "gateway.py":
             continue
         texte = source.read_text(encoding="utf-8")
@@ -388,3 +443,16 @@ def test_no_other_plan_a_module_references_the_order_routes():
         "Le Plan A interdit tout chemin de passage d'ordre hors gateway.py : "
         + "; ".join(fautifs)
     )
+
+
+def test_ibkr_bot_package_does_not_reexport_the_order_routes():
+    """Ceinture et bretelles par rapport au scan textuel ci-dessus : meme
+    si un futur `ibkr_bot/__init__.py` se mettait a faire
+    `from .gateway import *`, les fonctions de passage d'ordre ne
+    doivent pas devenir accessibles comme `ibkr_bot.place_market_order`.
+    Aujourd'hui __init__.py est vide (0 octet), donc ce test passe
+    trivialement — il sert de garde-fou si ca change."""
+    import ibkr_bot
+
+    assert not hasattr(ibkr_bot, "place_market_order")
+    assert not hasattr(ibkr_bot, "confirm_reply")

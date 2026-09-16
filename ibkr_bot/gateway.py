@@ -14,6 +14,7 @@
 # l'argent reel peut bouger. Un test structurel (voir
 # tests/ibkr_bot/test_order_routes_are_isolated.py) verifie qu'aucun
 # autre module de ibkr_bot/ ne reference ib_async.placeOrder / MarketOrder.
+import math
 import re
 
 from ib_async import IB, Stock, Forex, MarketOrder, Contract
@@ -254,7 +255,17 @@ def exchange_rate(base_url: str, source: str, target: str) -> float:
     """Pas d'appel RPC direct cote TWS API : demande de donnees de
     marche sur un contrat Forex, lecture du prix resultant. sleep(2)
     laisse le temps au premier tick d'arriver (pattern standard
-    ib_async pour une lecture ponctuelle plutot qu'un flux)."""
+    ib_async pour une lecture ponctuelle plutot qu'un flux).
+
+    CORRECTIF (revue finale de branche) : si aucun tick n'arrive dans ce
+    delai (ex. compte sans droit de marche IDEALPRO), ticker.marketPrice()
+    renvoie NaN SANS lever — un retour silencieux qui, avant ce correctif,
+    remontait tel quel jusqu'a sizing.compute_quantity et faisait rejeter
+    le signal avec motif="prix_ou_taux_invalide", indiscernable d'un prix
+    reellement invalide. On leve desormais explicitement pour que ce cas
+    passe par la gestion d'exception DEJA correcte de
+    daily.py::_taux_de_change() (qui, elle, consigne bien l'echec dans
+    run["erreurs"])."""
     if source == target:
         return 1.0
     ib = _require_ib()
@@ -262,10 +273,14 @@ def exchange_rate(base_url: str, source: str, target: str) -> float:
     ticker = ib.reqMktData(fx, "", False, False)
     ib.sleep(2)
     try:
-        prix = ticker.marketPrice()
+        prix = float(ticker.marketPrice())
     finally:
         ib.cancelMktData(fx)
-    return float(prix)
+    if math.isnan(prix) or prix <= 0:
+        raise RuntimeError(
+            f"taux de change {source}->{target} indisponible (NaN ou <= 0) : "
+            f"pas de donnee de marche recue")
+    return prix
 
 
 # --- ordres ----------------------------------------------------------
@@ -313,9 +328,18 @@ def place_market_order(base_url: str, account_id: str, conid: int,
     ib.sleep(2)  # laisse le temps a la reponse initiale de TWS d'arriver
                  # (placeOrder ne bloque pas et ne leve jamais sur un rejet,
                  # contrairement a l'ancien CPAPI qui levait via raise_for_status())
-    if trade.orderStatus.status in ("Cancelled", "ApiCancelled", "Inactive"):
+    # "PendingSubmit" est le statut synthetise localement par ib_async des
+    # l'appel a placeOrder(), AVANT tout accuse de reception de TWS (voir
+    # ATTENTION ci-dessus). Y rester encore apres le sleep(2) ne signifie
+    # pas "en cours de traitement normal" : pour un ordre reellement
+    # accepte, TWS a largement le temps de faire avancer ce statut dans
+    # cette fenetre. Y rester signale plutot un ordre jamais authentiquement
+    # accuse (ex. connexion coupee en plein envoi) — sans ce garde-fou, il
+    # serait mis en cache et confirme comme un succes (revue finale de
+    # branche, Fix Important #4).
+    if trade.orderStatus.status in ("Cancelled", "ApiCancelled", "Inactive", "PendingSubmit"):
         raise RuntimeError(
-            f"ordre rejete ou annule par IBKR (statut {trade.orderStatus.status}) : "
+            f"ordre rejete, annule ou jamais accuse par IBKR (statut {trade.orderStatus.status}) : "
             f"{'; '.join(str(l) for l in trade.log) if trade.log else 'aucun detail'}"
         )
     order_id = str(trade.order.orderId)

@@ -115,12 +115,27 @@ def preflight(base_url: str, *, gw=gateway, sleep_fn=time.sleep,
     detail = ""
     for tentative in range(1, attempts + 1):
         try:
-            if gw.connect(base_url, account_id=account_id or "") and gw.is_authenticated(base_url):
+            connecte = gw.connect(base_url, account_id=account_id or "")
+            if connecte and gw.is_authenticated(base_url):
                 gw.brokerage_accounts(base_url)
                 gw.portfolio_accounts(base_url)
                 return {"ok": True, "tentatives": tentative,
                         "detail": "authentifie, session amorcee"}
             detail = "session non authentifiee"
+            if connecte:
+                # Fix Important #5 (revue finale de branche) : gw.connect()
+                # est idempotent (voir gateway.py::connect()) et court-
+                # circuite sur True des qu'une connexion existe deja, MEME
+                # si cette connexion est restee a moitie etablie (socket
+                # ouvert, mais managedAccounts() vide — ex. course avec le
+                # login manuel). Sans ce disconnect(), les tentatives
+                # suivantes reutiliseraient indefiniment cette MEME
+                # connexion figee, qui ne repeuplera jamais cette liste
+                # toute seule : les 3 tentatives de preflight n'achetent
+                # alors rien dans exactement le scenario qu'elles existent
+                # pour couvrir. On force donc une connexion neuve a la
+                # prochaine tentative.
+                gw.disconnect()
         except Exception as e:
             detail = f"amorcage de session impossible : {e}"
         if tentative < attempts:

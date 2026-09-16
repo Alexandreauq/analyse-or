@@ -368,6 +368,26 @@ def test_exchange_rate_same_currency_is_one_without_network_call(fake_ib):
     assert fake_ib.req_mkt_data_calls == []  # aucun appel reqMktData necessaire
 
 
+def test_exchange_rate_raises_instead_of_returning_nan_silently(fake_ib):
+    # Fix Important #3 (revue finale de branche) : sans droit de marche
+    # IDEALPRO, ticker.marketPrice() renvoie NaN sans jamais lever. Avant
+    # ce correctif, ce NaN remontait tel quel et etait indiscernable d'un
+    # prix reellement invalide cote sizing.compute_quantity — desormais on
+    # leve explicitement pour que daily.py::_taux_de_change() (deja
+    # correct sur les EXCEPTIONS) consigne bien l'echec.
+    gateway.connect(BASE)
+    fake_ib.mkt_data_result = _FakeTicker(float("nan"))
+    with pytest.raises(RuntimeError, match="indisponible"):
+        gateway.exchange_rate(BASE, "EUR", "GBP")
+
+
+def test_exchange_rate_raises_on_a_non_positive_price(fake_ib):
+    gateway.connect(BASE)
+    fake_ib.mkt_data_result = _FakeTicker(0.0)
+    with pytest.raises(RuntimeError, match="indisponible"):
+        gateway.exchange_rate(BASE, "EUR", "GBP")
+
+
 def test_place_market_order_returns_a_single_confirmation(fake_ib):
     gateway.connect(BASE)
     fake_ib.place_order_result = _FakeTrade(orderId=555, avgFillPrice=0.0, status="Submitted")
@@ -426,7 +446,22 @@ def test_place_market_order_raises_when_ibkr_rejects_or_cancels_the_order(fake_i
     fake_ib.place_order_result = _FakeTrade(
         orderId=557, status="Cancelled",
         log=["rejected: no such contract"])
-    with pytest.raises(RuntimeError, match="rejete ou annule"):
+    with pytest.raises(RuntimeError, match="rejete, annule ou jamais accuse"):
+        gateway.place_market_order(BASE, "U28849893", 265598, "BUY", 10)
+
+
+def test_place_market_order_raises_when_still_pendingsubmit_after_the_sleep(fake_ib):
+    # Fix Important #4 (revue finale de branche) : "PendingSubmit" est le
+    # statut synthetise localement par ib_async des l'appel a placeOrder(),
+    # AVANT tout accuse de reception de TWS. Y rester encore apres le
+    # sleep(2) (ex. connexion coupee en plein envoi) n'est PAS un succes —
+    # avant ce correctif, ce statut n'etait pas dans le tuple de rejet et
+    # l'ordre non accuse etait mis en cache et confirme comme reussi.
+    # Verifie au passage (voir tests du happy path ci-dessus) que les
+    # fixtures de succes utilisent bien un statut different, "Submitted".
+    gateway.connect(BASE)
+    fake_ib.place_order_result = _FakeTrade(orderId=560, status="PendingSubmit")
+    with pytest.raises(RuntimeError, match="jamais accuse"):
         gateway.place_market_order(BASE, "U28849893", 265598, "BUY", 10)
 
 

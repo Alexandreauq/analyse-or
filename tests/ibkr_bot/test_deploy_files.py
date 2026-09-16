@@ -57,6 +57,16 @@ def test_requirements_bot_declares_dateutil():
         assert "python-dateutil" in fh.read()
 
 
+def test_requirements_bot_declares_ib_async():
+    """ibkr_bot.gateway importe ib_async (client TWS API) ; le venv du VPS
+    s'installe depuis requirements-bot.txt, pas requirements.txt. Sans
+    cette ligne, le premier batch reel plante a l'import, avant toute
+    gestion d'erreur — silence total, aucune entree de journal, aucun
+    email (revue finale de branche, Fix Critical #1)."""
+    with open(os.path.join(RACINE, "requirements-bot.txt"), encoding="utf-8") as fh:
+        assert "ib_async" in fh.read()
+
+
 def test_the_ibkr_readme_documents_the_operational_essentials():
     contenu = _lire("README-ibkr.md")
     for attendu in ("ibkrbot", "IBKR_GATEWAY_URL", "IBKR_ACCOUNT_ID",

@@ -103,3 +103,25 @@ concerné) non vide.
    original) avant tout passage en réel.
 5. Une fois la stabilité confirmée : désinstaller le Client Portal Gateway
    (`ibkr-gateway.service`, `/home/ibkrbot/clientportal.gw/`).
+6. Pendant les semaines de validation en `dry_run` (point 4) : journaliser
+   la valeur brute de `primaryExchange` renvoyée par la TWS API pour un
+   ticker par indice, et la confronter à la table `EXPECTED_VENUE` de
+   `ibkr_bot/contracts.py` — cette table a été vérifiée contre les
+   résultats de recherche du Client Portal Gateway, **pas** contre le
+   champ `primaryExchange` de la TWS API. Un écart non détecté ferait
+   échouer silencieusement `resolve_conid()` pour tous les tickers
+   concernés (échec sûr, mais avec un motif de rejet confus dans le
+   journal).
+7. Avant de décommissionner réellement le Client Portal Gateway (point 5
+   ci-dessus) :
+   - mettre à jour les lignes `After=`/`Wants=` de
+     `deploy/ibkr-bot-daily.service` pour qu'elles ne référencent plus
+     `ibkr-gateway.service` (l'ancienne unité CPAPI) ;
+   - retirer la ligne `sudo systemctl restart ibkr-gateway` de
+     `deploy/deploy-ibkr.sh` — ce script tourne sous `set -e` et
+     échouerait durement dès que cette ancienne unité n'existera plus.
+   - noter aussi que `tests/ibkr_bot/test_deploy_files.py` devrait à
+     terme recevoir des vérifications structurelles équivalentes pour
+     `docker-compose-ibkr-tws.yml` (ex. ports liés à `127.0.0.1`, pas
+     d'identifiants en dur) — pas urgent tant que les deux gateways
+     tournent en parallèle, mais nécessaire avant la bascule.

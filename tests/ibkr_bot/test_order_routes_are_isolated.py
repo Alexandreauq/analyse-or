@@ -12,11 +12,27 @@
 # `requests`/les chemins `/iserver/.../orders` ; depuis la migration vers
 # la TWS API (ib_async), les points sensibles sont le paquet `ib_async`
 # lui-meme et les noms de methode `placeOrder`/`reqContractDetails`/
-# `reqMktData` qui envoient reellement des requetes a TWS. Aucune version
-# anterieure de ce test n'existe dans l'historique du depot (verifie via
-# `git log --all` avant d'ecrire ce fichier) : les deux commentaires
-# etaient des references en avant jamais concretisees. On cree donc ce
-# fichier plutot que d'en "etendre" un existant.
+# `reqMktData` qui envoient reellement des requetes a TWS.
+#
+# CORRECTIF (revue finale de branche) : le paragraphe ci-dessus affirmait
+# auparavant qu'"aucune version anterieure de ce test n'existe dans
+# l'historique du depot" — c'est FAUX. Un test structurel d'isolation
+# existait deja AVANT cette migration (ajoute entre les commits beb7dda
+# et e2cee7a de l'ancienne suite CPAPI, dans
+# tests/ibkr_bot/test_gateway.py :
+# test_only_gateway_and_daily_may_reference_the_order_functions et
+# test_ibkr_bot_package_does_not_reexport_the_order_routes). La Tache 1
+# de cette migration (commit 5b381f2) l'a SUPPRIME sans le remplacer, en
+# recreant gateway.py from scratch pour la TWS API. La Tache 8 (ce
+# fichier) l'a reconstruit avec une couverture plus large, specifique a
+# ib_async (motifs `ib_async`/`placeOrder`/`MarketOrder`/
+# `reqContractDetails`/`reqMktData`, voir MOTIFS_INTERDITS ci-dessous) —
+# mais sans reprendre les deux garanties de l'ancien test portant sur les
+# NOMS DE FONCTION du gateway plutot que sur les symboles ib_async. Ces
+# deux garanties sont desormais ajoutees plus bas (voir
+# test_no_module_other_than_daily_calls_the_gateway_order_functions et
+# test_ibkr_bot_package_does_not_reexport_the_order_functions), fermant
+# l'ecart restant entre l'ancien test et celui-ci.
 #
 # Mecanique : parcours de tous les fichiers .py de ibkr_bot/ (paquet de
 # production, pas tests/), a l'exclusion de gateway.py lui-meme, et
@@ -105,3 +121,70 @@ def test_gateway_itself_is_the_one_module_allowed_to_import_ib_async():
         contenu = fh.read()
     assert "from ib_async import" in contenu
     assert "placeOrder" in contenu
+
+
+# --- garanties reprises de l'ancien test CPAPI (voir en-tete du fichier) --
+#
+# Le scan ci-dessus (MOTIFS_INTERDITS) ne detecte que les symboles
+# ib_async eux-memes. Il ne detecterait PAS un module qui contournerait
+# gateway.py en appelant directement `gateway.place_market_order(...)` ou
+# `gateway.confirm_reply(...)` sans jamais mentionner `ib_async`,
+# `placeOrder`, etc. Ces deux fonctions sont les NOMS DE FONCTION du
+# gateway (pas des symboles ib_async) : seuls gateway.py (definition) et
+# daily.py (seul appelant legitime, spec 4.3 point 2) ont le droit de les
+# mentionner.
+NOMS_DE_FONCTION_ORDRE = ["place_market_order", "confirm_reply"]
+
+# daily.py s'ajoute a gateway.py comme fichier autorise pour CE scan
+# precis (il appelle legitimement gateway.place_market_order /
+# gateway.confirm_reply) — contrairement au scan MOTIFS_INTERDITS
+# ci-dessus, qui interdit les symboles ib_async partout, daily.py compris.
+APPELANTS_AUTORISES_DES_FONCTIONS_ORDRE = {FICHIER_AUTORISE, "daily.py"}
+
+
+def _fichiers_python_du_paquet_hors_appelants_autorises():
+    """Meme parcours que _fichiers_python_du_paquet_hors_gateway() (voir
+    plus haut), mais excluant aussi daily.py — le seul appelant legitime
+    des fonctions de passage d'ordre."""
+    resultat = []
+    for dossier, _sous_dossiers, fichiers in os.walk(PAQUET):
+        if "__pycache__" in dossier:
+            continue
+        for nom in fichiers:
+            if not nom.endswith(".py"):
+                continue
+            if nom in APPELANTS_AUTORISES_DES_FONCTIONS_ORDRE:
+                continue
+            resultat.append(os.path.join(dossier, nom))
+    return resultat
+
+
+_FICHIERS_HORS_APPELANTS_AUTORISES = _fichiers_python_du_paquet_hors_appelants_autorises()
+
+
+@pytest.mark.parametrize("chemin", _FICHIERS_HORS_APPELANTS_AUTORISES,
+                         ids=lambda p: os.path.basename(p))
+@pytest.mark.parametrize("nom", NOMS_DE_FONCTION_ORDRE)
+def test_no_module_other_than_daily_calls_the_gateway_order_functions(chemin, nom):
+    with open(chemin, encoding="utf-8") as fh:
+        contenu = fh.read()
+    assert nom not in contenu, (
+        f"{os.path.relpath(chemin, RACINE)} mentionne {nom!r} — seuls "
+        f"{FICHIER_AUTORISE} (definition) et daily.py (seul appelant "
+        f"legitime, spec 4.3 point 2) ont le droit de reference cette "
+        f"fonction."
+    )
+
+
+def test_ibkr_bot_package_does_not_reexport_the_order_functions():
+    """Ceinture et bretelles par rapport aux scans textuels ci-dessus :
+    meme si un futur ibkr_bot/__init__.py se mettait a faire
+    `from .gateway import *`, les fonctions de passage d'ordre ne
+    doivent pas devenir accessibles comme `ibkr_bot.place_market_order`.
+    Aujourd'hui __init__.py est vide, donc ce test passe trivialement —
+    il sert de garde-fou si ca change."""
+    import ibkr_bot
+
+    assert not hasattr(ibkr_bot, "place_market_order")
+    assert not hasattr(ibkr_bot, "confirm_reply")
+    assert not hasattr(ibkr_bot, "order_status")

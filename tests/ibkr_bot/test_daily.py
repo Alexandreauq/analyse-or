@@ -267,6 +267,32 @@ def test_preflight_succeeds_on_a_later_attempt():
     assert dodos == [600]
 
 
+def test_preflight_disconnects_a_stale_connected_but_unauthenticated_session_before_retrying():
+    # Fix Important #5 (revue finale de branche) : gw.connect() court-
+    # circuite a True des qu'une connexion existe deja (idempotence, voir
+    # gateway.py::connect()) — si cette connexion est restee a moitie
+    # etablie (managedAccounts() vide), les tentatives suivantes
+    # reutiliseraient indefiniment la MEME connexion figee sans jamais la
+    # reparer. On verifie que disconnect() est appele entre la tentative
+    # "connectee mais non authentifiee" et la suivante, pour forcer une
+    # connexion neuve.
+    gw = FakeGateway(authentifie=False)
+    resultat = daily.preflight("https://127.0.0.1:5000", gw=gw, sleep_fn=lambda s: None)
+
+    assert resultat["ok"] is False
+    # 3 tentatives, chacune connect() + is_authenticated() + disconnect()
+    # (sauf apres la derniere, ou plus aucune reprise n'a de sens) :
+    assert gw.appels.count("connect") == 3
+    assert gw.appels.count("disconnect") == 3
+    # disconnect() intervient bien APRES chaque is_authenticated() raté,
+    # avant le connect() de la tentative suivante.
+    assert gw.appels == [
+        "connect", "is_authenticated", "disconnect",
+        "connect", "is_authenticated", "disconnect",
+        "connect", "is_authenticated", "disconnect",
+    ]
+
+
 def test_preflight_calls_connect_before_checking_is_authenticated():
     gw = FakeGateway(authentifie=True)
 

@@ -275,7 +275,7 @@ def exchange_rate(base_url: str, source: str, target: str) -> float:
 # tests/ibkr_bot/test_order_routes_are_isolated.py, Tache 8, qui
 # verifie qu'aucun autre module de ibkr_bot/ ne les appelle).
 
-_trades_by_order_id: dict[str, "object"] = {}
+_trades_by_order_id: dict[str, object] = {}
 
 
 def place_market_order(base_url: str, account_id: str, conid: int,
@@ -288,16 +288,33 @@ def place_market_order(base_url: str, account_id: str, conid: int,
     Si cette hypothese s'avere fausse en production, l'ordre resterait
     simplement bloque en attente au lieu de renvoyer une confirmation —
     un signal visible (batch qui timeout), pas un ordre perdu en
-    silence."""
+    silence.
+
+    ATTENTION (revue post-implementation, 2026-09-16) : ib.placeOrder()
+    est NON BLOQUANT et asynchrone. Il renvoie un Trade immediatement,
+    avec un statut PendingSubmit synthetise localement, SANS attendre
+    que TWS accepte ou rejette reellement l'ordre, et sans jamais lever
+    sur un rejet — contrairement a l'ancien CPAPI qui levait via
+    raise_for_status(). D'ou le sleep() et la verification de statut
+    ci-dessous : sans eux, un ordre rejete par TWS serait journalise
+    comme un succes."""
     if side not in ("BUY", "SELL"):
         raise ValueError(f"side doit valoir 'BUY' ou 'SELL', recu {side!r}")
     if not isinstance(quantity, int) or isinstance(quantity, bool) or quantity < 1:
         raise ValueError(f"quantite doit etre un entier >= 1, recue {quantity!r}")
     ib = _require_ib()
-    contract = Contract(conId=int(conid))
+    contract = Contract(conId=int(conid), exchange="SMART")
     order = MarketOrder(side, quantity)
     order.tif = "DAY"
     trade = ib.placeOrder(contract, order)
+    ib.sleep(2)  # laisse le temps a la reponse initiale de TWS d'arriver
+                 # (placeOrder ne bloque pas et ne leve jamais sur un rejet,
+                 # contrairement a l'ancien CPAPI qui levait via raise_for_status())
+    if trade.orderStatus.status in ("Cancelled", "ApiCancelled", "Inactive"):
+        raise RuntimeError(
+            f"ordre rejete ou annule par IBKR (statut {trade.orderStatus.status}) : "
+            f"{'; '.join(str(l) for l in trade.log) if trade.log else 'aucun detail'}"
+        )
     order_id = str(trade.order.orderId)
     _trades_by_order_id[order_id] = trade
     return [{"order_id": order_id}]
@@ -318,10 +335,24 @@ def order_status(base_url: str, order_id: str) -> dict:
     """Lit le Trade mis en cache par place_market_order() dans la MEME
     connexion (le batch ouvre/ferme une connexion par jour, jamais de
     suivi d'ordre entre deux runs) — evite une requete reseau separee.
-    {} si cet order_id n'a pas ete vu dans cette session."""
+    {} si cet order_id n'a pas ete vu dans cette session.
+
+    Le sleep(1) ci-dessous laisse un peu plus de temps a une execution/
+    un commissionReport d'arriver (en plus du sleep(2) deja fait par
+    place_market_order()) : ib.placeOrder() est asynchrone (voir sa
+    docstring), les fills peuvent arriver apres le retour de cette
+    fonction. Best-effort, comme le prix estime ailleurs dans ce
+    fichier — pas de tentative de forcer la presence d'une commission."""
     trade = _trades_by_order_id.get(str(order_id))
     if trade is None:
         return {}
+    ib = _require_ib()
+    ib.sleep(1)
+    commission = None
+    for fill in trade.fills:
+        if fill.commissionReport and fill.commissionReport.commission:
+            commission = fill.commissionReport.commission
+            break
     return {"order_status": trade.orderStatus.status,
             "avgPrice": trade.orderStatus.avgFillPrice or None,
-            "commission": None}
+            "commission": commission}

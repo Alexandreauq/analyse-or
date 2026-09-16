@@ -9,7 +9,7 @@
   }
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" id="themeColorMeta" content="#1c1f19">
+<meta name="theme-color" id="themeColorMeta" content="#0a0e1a">
 <title>AI Investment</title>
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icons/icon-192.png">
@@ -25,12 +25,12 @@
      réécrit par thème ; seuls les neutres (fond/texte) changent vraiment
      de nature entre les deux. */
   :root {
-    /* Neutres / élévation — anthracite */
-    --bg-0: #1c1f19; --bg-1: #23261f; --bg-2: #2c2f27; --bg-3: #383b32; --bg-4: #45483d;
-    --border: #3a3d34; --border-strong: #52564a; --border-subtle: #2f3229;
+    /* Neutres / élévation — bleu nuit */
+    --bg-0: #0a0e1a; --bg-1: #0f1524; --bg-2: #161d30; --bg-3: #1e2740; --bg-4: #29334f;
+    --border: #2a3550; --border-strong: #3c4a70; --border-subtle: #1a2136;
 
     /* Texte */
-    --text: #eceee7; --muted: #b7a695; --text-faint: #6e6455;
+    --text: #e8ecf5; --muted: #9aa6c4; --text-faint: #5c6690;
 
     /* Vert forêt — accent de marque + positif (échelle) */
     --green-100: #d9e9db; --green-300: #8fc29e; --green-500: #4f8a64;
@@ -48,7 +48,7 @@
     --gauge-bad: var(--rust-500); --gauge-bad-soft: var(--rust-soft);
     --gauge-mid: var(--taupe-500); --gauge-mid-soft: var(--taupe-soft);
     --gauge-good: var(--green-500); --gauge-good-soft: var(--green-soft);
-    --scrim: rgba(10,11,15,.72);
+    --scrim: rgba(6,9,17,.72);
 
     /* Alias rétrocompatibles (migration progressive) */
     --bg: var(--bg-1); --panel: var(--bg-2); --accent: var(--gold); --rust: var(--rust-500);
@@ -79,32 +79,49 @@
 
     /* Layout */
     --topbar-h: 76px; --drawer-w: min(280px, 80vw);
-    --bg-translucent: rgba(35,38,31,.9);
+    --bg-translucent: rgba(10,14,26,.9);
 
     /* Breakpoints (référence — non utilisables en valeur CSS, documentés pour cohérence media queries) */
   }
 
   html[data-theme="light"] {
-    --bg-0: #f2f3ec; --bg-1: #f2f3ec; --bg-2: #ffffff; --bg-3: #eceee3; --bg-4: #e2e5d7;
-    --border: #dcdfd0; --border-strong: #c7cab8; --border-subtle: #e6e8dc;
-    --text: #23261f; --muted: #7c6552; --text-faint: #8f7562;
+    /* Champagne / Emerald Ink — palette claire. */
+    --bg-0: #fbf2de; --bg-1: #fbf2de; --bg-2: #fdf8ee; --bg-3: #f3e4c2; --bg-4: #ead6a4;
+    --border: #e6d3a8; --border-strong: #cbad72; --border-subtle: #f0e3c2;
+    --text: #064e3b; --muted: #7c6552; --text-faint: #8f7562;
 
     /* Paliers "décalés" vers le foncé : un composant lisible en clair sur
        fond sombre (300) doit devenir sombre sur fond clair — donc 300
-       hérite ici de ce qui était le 700/900 en thème sombre. */
-    --green-300: #386249; --green-700: #23402f; --green-900: #16281d;
+       hérite ici de ce qui était le 700/900 en thème sombre. Alignés sur
+       Emerald Ink (#064e3b) pour une seule identité verte cohérente avec
+       l'accent général (voir --accent plus bas). */
+    --green-300: #064e3b; --green-700: #0a3626; --green-900: #052015;
     --taupe-300: #7c6552; --taupe-700: #4a3c30;
     --rust-300: #7a4531; --rust-700: #5c331f;
     --gold: #8a6d3f;
     --gold-100: #5c4a2a; --gold-700: #3d3018;
 
-    --green-soft: rgba(79,138,100,.12); --taupe-soft: rgba(166,138,114,.16); --rust-soft: rgba(163,95,69,.10);
+    /* Accent général découplé de l'or (réservé à la marque du module Or) —
+       Emerald Ink, assorti au vert "positif" ci-dessus. */
+    --accent: #064e3b;
 
-    --shadow-1: 0 1px 2px rgba(35,38,31,.07), 0 0 0 1px rgba(35,38,31,.04) inset;
-    --shadow-2: 0 4px 16px rgba(35,38,31,.10), 0 0 0 1px rgba(35,38,31,.05) inset;
-    --shadow-3: 0 12px 28px rgba(35,38,31,.14);
-    --shadow-accent-glow: 0 0 0 1px rgba(138,109,63,.3), 0 8px 20px rgba(138,109,63,.12);
-    --bg-translucent: rgba(242,243,236,.9);
+    --green-soft: rgba(6,78,59,.12); --taupe-soft: rgba(166,138,114,.16); --rust-soft: rgba(163,95,69,.10);
+
+    --shadow-1: 0 1px 2px rgba(80,63,20,.07), 0 0 0 1px rgba(80,63,20,.04) inset;
+    --shadow-2: 0 4px 16px rgba(80,63,20,.10), 0 0 0 1px rgba(80,63,20,.05) inset;
+    --shadow-3: 0 12px 28px rgba(80,63,20,.14);
+    --shadow-accent-glow: 0 0 0 1px rgba(6,78,59,.3), 0 8px 20px rgba(6,78,59,.12);
+    --bg-translucent: rgba(251,242,222,.9);
+  }
+  /* Version desktop du thème clair un peu plus soutenue (moins pâle) que la
+     version mobile — mobile garde exactement la palette Champagne/Emerald
+     Ink d'origine ci-dessus, seul le desktop fonce le fond/les bordures. */
+  @media (min-width: 1024px) {
+    html[data-theme="light"] {
+      --bg-0: #f0dfc0; --bg-1: #f0dfc0; --bg-2: #f5ecd8; --bg-3: #e9d3a0; --bg-4: #dbbc7e;
+      --border: #d9c193; --border-strong: #b8925a; --border-subtle: #e3d2a6;
+      --bg-translucent: rgba(240,223,192,.9);
+    }
   }
   * { font-variant-numeric: tabular-nums; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   html, body {
@@ -143,6 +160,25 @@
   #or.screen-in, #indices.screen-in, #portefeuille.screen-in { transform: translateX(0); }
   #or.no-anim, #indices.no-anim, #portefeuille.no-anim { transition: none; }
 
+  /* Sur mobile/tablette, le contenu touchait exactement les bords de
+     l'écran — on laisse une petite marge respirer tout autour plutôt que
+     de le laisser occuper 100% de la fenêtre. IMPORTANT : la marge est un
+     border (opaque, fait partie du calque plein-écran qui glisse/recule),
+     pas un inset — un inset réduit la boîte et laisse voir ce qu'il y a
+     dessous (l'accueil) dans l'espace découvert pendant/après la
+     transition. Le border reste toujours peint jusqu'au vrai bord de
+     l'écran, quel que soit le transform en cours, donc plus de fuite.
+     Pas de border-radius ici : des coins arrondis sur une boîte inset:0
+     rognent les 4 coins du rectangle plein écran lui-même, ce qui rouvre
+     exactement la même fuite dans ces 4 petits triangles — coins carrés
+     pour un remplissage réellement complet. */
+  @media (max-width: 1023px) {
+    /* var(--bg), pas --bg-4 : même couleur que le fond de l'écran lui-même
+       (voir background:var(--bg) juste au-dessus) pour que la marge se
+       fonde et ne se remarque pas comme un cadre. */
+    .home, #or, #indices, #portefeuille { border: 16px solid var(--bg); }
+  }
+
 
   /* Nav des modules (Or / Minières / Indices) : bouton menu + panneau latéral
      sur mobile/tablette, barre horizontale fixe sur desktop — les deux
@@ -170,6 +206,13 @@
   }
   .theme-toggle:hover { color: var(--text); border-color: var(--border-strong); }
   @media (min-width: 1024px) { .top-bar { display: flex; } }
+
+  /* Header desktop en clair : garde la barre translucide floutée d'origine,
+     juste une teinte plus soutenue (champagne plus saturé) pour bien se
+     détacher du fond de page au lieu de s'y fondre. */
+  html[data-theme="light"] .top-bar {
+    background: rgba(243,228,194,.88); border-bottom-color: var(--border-strong);
+  }
 
   /* Mobile/tablette (<1024px) : bouton menu discret + panneau latéral. */
   .menu-button {
@@ -258,15 +301,19 @@
     content: ''; position: absolute; inset: 0 0 auto 0; height: 50%;
     background: linear-gradient(180deg, rgba(255,255,255,.03), transparent); pointer-events: none;
   }
-  .module-card:hover { transform: translateY(-3px); border-color: var(--gold); box-shadow: var(--shadow-3); }
+  .module-card:hover { transform: translateY(-3px); border-color: var(--accent); box-shadow: var(--shadow-3); }
   .module-card:active { transform: translateY(-1px) scale(.99); }
   .module-card-icon {
-    width: 22px; height: 22px; fill: none; stroke: var(--gold);
+    width: 22px; height: 22px; fill: none; stroke: var(--accent);
     stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; margin-bottom: 2px;
   }
   .module-card-name { font-family: 'Newsreader', serif; font-weight: 400; font-size: var(--text-xl); }
   .module-card-desc { color: var(--muted); font-size: var(--text-sm); line-height: var(--lh-normal); }
+  /* Carte Or : garde son identité or dédiée, indépendante de l'accent
+     général (qui devient vert émeraude en thème clair). */
   .module-card-accent { border-color: var(--gold-700); box-shadow: var(--shadow-accent-glow); }
+  .module-card-accent:hover { border-color: var(--gold); }
+  .module-card-accent .module-card-icon { stroke: var(--gold); }
   .module-card-disabled { opacity: .4; pointer-events: none; }
   @keyframes home-card-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
   @media (min-width: 640px) {
@@ -281,18 +328,33 @@
     header { padding-top: calc(var(--topbar-h) + 36px); }
     .home { padding-top: calc(var(--topbar-h) + 36px); }
   }
-  .back-link { color: var(--muted); font-size: 12px; display: inline-block; margin-bottom: 10px; }
+  .back-link {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--bg-2); border: 1px solid var(--border); box-shadow: var(--shadow-1);
+    color: var(--text); font-size: var(--text-xs); font-weight: 600;
+    padding: 7px 14px 7px 10px; border-radius: var(--radius-pill); margin-bottom: 14px;
+    transition: border-color .15s ease, background .15s ease, transform .12s ease;
+  }
+  .back-link:hover { background: var(--accent); border-color: var(--accent); color: var(--bg); }
+  .back-link:active { transform: scale(.96); }
+  /* Bouton "retour" d'Indices : sur grand écran, sorti du flux et placé
+     dans la marge gauche de la page (relatif à .app, pas à la fenêtre —
+     s'adapte donc automatiquement aux différentes largeurs de .app selon
+     la sous-page : fiche entreprise, suivi des signaux...), un peu plus
+     grand pour bien se voir en dehors du contenu central. */
+  #indices .app { position: relative; }
+  @media (min-width: 1360px) {
+    #indices .back-link {
+      position: absolute; top: 0; right: calc(100% + 24px);
+      font-size: var(--text-sm); padding: 9px 18px 9px 12px; white-space: nowrap;
+    }
+  }
   .eyebrow { color: var(--muted); font-size: 12px; margin-bottom: 2px; }
   h1 { font-family: 'Newsreader', serif; font-weight: 400; font-size: clamp(2rem, 4.5vw, 2.5rem); letter-spacing: 0.02em; margin: 0 0 2px; }
   .updated { color: var(--muted); font-size: 12px; margin: 0 0 4px; }
 
   .hero {
     display:flex; align-items:center; gap: 24px; padding: 20px 0 28px; position: relative;
-  }
-  .hero::before {
-    content: ''; position: absolute; top: -40px; left: -20px; width: 280px; height: 220px;
-    background: radial-gradient(ellipse at top left, rgba(185,154,104,.14), transparent 65%);
-    pointer-events: none; z-index: -1;
   }
   .hero-number {
     font-family: 'Newsreader', serif; font-weight: 400; font-size: var(--text-hero); line-height: 1;
@@ -383,8 +445,8 @@
     content: ''; position: absolute; inset: 0 0 auto 0; height: 40%;
     background: linear-gradient(180deg, rgba(255,255,255,.025), transparent); pointer-events: none;
   }
-  .scalp-panel { margin: 16px 0 8px; }
-  .scalp-panel-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 0 0 10px; }
+  .scalp-panel { margin: 12px 0 6px; }
+  .scalp-panel-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 0 0 8px; }
   .scalp-panel-head h2 { margin: 0; }
   .scalp-expand-btn {
     background: var(--bg-2); border: 1px solid var(--border); color: var(--muted);
@@ -403,10 +465,10 @@
   }
   .scalp-chart-box.expanded { height: 560px; }
   @media (min-width: 768px) {
-    .scalp-chart-box { height: 500px; }
+    .scalp-chart-box { height: 400px; }
     .scalp-chart-box.expanded { height: 750px; }
   }
-  .scalp-note { color: var(--muted); font-size: 11px; line-height: 1.5; margin: 8px 0 0; }
+  .scalp-note { color: var(--muted); font-size: 11px; line-height: 1.5; margin: 6px 0 0; }
 
   .or-tabbar { display: flex; gap: 10px; margin: 4px 0 16px; }
   .or-tab-btn {
@@ -414,8 +476,17 @@
     font-size: 13px; font-weight: 500; padding: 12px 0; border-radius: 10px;
   }
   .or-tab-btn[aria-selected="true"] { color: var(--gold); border-color: var(--gold); }
+  /* Sur mobile, les boutons Actions/Or de Portefeuille n'ont pas besoin de
+     remplir toute la largeur — les rétrécir à leur contenu plutôt qu'un
+     50/50 qui les étire inutilement (l'onglet Or, à 3 boutons, garde le
+     50/50 partout, il n'est pas concerné). */
+  #portefeuille .or-tabbar { justify-content: center; }
+  #portefeuille .or-tab-btn { flex: 0 0 auto; padding: 10px 28px; }
+  @media (min-width: 768px) {
+    #portefeuille .or-tab-btn { flex: 1; padding: 12px 0; }
+  }
 
-  .scalp-signal-panel { margin: 0 0 20px; }
+  .scalp-signal-panel { margin: 0 0 14px; }
   .scalp-signal-status {
     display: inline-block; padding: 4px 12px; border-radius: 999px;
     font-size: 12px; font-weight: 600; letter-spacing: 0.02em; margin-bottom: 12px;
@@ -424,13 +495,49 @@
   .scalp-signal-status.vente { background: var(--rust); color: var(--bg); }
   .scalp-signal-status.neutre { background: var(--panel); color: var(--muted); border: 1px solid var(--border); }
 
-  .tracking-summary { display: flex; gap: 16px; margin: 0 0 16px; flex-wrap: wrap; }
+  .tracking-summary { display: flex; gap: 16px; margin: 0 0 16px; flex-wrap: wrap; flex-shrink: 0; }
   .tracking-stat { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; flex: 1; min-width: 120px; }
   .tracking-stat-value { font-family: 'Fraunces', serif; font-size: 22px; color: var(--gold); }
   .tracking-stat-label { color: var(--muted); font-size: 11px; margin-top: 2px; }
-  .tracking-row { display: flex; justify-content: space-between; gap: 8px; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+  .tracking-row { display: flex; justify-content: space-between; gap: 8px; padding: 10px 6px; margin: 0 -6px; border-bottom: 1px solid var(--border); font-size: 13px; border-radius: 6px; }
   .tracking-row.open { color: var(--gold); }
-  .tracking-banner { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; margin-bottom: 16px; font-size: 12px; color: var(--muted); }
+  .tracking-row.positive { color: var(--green-500); }
+  .tracking-row.negative { color: var(--rust); }
+  @media (max-width: 767px) {
+    .tracking-row-reason { display: none; }
+  }
+  .tracking-banner { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; margin-bottom: 16px; font-size: 12px; color: var(--muted); flex-shrink: 0; }
+
+  /* Onglet Suivi : la liste des positions peut être longue — on l'empêche
+     de faire défiler toute la page (voir #or.suivi-active, toggle JS sur
+     les handlers d'onglet Or) en la capant au bas de la fenêtre avec son
+     propre scroll interne, même style de scrollbar que le carrousel
+     Portefeuille. */
+  #or.suivi-active { overflow-y: hidden; }
+  /* 100svh (small viewport height) plutôt que s'appuyer sur inset:0/bottom:0 :
+     sur iOS Safari la barre d'outils (recherche) rétractable fait que la
+     hauteur "réelle" varie ; svh correspond à la hauteur quand la barre est
+     affichée, donc le contenu s'arrête toujours au-dessus au lieu de passer
+     dessous. */
+  @media (max-width: 1023px) {
+    #or.suivi-active { height: 100svh; bottom: auto; }
+  }
+  #or.suivi-active .app { height: 100%; display: flex; flex-direction: column; }
+  #or.suivi-active header, #or.suivi-active .or-tabbar { flex-shrink: 0; }
+  #or.suivi-active #orSuiviView, #or.suivi-active #scalpTrackingPanel {
+    flex: 1; min-height: 0; display: flex; flex-direction: column; padding-bottom: 20px;
+  }
+  #or.suivi-active .tracking-rows {
+    flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; padding-right: 14px;
+    scrollbar-width: thin; scrollbar-color: var(--muted) transparent;
+  }
+  #or.suivi-active .tracking-rows::-webkit-scrollbar { width: 12px; }
+  #or.suivi-active .tracking-rows::-webkit-scrollbar-track { background: transparent; }
+  #or.suivi-active .tracking-rows::-webkit-scrollbar-thumb {
+    background: var(--muted); border-radius: var(--radius-pill);
+    border: 3px solid transparent; background-clip: padding-box;
+  }
+  #or.suivi-active .tracking-rows::-webkit-scrollbar-thumb:hover { background: var(--accent); }
 
   .company-layout { display: block; }
   .company-main { min-width: 0; }
@@ -516,10 +623,15 @@
   .company-row:hover { transform: translateX(2px); background: var(--bg-3); }
   .company-row:active { transform: translateX(2px) scale(.99); }
   .company-row:last-child { border-bottom: none; }
-  .company-row-left { display: flex; flex-direction: column; }
+  /* min-width:0 : sans ça, un enfant flex refuse de rétrécir sous la
+     largeur de son contenu (nom + ticker + badges non retournés à la
+     ligne) et pousse .company-row plus large que son conteneur — c'est ce
+     qui provoquait le scrollbar horizontal dans le carrousel Opportunités,
+     plus étroit que la page Indices. */
+  .company-row-left { display: flex; flex-direction: column; min-width: 0; flex: 1 1 auto; }
   .company-name { font-weight: 500; font-size: var(--text-md); }
   .company-ticker { color: var(--muted); font-size: var(--text-xs); }
-  .company-score { font-family: 'Newsreader', serif; font-weight: 600; font-size: var(--text-xl); }
+  .company-score { font-family: 'Newsreader', serif; font-weight: 600; font-size: var(--text-xl); flex-shrink: 0; margin-left: 12px; }
 
   .portfolio-totals { display: flex; gap: 12px; margin: 4px 0 20px; flex-wrap: wrap; }
   .portfolio-total-card {
@@ -560,9 +672,54 @@
   #portefeuille .app { height: 100%; display: flex; flex-direction: column; }
   #portefeuille header, #portefeuille .or-tabbar { flex-shrink: 0; }
   #portefeuille main { flex: 1; min-height: 0; padding-bottom: 0; }
-  #portefeuille #portefeuilleOrView { flex: 1; min-height: 0; padding: 0 20px; }
+  #portefeuille #portefeuilleOrView { flex: 1; min-height: 0; padding: 0 clamp(20px, 6vw, 28px); }
+  #portefeuille main.portfolio-layout { padding-left: clamp(20px, 6vw, 28px); padding-right: clamp(20px, 6vw, 28px); }
 
-  .portfolio-pager { display: flex; flex-direction: column; height: 100%; min-height: 0; }
+  /* Sommaire des sections (Ajouter/Positions/Opportunités, ou MT5/Bot Or).
+     Sur mobile : liste déroulante compacte au-dessus du pager, qui remplace
+     entièrement la navigation par flèches (voir .portfolio-pager-nav plus
+     bas). Sur grand écran : colonne fixe dans la marge gauche de la page,
+     en dehors de .app (voir .portfolio-toc-sidebar), pour que .app et le
+     reste du contenu (boutons Actions/Or compris) gardent leur largeur
+     habituelle. Deux DOM distincts alimentés tous les deux par renderToc()
+     car un même noeud ne peut pas vivre aux deux endroits à la fois. */
+  .portfolio-layout { display: flex; flex-direction: column; height: 100%; min-height: 0; }
+
+  .portfolio-toc-mobile { flex-shrink: 0; }
+  .portfolio-toc-trigger {
+    display: flex; align-items: center; justify-content: space-between; gap: 10px; width: 100%;
+    background: var(--bg-2); border: 1px solid var(--border); border-radius: var(--radius-lg);
+    padding: 12px 14px; color: var(--text); text-align: left; margin-bottom: 8px;
+  }
+  .portfolio-toc-trigger-title { display: block; font-weight: 600; font-size: var(--text-md); }
+  .portfolio-toc-trigger-desc { display: block; color: var(--muted); font-size: var(--text-sm); margin-top: 2px; }
+  .portfolio-toc-chevron { color: var(--muted); flex-shrink: 0; transition: transform .15s ease; }
+  .portfolio-toc-trigger[aria-expanded="true"] .portfolio-toc-chevron { transform: rotate(180deg); }
+  .portfolio-toc-list {
+    display: flex; flex-direction: column; gap: 6px;
+    max-height: 0; overflow: hidden; opacity: 0;
+    transition: max-height .3s cubic-bezier(.22,1,.36,1), opacity .2s ease;
+  }
+  .portfolio-toc-list.is-open { max-height: 70vh; opacity: 1; overflow-y: auto; margin-bottom: 12px; }
+  .portfolio-toc-sidebar-list { display: flex; flex-direction: column; gap: 16px; }
+  .portfolio-toc-sidebar-list .portfolio-toc-item { padding: 16px 18px; gap: 6px; }
+  .portfolio-toc-sidebar-list .portfolio-toc-item-title { font-size: var(--text-md); }
+  .portfolio-toc-sidebar-list .portfolio-toc-item-desc { font-size: var(--text-sm); line-height: 1.4; }
+  .portfolio-toc-item {
+    display: flex; flex-direction: column; gap: 2px; text-align: left; width: 100%;
+    background: none; border: 1px solid transparent; border-radius: var(--radius-md);
+    padding: 10px 12px; color: var(--text-faint);
+    transition: background .15s ease, border-color .15s ease, color .15s ease;
+  }
+  .portfolio-toc-item:hover { background: var(--bg-3); }
+  .portfolio-toc-item-title { font-size: var(--text-sm); font-weight: 500; }
+  .portfolio-toc-item-desc { font-size: var(--text-xs); color: var(--muted); }
+  .portfolio-toc-item.is-active { border-color: var(--gold); background: var(--bg-3); }
+  .portfolio-toc-item.is-active .portfolio-toc-item-title { font-weight: 700; color: var(--text); }
+  .portfolio-toc-mobile .portfolio-toc-item-title { font-size: var(--text-md); }
+  .portfolio-toc-mobile .portfolio-toc-item-desc { font-size: var(--text-sm); }
+
+  .portfolio-pager { display: flex; flex-direction: column; flex: 1; min-height: 0; }
   .portfolio-pager-nav {
     display: flex; align-items: center; justify-content: space-between; gap: 12px;
     padding: 4px 0 14px; flex-shrink: 0;
@@ -577,10 +734,59 @@
   }
   .portfolio-pager-arrow:hover { border-color: var(--border-strong); background: var(--bg-3); }
   .portfolio-pager-arrow:active { transform: scale(.94); }
-  .portfolio-pager-content { flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; }
-  .portfolio-pager-dots { display: flex; justify-content: center; gap: 8px; padding: 12px 0 4px; flex-shrink: 0; }
-  .portfolio-pager-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--border-strong); transition: background .2s ease, transform .2s ease; }
-  .portfolio-pager-dot.is-active { background: var(--gold); transform: scale(1.3); }
+  .portfolio-pager-content {
+    flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch;
+    padding-right: 14px;
+    scrollbar-width: thin; scrollbar-color: var(--muted) transparent;
+  }
+  .portfolio-pager-content::-webkit-scrollbar { width: 12px; }
+  .portfolio-pager-content::-webkit-scrollbar-track { background: transparent; }
+  .portfolio-pager-content::-webkit-scrollbar-thumb {
+    background: var(--muted); border-radius: var(--radius-pill);
+    border: 3px solid transparent; background-clip: padding-box;
+  }
+  .portfolio-pager-content::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+  @keyframes portfolioSectionIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  .portfolio-pager-content.is-entering { animation: portfolioSectionIn .32s cubic-bezier(.22,1,.36,1); }
+  /* Même animation, un peu plus longue, pour le contenu affiché en changeant
+     d'onglet dans le header (.or-tab-btn) — voir showTabView(). */
+  .tab-view-enter { animation: portfolioSectionIn .45s cubic-bezier(.22,1,.36,1); }
+  @media (prefers-reduced-motion: reduce) {
+    .portfolio-pager-content.is-entering, .tab-view-enter { animation: none; }
+  }
+  /* Sommaire desktop : carte fixe, centrée à la fois verticalement dans la
+     fenêtre et horizontalement dans la vraie colonne gauche de la page —
+     l'espace entre le bord de la fenêtre et le début de .app (qui garde sa
+     largeur de 720px habituelle, header et boutons Actions/Or inclus). Cette
+     colonne gauche mesure `50vw - 360px` (360 = moitié de .app) ; on centre
+     une carte de 280px dedans via `(colonne - carte) / 2`, simplifié en
+     `25vw - 320px`. position:fixed (donc ancré à la fenêtre, pas au
+     document) : reste visible et à la même place même si le contenu du
+     pager défile en interne — l'équivalent "sticky" demandé, mais robuste
+     puisque #portefeuille lui-même ne défile jamais (overflow-y:hidden). */
+  .portfolio-toc-sidebar { display: none; }
+
+  @media (max-width: 1359px) {
+    .portfolio-pager-nav { display: none; }
+  }
+
+  @media (min-width: 1360px) {
+    .portfolio-toc-mobile { display: none; }
+    /* Colonne principale un peu élargie : la colonne de droite était
+       entièrement vide (aucun sommaire de ce côté), on réduit légèrement
+       cet espace sans le combler — le bord gauche ne change pas (même
+       calcul que la marge réservée au sommaire), max-width passe juste de
+       720 à 860px, le reste de la marge droite reste libre (margin-right:auto). */
+    #portefeuille .app { max-width: 860px; margin-left: calc(50vw - 360px); margin-right: auto; }
+    .portfolio-toc-sidebar {
+      display: block; position: fixed;
+      top: calc(50% + 24px); transform: translateY(-50%);
+      left: calc(25vw - 320px); width: 280px;
+      max-height: calc(100vh - 120px); overflow-y: auto;
+      background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius-lg);
+      padding: 16px; box-shadow: var(--shadow-2);
+    }
+  }
 
   /* Repère "profil financier" (banques/assurances) : méthodologie de
      calcul adaptée (ROE, ratio de levier, P/E+P/B) — voir .financial-notice. */
@@ -630,13 +836,21 @@
   }
   .list-filter-toggle input { accent-color: var(--gauge-mid); }
 
+  /* Repris de .back-link (même idée de bouton pilule) plutôt qu'un bandeau
+     pleine largeur — un lien vers une sous-page n'a pas besoin de peser
+     autant visuellement qu'un titre de section. */
   .signal-tracking-link {
-    display: block; background: var(--panel); border: 1px solid var(--border);
-    border-radius: 10px; padding: 14px 16px; margin: 4px 0 16px;
-    color: var(--gold); font-size: 13px; font-weight: 500; text-align: center;
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--bg-2); border: 1px solid var(--border); box-shadow: var(--shadow-1);
+    border-radius: var(--radius-pill); padding: 10px 18px; margin: 4px 0 20px;
+    color: var(--accent); font-size: var(--text-sm); font-weight: 600;
+    transition: background .15s ease, border-color .15s ease, color .15s ease, transform .12s ease;
   }
+  .signal-tracking-link:hover { background: var(--accent); border-color: var(--accent); color: var(--bg); }
+  .signal-tracking-link:active { transform: scale(.97); }
 
   .signal-stats { display: flex; flex-direction: column; gap: 2px; margin: 0 0 20px; }
+  .signal-tracking-layout { display: flex; flex-direction: column; }
   .signal-table-wrap { overflow-x: auto; margin: 0 0 20px; }
   .signal-table { width: 100%; border-collapse: collapse; font-size: 12px; white-space: nowrap; }
   .signal-table th {
@@ -644,9 +858,51 @@
     border-bottom: 1px solid var(--border);
   }
   .signal-table td { padding: 8px 10px; border-bottom: 1px solid var(--border); }
-  .signal-return-positive { color: var(--gold); }
+  .signal-return-positive { color: var(--green-500); }
   .signal-return-negative { color: var(--rust); }
   .signal-status-open { color: var(--muted); }
+
+  /* Mobile : cartes empilées plutôt que le tableau (8 colonnes illisibles,
+     même en scroll horizontal, sur un écran de téléphone). */
+  .signal-cards { display: none; }
+  .signal-card {
+    background: var(--bg-2); border: 1px solid var(--border); border-radius: var(--radius-md);
+    padding: 12px 14px; margin-bottom: 10px;
+  }
+  .signal-card-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; font-weight: 600; }
+  .signal-card-ticker { color: var(--muted); font-weight: 500; font-size: var(--text-xs); }
+  .signal-card-meta { display: flex; flex-direction: column; gap: 3px; margin-top: 6px; color: var(--muted); font-size: var(--text-xs); }
+  @media (max-width: 1023px) {
+    .signal-table-wrap { display: none; }
+    .signal-cards { display: block; margin: 0 0 20px; }
+  }
+
+  /* Desktop : deux colonnes (infos/stats à gauche, tableau à droite) plutôt
+     qu'empilé — .app nettement élargi pour que le tableau (9 colonnes,
+     white-space:nowrap) ait la place de tenir en entier sans scrollbar
+     horizontal même après avoir cédé de la largeur à la colonne de gauche.
+     Le tableau est capé en hauteur avec son propre scroll interne (même
+     scrollbar stylisée que le carrousel Portefeuille) plutôt que de faire
+     défiler toute la page. */
+  @media (min-width: 1024px) {
+    .app:has(.signal-tracking-layout) { max-width: 1600px; }
+    .signal-tracking-layout { display: grid; grid-template-columns: 300px 1fr; gap: 40px; align-items: start; }
+    .signal-tracking-info { margin-top: 48px; }
+    .signal-table { font-size: 14px; }
+    .signal-table th, .signal-table td { padding: 10px 12px; }
+    .signal-table-wrap {
+      overflow-x: hidden; overflow-y: auto; max-height: calc(100vh - 260px); padding-right: 14px;
+      scrollbar-width: thin; scrollbar-color: var(--muted) transparent;
+    }
+    .signal-table-wrap::-webkit-scrollbar { width: 12px; }
+    .signal-table-wrap::-webkit-scrollbar-track { background: transparent; }
+    .signal-table-wrap::-webkit-scrollbar-thumb {
+      background: var(--muted); border-radius: var(--radius-pill);
+      border: 3px solid transparent; background-clip: padding-box;
+    }
+    .signal-table-wrap::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+    .signal-table thead th { position: sticky; top: 0; background: var(--bg); }
+  }
 
   /* Liste des indices (CAC 40 aujourd'hui, DAX/Nasdaq à terme) : chacun
      est un panneau dépliant contenant l'équivalent de ce que le CAC 40
@@ -661,14 +917,70 @@
 
   /* Panneau de filtres partagé (recherche/tri/case à cocher) — remplace les
      contrôles par carte, masqués partout (voir .index-card-body .list-controls
-     plus bas) : plus simple qu'un filtre par carte à ouvrir un par un. */
+     plus bas) : plus simple qu'un filtre par carte à ouvrir un par un. Même
+     structure déclencheur/corps que .index-card (voir wireFilterAccordionToggles),
+     repliée par défaut ; fond bg-3 (au lieu de bg-2 comme les cartes
+     d'indices) pour bien la différencier visuellement du reste des cartes. */
   .indices-filters {
-    display: flex; flex-direction: column; gap: 10px; margin: 18px 0 4px;
-    padding: 14px; background: var(--bg-2); border: 1px solid var(--border); border-radius: var(--radius-lg);
+    margin: 14px 0 28px; background: var(--bg-3); border: 1px solid var(--border-strong);
+    border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow-1);
   }
-  .indices-filters h2 { margin: 0; }
-  .indices-filters .list-search, .indices-filters .list-sort { width: 100%; }
+  .indices-filters .index-card-header { padding: 14px 16px; }
+  .indices-filters .index-card-name { font-size: var(--text-md); }
+  .indices-filters-body {
+    display: flex; flex-direction: column; gap: 8px;
+    padding: 0 16px; max-height: 0; overflow: hidden; opacity: 0;
+    transition: max-height .35s cubic-bezier(.22,1,.36,1), opacity .25s ease, padding-bottom .35s cubic-bezier(.22,1,.36,1);
+  }
+  .indices-filters-body.is-open { padding-bottom: 16px; max-height: 2000px; opacity: 1; }
+  /* Filtres avancés (vide pour l'instant) : sous-accordéon dans le même
+     panneau, moins mis en avant que le déclencheur "Filtrer" du dessus. */
+  .indices-filters-advanced-toggle { padding: 10px 0 8px; margin-top: 4px; border-top: 1px solid var(--border); }
+  .indices-filters-advanced-toggle .index-card-name { font-size: var(--text-sm); font-weight: 500; font-family: 'Inter', sans-serif; }
+  .indices-filters-advanced-toggle .chevron { font-size: 16px; }
+  .indices-filters-advanced-body {
+    max-height: 0; overflow: hidden; opacity: 0;
+    transition: max-height .3s cubic-bezier(.22,1,.36,1), opacity .2s ease, padding-top .3s ease;
+  }
+  .indices-filters-advanced-body.is-open { max-height: 400px; opacity: 1; padding-top: 4px; }
+  /* Copie du filtre dans le sommaire desktop du Portefeuille (voir
+     pfOppFilterSidebar) : déjà dans une carte avec son propre padding, pas
+     besoin de la marge du haut ; plus de marge en bas avant la liste de
+     sections qui suit. */
+  .indices-filters.portfolio-opp-filter-sidebar { margin: 0 0 32px; border: none; background: none; box-shadow: none; }
+  .indices-filters .list-search, .indices-filters .list-sort {
+    width: 100%; padding: 8px 10px; font-size: var(--text-sm);
+  }
   .index-card-body .list-controls, .index-card-body .list-filter-toggle { display: none; }
+
+  /* Menu déroulant (tri) stylisé : flèche personnalisée plutôt que le
+     rendu natif du navigateur, une couleur par thème pour rester lisible. */
+  .indices-filters .list-sort {
+    appearance: none; -webkit-appearance: none;
+    background-repeat: no-repeat; background-position: right 10px center; background-size: 13px;
+    padding-right: 30px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23e8ecf5' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  }
+  html[data-theme="light"] .indices-filters .list-sort {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23064e3b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  }
+
+  /* Checkbox "Profil financier uniquement" : case personnalisée plutôt que
+     le rendu natif du navigateur, cochée dans le nouveau vert de marque. */
+  .indices-filters .list-filter-toggle { gap: 8px; }
+  .indices-filters .list-filter-toggle input[type="checkbox"] {
+    appearance: none; -webkit-appearance: none; margin: 0;
+    width: 18px; height: 18px; flex-shrink: 0; position: relative;
+    border: 1px solid var(--border-strong); border-radius: 5px; background: var(--bg-1);
+    transition: background .15s ease, border-color .15s ease;
+  }
+  .indices-filters .list-filter-toggle input[type="checkbox"]:checked {
+    background: var(--green-500); border-color: var(--green-500);
+  }
+  .indices-filters .list-filter-toggle input[type="checkbox"]:checked::after {
+    content: ''; position: absolute; left: 5px; top: 1px; width: 5px; height: 9px;
+    border: solid #fff; border-width: 0 2px 2px 0; transform: rotate(45deg);
+  }
 
   .index-card-list { display: flex; flex-direction: column; gap: 18px; margin: 4px 0 24px; }
   .index-card {
@@ -684,9 +996,9 @@
   .index-card-header:active { transform: scale(.99); }
   .index-card-name { font-family: 'Newsreader', serif; font-weight: 400; font-size: var(--text-lg); letter-spacing: 0.02em; }
   .index-card-count { color: var(--muted); font-size: var(--text-xs); flex: 1; }
-  .index-card-header .chevron { color: var(--muted); transition: transform 0.15s ease; flex-shrink: 0; }
-  .index-card-header[aria-expanded="true"] .chevron { color: var(--gold); transform: rotate(180deg); }
-  .index-card-header[aria-expanded="true"] .index-card-name { color: var(--gold); }
+  .index-card-header .chevron { color: var(--muted); transition: transform 0.15s ease; flex-shrink: 0; font-size: 22px; font-weight: 700; }
+  .index-card-header[aria-expanded="true"] .chevron { color: var(--accent); transform: rotate(180deg); }
+  .index-card-header[aria-expanded="true"] .index-card-name { color: var(--accent); }
 
   /* Aperçu des 3 meilleurs scores, visible carte repliée (mobile et desktop)
      — pour que la carte ne se résume pas qu'à sa ligne de titre. Masqué à
@@ -731,10 +1043,18 @@
   @media (min-width: 1024px) {
     .app:has(.indices-layout) { max-width: 1440px; }
     .indices-layout { display: grid; grid-template-columns: 240px 1fr; gap: 32px; align-items: start; }
-    .indices-filters {
-      gap: 12px; position: sticky; top: 20px; margin: 0;
-      padding-top: 19px; /* aligne "Filtrer" avec le texte des en-têtes de carte (bordure+padding du .index-card) */
-    }
+    .indices-filters { position: sticky; top: 20px; margin: 0; }
+    .indices-filters .index-card-name { font-size: var(--text-lg); }
+    .indices-filters .indices-filters-advanced-toggle .index-card-name { font-size: var(--text-sm); }
+    .indices-filters .list-search, .indices-filters .list-sort { padding: 10px 12px; font-size: var(--text-sm); }
+    .indices-filters .list-sort { padding-right: 32px; }
+    /* Desktop : le panneau "Filtrer" reste toujours déplié comme avant (pas
+       d'accordéon ici) — seul le sous-panneau "Filtres avancés" imbriqué
+       reste un vrai menu déroulant. Le déclencheur "Filtrer" n'a donc plus
+       de chevron/comportement cliquable au niveau supérieur. */
+    .indices-filters > .index-card-header { cursor: default; }
+    .indices-filters > .index-card-header .chevron { display: none; }
+    .indices-filters-body { padding: 0 14px 14px; max-height: none; opacity: 1; overflow: visible; }
     .index-card-list { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
   }
 
@@ -950,6 +1270,13 @@
 </div>
 
 <div id="portefeuille" class="screen" hidden>
+  <aside class="portfolio-toc-sidebar" id="pfActionsTocSidebar">
+    <div class="indices-filters portfolio-opp-filter-sidebar" id="pfOppFilterSidebar" hidden></div>
+    <div class="portfolio-toc-sidebar-list" id="pfActionsTocSidebarList"></div>
+  </aside>
+  <aside class="portfolio-toc-sidebar" id="pfOrTocSidebar" hidden>
+    <div class="portfolio-toc-sidebar-list" id="pfOrTocSidebarList"></div>
+  </aside>
   <div class="app">
   <header>
     <div class="eyebrow">Suivi personnel</div>
@@ -961,31 +1288,53 @@
     <button class="or-tab-btn" id="portefeuilleTabOr" role="tab" aria-selected="false" type="button">Or</button>
   </div>
 
-  <main id="portefeuilleContent" class="portfolio-pager">
-    <div class="portfolio-pager-nav">
-      <button class="portfolio-pager-arrow" id="pfActionsPrev" type="button" aria-label="Section précédente">‹</button>
-      <span class="portfolio-pager-title" id="pfActionsTitle"></span>
-      <button class="portfolio-pager-arrow" id="pfActionsNext" type="button" aria-label="Section suivante">›</button>
+  <main id="portefeuilleContent" class="portfolio-layout">
+    <div class="portfolio-toc-mobile">
+      <button class="portfolio-toc-trigger" id="pfActionsTocTrigger" type="button" aria-expanded="false">
+        <span class="portfolio-toc-trigger-text">
+          <span class="portfolio-toc-trigger-title" id="pfActionsTocTriggerTitle"></span>
+          <span class="portfolio-toc-trigger-desc" id="pfActionsTocTriggerDesc"></span>
+        </span>
+        <span class="portfolio-toc-chevron">▾</span>
+      </button>
+      <div class="portfolio-toc-list" id="pfActionsTocList"></div>
     </div>
-    <div class="portfolio-pager-content" id="pfActionsContent">
-      <div class="skeleton">
-        <div class="skeleton-line"></div>
-        <div class="skeleton-line"></div>
-        <div class="skeleton-line"></div>
-        <div class="skeleton-line"></div>
+    <div class="portfolio-pager">
+      <div class="portfolio-pager-nav">
+        <button class="portfolio-pager-arrow" id="pfActionsPrev" type="button" aria-label="Section précédente">‹</button>
+        <span class="portfolio-pager-title" id="pfActionsTitle"></span>
+        <button class="portfolio-pager-arrow" id="pfActionsNext" type="button" aria-label="Section suivante">›</button>
+      </div>
+      <div class="portfolio-pager-content" id="pfActionsContent">
+        <div class="skeleton">
+          <div class="skeleton-line"></div>
+          <div class="skeleton-line"></div>
+          <div class="skeleton-line"></div>
+          <div class="skeleton-line"></div>
+        </div>
       </div>
     </div>
-    <div class="portfolio-pager-dots" id="pfActionsDots"></div>
   </main>
 
-  <div id="portefeuilleOrView" class="portfolio-pager" hidden>
-    <div class="portfolio-pager-nav">
-      <button class="portfolio-pager-arrow" id="pfOrPrev" type="button" aria-label="Section précédente">‹</button>
-      <span class="portfolio-pager-title" id="pfOrTitle"></span>
-      <button class="portfolio-pager-arrow" id="pfOrNext" type="button" aria-label="Section suivante">›</button>
+  <div id="portefeuilleOrView" class="portfolio-layout" hidden>
+    <div class="portfolio-toc-mobile">
+      <button class="portfolio-toc-trigger" id="pfOrTocTrigger" type="button" aria-expanded="false">
+        <span class="portfolio-toc-trigger-text">
+          <span class="portfolio-toc-trigger-title" id="pfOrTocTriggerTitle"></span>
+          <span class="portfolio-toc-trigger-desc" id="pfOrTocTriggerDesc"></span>
+        </span>
+        <span class="portfolio-toc-chevron">▾</span>
+      </button>
+      <div class="portfolio-toc-list" id="pfOrTocList"></div>
     </div>
-    <div class="portfolio-pager-content" id="pfOrContent"></div>
-    <div class="portfolio-pager-dots" id="pfOrDots"></div>
+    <div class="portfolio-pager">
+      <div class="portfolio-pager-nav">
+        <button class="portfolio-pager-arrow" id="pfOrPrev" type="button" aria-label="Section précédente">‹</button>
+        <span class="portfolio-pager-title" id="pfOrTitle"></span>
+        <button class="portfolio-pager-arrow" id="pfOrNext" type="button" aria-label="Section suivante">›</button>
+      </div>
+      <div class="portfolio-pager-content" id="pfOrContent"></div>
+    </div>
   </div>
   </div>
 </div>
@@ -1042,7 +1391,7 @@ function loadScalpChart() {
       theme: isLightTheme() ? 'light' : 'dark',
       style: '1',
       locale: 'fr',
-      toolbar_bg: isLightTheme() ? '#eceee3' : '#383b32',
+      toolbar_bg: isLightTheme() ? '#f3e4c2' : '#1e2740',
       enable_publishing: false,
       allow_symbol_change: false,
       withdateranges: true,
@@ -1148,11 +1497,69 @@ function renderPortfolioScreen() {
 // `prefix` correspond aux ids statiques posés dans le markup (pfActions*/pfOr*).
 function renderPager(prefix, sections, index) {
   const section = sections[index];
+  // Masqué par défaut à chaque changement de section — seul le wire()
+  // d'Opportunités (voir wirePortfolioOpportunities) le réaffiche, sinon il
+  // resterait visible en naviguant vers Ajouter/Tes positions/l'onglet Or.
+  const oppFilterSidebar = document.getElementById('pfOppFilterSidebar');
+  if (oppFilterSidebar) oppFilterSidebar.hidden = true;
   document.getElementById(prefix + 'Title').textContent = section.title;
-  document.getElementById(prefix + 'Content').innerHTML = section.html;
-  document.getElementById(prefix + 'Dots').innerHTML = sections.map((_, i) =>
-    `<span class="portfolio-pager-dot${i === index ? ' is-active' : ''}"></span>`).join('');
+  const contentEl = document.getElementById(prefix + 'Content');
+  contentEl.innerHTML = section.html;
+  // Ré-anime l'entrée de la section à chaque changement — on retire la
+  // classe puis on force un reflow avant de la remettre, sinon le navigateur
+  // ne rejoue pas l'animation si elle était déjà active (même nom de classe).
+  contentEl.classList.remove('is-entering');
+  void contentEl.offsetWidth;
+  contentEl.classList.add('is-entering');
+  renderToc(prefix, sections, index);
   if (section.wire) section.wire();
+}
+
+// Sommaire des sections du pager : colonne fixe dans la marge gauche sur
+// grand écran, liste déroulante repliée par défaut sur mobile (voir
+// .portfolio-toc-list.is-open, et le câblage du bouton déclencheur plus
+// bas). Deux DOM séparés (voir .portfolio-toc-sidebar / .portfolio-toc-mobile
+// en CSS) alimentés ici en parallèle — un même bouton ne peut pas vivre aux
+// deux endroits à la fois. Le déclencheur mobile reprend titre + description
+// de la section actuellement affichée.
+function renderToc(prefix, sections, index) {
+  const current = sections[index];
+  document.getElementById(prefix + 'TocTriggerTitle').textContent = current.title;
+  document.getElementById(prefix + 'TocTriggerDesc').textContent = current.desc;
+
+  const itemHtml = (s, i) => `
+    <button class="portfolio-toc-item${i === index ? ' is-active' : ''}" type="button" data-index="${i}">
+      <span class="portfolio-toc-item-title">${s.title}</span>
+      <span class="portfolio-toc-item-desc">${s.desc}</span>
+    </button>`;
+
+  const wireItems = (listEl, closeOnPick) => {
+    listEl.querySelectorAll('.portfolio-toc-item').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const i = Number(btn.dataset.index);
+        if (prefix === 'pfActions') portfolioActionsSectionIndex = i;
+        else portfolioOrSectionIndex = i;
+        renderPager(prefix, sections, i);
+        if (closeOnPick) {
+          listEl.classList.remove('is-open');
+          document.getElementById(prefix + 'TocTrigger').setAttribute('aria-expanded', 'false');
+        }
+      });
+    });
+  };
+
+  // Mobile : la section active est déjà affichée dans le déclencheur fermé
+  // (titre + description), on ne la remet pas dans la liste déroulée pour
+  // éviter qu'elle apparaisse en double une fois ouverte.
+  const listEl = document.getElementById(prefix + 'TocList');
+  listEl.innerHTML = sections.map((s, i) => i === index ? '' : itemHtml(s, i)).join('');
+  wireItems(listEl, true);
+
+  // Desktop : colonne persistante, la liste complète reste affichée avec
+  // l'entrée active mise en avant (pas de déclencheur à côté, pas de doublon).
+  const sidebarListEl = document.getElementById(prefix + 'TocSidebarList');
+  sidebarListEl.innerHTML = sections.map(itemHtml).join('');
+  wireItems(sidebarListEl, false);
 }
 
 // Onglet "Actions" : suivi manuel des positions actions (localStorage, voir
@@ -1165,13 +1572,22 @@ function renderPortfolioActionsTab(companiesByTicker, currencyByIndex) {
   const opportunities = findOpportunities(indicesData.companies, heldTickers);
 
   portfolioActionsSections = [
-    { title: 'Ajouter une position', html: portfolioFormHtml(indicesData.companies), wire: wirePortfolioForm },
+    {
+      title: 'Ajouter une position',
+      desc: 'Enregistre un nouvel achat : choisis l\'entreprise, la quantité, le prix payé et la date, ton portefeuille se met à jour aussitôt.',
+      html: portfolioFormHtml(indicesData.companies), wire: wirePortfolioForm,
+    },
     {
       title: 'Tes positions',
+      desc: 'Vue d\'ensemble de ton portefeuille : totaux séparés EUR/USD, P&L latent et score de chaque ligne détenue.',
       html: `${portfolioTotalsHtml(totals)}${portfolioPositionsHtml(positions, companiesByTicker, currencyByIndex)}`,
       wire: () => wirePortfolioPositionActions(companiesByTicker),
     },
-    { title: 'Opportunités', html: portfolioOpportunitiesHtml(opportunities), wire: null },
+    {
+      title: 'Opportunités',
+      desc: 'Entreprises suivies dont le signal d\'entrée vient de s\'activer, que tu ne détiens pas encore dans ton portefeuille.',
+      html: portfolioOpportunitiesHtml(opportunities), wire: () => wirePortfolioOpportunities(opportunities),
+    },
   ];
   renderPager('pfActions', portfolioActionsSections, portfolioActionsSectionIndex);
 }
@@ -1185,8 +1601,16 @@ function renderPortfolioActionsTab(companiesByTicker, currencyByIndex) {
 // (voir botDashboardSectionHtml/wireBotDashboardSection).
 function renderPortfolioOrTab() {
   portfolioOrSections = [
-    { title: 'Positions réelles (MT5)', html: realPortfolioHtml(), wire: null },
-    { title: 'Bot Or', html: botDashboardSectionHtml(), wire: wireBotDashboardSection },
+    {
+      title: 'Positions réelles (MT5)',
+      desc: 'Les positions ouvertes sur ton compte de trading, synchronisées automatiquement depuis MT5, avec leur valeur actuelle.',
+      html: realPortfolioHtml(), wire: null,
+    },
+    {
+      title: 'Bot Or',
+      desc: 'Le tableau de bord complet du bot de trading automatique : statut en direct, solde, positions ouvertes, historique des décisions et interrupteur d\'urgence.',
+      html: botDashboardSectionHtml(), wire: wireBotDashboardSection,
+    },
   ];
   renderPager('pfOr', portfolioOrSections, portfolioOrSectionIndex);
 }
@@ -1277,18 +1701,77 @@ function portfolioFormHtml(companies) {
     </form>`;
 }
 
+let portfolioOppSearch = '';
+let portfolioOppSort = 'score_desc';
+let portfolioOppFinancialOnly = false;
+
+// Ids du filtre, paramétrés par un suffixe — deux instances coexistent dans
+// le DOM (voir portfolioOpportunitiesHtml / markup du sommaire desktop
+// pfOppFilterSidebar) : inline sous mobile (repliée en desktop via
+// .portfolio-toc-mobile, même bascule que le sommaire), colonne gauche
+// sous desktop — jamais les deux visibles en même temps. Même composant
+// que la page Indices (voir filterAccordionHtml/wireFilterAccordionToggles).
+function portfolioOppFilterIds(suffix) {
+  return {
+    toggle: 'pfOppToggle' + suffix, body: 'pfOppBody' + suffix,
+    search: 'pfOppSearch' + suffix, sort: 'pfOppSort' + suffix, financialOnly: 'pfOppFinancialOnly' + suffix,
+    advToggle: 'pfOppAdvToggle' + suffix, advBody: 'pfOppAdvBody' + suffix,
+  };
+}
+
+function portfolioOppFilterState() {
+  return { search: portfolioOppSearch, sort: portfolioOppSort, financialOnly: portfolioOppFinancialOnly };
+}
+
 function portfolioOpportunitiesHtml(opportunities) {
   if (!opportunities.length) return '<div class="empty">Aucune opportunité pour l\'instant — reviens plus tard.</div>';
   return `
     <p class="hero-sub">Entreprises suivies avec un signal d'entrée actif que tu ne détiens pas encore.</p>
-    <div class="index-card-list">${opportunities.map(c => `
+    <div class="indices-filters portfolio-toc-mobile">${filterAccordionHtml(portfolioOppFilterIds(''), portfolioOppFilterState())}</div>
+    <div class="index-card-list" id="pfOppList"></div>`;
+}
+
+function renderPortfolioOppList(opportunities) {
+  const el = document.getElementById('pfOppList');
+  if (!el) return;
+  const visible = sortedFilteredCompanies(opportunities, {
+    search: portfolioOppSearch, sort: portfolioOppSort, financialOnly: portfolioOppFinancialOnly,
+  });
+  el.innerHTML = visible.length ? visible.map(c => `
       <a class="company-row" href="#indices/${c.ticker}">
         <div class="company-row-left">
           <span class="company-name">${c.name}</span>
           <span class="company-ticker">${c.ticker}${allIndicesBadgesHtml(c)}</span>
         </div>
         <span class="company-score" style="color:${c.score >= 0 ? 'var(--gold)' : 'var(--rust)'};">${c.score > 0 ? '+' : ''}${c.score}</span>
-      </a>`).join('')}</div>`;
+      </a>`).join('') : '<div class="list-empty">Aucun résultat pour ce filtre.</div>';
+}
+
+function wireOppFilterControls(suffix, opportunities) {
+  const ids = portfolioOppFilterIds(suffix);
+  document.getElementById(ids.search).addEventListener('input', (e) => {
+    portfolioOppSearch = e.target.value; renderPortfolioOppList(opportunities);
+  });
+  document.getElementById(ids.sort).addEventListener('change', (e) => {
+    portfolioOppSort = e.target.value; renderPortfolioOppList(opportunities);
+  });
+  document.getElementById(ids.financialOnly).addEventListener('change', (e) => {
+    portfolioOppFinancialOnly = e.target.checked; renderPortfolioOppList(opportunities);
+  });
+  wireFilterAccordionToggles(ids);
+}
+
+function wirePortfolioOpportunities(opportunities) {
+  const inlineSearch = document.getElementById('pfOppSearch');
+  const sidebarFilter = document.getElementById('pfOppFilterSidebar');
+  if (!inlineSearch) { if (sidebarFilter) sidebarFilter.hidden = true; return; } // pas de filtre quand la liste est vide
+  renderPortfolioOppList(opportunities);
+  wireOppFilterControls('', opportunities);
+  if (sidebarFilter) {
+    sidebarFilter.innerHTML = filterAccordionHtml(portfolioOppFilterIds('Sb'), portfolioOppFilterState());
+    sidebarFilter.hidden = false;
+    wireOppFilterControls('Sb', opportunities);
+  }
 }
 
 function realPortfolioHtml() {
@@ -1426,7 +1909,7 @@ function loadBotTvChart() {
       theme: isLightTheme() ? 'light' : 'dark',
       style: '1',
       locale: 'fr',
-      toolbar_bg: isLightTheme() ? '#eceee3' : '#383b32',
+      toolbar_bg: isLightTheme() ? '#f3e4c2' : '#1e2740',
       enable_publishing: false,
       allow_symbol_change: false,
       withdateranges: true,
@@ -1750,14 +2233,16 @@ function renderScalpTracking(data) {
   const rows = data.positions.slice().reverse().map(p => {
     const label = p.status === 'open' ? 'En cours' : (SCALP_CLOSE_REASON_LABELS[p.close_reason] || p.close_reason);
     const resultText = p.status === 'open' ? '—' : `${formatPriceUsd(p.return_usd)} (${formatPctPrecise(p.return_pct)})`;
-    return `<div class="tracking-row ${p.status === 'open' ? 'open' : ''}">
-      <span>${p.direction === 'achat' ? 'Achat' : 'Vente'} — ${new Date(p.entry_time).toLocaleString('fr-FR')}</span>
-      <span>${label}</span>
-      <span>${resultText}</span>
+    const signClass = p.status === 'open' ? 'open' : (p.return_usd > 0 ? 'positive' : (p.return_usd < 0 ? 'negative' : ''));
+    return `<div class="tracking-row ${signClass}">
+      <span class="tracking-row-order">${p.direction === 'achat' ? 'Achat' : 'Vente'} — ${new Date(p.entry_time).toLocaleString('fr-FR')}</span>
+      <span class="tracking-row-reason">${label}</span>
+      <span class="tracking-row-value">${resultText}</span>
     </div>`;
   }).join('');
 
-  panel.innerHTML = banner + summary + (rows || '<div class="empty">Aucune position pour l\'instant.</div>');
+  const rowsHtml = rows || '<div class="empty">Aucune position pour l\'instant.</div>';
+  panel.innerHTML = banner + summary + `<div class="tracking-rows">${rowsHtml}</div>`;
 }
 
 // Préfixe d'échange TradingView par indice — dérivé du suffixe Yahoo
@@ -2216,20 +2701,66 @@ function formatPriceForIndex(v, indexKey) {
   return v != null ? `${v.toLocaleString('fr-FR', {maximumFractionDigits:2})} ${symbol}` : 'indisponible';
 }
 
-function sortedFilteredCompanies(companies) {
+// `state` optionnel : {search, sort, financialOnly} — par défaut, l'état
+// global de la page Indices (voir indicesListSearch/-Sort/-FinancialOnly),
+// mais réutilisable ailleurs (ex. filtre Opportunités du Portefeuille, voir
+// portfolioOppSearch/-Sort/-FinancialOnly) avec son propre état indépendant.
+function sortedFilteredCompanies(companies, state) {
+  const s = state || { search: indicesListSearch, sort: indicesListSort, financialOnly: indicesListFinancialOnly };
   let visible = companies;
-  if (indicesListSearch.trim()) {
-    const q = indicesListSearch.trim().toLowerCase();
+  if (s.search.trim()) {
+    const q = s.search.trim().toLowerCase();
     visible = visible.filter(c => c.name.toLowerCase().includes(q) || c.ticker.toLowerCase().includes(q));
   }
-  if (indicesListFinancialOnly) {
+  if (s.financialOnly) {
     visible = visible.filter(c => c.is_financial);
   }
   visible = [...visible];
-  if (indicesListSort === 'score_desc') visible.sort((a, b) => b.score - a.score);
-  else if (indicesListSort === 'score_asc') visible.sort((a, b) => a.score - b.score);
-  else if (indicesListSort === 'alpha') visible.sort((a, b) => a.name.localeCompare(b.name, 'fr'));
+  if (s.sort === 'score_desc') visible.sort((a, b) => b.score - a.score);
+  else if (s.sort === 'score_asc') visible.sort((a, b) => a.score - b.score);
+  else if (s.sort === 'alpha') visible.sort((a, b) => a.name.localeCompare(b.name, 'fr'));
   return visible;
+}
+
+// Panneau "Filtrer" en accordéon (recherche/tri/case à cocher + sous-
+// accordéon "Filtres avancés", vide pour l'instant) — partagé entre la
+// page Indices et le filtre Opportunités du Portefeuille (même design,
+// même comportement). `ids` fournit les ids exacts à utiliser (permet de
+// réutiliser des conventions de nommage différentes selon l'appelant) ;
+// `state` = {search, sort, financialOnly} déjà résolu par l'appelant.
+function filterAccordionHtml(ids, state) {
+  return `
+    <button class="index-card-header" id="${ids.toggle}" type="button" aria-expanded="false">
+      <span class="index-card-name">Filtrer</span>
+      <span class="chevron">▾</span>
+    </button>
+    <div class="indices-filters-body" id="${ids.body}">
+      <input type="search" class="list-search" id="${ids.search}" placeholder="Rechercher (nom, ticker)…" value="${state.search}">
+      <select class="list-sort" id="${ids.sort}">
+        <option value="score_desc"${state.sort === 'score_desc' ? ' selected' : ''}>Score ↓</option>
+        <option value="score_asc"${state.sort === 'score_asc' ? ' selected' : ''}>Score ↑</option>
+        <option value="alpha"${state.sort === 'alpha' ? ' selected' : ''}>A → Z</option>
+      </select>
+      <label class="list-filter-toggle">
+        <input type="checkbox" id="${ids.financialOnly}"${state.financialOnly ? ' checked' : ''}>
+        Profil financier uniquement
+      </label>
+      <button class="index-card-header indices-filters-advanced-toggle" id="${ids.advToggle}" type="button" aria-expanded="false">
+        <span class="index-card-name">Filtres avancés</span>
+        <span class="chevron">▾</span>
+      </button>
+      <div class="indices-filters-advanced-body" id="${ids.advBody}">
+        <p class="hero-sub" style="margin:0;">Bientôt disponible.</p>
+      </div>
+    </div>`;
+}
+
+// Câble les deux niveaux d'accordéon indépendamment (voir wireAccordionGroup)
+// — chacun dans son propre groupe à une seule entrée, pour ne pas se
+// refermer mutuellement ni interférer avec d'autres accordéons de la page.
+function wireFilterAccordionToggles(ids) {
+  wireAccordionGroup([[ids.toggle, ids.body, null]]);
+  wireAccordionGroup([[ids.advToggle, ids.advBody, null]]);
 }
 
 // Aperçu (3 meilleurs scores) d'une carte repliée — respecte les mêmes
@@ -2241,7 +2772,7 @@ function peekRowsHtml(companies) {
   return top3.map(c => `
     <a class="index-card-peek-row" href="#indices/${c.ticker}">
       <span class="index-card-peek-name">${c.name}</span>
-      <span class="index-card-peek-score" style="color:${c.score >= 0 ? 'var(--gold)' : 'var(--rust)'}">${c.score > 0 ? '+' : ''}${c.score}</span>
+      <span class="index-card-peek-score" style="color:${c.score >= 0 ? 'var(--green-500)' : 'var(--rust)'}">${c.score > 0 ? '+' : ''}${c.score}</span>
     </a>`).join('');
 }
 
@@ -2276,7 +2807,7 @@ function renderIndicesRows(companies, rowsContainerId) {
         <span class="company-name">${c.name}</span>
         <span class="company-ticker">${c.ticker}${c.is_financial ? '<span class="financial-tag">Profil financier</span>' : ''}${hasMajorNewsAlert(c) ? '<span class="financial-tag majeure-tag">Actu majeure</span>' : ''}${alsoIndicesBadgesHtml(c)}</span>
       </div>
-      <span class="company-score" style="color:${c.score >= 0 ? 'var(--gold)' : 'var(--rust)'};">
+      <span class="company-score" style="color:${c.score >= 0 ? 'var(--green-500)' : 'var(--rust)'};">
         ${c.score > 0 ? '+' : ''}${c.score}
       </span>
     </a>`).join('') : '<div class="list-empty">Aucun résultat pour cette recherche.</div>';
@@ -2345,7 +2876,7 @@ function renderIndicesList(companies) {
   const indexNames = { ...INDEX_DISPLAY_NAMES, ...(indicesData.index_names || {}) };
 
   const cardsHtml = indexKeys.map(key => `
-    <div class="index-card">
+    <div class="index-card" id="indexCard-${key}"${sortedFilteredCompanies(groups[key]).length ? '' : ' hidden'}>
       <button class="index-card-header" id="indexToggle-${key}" type="button" aria-expanded="false">
         <span class="index-card-name">${indexNames[key] || key}${INDEX_COUNTRY_BY_KEY[key] ? ` (${INDEX_COUNTRY_BY_KEY[key]})` : ''}</span>
         <span class="index-card-count">${groups[key].length} entreprise${groups[key].length > 1 ? 's' : ''}</span>
@@ -2359,22 +2890,14 @@ function renderIndicesList(companies) {
     ${healthHtml}
     <a href="#indices/suivi" class="signal-tracking-link">Suivi des signaux — performance réelle des conseils →</a>
     <div class="indices-layout">
-      <aside class="indices-filters">
-        <h2>Filtrer</h2>
-        <input type="search" class="list-search" id="filterSearch" placeholder="Rechercher (nom, ticker)…" value="${indicesListSearch}">
-        <select class="list-sort" id="filterSort">
-          <option value="score_desc"${indicesListSort === 'score_desc' ? ' selected' : ''}>Score ↓</option>
-          <option value="score_asc"${indicesListSort === 'score_asc' ? ' selected' : ''}>Score ↑</option>
-          <option value="alpha"${indicesListSort === 'alpha' ? ' selected' : ''}>A → Z</option>
-        </select>
-        <label class="list-filter-toggle">
-          <input type="checkbox" id="filterFinancialOnly"${indicesListFinancialOnly ? ' checked' : ''}>
-          Profil financier uniquement
-        </label>
-      </aside>
+      <aside class="indices-filters">${filterAccordionHtml({
+        toggle: 'filterToggle', body: 'filterBody', search: 'filterSearch', sort: 'filterSort',
+        financialOnly: 'filterFinancialOnly', advToggle: 'filterAdvToggle', advBody: 'filterAdvBody',
+      }, { search: indicesListSearch, sort: indicesListSort, financialOnly: indicesListFinancialOnly })}</aside>
       <div class="index-card-list">${cardsHtml}</div>
     </div>
   `;
+  wireFilterAccordionToggles({ toggle: 'filterToggle', body: 'filterBody', advToggle: 'filterAdvToggle', advBody: 'filterAdvBody' });
 
   // Le contenu de chaque panneau n'est construit qu'à sa première ouverture
   // (renderedKeys) — sur mobile au clic, sur desktop immédiatement (voir plus bas).
@@ -2402,6 +2925,9 @@ function renderIndicesList(companies) {
   // (dupliqués mais cachés partout — voir CSS).
   function refreshAllVisibleGroups() {
     indexKeys.forEach(key => {
+      // Un indice sans aucune entreprise correspondant au filtre disparaît
+      // entièrement plutôt que d'afficher une carte vide "Aucun résultat".
+      document.getElementById(`indexCard-${key}`).hidden = !sortedFilteredCompanies(groups[key]).length;
       document.getElementById(`indexPeek-${key}`).innerHTML = peekRowsHtml(groups[key]);
       renderIndicesRows(groups[key], `indicesRows-${key}`);
     });
@@ -2482,8 +3008,6 @@ function renderSignalTracking(positions) {
   const avgReturn = avg(withReturn.map(p => p.return_pct));
   const withIndex = closed.filter(p => p.return_pct != null && p.index_return_pct != null);
   const avgAlpha = avg(withIndex.map(p => p.return_pct - p.index_return_pct));
-  const withShadow = closed.filter(p => p.return_pct != null && p.shadow_resolved && p.shadow_return_pct != null);
-  const avgVsHold = avg(withShadow.map(p => p.return_pct - p.shadow_return_pct));
 
   const statsHtml = `
     <div class="signal-stats">
@@ -2491,7 +3015,6 @@ function renderSignalTracking(positions) {
       <div class="price-row"><span class="price-label">Taux de réussite</span><span class="price-value">${withReturn.length ? formatPct(winCount / withReturn.length * 100) : '—'}</span></div>
       <div class="price-row"><span class="price-label">Rendement moyen</span><span class="price-value ${pctClass(avgReturn)}">${formatPct(avgReturn)}</span></div>
       <div class="price-row"><span class="price-label">Vs indice (alpha moyen)</span><span class="price-value ${pctClass(avgAlpha)}">${formatPct(avgAlpha)}</span></div>
-      <div class="price-row"><span class="price-label">Vs tenir 6 mois pleins</span><span class="price-value ${pctClass(avgVsHold)}">${formatPct(avgVsHold)}</span></div>
     </div>`;
 
   const rowsHtml = positions.length ? positions.map(p => `
@@ -2504,23 +3027,48 @@ function renderSignalTracking(positions) {
       <td>${CLOSE_REASON_LABELS[p.close_reason] || '—'}</td>
       <td class="${pctClass(p.return_pct)}">${formatPct(p.return_pct)}</td>
       <td class="${pctClass(p.return_pct != null && p.index_return_pct != null ? p.return_pct - p.index_return_pct : null)}">${p.index_return_pct != null ? formatPct(p.return_pct - p.index_return_pct) : '—'}</td>
-      <td class="${pctClass(p.shadow_resolved && p.return_pct != null && p.shadow_return_pct != null ? p.return_pct - p.shadow_return_pct : null)}">${p.shadow_resolved && p.shadow_return_pct != null ? formatPct(p.return_pct - p.shadow_return_pct) : '—'}</td>
-    </tr>`).join('') : '<tr><td colspan="9" class="list-empty">Aucune position pour l\'instant.</td></tr>';
+    </tr>`).join('') : '<tr><td colspan="8" class="list-empty">Aucune position pour l\'instant.</td></tr>';
+
+  // Mobile : 8 colonnes ne tiennent pas sur un téléphone (même en scroll
+  // horizontal, illisible) — cartes empilées à la place du tableau (voir
+  // .signal-cards, masqué sur desktop où le tableau reprend la main).
+  const cardsListHtml = positions.length ? positions.map(p => {
+    const alphaVal = p.index_return_pct != null ? p.return_pct - p.index_return_pct : null;
+    return `
+    <div class="signal-card">
+      <div class="signal-card-head">
+        <span class="signal-card-name">${p.name} <span class="signal-card-ticker">${p.ticker}</span></span>
+        <span class="${pctClass(p.return_pct)}">${formatPct(p.return_pct)}</span>
+      </div>
+      <div class="signal-card-meta">
+        <span>Entrée ${p.entry_date} · ${formatPriceForIndex(p.entry_price, p.index)}</span>
+        <span>${p.status === 'open'
+          ? '<span class="signal-status-open">En cours</span>'
+          : `Clôture ${p.close_date} · ${formatPriceForIndex(p.close_price, p.index)} — ${CLOSE_REASON_LABELS[p.close_reason] || '—'}`}</span>
+        <span>Vs indice : <span class="${pctClass(alphaVal)}">${alphaVal != null ? formatPct(alphaVal) : '—'}</span></span>
+      </div>
+    </div>`;
+  }).join('') : '<div class="list-empty">Aucune position pour l\'instant.</div>';
 
   document.getElementById('indicesContent').innerHTML = `
     <a href="#indices" class="back-link">← Indices</a>
-    <div class="eyebrow">Indices</div>
-    <h1>Suivi des signaux</h1>
-    <p class="hero-sub" style="margin:0 0 20px;">Performance réelle des signaux "entrée" depuis leur mise en place — comparée à l'indice et à un simple achat-conservation. Pas un conseil d'investissement.</p>
-    ${statsHtml}
-    <div class="signal-table-wrap">
-      <table class="signal-table">
-        <thead><tr>
-          <th>Entreprise</th><th>Entrée</th><th>Prix entrée</th><th>Clôture</th>
-          <th>Prix clôture</th><th>Raison</th><th>Rendement</th><th>Vs indice</th><th>Vs tenir 6 mois</th>
-        </tr></thead>
-        <tbody>${rowsHtml}</tbody>
-      </table>
+    <div class="signal-tracking-layout">
+      <div class="signal-tracking-info">
+        <div class="eyebrow">Indices</div>
+        <h1>Suivi des signaux</h1>
+        <p class="hero-sub" style="margin:0 0 20px;">Performance réelle des signaux "entrée" depuis leur mise en place — comparée à l'indice et à un simple achat-conservation. Pas un conseil d'investissement.</p>
+        ${statsHtml}
+      </div>
+      <div class="signal-table-wrap">
+        <table class="signal-table">
+          <thead><tr>
+            <th>Entreprise</th><th>Entrée</th><th>Prix entrée</th><th>Clôture</th>
+            <th>Prix clôture</th><th>Raison</th><th>Rendement</th><th>Vs indice</th>
+          </tr></thead>
+          <tbody>${rowsHtml}</tbody>
+        </table>
+      </div>
+      <div class="signal-cards">${cardsListHtml}</div>
     </div>
   `;
 }
@@ -2586,14 +3134,14 @@ function renderCompanyDetail(company) {
 
     <div class="mobile-key-bar">
       <span class="mobile-key-bar-name">${company.name}</span>
-      <span class="mobile-key-bar-score" style="color:${company.score >= 0 ? 'var(--gold)' : 'var(--rust)'}">${company.score > 0 ? '+' : ''}${company.score}</span>
+      <span class="mobile-key-bar-score" style="color:${company.score >= 0 ? 'var(--green-500)' : 'var(--rust)'}">${company.score > 0 ? '+' : ''}${company.score}</span>
       <span class="mobile-key-bar-prices">${formatPriceForIndex(company.entry_price, company.index)} · ${formatPriceForIndex(company.exit_price, company.index)}</span>
     </div>
 
     <div class="company-layout">
       <div class="company-main">
         <section class="hero">
-          <div class="hero-number">${company.score > 0 ? '+' : ''}${company.score}</div>
+          <div class="hero-number" style="color:${company.score >= 0 ? 'var(--green-500)' : 'var(--rust)'}">${company.score > 0 ? '+' : ''}${company.score}</div>
           <div class="hero-label">${company.name} — ${company.interpretation}${hasMajorNewsAlert(company) ? '<br><span class="financial-tag majeure-tag" style="margin-left:0;">Actu majeure récente</span>' : ''}<br><span class="index-badges-row">${indexBadgesHtml}</span></div>
         </section>
 
@@ -2773,13 +3321,26 @@ function renderRoute(animate) {
 document.querySelectorAll('.nav-item[data-route]').forEach(tab => {
   tab.addEventListener('click', () => { location.hash = '#' + tab.dataset.route; });
 });
+// Affiche la vue d'un onglet du header (.or-tab-btn) avec une petite
+// animation d'entrée — même effet que le carrousel de sections (voir
+// .portfolio-pager-content.is-entering) mais un peu plus long, réservé au
+// changement d'onglet. Même trick que renderPager() : on retire la classe,
+// on force un reflow, puis on la remet pour être sûr qu'elle rejoue.
+function showTabView(el) {
+  el.hidden = false;
+  el.classList.remove('tab-view-enter');
+  void el.offsetWidth;
+  el.classList.add('tab-view-enter');
+}
+
 document.getElementById('orTabLongTerme').addEventListener('click', () => {
   document.getElementById('orTabLongTerme').setAttribute('aria-selected', 'true');
   document.getElementById('orTabScalping').setAttribute('aria-selected', 'false');
   document.getElementById('orTabSuivi').setAttribute('aria-selected', 'false');
   document.getElementById('orScalpingView').hidden = true;
   document.getElementById('orSuiviView').hidden = true;
-  document.getElementById('content').hidden = false;
+  document.getElementById('or').classList.remove('suivi-active');
+  showTabView(document.getElementById('content'));
   stopScalpingPolling();
 });
 document.getElementById('orTabScalping').addEventListener('click', () => {
@@ -2788,7 +3349,8 @@ document.getElementById('orTabScalping').addEventListener('click', () => {
   document.getElementById('orTabSuivi').setAttribute('aria-selected', 'false');
   document.getElementById('content').hidden = true;
   document.getElementById('orSuiviView').hidden = true;
-  document.getElementById('orScalpingView').hidden = false;
+  document.getElementById('or').classList.remove('suivi-active');
+  showTabView(document.getElementById('orScalpingView'));
   loadScalpChart();
   loadScalpingModule().then(startScalpingPolling).catch(e => {
     document.getElementById('scalpSignalPanel').innerHTML = `<div class="empty">${e.message}</div>`;
@@ -2800,7 +3362,8 @@ document.getElementById('orTabSuivi').addEventListener('click', () => {
   document.getElementById('orTabScalping').setAttribute('aria-selected', 'false');
   document.getElementById('content').hidden = true;
   document.getElementById('orScalpingView').hidden = true;
-  document.getElementById('orSuiviView').hidden = false;
+  document.getElementById('or').classList.add('suivi-active');
+  showTabView(document.getElementById('orSuiviView'));
   stopScalpingPolling();
   loadScalpTracking();
 });
@@ -2809,13 +3372,17 @@ document.getElementById('portefeuilleTabActions').addEventListener('click', () =
   document.getElementById('portefeuilleTabActions').setAttribute('aria-selected', 'true');
   document.getElementById('portefeuilleTabOr').setAttribute('aria-selected', 'false');
   document.getElementById('portefeuilleOrView').hidden = true;
-  document.getElementById('portefeuilleContent').hidden = false;
+  showTabView(document.getElementById('portefeuilleContent'));
+  document.getElementById('pfOrTocSidebar').hidden = true;
+  document.getElementById('pfActionsTocSidebar').hidden = false;
 });
 document.getElementById('portefeuilleTabOr').addEventListener('click', () => {
   document.getElementById('portefeuilleTabOr').setAttribute('aria-selected', 'true');
   document.getElementById('portefeuilleTabActions').setAttribute('aria-selected', 'false');
   document.getElementById('portefeuilleContent').hidden = true;
-  document.getElementById('portefeuilleOrView').hidden = false;
+  showTabView(document.getElementById('portefeuilleOrView'));
+  document.getElementById('pfActionsTocSidebar').hidden = true;
+  document.getElementById('pfOrTocSidebar').hidden = false;
 });
 
 // Flèches du carrousel de sections (boutons statiques dans le markup, câblés
@@ -2836,6 +3403,18 @@ document.getElementById('pfOrNext').addEventListener('click', () => {
   portfolioOrSectionIndex = (portfolioOrSectionIndex + 1) % portfolioOrSections.length;
   renderPager('pfOr', portfolioOrSections, portfolioOrSectionIndex);
 });
+
+// Déclencheurs du sommaire mobile (liste déroulante) — boutons statiques,
+// câblés une seule fois ; les items de la liste (regénérés à chaque rendu)
+// sont câblés dans renderToc().
+function togglePortfolioToc(prefix) {
+  const list = document.getElementById(prefix + 'TocList');
+  const open = !list.classList.contains('is-open');
+  list.classList.toggle('is-open', open);
+  document.getElementById(prefix + 'TocTrigger').setAttribute('aria-expanded', String(open));
+}
+document.getElementById('pfActionsTocTrigger').addEventListener('click', () => togglePortfolioToc('pfActions'));
+document.getElementById('pfOrTocTrigger').addEventListener('click', () => togglePortfolioToc('pfOr'));
 
 window.addEventListener('hashchange', () => renderRoute(true));
 renderRoute(false);
@@ -2871,13 +3450,17 @@ document.addEventListener('keydown', (e) => {
 
 // Bascule jour/nuit : persistée (localStorage), deux boutons (barre desktop
 // + panneau latéral mobile) restent synchronisés entre eux.
-const THEME_COLOR_BY_MODE = { dark: '#1c1f19', light: '#f2f3ec' };
+const THEME_COLOR_BY_MODE = { dark: '#0a0e1a', light: '#fbf2de' };
 
 function applyTheme(theme) {
   document.documentElement.setAttribute('data-theme', theme === 'light' ? 'light' : 'dark');
   localStorage.setItem('theme', theme);
   document.getElementById('themeColorMeta').setAttribute('content', THEME_COLOR_BY_MODE[theme]);
-  const icon = theme === 'light' ? '#icon-sun' : '#icon-moon';
+  // L'icône représente le mode VERS lequel on bascule en cliquant (pas le
+  // mode actuel) — en clair on montre la lune (bascule vers la nuit), en
+  // sombre on montre le soleil (bascule vers le jour). Même logique que le
+  // libellé juste en dessous.
+  const icon = theme === 'light' ? '#icon-moon' : '#icon-sun';
   document.getElementById('themeToggleDesktopIcon').querySelector('use').setAttribute('href', icon);
   document.getElementById('themeToggleDrawerIcon').querySelector('use').setAttribute('href', icon);
   document.getElementById('themeToggleDrawerLabel').textContent = theme === 'light' ? 'Mode nuit' : 'Mode jour';

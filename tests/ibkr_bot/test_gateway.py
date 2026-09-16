@@ -21,6 +21,8 @@ class _FakeIB:
         self.mkt_data_result = None
         self.cancel_mkt_data_calls = []
         self.req_mkt_data_calls = []
+        self.place_order_result = None
+        self.place_order_calls = []
 
     def connect(self, host, port, clientId=1, timeout=4, readonly=False,
                 account="", raiseSyncErrors=False, **kwargs):
@@ -59,6 +61,10 @@ class _FakeIB:
 
     def cancelMktData(self, contract):
         self.cancel_mkt_data_calls.append(contract)
+
+    def placeOrder(self, contract, order):
+        self.place_order_calls.append((contract, order))
+        return self.place_order_result
 
 
 class _FakeContract:
@@ -105,6 +111,24 @@ class _FakeTicker:
         return self._price
 
 
+class _FakeOrderStatus:
+    def __init__(self, status="Filled", avgFillPrice=0.0, orderId=0):
+        self.status = status
+        self.avgFillPrice = avgFillPrice
+        self.orderId = orderId
+
+
+class _FakeOrder:
+    def __init__(self, orderId):
+        self.orderId = orderId
+
+
+class _FakeTrade:
+    def __init__(self, orderId, avgFillPrice=0.0, status="Filled"):
+        self.order = _FakeOrder(orderId)
+        self.orderStatus = _FakeOrderStatus(status=status, avgFillPrice=avgFillPrice, orderId=orderId)
+
+
 @pytest.fixture
 def fake_ib(monkeypatch):
     instance = _FakeIB()
@@ -112,6 +136,10 @@ def fake_ib(monkeypatch):
     # gateway.py garde un singleton module-level ; le reinitialiser entre
     # deux tests evite qu'un test reutilise la connexion du precedent.
     monkeypatch.setattr(gateway, "_ib", None)
+    # Meme raisonnement pour le cache d'ordres passes (module-level lui
+    # aussi) : sans ce reset, un order_id reutilise d'un test a l'autre
+    # (555 ci-dessous) pourrait lire le Trade d'un test precedent.
+    monkeypatch.setattr(gateway, "_trades_by_order_id", {})
     return instance
 
 
@@ -323,3 +351,44 @@ def test_exchange_rate_same_currency_is_one_without_network_call(fake_ib):
     gateway.connect(BASE)
     assert gateway.exchange_rate(BASE, "EUR", "EUR") == 1.0
     assert fake_ib.req_mkt_data_calls == []  # aucun appel reqMktData necessaire
+
+
+def test_place_market_order_returns_a_single_confirmation(fake_ib):
+    gateway.connect(BASE)
+    fake_ib.place_order_result = _FakeTrade(orderId=555, avgFillPrice=0.0, status="Submitted")
+    result = gateway.place_market_order(BASE, "U28849893", 265598, "BUY", 10)
+    assert result == [{"order_id": "555"}]
+    contract, order = fake_ib.place_order_calls[0]
+    assert contract.conId == 265598
+    assert order.action == "BUY"
+    assert order.totalQuantity == 10
+    assert order.tif == "DAY"
+
+
+def test_place_market_order_rejects_invalid_side():
+    with pytest.raises(ValueError):
+        gateway.place_market_order(BASE, "U28849893", 265598, "HOLD", 10)
+
+
+def test_place_market_order_rejects_invalid_quantity():
+    with pytest.raises(ValueError):
+        gateway.place_market_order(BASE, "U28849893", 265598, "BUY", 0)
+
+
+def test_confirm_reply_raises_loudly_instead_of_pretending_to_answer(fake_ib):
+    gateway.connect(BASE)
+    with pytest.raises(NotImplementedError):
+        gateway.confirm_reply(BASE, "some-reply-id")
+
+
+def test_order_status_reads_the_cached_trade_for_this_order_id(fake_ib):
+    gateway.connect(BASE)
+    fake_ib.place_order_result = _FakeTrade(orderId=555, avgFillPrice=123.45, status="Filled")
+    gateway.place_market_order(BASE, "U28849893", 265598, "BUY", 10)
+    status = gateway.order_status(BASE, "555")
+    assert status == {"order_status": "Filled", "avgPrice": 123.45, "commission": None}
+
+
+def test_order_status_empty_dict_when_order_id_unknown(fake_ib):
+    gateway.connect(BASE)
+    assert gateway.order_status(BASE, "unknown-id") == {}

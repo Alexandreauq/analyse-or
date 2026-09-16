@@ -305,6 +305,27 @@ def is_news_blackout(date: datetime) -> bool:
     return False
 
 
+def meets_minimum_risk_reward(entry_price: float, stop_loss: float, take_profit: float, direction: str) -> bool:
+    """Garde-fou ratio risque/rendement : refuse un trade dont l'objectif
+    potentiel (souvent plafonne par le niveau de support/resistance
+    oppose le plus proche, puisque l'entree a justement lieu pres d'un
+    niveau) ne compense pas suffisamment le risque pris — le repli
+    SCALP_TAKEPROFIT_RISK_MULTIPLE ne se declenche en pratique presque
+    jamais sans ce garde-fou. Constate sur donnees reelles avant ce
+    correctif : gain moyen $6.22 / perte moyenne $8.87 (ratio 0.7),
+    causant un leger P&L negatif malgre un taux de reussite > 50%. Le
+    seuil reprend volontairement le meme multiple que le repli, pour ne
+    jamais accepter un trade moins bon que ce que le repli lui-meme
+    viserait. Portage fidele de meetsMinimumRiskReward (docs/scalping.js)."""
+    if direction == "achat":
+        risk = entry_price - stop_loss
+        reward = take_profit - entry_price
+    else:
+        risk = stop_loss - entry_price
+        reward = entry_price - take_profit
+    return risk > 0 and reward / risk >= SCALP_TAKEPROFIT_RISK_MULTIPLE
+
+
 def compute_signal(candles: list[dict]) -> dict:
     """Moteur de confluence : combine tendance + S/R + indicateurs +
     chandeliers en un signal achat/vente/neutre, avec entry/stop_loss/
@@ -344,6 +365,9 @@ def compute_signal(candles: list[dict]) -> dict:
         risk = price - stop_loss
         take_profit = levels["resistance"] if (levels["resistance"] is not None and levels["resistance"] > price) \
             else price + risk * SCALP_TAKEPROFIT_RISK_MULTIPLE
+        if not meets_minimum_risk_reward(price, stop_loss, take_profit, "achat"):
+            return {"status": "neutre", "price": price, "entry": None, "stop_loss": None,
+                    "take_profit": None, "trend": trend, "pattern": None}
         return {"status": "achat", "price": price, "entry": price, "stop_loss": stop_loss,
                 "take_profit": take_profit, "trend": trend, "pattern": pattern}
     if structurel_vente and confirmation_vente:
@@ -351,6 +375,9 @@ def compute_signal(candles: list[dict]) -> dict:
         risk = stop_loss - price
         take_profit = levels["support"] if (levels["support"] is not None and levels["support"] < price) \
             else price - risk * SCALP_TAKEPROFIT_RISK_MULTIPLE
+        if not meets_minimum_risk_reward(price, stop_loss, take_profit, "vente"):
+            return {"status": "neutre", "price": price, "entry": None, "stop_loss": None,
+                    "take_profit": None, "trend": trend, "pattern": None}
         return {"status": "vente", "price": price, "entry": price, "stop_loss": stop_loss,
                 "take_profit": take_profit, "trend": trend, "pattern": pattern}
     return {"status": "neutre", "price": price, "entry": None, "stop_loss": None,

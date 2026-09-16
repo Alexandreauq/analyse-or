@@ -127,6 +127,56 @@ def test_run_cycle_logs_dry_run_without_executing(monkeypatch, tmp_path):
     assert result["action"] == "simulation_dry_run"
 
 
+def test_run_cycle_applies_active_risk_profile_to_sizing_and_circuit_breaker(monkeypatch, tmp_path):
+    monkeypatch.setattr(loop.state, "load_state", lambda *a, **k: {"kill_switch": False, "dry_run": True, "risk_profile": 5})
+    monkeypatch.setattr(loop, "DECISIONS_LOG_PATH", str(tmp_path / "decisions_log.jsonl"))
+    monkeypatch.setattr(loop, "LATEST_CANDLES_PATH", str(tmp_path / "latest_candles.json"))
+    monkeypatch.setattr(loop, "LATEST_BALANCE_PATH", str(tmp_path / "latest_balance.json"))
+    monkeypatch.setattr(loop, "LATEST_POSITIONS_PATH", str(tmp_path / "latest_positions.json"))
+    monkeypatch.setattr(loop.confluence, "fetch_gold_candles", lambda api_key: [{"close": 2100}])
+    monkeypatch.setattr(loop.broker, "get_account_balance", lambda *a, **k: 10000)
+    monkeypatch.setattr(loop.bot, "reconcile_positions", lambda *a, **k: [])
+    monkeypatch.setattr(loop.broker, "get_symbol_specification", lambda *a, **k: {"contractSize": 100})
+    captured = {}
+
+    def fake_decide_and_act(*args, **kwargs):
+        captured["risk_pct"] = kwargs.get("risk_pct")
+        return {"action": "aucune", "reason": "signal neutre"}
+
+    monkeypatch.setattr(loop.bot, "decide_and_act", fake_decide_and_act)
+
+    cb = loop.risk.CircuitBreaker()
+    loop.run_cycle("tok", "acc", "td-key", cb)
+
+    assert captured["risk_pct"] == 0.10
+    assert cb.threshold_pct == 0.175
+
+
+def test_run_cycle_defaults_to_profile_3_when_risk_profile_absent_from_state(monkeypatch, tmp_path):
+    monkeypatch.setattr(loop.state, "load_state", lambda *a, **k: {"kill_switch": False, "dry_run": True})
+    monkeypatch.setattr(loop, "DECISIONS_LOG_PATH", str(tmp_path / "decisions_log.jsonl"))
+    monkeypatch.setattr(loop, "LATEST_CANDLES_PATH", str(tmp_path / "latest_candles.json"))
+    monkeypatch.setattr(loop, "LATEST_BALANCE_PATH", str(tmp_path / "latest_balance.json"))
+    monkeypatch.setattr(loop, "LATEST_POSITIONS_PATH", str(tmp_path / "latest_positions.json"))
+    monkeypatch.setattr(loop.confluence, "fetch_gold_candles", lambda api_key: [{"close": 2100}])
+    monkeypatch.setattr(loop.broker, "get_account_balance", lambda *a, **k: 10000)
+    monkeypatch.setattr(loop.bot, "reconcile_positions", lambda *a, **k: [])
+    monkeypatch.setattr(loop.broker, "get_symbol_specification", lambda *a, **k: {"contractSize": 100})
+    captured = {}
+
+    def fake_decide_and_act(*args, **kwargs):
+        captured["risk_pct"] = kwargs.get("risk_pct")
+        return {"action": "aucune", "reason": "signal neutre"}
+
+    monkeypatch.setattr(loop.bot, "decide_and_act", fake_decide_and_act)
+
+    cb = loop.risk.CircuitBreaker()
+    loop.run_cycle("tok", "acc", "td-key", cb)
+
+    assert captured["risk_pct"] == 0.05
+    assert cb.threshold_pct == 0.10
+
+
 def test_run_cycle_executes_when_not_dry_run(monkeypatch, tmp_path):
     monkeypatch.setattr(loop.state, "load_state", lambda *a, **k: {"kill_switch": False, "dry_run": False})
     monkeypatch.setattr(loop, "DECISIONS_LOG_PATH", str(tmp_path / "decisions_log.jsonl"))
@@ -416,6 +466,79 @@ def test_run_cycle_does_not_write_candles_cache_when_fetch_itself_fails(monkeypa
     assert not (tmp_path / "latest_candles.json").exists()
     assert not (tmp_path / "latest_balance.json").exists()
     assert not (tmp_path / "latest_positions.json").exists()
+
+
+def test_run_cycle_picks_up_risk_profile_change_between_cycles(monkeypatch, tmp_path):
+    """Test d'intégration exigé par la spec (§Tests,
+    docs/superpowers/specs/2026-09-15-gold-bot-risk-profiles-design.md) :
+    "le CircuitBreaker partagé voit son threshold_pct changer entre deux
+    cycles simulés si risk_profile change dans state.json entre les
+    deux". Contrairement aux tests ci-dessus (un seul run_cycle par test,
+    avec un mock d'état fixe), celui-ci écrit un vrai state.json, appelle
+    run_cycle deux fois avec le MÊME CircuitBreaker, et réécrit le
+    fichier entre les deux appels — simulant un changement de profil
+    par un opérateur pendant que la boucle tourne."""
+    state_path = str(tmp_path / "state.json")
+    monkeypatch.setattr(loop.state, "STATE_PATH", state_path)
+    monkeypatch.setattr(loop, "DECISIONS_LOG_PATH", str(tmp_path / "decisions_log.jsonl"))
+    monkeypatch.setattr(loop, "LATEST_CANDLES_PATH", str(tmp_path / "latest_candles.json"))
+    monkeypatch.setattr(loop, "LATEST_BALANCE_PATH", str(tmp_path / "latest_balance.json"))
+    monkeypatch.setattr(loop, "LATEST_POSITIONS_PATH", str(tmp_path / "latest_positions.json"))
+    monkeypatch.setattr(loop.confluence, "fetch_gold_candles", lambda api_key: [{"close": 2100}])
+    monkeypatch.setattr(loop.broker, "get_account_balance", lambda *a, **k: 10000.0)
+    monkeypatch.setattr(loop.bot, "reconcile_positions", lambda *a, **k: [])
+    monkeypatch.setattr(loop.broker, "get_symbol_specification", lambda *a, **k: {"contractSize": 100})
+    monkeypatch.setattr(loop.bot, "decide_and_act", lambda *a, **k: {"action": "aucune", "reason": "signal neutre"})
+
+    loop.state.save_state({"kill_switch": False, "dry_run": True, "risk_profile": 3}, state_path)
+    cb = loop.risk.CircuitBreaker()
+
+    loop.run_cycle("tok", "acc", "td-key", cb)
+    assert cb.threshold_pct == 0.10
+
+    # Un opérateur change de profil entre les deux cycles (POST /profile
+    # ou édition manuelle) — le process ne redémarre pas, seul le fichier
+    # change sous ses pieds.
+    loop.state.save_state({"kill_switch": False, "dry_run": True, "risk_profile": 5}, state_path)
+
+    loop.run_cycle("tok", "acc", "td-key", cb)
+    assert cb.threshold_pct == 0.175
+
+
+def test_run_cycle_picks_up_risk_profile_change_via_api_between_cycles(monkeypatch, tmp_path):
+    """Variante bout-en-bout du test ci-dessus, suggérée par le
+    relecteur : le changement de profil passe réellement par
+    POST /profile (gold_bot/api.py), via FastAPI's TestClient, plutôt
+    que par une écriture directe de state.json — le chemin qu'un
+    opérateur utiliserait réellement."""
+    import gold_bot.api as api
+    from fastapi.testclient import TestClient
+
+    state_path = str(tmp_path / "state.json")
+    monkeypatch.setattr(loop.state, "STATE_PATH", state_path)
+    monkeypatch.setattr(loop, "DECISIONS_LOG_PATH", str(tmp_path / "decisions_log.jsonl"))
+    monkeypatch.setattr(loop, "LATEST_CANDLES_PATH", str(tmp_path / "latest_candles.json"))
+    monkeypatch.setattr(loop, "LATEST_BALANCE_PATH", str(tmp_path / "latest_balance.json"))
+    monkeypatch.setattr(loop, "LATEST_POSITIONS_PATH", str(tmp_path / "latest_positions.json"))
+    monkeypatch.setattr(loop.confluence, "fetch_gold_candles", lambda api_key: [{"close": 2100}])
+    monkeypatch.setattr(loop.broker, "get_account_balance", lambda *a, **k: 10000.0)
+    monkeypatch.setattr(loop.bot, "reconcile_positions", lambda *a, **k: [])
+    monkeypatch.setattr(loop.broker, "get_symbol_specification", lambda *a, **k: {"contractSize": 100})
+    monkeypatch.setattr(loop.bot, "decide_and_act", lambda *a, **k: {"action": "aucune", "reason": "signal neutre"})
+    monkeypatch.setenv("BOT_API_TOKEN", "secret-token")
+
+    loop.state.save_state({"kill_switch": False, "dry_run": True, "risk_profile": 3}, state_path)
+    cb = loop.risk.CircuitBreaker()
+
+    loop.run_cycle("tok", "acc", "td-key", cb)
+    assert cb.threshold_pct == 0.10
+
+    client = TestClient(api.app)
+    response = client.post("/profile", json={"profile": 5}, headers={"X-Bot-Token": "secret-token"})
+    assert response.status_code == 200
+
+    loop.run_cycle("tok", "acc", "td-key", cb)
+    assert cb.threshold_pct == 0.175
 
 
 def test_run_cycle_continues_when_a_dashboard_cache_write_fails(monkeypatch, tmp_path):

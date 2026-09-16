@@ -1,0 +1,14 @@
+[Unit]
+Description=Gateway IBKR Client Portal (ecoute 127.0.0.1 uniquement)
+After=network.target
+
+[Service]
+Type=simple
+User=ibkrbot
+WorkingDirectory=/home/ibkrbot/clientportal.gw
+ExecStart=/home/ibkrbot/clientportal.gw/bin/run.sh root/conf.yaml
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

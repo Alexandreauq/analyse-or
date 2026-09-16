@@ -140,6 +140,16 @@ def run_cycle(token: str, account_id: str, twelve_data_api_key: str,
         _log_decision(decision, path=DECISIONS_LOG_PATH)
         return decision
 
+    # Résolu à chaque cycle (pas seulement au démarrage du process) —
+    # même contrat que dry_run/kill_switch : un changement de profil via
+    # POST /profile doit prendre effet au cycle suivant, sans redémarrage
+    # du service. circuit_breaker est un objet unique et persistant sur
+    # toute la durée du while True de main() (il porte l'état du solde
+    # de départ journalier) — on mute son threshold_pct en place plutôt
+    # que de recréer l'objet, ce qui perdrait cet état.
+    profile_params = risk.risk_profile_params(current_state.get("risk_profile"))
+    circuit_breaker.threshold_pct = profile_params["threshold_pct"]
+
     try:
         candles = _with_retry(lambda: confluence.fetch_gold_candles(twelve_data_api_key))
         _save_cache({"candles": candles, "fetched_at": _now_iso()}, LATEST_CANDLES_PATH)
@@ -152,6 +162,7 @@ def run_cycle(token: str, account_id: str, twelve_data_api_key: str,
         decision = bot.decide_and_act(
             candles, contract_size=contract_size, balance=balance,
             open_positions=open_positions, circuit_breaker=circuit_breaker, symbol=symbol,
+            risk_pct=profile_params["risk_pct"],
         )
     except Exception as e:
         decision = {"action": "erreur", "reason": f"Erreur pendant la décision : {e}"}

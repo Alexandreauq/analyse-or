@@ -1019,8 +1019,9 @@
   .index-card-peek-empty { color: var(--muted); font-size: var(--text-sm); margin: 0; }
   .index-card:has(.index-card-header[aria-expanded="true"]) .index-card-peek { display: none; }
 
-  /* Repli sans widget TradingView (voir loadIndexQuoteWidget/indexPriceFallbackHtml) :
-     juste le niveau du jour de l'indice, sobre, pas un graphique. */
+  /* Repli sans widget TradingView (voir loadIndexQuoteWidget/indexPriceFallbackHtml,
+     et renderCompanyDetail pour le repli par entreprise Hang Seng/Nikkei 225) :
+     juste le cours du jour, sobre, pas un graphique. */
   .index-price-fallback {
     font-family: 'Newsreader', serif; font-weight: 400; font-size: var(--text-2xl);
     padding: 14px 0 4px;
@@ -1339,6 +1340,13 @@
   </div>
 </div>
 
+<!-- Chargé en amont (pas en différé comme scalping.js/portfolio.js/
+     chart_patterns.js) : resolveCompanyTvSymbol est nécessaire dès la
+     première fiche entreprise consultée, un chemin courant, pas une
+     fonctionnalité annexe — et le fichier est minuscule (tables de
+     correspondance + une fonction pure), contrairement à ces trois autres
+     modules qui portent un vrai moteur logique. -->
+<script src="company_quote_widget.js"></script>
 <script>
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('service-worker.js').catch(() => {});
@@ -2245,50 +2253,15 @@ function renderScalpTracking(data) {
   panel.innerHTML = banner + summary + `<div class="tracking-rows">${rowsHtml}</div>`;
 }
 
-// Préfixe d'échange TradingView par indice — dérivé du suffixe Yahoo
-// Finance pour CAC40 (.PA → Euronext Paris) et DAX (.DE → Xetra), vérifié
-// contre TradingView/MarketScreener y compris pour les cas a priori
-// ambigus (STMicroelectronics → STMPA, Stellantis → STLAP, SAP, VOW3).
-// NASDAQ n'a PAS de suffixe Yahoo (tickers US bruts, ex. "AAPL") — d'où
-// une table par indice plutôt qu'une déduction par suffixe (l'ancienne
-// approche, qui a laissé chaque entreprise Nasdaq sans widget de cours :
-// aucun suffixe ne matchait jamais). Un futur indice avec un autre
-// préfixe/suffixe devra ajouter sa propre entrée ici.
-// DOW : les 21 entreprises suivies (voir DOW_COMPANIES, indices_score.py)
-// sont toutes cotées au NYSE — les 9 composants du Dow cotés Nasdaq
-// (Apple, Microsoft...) sont déjà suivis côté NASDAQ, pas dupliqués ici,
-// donc un seul préfixe suffit comme pour les 3 autres indices.
-const TV_EXCHANGE_PREFIX_BY_INDEX = { CAC40: 'EURONEXT:', DAX: 'XETR:', NASDAQ: 'NASDAQ:', DOW: 'NYSE:', FTSE: 'LSE:', SMI: 'SIX:', IBEX35: 'BME:', FTSEMIB: 'MIL:', NIKKEI225: 'TSE:', HANGSENG: 'HKEX:' };
-const TV_TICKER_SUFFIX_BY_INDEX = { CAC40: '.PA', DAX: '.DE', NASDAQ: '', DOW: '', FTSE: '.L', SMI: '.SW', IBEX35: '.MC', FTSEMIB: '.MI', NIKKEI225: '.T', HANGSENG: '.HK' };
-// LSE : certains codes EPIC "courts" portent un point terminal officiel
-// pour éviter toute collision (ex. Aviva = "AV.", pas "AV"), que Yahoo
-// absorbe dans son propre suffixe ".L" (ticker Yahoo "AV.L") — une fois ce
-// suffixe retiré normalement, TradingView reçoit "AV" au lieu du vrai code
-// et renvoie une 404 (vérifié en direct contre tradingview.com pour les 9
-// entrées ci-dessous). BT Group est un cas à part : le point EPIC est au
-// milieu ("BT.A"), pas en fin. Clé = ticker Yahoo complet.
-const TV_TICKER_OVERRIDE_BY_YAHOO_TICKER = {
-  'AV.L': 'AV.', 'BA.L': 'BA.', 'BP.L': 'BP.', 'JD.L': 'JD.', 'NG.L': 'NG.',
-  'RR.L': 'RR.', 'SN.L': 'SN.', 'UU.L': 'UU.', 'BT-A.L': 'BT.A',
-};
-
-function loadSideQuoteWidget(ticker, indexKey) {
+function loadSideQuoteWidget(tvSymbol) {
   // Widget TradingView compact (cours + mini-graphique), injecté après coup
   // car un <script> posé via innerHTML ne s'exécute jamais tout seul dans
   // un navigateur. Le conteneur #tv-side-widget est recréé à chaque appel
   // de renderCompanyDetail (tout le innerHTML est remplacé), donc pas de
-  // widget dupliqué ni de nettoyage à faire d'un rendu à l'autre.
-  const prefix = TV_EXCHANGE_PREFIX_BY_INDEX[indexKey];
-  const suffix = TV_TICKER_SUFFIX_BY_INDEX[indexKey] || '';
-  let bareTicker = suffix && ticker.endsWith(suffix) ? ticker.slice(0, -suffix.length) : ticker;
-  // Hang Seng : yfinance/Yahoo zero-paddent le code HKEX sur 4 chiffres
-  // ("0700"), mais TradingView utilise le code brut sans padding ("700") —
-  // "HKEX:0700" renvoie une 404, vérifié directement contre tradingview.com.
-  if (indexKey === 'HANGSENG') bareTicker = bareTicker.replace(/^0+(?=\d)/, '');
-  if (Object.prototype.hasOwnProperty.call(TV_TICKER_OVERRIDE_BY_YAHOO_TICKER, ticker)) {
-    bareTicker = TV_TICKER_OVERRIDE_BY_YAHOO_TICKER[ticker];
-  }
-  const tvSymbol = prefix ? prefix + bareTicker : null;
+  // widget dupliqué ni de nettoyage à faire d'un rendu à l'autre. Prend le
+  // symbole déjà résolu par resolveCompanyTvSymbol (docs/company_quote_
+  // widget.js) — l'appelant a la responsabilité de ne pas appeler cette
+  // fonction du tout quand ce symbole est `null` (voir renderCompanyDetail).
   const container = document.getElementById('tv-side-widget');
   if (!tvSymbol || !container) return;
   const script = document.createElement('script');
@@ -3074,6 +3047,11 @@ function renderSignalTracking(positions) {
 }
 
 function renderCompanyDetail(company) {
+  // Résolu une seule fois ici (pas dans loadSideQuoteWidget) pour que le
+  // template ci-dessous et l'appel de chargement du widget restent
+  // cohérents entre eux — voir docs/company_quote_widget.js pour le détail
+  // des indices sans widget gratuit fiable (Hang Seng, Nikkei 225).
+  const tvSymbol = resolveCompanyTvSymbol(company.ticker, company.index);
   const factorsHtml = renderFactorRows(company.factors);
 
   const newsHtml = (company.news || []).map(n => `
@@ -3198,15 +3176,20 @@ function renderCompanyDetail(company) {
         <div class="company-key-numbers company-key-numbers-desktop">${keyNumbersHtml}</div>
 
         <h2>Cours en direct</h2>
+        ${tvSymbol ? `
         <div class="tradingview-widget-container">
           <div class="tradingview-widget-container__widget" id="tv-side-widget"></div>
         </div>
         <p class="scalp-note">Temps réel via TradingView (${company.ticker}).</p>
+        ` : `
+        <div class="index-price-fallback">${formatPriceForIndex(company.current_price, company.index)}</div>
+        <p class="scalp-note">Cours au dernier calcul du score (${company.ticker}) — pas de widget temps réel disponible pour cette place sur l'offre gratuite TradingView.</p>
+        `}
       </div>
     </div>
   `;
 
-  loadSideQuoteWidget(company.ticker, company.index);
+  if (tvSymbol) loadSideQuoteWidget(tvSymbol);
 
   // Le marqueur part du centre (position de repos posée dans le template)
   // et glisse vers sa vraie position au premier rendu, plutôt que d'apparaître statique.

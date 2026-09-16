@@ -1,0 +1,39 @@
+# deploy/docker-compose-ibkr-tws.yml
+# IB Gateway + IBC (login automatise) + VNC (pour valider le 2FA
+# manuellement chaque jour) via l'image gnzsnz/ib-gateway-docker
+# (wrapper Docker maintenu autour de la derniere version figee d'IBC,
+# archive depuis le 2026-09-01 — voir
+# docs/superpowers/specs/2026-09-16-ibkr-tws-gateway-migration-design.md
+# section 1). Remplace a terme ibkr-gateway.service (Client Portal
+# Gateway), installe EN PARALLELE tant que la bascule n'est pas validee.
+#
+# Variables d'environnement reelles verifiees le 2026-09-16 contre le
+# README du projet (github.com/gnzsnz/ib-gateway-docker) : TWS_USERID
+# n'a pas d'equivalent _FILE (contrairement a TWS_PASSWORD), donc il
+# passe par le fichier .env local (non commite) a cote de ce fichier,
+# jamais en clair ici.
+services:
+  ib-gateway:
+    image: ghcr.io/gnzsnz/ib-gateway:stable
+    container_name: ibkr-tws-gateway
+    restart: unless-stopped
+    environment:
+      TWS_USERID: ${TWS_USERID}
+      TWS_PASSWORD_FILE: /run/secrets/tws_password
+      TRADING_MODE: ${TRADING_MODE:-paper}
+      READ_ONLY_API: "no"
+      VNC_SERVER_PASSWORD_FILE: /run/secrets/vnc_password
+      BYPASS_WARNING: "yes"
+    secrets:
+      - tws_password
+      - vnc_password
+    ports:
+      - "127.0.0.1:4001:4003"  # port reel (host:conteneur, via socat interne)
+      - "127.0.0.1:4002:4004"  # port paper (host:conteneur, via socat interne)
+      - "127.0.0.1:5900:5900"  # VNC — jamais expose au-dela de localhost, meme regle que le port 5000 du CPAPI (tunnel SSH obligatoire)
+
+secrets:
+  tws_password:
+    file: /home/ibkrbot/secrets/tws_password.txt
+  vnc_password:
+    file: /home/ibkrbot/secrets/vnc_password.txt

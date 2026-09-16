@@ -2,11 +2,24 @@
 
 ## Statut
 
-**DESIGN VALIDÉ (2026-09-14) — aucun code n'a encore été écrit.** Tous
-les points bloquants de la section 9 ont été arbitrés avec l'utilisateur.
-Reste une vérification manuelle non bloquante (coûts de données de
-marché, 9.2) à faire avant le lancement en réel, pas avant le plan
-d'implémentation.
+**Plan A ("le cerveau" : state.py, signals.py, sizing.py, contracts.py,
+gateway.py, portfolio.py) implémenté, revu et fusionné dans `main` le
+2026-09-15** — structurellement incapable de passer un ordre réel (garde-fou
+vérifié à la revue de branche), toujours en dry-run. Sections 4.3/4.6/4.7,
+initialement marquées **[Proposé — non validé]**, sont validées par
+l'implémentation réelle (elle les a suivies telles quelles, revues à
+plusieurs reprises). Section 9.9 a été révisée le 2026-09-15 (garde-fou de
+solde en devise de base, pas par devise — voir 9.9 pour le détail). Section
+4.5 : la source des données pour Plan B est tranchée (git pull sur le clone
+local, pas un fetch HTTPS séparé).
+
+**Reste à faire : Plan B** (orchestrateur `daily.py`, `journal.py`,
+`notify.py`, déploiement VPS — sections 4.5/5.5/7/8, toujours
+**[Proposé — non validé]** sauf indication contraire ci-dessus) — à régler
+normalement lors de l'écriture de son plan d'implémentation, pas
+individuellement avec l'utilisateur, sauf point structurant nouveau. Reste
+aussi une vérification manuelle non bloquante (coûts de données de marché,
+9.2) à faire avant le lancement en réel, pas avant le plan Plan B.
 
 Ce document est le compte rendu structuré d'une session de brainstorming
 menée avec l'utilisateur : tous les paramètres de la section « Paramètres
@@ -273,7 +286,7 @@ quotidienne. La persistance du Gateway est un sujet séparé** (un service
 qui tourne en continu, mais que la logique métier n'interroge qu'une
 fois par jour).
 
-### 4.3 Structure de fichiers proposée **[Proposé — non validé]**
+### 4.3 Structure de fichiers **[Validé par l'implémentation, Plan A]**
 
 Miroir de `gold_bot/`, adapté à un batch plutôt qu'à une boucle :
 
@@ -336,14 +349,11 @@ traitée comme telle en 5.5 (préflight, abandon propre, alerte email).
 Le bot **ne recalcule jamais le score**. Il consomme le résultat déjà
 publié.
 
-**Source des données** **[Proposé — non validé]** : le VPS possède déjà
-un clone du dépôt (`gold_bot` tourne depuis `/home/goldbot/analyse-or`).
-Proposition : `ibkr_bot.daily` fait un `git pull` en début de batch et
-lit les fichiers du clone local. Alternative : lire les fichiers publiés
-sur GitHub Pages (`https://alexandreauq.github.io/analyse-or/indices.json`),
-ce qui évite toute dépendance à l'état du clone git mais ajoute une
-dépendance réseau supplémentaire. La première est proposée parce qu'elle
-réutilise l'infrastructure déjà en place.
+**Source des données — tranché avec l'utilisateur le 2026-09-15** :
+`ibkr_bot.daily` fait un `git pull` en début de batch sur le clone déjà
+présent sur le VPS (`gold_bot` tourne depuis `/home/goldbot/analyse-or`)
+et lit les fichiers de ce clone local. Réutilise l'infrastructure déjà en
+place, pas de nouvelle dépendance réseau.
 
 **Garde de fraîcheur, non négociable** : le batch vérifie que
 `docs/indices.json`.`updated` vaut la date du jour. Si ce n'est pas le
@@ -378,7 +388,7 @@ slippage et les frais. Il doit être journalisé explicitement (prix
 paper / prix réel / écart en %) pour que la comparaison reste lisible
 plutôt que trompeuse.
 
-### 4.6 Détection d'un NOUVEAU signal du jour **[Proposé — non validé]**
+### 4.6 Détection d'un NOUVEAU signal du jour **[Validé par l'implémentation, Plan A]**
 
 Le problème : une alerte `entree` reste affichée plusieurs jours tant que
 les conditions sont réunies. Il ne faut acheter qu'**une fois**, le jour
@@ -418,7 +428,7 @@ réconciliation IBKR. Ces deux états ne doivent jamais être confondus.
 Le score composite servant au classement (3.5) est lu dans
 `docs/indices.json`, en rapprochant par `ticker`.
 
-### 4.7 Résolution des contrats IBKR **[Proposé — non validé]**
+### 4.7 Résolution des contrats IBKR **[Validé par l'implémentation, Plan A]**
 
 `docs/indices.json` identifie les entreprises par **ticker yfinance**
 (`MC.PA`, `SAP.DE`, `ABBN.SW`, `III.L`, `A2A.MI`, `ANA.MC`, `ADBE`…).
@@ -724,7 +734,7 @@ gateway :
 - un ordre en échec n'interrompt pas les suivants ;
 - relance du batch le même jour après plantage → pas de double achat.
 
-**Test de non-régression transversal** **[Proposé — non validé]** : un
+**Test de non-régression transversal** **[Validé par l'implémentation, Plan A]** : un
 test qui rejoue un historique de signaux à travers **la logique de sortie
 du bot réel** et **`_close_eligible_positions()` du paper-trading**, et
 vérifie que les décisions de sortie sont identiques à prix identiques.
@@ -824,11 +834,24 @@ cas de panne technique — propriété déjà partagée avec le paper-trading
 (évalué une fois par jour lui aussi). Pas de mécanisme d'urgence pour
 forcer une vente.
 
-### 9.9 Financement et suivi du solde — résolu
+### 9.9 Financement et suivi du solde — résolu, révisé le 2026-09-15
 
-**Garde-fou de solde ajouté** : le bot lit le solde disponible par devise
-avant de classer les signaux, et ne retient que ceux finançables — évite
-une série de rejets bruyants en fin de classement.
+**Garde-fou de solde ajouté**, mais pas par devise. La première version
+de cette décision (« solde disponible par devise ») contredisait 9.1/3.2 :
+puisqu'IBKR convertit automatiquement au moment de l'achat via IDEAL, il
+n'y a pas besoin de cash pré-converti par devise — l'exiger aurait
+bloqué la plupart des signaux sur un compte financé normalement (en EUR),
+comme l'a confirmé la revue finale du Plan A avec des données réelles
+(le signal le mieux noté du jour, en USD, aurait été rejeté à tort sur un
+compte avec 8 000 € de cash disponible).
+
+**Décision corrigée, tranchée par l'utilisateur pendant la revue de Plan A** :
+le garde-fou compare le budget cumulé du classement (à raison de 500 €
+par position retenue, un majorant sûr — l'arrondi aux actions entières ne
+fait que réduire la dépense réelle, jamais l'augmenter) au solde total
+disponible dans la **devise de base du compte**, pas devise par devise.
+Implémenté par `ibkr_bot.gateway.base_currency_cash()` (lit l'agrégat
+`"BASE"` du ledger IBKR) et le garde-fou de `ibkr_bot.portfolio.select_entries`.
 
 ## 10. Prochaine étape
 

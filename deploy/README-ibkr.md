@@ -1,5 +1,12 @@
 # Déploiement du Bot Actions IBKR sur le VPS
 
+**⚠️ Ce Gateway (Client Portal Web API) est en cours de remplacement** par
+IB Gateway / TWS API, suite à un bug d'authentification IBKR non résolu
+sur ce Gateway (session jamais authentifiée malgré un login+2FA réussis).
+Voir `deploy/README-ibkr-tws.md` pour le nouveau déploiement, installé EN
+PARALLÈLE de celui-ci le temps de la validation — ce document reste exact
+tant que la bascule n'est pas actée.
+
 Le bot actions (`ibkr_bot/`) tourne sur **le même VPS Hetzner que le Bot
 Or**, mais sous un **utilisateur système séparé** (`ibkrbot`) et avec son
 propre clone du dépôt. Raison (spec 5.1) : un bug ou une compromission du

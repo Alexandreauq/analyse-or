@@ -120,19 +120,19 @@
 
   /* Les écrans occupent tout le viewport et se superposent pendant
      la transition ; #or / #indices / #portefeuille glissent par-dessus #home puis repartent au retour. */
-  .home, #or, #indices, #portefeuille, #bot {
+  .home, #or, #indices, #portefeuille, #bot, #bot-actions {
     position: fixed; inset: 0; overflow-y: auto; -webkit-overflow-scrolling: touch;
     background: var(--bg);
     scrollbar-width: none;      /* Firefox */
     -ms-overflow-style: none;   /* vieux Edge */
   }
-  .home::-webkit-scrollbar, #or::-webkit-scrollbar, #indices::-webkit-scrollbar, #portefeuille::-webkit-scrollbar, #bot::-webkit-scrollbar { display: none; }
-  #or, #indices, #portefeuille, #bot {
+  .home::-webkit-scrollbar, #or::-webkit-scrollbar, #indices::-webkit-scrollbar, #portefeuille::-webkit-scrollbar, #bot::-webkit-scrollbar, #bot-actions::-webkit-scrollbar { display: none; }
+  #or, #indices, #portefeuille, #bot, #bot-actions {
     z-index: 2; transform: translateX(100%);
     transition: transform 0.32s cubic-bezier(.22,1,.36,1);
   }
-  #or.screen-in, #indices.screen-in, #portefeuille.screen-in, #bot.screen-in { transform: translateX(0); }
-  #or.no-anim, #indices.no-anim, #portefeuille.no-anim, #bot.no-anim { transition: none; }
+  #or.screen-in, #indices.screen-in, #portefeuille.screen-in, #bot.screen-in, #bot-actions.screen-in { transform: translateX(0); }
+  #or.no-anim, #indices.no-anim, #portefeuille.no-anim, #bot.no-anim, #bot-actions.no-anim { transition: none; }
 
 
   /* Nav des modules (Or / Minières / Indices) : bouton menu + panneau latéral
@@ -942,6 +942,34 @@
   </main>
 </div>
 
+<div id="bot-actions" class="screen app" hidden>
+  <header>
+    <div class="eyebrow">Trading automatique</div>
+    <h1>Bot Actions</h1>
+  </header>
+
+  <main>
+    <div class="portfolio-position-row">
+      <div class="portfolio-position-main">
+        <span class="company-name" style="color:var(--gold)">En validation</span>
+        <span class="hero-sub">Mode simulation — aucun ordre réel</span>
+      </div>
+    </div>
+    <p style="margin-top: 1.5rem; line-height: 1.6;">
+      Ce bot achète automatiquement les actions dont le signal « entrée »
+      se déclenche sur les 10 indices boursiers suivis dans l'onglet
+      Indices, et les revend selon les mêmes règles de sortie que le
+      paper-trading. Il tourne actuellement en simulation (aucun argent
+      réel engagé) le temps de valider sa fiabilité sur plusieurs
+      semaines.
+    </p>
+    <p style="margin-top: 1rem; line-height: 1.6; opacity: 0.75;">
+      Tableau de bord détaillé (positions, historique des décisions,
+      contrôles) à venir une fois la validation terminée.
+    </p>
+  </main>
+</div>
+
 <script>
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('service-worker.js').catch(() => {});
@@ -1104,6 +1132,7 @@ function renderPortfolioScreen() {
     ${portfolioPositionsHtml(positions, companiesByTicker, currencyByIndex)}
     ${realPortfolioHtml()}
     ${botLinkHtml()}
+    ${botActionsLinkHtml()}
     ${portfolioOpportunitiesHtml(opportunities)}
   `;
   wirePortfolioForm();
@@ -1284,6 +1313,24 @@ function botLinkHtml() {
       </div>
       <div class="portfolio-position-actions">
         <a href="#bot" class="toggle-btn">Voir le Bot →</a>
+      </div>
+    </div>`;
+}
+
+function botActionsLinkHtml() {
+  // Contenu volontairement statique : pas d'API équivalente à
+  // gold-bot-api.service pour ce bot pour l'instant — juste une carte
+  // qui reflète l'état réel (simulation) en attendant un vrai tableau
+  // de bord.
+  return `
+    <h2>Bot Actions</h2>
+    <div class="portfolio-position-row">
+      <div class="portfolio-position-main">
+        <span class="company-name" style="color:var(--gold)">En validation</span>
+        <span class="hero-sub">Mode simulation — aucun ordre réel</span>
+      </div>
+      <div class="portfolio-position-actions">
+        <a href="#bot-actions" class="toggle-btn">Voir le Bot →</a>
       </div>
     </div>`;
 }
@@ -2021,7 +2068,7 @@ function render(data) {
   if (matchMedia('(min-width: 1024px)').matches) animateFactorBars();
 }
 
-const SLIDING_PANES = ['or', 'indices', 'portefeuille', 'bot'];
+const SLIDING_PANES = ['or', 'indices', 'portefeuille', 'bot', 'bot-actions'];
 let indicesLoaded = false;
 let indicesData = null;
 let realPortfolioData = null;
@@ -2613,6 +2660,7 @@ function parseRoute() {
   if (hash === 'or') return { screen: 'or' };
   if (hash === 'portefeuille') return { screen: 'portefeuille' };
   if (hash === 'bot') return { screen: 'bot' };
+  if (hash === 'bot-actions') return { screen: 'bot-actions' };
   if (hash === 'indices') return { screen: 'indices', ticker: null };
   if (hash === 'indices/suivi') return { screen: 'indices', ticker: null, view: 'suivi' };
   if (hash.startsWith('indices/')) {

@@ -1,6 +1,6 @@
 {
-  "date": "2026-09-15",
-  "composite_score": 13.3,
+  "date": "2026-09-16",
+  "composite_score": 12.7,
   "interpretation": "Neutre — pas d'action",
   "factors": [
     {
@@ -11,9 +11,9 @@
     },
     {
       "name": "Dollar (DXY)",
-      "score": 4.44000244140625,
+      "score": 4.0399932861328125,
       "weight": 0.15,
-      "raw_value": "99.61 (il y a 2 mois : 100.50)"
+      "raw_value": "99.69 (il y a 2 mois : 100.50)"
     },
     {
       "name": "Anticipations d'inflation",
@@ -47,9 +47,9 @@
     }
   ],
   "technical": {
-    "note": "Cours en-dessous de la MM200 (-4.9%) — tendance baissière",
-    "spot": 4326.60009765625,
-    "ma200": 4550.734002685547
+    "note": "Cours en-dessous de la MM200 (-4.8%) — tendance baissière",
+    "spot": 4332.7001953125,
+    "ma200": 4550.764503173828
   },
   "calendar": [
     {
@@ -95,10 +95,10 @@
   ],
   "alerts": [
     {
-      "kind": "risque",
-      "title": "Chute rapide du score composite",
-      "detail": "Repricing de -22.1 points en moins de 5 jours.",
-      "date": "15/09/2026"
+      "kind": "info",
+      "title": "Pas de signal actif",
+      "detail": "Aucune des conditions de veille, d'entrée ou de risque n'est réunie aujourd'hui.",
+      "date": "16/09/2026"
     }
   ]
 }

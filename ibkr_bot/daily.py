@@ -99,7 +99,8 @@ def pull_repo(repo_dir: str = REPO_DIR, run_fn=subprocess.run) -> dict:
 
 def preflight(base_url: str, *, gw=gateway, sleep_fn=time.sleep,
               attempts: int = PREFLIGHT_ATTEMPTS,
-              delay_s: float = PREFLIGHT_DELAY_SECONDS) -> dict:
+              delay_s: float = PREFLIGHT_DELAY_SECONDS,
+              account_id: str | None = None) -> dict:
     """Le Gateway est-il utilisable ? (spec 5.5)
 
     "Utilisable" ne veut pas seulement dire "authentifie" : le CPAPI exige
@@ -114,7 +115,7 @@ def preflight(base_url: str, *, gw=gateway, sleep_fn=time.sleep,
     detail = ""
     for tentative in range(1, attempts + 1):
         try:
-            if gw.is_authenticated(base_url):
+            if gw.connect(base_url, account_id=account_id or "") and gw.is_authenticated(base_url):
                 gw.brokerage_accounts(base_url)
                 gw.portfolio_accounts(base_url)
                 return {"ok": True, "tentatives": tentative,
@@ -431,10 +432,17 @@ def _nouveau_run(today: str, mode: str) -> dict:
     }
 
 
-def _terminer(run: dict, chemins: dict, *, alerte_gateway: bool = False) -> dict:
+def _terminer(run: dict, chemins: dict, *, alerte_gateway: bool = False, gw=gateway) -> dict:
     """Sortie unique du batch : journal puis email. Le journal AVANT
     l'email pour qu'une panne SMTP ne fasse jamais perdre la trace d'un
     batch qui a reellement passe des ordres."""
+    try:
+        gw.disconnect()
+    except Exception:
+        # Une deconnexion ratee ne doit jamais faire perdre la trace du
+        # batch (meme raisonnement que journal.append_run juste en
+        # dessous : le compte-rendu prime toujours sur le nettoyage).
+        pass
     if not journal.append_run(run, chemins["journal"]):
         # journal.append_run ne leve jamais (voir journal.py) : une panne
         # disque sur le journal ne doit pas interrompre le batch, mais elle
@@ -490,7 +498,7 @@ def run_batch(today: str | None = None, *, gw=gateway, sleep_fn=time.sleep,
     # 1. Interrupteur d'urgence : on ne touche meme pas au reseau.
     if etat["kill_switch"]:
         run["statut"] = "kill_switch"
-        return _terminer(run, chemins)
+        return _terminer(run, chemins, gw=gw)
 
     # 1bis. Jour de bourse ? (Critical #1 de la revue finale de branche) —
     # le timer systemd tourne 7j/7, ET le garde de fraicheur juste en
@@ -514,7 +522,7 @@ def run_batch(today: str | None = None, *, gw=gateway, sleep_fn=time.sleep,
             "ticker": None, "raison": "hors_jour_de_bourse",
             "rang": None, "score": None,
         })
-        return _terminer(run, chemins)
+        return _terminer(run, chemins, gw=gw)
 
     # 2. Donnees du jour : git pull sur le clone local (spec 4.5).
     run["git_pull"] = pull_repo(repo_dir)
@@ -527,13 +535,13 @@ def run_batch(today: str | None = None, *, gw=gateway, sleep_fn=time.sleep,
             "ticker": None, "raison": "donnees_perimees",
             "rang": None, "score": None,
         })
-        return _terminer(run, chemins)
+        return _terminer(run, chemins, gw=gw)
 
     # 4. Preflight du Gateway (spec 5.5).
-    run["preflight"] = preflight(base_url, gw=gw, sleep_fn=sleep_fn)
+    run["preflight"] = preflight(base_url, gw=gw, sleep_fn=sleep_fn, account_id=account_id)
     if not run["preflight"]["ok"]:
         run["statut"] = "gateway_indisponible"
-        return _terminer(run, chemins, alerte_gateway=True)
+        return _terminer(run, chemins, alerte_gateway=True, gw=gw)
 
     # DEFENSE EN PROFONDEUR (spec 4.3 point 2), symetrique a celle de
     # _place_order mais ICI pour la POLITIQUE DE RECONCILIATION : la
@@ -563,7 +571,7 @@ def run_batch(today: str | None = None, *, gw=gateway, sleep_fn=time.sleep,
         # racheter une ligne deja detenue (spec 5.4 / 5.5).
         run["erreurs"].append({"etape": "positions_ibkr", "detail": str(e)})
         run["statut"] = "reconciliation_impossible"
-        return _terminer(run, chemins)
+        return _terminer(run, chemins, gw=gw)
 
     reconciliation = portfolio.reconcile(locales, brutes)
     run["reconciliation"] = {
@@ -857,7 +865,7 @@ def run_batch(today: str | None = None, *, gw=gateway, sleep_fn=time.sleep,
             today))
         _sauver_positions()
 
-    return _terminer(run, chemins)
+    return _terminer(run, chemins, gw=gw)
 
 
 def main() -> None:

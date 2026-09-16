@@ -24,6 +24,17 @@ class FakeGateway:
         self.echecs = set()
 
     # --- session ---
+    def connect(self, base_url, **kwargs):
+        # Decouple de `authentifie` : connect() (transport) et
+        # is_authenticated() (session/comptes) sont deux echecs distincts
+        # dans les tests de preflight (voir test_preflight_succeeds_on_a_later_attempt
+        # qui pilote is_authenticated() independamment de ce flag).
+        self.appels.append("connect")
+        return True
+
+    def disconnect(self):
+        self.appels.append("disconnect")
+
     def is_authenticated(self, base_url):
         self.appels.append("is_authenticated")
         return self.authentifie
@@ -256,10 +267,65 @@ def test_preflight_succeeds_on_a_later_attempt():
     assert dodos == [600]
 
 
+def test_preflight_calls_connect_before_checking_is_authenticated():
+    gw = FakeGateway(authentifie=True)
+
+    resultat = daily.preflight("127.0.0.1:4002", gw=gw, sleep_fn=lambda s: None)
+
+    assert resultat["ok"] is True
+    assert gw.appels[0] == "connect"
+
+
+def test_preflight_retries_connect_on_failure_like_is_authenticated():
+    tentatives = []
+
+    class _Gw(FakeGateway):
+        def connect(self, base_url, **kwargs):
+            tentatives.append(1)
+            return len(tentatives) >= 2  # echoue la 1ere fois, reussit la 2eme
+
+    gw = _Gw(authentifie=True)
+    resultat = daily.preflight("127.0.0.1:4002", gw=gw, sleep_fn=lambda s: None,
+                               attempts=3, delay_s=0)
+
+    assert resultat["ok"] is True
+    assert resultat["tentatives"] == 2
+
+
+# --- _terminer ---------------------------------------------------------
+
+def test_terminer_calls_disconnect(tmp_path, monkeypatch):
+    gw = FakeGateway()
+
+    monkeypatch.setattr(daily.notify, "send_daily_summary", lambda run, day=None: True)
+    monkeypatch.setattr(daily.notify, "send_gateway_alert", lambda tentatives, day=None: True)
+
+    chemins = {
+        "journal": str(tmp_path / "journal.jsonl"),
+        "state": str(tmp_path / "state.json"),
+        "positions": str(tmp_path / "positions.json"),
+        "conid_cache": str(tmp_path / "conid_cache.json"),
+        "indices": str(tmp_path / "indices.json"),
+        "tracking": str(tmp_path / "tracking.json"),
+        "account_snapshot": str(tmp_path / "account.json"),
+    }
+    run = daily._nouveau_run("2026-09-16", "dry_run")
+    daily._terminer(run, chemins, gw=gw)
+
+    assert "disconnect" in gw.appels
+
+
 # --- gardes de run_batch ---------------------------------------------
 
 def test_kill_switch_stops_everything_before_any_gateway_call(env):
-    """Spec 7 : kill_switch: true -> aucune action, ni entree ni sortie."""
+    """Spec 7 : kill_switch: true -> aucune action, ni entree ni sortie.
+
+    gw.appels == ["disconnect"] et pas [] : _terminer() appelle
+    gateway.disconnect() sur CHAQUE sortie de run_batch (voir sa
+    docstring dans gateway.py), y compris celle-ci qui precede tout
+    connect() — disconnect() est un no-op idempotent quand aucune
+    connexion n'a jamais ete ouverte. C'est connect()/is_authenticated/
+    positions qui ne doivent jamais avoir ete appeles."""
     ecrire_etat(env, kill_switch=True)
     gw = FakeGateway()
 
@@ -267,7 +333,7 @@ def test_kill_switch_stops_everything_before_any_gateway_call(env):
                           account_id="U1", paths=env["paths"])
 
     assert run["statut"] == "kill_switch"
-    assert gw.appels == []
+    assert gw.appels == ["disconnect"]
     assert gw.ordres == []
     assert run["sorties"] == [] and run["entrees"] == []
     assert lire_journal(env)[0]["statut"] == "kill_switch"
@@ -286,7 +352,10 @@ def test_a_weekend_batch_is_abandoned_before_the_gateway_is_touched(env):
                           account_id="U1", paths=env["paths"])
 
     assert run["statut"] == "hors_jour_de_bourse"
-    assert gw.appels == []
+    # disconnect() est un no-op appele sur toute sortie de run_batch (voir
+    # sa docstring dans gateway.py) ; c'est connect()/is_authenticated qui
+    # ne doivent jamais avoir ete appeles ici.
+    assert gw.appels == ["disconnect"]
     assert gw.ordres == []
     assert lire_journal(env)[0]["statut"] == "hors_jour_de_bourse"
     assert len(env["emails"]["resumes"]) == 1
@@ -302,7 +371,7 @@ def test_a_sunday_batch_is_also_abandoned(env):
                           account_id="U1", paths=env["paths"])
 
     assert run["statut"] == "hors_jour_de_bourse"
-    assert gw.appels == []
+    assert gw.appels == ["disconnect"]
 
 
 def test_stale_indices_json_stops_the_batch_entirely(env):
@@ -312,7 +381,9 @@ def test_stale_indices_json_stops_the_batch_entirely(env):
     bug inversait l'ordre des gardes (preflight avant fraicheur), ce
     preflight REUSSIRAIT silencieusement et le statut final ressemblerait
     quand meme a "donnees_perimees" en apparence — seule l'assertion sur
-    gw.appels prouve que le Gateway n'a jamais ete touche du tout."""
+    gw.appels (a l'exception de "disconnect", no-op appele sur toute
+    sortie de run_batch, voir sa docstring dans gateway.py) prouve que le
+    Gateway n'a jamais ete touche du tout par le preflight."""
     perime = {**INDICES, "updated": "2026-09-14"}
     with open(env["paths"]["indices"], "w", encoding="utf-8") as fh:
         json.dump(perime, fh)
@@ -322,7 +393,7 @@ def test_stale_indices_json_stops_the_batch_entirely(env):
                           account_id="U1", paths=env["paths"])
 
     assert run["statut"] == "donnees_perimees"
-    assert gw.appels == []
+    assert gw.appels == ["disconnect"]
     assert gw.ordres == []
     assert lire_journal(env)[0]["statut"] == "donnees_perimees"
     assert len(env["emails"]["resumes"]) == 1

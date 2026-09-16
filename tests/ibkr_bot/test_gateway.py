@@ -20,6 +20,7 @@ class _FakeIB:
         self.contract_details_result = []
         self.mkt_data_result = None
         self.cancel_mkt_data_calls = []
+        self.req_mkt_data_calls = []
 
     def connect(self, host, port, clientId=1, timeout=4, readonly=False,
                 account="", raiseSyncErrors=False, **kwargs):
@@ -53,6 +54,7 @@ class _FakeIB:
         return self.contract_details_result
 
     def reqMktData(self, contract, *a, **k):
+        self.req_mkt_data_calls.append(contract)
         return self.mkt_data_result
 
     def cancelMktData(self, contract):
@@ -320,4 +322,4 @@ def test_exchange_rate_reads_forex_market_price(fake_ib):
 def test_exchange_rate_same_currency_is_one_without_network_call(fake_ib):
     gateway.connect(BASE)
     assert gateway.exchange_rate(BASE, "EUR", "EUR") == 1.0
-    assert fake_ib.mkt_data_result is None  # aucun appel reqMktData necessaire
+    assert fake_ib.req_mkt_data_calls == []  # aucun appel reqMktData necessaire

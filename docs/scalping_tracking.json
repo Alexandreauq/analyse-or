@@ -389,18 +389,18 @@
     {
       "id": "scalp-2026-09-16T05:37:41.128Z",
       "direction": "achat",
-      "status": "open",
+      "status": "closed",
       "entry_time": "2026-09-16T05:37:41.128Z",
       "entry_price": 4328.55408,
       "stop_loss": 4319.46098,
       "take_profit": 4332.92678,
       "trend_at_entry": "haussier",
       "pattern_at_entry": "Triangle ascendant",
-      "close_time": null,
-      "close_price": null,
-      "close_reason": null,
-      "return_usd": null,
-      "return_pct": null
+      "close_time": "2026-09-16T05:47:43.542Z",
+      "close_price": 4332.92678,
+      "close_reason": "tp_hit",
+      "return_usd": 4.372699999999895,
+      "return_pct": 0.10101987682685704
     }
   ]
 }

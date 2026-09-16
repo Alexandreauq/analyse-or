@@ -5,7 +5,7 @@
 // correspond pas — pas de bibliothèque d'assertion, juste `assert` natif
 // de Node pour rester sans dépendance.
 const assert = require('assert');
-const { fetchGoldCandles, detectPivots, classifyTrend, currentLevels, computeRSI, computeMACD, computeBollinger, computeSignal, isNewsBlackout } = require('./scalping.js');
+const { fetchGoldCandles, detectPivots, classifyTrend, currentLevels, computeRSI, computeMACD, computeBollinger, computeSignal, meetsMinimumRiskReward, isNewsBlackout } = require('./scalping.js');
 
 async function test_fetchGoldCandles_parses_and_reverses_to_chronological_order() {
   const fakeResponse = {
@@ -242,6 +242,31 @@ function test_computeSignal_neutre_during_news_blackout() {
   console.log('OK: test_computeSignal_neutre_during_news_blackout');
 }
 
+function test_meetsMinimumRiskReward_accepts_a_ratio_at_or_above_the_multiple() {
+  // achat : risque = 100-98 = 2, gain = 103-100 = 3, ratio = 1.5 (pile le seuil)
+  assert.strictEqual(meetsMinimumRiskReward(100, 98, 103, 'achat'), true);
+  // vente : risque = 102-100 = 2, gain = 100-97 = 3, ratio = 1.5
+  assert.strictEqual(meetsMinimumRiskReward(100, 102, 97, 'vente'), true);
+  console.log('OK: test_meetsMinimumRiskReward_accepts_a_ratio_at_or_above_the_multiple');
+}
+
+function test_meetsMinimumRiskReward_rejects_a_ratio_below_the_multiple() {
+  // achat : risque = 100-98 = 2, gain = 100.7-100 = 0.7, ratio = 0.35 — cas
+  // exact du garde-fou : la résistance la plus proche plafonne l'objectif
+  // bien en-deçà du repli 1.5x, alors que le stop reste loin.
+  assert.strictEqual(meetsMinimumRiskReward(100, 98, 100.7, 'achat'), false);
+  assert.strictEqual(meetsMinimumRiskReward(100, 102, 99.3, 'vente'), false);
+  console.log('OK: test_meetsMinimumRiskReward_rejects_a_ratio_below_the_multiple');
+}
+
+function test_meetsMinimumRiskReward_rejects_zero_or_negative_risk() {
+  // entry === stopLoss (risque nul) ne doit jamais être accepté, même si
+  // le calcul de ratio deviendrait une division par zéro sans ce garde.
+  assert.strictEqual(meetsMinimumRiskReward(100, 100, 105, 'achat'), false);
+  assert.strictEqual(meetsMinimumRiskReward(100, 100, 95, 'vente'), false);
+  console.log('OK: test_meetsMinimumRiskReward_rejects_zero_or_negative_risk');
+}
+
 async function main() {
   await test_fetchGoldCandles_parses_and_reverses_to_chronological_order();
   await test_fetchGoldCandles_rejects_on_error_status();
@@ -266,6 +291,9 @@ async function main() {
   test_isNewsBlackout_exactly_at_ecb_decision();
   test_isNewsBlackout_exactly_at_boe_decision();
   test_computeSignal_neutre_during_news_blackout();
+  test_meetsMinimumRiskReward_accepts_a_ratio_at_or_above_the_multiple();
+  test_meetsMinimumRiskReward_rejects_a_ratio_below_the_multiple();
+  test_meetsMinimumRiskReward_rejects_zero_or_negative_risk();
   console.log('Tous les tests scalping.test.js sont passés.');
 }
 

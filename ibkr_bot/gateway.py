@@ -204,3 +204,66 @@ def positions(base_url: str, account_id: str) -> list[dict]:
          "avgCost": p.avgCost, "account": p.account}
         for p in ib.positions(account_id)
     ]
+
+
+# --- contrats et change ----------------------------------------------
+
+def search_contract(base_url: str, symbol: str) -> list[dict]:
+    """Contrat sous-specifie (exchange="SMART", devise vide) : IBKR
+    renvoie tous les contrats correspondants toutes places confondues,
+    comme le faisait /iserver/secdef/search cote CPAPI. Traduit chaque
+    ContractDetails dans la forme deja filtree par
+    contracts.py::resolve_conid() — "description" porte le code de
+    bourse (primaryExchange, PAS exchange qui vaut souvent "SMART"),
+    "sections" simule la forme CPAPI pour que
+    _a_une_section_action() continue de fonctionner sans modification.
+
+    [A VERIFIER EN TACHE] : que reqContractDetails avec un contrat
+    sous-specifie renvoie bien plusieurs candidats par place/devise pour
+    un symbole multi-cote, comme le faisait la recherche CPAPI — non
+    verifiable sans connexion IBKR reelle dans cet environnement. Voir
+    task-4-report.md."""
+    ib = _require_ib()
+    try:
+        details_list = ib.reqContractDetails(Stock(symbol, "SMART", ""))
+    except Exception:
+        return []
+    return [
+        {"symbol": d.contract.symbol, "conid": d.contract.conId,
+         "description": d.contract.primaryExchange,
+         "sections": [{"secType": d.contract.secType}]}
+        for d in details_list
+    ]
+
+
+def contract_info(base_url: str, conid) -> dict:
+    """currency + listingExchange (= primaryExchange cote ib_async, PAS
+    exchange qui vaut souvent "SMART" pour un contrat route)."""
+    from ib_async import Contract
+    ib = _require_ib()
+    try:
+        details_list = ib.reqContractDetails(Contract(conId=int(conid)))
+    except Exception:
+        return {}
+    if not details_list:
+        return {}
+    contract = details_list[0].contract
+    return {"currency": contract.currency, "listingExchange": contract.primaryExchange}
+
+
+def exchange_rate(base_url: str, source: str, target: str) -> float:
+    """Pas d'appel RPC direct cote TWS API : demande de donnees de
+    marche sur un contrat Forex, lecture du prix resultant. sleep(2)
+    laisse le temps au premier tick d'arriver (pattern standard
+    ib_async pour une lecture ponctuelle plutot qu'un flux)."""
+    if source == target:
+        return 1.0
+    ib = _require_ib()
+    fx = Forex(f"{source}{target}")
+    ticker = ib.reqMktData(fx, "", False, False)
+    ib.sleep(2)
+    try:
+        prix = ticker.marketPrice()
+    finally:
+        ib.cancelMktData(fx)
+    return float(prix)

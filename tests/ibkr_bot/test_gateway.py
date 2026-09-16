@@ -123,10 +123,25 @@ class _FakeOrder:
         self.orderId = orderId
 
 
+class _FakeCommissionReport:
+    def __init__(self, commission):
+        self.commission = commission
+
+
+class _FakeFill:
+    def __init__(self, commission=None):
+        # commissionReport est None tant que le rapport n'est pas encore
+        # arrive (ordre juste rempli, ib.placeOrder etant asynchrone) —
+        # voir docstring de order_status().
+        self.commissionReport = _FakeCommissionReport(commission) if commission is not None else None
+
+
 class _FakeTrade:
-    def __init__(self, orderId, avgFillPrice=0.0, status="Filled"):
+    def __init__(self, orderId, avgFillPrice=0.0, status="Filled", fills=None, log=None):
         self.order = _FakeOrder(orderId)
         self.orderStatus = _FakeOrderStatus(status=status, avgFillPrice=avgFillPrice, orderId=orderId)
+        self.fills = fills if fills is not None else []
+        self.log = log if log is not None else []
 
 
 @pytest.fixture
@@ -360,19 +375,73 @@ def test_place_market_order_returns_a_single_confirmation(fake_ib):
     assert result == [{"order_id": "555"}]
     contract, order = fake_ib.place_order_calls[0]
     assert contract.conId == 265598
+    # Fix 2 (revue post-implementation) : sans exchange="SMART", TWS
+    # rejette tout ordre reel avec l'erreur 321 "Please enter exchange"
+    # — un Contract(conId=...) seul suffit pour reqContractDetails mais
+    # pas pour placeOrder.
+    assert contract.exchange == "SMART"
     assert order.action == "BUY"
     assert order.totalQuantity == 10
     assert order.tif == "DAY"
+    # Fix 1 : place_market_order laisse le temps a la reponse initiale de
+    # TWS d'arriver avant de considerer l'ordre confirme (placeOrder est
+    # non bloquant et ne leve jamais sur un rejet).
+    assert fake_ib.sleep_calls == [2]
+
+
+def test_place_market_order_sell_side_is_forwarded_unchanged(fake_ib):
+    gateway.connect(BASE)
+    fake_ib.place_order_result = _FakeTrade(orderId=556, avgFillPrice=0.0, status="Submitted")
+    result = gateway.place_market_order(BASE, "U28849893", 265598, "SELL", 4)
+    assert result == [{"order_id": "556"}]
+    contract, order = fake_ib.place_order_calls[0]
+    assert contract.exchange == "SMART"
+    assert order.action == "SELL"
+    assert order.totalQuantity == 4
 
 
 def test_place_market_order_rejects_invalid_side():
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="BUY.*SELL"):
         gateway.place_market_order(BASE, "U28849893", 265598, "HOLD", 10)
 
 
 def test_place_market_order_rejects_invalid_quantity():
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="entier"):
         gateway.place_market_order(BASE, "U28849893", 265598, "BUY", 0)
+
+
+def test_place_market_order_rejects_a_bool_quantity():
+    # bool est une sous-classe d'int en Python : True/False ne doivent
+    # jamais devenir silencieusement une quantite de 1/0.
+    with pytest.raises(ValueError, match="entier"):
+        gateway.place_market_order(BASE, "U28849893", 265598, "BUY", True)
+
+
+def test_place_market_order_raises_when_ibkr_rejects_or_cancels_the_order(fake_ib):
+    # Fix 1 (Critical, revue post-implementation) : ib.placeOrder() ne
+    # leve jamais sur un rejet — TWS le signale plus tard via un statut
+    # asynchrone. Sans cette verification, un ordre rejete serait
+    # journalise comme un succes par daily.py::_place_order.
+    gateway.connect(BASE)
+    fake_ib.place_order_result = _FakeTrade(
+        orderId=557, status="Cancelled",
+        log=["rejected: no such contract"])
+    with pytest.raises(RuntimeError, match="rejete ou annule"):
+        gateway.place_market_order(BASE, "U28849893", 265598, "BUY", 10)
+
+
+def test_place_market_order_propagates_placeorder_exceptions(fake_ib, monkeypatch):
+    # Mirroir de l'ancien test_place_market_order_propagates_http_errors
+    # (CPAPI) : une exception levee pendant l'envoi de l'ordre (connexion
+    # coupee, etc.) doit remonter telle quelle, jamais etre avalee.
+    gateway.connect(BASE)
+
+    def boom(contract, order):
+        raise ConnectionError("connexion TWS perdue pendant l'envoi de l'ordre")
+
+    monkeypatch.setattr(fake_ib, "placeOrder", boom)
+    with pytest.raises(ConnectionError, match="connexion TWS perdue"):
+        gateway.place_market_order(BASE, "U28849893", 265598, "BUY", 10)
 
 
 def test_confirm_reply_raises_loudly_instead_of_pretending_to_answer(fake_ib):
@@ -392,3 +461,28 @@ def test_order_status_reads_the_cached_trade_for_this_order_id(fake_ib):
 def test_order_status_empty_dict_when_order_id_unknown(fake_ib):
     gateway.connect(BASE)
     assert gateway.order_status(BASE, "unknown-id") == {}
+
+
+def test_order_status_reads_real_commission_when_a_fill_reports_one(fake_ib):
+    # Fix 3 (Important, revue post-implementation) : commission etait
+    # hardcodee a None, perdant definitivement la donnee reelle exposee
+    # par ib_async via trade.fills[i].commissionReport.commission.
+    gateway.connect(BASE)
+    fake_ib.place_order_result = _FakeTrade(
+        orderId=558, avgFillPrice=99.5, status="Filled",
+        fills=[_FakeFill(commission=None), _FakeFill(commission=1.23)])
+    gateway.place_market_order(BASE, "U28849893", 265598, "BUY", 10)
+    status = gateway.order_status(BASE, "558")
+    assert status == {"order_status": "Filled", "avgPrice": 99.5, "commission": 1.23}
+
+
+def test_order_status_commission_falls_back_to_none_without_a_fill_yet(fake_ib):
+    # Best-effort (comme le prix estime ailleurs dans ce fichier) : les
+    # fills peuvent arriver apres l'appel a order_status(), pas de
+    # tentative de forcer leur presence.
+    gateway.connect(BASE)
+    fake_ib.place_order_result = _FakeTrade(
+        orderId=559, avgFillPrice=0.0, status="Submitted", fills=[])
+    gateway.place_market_order(BASE, "U28849893", 265598, "BUY", 10)
+    status = gateway.order_status(BASE, "559")
+    assert status == {"order_status": "Submitted", "avgPrice": None, "commission": None}

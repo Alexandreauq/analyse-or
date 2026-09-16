@@ -17,6 +17,9 @@ class _FakeIB:
         self.sleep_calls = []
         self.account_values_result = []
         self.positions_result = []
+        self.contract_details_result = []
+        self.mkt_data_result = None
+        self.cancel_mkt_data_calls = []
 
     def connect(self, host, port, clientId=1, timeout=4, readonly=False,
                 account="", raiseSyncErrors=False, **kwargs):
@@ -46,6 +49,15 @@ class _FakeIB:
     def positions(self, account=""):
         return self.positions_result
 
+    def reqContractDetails(self, contract):
+        return self.contract_details_result
+
+    def reqMktData(self, contract, *a, **k):
+        return self.mkt_data_result
+
+    def cancelMktData(self, contract):
+        self.cancel_mkt_data_calls.append(contract)
+
 
 class _FakeContract:
     def __init__(self, conId):
@@ -67,6 +79,28 @@ class _FakeAccountValue:
         self.value = value
         self.currency = currency
         self.modelCode = modelCode
+
+
+class _FakeContractFull:
+    def __init__(self, symbol, conId, currency, primaryExchange, secType="STK"):
+        self.symbol = symbol
+        self.conId = conId
+        self.currency = currency
+        self.primaryExchange = primaryExchange
+        self.secType = secType
+
+
+class _FakeContractDetails:
+    def __init__(self, contract):
+        self.contract = contract
+
+
+class _FakeTicker:
+    def __init__(self, price):
+        self._price = price
+
+    def marketPrice(self):
+        return self._price
 
 
 @pytest.fixture
@@ -236,3 +270,54 @@ def test_positions_empty_when_no_positions_held(fake_ib):
     gateway.connect(BASE)
     fake_ib.positions_result = []
     assert gateway.positions(BASE, "U28849893") == []
+
+
+def test_search_contract_translates_contract_details_list(fake_ib):
+    gateway.connect(BASE)
+    fake_ib.contract_details_result = [
+        _FakeContractDetails(_FakeContractFull("SAP", 12345, "EUR", "IBIS")),
+        _FakeContractDetails(_FakeContractFull("SAP", 67890, "USD", "NYSE")),
+    ]
+    result = gateway.search_contract(BASE, "SAP")
+    assert result == [
+        {"symbol": "SAP", "conid": 12345, "description": "IBIS",
+         "sections": [{"secType": "STK"}]},
+        {"symbol": "SAP", "conid": 67890, "description": "NYSE",
+         "sections": [{"secType": "STK"}]},
+    ]
+
+
+def test_search_contract_returns_empty_list_on_no_match(fake_ib):
+    gateway.connect(BASE)
+    fake_ib.contract_details_result = []
+    assert gateway.search_contract(BASE, "INCONNU") == []
+
+
+def test_contract_info_reads_currency_and_primary_exchange(fake_ib):
+    gateway.connect(BASE)
+    fake_ib.contract_details_result = [
+        _FakeContractDetails(_FakeContractFull("SAP", 12345, "EUR", "IBIS")),
+    ]
+    assert gateway.contract_info(BASE, 12345) == {
+        "currency": "EUR", "listingExchange": "IBIS",
+    }
+
+
+def test_contract_info_empty_dict_when_not_found(fake_ib):
+    gateway.connect(BASE)
+    fake_ib.contract_details_result = []
+    assert gateway.contract_info(BASE, 999) == {}
+
+
+def test_exchange_rate_reads_forex_market_price(fake_ib):
+    gateway.connect(BASE)
+    fake_ib.mkt_data_result = _FakeTicker(0.86)
+    rate = gateway.exchange_rate(BASE, "EUR", "GBP")
+    assert rate == 0.86
+    assert fake_ib.cancel_mkt_data_calls  # nettoyage de l'abonnement
+
+
+def test_exchange_rate_same_currency_is_one_without_network_call(fake_ib):
+    gateway.connect(BASE)
+    assert gateway.exchange_rate(BASE, "EUR", "EUR") == 1.0
+    assert fake_ib.mkt_data_result is None  # aucun appel reqMktData necessaire

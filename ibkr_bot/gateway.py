@@ -273,7 +273,10 @@ def exchange_rate(base_url: str, source: str, target: str) -> float:
 # l'argent reel peut bouger. Dans ce plan, elles sont couvertes
 # UNIQUEMENT par des tests avec IB mocke (voir
 # tests/ibkr_bot/test_order_routes_are_isolated.py, Tache 8, qui
-# verifie qu'aucun autre module de ibkr_bot/ ne les appelle).
+# verifie qu'aucun autre module de ibkr_bot/ ne reference ib_async /
+# placeOrder / MarketOrder directement — appeler place_market_order()
+# d'ici est attendu et sans danger, contourner gateway.py pour parler
+# a ib_async directement ne l'est pas).
 
 _trades_by_order_id: dict[str, object] = {}
 

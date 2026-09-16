@@ -3,3 +3,4 @@ yfinance
 pandas
 trafilatura
 python-dateutil
+ib_async

@@ -1,250 +1,135 @@
 # ibkr_bot/gateway.py
-# Client HTTP du IBKR Client Portal Web API Gateway (paquet Java lance en
-# service systemd, a l'ecoute sur 127.0.0.1 uniquement — voir spec 4.4).
+# Client TWS API (via ib_async) d'IB Gateway — remplace le Client Portal
+# Web API Gateway (bloque par un bug d'authentification IBKR non
+# resolu, voir docs/superpowers/specs/2026-09-16-ibkr-tws-gateway-migration-design.md).
 # SEUL MODULE DU PAQUET QUI PARLE A IBKR.
 #
-# Endpoints verifies le 2026-09-14 contre la documentation publique du
-# Client Portal Web API et contre le client open-source Voyz/ibind, qui
-# les exerce en production. Ne pas modifier les chemins, les methodes ni
-# les noms de champs sans re-verification contre la doc reelle.
+# Endpoints verifies le 2026-09-16 contre le code source de ib_async
+# (github.com/ib-api-reloaded/ib_async, fichiers ib.py/objects.py/
+# contract.py/order.py lus directement). Ne pas modifier les noms de
+# methodes ib_async ni les champs lus sans re-verification contre le
+# code source reel.
 #
-# PLAN A : place_market_order() et confirm_reply() sont ecrites et
-# testees (mockees), mais AUCUN autre module de ibkr_bot/ ne les appelle
-# — un test structurel le verifie. Le chemin reel arrive au Plan B.
-import uuid
+# ORDRE REEL : place_market_order() est le SEUL chemin par lequel de
+# l'argent reel peut bouger. Un test structurel (voir
+# tests/ibkr_bot/test_order_routes_are_isolated.py) verifie qu'aucun
+# autre module de ibkr_bot/ ne reference ib_async.placeOrder / MarketOrder.
+import re
 
-import urllib3
+from ib_async import IB, Stock, Forex, MarketOrder
 
-import requests
+DEFAULT_GATEWAY_URL = "127.0.0.1:4002"  # port paper par defaut ; le
+# deploiement reel passe 127.0.0.1:4001 via IBKR_GATEWAY_URL (.env).
+DEFAULT_CLIENT_ID = 7
+CONNECT_TIMEOUT = 15
+DISCONNECT_FLUSH_SECONDS = 1  # recommandation ib_async pour les
+# connexions de courte duree : laisser le temps aux derniers messages de
+# partir avant de couper le socket.
 
-DEFAULT_GATEWAY_URL = "https://127.0.0.1:5000"
-API_PREFIX = "/v1/api"
-TIMEOUT = 15
-POSITIONS_PAGE_SIZE = 100
+_HOST_PORT_RE = re.compile(r"^(?:https?://)?([^:/]+):(\d+)/?$")
 
-# Le Gateway presente un certificat auto-signe. verify=False est sur ici
-# et seulement ici : la connexion ne quitte jamais la machine.
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-
-
-def build_url(base_url: str, path: str) -> str:
-    return f"{base_url.rstrip('/')}{API_PREFIX}/{path.lstrip('/')}"
-
-
-def _get(base_url: str, path: str, params: dict | None = None):
-    resp = requests.get(
-        build_url(base_url, path), params=params, timeout=TIMEOUT, verify=False,
-    )
-    resp.raise_for_status()
-    return resp.json()
+# Connexion unique, partagee par toutes les fonctions de ce module —
+# ouverte par connect() (appele depuis daily.py::preflight()), fermee
+# par disconnect() (appele depuis daily.py::_terminer()). Jamais de
+# connexion permanente en arriere-plan (spec 2026-09-16, point 6) : une
+# seule ouverture/fermeture par batch quotidien.
+_ib: IB | None = None
 
 
-def _post(base_url: str, path: str, payload: dict | None = None):
-    resp = requests.post(
-        build_url(base_url, path), json=payload, timeout=TIMEOUT, verify=False,
-    )
-    resp.raise_for_status()
-    return resp.json()
+def _parse_host_port(base_url: str) -> tuple[str, int]:
+    m = _HOST_PORT_RE.match(base_url.strip())
+    if not m:
+        raise ValueError(f"base_url attendu sous la forme host:port, recu {base_url!r}")
+    return m.group(1), int(m.group(2))
+
+
+def connect(base_url: str = DEFAULT_GATEWAY_URL, *, client_id: int = DEFAULT_CLIENT_ID,
+           account_id: str = "", timeout: float = CONNECT_TIMEOUT) -> bool:
+    """Ouvre la connexion TWS API vers IB Gateway (une fois par batch —
+    voir daily.py::preflight()). Idempotent : un appel alors qu'une
+    connexion est deja active ne fait rien. Ne leve jamais : renvoie
+    False sur tout echec, a charge de l'appelant (preflight) de
+    reessayer."""
+    global _ib
+    if _ib is not None and _ib.isConnected():
+        return True
+    try:
+        host, port = _parse_host_port(base_url)
+        candidate = IB()
+        candidate.connect(host, port, clientId=client_id, timeout=timeout,
+                          account=account_id, raiseSyncErrors=True)
+    except Exception:
+        return False
+    _ib = candidate
+    return True
+
+
+def disconnect() -> None:
+    """Ferme la connexion TWS API en fin de batch (daily.py::_terminer()).
+    Ne leve jamais, et ne fait rien si aucune connexion n'est active —
+    tous les chemins de sortie de run_batch (kill_switch, hors jour de
+    bourse, donnees perimees...) passent par _terminer() meme quand
+    connect() n'a jamais ete appele."""
+    global _ib
+    if _ib is None:
+        return
+    try:
+        if _ib.isConnected():
+            # Delai de purge recommande par ib_async avant de couper une
+            # connexion de courte duree (voir recherche de ce plan) :
+            # laisse le temps aux derniers messages en vol de partir.
+            _ib.sleep(DISCONNECT_FLUSH_SECONDS)
+            _ib.disconnect()
+    except Exception:
+        pass
+    finally:
+        _ib = None
+
+
+def _require_ib() -> IB:
+    if _ib is None or not _ib.isConnected():
+        raise ConnectionError("gateway.connect() n'a pas ete appele ou la connexion est fermee")
+    return _ib
 
 
 # --- session ---------------------------------------------------------
 
-def auth_status(base_url: str = DEFAULT_GATEWAY_URL) -> dict:
-    """POST /iserver/auth/status -> {"authenticated", "connected",
-    "competing"}."""
-    return _post(base_url, "/iserver/auth/status")
-
-
 def is_authenticated(base_url: str = DEFAULT_GATEWAY_URL) -> bool:
-    """Preflight du batch : True seulement si la session est a la fois
-    authentifiee et connectee. Ne leve jamais — un Gateway eteint ou une
-    reponse inattendue donnent False, que l'appelant traduira en
-    'gateway_indisponible'."""
+    """Preflight du batch : True seulement si la connexion TWS API est
+    active ET que managedAccounts() renvoie au moins un compte — meme
+    esprit que l'ancien authenticated+connected du CPAPI. Ne leve
+    jamais."""
+    if _ib is None or not _ib.isConnected():
+        return False
     try:
-        status = auth_status(base_url)
+        comptes = _ib.managedAccounts()
     except Exception:
         return False
-    if not isinstance(status, dict):
-        return False
-    return bool(status.get("authenticated")) and bool(status.get("connected"))
+    return bool(comptes)
+
+
+def auth_status(base_url: str = DEFAULT_GATEWAY_URL) -> dict:
+    """Forme inchangee pour les appelants existants (aucun n'utilise
+    "competing" aujourd'hui, mais la cle est gardee pour compatibilite
+    de forme)."""
+    return {"authenticated": is_authenticated(base_url),
+            "connected": _ib is not None and _ib.isConnected(),
+            "competing": False}
 
 
 def tickle(base_url: str = DEFAULT_GATEWAY_URL) -> dict:
-    """POST /tickle — maintient la session vivante."""
-    return _post(base_url, "/tickle")
+    """La TWS API maintient la connexion vivante via son propre
+    heartbeat interne — pas d'appel explicite de maintien de session
+    necessaire, contrairement au CPAPI. Simple reflet de l'etat."""
+    return {"session": "ib_async", "connected": _ib is not None and _ib.isConnected()}
 
 
 def reauthenticate(base_url: str = DEFAULT_GATEWAY_URL) -> dict:
-    """POST /iserver/reauthenticate — relance la session courtage. Ne
-    remplace pas une validation 2FA manuelle quand elle est exigee."""
-    return _post(base_url, "/iserver/reauthenticate")
-
-
-def brokerage_accounts(base_url: str = DEFAULT_GATEWAY_URL) -> dict:
-    """GET /iserver/accounts — doit avoir ete appele au moins une fois
-    dans la session avant tout passage d'ordre."""
-    return _get(base_url, "/iserver/accounts")
-
-
-# --- contrats et change ----------------------------------------------
-
-def search_contract(base_url: str, symbol: str) -> list[dict]:
-    """GET /iserver/secdef/search — recherche d'actions par symbole.
-    Renvoie toujours une liste : le Gateway substitue parfois un objet
-    d'erreur a la liste attendue."""
-    data = _get(base_url, "/iserver/secdef/search",
-                {"symbol": symbol, "secType": "STK"})
-    return data if isinstance(data, list) else []
-
-
-def contract_info(base_url: str, conid) -> dict:
-    """GET /iserver/secdef/info — details du contrat (porte notamment
-    currency et listingExchange, les deux champs qui permettent de
-    refuser un contrat ambigu plutot que de le deviner).
-
-    Envoie a la fois `secType` (camelCase, documente pour
-    /iserver/secdef/search) et `sectype` (tout en minuscules, celui que
-    le client open-source `ibind` envoie pour cette route precise) : la
-    doc publique du Client Portal Web API est incoherente entre les deux
-    routes sur la casse de ce parametre, et un Gateway qui ignore la
-    mauvaise cle laisserait le param manquant — sans `currency` ni
-    `listingExchange` en retour, tout contrat serait a tort traite comme
-    ambigu par la resolution de contrat (Tache 5)."""
-    data = _get(base_url, "/iserver/secdef/info",
-                {"conid": str(conid), "secType": "STK", "sectype": "STK"})
-    if isinstance(data, list):
-        return data[0] if data else {}
-    return data if isinstance(data, dict) else {}
-
-
-def exchange_rate(base_url: str, source: str, target: str) -> float:
-    """GET /iserver/exchangerate -> {"rate": ...}. Taux `source` ->
-    `target` (EUR -> GBP renvoie des GBP par EUR)."""
-    if source == target:
-        return 1.0
-    return float(_get(base_url, "/iserver/exchangerate",
-                      {"source": source, "target": target})["rate"])
-
-
-# --- portefeuille ----------------------------------------------------
-
-def portfolio_accounts(base_url: str = DEFAULT_GATEWAY_URL) -> list[dict]:
-    """GET /portfolio/accounts — pendant cote portefeuille du prealable
-    deja impose cote ordres par brokerage_accounts()/GET /iserver/accounts.
-    Le CPAPI exige que cette route ait ete appelee au moins une fois dans
-    la session avant que /portfolio/{accountId}/... (ledger(), positions())
-    ne renvoie des donnees reelles ; sans cet appel, ces routes renvoient
-    silencieusement une reponse vide plutot qu'une erreur, ce qui est le
-    sens dangereux pour portfolio.reconcile() (Tache 7) — "le bot ne
-    detient rien" pourrait a tort justifier un rachat d'une ligne deja
-    detenue. Renvoie toujours une liste, meme forme que search_contract()
-    et positions()."""
-    data = _get(base_url, "/portfolio/accounts")
-    return data if isinstance(data, list) else []
-
-
-def ledger(base_url: str, account_id: str) -> dict:
-    """GET /portfolio/{accountId}/ledger — soldes indexes par devise.
-    La cle "BASE" est un agregat dans la devise de base du compte, pas
-    une devise reelle."""
-    data = _get(base_url, f"/portfolio/{account_id}/ledger")
-    return data if isinstance(data, dict) else {}
-
-
-def cash_by_currency(base_url: str, account_id: str) -> dict[str, float]:
-    """Solde cash disponible par devise reelle. Alimente le garde-fou de
-    solde (spec 9.9) : ne retenir que les signaux financables, plutot que
-    de declencher une serie de rejets bruyants en fin de classement."""
-    soldes: dict[str, float] = {}
-    for devise, entree in ledger(base_url, account_id).items():
-        if devise == "BASE" or not isinstance(entree, dict):
-            continue
-        solde = entree.get("cashbalance")
-        if isinstance(solde, (int, float)) and not isinstance(solde, bool):
-            soldes[devise] = float(solde)
-    return soldes
-
-
-def base_currency_cash(base_url: str, account_id: str) -> float:
-    """Solde en especes dans la devise de base du compte (agregat "BASE"
-    du ledger IBKR) — utilise pour le garde-fou de solde global, coherent
-    avec la conversion automatique a l'achat (spec 9.1, mecanisme IDEAL) :
-    le bot n'a pas besoin de cash pre-converti par devise, seulement d'un
-    solde suffisant dans la devise de base du compte."""
-    data = ledger(base_url, account_id)
-    entree = data.get("BASE") if isinstance(data, dict) else None
-    if not isinstance(entree, dict):
-        return 0.0
-    solde = entree.get("cashbalance")
-    return solde if isinstance(solde, (int, float)) and not isinstance(solde, bool) else 0.0
-
-
-def positions(base_url: str, account_id: str) -> list[dict]:
-    """GET /portfolio/{accountId}/positions/{pageId} — toutes les
-    positions du compte, pagination suivie jusqu'a une page incomplete.
-    Renvoie les positions BRUTES du compte : c'est portfolio.reconcile()
-    qui distingue celles du bot de celles de l'utilisateur."""
-    toutes: list[dict] = []
-    page = 0
-    while True:
-        lot = _get(base_url, f"/portfolio/{account_id}/positions/{page}")
-        if not isinstance(lot, list):
-            break
-        toutes.extend(lot)
-        if len(lot) < POSITIONS_PAGE_SIZE:
-            break
-        page += 1
-    return toutes
-
-
-# --- ordres ----------------------------------------------------------
-# ATTENTION : les deux fonctions ci-dessous sont le seul chemin par
-# lequel de l'argent reel peut bouger. Dans ce Plan A, elles ne sont
-# appelees QUE par les tests (avec requests.post monkeypatche). Le test
-# test_no_other_plan_a_module_references_the_order_routes le verifie.
-
-def place_market_order(base_url: str, account_id: str, conid: int,
-                       side: str, quantity: int) -> list[dict]:
-    """POST /iserver/account/{accountId}/orders — ordre au marche (MKT),
-    valable le jour (DAY), passe dans la fenetre 14:30-15:30 UTC ou
-    toutes les places du perimetre sont ouvertes (spec 4.8, 4.5).
-
-    La reponse peut etre une confirmation d'ordre OU une question a
-    confirmer via confirm_reply() ; l'appelant (Plan B) doit traiter les
-    deux formes.
-
-    Le corps porte un `cOID` (client order id, champ documente du CPAPI)
-    genere ici via uuid.uuid4() : sans identifiant client, un retry apres
-    timeout HTTP (Plan B) ne pourrait pas distinguer "l'ordre est bien
-    arrive au Gateway" de "l'ordre ne l'a jamais atteint", au risque d'un
-    double envoi sur un compte reel."""
-    if side not in ("BUY", "SELL"):
-        raise ValueError(f"side doit valoir 'BUY' ou 'SELL', recu {side!r}")
-    if not isinstance(quantity, int) or isinstance(quantity, bool) or quantity < 1:
-        raise ValueError(f"quantite doit etre un entier >= 1, recue {quantity!r}")
-    data = _post(base_url, f"/iserver/account/{account_id}/orders", {
-        "orders": [{
-            "conid": conid,
-            "orderType": "MKT",
-            "side": side,
-            "quantity": quantity,
-            "tif": "DAY",
-            "acctId": account_id,
-            "cOID": str(uuid.uuid4()),
-        }]
-    })
-    return data if isinstance(data, list) else [data]
-
-
-def confirm_reply(base_url: str, reply_id: str, confirmed: bool = True) -> list[dict]:
-    """POST /iserver/reply/{replyId} — repond a une question de
-    confirmation renvoyee par place_market_order()."""
-    data = _post(base_url, f"/iserver/reply/{reply_id}", {"confirmed": confirmed})
-    return data if isinstance(data, list) else [data]
-
-
-def order_status(base_url: str, order_id: str) -> dict:
-    """GET /iserver/account/order/status/{orderId} — etat d'un ordre
-    soumis (porte notamment order_status et avgPrice une fois execute)."""
-    data = _get(base_url, f"/iserver/account/order/status/{order_id}")
-    return data if isinstance(data, dict) else {}
+    """No-op documente : la TWS API n'a pas d'equivalent de
+    /iserver/reauthenticate. Une session expiree exige une vraie
+    reconnexion socket, geree par IBC/systemd (redemarrage du
+    conteneur), pas par un appel applicatif depuis ce module."""
+    return {
+        "authenticated": is_authenticated(base_url),
+        "detail": "no-op : la reconnexion TWS API passe par IBC/systemd, pas par un appel applicatif",
+    }

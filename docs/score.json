@@ -1,7 +1,7 @@
 {
   "date": "2026-09-16",
-  "composite_score": 15.1,
-  "interpretation": "Favorable — en attente d'un déclencheur technique",
+  "composite_score": 14.5,
+  "interpretation": "Neutre — pas d'action",
   "factors": [
     {
       "name": "Taux réels US 10 ans",
@@ -11,9 +11,9 @@
     },
     {
       "name": "Dollar (DXY)",
-      "score": 5.6800079345703125,
+      "score": 5.235023498535156,
       "weight": 0.15,
-      "raw_value": "99.59 (il y a 2 mois : 100.73)"
+      "raw_value": "99.68 (il y a 2 mois : 100.73)"
     },
     {
       "name": "Anticipations d'inflation",
@@ -47,9 +47,9 @@
     }
   ],
   "technical": {
-    "note": "Cours en-dessous de la MM200 (-4.0%) — tendance baissière",
-    "spot": 4369.7001953125,
-    "ma200": 4551.787501220703
+    "note": "Cours en-dessous de la MM200 (-3.7%) — tendance baissière",
+    "spot": 4385.0,
+    "ma200": 4551.864000244141
   },
   "calendar": [
     {
@@ -95,9 +95,9 @@
   ],
   "alerts": [
     {
-      "kind": "watch",
-      "title": "Score composite a franchi +15",
-      "detail": "Surveillance active du déclencheur technique enclenchée.",
+      "kind": "info",
+      "title": "Pas de signal actif",
+      "detail": "Aucune des conditions de veille, d'entrée ou de risque n'est réunie aujourd'hui.",
       "date": "16/09/2026"
     }
   ]

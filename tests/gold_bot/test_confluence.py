@@ -223,6 +223,28 @@ def test_match_candlestick_pattern_none_when_no_match():
     assert confluence.match_candlestick_pattern(candles, "neutre") is None
 
 
+def test_meets_minimum_risk_reward_accepts_a_ratio_at_or_above_the_multiple():
+    # achat : risque = 100-98 = 2, gain = 103-100 = 3, ratio = 1.5 (pile le seuil)
+    assert confluence.meets_minimum_risk_reward(100, 98, 103, "achat") is True
+    # vente : risque = 102-100 = 2, gain = 100-97 = 3, ratio = 1.5
+    assert confluence.meets_minimum_risk_reward(100, 102, 97, "vente") is True
+
+
+def test_meets_minimum_risk_reward_rejects_a_ratio_below_the_multiple():
+    # achat : risque = 100-98 = 2, gain = 100.7-100 = 0.7, ratio = 0.35 (cas
+    # exact du garde-fou : la resistance la plus proche plafonne l'objectif
+    # bien en-deca du repli 1.5x, alors que le stop reste loin).
+    assert confluence.meets_minimum_risk_reward(100, 98, 100.7, "achat") is False
+    assert confluence.meets_minimum_risk_reward(100, 102, 99.3, "vente") is False
+
+
+def test_meets_minimum_risk_reward_rejects_zero_or_negative_risk():
+    # entry == stop_loss (risque nul) ne doit jamais etre accepte, meme si
+    # le calcul de ratio deviendrait une division par zero sans ce garde.
+    assert confluence.meets_minimum_risk_reward(100, 100, 105, "achat") is False
+    assert confluence.meets_minimum_risk_reward(100, 100, 95, "vente") is False
+
+
 def test_compute_signal_neutre_when_too_few_candles():
     candles = [_candle(100, 101, 99, 100.5) for _ in range(5)]
     result = confluence.compute_signal(candles)
@@ -323,6 +345,29 @@ def test_compute_signal_full_achat_scenario():
     assert result["stop_loss"] < result["entry"] < result["take_profit"]
 
 
+def test_compute_signal_neutre_when_achat_ratio_insufficient(monkeypatch):
+    """Reprend le scenario d'achat complet (structure + confirmation
+    reunies) mais force une resistance a peine au-dessus du prix : le
+    gain potentiel devient minuscule alors que le risque (distance au
+    support) reste celui, reel, du scenario — le garde-fou ratio
+    risque/rendement doit refuser le trade plutot que d'accepter un
+    stop plus loin que l'objectif (constate sur donnees reelles :
+    gain moyen $6.22 / perte moyenne $8.87)."""
+    candles = _build_bearish_then_hammer_candles()
+    price = candles[-1]["close"]
+    pivots = confluence.detect_pivots(candles, confluence.SCALP_PIVOT_K)
+    vrais_niveaux = confluence.current_levels(pivots, price)
+
+    def niveaux_resistance_minuscule(pivots, price):
+        return {"support": vrais_niveaux["support"], "resistance": price + 0.05}
+
+    monkeypatch.setattr(confluence, "current_levels", niveaux_resistance_minuscule)
+    result = confluence.compute_signal(candles)
+    assert result["status"] == "neutre"
+    assert result["stop_loss"] is None
+    assert result["take_profit"] is None
+
+
 def _build_bullish_then_shooting_star_candles():
     """Symétrique de _build_bearish_then_hammer_candles : 3 cycles
     hausse-de-4/repli-de-3 (chaque sommet et chaque creux strictement plus
@@ -391,6 +436,24 @@ def test_compute_signal_full_vente_scenario():
     assert result["pattern"]["name"] == "Étoile filante"
     assert result["entry"] == candles[-1]["close"]
     assert result["take_profit"] < result["entry"] < result["stop_loss"]
+
+
+def test_compute_signal_neutre_when_vente_ratio_insufficient(monkeypatch):
+    """Symetrique de test_compute_signal_neutre_when_achat_ratio_insufficient,
+    cote vente : support force a peine en-dessous du prix."""
+    candles = _build_bullish_then_shooting_star_candles()
+    price = candles[-1]["close"]
+    pivots = confluence.detect_pivots(candles, confluence.SCALP_PIVOT_K)
+    vrais_niveaux = confluence.current_levels(pivots, price)
+
+    def niveaux_support_minuscule(pivots, price):
+        return {"support": price - 0.05, "resistance": vrais_niveaux["resistance"]}
+
+    monkeypatch.setattr(confluence, "current_levels", niveaux_support_minuscule)
+    result = confluence.compute_signal(candles)
+    assert result["status"] == "neutre"
+    assert result["stop_loss"] is None
+    assert result["take_profit"] is None
 
 
 def test_compute_signal_neutre_when_no_confluence():

@@ -36,6 +36,19 @@ def test_decide_and_act_opens_when_no_existing_position(monkeypatch):
     assert step["volume"] == pytest.approx(1.0)  # (10000*0.05) / (5*100)
 
 
+def test_decide_and_act_uses_explicit_risk_pct_when_provided(monkeypatch):
+    monkeypatch.setattr(
+        bot.confluence, "compute_signal",
+        lambda candles: _signal("achat", entry=2100, stop_loss=2095, take_profit=2115),
+    )
+    result = bot.decide_and_act(
+        [], contract_size=100, balance=10000, open_positions=[],
+        circuit_breaker=_open_circuit_breaker(), risk_pct=0.10,
+    )
+    step = result["steps"][0]
+    assert step["volume"] == pytest.approx(2.0)  # (10000*0.10) / (5*100)
+
+
 def test_decide_and_act_no_action_when_same_direction_already_open(monkeypatch):
     monkeypatch.setattr(
         bot.confluence, "compute_signal",

@@ -362,6 +362,24 @@ function isNewsBlackout(date) {
 }
 
 /**
+ * Garde-fou ratio risque/rendement : refuse un trade dont l'objectif
+ * potentiel (souvent plafonné par le niveau de support/résistance
+ * opposé le plus proche, puisque l'entrée a justement lieu près d'un
+ * niveau) ne compense pas suffisamment le risque prix — le repli
+ * SCALP_TAKEPROFIT_RISK_MULTIPLE ne se déclenche en pratique presque
+ * jamais sans ce garde-fou. Constaté sur données réelles avant ce
+ * correctif : gain moyen $6.22 / perte moyenne $8.87 (ratio 0.7), causant
+ * un léger P&L négatif malgré un taux de réussite > 50%. Le seuil
+ * reprend volontairement le même multiple que le repli, pour ne jamais
+ * accepter un trade moins bon que ce que le repli lui-même viserait.
+ */
+function meetsMinimumRiskReward(entryPrice, stopLoss, takeProfit, direction) {
+  const risk = direction === 'achat' ? entryPrice - stopLoss : stopLoss - entryPrice;
+  const reward = direction === 'achat' ? takeProfit - entryPrice : entryPrice - takeProfit;
+  return risk > 0 && reward / risk >= SCALP_TAKEPROFIT_RISK_MULTIPLE;
+}
+
+/**
  * Moteur de confluence (spec §6) : combine tendance + S/R + indicateurs +
  * chandeliers en un signal Achat/Vente/Neutre, avec Entrée/Stop-loss/TP
  * si un signal est émis. Ne lève jamais d'exception — `candles` trop
@@ -444,6 +462,9 @@ function computeSignal(candles) {
         ? levels.resistance
         : price + risk * SCALP_TAKEPROFIT_RISK_MULTIPLE;
     }
+    if (!meetsMinimumRiskReward(price, stopLoss, takeProfit, 'achat')) {
+      return { status: 'neutre', price, entry: null, stopLoss: null, takeProfit: null, trend, pattern: null };
+    }
     return { status: 'achat', price, entry: price, stopLoss, takeProfit, trend, pattern };
   }
   if (structurelVente && confirmationVente) {
@@ -459,6 +480,9 @@ function computeSignal(candles) {
         ? levels.support
         : price - risk * SCALP_TAKEPROFIT_RISK_MULTIPLE;
     }
+    if (!meetsMinimumRiskReward(price, stopLoss, takeProfit, 'vente')) {
+      return { status: 'neutre', price, entry: null, stopLoss: null, takeProfit: null, trend, pattern: null };
+    }
     return { status: 'vente', price, entry: price, stopLoss, takeProfit, trend, pattern };
   }
   return { status: 'neutre', price, entry: null, stopLoss: null, takeProfit: null, trend, pattern: null };
@@ -468,6 +492,7 @@ if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
     fetchGoldCandles, detectPivots, classifyTrend, currentLevels,
     computeRSI, computeMACD, computeBollinger, matchCandlestickPattern,
-    computeSignal, isNewsBlackout, SCALP_HIGH_IMPACT_EVENTS_UTC, SCALP_NEWS_BLACKOUT_MINUTES,
+    computeSignal, meetsMinimumRiskReward, isNewsBlackout,
+    SCALP_HIGH_IMPACT_EVENTS_UTC, SCALP_NEWS_BLACKOUT_MINUTES,
   };
 }

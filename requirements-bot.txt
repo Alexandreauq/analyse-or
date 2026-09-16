@@ -2,3 +2,5 @@ requests
 fastapi
 uvicorn[standard]
 httpx
+python-dateutil
+ib_async

@@ -52,6 +52,87 @@ def test_resume_requires_valid_token(client):
     assert response.status_code == 401
 
 
+def test_status_includes_risk_profile(client):
+    response = client.get("/status")
+    assert response.json()["risk_profile"] == 3
+
+
+def test_set_profile_requires_valid_token(client):
+    response = client.post("/profile", json={"profile": 5}, headers={"X-Bot-Token": "wrong-token"})
+    assert response.status_code == 401
+
+
+def test_set_profile_without_token_header_is_rejected(client):
+    response = client.post("/profile", json={"profile": 5})
+    assert response.status_code == 401
+
+
+def test_set_profile_updates_state_and_is_reflected_in_status(client):
+    response = client.post("/profile", json={"profile": 5}, headers={"X-Bot-Token": "secret-token"})
+    assert response.status_code == 200
+    assert response.json()["risk_profile"] == 5
+    assert client.get("/status").json()["risk_profile"] == 5
+
+
+def test_set_profile_rejects_out_of_range_value(client):
+    response = client.post("/profile", json={"profile": 6}, headers={"X-Bot-Token": "secret-token"})
+    assert response.status_code == 422
+
+
+def test_set_profile_rejects_non_integer_value(client):
+    response = client.post("/profile", json={"profile": "5"}, headers={"X-Bot-Token": "secret-token"})
+    assert response.status_code == 422
+
+
+def test_set_profile_rejects_missing_profile_key(client):
+    response = client.post("/profile", json={}, headers={"X-Bot-Token": "secret-token"})
+    assert response.status_code == 422
+
+
+def test_set_profile_rejects_boolean_value(client):
+    # bool is an int subclass in Python — without an explicit isinstance(...,
+    # bool) guard checked before the int check, True/False would silently
+    # resolve to a numeric profile (True == 1). Regression test for that
+    # guard, matching the same pattern used by risk.risk_profile_params().
+    response = client.post("/profile", json={"profile": True}, headers={"X-Bot-Token": "secret-token"})
+    assert response.status_code == 422
+    response = client.post("/profile", json={"profile": False}, headers={"X-Bot-Token": "secret-token"})
+    assert response.status_code == 422
+
+
+def test_set_profile_rejects_zero_or_negative_value(client):
+    response = client.post("/profile", json={"profile": 0}, headers={"X-Bot-Token": "secret-token"})
+    assert response.status_code == 422
+    response = client.post("/profile", json={"profile": -1}, headers={"X-Bot-Token": "secret-token"})
+    assert response.status_code == 422
+
+
+def test_status_reports_resolved_profile_when_stored_value_is_invalid(client, tmp_path):
+    """Finding #3 de la revue finale : state.py ne valide délibérément
+    pas risk_profile (voir son docstring) — un hand-edit SSH peut donc y
+    laisser une valeur invalide. /status doit rapporter le profil
+    RÉSOLU/effectif (celui que run_cycle utilise réellement via
+    risk.risk_profile_params(), repli sur 3), pas la valeur brute
+    invalide, pour ne jamais désynchroniser ce qui est affiché de ce qui
+    est utilisé."""
+    state.save_state({"kill_switch": False, "dry_run": True, "risk_profile": 9}, state.STATE_PATH)
+    response = client.get("/status")
+    assert response.json()["risk_profile"] == 3
+
+    state.save_state({"kill_switch": False, "dry_run": True, "risk_profile": "bogus"}, state.STATE_PATH)
+    response = client.get("/status")
+    assert response.json()["risk_profile"] == 3
+
+
+def test_set_profile_rejects_malformed_json_body(client):
+    response = client.post(
+        "/profile",
+        content=b"not-json",
+        headers={"X-Bot-Token": "secret-token", "Content-Type": "application/json"},
+    )
+    assert response.status_code == 422
+
+
 def test_status_reports_circuit_breaker_fields_from_separate_file(client, monkeypatch, tmp_path):
     cb_path = str(tmp_path / "circuit_breaker_state.json")
     monkeypatch.setattr(api, "CIRCUIT_BREAKER_STATE_PATH", cb_path)

@@ -16,6 +16,7 @@ class _FakeIB:
         self.managed_accounts_result = ["U28849893"]
         self.sleep_calls = []
         self.account_values_result = []
+        self.positions_result = []
 
     def connect(self, host, port, clientId=1, timeout=4, readonly=False,
                 account="", raiseSyncErrors=False, **kwargs):
@@ -41,6 +42,22 @@ class _FakeIB:
 
     def accountValues(self, account=""):
         return self.account_values_result
+
+    def positions(self, account=""):
+        return self.positions_result
+
+
+class _FakeContract:
+    def __init__(self, conId):
+        self.conId = conId
+
+
+class _FakePosition:
+    def __init__(self, account, conId, position, avgCost=0.0):
+        self.account = account
+        self.contract = _FakeContract(conId)
+        self.position = position
+        self.avgCost = avgCost
 
 
 class _FakeAccountValue:
@@ -200,3 +217,22 @@ def test_base_currency_cash_defaults_to_zero_when_absent(fake_ib):
     gateway.connect(BASE)
     fake_ib.account_values_result = []
     assert gateway.base_currency_cash(BASE, "U28849893") == 0.0
+
+
+def test_positions_translates_ib_async_position_objects(fake_ib):
+    gateway.connect(BASE)
+    fake_ib.positions_result = [
+        _FakePosition("U28849893", 265598, 10, avgCost=150.25),
+        _FakePosition("U28849893", 999999, 0, avgCost=0.0),
+    ]
+    result = gateway.positions(BASE, "U28849893")
+    assert result == [
+        {"conid": 265598, "position": 10, "avgCost": 150.25, "account": "U28849893"},
+        {"conid": 999999, "position": 0, "avgCost": 0.0, "account": "U28849893"},
+    ]
+
+
+def test_positions_empty_when_no_positions_held(fake_ib):
+    gateway.connect(BASE)
+    fake_ib.positions_result = []
+    assert gateway.positions(BASE, "U28849893") == []

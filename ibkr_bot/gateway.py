@@ -187,3 +187,20 @@ def base_currency_cash(base_url: str, account_id: str) -> float:
     """Identique a l'ancienne implementation CPAPI : 0.0 si absent."""
     entree = ledger(base_url, account_id).get("BASE")
     return entree["cashbalance"] if entree else 0.0
+
+
+# --- positions ---------------------------------------------------------
+
+def positions(base_url: str, account_id: str) -> list[dict]:
+    """Traduit les Position (NamedTuple ib_async) en dicts au format
+    deja consomme par portfolio.reconcile() — "conid" et "position"
+    sont les deux seules cles lues par reconcile(), verifie dans
+    ibkr_bot/portfolio.py pendant la redaction de ce plan. Deja peuple
+    a la connexion (Tache 1) : pas de pagination a gerer, contrairement
+    au CPAPI."""
+    ib = _require_ib()
+    return [
+        {"conid": p.contract.conId, "position": p.position,
+         "avgCost": p.avgCost, "account": p.account}
+        for p in ib.positions(account_id)
+    ]

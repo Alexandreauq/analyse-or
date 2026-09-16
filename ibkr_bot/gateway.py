@@ -16,7 +16,7 @@
 # autre module de ibkr_bot/ ne reference ib_async.placeOrder / MarketOrder.
 import re
 
-from ib_async import IB, Stock, Forex, MarketOrder
+from ib_async import IB, Stock, Forex, MarketOrder, Contract
 
 DEFAULT_GATEWAY_URL = "127.0.0.1:4002"  # port paper par defaut ; le
 # deploiement reel passe 127.0.0.1:4001 via IBKR_GATEWAY_URL (.env).
@@ -239,7 +239,6 @@ def search_contract(base_url: str, symbol: str) -> list[dict]:
 def contract_info(base_url: str, conid) -> dict:
     """currency + listingExchange (= primaryExchange cote ib_async, PAS
     exchange qui vaut souvent "SMART" pour un contrat route)."""
-    from ib_async import Contract
     ib = _require_ib()
     try:
         details_list = ib.reqContractDetails(Contract(conId=int(conid)))
@@ -267,3 +266,62 @@ def exchange_rate(base_url: str, source: str, target: str) -> float:
     finally:
         ib.cancelMktData(fx)
     return float(prix)
+
+
+# --- ordres ----------------------------------------------------------
+# ATTENTION : les fonctions ci-dessous sont le seul chemin par lequel de
+# l'argent reel peut bouger. Dans ce plan, elles sont couvertes
+# UNIQUEMENT par des tests avec IB mocke (voir
+# tests/ibkr_bot/test_order_routes_are_isolated.py, Tache 8, qui
+# verifie qu'aucun autre module de ibkr_bot/ ne les appelle).
+
+_trades_by_order_id: dict[str, "object"] = {}
+
+
+def place_market_order(base_url: str, account_id: str, conid: int,
+                       side: str, quantity: int) -> list[dict]:
+    """Ordre au marche (MKT), valable le jour (DAY) — meme forme de
+    retour que l'ancien CPAPI : [{"order_id": "..."}]. Ne renvoie JAMAIS
+    de "question" de confirmation : ce mecanisme n'existe pas cote TWS
+    API, les popups d'avertissement equivalentes sont pre-desactivees
+    cote configuration IBC (BypassOrderPrecautions et freres, Tache 7).
+    Si cette hypothese s'avere fausse en production, l'ordre resterait
+    simplement bloque en attente au lieu de renvoyer une confirmation —
+    un signal visible (batch qui timeout), pas un ordre perdu en
+    silence."""
+    if side not in ("BUY", "SELL"):
+        raise ValueError(f"side doit valoir 'BUY' ou 'SELL', recu {side!r}")
+    if not isinstance(quantity, int) or isinstance(quantity, bool) or quantity < 1:
+        raise ValueError(f"quantite doit etre un entier >= 1, recue {quantity!r}")
+    ib = _require_ib()
+    contract = Contract(conId=int(conid))
+    order = MarketOrder(side, quantity)
+    order.tif = "DAY"
+    trade = ib.placeOrder(contract, order)
+    order_id = str(trade.order.orderId)
+    _trades_by_order_id[order_id] = trade
+    return [{"order_id": order_id}]
+
+
+def confirm_reply(base_url: str, reply_id: str, confirmed: bool = True) -> list[dict]:
+    """Ne doit jamais etre atteinte en pratique (voir docstring de la
+    Tache 5 du plan) : leve bruyamment plutot que de repondre a une
+    question que la TWS API ne pose structurellement jamais."""
+    raise NotImplementedError(
+        "confirm_reply() a ete appelee : la configuration IBC "
+        "BypassOrderPrecautions (et reglages Bypass* freres) n'empeche pas "
+        "toutes les popups de confirmation IB Gateway. A corriger cote "
+        "deploiement (deploy/README-ibkr.md), pas cote code.")
+
+
+def order_status(base_url: str, order_id: str) -> dict:
+    """Lit le Trade mis en cache par place_market_order() dans la MEME
+    connexion (le batch ouvre/ferme une connexion par jour, jamais de
+    suivi d'ordre entre deux runs) — evite une requete reseau separee.
+    {} si cet order_id n'a pas ete vu dans cette session."""
+    trade = _trades_by_order_id.get(str(order_id))
+    if trade is None:
+        return {}
+    return {"order_status": trade.orderStatus.status,
+            "avgPrice": trade.orderStatus.avgFillPrice or None,
+            "commission": None}

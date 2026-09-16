@@ -133,3 +133,57 @@ def reauthenticate(base_url: str = DEFAULT_GATEWAY_URL) -> dict:
         "authenticated": is_authenticated(base_url),
         "detail": "no-op : la reconnexion TWS API passe par IBC/systemd, pas par un appel applicatif",
     }
+
+
+# --- comptes et soldes -------------------------------------------------
+
+def brokerage_accounts(base_url: str = DEFAULT_GATEWAY_URL) -> dict:
+    """Deja peuple a la connexion (Tache 1) — plus de bootstrap reseau a
+    faire ici, contrairement au CPAPI. Garde pour compatibilite de nom."""
+    ib = _require_ib()
+    return {"accounts": list(ib.managedAccounts())}
+
+
+def portfolio_accounts(base_url: str = DEFAULT_GATEWAY_URL) -> list[dict]:
+    """Idem brokerage_accounts, forme liste pour compatibilite avec
+    l'ancien retour CPAPI de /portfolio/accounts."""
+    ib = _require_ib()
+    return [{"accountId": compte} for compte in ib.managedAccounts()]
+
+
+def ledger(base_url: str, account_id: str) -> dict:
+    """Soldes indexes par devise reelle, plus l'agregat "BASE" — meme
+    forme que l'ancienne lecture CPAPI de /portfolio/{accountId}/ledger.
+    Tag "CashBalance" (par devise) et "TotalCashValue" avec
+    currency == "BASE" (agregat) — voir docstring de la Tache 2 sur le
+    statut de verification de cette derniere convention."""
+    ib = _require_ib()
+    soldes: dict[str, dict] = {}
+    for valeur in ib.accountValues(account_id):
+        if valeur.tag == "CashBalance":
+            try:
+                soldes[valeur.currency] = {"cashbalance": float(valeur.value)}
+            except (TypeError, ValueError):
+                continue
+        elif valeur.tag == "TotalCashValue" and valeur.currency == "BASE":
+            try:
+                soldes["BASE"] = {"cashbalance": float(valeur.value)}
+            except (TypeError, ValueError):
+                continue
+    return soldes
+
+
+def cash_by_currency(base_url: str, account_id: str) -> dict[str, float]:
+    """Identique a l'ancienne implementation CPAPI : exclut "BASE"."""
+    resultat: dict[str, float] = {}
+    for devise, entree in ledger(base_url, account_id).items():
+        if devise == "BASE":
+            continue
+        resultat[devise] = entree["cashbalance"]
+    return resultat
+
+
+def base_currency_cash(base_url: str, account_id: str) -> float:
+    """Identique a l'ancienne implementation CPAPI : 0.0 si absent."""
+    entree = ledger(base_url, account_id).get("BASE")
+    return entree["cashbalance"] if entree else 0.0

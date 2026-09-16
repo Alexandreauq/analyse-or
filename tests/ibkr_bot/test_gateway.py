@@ -15,6 +15,7 @@ class _FakeIB:
         self.disconnect_calls = 0
         self.managed_accounts_result = ["U28849893"]
         self.sleep_calls = []
+        self.account_values_result = []
 
     def connect(self, host, port, clientId=1, timeout=4, readonly=False,
                 account="", raiseSyncErrors=False, **kwargs):
@@ -37,6 +38,18 @@ class _FakeIB:
 
     def sleep(self, seconds):
         self.sleep_calls.append(seconds)
+
+    def accountValues(self, account=""):
+        return self.account_values_result
+
+
+class _FakeAccountValue:
+    def __init__(self, account, tag, value, currency, modelCode=""):
+        self.account = account
+        self.tag = tag
+        self.value = value
+        self.currency = currency
+        self.modelCode = modelCode
 
 
 @pytest.fixture
@@ -138,3 +151,52 @@ def test_reauthenticate_is_a_documented_no_op(fake_ib):
         "authenticated": True,
         "detail": "no-op : la reconnexion TWS API passe par IBC/systemd, pas par un appel applicatif",
     }
+
+
+def test_brokerage_accounts_reflects_managed_accounts(fake_ib):
+    gateway.connect(BASE)
+    assert gateway.brokerage_accounts(BASE) == {"accounts": ["U28849893"]}
+
+
+def test_portfolio_accounts_reflects_managed_accounts(fake_ib):
+    gateway.connect(BASE)
+    assert gateway.portfolio_accounts(BASE) == [{"accountId": "U28849893"}]
+
+
+def test_ledger_indexes_cash_balances_by_currency_plus_base(fake_ib):
+    gateway.connect(BASE)
+    fake_ib.account_values_result = [
+        _FakeAccountValue("U28849893", "CashBalance", "1234.56", "EUR"),
+        _FakeAccountValue("U28849893", "CashBalance", "500.00", "GBP"),
+        _FakeAccountValue("U28849893", "TotalCashValue", "1800.00", "BASE"),
+        _FakeAccountValue("U28849893", "NetLiquidation", "9999.00", "BASE"),  # doit etre ignore
+    ]
+    result = gateway.ledger(BASE, "U28849893")
+    assert result == {
+        "EUR": {"cashbalance": 1234.56},
+        "GBP": {"cashbalance": 500.00},
+        "BASE": {"cashbalance": 1800.00},
+    }
+
+
+def test_cash_by_currency_excludes_the_base_aggregate(fake_ib):
+    gateway.connect(BASE)
+    fake_ib.account_values_result = [
+        _FakeAccountValue("U28849893", "CashBalance", "1234.56", "EUR"),
+        _FakeAccountValue("U28849893", "TotalCashValue", "1800.00", "BASE"),
+    ]
+    assert gateway.cash_by_currency(BASE, "U28849893") == {"EUR": 1234.56}
+
+
+def test_base_currency_cash_reads_the_base_aggregate(fake_ib):
+    gateway.connect(BASE)
+    fake_ib.account_values_result = [
+        _FakeAccountValue("U28849893", "TotalCashValue", "1800.00", "BASE"),
+    ]
+    assert gateway.base_currency_cash(BASE, "U28849893") == 1800.00
+
+
+def test_base_currency_cash_defaults_to_zero_when_absent(fake_ib):
+    gateway.connect(BASE)
+    fake_ib.account_values_result = []
+    assert gateway.base_currency_cash(BASE, "U28849893") == 0.0

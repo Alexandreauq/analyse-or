@@ -923,6 +923,48 @@
       "shadow_resolved": false,
       "shadow_price": null,
       "shadow_return_pct": null
+    },
+    {
+      "id": "7951.T-2026-09-16",
+      "ticker": "7951.T",
+      "name": "Yamaha",
+      "index": "NIKKEI225",
+      "status": "open",
+      "entry_date": "2026-09-16",
+      "entry_price": 1264.0,
+      "target_exit_price": 1605.0922421429304,
+      "index_price_at_entry": 63923.0,
+      "close_date": null,
+      "close_price": null,
+      "close_reason": null,
+      "return_pct": null,
+      "index_price_at_close": null,
+      "index_return_pct": null,
+      "shadow_close_date": "2027-03-16",
+      "shadow_resolved": false,
+      "shadow_price": null,
+      "shadow_return_pct": null
+    },
+    {
+      "id": "2313.HK-2026-09-16",
+      "ticker": "2313.HK",
+      "name": "Shenzhou International Group Holdings",
+      "index": "HANGSENG",
+      "status": "open",
+      "entry_date": "2026-09-16",
+      "entry_price": 34.459999084472656,
+      "target_exit_price": 50.71330153841581,
+      "index_price_at_entry": 24701.23046875,
+      "close_date": null,
+      "close_price": null,
+      "close_reason": null,
+      "return_pct": null,
+      "index_price_at_close": null,
+      "index_return_pct": null,
+      "shadow_close_date": "2027-03-16",
+      "shadow_resolved": false,
+      "shadow_price": null,
+      "shadow_return_pct": null
     }
   ]
 }

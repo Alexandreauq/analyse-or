@@ -1,6 +1,6 @@
 {
   "date": "2026-09-17",
-  "composite_score": 7.1,
+  "composite_score": 7.6,
   "interpretation": "Neutre — pas d'action",
   "factors": [
     {
@@ -11,9 +11,9 @@
     },
     {
       "name": "Dollar (DXY)",
-      "score": 2.79998779296875,
+      "score": 3.1299972534179688,
       "weight": 0.15,
-      "raw_value": "100.19 (il y a 2 mois : 100.75)"
+      "raw_value": "100.12 (il y a 2 mois : 100.75)"
     },
     {
       "name": "Anticipations d'inflation",
@@ -47,9 +47,9 @@
     }
   ],
   "technical": {
-    "note": "Cours en-dessous de la MM200 (-4.1%) — tendance baissière",
-    "spot": 4366.5,
-    "ma200": 4552.434500732422
+    "note": "Cours en-dessous de la MM200 (-3.3%) — tendance baissière",
+    "spot": 4403.10009765625,
+    "ma200": 4552.617501220703
   },
   "calendar": [
     {

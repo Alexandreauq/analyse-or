@@ -349,8 +349,11 @@
      grand pour bien se voir en dehors du contenu central. */
   #indices .app { position: relative; }
   @media (min-width: 1360px) {
+    /* top aligné sur le padding-top du header (calc(topbar-h + 36px)) :
+       un top:0 tout court place le lien derrière la top-bar fixe
+       (height: var(--topbar-h), z-index:10), qui le rend invisible. */
     #indices .back-link {
-      position: absolute; top: 0; right: calc(100% + 24px);
+      position: absolute; top: calc(var(--topbar-h) + 36px); right: calc(100% + 24px);
       font-size: var(--text-sm); padding: 9px 18px 9px 12px; white-space: nowrap;
     }
     /* .back-link-row prend elle-même la position dans la marge (en
@@ -358,7 +361,7 @@
        colonne plutôt que de tenter chacun sa propre absolute-position
        au même endroit (qui les superposerait). */
     #indices .back-link-row {
-      position: absolute; top: 0; right: calc(100% + 24px);
+      position: absolute; top: calc(var(--topbar-h) + 36px); right: calc(100% + 24px);
       display: flex; flex-direction: column; gap: 8px;
     }
     #indices .back-link-row .back-link { position: static; right: auto; }

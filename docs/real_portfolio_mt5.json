@@ -1,27 +1,6 @@
 {
-  "updated": "2026-09-16T13:03:19Z",
+  "updated": "2026-09-17T13:00:12Z",
   "sync_status": "ok",
   "sync_error": null,
-  "positions": [
-    {
-      "symbol": "XAUUSD",
-      "type": "vente",
-      "pnl_sign": "négatif"
-    },
-    {
-      "symbol": "XAUUSD",
-      "type": "vente",
-      "pnl_sign": "négatif"
-    },
-    {
-      "symbol": "XAUUSD",
-      "type": "vente",
-      "pnl_sign": "négatif"
-    },
-    {
-      "symbol": "XAUUSD",
-      "type": "vente",
-      "pnl_sign": "négatif"
-    }
-  ]
+  "positions": []
 }

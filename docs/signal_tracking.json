@@ -1007,6 +1007,27 @@
       "shadow_resolved": false,
       "shadow_price": null,
       "shadow_return_pct": null
+    },
+    {
+      "id": "9201.T-2026-09-17",
+      "ticker": "9201.T",
+      "name": "Japan Airlines",
+      "index": "NIKKEI225",
+      "status": "open",
+      "entry_date": "2026-09-17",
+      "entry_price": 3061.0,
+      "target_exit_price": 3957.9397126515946,
+      "index_price_at_entry": 64136.25,
+      "close_date": null,
+      "close_price": null,
+      "close_reason": null,
+      "return_pct": null,
+      "index_price_at_close": null,
+      "index_return_pct": null,
+      "shadow_close_date": "2027-03-17",
+      "shadow_resolved": false,
+      "shadow_price": null,
+      "shadow_return_pct": null
     }
   ]
 }

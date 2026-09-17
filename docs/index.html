@@ -337,6 +337,11 @@
   }
   .back-link:hover { background: var(--accent); border-color: var(--accent); color: var(--bg); }
   .back-link:active { transform: scale(.96); }
+  /* Deux liens de retour côte à côte (ex. analyse financière : retour à
+     l'indice ET retour à la fiche) — en ligne avec un léger espacement,
+     s'enroule si trop étroit plutôt que déborder horizontalement. */
+  .back-link-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+  .back-link-row .back-link { margin-bottom: 0; }
   /* Bouton "retour" d'Indices : sur grand écran, sorti du flux et placé
      dans la marge gauche de la page (relatif à .app, pas à la fenêtre —
      s'adapte donc automatiquement aux différentes largeurs de .app selon
@@ -348,6 +353,15 @@
       position: absolute; top: 0; right: calc(100% + 24px);
       font-size: var(--text-sm); padding: 9px 18px 9px 12px; white-space: nowrap;
     }
+    /* .back-link-row prend elle-même la position dans la marge (en
+       colonne) ; ses liens internes repassent en flux normal dans la
+       colonne plutôt que de tenter chacun sa propre absolute-position
+       au même endroit (qui les superposerait). */
+    #indices .back-link-row {
+      position: absolute; top: 0; right: calc(100% + 24px);
+      display: flex; flex-direction: column; gap: 8px;
+    }
+    #indices .back-link-row .back-link { position: static; right: auto; }
   }
   .eyebrow { color: var(--muted); font-size: 12px; margin-bottom: 2px; }
   h1 { font-family: 'Newsreader', serif; font-weight: 400; font-size: clamp(2rem, 4.5vw, 2.5rem); letter-spacing: 0.02em; margin: 0 0 2px; }
@@ -3248,7 +3262,10 @@ function renderCompanyDetail(company) {
 function renderCompanyAnalysis(company) {
   const html = company.financial_analysis_html;
   document.getElementById('indicesContent').innerHTML = `
-    <a href="#indices/${encodeURIComponent(company.ticker)}" class="back-link">← ${company.name}</a>
+    <div class="back-link-row">
+      <a href="#indices" class="back-link">← Indices</a>
+      <a href="#indices/${encodeURIComponent(company.ticker)}" class="back-link">← ${company.name}</a>
+    </div>
     <h2>Analyse financière complète</h2>
     <div class="ai-analysis">${html || '<p>Analyse non disponible pour le moment.</p>'}</div>
   `;

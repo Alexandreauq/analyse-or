@@ -513,6 +513,22 @@
       "close_reason": "sl_hit",
       "return_usd": -12.258939999999711,
       "return_pct": -0.28742304186355294
+    },
+    {
+      "id": "scalp-2026-09-17T20:01:16.468Z",
+      "direction": "achat",
+      "status": "closed",
+      "entry_time": "2026-09-17T20:01:16.468Z",
+      "entry_price": 4348.77168,
+      "stop_loss": 4341.54455,
+      "take_profit": 4360.64051,
+      "trend_at_entry": "haussier",
+      "pattern_at_entry": "Triangle symétrique",
+      "close_time": "2026-09-17T20:36:22.395Z",
+      "close_price": 4341.54455,
+      "close_reason": "sl_hit",
+      "return_usd": -7.227130000000216,
+      "return_pct": -0.1661878464035669
     }
   ]
 }

@@ -963,7 +963,15 @@
     max-height: 0; overflow: hidden; opacity: 0;
     transition: max-height .3s cubic-bezier(.22,1,.36,1), opacity .2s ease, padding-top .3s ease;
   }
-  .indices-filters-advanced-body.is-open { max-height: 400px; opacity: 1; padding-top: 4px; }
+  .indices-filters-advanced-body.is-open { max-height: 480px; opacity: 1; padding-top: 4px; }
+  .adv-filter-label {
+    color: var(--muted); font-size: var(--text-xs); font-weight: 600;
+    margin: 12px 0 6px;
+  }
+  .adv-filter-label-first { margin-top: 0; }
+  .adv-filter-label + .list-sort { width: 100%; }
+  .adv-score-range { display: flex; align-items: center; gap: 8px; }
+  .adv-score-range .list-search { flex: 1; min-width: 0; appearance: textfield; }
   /* Copie du filtre dans le sommaire desktop du Portefeuille (voir
      pfOppFilterSidebar) : déjà dans une carte avec son propre padding, pas
      besoin de la marge du haut ; plus de marge en bas avant la liste de
@@ -2636,6 +2644,15 @@ async function loadIndices(ticker, view) {
 let indicesListSearch = '';
 let indicesListSort = 'score_desc';
 let indicesListFinancialOnly = false;
+// Filtres avancés (score min/max, secteur, profil sectoriel, type de
+// signal) — chaînes vides/null = filtre inactif, mêmes conventions que
+// les filtres simples ci-dessus (state global, remis à zéro par l'onglet
+// Indices, voir plus bas).
+let indicesListScoreMin = null;
+let indicesListScoreMax = null;
+let indicesListSector = '';
+let indicesListSectorProfile = '';
+let indicesListAlertKind = '';
 // Position de défilement + indice actuellement déplié de la liste — pour
 // revenir exactement où on en était après avoir consulté une fiche
 // entreprise, plutôt que de tout réafficher replié en haut de page à
@@ -2659,6 +2676,25 @@ const INDEX_DISPLAY_NAMES = {
   DAX: 'DAX',
   NASDAQ: 'Nasdaq 100',
   DOW: 'Dow Jones',
+};
+
+// Traduction des secteurs (company.sector, valeurs Yahoo Finance en
+// anglais) pour le filtre avancé Indices — liste fermée (11 valeurs
+// observées dans indices.json), pas de mécanisme de repli nécessaire
+// comme pour INDEX_DISPLAY_NAMES (un secteur non traduit s'affiche tel
+// quel, ce n'est pas bloquant).
+const SECTOR_LABELS_FR = {
+  'Basic Materials': 'Matériaux de base',
+  'Communication Services': 'Services de communication',
+  'Consumer Cyclical': 'Consommation cyclique',
+  'Consumer Defensive': 'Consommation défensive',
+  'Energy': 'Énergie',
+  'Financial Services': 'Services financiers',
+  'Healthcare': 'Santé',
+  'Industrials': 'Industrie',
+  'Real Estate': 'Immobilier',
+  'Technology': 'Technologie',
+  'Utilities': 'Services publics',
 };
 
 // Pays par indice, affiché entre parenthèses à côté du nom (sélecteur de
@@ -2723,12 +2759,18 @@ function formatPriceForIndex(v, indexKey) {
   return v != null ? `${v.toLocaleString('fr-FR', {maximumFractionDigits:2})} ${symbol}` : 'indisponible';
 }
 
-// `state` optionnel : {search, sort, financialOnly} — par défaut, l'état
-// global de la page Indices (voir indicesListSearch/-Sort/-FinancialOnly),
+// `state` optionnel : {search, sort, financialOnly, scoreMin, scoreMax,
+// sector, sectorProfile, alertKind} — par défaut, l'état global de la
+// page Indices (voir indicesListSearch/-Sort/-FinancialOnly/-ScoreMin/…),
 // mais réutilisable ailleurs (ex. filtre Opportunités du Portefeuille, voir
-// portfolioOppSearch/-Sort/-FinancialOnly) avec son propre état indépendant.
+// portfolioOppSearch/-Sort/-FinancialOnly) avec son propre état indépendant
+// — les filtres avancés y sont simplement absents/undefined, donc inactifs.
 function sortedFilteredCompanies(companies, state) {
-  const s = state || { search: indicesListSearch, sort: indicesListSort, financialOnly: indicesListFinancialOnly };
+  const s = state || {
+    search: indicesListSearch, sort: indicesListSort, financialOnly: indicesListFinancialOnly,
+    scoreMin: indicesListScoreMin, scoreMax: indicesListScoreMax, sector: indicesListSector,
+    sectorProfile: indicesListSectorProfile, alertKind: indicesListAlertKind,
+  };
   let visible = companies;
   if (s.search.trim()) {
     const q = s.search.trim().toLowerCase();
@@ -2737,6 +2779,11 @@ function sortedFilteredCompanies(companies, state) {
   if (s.financialOnly) {
     visible = visible.filter(c => c.is_financial);
   }
+  if (s.scoreMin != null) visible = visible.filter(c => c.score >= s.scoreMin);
+  if (s.scoreMax != null) visible = visible.filter(c => c.score <= s.scoreMax);
+  if (s.sector) visible = visible.filter(c => c.sector === s.sector);
+  if (s.sectorProfile) visible = visible.filter(c => c.sector_profile === s.sectorProfile);
+  if (s.alertKind) visible = visible.filter(c => (c.alerts || []).some(a => a.kind === s.alertKind));
   visible = [...visible];
   if (s.sort === 'score_desc') visible.sort((a, b) => b.score - a.score);
   else if (s.sort === 'score_asc') visible.sort((a, b) => a.score - b.score);
@@ -2745,12 +2792,45 @@ function sortedFilteredCompanies(companies, state) {
 }
 
 // Panneau "Filtrer" en accordéon (recherche/tri/case à cocher + sous-
-// accordéon "Filtres avancés", vide pour l'instant) — partagé entre la
-// page Indices et le filtre Opportunités du Portefeuille (même design,
-// même comportement). `ids` fournit les ids exacts à utiliser (permet de
-// réutiliser des conventions de nommage différentes selon l'appelant) ;
-// `state` = {search, sort, financialOnly} déjà résolu par l'appelant.
-function filterAccordionHtml(ids, state) {
+// accordéon "Filtres avancés") — partagé entre la page Indices et le
+// filtre Opportunités du Portefeuille (même design, même comportement).
+// `ids` fournit les ids exacts à utiliser (permet de réutiliser des
+// conventions de nommage différentes selon l'appelant) ; `state` =
+// {search, sort, financialOnly, scoreMin, scoreMax, sector,
+// sectorProfile, alertKind} déjà résolu par l'appelant. `advancedOptions`
+// = {sectors: string[]} optionnel : seul l'appelant Indices le fournit
+// (liste des secteurs réellement présents) — sans lui, les filtres
+// avancés n'ont pas de sens (ex. l'opportunités Portefeuille ne liste
+// que des entreprises déjà en signal "entrée") et le panneau reste le
+// placeholder "Bientôt disponible".
+function filterAccordionHtml(ids, state, advancedOptions) {
+  const advancedHtml = advancedOptions ? `
+      <p class="adv-filter-label adv-filter-label-first">Score</p>
+      <div class="adv-score-range">
+        <input type="number" class="list-search" id="${ids.scoreMin}" placeholder="Min" step="1" value="${state.scoreMin ?? ''}">
+        <span>–</span>
+        <input type="number" class="list-search" id="${ids.scoreMax}" placeholder="Max" step="1" value="${state.scoreMax ?? ''}">
+      </div>
+      <p class="adv-filter-label">Secteur</p>
+      <select class="list-sort" id="${ids.sector}">
+        <option value="">Tous les secteurs</option>
+        ${advancedOptions.sectors.map(sec => `<option value="${sec}"${state.sector === sec ? ' selected' : ''}>${SECTOR_LABELS_FR[sec] || sec}</option>`).join('')}
+      </select>
+      <p class="adv-filter-label">Profil sectoriel</p>
+      <select class="list-sort" id="${ids.sectorProfile}">
+        <option value="">Tous les profils</option>
+        <option value="cyclique"${state.sectorProfile === 'cyclique' ? ' selected' : ''}>Cyclique</option>
+        <option value="defensif"${state.sectorProfile === 'defensif' ? ' selected' : ''}>Défensif</option>
+        <option value="standard"${state.sectorProfile === 'standard' ? ' selected' : ''}>Standard</option>
+      </select>
+      <p class="adv-filter-label">Signal / alerte</p>
+      <select class="list-sort" id="${ids.alertKind}">
+        <option value="">Tous les signaux</option>
+        <option value="entree"${state.alertKind === 'entree' ? ' selected' : ''}>Entrée (opportunité)</option>
+        <option value="risque"${state.alertKind === 'risque' ? ' selected' : ''}>Risque</option>
+        <option value="actu_majeure"${state.alertKind === 'actu_majeure' ? ' selected' : ''}>Actu majeure</option>
+      </select>` : `
+      <p class="hero-sub" style="margin:0;">Bientôt disponible.</p>`;
   return `
     <button class="index-card-header" id="${ids.toggle}" type="button" aria-expanded="false">
       <span class="index-card-name">Filtrer</span>
@@ -2771,8 +2851,7 @@ function filterAccordionHtml(ids, state) {
         <span class="index-card-name">Filtres avancés</span>
         <span class="chevron">▾</span>
       </button>
-      <div class="indices-filters-advanced-body" id="${ids.advBody}">
-        <p class="hero-sub" style="margin:0;">Bientôt disponible.</p>
+      <div class="indices-filters-advanced-body" id="${ids.advBody}">${advancedHtml}
       </div>
     </div>`;
 }
@@ -2896,6 +2975,12 @@ function renderIndicesList(companies) {
   });
   const indexKeys = Object.keys(groups);
   const indexNames = { ...INDEX_DISPLAY_NAMES, ...(indicesData.index_names || {}) };
+  // Secteurs réellement présents dans les données (pas une liste figée en
+  // dur) — triés en français, valeurs manquantes (company.sector absent
+  // pour quelques trackers/fonds) ignorées plutôt que d'afficher une
+  // option vide dans le menu.
+  const sectors = [...new Set(companies.map(c => c.sector).filter(Boolean))]
+    .sort((a, b) => (SECTOR_LABELS_FR[a] || a).localeCompare(SECTOR_LABELS_FR[b] || b, 'fr'));
 
   const cardsHtml = indexKeys.map(key => `
     <div class="index-card" id="indexCard-${key}"${sortedFilteredCompanies(groups[key]).length ? '' : ' hidden'}>
@@ -2915,7 +3000,13 @@ function renderIndicesList(companies) {
       <aside class="indices-filters">${filterAccordionHtml({
         toggle: 'filterToggle', body: 'filterBody', search: 'filterSearch', sort: 'filterSort',
         financialOnly: 'filterFinancialOnly', advToggle: 'filterAdvToggle', advBody: 'filterAdvBody',
-      }, { search: indicesListSearch, sort: indicesListSort, financialOnly: indicesListFinancialOnly })}</aside>
+        scoreMin: 'filterScoreMin', scoreMax: 'filterScoreMax', sector: 'filterSector',
+        sectorProfile: 'filterSectorProfile', alertKind: 'filterAlertKind',
+      }, {
+        search: indicesListSearch, sort: indicesListSort, financialOnly: indicesListFinancialOnly,
+        scoreMin: indicesListScoreMin, scoreMax: indicesListScoreMax, sector: indicesListSector,
+        sectorProfile: indicesListSectorProfile, alertKind: indicesListAlertKind,
+      }, { sectors })}</aside>
       <div class="index-card-list">${cardsHtml}</div>
     </div>
   `;
@@ -2982,6 +3073,26 @@ function renderIndicesList(companies) {
   });
   document.getElementById('filterFinancialOnly').addEventListener('change', (e) => {
     indicesListFinancialOnly = e.target.checked;
+    refreshAllVisibleGroups();
+  });
+  document.getElementById('filterScoreMin').addEventListener('change', (e) => {
+    indicesListScoreMin = e.target.value === '' ? null : Number(e.target.value);
+    refreshAllVisibleGroups();
+  });
+  document.getElementById('filterScoreMax').addEventListener('change', (e) => {
+    indicesListScoreMax = e.target.value === '' ? null : Number(e.target.value);
+    refreshAllVisibleGroups();
+  });
+  document.getElementById('filterSector').addEventListener('change', (e) => {
+    indicesListSector = e.target.value;
+    refreshAllVisibleGroups();
+  });
+  document.getElementById('filterSectorProfile').addEventListener('change', (e) => {
+    indicesListSectorProfile = e.target.value;
+    refreshAllVisibleGroups();
+  });
+  document.getElementById('filterAlertKind').addEventListener('change', (e) => {
+    indicesListAlertKind = e.target.value;
     refreshAllVisibleGroups();
   });
 }
@@ -3378,10 +3489,16 @@ function renderRoute(animate) {
 document.querySelectorAll('.nav-item[data-route]').forEach(tab => {
   tab.addEventListener('click', () => {
     // Clic explicite sur l'onglet Indices = remise à zéro volontaire de la
-    // recherche/l'indice déplié/le défilement, contrairement au lien
-    // "← Indices" d'une fiche qui, lui, doit les conserver.
+    // recherche/des filtres avancés/l'indice déplié/le défilement,
+    // contrairement au lien "← Indices" d'une fiche qui, lui, doit les
+    // conserver.
     if (tab.dataset.route === 'indices') {
       indicesListSearch = '';
+      indicesListScoreMin = null;
+      indicesListScoreMax = null;
+      indicesListSector = '';
+      indicesListSectorProfile = '';
+      indicesListAlertKind = '';
       indicesListScrollTop = 0;
       indicesOpenIndexKey = null;
     }

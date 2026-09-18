@@ -2805,11 +2805,11 @@ function sortedFilteredCompanies(companies, state) {
 // placeholder "Bientôt disponible".
 function filterAccordionHtml(ids, state, advancedOptions) {
   const advancedHtml = advancedOptions ? `
-      <p class="adv-filter-label adv-filter-label-first">Score</p>
+      <p class="adv-filter-label adv-filter-label-first">Score (-100 à +100)</p>
       <div class="adv-score-range">
-        <input type="number" class="list-search" id="${ids.scoreMin}" placeholder="Min" step="1" value="${state.scoreMin ?? ''}">
+        <input type="number" class="list-search" id="${ids.scoreMin}" placeholder="Min" step="1" min="-100" max="100" value="${state.scoreMin ?? ''}">
         <span>–</span>
-        <input type="number" class="list-search" id="${ids.scoreMax}" placeholder="Max" step="1" value="${state.scoreMax ?? ''}">
+        <input type="number" class="list-search" id="${ids.scoreMax}" placeholder="Max" step="1" min="-100" max="100" value="${state.scoreMax ?? ''}">
       </div>
       <p class="adv-filter-label">Secteur</p>
       <select class="list-sort" id="${ids.sector}">

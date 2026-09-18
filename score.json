@@ -1,25 +1,25 @@
 {
-  "date": "2026-09-17",
-  "composite_score": 6.8,
+  "date": "2026-09-18",
+  "composite_score": 3.0,
   "interpretation": "Neutre — pas d'action",
   "factors": [
     {
       "name": "Taux réels US 10 ans",
-      "score": -3.799999999999999,
+      "score": -5.600000000000005,
       "weight": 0.3,
-      "raw_value": "2.62% (il y a ~45j : 2.43%)"
+      "raw_value": "2.68% (il y a ~45j : 2.40%)"
     },
     {
       "name": "Dollar (DXY)",
-      "score": 2.5699996948242188,
+      "score": 2.3349761962890625,
       "weight": 0.15,
-      "raw_value": "100.24 (il y a 2 mois : 100.75)"
+      "raw_value": "100.52 (il y a 2 mois : 100.99)"
     },
     {
       "name": "Anticipations d'inflation",
-      "score": 2.0000000000000018,
+      "score": 3.3333333333333366,
       "weight": 0.15,
-      "raw_value": "2.33% (il y a ~45j : 2.27%)"
+      "raw_value": "2.33% (il y a ~45j : 2.23%)"
     },
     {
       "name": "Ton de la Fed",
@@ -47,13 +47,13 @@
     }
   ],
   "technical": {
-    "note": "Cours en-dessous de la MM200 (-3.4%) — tendance baissière",
-    "spot": 4399.5,
-    "ma200": 4552.599500732422
+    "note": "Cours en-dessous de la MM200 (-3.1%) — tendance baissière",
+    "spot": 4410.0,
+    "ma200": 4553.276502685547
   },
   "calendar": [
     {
-      "date": "17/09/2026",
+      "date": "24/09/2026",
       "label": "Inscriptions chômage (hebdo)",
       "kind": "Donnée"
     },
@@ -98,7 +98,7 @@
       "kind": "info",
       "title": "Pas de signal actif",
       "detail": "Aucune des conditions de veille, d'entrée ou de risque n'est réunie aujourd'hui.",
-      "date": "17/09/2026"
+      "date": "18/09/2026"
     }
   ]
 }

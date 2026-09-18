@@ -339,33 +339,12 @@
   .back-link:active { transform: scale(.96); }
   /* Deux liens de retour côte à côte (ex. analyse financière : retour à
      l'indice ET retour à la fiche) — en ligne avec un léger espacement,
-     s'enroule si trop étroit plutôt que déborder horizontalement. */
+     s'enroule si trop étroit plutôt que déborder horizontalement.
+     Toujours dans le flux normal du contenu (pas de positionnement hors
+     flux dans la marge : ça finissait masqué sous la top-bar fixe sur
+     grand écran). */
   .back-link-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
   .back-link-row .back-link { margin-bottom: 0; }
-  /* Bouton "retour" d'Indices : sur grand écran, sorti du flux et placé
-     dans la marge gauche de la page (relatif à .app, pas à la fenêtre —
-     s'adapte donc automatiquement aux différentes largeurs de .app selon
-     la sous-page : fiche entreprise, suivi des signaux...), un peu plus
-     grand pour bien se voir en dehors du contenu central. */
-  #indices .app { position: relative; }
-  @media (min-width: 1360px) {
-    /* top aligné sur le padding-top du header (calc(topbar-h + 36px)) :
-       un top:0 tout court place le lien derrière la top-bar fixe
-       (height: var(--topbar-h), z-index:10), qui le rend invisible. */
-    #indices .back-link {
-      position: absolute; top: calc(var(--topbar-h) + 36px); right: calc(100% + 24px);
-      font-size: var(--text-sm); padding: 9px 18px 9px 12px; white-space: nowrap;
-    }
-    /* .back-link-row prend elle-même la position dans la marge (en
-       colonne) ; ses liens internes repassent en flux normal dans la
-       colonne plutôt que de tenter chacun sa propre absolute-position
-       au même endroit (qui les superposerait). */
-    #indices .back-link-row {
-      position: absolute; top: calc(var(--topbar-h) + 36px); right: calc(100% + 24px);
-      display: flex; flex-direction: column; gap: 8px;
-    }
-    #indices .back-link-row .back-link { position: static; right: auto; }
-  }
   .eyebrow { color: var(--muted); font-size: 12px; margin-bottom: 2px; }
   h1 { font-family: 'Newsreader', serif; font-weight: 400; font-size: clamp(2rem, 4.5vw, 2.5rem); letter-spacing: 0.02em; margin: 0 0 2px; }
   .updated { color: var(--muted); font-size: 12px; margin: 0 0 4px; }

@@ -1011,6 +1011,18 @@
     border: solid #fff; border-width: 0 2px 2px 0; transform: rotate(45deg);
   }
 
+  /* Bouton "Réinitialiser les filtres" : remet recherche/tri/checkbox +
+     filtres avancés à zéro en un clic, sans toucher au reste de l'état de
+     la liste (indice déplié, position de défilement). */
+  .filter-reset-btn {
+    width: 100%; margin-top: 10px;
+    background: none; border: 1px solid var(--border); color: var(--muted);
+    font: inherit; font-size: var(--text-xs); font-weight: 600;
+    padding: 8px 10px; border-radius: var(--radius-md);
+    transition: border-color .15s ease, color .15s ease;
+  }
+  .filter-reset-btn:hover { border-color: var(--rust); color: var(--rust); }
+
   .index-card-list { display: flex; flex-direction: column; gap: 18px; margin: 4px 0 24px; }
   .index-card {
     background: var(--bg-2); border: 1px solid var(--border); border-radius: var(--radius-lg);
@@ -1752,6 +1764,7 @@ function portfolioOppFilterIds(suffix) {
   return {
     toggle: 'pfOppToggle' + suffix, body: 'pfOppBody' + suffix,
     search: 'pfOppSearch' + suffix, sort: 'pfOppSort' + suffix, financialOnly: 'pfOppFinancialOnly' + suffix,
+    reset: 'pfOppReset' + suffix,
     advToggle: 'pfOppAdvToggle' + suffix, advBody: 'pfOppAdvBody' + suffix,
   };
 }
@@ -1794,6 +1807,12 @@ function wireOppFilterControls(suffix, opportunities) {
   });
   document.getElementById(ids.financialOnly).addEventListener('change', (e) => {
     portfolioOppFinancialOnly = e.target.checked; renderPortfolioOppList(opportunities);
+  });
+  document.getElementById(ids.reset).addEventListener('click', () => {
+    portfolioOppSearch = '';
+    portfolioOppSort = 'score_desc';
+    portfolioOppFinancialOnly = false;
+    wirePortfolioOpportunities(opportunities);
   });
   wireFilterAccordionToggles(ids);
 }
@@ -2858,6 +2877,7 @@ function filterAccordionHtml(ids, state, advancedOptions) {
         <input type="checkbox" id="${ids.financialOnly}"${state.financialOnly ? ' checked' : ''}>
         Profil financier uniquement
       </label>
+      <button class="filter-reset-btn" id="${ids.reset}" type="button">Réinitialiser les filtres</button>
       <button class="index-card-header indices-filters-advanced-toggle" id="${ids.advToggle}" type="button" aria-expanded="false">
         <span class="index-card-name">Filtres avancés</span>
         <span class="chevron">▾</span>
@@ -3010,7 +3030,8 @@ function renderIndicesList(companies) {
     <div class="indices-layout">
       <aside class="indices-filters">${filterAccordionHtml({
         toggle: 'filterToggle', body: 'filterBody', search: 'filterSearch', sort: 'filterSort',
-        financialOnly: 'filterFinancialOnly', advToggle: 'filterAdvToggle', advBody: 'filterAdvBody',
+        financialOnly: 'filterFinancialOnly', reset: 'filterReset',
+        advToggle: 'filterAdvToggle', advBody: 'filterAdvBody',
         scoreMin: 'filterScoreMin', scoreMax: 'filterScoreMax', sector: 'filterSector',
         sectorProfile: 'filterSectorProfile', alertKind: 'filterAlertKind',
       }, {
@@ -3105,6 +3126,21 @@ function renderIndicesList(companies) {
   document.getElementById('filterAlertKind').addEventListener('change', (e) => {
     indicesListAlertKind = e.target.value;
     refreshAllVisibleGroups();
+  });
+  document.getElementById('filterReset').addEventListener('click', () => {
+    // Ne touche qu'aux filtres (recherche/tri/checkbox + avancés) — pas à
+    // l'indice déplié ni au défilement, contrairement à la remise à zéro
+    // complète du clic sur l'onglet "Indices" du haut.
+    indicesListSearch = '';
+    indicesListSort = 'score_desc';
+    indicesListFinancialOnly = false;
+    indicesListScoreMin = null;
+    indicesListScoreMax = null;
+    indicesListSector = '';
+    indicesListSectorProfile = '';
+    indicesListAlertKind = '';
+    indicesListViewActive = false;
+    renderIndicesList(indicesData.companies);
   });
 }
 

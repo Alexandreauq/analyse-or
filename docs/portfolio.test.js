@@ -7,6 +7,7 @@ const {
   PORTFOLIO_STORAGE_KEY, validatePositionInput, createPosition,
   loadPortfolio, savePortfolio, addPosition, updatePosition, removePosition,
   computePositionPnL, computePortfolioTotals, findOpportunities,
+  computePortfolioConcentration, computePortfolioHealth, computePortfolioAttribution,
 } = require('./portfolio.js');
 
 // Mock localStorage minimal — Node n'a pas cet objet nativement.
@@ -250,6 +251,94 @@ function test_findOpportunities_handles_missing_alerts_field() {
   console.log('OK: test_findOpportunities_handles_missing_alerts_field');
 }
 
+function test_computePortfolioConcentration_counts_by_index_and_sector() {
+  const positions = [
+    { id: 'p1', ticker: 'MC.PA', quantity: 10, buy_price: 600, buy_date: '2026-07-01' },
+    { id: 'p2', ticker: 'OR.PA', quantity: 4, buy_price: 50, buy_date: '2026-07-01' },
+    { id: 'p3', ticker: 'AAPL', quantity: 5, buy_price: 180, buy_date: '2026-07-01' },
+  ];
+  const companiesByTicker = {
+    'MC.PA': { ticker: 'MC.PA', index: 'CAC40', sector: 'Consumer Cyclical', current_price: 660 },
+    'OR.PA': { ticker: 'OR.PA', index: 'CAC40', sector: 'Consumer Cyclical', current_price: 55 },
+    'AAPL': { ticker: 'AAPL', index: 'NASDAQ', sector: 'Technology', current_price: 200 },
+  };
+  const currencyByIndex = { CAC40: 'EUR', NASDAQ: 'USD' };
+  const result = computePortfolioConcentration(positions, companiesByTicker, currencyByIndex);
+  assert.strictEqual(result.totalPositions, 3);
+  assert.deepStrictEqual(result.byIndex, { CAC40: 2, NASDAQ: 1 });
+  assert.deepStrictEqual(result.bySector, { 'Consumer Cyclical': 2, Technology: 1 });
+  assert.strictEqual(result.byCurrency.EUR, 660 * 10 + 55 * 4);
+  assert.strictEqual(result.byCurrency.USD, 200 * 5);
+  console.log('OK: test_computePortfolioConcentration_counts_by_index_and_sector');
+}
+
+function test_computePortfolioConcentration_skips_unknown_ticker() {
+  const positions = [{ id: 'p1', ticker: 'DELISTED', quantity: 10, buy_price: 600, buy_date: '2026-07-01' }];
+  const result = computePortfolioConcentration(positions, {}, {});
+  assert.strictEqual(result.totalPositions, 0);
+  assert.deepStrictEqual(result.byIndex, {});
+  assert.deepStrictEqual(result.byCurrency, {});
+  console.log('OK: test_computePortfolioConcentration_skips_unknown_ticker');
+}
+
+function test_computePortfolioConcentration_defaults_missing_sector_to_inconnu() {
+  const positions = [{ id: 'p1', ticker: 'MC.PA', quantity: 1, buy_price: 600, buy_date: '2026-07-01' }];
+  const companiesByTicker = { 'MC.PA': { ticker: 'MC.PA', index: 'CAC40', current_price: 660 } };
+  const result = computePortfolioConcentration(positions, companiesByTicker, { CAC40: 'EUR' });
+  assert.deepStrictEqual(result.bySector, { Inconnu: 1 });
+  console.log('OK: test_computePortfolioConcentration_defaults_missing_sector_to_inconnu');
+}
+
+function test_computePortfolioHealth_averages_score_and_counts_alerts() {
+  const positions = [
+    { id: 'p1', ticker: 'MC.PA', quantity: 1, buy_price: 600, buy_date: '2026-07-01' },
+    { id: 'p2', ticker: 'OR.PA', quantity: 1, buy_price: 50, buy_date: '2026-07-01' },
+  ];
+  const companiesByTicker = {
+    'MC.PA': { ticker: 'MC.PA', score: 20, alerts: [{ kind: 'risque' }] },
+    'OR.PA': { ticker: 'OR.PA', score: 10, alerts: [{ kind: 'actu_majeure' }, { kind: 'risque' }] },
+  };
+  const result = computePortfolioHealth(positions, companiesByTicker);
+  assert.strictEqual(result.avgScore, 15);
+  assert.strictEqual(result.scoredPositions, 2);
+  assert.strictEqual(result.riskAlertCount, 2);
+  assert.strictEqual(result.majorNewsAlertCount, 1);
+  console.log('OK: test_computePortfolioHealth_averages_score_and_counts_alerts');
+}
+
+function test_computePortfolioHealth_null_avg_score_when_no_scored_positions() {
+  const result = computePortfolioHealth([{ id: 'p1', ticker: 'DELISTED', quantity: 1, buy_price: 1, buy_date: '2026-07-01' }], {});
+  assert.strictEqual(result.avgScore, null);
+  assert.strictEqual(result.scoredPositions, 0);
+  console.log('OK: test_computePortfolioHealth_null_avg_score_when_no_scored_positions');
+}
+
+function test_computePortfolioAttribution_sorts_by_pnl_desc() {
+  const positions = [
+    { id: 'p1', ticker: 'MC.PA', quantity: 10, buy_price: 600, buy_date: '2026-07-01' },
+    { id: 'p2', ticker: 'AAPL', quantity: 5, buy_price: 200, buy_date: '2026-07-01' },
+  ];
+  const companiesByTicker = {
+    'MC.PA': { ticker: 'MC.PA', name: 'LVMH', index: 'CAC40', current_price: 660 },
+    'AAPL': { ticker: 'AAPL', name: 'Apple', index: 'NASDAQ', current_price: 180 },
+  };
+  const result = computePortfolioAttribution(positions, companiesByTicker);
+  assert.strictEqual(result.length, 2);
+  assert.strictEqual(result[0].ticker, 'MC.PA');
+  assert.strictEqual(result[0].pnlAbs, 600);
+  assert.strictEqual(result[1].ticker, 'AAPL');
+  assert.strictEqual(result[1].pnlAbs, -100);
+  console.log('OK: test_computePortfolioAttribution_sorts_by_pnl_desc');
+}
+
+function test_computePortfolioAttribution_skips_position_without_price() {
+  const positions = [{ id: 'p1', ticker: 'MC.PA', quantity: 1, buy_price: 600, buy_date: '2026-07-01' }];
+  const companiesByTicker = { 'MC.PA': { ticker: 'MC.PA', name: 'LVMH', current_price: null } };
+  const result = computePortfolioAttribution(positions, companiesByTicker);
+  assert.strictEqual(result.length, 0);
+  console.log('OK: test_computePortfolioAttribution_skips_position_without_price');
+}
+
 function main() {
   test_validatePositionInput_accepts_positive_numbers();
   test_validatePositionInput_rejects_non_positive_quantity();
@@ -278,6 +367,13 @@ function main() {
   test_findOpportunities_returns_entree_alerts_not_held();
   test_findOpportunities_excludes_companies_without_entree_alert();
   test_findOpportunities_handles_missing_alerts_field();
+  test_computePortfolioConcentration_counts_by_index_and_sector();
+  test_computePortfolioConcentration_skips_unknown_ticker();
+  test_computePortfolioConcentration_defaults_missing_sector_to_inconnu();
+  test_computePortfolioHealth_averages_score_and_counts_alerts();
+  test_computePortfolioHealth_null_avg_score_when_no_scored_positions();
+  test_computePortfolioAttribution_sorts_by_pnl_desc();
+  test_computePortfolioAttribution_skips_position_without_price();
   console.log('Tous les tests portfolio.test.js sont passés.');
 }
 

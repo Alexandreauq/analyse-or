@@ -158,10 +158,95 @@ function findOpportunities(companies, heldTickers) {
   );
 }
 
+/**
+ * Répartition du portefeuille par indice/secteur (en nombre de lignes)
+ * et par devise (en valeur détenue) — jamais en valeur pondérée pour
+ * indice/secteur, ni convertie entre devises pour la répartition par
+ * devise : le site ne convertit jamais entre devises ailleurs (voir
+ * computePortfolioTotals), donc sommer des € et des $ n'aurait pas de
+ * sens. Une position dont le ticker n'est plus suivi est ignorée (comme
+ * ailleurs dans ce fichier) plutôt que de faire échouer tout le calcul.
+ */
+function computePortfolioConcentration(positions, companiesByTicker, currencyByIndex) {
+  const byIndex = {};
+  const bySector = {};
+  const byCurrency = {};
+  let totalPositions = 0;
+  positions.forEach(position => {
+    const company = companiesByTicker[position.ticker];
+    if (!company) return;
+    totalPositions++;
+    byIndex[company.index] = (byIndex[company.index] || 0) + 1;
+    const sector = company.sector || 'Inconnu';
+    bySector[sector] = (bySector[sector] || 0) + 1;
+    const currency = (currencyByIndex && currencyByIndex[company.index]) || 'EUR';
+    const pnl = computePositionPnL(position, company.current_price);
+    const value = pnl ? pnl.value : position.quantity * position.buy_price;
+    byCurrency[currency] = (byCurrency[currency] || 0) + value;
+  });
+  return { totalPositions, byIndex, bySector, byCurrency };
+}
+
+/**
+ * Santé du portefeuille selon le modèle : score moyen à parts égales
+ * entre positions (pas pondéré par la valeur détenue — additionner des
+ * valeurs dans des devises différentes n'aurait pas de sens sans
+ * conversion, que ce fichier ne fait jamais) + nombre de positions avec
+ * une alerte "risque" ou "actu_majeure" active.
+ */
+function computePortfolioHealth(positions, companiesByTicker) {
+  let scoreSum = 0;
+  let scoreCount = 0;
+  let riskAlertCount = 0;
+  let majorNewsAlertCount = 0;
+  positions.forEach(position => {
+    const company = companiesByTicker[position.ticker];
+    if (!company) return;
+    if (Number.isFinite(company.score)) {
+      scoreSum += company.score;
+      scoreCount++;
+    }
+    const alerts = company.alerts || [];
+    if (alerts.some(a => a.kind === 'risque')) riskAlertCount++;
+    if (alerts.some(a => a.kind === 'actu_majeure')) majorNewsAlertCount++;
+  });
+  return {
+    avgScore: scoreCount ? scoreSum / scoreCount : null,
+    scoredPositions: scoreCount,
+    riskAlertCount,
+    majorNewsAlertCount,
+  };
+}
+
+/**
+ * Contribution de chaque position au P&L, triée par contribution
+ * absolue décroissante (plus gros contributeur positif en premier).
+ * Version "simple" de l'attribution de performance : pas de comparaison
+ * à l'indice sur la période de détention (demanderait le cours de
+ * l'indice à la date d'achat, non disponible pour des positions
+ * ajoutées manuellement à une date arbitraire).
+ */
+function computePortfolioAttribution(positions, companiesByTicker) {
+  const rows = [];
+  positions.forEach(position => {
+    const company = companiesByTicker[position.ticker];
+    if (!company) return;
+    const pnl = computePositionPnL(position, company.current_price);
+    if (!pnl) return;
+    rows.push({
+      ticker: position.ticker, name: company.name, index: company.index,
+      pnlAbs: pnl.pnlAbs, pnlPct: pnl.pnlPct,
+    });
+  });
+  rows.sort((a, b) => b.pnlAbs - a.pnlAbs);
+  return rows;
+}
+
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
     PORTFOLIO_STORAGE_KEY, validatePositionInput, createPosition,
     loadPortfolio, savePortfolio, addPosition, updatePosition, removePosition,
     computePositionPnL, computePortfolioTotals, findOpportunities,
+    computePortfolioConcentration, computePortfolioHealth, computePortfolioAttribution,
   };
 }

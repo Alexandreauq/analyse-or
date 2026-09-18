@@ -2759,6 +2759,17 @@ function formatPriceForIndex(v, indexKey) {
   return v != null ? `${v.toLocaleString('fr-FR', {maximumFractionDigits:2})} ${symbol}` : 'indisponible';
 }
 
+// Lit et borne à [-100, 100] la valeur d'un champ Min/Max du filtre de
+// score, en réécrivant la valeur affichée si elle dépassait — les
+// attributs HTML min/max seuls ne bloquent que les flèches du champ, pas
+// une saisie clavier directe (ex. -127 ou 110), d'où ce clampage explicite.
+function clampScoreInput(input) {
+  if (input.value === '') return null;
+  const clamped = Math.max(-100, Math.min(100, Number(input.value)));
+  input.value = clamped;
+  return clamped;
+}
+
 // `state` optionnel : {search, sort, financialOnly, scoreMin, scoreMax,
 // sector, sectorProfile, alertKind} — par défaut, l'état global de la
 // page Indices (voir indicesListSearch/-Sort/-FinancialOnly/-ScoreMin/…),
@@ -3076,11 +3087,11 @@ function renderIndicesList(companies) {
     refreshAllVisibleGroups();
   });
   document.getElementById('filterScoreMin').addEventListener('change', (e) => {
-    indicesListScoreMin = e.target.value === '' ? null : Number(e.target.value);
+    indicesListScoreMin = clampScoreInput(e.target);
     refreshAllVisibleGroups();
   });
   document.getElementById('filterScoreMax').addEventListener('change', (e) => {
-    indicesListScoreMax = e.target.value === '' ? null : Number(e.target.value);
+    indicesListScoreMax = clampScoreInput(e.target);
     refreshAllVisibleGroups();
   });
   document.getElementById('filterSector').addEventListener('change', (e) => {

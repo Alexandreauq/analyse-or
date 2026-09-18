@@ -593,6 +593,27 @@
   .price-value { font-weight: 500; }
   .price-disclaimer { color: var(--muted); font-size: 11px; line-height: 1.5; margin: 8px 0 0; }
 
+  /* Onglet "Analyse" du Portefeuille — paragraphe diagnostic (voir
+     portfolioDiagnosisParagraph), titres de sous-section et barres de
+     concentration (indice/secteur), réutilise .signal-stats/.price-row
+     pour la santé/les devises/l'attribution. */
+  .portfolio-diagnosis {
+    background: var(--bg-2); border: 1px solid var(--border); border-radius: var(--radius-lg);
+    padding: 14px 16px; font-size: var(--text-sm); line-height: var(--lh-relaxed); color: var(--text);
+    margin: 0 0 24px;
+  }
+  .portfolio-analysis-title {
+    font-family: 'Newsreader', serif; font-weight: 400; font-size: var(--text-lg);
+    margin: 28px 0 10px;
+  }
+  .portfolio-analysis-title:first-of-type { margin-top: 0; }
+  .concentration-list { display: flex; flex-direction: column; gap: 10px; margin: 0 0 24px; }
+  .concentration-row { display: flex; align-items: center; gap: 10px; font-size: var(--text-sm); }
+  .concentration-label { flex: 0 0 160px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .concentration-bar-track { flex: 1; height: 8px; border-radius: var(--radius-pill); background: var(--bg-3); overflow: hidden; }
+  .concentration-bar-fill { height: 100%; background: var(--accent); border-radius: var(--radius-pill); }
+  .concentration-value { flex: 0 0 auto; color: var(--text); font-weight: 500; white-space: nowrap; }
+
   .cal-row { display:flex; justify-content:space-between; gap:10px; font-size: var(--text-xs);
              padding:8px 0; border-bottom:1px solid var(--border); transition: transform .14s ease; }
   .cal-row:hover { transform: translateX(2px); }
@@ -1624,8 +1645,116 @@ function renderToc(prefix, sections, index) {
   wireItems(sidebarListEl, false);
 }
 
+// Qualificatif texte du score moyen — mêmes seuils que interpret() côté
+// indices_score.py (>50 très solide, >15 solide, >-15 neutre, sinon
+// fragile), pour rester cohérent avec le vocabulaire utilisé ailleurs
+// sur le site plutôt que d'inventer de nouveaux seuils.
+function scoreQualifier(score) {
+  if (score > 50) return 'très solide';
+  if (score > 15) return 'solide';
+  if (score > -15) return 'neutre';
+  return 'fragile';
+}
+
+// Paragraphe de diagnostic généré par des règles simples (seuils fixes),
+// pas un appel à un modèle — ce site est entièrement statique côté
+// client. Pointe uniquement ce qui dépasse un seuil notable (40% de
+// concentration, 70% d'exposition devise) plutôt que de tout énumérer.
+function portfolioDiagnosisParagraph(concentration, health, attribution) {
+  if (!concentration.totalPositions) return '';
+  const parts = [];
+  const indexNames = { ...INDEX_DISPLAY_NAMES, ...(indicesData.index_names || {}) };
+  const topEntry = obj => Object.entries(obj).sort((a, b) => b[1] - a[1])[0];
+
+  const [topIndexKey, topIndexCount] = topEntry(concentration.byIndex);
+  const [topSectorKey, topSectorCount] = topEntry(concentration.bySector);
+  const indexShare = topIndexCount / concentration.totalPositions;
+  const sectorShare = topSectorCount / concentration.totalPositions;
+  const concentrationBits = [];
+  if (indexShare >= 0.4) concentrationBits.push(`${Math.round(indexShare * 100)}% sur ${indexNames[topIndexKey] || topIndexKey}`);
+  if (sectorShare >= 0.4) concentrationBits.push(`${Math.round(sectorShare * 100)}% sur le secteur ${SECTOR_LABELS_FR[topSectorKey] || topSectorKey}`);
+  parts.push(concentrationBits.length
+    ? `Portefeuille concentré : ${concentrationBits.join(', ')}.`
+    : 'Portefeuille plutôt diversifié, sans concentration dominante par indice ou secteur.');
+
+  const currencyEntries = Object.entries(concentration.byCurrency).filter(([, v]) => v > 0);
+  const totalValue = currencyEntries.reduce((sum, [, v]) => sum + v, 0);
+  if (currencyEntries.length > 1 && totalValue > 0) {
+    const [topCurrency, topCurrencyValue] = currencyEntries.sort((a, b) => b[1] - a[1])[0];
+    const share = topCurrencyValue / totalValue;
+    if (share >= 0.7) parts.push(`Exposition change essentiellement en ${topCurrency} (${Math.round(share * 100)}%).`);
+  }
+
+  if (health.avgScore != null) {
+    parts.push(`Score moyen du modèle : ${health.avgScore > 0 ? '+' : ''}${health.avgScore.toFixed(1)} (profil ${scoreQualifier(health.avgScore)}).`);
+  }
+  if (health.riskAlertCount > 0) {
+    parts.push(`${health.riskAlertCount} position${health.riskAlertCount > 1 ? 's' : ''} avec une alerte "risque" active à surveiller.`);
+  }
+
+  if (attribution.length) {
+    const best = attribution[0];
+    const worst = attribution[attribution.length - 1];
+    if (best.pnlAbs > 0) parts.push(`${best.name} tire le plus le P&L vers le haut (${formatPct(best.pnlPct)}).`);
+    if (worst.pnlAbs < 0 && worst.ticker !== best.ticker) parts.push(`${worst.name} pèse le plus vers le bas (${formatPct(worst.pnlPct)}).`);
+  }
+
+  return parts.join(' ');
+}
+
+// Barres de répartition (indice/secteur) — proportion en % du nombre de
+// positions, pas de la valeur détenue (voir computePortfolioConcentration).
+function concentrationBarsHtml(counts, labelFn) {
+  const total = Object.values(counts).reduce((a, b) => a + b, 0);
+  return Object.entries(counts).sort((a, b) => b[1] - a[1]).map(([key, count]) => `
+    <div class="concentration-row">
+      <span class="concentration-label">${labelFn(key)}</span>
+      <div class="concentration-bar-track"><div class="concentration-bar-fill" style="width:${total ? (count / total * 100) : 0}%"></div></div>
+      <span class="concentration-value">${count} (${total ? Math.round(count / total * 100) : 0}%)</span>
+    </div>`).join('');
+}
+
+function portfolioAnalysisHtml(positions, companiesByTicker, currencyByIndex) {
+  if (!positions.length) {
+    return '<div class="empty">Ajoute des positions pour voir apparaître une analyse ici.</div>';
+  }
+  const concentration = computePortfolioConcentration(positions, companiesByTicker, currencyByIndex);
+  const health = computePortfolioHealth(positions, companiesByTicker);
+  const attribution = computePortfolioAttribution(positions, companiesByTicker);
+  const diagnosis = portfolioDiagnosisParagraph(concentration, health, attribution);
+  const indexNames = { ...INDEX_DISPLAY_NAMES, ...(indicesData.index_names || {}) };
+
+  const currencyHtml = Object.entries(concentration.byCurrency).sort((a, b) => b[1] - a[1]).map(([currency, value]) => `
+    <div class="price-row"><span class="price-label">${currency}</span><span class="price-value">${value.toLocaleString('fr-FR', {maximumFractionDigits:0})} ${CURRENCY_SYMBOL[currency] || currency}</span></div>`).join('');
+
+  const attributionHtml = attribution.length ? attribution.map(a => `
+    <div class="price-row">
+      <span class="price-label"><a href="#indices/${a.ticker}">${a.name}</a></span>
+      <span class="price-value ${pctClass(a.pnlAbs)}">${a.pnlAbs >= 0 ? '+' : ''}${a.pnlAbs.toLocaleString('fr-FR', {maximumFractionDigits:0})} ${CURRENCY_SYMBOL[currencyByIndex[a.index]] || ''} (${formatPct(a.pnlPct)})</span>
+    </div>`).join('') : '<div class="list-empty">Aucune position avec un cours disponible.</div>';
+
+  return `
+    <p class="portfolio-diagnosis">${diagnosis}</p>
+    <h3 class="portfolio-analysis-title">Santé selon le modèle</h3>
+    <div class="signal-stats">
+      <div class="price-row"><span class="price-label">Score moyen (parts égales)</span><span class="price-value ${pctClass(health.avgScore)}">${health.avgScore != null ? (health.avgScore > 0 ? '+' : '') + health.avgScore.toFixed(1) : '—'}</span></div>
+      <div class="price-row"><span class="price-label">Positions avec alerte "risque"</span><span class="price-value">${health.riskAlertCount}</span></div>
+      <div class="price-row"><span class="price-label">Positions avec actu majeure</span><span class="price-value">${health.majorNewsAlertCount}</span></div>
+    </div>
+    <h3 class="portfolio-analysis-title">Concentration par indice</h3>
+    <div class="concentration-list">${concentrationBarsHtml(concentration.byIndex, key => indexNames[key] || key)}</div>
+    <h3 class="portfolio-analysis-title">Concentration par secteur</h3>
+    <div class="concentration-list">${concentrationBarsHtml(concentration.bySector, key => SECTOR_LABELS_FR[key] || key)}</div>
+    <h3 class="portfolio-analysis-title">Exposition devises</h3>
+    <div class="signal-stats">${currencyHtml}</div>
+    <h3 class="portfolio-analysis-title">Attribution de performance</h3>
+    <div class="signal-stats">${attributionHtml}</div>
+  `;
+}
+
 // Onglet "Actions" : suivi manuel des positions actions (localStorage, voir
-// portfolio.js) — 3 sections en carrousel : ajout, positions détenues, opportunités.
+// portfolio.js) — 4 sections en carrousel : ajout, positions détenues,
+// opportunités, analyse.
 function renderPortfolioActionsTab(companiesByTicker, currencyByIndex) {
   const positions = loadPortfolio();
   const totals = computePortfolioTotals(positions, companiesByTicker, currencyByIndex);
@@ -1649,6 +1778,11 @@ function renderPortfolioActionsTab(companiesByTicker, currencyByIndex) {
       title: 'Opportunités',
       desc: 'Entreprises suivies dont le signal d\'entrée vient de s\'activer, que tu ne détiens pas encore dans ton portefeuille.',
       html: portfolioOpportunitiesHtml(opportunities), wire: () => wirePortfolioOpportunities(opportunities),
+    },
+    {
+      title: 'Analyse',
+      desc: 'Concentration, santé du portefeuille selon le modèle et contribution de chaque ligne au P&L.',
+      html: portfolioAnalysisHtml(positions, companiesByTicker, currencyByIndex),
     },
   ];
   renderPager('pfActions', portfolioActionsSections, portfolioActionsSectionIndex);

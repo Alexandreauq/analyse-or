@@ -1753,40 +1753,58 @@ function portfolioFormHtml(companies) {
 let portfolioOppSearch = '';
 let portfolioOppSort = 'score_desc';
 let portfolioOppFinancialOnly = false;
+let portfolioOppScoreMin = null;
+let portfolioOppScoreMax = null;
+let portfolioOppSector = '';
+let portfolioOppSectorProfile = '';
+let portfolioOppAlertKind = '';
 
 // Ids du filtre, paramétrés par un suffixe — deux instances coexistent dans
 // le DOM (voir portfolioOpportunitiesHtml / markup du sommaire desktop
 // pfOppFilterSidebar) : inline sous mobile (repliée en desktop via
 // .portfolio-toc-mobile, même bascule que le sommaire), colonne gauche
 // sous desktop — jamais les deux visibles en même temps. Même composant
-// que la page Indices (voir filterAccordionHtml/wireFilterAccordionToggles).
+// que la page Indices (voir filterAccordionHtml/wireFilterAccordionToggles),
+// mêmes filtres avancés (score/secteur/profil sectoriel/signal).
 function portfolioOppFilterIds(suffix) {
   return {
     toggle: 'pfOppToggle' + suffix, body: 'pfOppBody' + suffix,
     search: 'pfOppSearch' + suffix, sort: 'pfOppSort' + suffix, financialOnly: 'pfOppFinancialOnly' + suffix,
     reset: 'pfOppReset' + suffix,
     advToggle: 'pfOppAdvToggle' + suffix, advBody: 'pfOppAdvBody' + suffix,
+    scoreMin: 'pfOppScoreMin' + suffix, scoreMax: 'pfOppScoreMax' + suffix, sector: 'pfOppSector' + suffix,
+    sectorProfile: 'pfOppSectorProfile' + suffix, alertKind: 'pfOppAlertKind' + suffix,
   };
 }
 
 function portfolioOppFilterState() {
-  return { search: portfolioOppSearch, sort: portfolioOppSort, financialOnly: portfolioOppFinancialOnly };
+  return {
+    search: portfolioOppSearch, sort: portfolioOppSort, financialOnly: portfolioOppFinancialOnly,
+    scoreMin: portfolioOppScoreMin, scoreMax: portfolioOppScoreMax, sector: portfolioOppSector,
+    sectorProfile: portfolioOppSectorProfile, alertKind: portfolioOppAlertKind,
+  };
+}
+
+// Secteurs réellement présents parmi les opportunités (pas la liste globale
+// des 710 entreprises) — cohérent avec le fait qu'un secteur absent des
+// opportunités actuelles n'aurait aucun résultat de toute façon.
+function portfolioOppSectors(opportunities) {
+  return [...new Set(opportunities.map(c => c.sector).filter(Boolean))]
+    .sort((a, b) => (SECTOR_LABELS_FR[a] || a).localeCompare(SECTOR_LABELS_FR[b] || b, 'fr'));
 }
 
 function portfolioOpportunitiesHtml(opportunities) {
   if (!opportunities.length) return '<div class="empty">Aucune opportunité pour l\'instant — reviens plus tard.</div>';
   return `
     <p class="hero-sub">Entreprises suivies avec un signal d'entrée actif que tu ne détiens pas encore.</p>
-    <div class="indices-filters portfolio-toc-mobile">${filterAccordionHtml(portfolioOppFilterIds(''), portfolioOppFilterState())}</div>
+    <div class="indices-filters portfolio-toc-mobile" id="pfOppFilterInline">${filterAccordionHtml(portfolioOppFilterIds(''), portfolioOppFilterState(), { sectors: portfolioOppSectors(opportunities) })}</div>
     <div class="index-card-list" id="pfOppList"></div>`;
 }
 
 function renderPortfolioOppList(opportunities) {
   const el = document.getElementById('pfOppList');
   if (!el) return;
-  const visible = sortedFilteredCompanies(opportunities, {
-    search: portfolioOppSearch, sort: portfolioOppSort, financialOnly: portfolioOppFinancialOnly,
-  });
+  const visible = sortedFilteredCompanies(opportunities, portfolioOppFilterState());
   el.innerHTML = visible.length ? visible.map(c => `
       <a class="company-row" href="#indices/${c.ticker}">
         <div class="company-row-left">
@@ -1808,23 +1826,50 @@ function wireOppFilterControls(suffix, opportunities) {
   document.getElementById(ids.financialOnly).addEventListener('change', (e) => {
     portfolioOppFinancialOnly = e.target.checked; renderPortfolioOppList(opportunities);
   });
+  document.getElementById(ids.scoreMin).addEventListener('change', (e) => {
+    portfolioOppScoreMin = clampScoreInput(e.target); renderPortfolioOppList(opportunities);
+  });
+  document.getElementById(ids.scoreMax).addEventListener('change', (e) => {
+    portfolioOppScoreMax = clampScoreInput(e.target); renderPortfolioOppList(opportunities);
+  });
+  document.getElementById(ids.sector).addEventListener('change', (e) => {
+    portfolioOppSector = e.target.value; renderPortfolioOppList(opportunities);
+  });
+  document.getElementById(ids.sectorProfile).addEventListener('change', (e) => {
+    portfolioOppSectorProfile = e.target.value; renderPortfolioOppList(opportunities);
+  });
+  document.getElementById(ids.alertKind).addEventListener('change', (e) => {
+    portfolioOppAlertKind = e.target.value; renderPortfolioOppList(opportunities);
+  });
   document.getElementById(ids.reset).addEventListener('click', () => {
     portfolioOppSearch = '';
     portfolioOppSort = 'score_desc';
     portfolioOppFinancialOnly = false;
+    portfolioOppScoreMin = null;
+    portfolioOppScoreMax = null;
+    portfolioOppSector = '';
+    portfolioOppSectorProfile = '';
+    portfolioOppAlertKind = '';
     wirePortfolioOpportunities(opportunities);
   });
   wireFilterAccordionToggles(ids);
 }
 
 function wirePortfolioOpportunities(opportunities) {
-  const inlineSearch = document.getElementById('pfOppSearch');
+  const inlineFilter = document.getElementById('pfOppFilterInline');
   const sidebarFilter = document.getElementById('pfOppFilterSidebar');
-  if (!inlineSearch) { if (sidebarFilter) sidebarFilter.hidden = true; return; } // pas de filtre quand la liste est vide
+  if (!inlineFilter) { if (sidebarFilter) sidebarFilter.hidden = true; return; } // pas de filtre quand la liste est vide
+  // Reconstruit systématiquement le panneau inline depuis l'état courant
+  // (pas seulement au premier rendu) — nécessaire pour qu'un reset (ou tout
+  // changement déclenché depuis l'instance sidebar) se reflète aussi dans
+  // les champs affichés de cette instance, comme c'est déjà le cas pour
+  // sidebarFilter ci-dessous.
+  const sectors = portfolioOppSectors(opportunities);
+  inlineFilter.innerHTML = filterAccordionHtml(portfolioOppFilterIds(''), portfolioOppFilterState(), { sectors });
   renderPortfolioOppList(opportunities);
   wireOppFilterControls('', opportunities);
   if (sidebarFilter) {
-    sidebarFilter.innerHTML = filterAccordionHtml(portfolioOppFilterIds('Sb'), portfolioOppFilterState());
+    sidebarFilter.innerHTML = filterAccordionHtml(portfolioOppFilterIds('Sb'), portfolioOppFilterState(), { sectors });
     sidebarFilter.hidden = false;
     wireOppFilterControls('Sb', opportunities);
   }

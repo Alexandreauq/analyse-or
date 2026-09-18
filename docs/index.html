@@ -897,6 +897,15 @@
      scrollbar stylisée, la fenêtre elle-même ne défile jamais. */
   #indices.suivi-signaux-active { overflow-y: hidden; }
   #indices.suivi-signaux-active .app { height: 100%; display: flex; flex-direction: column; }
+  /* #indicesContent (<main>) est entre .app et .signal-tracking-layout —
+     sans cette règle, il n'est pas lui-même un enfant flexible de .app
+     (contrairement à #orSuiviView/#scalpTrackingPanel côté #or.suivi-active)
+     et grandit à la taille de son contenu au lieu de se limiter à l'espace
+     restant, ce qui pousse tout le reste hors de vue derrière
+     overflow-y:hidden — aucun scroll interne ne peut alors se déclencher. */
+  #indices.suivi-signaux-active #indicesContent {
+    flex: 1; min-height: 0; display: flex; flex-direction: column; padding-bottom: 20px;
+  }
   #indices.suivi-signaux-active .back-link { flex-shrink: 0; }
   #indices.suivi-signaux-active .signal-tracking-layout { flex: 1; min-height: 0; }
   #indices.suivi-signaux-active .signal-tracking-info { flex-shrink: 0; overflow-y: auto; }

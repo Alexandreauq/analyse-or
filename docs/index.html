@@ -3290,7 +3290,7 @@ function renderCompanyDetail(company) {
   `;
 
   document.getElementById('indicesContent').innerHTML = `
-    <a href="#indices" class="back-link">← Indices</a>
+    <a href="${companyBackTarget.hash}" class="back-link">← ${companyBackTarget.label}</a>
 
     <div class="mobile-key-bar">
       <span class="mobile-key-bar-name">${company.name}</span>
@@ -3396,7 +3396,7 @@ function renderCompanyAnalysis(company) {
   const html = company.financial_analysis_html;
   document.getElementById('indicesContent').innerHTML = `
     <div class="back-link-row">
-      <a href="#indices" class="back-link">← Indices</a>
+      <a href="${companyBackTarget.hash}" class="back-link">← ${companyBackTarget.label}</a>
       <a href="#indices/${encodeURIComponent(company.ticker)}" class="back-link">← ${company.name}</a>
     </div>
     <h2>Analyse financière complète</h2>
@@ -3451,8 +3451,27 @@ function hidePane(id, animate) {
   el.addEventListener('transitionend', onEnd);
 }
 
+// Mémorise l'écran d'origine pour le lien "retour" d'une fiche entreprise
+// (#indices/TICKER) : plusieurs écrans y renvoient (liste Indices,
+// Opportunités du Portefeuille, positions détenues) mais routent tous
+// vers le même #indices/TICKER — sans ceci le retour ramenait toujours
+// vers Indices même en venant du Portefeuille. Mis à jour seulement en
+// ENTRANT dans une fiche depuis un écran différent, pas en circulant
+// entre la fiche et sa page d'analyse (#indices/TICKER/analyse), qui
+// doivent revenir au même point de départ.
+let previousRoute = { screen: 'home' };
+let companyBackTarget = { hash: '#indices', label: 'Indices' };
+
 function renderRoute(animate) {
   const route = parseRoute();
+  const enteringCompanyDetail = route.screen === 'indices' && route.ticker;
+  const wasAlreadyInCompanyDetail = previousRoute.screen === 'indices' && previousRoute.ticker;
+  if (enteringCompanyDetail && !wasAlreadyInCompanyDetail) {
+    companyBackTarget = previousRoute.screen === 'portefeuille'
+      ? { hash: '#portefeuille', label: 'Portefeuille' }
+      : { hash: '#indices', label: 'Indices' };
+  }
+  previousRoute = route;
   document.querySelectorAll('.nav-item[data-route]').forEach(tab => {
     tab.classList.toggle('active', tab.dataset.route === route.screen);
   });

@@ -593,15 +593,18 @@
   .price-value { font-weight: 500; }
   .price-disclaimer { color: var(--muted); font-size: 11px; line-height: 1.5; margin: 8px 0 0; }
 
-  /* Onglet "Analyse" du Portefeuille — paragraphe diagnostic (voir
-     portfolioDiagnosisParagraph), titres de sous-section et barres de
-     concentration (indice/secteur), réutilise .signal-stats/.price-row
-     pour la santé/les devises/l'attribution. */
-  .portfolio-diagnosis {
+  /* Onglet "Analyse" du Portefeuille — diagnostic "à la humaine" (voir
+     portfolioDiagnosisHtml, deux blocs "Ce qui va bien"/"Ce qui pêche"),
+     titres de sous-section et barres de concentration (indice/secteur),
+     réutilise .signal-stats/.price-row pour la santé/les devises/
+     l'attribution. */
+  .portfolio-diagnosis-section {
     background: var(--bg-2); border: 1px solid var(--border); border-radius: var(--radius-lg);
     padding: 14px 16px; font-size: var(--text-sm); line-height: var(--lh-relaxed); color: var(--text);
-    margin: 0 0 24px;
+    margin: 0 0 12px;
   }
+  .portfolio-diagnosis-section strong { display: block; margin-bottom: 4px; color: var(--muted); font-size: var(--text-xs); text-transform: uppercase; letter-spacing: .03em; }
+  .portfolio-diagnosis-section:last-of-type { margin-bottom: 24px; }
   .portfolio-analysis-title {
     font-family: 'Newsreader', serif; font-weight: 400; font-size: var(--text-lg);
     margin: 28px 0 10px;
@@ -1656,13 +1659,16 @@ function scoreQualifier(score) {
   return 'fragile';
 }
 
-// Paragraphe de diagnostic généré par des règles simples (seuils fixes),
-// pas un appel à un modèle — ce site est entièrement statique côté
-// client. Pointe uniquement ce qui dépasse un seuil notable (40% de
-// concentration, 70% d'exposition devise) plutôt que de tout énumérer.
-function portfolioDiagnosisParagraph(concentration, health, attribution) {
+// Diagnostic "à la humaine" — deux listes (points positifs / points qui
+// pêchent), chacune avec une raison, pas juste un empilement de chiffres.
+// Généré par des règles simples (seuils fixes), pas un appel à un modèle
+// — ce site est entièrement statique côté client, mais la FORME imite le
+// style d'une analyse manuelle (constat + pourquoi) plutôt qu'un relevé
+// de stats brutes.
+function portfolioDiagnosisHtml(concentration, health, attribution) {
   if (!concentration.totalPositions) return '';
-  const parts = [];
+  const good = [];
+  const bad = [];
   const indexNames = { ...INDEX_DISPLAY_NAMES, ...(indicesData.index_names || {}) };
   const topEntry = obj => Object.entries(obj).sort((a, b) => b[1] - a[1])[0];
 
@@ -1670,36 +1676,56 @@ function portfolioDiagnosisParagraph(concentration, health, attribution) {
   const [topSectorKey, topSectorCount] = topEntry(concentration.bySector);
   const indexShare = topIndexCount / concentration.totalPositions;
   const sectorShare = topSectorCount / concentration.totalPositions;
-  const concentrationBits = [];
-  if (indexShare >= 0.4) concentrationBits.push(`${Math.round(indexShare * 100)}% sur ${indexNames[topIndexKey] || topIndexKey}`);
-  if (sectorShare >= 0.4) concentrationBits.push(`${Math.round(sectorShare * 100)}% sur le secteur ${SECTOR_LABELS_FR[topSectorKey] || topSectorKey}`);
-  parts.push(concentrationBits.length
-    ? `Portefeuille concentré : ${concentrationBits.join(', ')}.`
-    : 'Portefeuille plutôt diversifié, sans concentration dominante par indice ou secteur.');
+  const indexLabel = indexNames[topIndexKey] || topIndexKey;
+  const sectorLabel = SECTOR_LABELS_FR[topSectorKey] || topSectorKey;
+  if (indexShare >= 0.4 || sectorShare >= 0.4) {
+    const bits = [];
+    if (indexShare >= 0.4) bits.push(`${Math.round(indexShare * 100)}% sur ${indexLabel}`);
+    if (sectorShare >= 0.4) bits.push(`${Math.round(sectorShare * 100)}% sur le secteur ${sectorLabel}`);
+    bad.push(`Le portefeuille est concentré (${bits.join(', ')}) : un choc sur ce segment pèserait disproportionnellement sur l'ensemble plutôt que d'être amorti par le reste des lignes.`);
+  } else {
+    good.push(`Le portefeuille est plutôt bien diversifié — aucun indice ni secteur ne dépasse 40% du nombre de lignes, donc un accident isolé sur un segment ne devrait pas faire dérailler l'ensemble.`);
+  }
 
   const currencyEntries = Object.entries(concentration.byCurrency).filter(([, v]) => v > 0);
   const totalValue = currencyEntries.reduce((sum, [, v]) => sum + v, 0);
   if (currencyEntries.length > 1 && totalValue > 0) {
     const [topCurrency, topCurrencyValue] = currencyEntries.sort((a, b) => b[1] - a[1])[0];
     const share = topCurrencyValue / totalValue;
-    if (share >= 0.7) parts.push(`Exposition change essentiellement en ${topCurrency} (${Math.round(share * 100)}%).`);
+    if (share >= 0.7) {
+      bad.push(`L'essentiel de la valeur (${Math.round(share * 100)}%) est en ${topCurrency} : une dépréciation de cette devise pèserait sur tout le portefeuille en même temps.`);
+    } else {
+      good.push(`L'exposition devise est répartie (pas plus de ${Math.round(share * 100)}% sur une seule devise), ce qui limite le risque de change.`);
+    }
   }
 
   if (health.avgScore != null) {
-    parts.push(`Score moyen du modèle : ${health.avgScore > 0 ? '+' : ''}${health.avgScore.toFixed(1)} (profil ${scoreQualifier(health.avgScore)}).`);
+    const qualifier = scoreQualifier(health.avgScore);
+    const scoreTxt = `${health.avgScore > 0 ? '+' : ''}${health.avgScore.toFixed(1)}`;
+    if (health.avgScore > 15) {
+      good.push(`Le score moyen du modèle est de ${scoreTxt} (profil ${qualifier}) : la sélection de titres reste globalement de bonne qualité fondamentale selon les propres critères du site.`);
+    } else {
+      bad.push(`Le score moyen du modèle n'est que de ${scoreTxt} (profil ${qualifier}) : une partie des positions n'est plus dans la zone que le modèle juge solide — vaut le coup de revérifier lesquelles.`);
+    }
   }
+
   if (health.riskAlertCount > 0) {
-    parts.push(`${health.riskAlertCount} position${health.riskAlertCount > 1 ? 's' : ''} avec une alerte "risque" active à surveiller.`);
+    bad.push(`${health.riskAlertCount} position${health.riskAlertCount > 1 ? 's portent' : ' porte'} une alerte "risque" active en ce moment — à surveiller de près.`);
+  } else {
+    good.push(`Aucune position ne porte d'alerte "risque" active pour le moment.`);
   }
 
   if (attribution.length) {
     const best = attribution[0];
     const worst = attribution[attribution.length - 1];
-    if (best.pnlAbs > 0) parts.push(`${best.name} tire le plus le P&L vers le haut (${formatPct(best.pnlPct)}).`);
-    if (worst.pnlAbs < 0 && worst.ticker !== best.ticker) parts.push(`${worst.name} pèse le plus vers le bas (${formatPct(worst.pnlPct)}).`);
+    if (best.pnlAbs > 0) good.push(`${best.name} est la meilleure ligne (${formatPct(best.pnlPct)}) et tire le P&L vers le haut.`);
+    if (worst.pnlAbs < 0 && worst.ticker !== best.ticker) bad.push(`${worst.name} pèse le plus vers le bas (${formatPct(worst.pnlPct)}).`);
   }
 
-  return parts.join(' ');
+  const section = (title, items) => items.length
+    ? `<p class="portfolio-diagnosis-section"><strong>${title}</strong> ${items.join(' ')}</p>`
+    : '';
+  return section('Ce qui va bien —', good) + section('Ce qui pêche —', bad);
 }
 
 // Barres de répartition (indice/secteur) — proportion en % du nombre de
@@ -1721,7 +1747,7 @@ function portfolioAnalysisHtml(positions, companiesByTicker, currencyByIndex) {
   const concentration = computePortfolioConcentration(positions, companiesByTicker, currencyByIndex);
   const health = computePortfolioHealth(positions, companiesByTicker);
   const attribution = computePortfolioAttribution(positions, companiesByTicker);
-  const diagnosis = portfolioDiagnosisParagraph(concentration, health, attribution);
+  const diagnosis = portfolioDiagnosisHtml(concentration, health, attribution);
   const indexNames = { ...INDEX_DISPLAY_NAMES, ...(indicesData.index_names || {}) };
 
   const currencyHtml = Object.entries(concentration.byCurrency).sort((a, b) => b[1] - a[1]).map(([currency, value]) => `
@@ -1734,7 +1760,7 @@ function portfolioAnalysisHtml(positions, companiesByTicker, currencyByIndex) {
     </div>`).join('') : '<div class="list-empty">Aucune position avec un cours disponible.</div>';
 
   return `
-    <p class="portfolio-diagnosis">${diagnosis}</p>
+    ${diagnosis}
     <h3 class="portfolio-analysis-title">Santé selon le modèle</h3>
     <div class="signal-stats">
       <div class="price-row"><span class="price-label">Score moyen (parts égales)</span><span class="price-value ${pctClass(health.avgScore)}">${health.avgScore != null ? (health.avgScore > 0 ? '+' : '') + health.avgScore.toFixed(1) : '—'}</span></div>

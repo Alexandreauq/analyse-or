@@ -857,6 +857,10 @@
   .signal-return-positive { color: var(--green-500); }
   .signal-return-negative { color: var(--rust); }
   .signal-status-open { color: var(--muted); }
+  /* Marque le cours/rendement d'une position encore ouverte comme
+     valorisé au cours du jour, pas figé comme une clôture réelle. */
+  .signal-live-mark { color: var(--gold); font-weight: 700; margin-left: 1px; }
+  .signal-live-note { margin: -12px 0 20px; }
 
   /* Mobile : cartes empilées plutôt que le tableau (8 colonnes illisibles,
      même en scroll horizontal, sur un écran de téléphone) — repliées par
@@ -3242,35 +3246,93 @@ const CLOSE_REASON_LABELS = {
   delai_max: 'Délai max',
 };
 
+// Rendement d'une position à l'instant présent : la valeur réelle et
+// figée pour une position clôturée (return_pct déjà stocké), ou une
+// estimation mark-to-market pour une position encore ouverte, à partir
+// du cours du jour de l'entreprise (indicesData.companies[].current_price,
+// mis à jour une fois par jour — pas un flux intrajournalier en direct).
+function positionCurrentReturnPct(p, companiesByTicker) {
+  if (p.status === 'closed') return p.return_pct;
+  const company = companiesByTicker[p.ticker];
+  if (!company || company.current_price == null || !p.entry_price) return null;
+  return (company.current_price - p.entry_price) / p.entry_price * 100;
+}
+
+// Même principe pour le rendement de l'indice sur la même période :
+// index_price_at_entry est stocké à l'ouverture de la position (voir
+// signal_tracking.json), comparé au niveau d'indice du jour
+// (indicesData.index_prices).
+function positionCurrentIndexReturnPct(p) {
+  if (p.status === 'closed') return p.index_return_pct;
+  const currentIndexPrice = indicesData.index_prices && indicesData.index_prices[p.index];
+  if (currentIndexPrice == null || !p.index_price_at_entry) return null;
+  return (currentIndexPrice - p.index_price_at_entry) / p.index_price_at_entry * 100;
+}
+
+function positionCurrentPrice(p, companiesByTicker) {
+  if (p.status === 'closed') return p.close_price;
+  const company = companiesByTicker[p.ticker];
+  return company ? company.current_price : null;
+}
+
 function renderSignalTracking(positions) {
+  const companiesByTicker = {};
+  indicesData.companies.forEach(c => { companiesByTicker[c.ticker] = c; });
+
   const closed = positions.filter(p => p.status === 'closed');
-  const withReturn = closed.filter(p => p.return_pct != null);
-  const winCount = withReturn.filter(p => p.return_pct > 0).length;
+  const open = positions.filter(p => p.status === 'open');
   const avg = arr => arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : null;
 
-  const avgReturn = avg(withReturn.map(p => p.return_pct));
-  const withIndex = closed.filter(p => p.return_pct != null && p.index_return_pct != null);
-  const avgAlpha = avg(withIndex.map(p => p.return_pct - p.index_return_pct));
+  // Statistiques calculées sur TOUTES les positions — réel pour les
+  // clôturées, valorisé au cours du jour pour les ouvertes — pour que la
+  // performance affichée reflète l'état actuel du suivi plutôt que de
+  // rester vide tant qu'aucune position n'a encore clôturé.
+  const returns = positions
+    .map(p => positionCurrentReturnPct(p, companiesByTicker))
+    .filter(r => r != null);
+  const winCount = positions.filter(p => {
+    const r = positionCurrentReturnPct(p, companiesByTicker);
+    return r != null && r > 0;
+  }).length;
+  const avgReturn = avg(returns);
+  const alphas = positions
+    .map(p => {
+      const r = positionCurrentReturnPct(p, companiesByTicker);
+      const idx = positionCurrentIndexReturnPct(p);
+      return r != null && idx != null ? r - idx : null;
+    })
+    .filter(a => a != null);
+  const avgAlpha = avg(alphas);
 
   const statsHtml = `
     <div class="signal-stats">
       <div class="price-row"><span class="price-label">Positions clôturées</span><span class="price-value">${closed.length}</span></div>
-      <div class="price-row"><span class="price-label">Taux de réussite</span><span class="price-value">${withReturn.length ? formatPct(winCount / withReturn.length * 100) : '—'}</span></div>
+      <div class="price-row"><span class="price-label">Positions en cours</span><span class="price-value">${open.length}</span></div>
+      <div class="price-row"><span class="price-label">Taux de réussite</span><span class="price-value">${returns.length ? formatPct(winCount / returns.length * 100) : '—'}</span></div>
       <div class="price-row"><span class="price-label">Rendement moyen</span><span class="price-value ${pctClass(avgReturn)}">${formatPct(avgReturn)}</span></div>
       <div class="price-row"><span class="price-label">Vs indice (alpha moyen)</span><span class="price-value ${pctClass(avgAlpha)}">${formatPct(avgAlpha)}</span></div>
-    </div>`;
+    </div>
+    <p class="hero-sub signal-live-note">Positions en cours valorisées au cours du jour<span class="signal-live-mark">*</span> (pas un flux intrajournalier).</p>`;
 
-  const rowsHtml = positions.length ? positions.map(p => `
+  const rowsHtml = positions.length ? positions.map(p => {
+    const curReturn = positionCurrentReturnPct(p, companiesByTicker);
+    const curIndexReturn = positionCurrentIndexReturnPct(p);
+    const alpha = curReturn != null && curIndexReturn != null ? curReturn - curIndexReturn : null;
+    const closePriceCell = p.status === 'open'
+      ? `${formatPriceForIndex(positionCurrentPrice(p, companiesByTicker), p.index)}<span class="signal-live-mark">*</span>`
+      : formatPriceForIndex(p.close_price, p.index);
+    return `
     <tr>
       <td>${p.name} <span class="hero-sub">${p.ticker}</span></td>
       <td>${p.entry_date}</td>
       <td>${formatPriceForIndex(p.entry_price, p.index)}</td>
       <td>${p.status === 'open' ? '<span class="signal-status-open">en cours</span>' : p.close_date}</td>
-      <td>${p.status === 'open' ? '—' : formatPriceForIndex(p.close_price, p.index)}</td>
+      <td>${closePriceCell}</td>
       <td>${CLOSE_REASON_LABELS[p.close_reason] || '—'}</td>
-      <td class="${pctClass(p.return_pct)}">${formatPct(p.return_pct)}</td>
-      <td class="${pctClass(p.return_pct != null && p.index_return_pct != null ? p.return_pct - p.index_return_pct : null)}">${p.index_return_pct != null ? formatPct(p.return_pct - p.index_return_pct) : '—'}</td>
-    </tr>`).join('') : '<tr><td colspan="8" class="list-empty">Aucune position pour l\'instant.</td></tr>';
+      <td class="${pctClass(curReturn)}">${formatPct(curReturn)}</td>
+      <td class="${pctClass(alpha)}">${formatPct(alpha)}</td>
+    </tr>`;
+  }).join('') : '<tr><td colspan="8" class="list-empty">Aucune position pour l\'instant.</td></tr>';
 
   // Mobile : 8 colonnes ne tiennent pas sur un téléphone (même en scroll
   // horizontal, illisible) — cartes empilées à la place du tableau (voir
@@ -3278,18 +3340,20 @@ function renderSignalTracking(positions) {
   // Repliées par défaut (nom + rendement seulement) ; dépliées, elles
   // montrent les mêmes métadonnées que les colonnes cachées du tableau.
   const cardsListHtml = positions.length ? positions.map((p, i) => {
-    const alphaVal = p.index_return_pct != null ? p.return_pct - p.index_return_pct : null;
+    const curReturn = positionCurrentReturnPct(p, companiesByTicker);
+    const curIndexReturn = positionCurrentIndexReturnPct(p);
+    const alphaVal = curReturn != null && curIndexReturn != null ? curReturn - curIndexReturn : null;
     return `
     <div class="signal-card">
       <button class="signal-card-head" id="sigCardToggle-${i}" type="button" aria-expanded="false">
         <span class="signal-card-name">${p.name} <span class="signal-card-ticker">${p.ticker}</span></span>
-        <span class="${pctClass(p.return_pct)}">${formatPct(p.return_pct)}</span>
+        <span class="${pctClass(curReturn)}">${formatPct(curReturn)}</span>
         <span class="chevron">▾</span>
       </button>
       <div class="signal-card-meta" id="sigCardBody-${i}">
         <span>Entrée ${p.entry_date} · ${formatPriceForIndex(p.entry_price, p.index)}</span>
         <span>${p.status === 'open'
-          ? '<span class="signal-status-open">En cours</span>'
+          ? `<span class="signal-status-open">En cours</span> · Cours du jour${' '}${formatPriceForIndex(positionCurrentPrice(p, companiesByTicker), p.index)}<span class="signal-live-mark">*</span>`
           : `Clôture ${p.close_date} · ${formatPriceForIndex(p.close_price, p.index)} — ${CLOSE_REASON_LABELS[p.close_reason] || '—'}`}</span>
         <span>Vs indice : <span class="${pctClass(alphaVal)}">${alphaVal != null ? formatPct(alphaVal) : '—'}</span></span>
       </div>

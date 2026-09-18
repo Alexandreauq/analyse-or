@@ -2608,10 +2608,18 @@ async function loadIndices(ticker, view) {
   document.getElementById('indices').classList.toggle('suivi-signaux-active', view === 'suivi');
 
   if (view === 'suivi') {
+    indicesListViewActive = false;
     loadSignalTracking();
   } else if (!ticker) {
+    // indicesListViewActive repasse à true seulement une fois la liste
+    // réaffichée ET l'indice/le défilement restaurés (voir fin de
+    // renderIndicesList) — sinon le ré-affichage initial (tout replié,
+    // donc plus court) déclenche un scroll "parasite" côté navigateur qui
+    // écraserait la valeur mémorisée avant même la réouverture.
+    indicesListViewActive = false;
     renderIndicesList(indicesData.companies);
   } else {
+    indicesListViewActive = false;
     const company = indicesData.companies.find(c => c.ticker === ticker);
     if (!company) {
       content.innerHTML = `<div class="empty">Entreprise inconnue : ${ticker}</div>`;
@@ -2628,6 +2636,20 @@ async function loadIndices(ticker, view) {
 let indicesListSearch = '';
 let indicesListSort = 'score_desc';
 let indicesListFinancialOnly = false;
+// Position de défilement + indice actuellement déplié de la liste — pour
+// revenir exactement où on en était après avoir consulté une fiche
+// entreprise, plutôt que de tout réafficher replié en haut de page à
+// chaque retour. Remis à zéro uniquement par un clic explicite sur
+// l'onglet "Indices" du haut (voir plus bas), pas par la navigation
+// normale liste <-> fiche.
+let indicesListScrollTop = 0;
+let indicesOpenIndexKey = null;
+let indicesListViewActive = false;
+document.getElementById('indices').addEventListener('scroll', () => {
+  if (indicesListViewActive) {
+    indicesListScrollTop = document.getElementById('indices').scrollTop;
+  }
+});
 
 // Nom affiché par indice — repli sur indicesData.index_names (fourni par
 // le backend) si une clé n'est pas encore listée ici, puis sur la clé
@@ -2910,13 +2932,31 @@ function renderIndicesList(companies) {
 
   wireAccordionGroup(
     indexKeys.map(key => [`indexToggle-${key}`, `indexBody-${key}`, key]),
-    (key, wrap) => renderGroupIfNeeded(key, wrap)
+    (key, wrap) => { indicesOpenIndexKey = key; renderGroupIfNeeded(key, wrap); }
   );
 
   // Repliés par défaut sur mobile ET desktop — sauf s'il n'y a qu'un seul
-  // indice, auquel cas pas la peine d'imposer un clic pour le déplier.
-  if (indexKeys.length === 1) {
-    document.getElementById(`indexToggle-${indexKeys[0]}`).click();
+  // indice (pas la peine d'imposer un clic pour le déplier), ou si on
+  // revient d'une fiche entreprise : on rouvre alors l'indice qu'on
+  // parcourait avant d'y entrer et on restaure le défilement, pour ne
+  // pas avoir à tout redérouler à chaque retour.
+  const keyToReopen = (indicesOpenIndexKey && indexKeys.includes(indicesOpenIndexKey))
+    ? indicesOpenIndexKey
+    : (indexKeys.length === 1 ? indexKeys[0] : null);
+  if (keyToReopen) {
+    document.getElementById(`indexToggle-${keyToReopen}`).click();
+    // .index-card-body.is-open anime sa hauteur sur .35s (voir CSS) : tant
+    // que la transition tourne, le conteneur n'a pas encore sa hauteur
+    // finale, donc le scrollTop se ferait plafonner. On attend la fin de
+    // la transition (+ marge) avant de restaurer le défilement, puis
+    // seulement alors on réactive le suivi du scroll (indicesListViewActive).
+    setTimeout(() => {
+      document.getElementById('indices').scrollTop = indicesListScrollTop;
+      indicesListViewActive = true;
+    }, 400);
+  } else {
+    document.getElementById('indices').scrollTop = indicesListScrollTop;
+    indicesListViewActive = true;
   }
 
   // Panneau de filtres partagé (recherche/tri/case à cocher, voir
@@ -3336,7 +3376,17 @@ function renderRoute(animate) {
 }
 
 document.querySelectorAll('.nav-item[data-route]').forEach(tab => {
-  tab.addEventListener('click', () => { location.hash = '#' + tab.dataset.route; });
+  tab.addEventListener('click', () => {
+    // Clic explicite sur l'onglet Indices = remise à zéro volontaire de la
+    // recherche/l'indice déplié/le défilement, contrairement au lien
+    // "← Indices" d'une fiche qui, lui, doit les conserver.
+    if (tab.dataset.route === 'indices') {
+      indicesListSearch = '';
+      indicesListScrollTop = 0;
+      indicesOpenIndexKey = null;
+    }
+    location.hash = '#' + tab.dataset.route;
+  });
 });
 // Affiche la vue d'un onglet du header (.or-tab-btn) avec une petite
 // animation d'entrée — même effet que le carrousel de sections (voir

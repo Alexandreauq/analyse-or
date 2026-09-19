@@ -196,3 +196,47 @@ def load_account_snapshot(path: str = LATEST_ACCOUNT_PATH) -> dict:
     except Exception:
         return {}
     return data if isinstance(data, dict) else {}
+
+
+def read_recent_actions(path: str = REAL_TRADING_LOG_PATH, limit: int = 50) -> list[dict]:
+    """Les `limit` dernieres actions (achats/ventes) reellement executees
+    ou simulees par le bot, tous jours confondus, triees du plus ancien au
+    plus recent. Parcourt TOUT le fichier avant de tronquer (comme
+    gold_bot.api._read_recent_decisions) : ce fichier grossit lentement
+    (~1 ligne de run par jour), pas de souci de performance a moyen terme.
+
+    Chaque entree aplatie ajoute un champ "date" (repris de run["date"]) :
+    journal.build_order_record ne porte aucun horodatage propre (une seule
+    ligne de run par jour), donc c'est le seul moyen pour l'appelant de
+    savoir QUAND une action a ete prise. Une ligne, un run non-dict, ou un
+    enregistrement individuel malforme est ignore sans jamais faire
+    echouer le reste (meme contrat que gold_bot.api._read_recent_decisions)."""
+    try:
+        with open(path, "r", encoding="utf-8") as fh:
+            lines = fh.readlines()
+    except Exception:
+        return []
+    actions: list[dict] = []
+    for ligne in lines:
+        ligne = ligne.strip()
+        if not ligne:
+            continue
+        try:
+            run = json.loads(ligne)
+        except json.JSONDecodeError:
+            continue
+        if not isinstance(run, dict):
+            continue
+        for cle in ("entrees", "sorties"):
+            records = run.get(cle)
+            if not isinstance(records, list):
+                continue
+            for record in records:
+                if not isinstance(record, dict):
+                    continue
+                if record.get("statut") not in ("execute", "simule"):
+                    continue
+                action = dict(record)
+                action["date"] = run.get("date")
+                actions.append(action)
+    return actions[-limit:]

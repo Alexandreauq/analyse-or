@@ -4308,6 +4308,62 @@ def test_fetch_company_financials_leaves_non_lse_prices_unconverted(monkeypatch)
     assert ratios["current_price"] == pytest.approx(1478.0)
 
 
+def test_fetch_company_financials_drops_trailing_nan_rows_from_current_price(monkeypatch):
+    """Incident reel du 2026-09-19 : 131 entreprises europeennes d'un
+    coup avec current_price=NaN (yfinance renvoyant une derniere ligne
+    de cloture NaN pour ce fetch precis) — un JSON invalide au sens
+    strict (json.dump ecrit NaN tel quel, JSON.parse() cote navigateur
+    le refuse), qui avait casse le chargement d'indices.json pour TOUT
+    le site. current_price doit retomber sur la derniere cloture
+    REELLEMENT valide plutot que sur NaN."""
+    financials, balance_sheet, cashflow, _ = _make_fixture_statements()
+    financials.columns = pd.to_datetime(financials.columns)
+    balance_sheet.columns = pd.to_datetime(balance_sheet.columns)
+    cashflow.columns = pd.to_datetime(cashflow.columns)
+    quarterly = _fake_annual_df({"Diluted Average Shares": [100.0]}, [pd.Timestamp("2025-09-30")])
+    history_index = pd.date_range("2024-01-01", periods=250, freq="D")
+    # Les 2 dernieres lignes sont NaN (cas reel constate) : le dernier
+    # cours valide, 3 jours avant la fin de la serie, est 88.5.
+    closes = [42.0] * 247 + [88.5, float("nan"), float("nan")]
+    history_close = pd.Series(closes, index=history_index)
+
+    class _FakeTicker:
+        def __init__(self, ticker):
+            pass
+
+        @property
+        def financials(self):
+            return financials
+
+        @property
+        def balance_sheet(self):
+            return balance_sheet
+
+        @property
+        def cashflow(self):
+            return cashflow
+
+        @property
+        def quarterly_financials(self):
+            return quarterly
+
+        @property
+        def info(self):
+            return {"sharesOutstanding": 1000.0, "beta": 0.9, "sector": "Basic Materials"}
+
+        def history(self, period=None):
+            return pd.DataFrame({"Close": history_close})
+
+    monkeypatch.setattr(indices_score.yf, "Ticker", _FakeTicker)
+    monkeypatch.setattr(indices_score.time, "sleep", lambda s: None)
+
+    ratios = indices_score.fetch_company_financials("MC.PA")
+
+    assert ratios["current_price"] == pytest.approx(88.5)
+    assert not math.isnan(ratios["current_price"])
+    assert ratios["ma200"] is not None and not math.isnan(ratios["ma200"])
+
+
 def test_fetch_company_financials_uses_price_history_override_for_mtpa(monkeypatch):
     """Constaté en production les 2026-09-18 et 2026-09-19 : yfinance
     renvoie "possibly delisted; no price data found" pour MT.PA

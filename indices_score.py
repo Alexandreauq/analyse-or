@@ -2397,6 +2397,23 @@ def fetch_company_financials(ticker: str) -> dict:
         # consommateur.
         history = history / 100.0
 
+    # Purge les lignes NaN en fin de serie (constate en production le
+    # 2026-09-19 : 131 entreprises europeennes d'un coup, .iloc[-1]
+    # retombant sur une cloture NaN cote yfinance a ce moment precis —
+    # probablement un accroc ponctuel cote fournisseur, mais AUCUN champ
+    # numerique ne doit jamais pouvoir devenir NaN en aval de cette ligne
+    # : json.dump() ecrit NaN tel quel (JSON invalide au sens strict),
+    # que JSON.parse()/Response.json() cote navigateur refuse
+    # categoriquement — un seul NaN avait suffi a casser le chargement
+    # d'indices.json pour TOUT le site, pas seulement l'entreprise
+    # concernee. dropna() ici, a la source, au lieu d'un garde
+    # consommateur par consommateur (meme raisonnement que la conversion
+    # pence/livre juste au-dessus) : current_price retombe sur la
+    # derniere cloture reellement valide plutot que sur rien, moins
+    # perturbateur qu'un None generalise a chaque accroc ponctuel de
+    # donnees.
+    history = history.dropna()
+
     closes_by_year = {}
     for col in financials.columns:
         target_date = col.date() if hasattr(col, "date") else col
@@ -4141,9 +4158,17 @@ def main():
         "health": _compute_health_summary(companies),
     }
 
+    # allow_nan=False : derniere ligne de defense (voir le commentaire de
+    # dropna() dans fetch_company_financials pour l'incident du
+    # 2026-09-19 qui a motive ceci) — si un NaN atteint quand meme ce
+    # point, mieux vaut planter ici et laisser l'ancien indices.json
+    # valide en place (le step "Publier les donnees" de indices.yml ne
+    # s'execute jamais apres un python3 indices_score.py en echec) que
+    # publier un JSON invalide qui casse le chargement du site pour tout
+    # le monde, silencieusement.
     os.makedirs(os.path.dirname(OUTPUT_JSON_PATH), exist_ok=True)
     with open(OUTPUT_JSON_PATH, "w", encoding="utf-8") as fh:
-        json.dump(payload, fh, ensure_ascii=False, indent=2)
+        json.dump(payload, fh, ensure_ascii=False, indent=2, allow_nan=False)
 
     print(f"Données exportées vers : {OUTPUT_JSON_PATH}")
     for c in companies:

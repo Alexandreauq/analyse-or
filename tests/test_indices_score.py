@@ -2092,6 +2092,96 @@ def test_append_indices_history_retains_only_last_730_entries_per_ticker(tmp_pat
     assert mc_entries[-1]["composite"] == 42.0
 
 
+def test_load_nikkei_hangseng_price_history_returns_empty_list_when_file_absent(tmp_path):
+    missing_path = tmp_path / "does_not_exist.json"
+    assert indices_score.load_nikkei_hangseng_price_history(path=str(missing_path)) == []
+
+
+def test_load_nikkei_hangseng_price_history_returns_empty_list_on_corrupted_json(tmp_path):
+    corrupted_path = tmp_path / "corrupted.json"
+    corrupted_path.write_text("{not valid json", encoding="utf-8")
+    assert indices_score.load_nikkei_hangseng_price_history(path=str(corrupted_path)) == []
+
+
+def test_update_nikkei_hangseng_price_history_adds_entries_for_nikkei_and_hangseng_only(tmp_path):
+    """Point de départ pour un futur graphique par entreprise sur ces deux
+    places (TradingView n'a pas de données fiables dessus) — un ticker
+    d'un autre indice (CAC40) ne doit jamais y apparaître."""
+    path = tmp_path / "history.json"
+    companies = [
+        {"ticker": "9984.T", "index": "NIKKEI225", "current_price": 6540.0},
+        {"ticker": "1299.HK", "index": "HANGSENG", "current_price": 55.2},
+        {"ticker": "MC.PA", "index": "CAC40", "current_price": 660.0},
+    ]
+    result = indices_score.update_nikkei_hangseng_price_history(companies, path=str(path))
+    today_str = datetime.today().strftime("%Y-%m-%d")
+    tickers = {e["ticker"] for e in result}
+    assert tickers == {"9984.T", "1299.HK"}
+    entry = next(e for e in result if e["ticker"] == "9984.T")
+    assert entry == {"date": today_str, "ticker": "9984.T", "price": 6540.0}
+    assert indices_score.load_nikkei_hangseng_price_history(path=str(path)) == result
+
+
+def test_update_nikkei_hangseng_price_history_skips_missing_price(tmp_path):
+    """Un current_price manquant (None/NaN, _is_missing) ne doit jamais
+    écrire une valeur invalide dans ce fichier jamais régénéré à zéro —
+    même leçon que signal_tracking.json."""
+    path = tmp_path / "history.json"
+    companies = [
+        {"ticker": "9984.T", "index": "NIKKEI225", "current_price": None},
+        {"ticker": "1299.HK", "index": "HANGSENG", "current_price": float("nan")},
+    ]
+    result = indices_score.update_nikkei_hangseng_price_history(companies, path=str(path))
+    assert result == []
+
+
+def test_update_nikkei_hangseng_price_history_trims_independently_per_ticker(tmp_path):
+    path = tmp_path / "history.json"
+    existing = (
+        [{"date": f"2020-01-{i:02d}", "ticker": "9984.T", "price": float(i)} for i in range(1, 10)]
+        + [{"date": f"2020-01-{i:02d}", "ticker": "1299.HK", "price": float(i)} for i in range(1, 5)]
+    )
+    path.write_text(json.dumps(existing), encoding="utf-8")
+
+    result = indices_score.update_nikkei_hangseng_price_history(
+        [{"ticker": "9984.T", "index": "NIKKEI225", "current_price": 99.0}], path=str(path)
+    )
+    hk_entries = [e for e in result if e["ticker"] == "1299.HK"]
+    nikkei_entries = [e for e in result if e["ticker"] == "9984.T"]
+    assert len(hk_entries) == 4  # inchangé
+    assert len(nikkei_entries) == 10  # 9 existantes + 1 nouvelle
+    assert nikkei_entries[-1]["price"] == 99.0
+
+
+def test_update_nikkei_hangseng_price_history_retains_only_last_730_entries_per_ticker(tmp_path):
+    path = tmp_path / "history.json"
+    existing = [
+        {"date": f"2020-{(i % 12) + 1:02d}-01", "ticker": "9984.T", "price": float(i)}
+        for i in range(735)
+    ]
+    path.write_text(json.dumps(existing), encoding="utf-8")
+
+    result = indices_score.update_nikkei_hangseng_price_history(
+        [{"ticker": "9984.T", "index": "NIKKEI225", "current_price": 42.0}], path=str(path)
+    )
+    entries = [e for e in result if e["ticker"] == "9984.T"]
+    assert len(entries) == 730
+    assert entries[-1]["price"] == 42.0
+
+
+def test_update_nikkei_hangseng_price_history_degrades_gracefully_on_failure(tmp_path, monkeypatch):
+    """Une panne (ex: répertoire illisible) ne doit jamais faire échouer
+    main() — renvoie [] plutôt que de propager l'exception."""
+    def _boom(*args, **kwargs):
+        raise RuntimeError("boom")
+    monkeypatch.setattr(indices_score, "load_nikkei_hangseng_price_history", _boom)
+    result = indices_score.update_nikkei_hangseng_price_history(
+        [{"ticker": "9984.T", "index": "NIKKEI225", "current_price": 42.0}],
+        path=str(tmp_path / "history.json"),
+    )
+    assert result == []
+
+
 def test_compute_company_alerts_returns_info_when_nothing_triggers():
     alerts = indices_score.compute_company_alerts(
         "BN.PA", composite=5.0, current_price=100.0, entry_price=50.0,
@@ -2668,6 +2758,7 @@ def test_main_writes_alerts_key_for_every_company(monkeypatch, tmp_path):
     monkeypatch.setattr(indices_score, "load_indices_history", lambda: [])
     monkeypatch.setattr(indices_score, "append_indices_history", lambda entries: entries)
     monkeypatch.setattr(indices_score, "update_signal_tracking", lambda companies, newly_triggered_entree: [])
+    monkeypatch.setattr(indices_score, "update_nikkei_hangseng_price_history", lambda companies: [])
     monkeypatch.setattr(indices_score, "fetch_index_prices", lambda: {"CAC40": None, "DAX": None, "NASDAQ": None, "DOW": None})
     output_path = tmp_path / "indices.json"
     monkeypatch.setattr(indices_score, "OUTPUT_JSON_PATH", str(output_path))
@@ -2700,6 +2791,7 @@ def test_main_payload_includes_index_metadata(monkeypatch, tmp_path):
     monkeypatch.setattr(indices_score, "load_indices_history", lambda: [])
     monkeypatch.setattr(indices_score, "append_indices_history", lambda entries: entries)
     monkeypatch.setattr(indices_score, "update_signal_tracking", lambda companies, newly_triggered_entree: [])
+    monkeypatch.setattr(indices_score, "update_nikkei_hangseng_price_history", lambda companies: [])
     fake_index_prices = {"CAC40": 7600.5, "DAX": 19000.2, "NASDAQ": 20123.4, "DOW": 41234.5}
     monkeypatch.setattr(indices_score, "fetch_index_prices", lambda: fake_index_prices)
     output_path = tmp_path / "indices.json"
@@ -2760,6 +2852,7 @@ def test_main_routes_risk_free_rate_by_currency(monkeypatch, tmp_path):
     monkeypatch.setattr(indices_score, "load_indices_history", lambda: [])
     monkeypatch.setattr(indices_score, "append_indices_history", lambda entries: entries)
     monkeypatch.setattr(indices_score, "update_signal_tracking", lambda companies, newly_triggered_entree: [])
+    monkeypatch.setattr(indices_score, "update_nikkei_hangseng_price_history", lambda companies: [])
     monkeypatch.setattr(
         indices_score, "fetch_index_prices",
         lambda: {
@@ -4741,6 +4834,7 @@ def test_main_calls_update_signal_tracking(monkeypatch, tmp_path):
         return []
 
     monkeypatch.setattr(indices_score, "update_signal_tracking", _fake_update_signal_tracking)
+    monkeypatch.setattr(indices_score, "update_nikkei_hangseng_price_history", lambda companies: [])
     monkeypatch.setattr(indices_score, "fetch_index_prices", lambda: {"CAC40": None, "DAX": None, "NASDAQ": None, "DOW": None})
 
     indices_score.main()

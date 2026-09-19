@@ -2721,6 +2721,18 @@ HISTORY_RETENTION_PER_TICKER = 730  # ~2 ans, une entrée par jour et par ticker
 SIGNAL_TRACKING_PATH = os.path.join(
     os.path.dirname(os.path.abspath(__file__)), "docs", "signal_tracking.json"
 )
+
+NIKKEI_HANGSENG_PRICE_HISTORY_PATH = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "docs", "nikkei_hangseng_price_history.json"
+)
+# Même rétention qu'indices_history.json — mais publié dans docs/ (pas à
+# la racine) pour être récupérable côté frontend : point de départ pour
+# un futur graphique par entreprise (TradingView n'a pas de données
+# fiables sur ces deux places, voir NO_RELIABLE_COMPANY_TV_DATA dans
+# docs/company_quote_widget.js). Limité à ces deux indices pour l'instant
+# — les autres ont déjà un graphique TradingView fonctionnel, pas besoin
+# d'accumuler un historique de prix pour eux.
+PRICE_HISTORY_RETENTION_PER_TICKER = 730
 # Indices utilisés comme benchmark de chaque position (voir "index" sur
 # chaque société — CAC40/DAX) : tickers yfinance correspondants.
 INDEX_YFINANCE_TICKERS = {
@@ -2923,6 +2935,55 @@ def update_signal_tracking(companies: list[dict], newly_triggered_entree: list[d
         return positions
     except Exception as e:
         print(f"Erreur suivi de performance des signaux : {e}")
+        return []
+
+
+def load_nikkei_hangseng_price_history(path=NIKKEI_HANGSENG_PRICE_HISTORY_PATH) -> list[dict]:
+    """Historique de prix quotidien des entreprises Nikkei 225/Hang Seng.
+    [] si le fichier n'existe pas encore ou est corrompu — jamais
+    d'exception."""
+    if not os.path.exists(path):
+        return []
+    with open(path, encoding="utf-8") as fh:
+        try:
+            return json.load(fh)
+        except json.JSONDecodeError:
+            return []
+
+
+def update_nikkei_hangseng_price_history(
+    companies: list[dict], path=NIKKEI_HANGSENG_PRICE_HISTORY_PATH
+) -> list[dict]:
+    """Ajoute une entrée du jour par entreprise Nikkei 225/Hang Seng dont
+    le cours est disponible (_is_missing exclut None/NaN — comme pour
+    signal_tracking.json, ce fichier n'est jamais régénéré à partir de
+    zéro, seulement complété, donc un NaN écrit ici resterait invalide
+    pour toujours), puis retrimme chaque ticker indépendamment à
+    PRICE_HISTORY_RETENTION_PER_TICKER (même mécanique qu'
+    append_indices_history — pas de déduplication par jour, une entrée
+    par exécution du workflow, comme pour indices_history.json). Dégrade
+    toujours vers [] en cas d'erreur — ne fait jamais échouer main()."""
+    try:
+        today_str = datetime.today().strftime("%Y-%m-%d")
+        new_entries = [
+            {"date": today_str, "ticker": c["ticker"], "price": c["current_price"]}
+            for c in companies
+            if c.get("index") in ("NIKKEI225", "HANGSENG") and not _is_missing(c.get("current_price"))
+        ]
+        history = load_nikkei_hangseng_price_history(path)
+        history.extend(new_entries)
+        by_ticker: dict[str, list[dict]] = {}
+        for entry in history:
+            by_ticker.setdefault(entry["ticker"], []).append(entry)
+        trimmed = []
+        for ticker_entries in by_ticker.values():
+            trimmed.extend(ticker_entries[-PRICE_HISTORY_RETENTION_PER_TICKER:])
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, "w", encoding="utf-8") as fh:
+            json.dump(trimmed, fh, ensure_ascii=False, indent=2, allow_nan=False)
+        return trimmed
+    except Exception as e:
+        print(f"Erreur historique de prix Nikkei/Hang Seng : {e}")
         return []
 
 
@@ -4065,6 +4126,7 @@ def main():
     newly_triggered_entree, newly_triggered_major_news = _attach_alerts_and_update_history(companies)
     send_daily_digest_email(newly_triggered_entree, newly_triggered_major_news)
     update_signal_tracking(companies, newly_triggered_entree)
+    update_nikkei_hangseng_price_history(companies)
 
     payload = {
         "updated": datetime.today().strftime("%Y-%m-%d"),

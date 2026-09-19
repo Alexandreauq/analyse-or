@@ -2137,11 +2137,38 @@ async function loadIbkrBotStatus() {
     const res = await fetch(`ibkr_bot_status.json?t=${Date.now()}`);
     if (!res.ok) throw new Error('fichier introuvable');
     ibkrBotStatusData = await res.json();
+    // #ibkrBotContent peut avoir disparu pendant le fetch si l'utilisateur
+    // a quitté la section entre-temps (carrousel) — même garde que
+    // fetchBotDashboard côté Bot Or.
+    if (!document.getElementById('ibkrBotContent')) return;
   } catch (e) {
-    el.innerHTML = `<div class="empty">Statut indisponible pour l'instant — le bot n'a peut-être pas encore publié son premier statut.<br>${e.message}</div>`;
+    if (el) el.innerHTML = `<div class="empty">Statut indisponible pour l'instant — le bot n'a peut-être pas encore publié son premier statut.<br>${e.message}</div>`;
     return;
   }
   renderIbkrBotStatus();
+}
+
+// Une ligne par compteur (Entrées/Sorties/...), même style que
+// botPositionsHtml/botDecisionsHtml côté Bot Or (.portfolio-position-row
+// répétée) plutôt qu'un tableau .signal-stats — harmonisation visuelle
+// entre les deux panneaux bot demandée par l'utilisateur.
+function ibkrBotCountersHtml(s) {
+  const rows = [
+    ['Entrées', s.entrees_count],
+    ['Sorties', s.sorties_count],
+    ['Signaux rejetés', s.signaux_rejetes_count],
+    ['Anomalies', s.anomalies_count],
+    ['Erreurs', s.erreurs_count],
+  ];
+  return rows.map(([label, value]) => `
+    <div class="portfolio-position-row">
+      <div class="portfolio-position-main">
+        <span class="hero-sub">${label}</span>
+      </div>
+      <div class="portfolio-position-pnl">
+        <span class="price-value" style="${label === 'Erreurs' && value ? 'color:var(--rust)' : ''}">${value ?? '—'}</span>
+      </div>
+    </div>`).join('');
 }
 
 function renderIbkrBotStatus() {
@@ -2154,6 +2181,7 @@ function renderIbkrBotStatus() {
     day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'UTC',
   }) + ' UTC' : '—';
   el.innerHTML = `
+    <h2>Statut</h2>
     <div class="portfolio-position-row">
       <div class="portfolio-position-main">
         <span class="company-name" style="color:${color}">${label}</span>
@@ -2163,14 +2191,18 @@ function renderIbkrBotStatus() {
         <span class="hero-sub">${when}</span>
       </div>
     </div>
-    <div class="signal-stats" style="margin-top:16px;">
-      <div class="price-row"><span class="price-label">Entrées</span><span class="price-value">${s.entrees_count ?? '—'}</span></div>
-      <div class="price-row"><span class="price-label">Sorties</span><span class="price-value">${s.sorties_count ?? '—'}</span></div>
-      <div class="price-row"><span class="price-label">Signaux rejetés</span><span class="price-value">${s.signaux_rejetes_count ?? '—'}</span></div>
-      <div class="price-row"><span class="price-label">Anomalies</span><span class="price-value">${s.anomalies_count ?? '—'}</span></div>
-      <div class="price-row"><span class="price-label">Erreurs</span><span class="price-value${s.erreurs_count ? ' signal-return-negative' : ''}">${s.erreurs_count ?? '—'}</span></div>
-    </div>
-    <p class="hero-sub" style="margin-top:16px;">Statut mis à jour après chaque exécution quotidienne (vers 14h45 UTC en semaine) — pas un flux en direct.</p>`;
+    <h2>Compteurs du jour</h2>
+    ${ibkrBotCountersHtml(s)}
+    <p class="hero-sub" style="margin-top:12px;">Publié après chaque exécution quotidienne (vers 14h45 UTC en semaine) — pas un flux en direct, contrairement au Bot Or.</p>
+    <button class="toggle-btn" type="button" id="ibkrBotRefreshBtn">Actualiser</button>
+  `;
+  wireIbkrBotRefresh();
+}
+
+function wireIbkrBotRefresh() {
+  const btn = document.getElementById('ibkrBotRefreshBtn');
+  if (!btn) return;
+  btn.addEventListener('click', () => loadIbkrBotStatus());
 }
 
 function wireIbkrBotDashboardSection() {

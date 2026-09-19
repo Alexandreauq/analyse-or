@@ -2171,6 +2171,30 @@ function ibkrBotCountersHtml(s) {
     </div>`).join('');
 }
 
+// Positions OUVERTES par le bot, mêmes noms de champs que
+// status_publish._public_position côté ibkr_bot (ticker, name, index,
+// quantite, prix_entree, date_entree — jamais conid). Publié
+// UNIQUEMENT tant que le bot est en simulation (voir le commentaire de
+// module dans ibkr_bot/status_publish.py) : s.positions est absent en
+// mode réel, donc cette section disparaît automatiquement, sans logique
+// supplémentaire à écrire ici. Chaque ligne renvoie vers la fiche
+// entreprise, même pattern que portfolioPositionsHtml ("Tes positions").
+function ibkrBotPositionsHtml(positions) {
+  if (!positions || positions.length === 0) {
+    return `<div class="empty">Aucune position ouverte.</div>`;
+  }
+  return positions.map(p => `
+    <div class="portfolio-position-row">
+      <div class="portfolio-position-main">
+        <a class="company-name" href="#indices/${encodeURIComponent(p.ticker)}">${escHtml(p.name || p.ticker)}</a>
+        <span class="hero-sub">${escHtml(p.ticker)}${p.quantite != null ? ` · ${p.quantite} titre${p.quantite > 1 ? 's' : ''}` : ''}${p.date_entree ? ` · entrée ${p.date_entree}` : ''}</span>
+      </div>
+      <div class="portfolio-position-pnl">
+        <span class="price-value">${p.prix_entree != null ? formatPriceForIndex(p.prix_entree, p.index) : '—'}</span>
+      </div>
+    </div>`).join('');
+}
+
 function renderIbkrBotStatus() {
   const el = document.getElementById('ibkrBotContent');
   if (!el || !ibkrBotStatusData) return;
@@ -2191,6 +2215,7 @@ function renderIbkrBotStatus() {
         <span class="hero-sub">${when}</span>
       </div>
     </div>
+    ${s.positions ? `<h2>Positions ouvertes</h2>${ibkrBotPositionsHtml(s.positions)}` : ''}
     <h2>Compteurs du jour</h2>
     ${ibkrBotCountersHtml(s)}
     <p class="hero-sub" style="margin-top:12px;">Publié après chaque exécution quotidienne (vers 14h45 UTC en semaine) — pas un flux en direct, contrairement au Bot Or.</p>

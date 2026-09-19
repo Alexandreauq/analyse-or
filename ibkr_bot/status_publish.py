@@ -4,12 +4,22 @@
 # deliberement pas d'API HTTP (decision de securite prise apres
 # l'incident du token API du Bot Or, voir deploy/README-ibkr.md), donc
 # c'est le seul canal par lequel le site statique peut savoir ce qui
-# s'est passe. Champs strictement operationnels — jamais de ticker ni de
-# montant : decision explicite de l'utilisateur (ce bot pourrait un jour
-# passer en argent reel), voir build_public_status.
+# s'est passe.
+#
+# TICKERS DES POSITIONS OUVERTES : publies UNIQUEMENT tant que
+# run["mode"] == "dry_run" (decision explicite de l'utilisateur,
+# 2026-09-20 : "seulement tant que c'est en simulation", face au risque
+# qu'exposer les tickers/positions publiquement poserait si le bot passe
+# un jour en argent reel). Des que le mode passe a "reel",
+# build_public_status omet le champ "positions" et retombe sur le statut
+# operationnel seul (compteurs, pas de ticker ni de montant) — aucune
+# intervention manuelle requise, la bascule est automatique et suit le
+# meme etat (state.json dry_run) que le reste du bot.
 import json
 import os
 import subprocess
+
+import ibkr_bot.portfolio as portfolio
 
 STATUS_PATH = os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "docs", "ibkr_bot_status.json"
@@ -18,11 +28,31 @@ GITHUB_REPO_SLUG = "Alexandreauq/analyse-or"
 GIT_TIMEOUT_SECONDS = 30
 
 
-def build_public_status(run: dict) -> dict:
-    """Extrait uniquement des champs operationnels d'un run (voir
-    _nouveau_run dans daily.py pour sa forme complete) — jamais de
-    ticker ni de montant, seulement des compteurs et des booleens."""
+def _public_position(position: dict) -> dict:
+    """Un sous-ensemble d'une position ouverte (voir
+    journal.build_position_record pour sa forme complete) — ticker/nom/
+    indice pour pouvoir lier vers la fiche entreprise, quantite/prix
+    d'entree/date pour le contexte. Jamais `conid` (identifiant de
+    contrat IBKR interne, aucune valeur d'affichage)."""
     return {
+        "ticker": position.get("ticker"),
+        "name": position.get("name"),
+        "index": position.get("index"),
+        "quantite": position.get("quantite"),
+        "prix_entree": position.get("prix_execution_reference"),
+        "date_entree": position.get("date_entree"),
+    }
+
+
+def build_public_status(run: dict, positions: list[dict] | None = None) -> dict:
+    """Extrait uniquement des champs operationnels d'un run (voir
+    _nouveau_run dans daily.py pour sa forme complete) — compteurs et
+    booleens. `positions` (les positions ACTUELLEMENT ouvertes, pas
+    seulement les entrees/sorties de ce run — voir portfolio.load_positions)
+    n'est inclus, avec tickers, QUE si run["mode"] == "dry_run" (voir
+    commentaire de module) ; absent sinon, jamais un ticker ou un montant
+    de position en mode reel."""
+    status = {
         "timestamp": run.get("timestamp"),
         "date": run.get("date"),
         "mode": run.get("mode"),
@@ -35,6 +65,9 @@ def build_public_status(run: dict) -> dict:
         "anomalies_count": len(run.get("anomalies") or []),
         "erreurs_count": len(run.get("erreurs") or []),
     }
+    if run.get("mode") == "dry_run":
+        status["positions"] = [_public_position(p) for p in (positions or [])]
+    return status
 
 
 def write_status_file(status: dict, path: str = STATUS_PATH) -> None:
@@ -88,18 +121,24 @@ def push_status_file(
         return {"ok": False, "detail": _redact(str(e), token)[:300]}
 
 
-def publish_status(run: dict, *, repo_dir: str, path: str = STATUS_PATH, run_fn=subprocess.run) -> dict:
+def publish_status(
+    run: dict, *, repo_dir: str, path: str = STATUS_PATH, run_fn=subprocess.run,
+    load_positions_fn=portfolio.load_positions,
+) -> dict:
     """Point d'entree unique, appele depuis _terminer (daily.py) apres
     CHAQUE batch, quel que soit son statut (kill_switch,
     hors_jour_de_bourse, gateway_indisponible, termine...). Ne leve
     jamais — un GITHUB_PUSH_TOKEN absent ou une panne reseau degradent
     vers {"ok": False, ...}, jamais une exception qui remonterait
-    jusqu'au batch de trading."""
+    jusqu'au batch de trading. `load_positions_fn` injectable (tests) —
+    les positions ACTUELLEMENT ouvertes (positions.json), pas seulement
+    celles entrees/sorties par ce run."""
     token = os.environ.get("GITHUB_PUSH_TOKEN")
     if not token:
         return {"ok": False, "detail": "GITHUB_PUSH_TOKEN absent de l'environnement"}
     try:
-        status = build_public_status(run)
+        positions = load_positions_fn() if run.get("mode") == "dry_run" else None
+        status = build_public_status(run, positions)
         write_status_file(status, path)
         return push_status_file(repo_dir, token, path, run_fn=run_fn)
     except Exception as e:

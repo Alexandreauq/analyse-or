@@ -14,12 +14,13 @@ class _Resultat:
 # --- build_public_status ------------------------------------------------
 
 def test_build_public_status_extracts_operational_fields_only():
-    """Jamais de ticker ni de montant dans le statut public — meme si le
-    run en contient (ex. un vrai ordre passe), seuls des compteurs et des
-    booleens doivent en ressortir (decision explicite de l'utilisateur,
-    ce bot pourrait un jour passer en argent reel)."""
+    """Le detail des entrees/sorties/rejets/anomalies/erreurs du run
+    lui-meme (ex. un vrai ordre passe) ne doit jamais fuiter dans le
+    statut public, quel que soit le mode — seuls des compteurs et des
+    booleens en ressortent pour ces champs-la (les positions OUVERTES,
+    elles, sont un champ separe, testees plus bas)."""
     run = {
-        "timestamp": "2026-09-19T14:45:00Z", "date": "2026-09-19", "mode": "dry_run",
+        "timestamp": "2026-09-19T14:45:00Z", "date": "2026-09-19", "mode": "reel",
         "statut": "termine",
         "git_pull": {"ok": True, "detail": "Already up to date."},
         "preflight": {"ok": True, "tentatives": 1, "detail": "authentifie"},
@@ -32,7 +33,7 @@ def test_build_public_status_extracts_operational_fields_only():
     status = status_publish.build_public_status(run)
 
     assert status == {
-        "timestamp": "2026-09-19T14:45:00Z", "date": "2026-09-19", "mode": "dry_run",
+        "timestamp": "2026-09-19T14:45:00Z", "date": "2026-09-19", "mode": "reel",
         "statut": "termine", "git_pull_ok": True, "preflight_ok": True,
         "entrees_count": 1, "sorties_count": 1, "signaux_rejetes_count": 1,
         "anomalies_count": 1, "erreurs_count": 1,
@@ -53,6 +54,46 @@ def test_build_public_status_handles_missing_optional_fields():
     assert status["preflight_ok"] is None
     assert status["entrees_count"] == 0
     assert status["erreurs_count"] == 0
+
+
+def test_build_public_status_includes_sanitized_positions_in_dry_run():
+    """Decision explicite de l'utilisateur (2026-09-20) : les tickers des
+    positions OUVERTES sont publies tant que le bot est en simulation —
+    mais seulement un sous-ensemble (jamais conid, l'identifiant de
+    contrat IBKR interne)."""
+    run = {"timestamp": "t", "date": "2026-09-20", "mode": "dry_run", "statut": "termine"}
+    positions = [{
+        "id": "sig-1", "ticker": "AAPL", "name": "Apple Inc.", "index": "NASDAQ",
+        "conid": 265598, "devise": "USD", "quantite": 5,
+        "prix_execution_reference": 200.0, "paper_entry_price": 198.5,
+        "date_entree": "2026-09-15", "target_exit_price": 250.0, "date_limite": "2027-03-15",
+    }]
+    status = status_publish.build_public_status(run, positions)
+
+    assert status["positions"] == [{
+        "ticker": "AAPL", "name": "Apple Inc.", "index": "NASDAQ",
+        "quantite": 5, "prix_entree": 200.0, "date_entree": "2026-09-15",
+    }]
+    assert "conid" not in json.dumps(status)
+    assert "265598" not in json.dumps(status)
+
+
+def test_build_public_status_omits_positions_when_mode_is_reel():
+    """La bascule vers argent reel doit automatiquement arreter de publier
+    les tickers/positions, sans intervention manuelle — meme si une liste
+    de positions est passee, elle est ignoree en mode reel."""
+    run = {"timestamp": "t", "date": "2026-09-20", "mode": "reel", "statut": "termine"}
+    positions = [{"ticker": "AAPL", "name": "Apple Inc.", "index": "NASDAQ", "quantite": 5}]
+    status = status_publish.build_public_status(run, positions)
+
+    assert "positions" not in status
+    assert "AAPL" not in json.dumps(status)
+
+
+def test_build_public_status_dry_run_with_no_open_positions_is_empty_list():
+    run = {"timestamp": "t", "date": "2026-09-20", "mode": "dry_run", "statut": "termine"}
+    status = status_publish.build_public_status(run, None)
+    assert status["positions"] == []
 
 
 # --- write_status_file ----------------------------------------------------
@@ -197,12 +238,66 @@ def test_publish_status_writes_and_pushes_when_token_present(tmp_path, monkeypat
 
     resultat = status_publish.publish_status(
         run, repo_dir=str(tmp_path), path=str(path), run_fn=fake_run,
+        load_positions_fn=lambda: [],
     )
 
     assert resultat["ok"] is True
     written = json.loads(path.read_text(encoding="utf-8"))
     assert written["statut"] == "termine"
     assert any(c[:2] == ["git", "push"] for c in appels)
+
+
+def test_publish_status_loads_and_includes_positions_in_dry_run(tmp_path, monkeypatch):
+    """Preuve que publish_status cable bien load_positions_fn jusque dans
+    le fichier ecrit — si l'appel etait supprime, ce test doit echouer."""
+    monkeypatch.setenv("GITHUB_PUSH_TOKEN", "fake-token")
+
+    def fake_run(cmd, **kwargs):
+        if cmd[:2] == ["git", "diff"]:
+            return _Resultat(returncode=1)
+        return _Resultat(returncode=0)
+
+    path = tmp_path / "docs" / "ibkr_bot_status.json"
+    run = {"timestamp": "t", "date": "2026-09-20", "mode": "dry_run", "statut": "termine"}
+    fake_positions = [{"ticker": "AAPL", "name": "Apple Inc.", "index": "NASDAQ",
+                       "conid": 123, "quantite": 5, "prix_execution_reference": 200.0,
+                       "date_entree": "2026-09-15"}]
+
+    status_publish.publish_status(
+        run, repo_dir=str(tmp_path), path=str(path), run_fn=fake_run,
+        load_positions_fn=lambda: fake_positions,
+    )
+
+    written = json.loads(path.read_text(encoding="utf-8"))
+    assert written["positions"] == [{
+        "ticker": "AAPL", "name": "Apple Inc.", "index": "NASDAQ",
+        "quantite": 5, "prix_entree": 200.0, "date_entree": "2026-09-15",
+    }]
+
+
+def test_publish_status_does_not_load_positions_when_mode_is_reel(tmp_path, monkeypatch):
+    """En mode reel, load_positions_fn ne doit meme pas etre appelee —
+    defense en profondeur en plus du filtrage dans build_public_status."""
+    monkeypatch.setenv("GITHUB_PUSH_TOKEN", "fake-token")
+
+    def fake_run(cmd, **kwargs):
+        if cmd[:2] == ["git", "diff"]:
+            return _Resultat(returncode=1)
+        return _Resultat(returncode=0)
+
+    called = []
+
+    def boom_if_called():
+        called.append(True)
+        return [{"ticker": "AAPL"}]
+
+    run = {"timestamp": "t", "date": "2026-09-20", "mode": "reel", "statut": "termine"}
+    status_publish.publish_status(
+        run, repo_dir=str(tmp_path), path=str(tmp_path / "docs" / "s.json"), run_fn=fake_run,
+        load_positions_fn=boom_if_called,
+    )
+
+    assert called == []
 
 
 def test_publish_status_degrades_gracefully_when_write_fails(tmp_path, monkeypatch):

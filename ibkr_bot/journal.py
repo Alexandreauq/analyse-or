@@ -184,3 +184,15 @@ def save_account_snapshot(data: dict, path: str = LATEST_ACCOUNT_PATH) -> bool:
     except Exception as e:
         print(f"Erreur ecriture instantane du compte : {e}")
         return False
+
+
+def load_account_snapshot(path: str = LATEST_ACCOUNT_PATH) -> dict:
+    """Dernier instantane du compte ecrit par save_account_snapshot.
+    Fichier absent/corrompu -> {}, jamais d'exception (meme contrat que
+    portfolio.load_positions)."""
+    try:
+        with open(path, "r", encoding="utf-8") as fh:
+            data = json.load(fh)
+    except Exception:
+        return {}
+    return data if isinstance(data, dict) else {}

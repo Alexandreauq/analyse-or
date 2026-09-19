@@ -228,3 +228,24 @@ def test_save_account_snapshot_writes_json_and_never_raises(tmp_path):
     fichier = tmp_path / "fichier"
     fichier.write_text("x", encoding="utf-8")
     assert journal.save_account_snapshot({}, str(fichier / "x.json")) is False
+
+
+def test_load_account_snapshot_reads_back_what_save_account_snapshot_wrote(tmp_path):
+    path = str(tmp_path / "latest_account.json")
+    journal.save_account_snapshot({"base_cash": 8000.0}, path)
+    data = journal.load_account_snapshot(path)
+    assert data["base_cash"] == 8000.0
+    assert data["fetched_at"].endswith("Z")
+
+
+def test_load_account_snapshot_degrades_to_empty_dict_when_file_absent_or_corrupt(tmp_path):
+    assert journal.load_account_snapshot(str(tmp_path / "absent.json")) == {}
+    corrompu = tmp_path / "corrompu.json"
+    corrompu.write_text("pas du json", encoding="utf-8")
+    assert journal.load_account_snapshot(str(corrompu)) == {}
+
+
+def test_load_account_snapshot_degrades_to_empty_dict_when_top_level_is_not_a_dict(tmp_path):
+    path = tmp_path / "liste.json"
+    path.write_text("[1, 2, 3]", encoding="utf-8")
+    assert journal.load_account_snapshot(str(path)) == {}

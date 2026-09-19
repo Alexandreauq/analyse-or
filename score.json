@@ -1,13 +1,13 @@
 {
-  "date": "2026-09-18",
-  "composite_score": 9.9,
+  "date": "2026-09-19",
+  "composite_score": 11.0,
   "interpretation": "Neutre — pas d'action",
   "factors": [
     {
       "name": "Taux réels US 10 ans",
-      "score": -4.199999999999999,
+      "score": -3.9999999999999947,
       "weight": 0.3,
-      "raw_value": "2.61% (il y a ~45j : 2.40%)"
+      "raw_value": "2.61% (il y a ~45j : 2.41%)"
     },
     {
       "name": "Dollar (DXY)",
@@ -17,9 +17,9 @@
     },
     {
       "name": "Anticipations d'inflation",
-      "score": 3.3333333333333366,
+      "score": 3.6666666666666625,
       "weight": 0.15,
-      "raw_value": "2.33% (il y a ~45j : 2.23%)"
+      "raw_value": "2.33% (il y a ~45j : 2.22%)"
     },
     {
       "name": "Ton de la Fed",
@@ -98,7 +98,7 @@
       "kind": "info",
       "title": "Pas de signal actif",
       "detail": "Aucune des conditions de veille, d'entrée ou de risque n'est réunie aujourd'hui.",
-      "date": "18/09/2026"
+      "date": "19/09/2026"
     }
   ]
 }

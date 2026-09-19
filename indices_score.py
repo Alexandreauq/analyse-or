@@ -984,6 +984,22 @@ SECTOR_OVERRIDE_BY_TICKER = {
     "MT.PA": "Basic Materials",  # ArcelorMittal (sidérurgie, cyclique)
 }
 
+# Alias yfinance pour la récupération du cours (history()) uniquement —
+# le ticker canonique reste la clé utilisée partout ailleurs (identité,
+# indices.json, indices_history.json, portefeuille, URLs #indices/...) ;
+# seul le symbole interrogé pour l'historique de prix est substitué.
+# MT.PA (ArcelorMittal, cotation Paris) : constaté en production les
+# 2026-09-18 et 2026-09-19, yfinance renvoie "possibly delisted; no price
+# data found" pour ce ticker précis alors que financials/info/quarterly
+# restent résolubles dessus (d'où un score quand même calculé, mais sans
+# current_price ni rien qui en dépend : fair_value/entry_price/exit_price,
+# écart MM200). MT.AS (cotation Amsterdam, même émetteur) renvoie un
+# historique de prix valide — vérifié via yfinance en direct avant ce
+# correctif, pas une supposition.
+PRICE_HISTORY_TICKER_OVERRIDE = {
+    "MT.PA": "MT.AS",
+}
+
 # Entreprises à double classe d'actions (ordinaires + préférence) dont le
 # "sharesOutstanding" yfinance ne compte qu'une seule classe, alors que les
 # données financières (résultat net, FCF...) couvrent l'entreprise entière
@@ -2354,7 +2370,9 @@ def fetch_company_financials(ticker: str) -> dict:
     shares_outstanding = info.get("sharesOutstanding") or 0.0
     beta = info.get("beta")
     sector = info.get("sector")
-    history = t.history(period="6y")["Close"]
+    history_ticker = PRICE_HISTORY_TICKER_OVERRIDE.get(ticker, ticker)
+    history_source = yf.Ticker(history_ticker) if history_ticker != ticker else t
+    history = history_source.history(period="6y")["Close"]
     if ticker.endswith(".L"):
         # LSE (bug racine trouvé et corrigé le 2026-09-13) : yfinance
         # renvoie les prix des tickers londoniens en PENCE (GBp), alors que

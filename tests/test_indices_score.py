@@ -4215,6 +4215,125 @@ def test_fetch_company_financials_leaves_non_lse_prices_unconverted(monkeypatch)
     assert ratios["current_price"] == pytest.approx(1478.0)
 
 
+def test_fetch_company_financials_uses_price_history_override_for_mtpa(monkeypatch):
+    """Constaté en production les 2026-09-18 et 2026-09-19 : yfinance
+    renvoie "possibly delisted; no price data found" pour MT.PA
+    (ArcelorMittal, cotation Paris) alors que financials/info/quarterly
+    restent résolubles dessus — d'où un score quand même calculé mais
+    current_price=None. MT.AS (cotation Amsterdam, même émetteur) renvoie
+    un historique valide, vérifié en direct via yfinance avant ce test.
+    PRICE_HISTORY_TICKER_OVERRIDE doit rediriger UNIQUEMENT l'appel
+    history() vers MT.AS, sans changer le ticker utilisé pour
+    financials/balance_sheet/cashflow/quarterly/info (qui restent MT.PA,
+    la clé d'identité canonique utilisée partout ailleurs)."""
+    financials, balance_sheet, cashflow, _ = _make_fixture_statements()
+    financials.columns = pd.to_datetime(financials.columns)
+    balance_sheet.columns = pd.to_datetime(balance_sheet.columns)
+    cashflow.columns = pd.to_datetime(cashflow.columns)
+    quarterly = _fake_annual_df({"Diluted Average Shares": [100.0]}, [pd.Timestamp("2025-09-30")])
+    mt_as_history_index = pd.date_range("2024-01-01", periods=250, freq="D")
+    mt_as_history_close = pd.Series([26.4] * 250, index=mt_as_history_index)
+
+    constructed_tickers = []
+
+    class _FakeTicker:
+        def __init__(self, ticker):
+            constructed_tickers.append(ticker)
+            self._ticker = ticker
+
+        @property
+        def financials(self):
+            return financials
+
+        @property
+        def balance_sheet(self):
+            return balance_sheet
+
+        @property
+        def cashflow(self):
+            return cashflow
+
+        @property
+        def quarterly_financials(self):
+            return quarterly
+
+        @property
+        def info(self):
+            return {"sharesOutstanding": 1000.0, "beta": 0.9, "sector": "Basic Materials"}
+
+        def history(self, period=None):
+            if self._ticker == "MT.PA":
+                return pd.DataFrame({"Close": pd.Series(dtype=float)})
+            if self._ticker == "MT.AS":
+                return pd.DataFrame({"Close": mt_as_history_close})
+            raise AssertionError(f"unexpected ticker passed to yf.Ticker: {self._ticker}")
+
+    monkeypatch.setattr(indices_score.yf, "Ticker", _FakeTicker)
+    monkeypatch.setattr(indices_score.time, "sleep", lambda s: None)
+
+    ratios = indices_score.fetch_company_financials("MT.PA")
+
+    assert ratios["current_price"] == pytest.approx(26.4)
+    assert "MT.AS" in constructed_tickers
+    # Le ticker d'identité (financials/balance_sheet/cashflow/quarterly/info)
+    # reste MT.PA — _fetch_statement_with_retry et le premier yf.Ticker(t)
+    # de fetch_company_financials sont tous deux construits sur ce ticker.
+    assert constructed_tickers[0] == "MT.PA"
+
+
+def test_fetch_company_financials_does_not_override_other_tickers(monkeypatch):
+    """Contre-exemple : un ticker absent de PRICE_HISTORY_TICKER_OVERRIDE
+    ne doit déclencher aucun yf.Ticker(...) supplémentaire — un seul
+    objet Ticker construit, réutilisé pour history() comme avant ce
+    correctif."""
+    financials, balance_sheet, cashflow, _ = _make_fixture_statements()
+    financials.columns = pd.to_datetime(financials.columns)
+    balance_sheet.columns = pd.to_datetime(balance_sheet.columns)
+    cashflow.columns = pd.to_datetime(cashflow.columns)
+    quarterly = _fake_annual_df({"Diluted Average Shares": [100.0]}, [pd.Timestamp("2025-09-30")])
+    history_index = pd.date_range("2024-01-01", periods=250, freq="D")
+    history_close = pd.Series([100.0] * 250, index=history_index)
+
+    constructed_tickers = []
+
+    class _FakeTicker:
+        def __init__(self, ticker):
+            constructed_tickers.append(ticker)
+
+        @property
+        def financials(self):
+            return financials
+
+        @property
+        def balance_sheet(self):
+            return balance_sheet
+
+        @property
+        def cashflow(self):
+            return cashflow
+
+        @property
+        def quarterly_financials(self):
+            return quarterly
+
+        @property
+        def info(self):
+            return {"sharesOutstanding": 1000.0, "beta": 0.9, "sector": "Technology"}
+
+        def history(self, period=None):
+            return pd.DataFrame({"Close": history_close})
+
+    monkeypatch.setattr(indices_score.yf, "Ticker", _FakeTicker)
+    monkeypatch.setattr(indices_score.time, "sleep", lambda s: None)
+
+    ratios = indices_score.fetch_company_financials("MC.PA")
+
+    assert ratios["current_price"] == pytest.approx(100.0)
+    # Aucun ticker autre que MC.PA construit — pas de yf.Ticker("MT.AS")
+    # ni d'aucun autre symbole substitué pour un ticker hors override.
+    assert set(constructed_tickers) == {"MC.PA"}
+
+
 def test_load_signal_tracking_returns_empty_list_when_file_absent(monkeypatch, tmp_path):
     monkeypatch.setattr(indices_score, "SIGNAL_TRACKING_PATH", str(tmp_path / "does_not_exist.json"))
     assert indices_score.load_signal_tracking() == []

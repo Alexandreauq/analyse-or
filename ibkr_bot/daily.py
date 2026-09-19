@@ -34,6 +34,7 @@ import ibkr_bot.portfolio as portfolio
 import ibkr_bot.signals as signals
 import ibkr_bot.sizing as sizing
 import ibkr_bot.state as state
+import ibkr_bot.status_publish as status_publish
 
 # Preflight : 3 tentatives espacees de 10 minutes (spec 5.5). Le batch
 # demarre a 14:45 UTC et reste donc au plus tard a 15:05 UTC, encore dans
@@ -474,6 +475,12 @@ def _terminer(run: dict, chemins: dict, *, alerte_gateway: bool = False, gw=gate
         notify.send_gateway_alert(run["preflight"]["tentatives"], run["date"])
     else:
         notify.send_daily_summary(run, run["date"])
+    # Statut public (docs/ibkr_bot_status.json) — voir status_publish.py.
+    # Apres le journal/email, jamais avant : une panne de publication ne
+    # doit jamais empecher la trace privee (journal) ou l'alerte email
+    # d'arriver. Ne leve jamais (degrade vers {"ok": False, ...}), donc
+    # pas besoin de try/except ici.
+    run["statut_public"] = status_publish.publish_status(run, repo_dir=REPO_DIR)
     return run
 
 

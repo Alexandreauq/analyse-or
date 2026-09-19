@@ -341,6 +341,41 @@ def test_terminer_calls_disconnect(tmp_path, monkeypatch):
     assert "disconnect" in gw.appels
 
 
+def test_terminer_calls_publish_status_and_stores_its_result(tmp_path, monkeypatch):
+    """Preuve que _terminer cable bien status_publish.publish_status —
+    si l'appel etait supprime de _terminer, ce test doit echouer. Appele
+    APRES le journal/l'email (voir le commentaire dans _terminer), donc
+    ni l'un ni l'autre ne doivent en dependre."""
+    gw = FakeGateway()
+    monkeypatch.setattr(daily.notify, "send_daily_summary", lambda run, day=None: True)
+    monkeypatch.setattr(daily.notify, "send_gateway_alert", lambda tentatives, day=None: True)
+
+    called_with = {}
+
+    def _fake_publish_status(run, *, repo_dir):
+        called_with["run"] = run
+        called_with["repo_dir"] = repo_dir
+        return {"ok": True, "detail": "publie"}
+
+    monkeypatch.setattr(daily.status_publish, "publish_status", _fake_publish_status)
+
+    chemins = {
+        "journal": str(tmp_path / "journal.jsonl"),
+        "state": str(tmp_path / "state.json"),
+        "positions": str(tmp_path / "positions.json"),
+        "conid_cache": str(tmp_path / "conid_cache.json"),
+        "indices": str(tmp_path / "indices.json"),
+        "tracking": str(tmp_path / "tracking.json"),
+        "account_snapshot": str(tmp_path / "account.json"),
+    }
+    run = daily._nouveau_run("2026-09-16", "dry_run")
+    resultat = daily._terminer(run, chemins, gw=gw)
+
+    assert called_with["run"] is run
+    assert called_with["repo_dir"] == daily.REPO_DIR
+    assert resultat["statut_public"] == {"ok": True, "detail": "publie"}
+
+
 # --- gardes de run_batch ---------------------------------------------
 
 def test_kill_switch_stops_everything_before_any_gateway_call(env):

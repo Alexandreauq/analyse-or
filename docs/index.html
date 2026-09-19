@@ -1810,6 +1810,11 @@ function renderPortfolioActionsTab(companiesByTicker, currencyByIndex) {
       desc: 'Concentration, santé du portefeuille selon le modèle et contribution de chaque ligne au P&L.',
       html: portfolioAnalysisHtml(positions, companiesByTicker, currencyByIndex),
     },
+    {
+      title: 'Bot Actions',
+      desc: 'Statut du bot de trading automatique sur les signaux Indices : dernière exécution, mode (simulation ou réel), compteurs.',
+      html: ibkrBotDashboardSectionHtml(), wire: wireIbkrBotDashboardSection,
+    },
   ];
   renderPager('pfActions', portfolioActionsSections, portfolioActionsSectionIndex);
 }
@@ -2091,6 +2096,85 @@ function getBotToken() {
     if (token) localStorage.setItem('goldBotToken', token);
   }
   return token;
+}
+
+// Section "Bot Actions" du carrousel Portefeuille — contrairement au Bot
+// Or, ce bot n'a délibérément pas d'API HTTP (décision de sécurité prise
+// après l'incident du token API du Bot Or, voir deploy/README-ibkr.md) :
+// pas de tableau de bord en direct ni d'interrupteur d'urgence possible
+// depuis le site. Le seul canal disponible est un statut publié par le
+// bot lui-même après chaque exécution (docs/ibkr_bot_status.json, voir
+// ibkr_bot/status_publish.py) — un instantané, pas un flux en direct.
+const IBKR_BOT_STATUS_LABELS = {
+  termine: 'Terminé', gateway_indisponible: 'Passerelle indisponible',
+  hors_jour_de_bourse: 'Hors jour de bourse', kill_switch: 'Coupe-circuit actif',
+  donnees_perimees: 'Données périmées',
+};
+let ibkrBotStatusData = null;
+
+function ibkrBotDashboardSectionHtml() {
+  return `
+    <main id="ibkrBotContent">
+      <div class="skeleton">
+        <div class="skeleton-line"></div>
+        <div class="skeleton-line"></div>
+        <div class="skeleton-line"></div>
+      </div>
+    </main>`;
+}
+
+function ibkrBotStatusColor(status) {
+  if (!status) return 'var(--muted)';
+  if (status.statut === 'termine' && !status.erreurs_count) return 'var(--gold)';
+  if (status.statut === 'kill_switch' || status.statut === 'hors_jour_de_bourse') return 'var(--muted)';
+  return 'var(--rust)';
+}
+
+async function loadIbkrBotStatus() {
+  const el = document.getElementById('ibkrBotContent');
+  if (!el) return;
+  try {
+    const res = await fetch(`ibkr_bot_status.json?t=${Date.now()}`);
+    if (!res.ok) throw new Error('fichier introuvable');
+    ibkrBotStatusData = await res.json();
+  } catch (e) {
+    el.innerHTML = `<div class="empty">Statut indisponible pour l'instant — le bot n'a peut-être pas encore publié son premier statut.<br>${e.message}</div>`;
+    return;
+  }
+  renderIbkrBotStatus();
+}
+
+function renderIbkrBotStatus() {
+  const el = document.getElementById('ibkrBotContent');
+  if (!el || !ibkrBotStatusData) return;
+  const s = ibkrBotStatusData;
+  const label = IBKR_BOT_STATUS_LABELS[s.statut] || s.statut || '—';
+  const color = ibkrBotStatusColor(s);
+  const when = s.timestamp ? new Date(s.timestamp).toLocaleString('fr-FR', {
+    day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'UTC',
+  }) + ' UTC' : '—';
+  el.innerHTML = `
+    <div class="portfolio-position-row">
+      <div class="portfolio-position-main">
+        <span class="company-name" style="color:${color}">${label}</span>
+        <span class="hero-sub">${s.mode === 'reel' ? 'Mode réel' : 'Mode simulation — aucun ordre réel'}</span>
+      </div>
+      <div class="portfolio-position-pnl">
+        <span class="hero-sub">${when}</span>
+      </div>
+    </div>
+    <div class="signal-stats" style="margin-top:16px;">
+      <div class="price-row"><span class="price-label">Entrées</span><span class="price-value">${s.entrees_count ?? '—'}</span></div>
+      <div class="price-row"><span class="price-label">Sorties</span><span class="price-value">${s.sorties_count ?? '—'}</span></div>
+      <div class="price-row"><span class="price-label">Signaux rejetés</span><span class="price-value">${s.signaux_rejetes_count ?? '—'}</span></div>
+      <div class="price-row"><span class="price-label">Anomalies</span><span class="price-value">${s.anomalies_count ?? '—'}</span></div>
+      <div class="price-row"><span class="price-label">Erreurs</span><span class="price-value${s.erreurs_count ? ' signal-return-negative' : ''}">${s.erreurs_count ?? '—'}</span></div>
+    </div>
+    <p class="hero-sub" style="margin-top:16px;">Statut mis à jour après chaque exécution quotidienne (vers 14h45 UTC en semaine) — pas un flux en direct.</p>`;
+}
+
+function wireIbkrBotDashboardSection() {
+  loadIbkrBotStatus();
 }
 
 // Coquille de la section "Bot Or" du carrousel Portefeuille : statut public

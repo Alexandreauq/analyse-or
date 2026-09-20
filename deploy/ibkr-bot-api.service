@@ -1,0 +1,15 @@
+[Unit]
+Description=Bot Actions IBKR - API tableau de bord
+After=network.target
+
+[Service]
+Type=simple
+User=ibkrbot
+WorkingDirectory=/home/ibkrbot/analyse-or
+EnvironmentFile=/home/ibkrbot/analyse-or/.env
+ExecStart=/home/ibkrbot/analyse-or/venv/bin/uvicorn ibkr_bot.api:app --host 0.0.0.0 --port 8444 --ssl-keyfile /etc/letsencrypt/live/goldbot.fr/privkey.pem --ssl-certfile /etc/letsencrypt/live/goldbot.fr/fullchain.pem
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

@@ -71,7 +71,8 @@ def test_the_ibkr_readme_documents_the_operational_essentials():
     contenu = _lire("README-ibkr.md")
     for attendu in ("ibkrbot", "IBKR_GATEWAY_URL", "IBKR_ACCOUNT_ID",
                     "chmod 600", "ibkr-bot-daily.timer", "kill_switch",
-                    "dry_run", "ibkr_bot.state", "2FA", "127.0.0.1"):
+                    "dry_run", "ibkr_bot.state", "2FA", "127.0.0.1",
+                    "IBKR_BOT_API_TOKEN", "ibkr-bot-api"):
         assert attendu in contenu, f"{attendu!r} absent de deploy/README-ibkr.md"
 
 
@@ -82,6 +83,33 @@ def test_the_ibkr_readme_never_asks_for_the_ibkr_password_in_the_env_file():
     contenu = _lire("README-ibkr.md")
     assert "IBKR_PASSWORD" not in contenu
     assert "IBKR_LOGIN" not in contenu
+
+
+def test_the_api_service_runs_as_the_dedicated_user_on_its_own_port():
+    contenu = _lire("ibkr-bot-api.service")
+    assert "User=ibkrbot" in contenu
+    assert "User=goldbot" not in contenu
+    assert "--port 8444" in contenu
+    assert "ibkr_bot.api:app" in contenu
+    assert "EnvironmentFile=/home/ibkrbot/analyse-or/.env" in contenu
+    assert "Restart=on-failure" in contenu
+
+
+def test_the_api_service_reuses_the_goldbot_fr_certificate():
+    contenu = _lire("ibkr-bot-api.service")
+    assert "/etc/letsencrypt/live/goldbot.fr/privkey.pem" in contenu
+    assert "/etc/letsencrypt/live/goldbot.fr/fullchain.pem" in contenu
+
+
+def test_the_firewall_script_opens_the_api_port():
+    contenu = _lire("harden-vps-firewall.sh")
+    assert "ufw allow 8444" in contenu
+
+
+def test_the_tls_setup_script_adds_ibkrbot_to_the_ssl_cert_group_and_a_renewal_hook():
+    contenu = _lire("setup-tls-ibkr.sh")
+    assert "usermod -aG ssl-cert ibkrbot" in contenu
+    assert "systemctl restart ibkr-bot-api" in contenu
 
 
 def test_the_gold_readme_points_to_the_ibkr_one():

@@ -114,3 +114,29 @@ def test_the_tls_setup_script_adds_ibkrbot_to_the_ssl_cert_group_and_a_renewal_h
 
 def test_the_gold_readme_points_to_the_ibkr_one():
     assert "README-ibkr.md" in _lire("README.md")
+
+
+def test_docker_compose_sets_the_auto_restart_variables_without_a_new_secret():
+    """AUTO_RESTART_TIME/TWOFA_TIMEOUT_ACTION/TIME_ZONE sont des reglages,
+    pas des secrets : ils doivent rester en clair dans le compose file
+    commite, pas dans /home/ibkrbot/secrets/."""
+    contenu = _lire("docker-compose-ibkr-tws.yml")
+    assert "TIME_ZONE: America/New_York" in contenu
+    assert 'AUTO_RESTART_TIME: "11:59 PM"' in contenu
+    assert "TWOFA_TIMEOUT_ACTION: restart" in contenu
+
+
+def test_the_gateway_reminder_service_runs_as_the_dedicated_user():
+    contenu = _lire("ibkr-gateway-reminder.service")
+    assert "Type=oneshot" in contenu
+    assert "User=ibkrbot" in contenu
+    assert "ExecStart=" in contenu and "-m ibkr_bot.gateway_reminder" in contenu
+    assert "EnvironmentFile=/home/ibkrbot/analyse-or/.env" in contenu
+
+
+def test_the_gateway_reminder_timer_fires_sunday_at_the_gateway_restart_time():
+    contenu = _lire("ibkr-gateway-reminder.timer")
+    assert "OnCalendar=Sun *-*-* 23:59:00 America/New_York" in contenu
+    assert "Persistent=false" in contenu
+    assert "Unit=ibkr-gateway-reminder.service" in contenu
+    assert "WantedBy=timers.target" in contenu

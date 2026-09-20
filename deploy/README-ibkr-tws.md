@@ -50,7 +50,7 @@ réelle vient du dossier parent `/home/ibkrbot/secrets/` en `chmod 700`
 d'environnement en clair dans le `.env` local (non commité, `chmod 600`),
 jamais dans `docker-compose-ibkr-tws.yml` lui-même (qui, lui, est commité).
 
-## Login initial et validation quotidienne
+## Login initial et validation hebdomadaire
 
 1. Tunnel SSH vers le port VNC : `ssh -L 5900:127.0.0.1:5900 root@178.105.186.220`.
 2. Client VNC (ex. TigerVNC Viewer) sur `127.0.0.1:5900`, mot de passe VNC.
@@ -69,10 +69,18 @@ jamais dans `docker-compose-ibkr-tws.yml` lui-même (qui, lui, est commité).
    `BYPASS_WARNING=yes`) — c'est ce qui garantit qu'aucune popup de
    confirmation ne bloque jamais un ordre réel envoyé par
    `gateway.py::place_market_order()` (voir plan de migration, Tâche 5).
-5. La session TWS API dure ~24h (règle de sécurité IBKR, pas une
-   limitation du logiciel) — revalidation manuelle quotidienne nécessaire
-   via les étapes 1-3, exactement comme documenté dans
-   `deploy/README-ibkr.md` pour l'ancien Gateway.
+5. **Revalidation manuelle uniquement le dimanche**, pas chaque jour.
+   IBKR force un redémarrage de Gateway chaque nuit (~23h45 heure US),
+   mais `TIME_ZONE`/`AUTO_RESTART_TIME`/`TWOFA_TIMEOUT_ACTION` dans
+   `docker-compose-ibkr-tws.yml` laissent IBC reprendre la session
+   automatiquement pour ces redémarrages — seul celui qui suit dimanche
+   01h00 heure US exige de refaire les étapes 1-3 (login + 2FA). Un
+   email de rappel part automatiquement chaque dimanche à l'heure du
+   redémarrage (`ibkr_bot/gateway_reminder.py`, voir
+   `deploy/ibkr-gateway-reminder.timer`). Avant ce réglage (découvert le
+   2026-09-20), la revalidation était bien quotidienne, comme documenté
+   dans `deploy/README-ibkr.md` pour l'ancien Gateway — ce n'est plus le
+   cas ici.
 
 ## Vérification de connectivité (validé le 2026-09-16)
 

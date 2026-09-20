@@ -191,6 +191,28 @@ def build_gateway_alert_html(tentatives: int, day: str) -> str:
     return _page(f"Bot Actions IBKR — ALERTE Gateway du {_e(day)}", corps)
 
 
+def build_gateway_reauth_reminder_html(day: str) -> str:
+    """Rappel hebdomadaire (dimanche) : depuis l'ajout de AUTO_RESTART_TIME
+    a docker-compose-ibkr-tws.yml, IBC ne redemande login+2FA qu'une fois
+    par semaine (le redemarrage qui suit dimanche 01h00 heure US) au lieu
+    de chaque nuit — voir docs/superpowers/specs pour le contexte. Ce mail
+    est le seul rappel de ce geste desormais hebdomadaire."""
+    corps = (
+        _carte("#7a6a2a",
+               f'Rappel hebdomadaire — le redémarrage IB Gateway du '
+               f'{_e(day)} exige une ré-authentification complète '
+               f'(login + 2FA), contrairement aux redémarrages des autres '
+               f'jours de la semaine qui reprennent la session '
+               f'automatiquement.')
+        + _carte("#4a4d5a",
+                 "Action attendue : tunnel SSH vers le port VNC, client "
+                 "VNC local, login IBKR puis validation 2FA. Voir "
+                 "deploy/README-ibkr-tws.md, section « Login initial et "
+                 "validation quotidienne ».")
+    )
+    return _page(f"Bot Actions IBKR — rappel hebdomadaire du {_e(day)}", corps)
+
+
 def _send(subject: str, body_html: str) -> bool:
     """Plomberie SMTP commune aux deux emails. Ignore silencieusement (avec
     un message) si SMTP_USER/SMTP_PASSWORD ne sont pas configures — meme
@@ -232,6 +254,12 @@ def send_gateway_alert(tentatives: int, day: str | None = None) -> bool:
     day = day or _today()
     return _send(f"Bot Actions IBKR — ALERTE : Gateway non authentifié ({day})",
                  build_gateway_alert_html(tentatives, day))
+
+
+def send_gateway_reauth_reminder(day: str | None = None) -> bool:
+    day = day or _today()
+    return _send(f"Bot Actions IBKR — rappel hebdomadaire : réauthentifier le Gateway ({day})",
+                 build_gateway_reauth_reminder_html(day))
 
 
 def main(day: str | None = None) -> None:

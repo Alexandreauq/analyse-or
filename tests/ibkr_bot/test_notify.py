@@ -193,6 +193,40 @@ def test_send_gateway_alert_returns_false_instead_of_raising(monkeypatch):
     assert notify.send_gateway_alert(3, "2026-09-15") is False
 
 
+def test_gateway_reauth_reminder_explains_the_weekly_manual_step():
+    html = notify.build_gateway_reauth_reminder_html("2026-09-27")
+    assert "2026-09-27" in html
+    assert "2FA" in html
+    assert "deploy/README-ibkr-tws.md" in html
+
+
+def test_send_gateway_reauth_reminder_uses_a_distinct_subject(monkeypatch):
+    _configure_smtp(monkeypatch)
+
+    assert notify.send_gateway_reauth_reminder("2026-09-27") is True
+    message_rappel = _FakeSMTP.instances[0].sent[0]["message"]
+
+    _FakeSMTP.instances = []
+    notify.send_daily_summary(RUN, "2026-09-27")
+    message_resume = _FakeSMTP.instances[0].sent[0]["message"]
+
+    def _sujet(message):
+        for ligne in message.splitlines():
+            if ligne.startswith("Subject:"):
+                return ligne
+        return ""
+
+    assert _sujet(message_rappel) != _sujet(message_resume)
+    assert "hebdomadaire" in _sujet(message_rappel).lower() or "dimanche" in _sujet(message_rappel).lower()
+
+
+def test_send_gateway_reauth_reminder_returns_false_instead_of_raising(monkeypatch):
+    _configure_smtp(monkeypatch)
+    monkeypatch.setattr(notify.smtplib, "SMTP",
+                        lambda host, port: (_ for _ in ()).throw(OSError("ko")))
+    assert notify.send_gateway_reauth_reminder("2026-09-27") is False
+
+
 def test_main_resends_the_last_run_of_the_day(monkeypatch, tmp_path):
     _configure_smtp(monkeypatch)
     log = tmp_path / "real_trading_log.jsonl"

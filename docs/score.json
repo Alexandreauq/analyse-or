@@ -11,7 +11,7 @@
     },
     {
       "name": "Dollar (DXY)",
-      "score": 3.8499832153320312,
+      "score": 3.8699722290039062,
       "weight": 0.15,
       "raw_value": "100.22 (il y a 2 mois : 100.99)"
     },
@@ -49,7 +49,7 @@
   "technical": {
     "note": "Cours en-dessous de la MM200 (-2.8%) — tendance baissière",
     "spot": 4424.89990234375,
-    "ma200": 4553.351002197265
+    "ma200": 4554.371502685547
   },
   "calendar": [
     {

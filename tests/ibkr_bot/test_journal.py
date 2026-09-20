@@ -228,3 +228,85 @@ def test_save_account_snapshot_writes_json_and_never_raises(tmp_path):
     fichier = tmp_path / "fichier"
     fichier.write_text("x", encoding="utf-8")
     assert journal.save_account_snapshot({}, str(fichier / "x.json")) is False
+
+
+def test_load_account_snapshot_reads_back_what_save_account_snapshot_wrote(tmp_path):
+    path = str(tmp_path / "latest_account.json")
+    journal.save_account_snapshot({"base_cash": 8000.0}, path)
+    data = journal.load_account_snapshot(path)
+    assert data["base_cash"] == 8000.0
+    assert data["fetched_at"].endswith("Z")
+
+
+def test_load_account_snapshot_degrades_to_empty_dict_when_file_absent_or_corrupt(tmp_path):
+    assert journal.load_account_snapshot(str(tmp_path / "absent.json")) == {}
+    corrompu = tmp_path / "corrompu.json"
+    corrompu.write_text("pas du json", encoding="utf-8")
+    assert journal.load_account_snapshot(str(corrompu)) == {}
+
+
+def test_load_account_snapshot_degrades_to_empty_dict_when_top_level_is_not_a_dict(tmp_path):
+    path = tmp_path / "liste.json"
+    path.write_text("[1, 2, 3]", encoding="utf-8")
+    assert journal.load_account_snapshot(str(path)) == {}
+
+
+def test_read_recent_actions_flattens_entrees_and_sorties_and_tags_the_run_date(tmp_path):
+    path = tmp_path / "real_trading_log.jsonl"
+    path.write_text(
+        json.dumps({"date": "2026-09-18", "entrees": [
+            {"ticker": "MC.PA", "sens": "BUY", "quantite": 5, "statut": "execute"}
+        ], "sorties": [
+            {"ticker": "SAP.DE", "sens": "SELL", "quantite": 2, "statut": "simule"}
+        ]}) + "\n",
+        encoding="utf-8",
+    )
+    actions = journal.read_recent_actions(str(path))
+    assert [(a["ticker"], a["date"]) for a in actions] == [("MC.PA", "2026-09-18"), ("SAP.DE", "2026-09-18")]
+
+
+def test_read_recent_actions_excludes_annule_interruption_and_other_non_taken_statuts(tmp_path):
+    path = tmp_path / "log.jsonl"
+    path.write_text(
+        json.dumps({"date": "2026-09-18", "entrees": [
+            {"ticker": "A", "statut": "execute"},
+            {"ticker": "B", "statut": "annule_interruption"},
+            {"ticker": "C", "statut": "erreur"},
+        ], "sorties": []}) + "\n",
+        encoding="utf-8",
+    )
+    actions = journal.read_recent_actions(str(path))
+    assert [a["ticker"] for a in actions] == ["A"]
+
+
+def test_read_recent_actions_orders_chronologically_across_multiple_days_and_truncates_to_limit(tmp_path):
+    path = tmp_path / "log.jsonl"
+    lignes = []
+    for jour in range(60):
+        lignes.append(json.dumps({
+            "date": f"2026-09-{jour + 1:02d}" if jour < 28 else f"2026-10-{jour - 27:02d}",
+            "entrees": [{"ticker": f"T{jour}", "statut": "execute"}],
+            "sorties": [],
+        }))
+    path.write_text("\n".join(lignes) + "\n", encoding="utf-8")
+
+    actions = journal.read_recent_actions(str(path), limit=50)
+
+    assert len(actions) == 50
+    assert [a["ticker"] for a in actions] == [f"T{i}" for i in range(10, 60)]
+
+
+def test_read_recent_actions_skips_corrupt_lines_and_non_dict_records(tmp_path):
+    path = tmp_path / "log.jsonl"
+    path.write_text(
+        "pas du json\n"
+        + json.dumps({"date": "x", "entrees": "pas une liste", "sorties": None}) + "\n"
+        + json.dumps({"date": "2026-09-18", "entrees": [5, {"ticker": "OK", "statut": "execute"}], "sorties": []}) + "\n",
+        encoding="utf-8",
+    )
+    actions = journal.read_recent_actions(str(path))
+    assert [a["ticker"] for a in actions] == ["OK"]
+
+
+def test_read_recent_actions_returns_empty_list_when_file_is_absent(tmp_path):
+    assert journal.read_recent_actions(str(tmp_path / "absent.jsonl")) == []

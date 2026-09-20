@@ -92,6 +92,11 @@ def dashboard(x_bot_token: str | None = Header(default=None)):
     # reels (ecart_paper_pct, taux_de_change...) qui pourraient un jour
     # produire NaN/Inf. FastAPI ne passe PAS allow_nan=False par defaut
     # (voir la note en tete de fichier et Global Constraints du plan).
+    # Contrairement aux positions (qui omettent `conid`), les actions
+    # gardent tous les champs de `journal.read_recent_actions` tels
+    # quels — `conid`/`order_id` y sont des identifiants IBKR publics,
+    # sans valeur d'attaque une fois l'acces deja protege par jeton
+    # (spec 4.3 : le jeton change le modele de menace).
     actions = [
         {k: _sanitize_number(v) for k, v in a.items()}
         for a in raw_actions

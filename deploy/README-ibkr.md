@@ -82,10 +82,14 @@ C'est contraignant, mais c'est la meilleure propriété de sécurité du
 dispositif : les identifiants maîtres du compte-titres ne sont stockés
 sur le VPS sous aucune forme.
 
-**Il n'y a pas non plus de jeton d'API** (`IBKR_BOT_API_TOKEN` n'existe
-pas) : l'interrupteur d'urgence est un fichier modifié en SSH, pas une
-route HTTPS (spec 5.2 / 9.4, décidé après l'incident `BOT_API_TOKEN` du
-2026-09-14 sur le bot Or — un secret de moins à perdre).
+**Il existe un jeton d'API, mais uniquement pour un tableau de bord en
+LECTURE SEULE** (`IBKR_BOT_API_TOKEN`, voir `ibkr_bot/api.py` et
+`docs/superpowers/specs/2026-09-20-ibkr-bot-api-design.md`) : solde,
+positions ouvertes, historique des actions. **L'interrupteur d'urgence,
+lui, reste exclusivement un fichier modifié en SSH — jamais une route
+HTTPS** (spec 5.2 / 9.4, décidé après l'incident `BOT_API_TOKEN` du
+2026-09-14 sur le bot Or — un secret de moins à perdre ; ce choix précis
+n'a pas été remis en question par l'ajout du tableau de bord).
 
 ## 4. Installer les services systemd
 
@@ -95,9 +99,11 @@ route HTTPS (spec 5.2 / 9.4, décidé après l'incident `BOT_API_TOKEN` du
 sudo cp deploy/ibkr-gateway.service /etc/systemd/system/
 sudo cp deploy/ibkr-bot-daily.service /etc/systemd/system/
 sudo cp deploy/ibkr-bot-daily.timer /etc/systemd/system/
+sudo cp deploy/ibkr-bot-api.service /etc/systemd/system/
 sudo systemctl daemon-reload
 sudo systemctl enable --now ibkr-gateway
 sudo systemctl enable --now ibkr-bot-daily.timer
+sudo systemctl enable --now ibkr-bot-api
 ```
 
 Le **timer** est activé, pas le service : c'est lui qui déclenche le batch
@@ -106,6 +112,15 @@ Le **timer** est activé, pas le service : c'est lui qui déclenche le batch
 ```bash
 systemctl list-timers ibkr-bot-daily.timer --no-pager
 ```
+
+Le service `ibkr-bot-api` expose le tableau de bord en lecture seule sur
+le port 8444 (le port 8443 est déjà pris par `gold-bot-api`). Il réutilise
+le certificat TLS existant de `goldbot.fr` — exécuter
+`deploy/setup-tls-ibkr.sh` en root pour l'accès au certificat et le hook
+de renouvellement, et `ufw allow 8444` (ou relancer
+`deploy/harden-vps-firewall.sh`) pour le pare-feu. Générer un jeton dédié
+(différent du `BOT_API_TOKEN` du bot Or) et l'ajouter comme
+`IBKR_BOT_API_TOKEN=...` dans `.env` avant de démarrer le service.
 
 ## 5. Authentifier le Gateway (action manuelle récurrente)
 

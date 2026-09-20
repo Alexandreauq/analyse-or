@@ -2098,13 +2098,16 @@ function getBotToken() {
   return token;
 }
 
-// Section "Bot Actions" du carrousel Portefeuille — contrairement au Bot
-// Or, ce bot n'a délibérément pas d'API HTTP (décision de sécurité prise
-// après l'incident du token API du Bot Or, voir deploy/README-ibkr.md) :
-// pas de tableau de bord en direct ni d'interrupteur d'urgence possible
-// depuis le site. Le seul canal disponible est un statut publié par le
-// bot lui-même après chaque exécution (docs/ibkr_bot_status.json, voir
-// ibkr_bot/status_publish.py) — un instantané, pas un flux en direct.
+// Section "Bot Actions" du carrousel Portefeuille — statut public,
+// publié par le bot lui-même après chaque exécution
+// (docs/ibkr_bot_status.json, voir ibkr_bot/status_publish.py) : un
+// instantané, pas un flux en direct. Un tableau de bord protégé par
+// jeton (solde, positions, historique) est disponible en plus, voir
+// fetchIbkrBotDashboard plus bas — mais l'interrupteur d'urgence reste
+// exclusivement un fichier modifié en SSH (ibkr_bot/state.json), jamais
+// une route HTTPS (spec 5.2/9.4 de 2026-09-14, non remise en question
+// par l'ajout du tableau de bord — voir
+// docs/superpowers/specs/2026-09-20-ibkr-bot-api-design.md).
 const IBKR_BOT_STATUS_LABELS = {
   termine: 'Terminé', gateway_indisponible: 'Passerelle indisponible',
   hors_jour_de_bourse: 'Hors jour de bourse', kill_switch: 'Coupe-circuit actif',
@@ -2112,6 +2115,7 @@ const IBKR_BOT_STATUS_LABELS = {
 };
 let ibkrBotStatusData = null;
 let ibkrBotDashboardData = null;
+let ibkrBotDashboardError = null;
 
 function ibkrBotDashboardSectionHtml() {
   return `
@@ -2285,15 +2289,17 @@ function ibkrBotActionsHtml(actions) {
   }).join('');
 }
 
-function ibkrBotUnlockHtml() {
-  return `<button class="toggle-btn" type="button" id="ibkrBotUnlockBtn">Voir solde, positions et historique complets (jeton requis)</button>`;
+function ibkrBotUnlockHtml(label) {
+  return `<button class="toggle-btn" type="button" id="ibkrBotUnlockBtn">${label || 'Voir solde, positions et historique complets (jeton requis)'}</button>`;
 }
 
 function renderIbkrBotDashboardBlock() {
   const el = document.getElementById('ibkrBotDashboardBlock');
   if (!el) return;
   if (!ibkrBotDashboardData) {
-    el.innerHTML = ibkrBotUnlockHtml();
+    el.innerHTML = ibkrBotDashboardError
+      ? `<div class="empty">${escHtml(ibkrBotDashboardError)}</div>${ibkrBotUnlockHtml('Réessayer')}`
+      : ibkrBotUnlockHtml();
     const unlockBtn = document.getElementById('ibkrBotUnlockBtn');
     if (unlockBtn) unlockBtn.addEventListener('click', () => {
       const token = getIbkrBotToken();
@@ -2323,18 +2329,26 @@ async function fetchIbkrBotDashboard() {
   const token = localStorage.getItem('ibkrBotToken');
   if (!token) {
     ibkrBotDashboardData = null;
+    ibkrBotDashboardError = null;
     renderIbkrBotDashboardBlock();
     return;
   }
   try {
     const res = await fetch(`${IBKR_BOT_API_BASE_URL}/dashboard`, { headers: { 'X-Bot-Token': token } });
-    if (!res.ok) {
-      if (res.status === 401) localStorage.removeItem('ibkrBotToken');
-      throw new Error('échec de la requête (' + res.status + ')');
+    if (res.status === 401) {
+      localStorage.removeItem('ibkrBotToken');
+      ibkrBotDashboardData = null;
+      ibkrBotDashboardError = null;
+    } else if (!res.ok) {
+      ibkrBotDashboardData = null;
+      ibkrBotDashboardError = 'échec de la requête (' + res.status + ')';
+    } else {
+      ibkrBotDashboardData = await res.json();
+      ibkrBotDashboardError = null;
     }
-    ibkrBotDashboardData = await res.json();
   } catch (e) {
     ibkrBotDashboardData = null;
+    ibkrBotDashboardError = 'tableau de bord indisponible pour l\'instant';
   }
   if (!document.getElementById('ibkrBotDashboardBlock')) return;
   if (ibkrBotStatusData) renderIbkrBotStatus();

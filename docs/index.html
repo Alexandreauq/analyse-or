@@ -2111,6 +2111,7 @@ const IBKR_BOT_STATUS_LABELS = {
   donnees_perimees: 'Données périmées',
 };
 let ibkrBotStatusData = null;
+let ibkrBotDashboardData = null;
 
 function ibkrBotDashboardSectionHtml() {
   return `
@@ -2120,7 +2121,8 @@ function ibkrBotDashboardSectionHtml() {
         <div class="skeleton-line"></div>
         <div class="skeleton-line"></div>
       </div>
-    </main>`;
+    </main>
+    <div id="ibkrBotDashboardBlock"></div>`;
 }
 
 function ibkrBotStatusColor(status) {
@@ -2215,7 +2217,7 @@ function renderIbkrBotStatus() {
         <span class="hero-sub">${when}</span>
       </div>
     </div>
-    ${s.positions ? `<h2>Positions ouvertes</h2>${ibkrBotPositionsHtml(s.positions)}` : ''}
+    ${s.positions && !ibkrBotDashboardData ? `<h2>Positions ouvertes</h2>${ibkrBotPositionsHtml(s.positions)}` : ''}
     <h2>Compteurs du jour</h2>
     ${ibkrBotCountersHtml(s)}
     <p class="hero-sub" style="margin-top:12px;">Publié après chaque exécution quotidienne (vers 14h45 UTC en semaine) — pas un flux en direct, contrairement au Bot Or.</p>
@@ -2230,8 +2232,118 @@ function wireIbkrBotRefresh() {
   btn.addEventListener('click', () => loadIbkrBotStatus());
 }
 
+function getIbkrBotToken() {
+  let token = localStorage.getItem('ibkrBotToken');
+  if (!token) {
+    token = prompt('Jeton d\'accès au tableau de bord Bot Actions (demandé une seule fois, conservé sur cet appareil) :');
+    if (token) localStorage.setItem('ibkrBotToken', token);
+  }
+  return token;
+}
+
+function ibkrBotBalanceHtml(data) {
+  if (!data || data.balance == null) {
+    return `<div class="empty">Solde indisponible pour l'instant.</div>`;
+  }
+  const freshness = formatFetchedAgo(data.balance_fetched_at);
+  return `
+    <div class="portfolio-position-row">
+      <div class="portfolio-position-main">
+        <span class="company-name">${formatPrice(data.balance)}</span>
+        <span class="hero-sub">Solde disponible</span>
+        ${freshness ? `<span class="hero-sub">${freshness}</span>` : ''}
+      </div>
+    </div>`;
+}
+
+// Ticker -> entreprise resolu ici, cote frontend, plutot que duplique par
+// l'API (voir spec 4.4) : indicesData est deja charge pour toute la page.
+function ibkrBotActionsHtml(actions) {
+  if (!actions || actions.length === 0) {
+    return `<div class="empty">Aucune action récente.</div>`;
+  }
+  const companiesByTicker = {};
+  (indicesData.companies || []).forEach(c => { companiesByTicker[c.ticker] = c; });
+  return actions.slice().reverse().map(a => {
+    const label = a.sens === 'BUY' ? 'Achat' : a.sens === 'SELL' ? 'Vente' : '—';
+    const color = a.sens === 'BUY' ? 'var(--gold)' : a.sens === 'SELL' ? 'var(--rust)' : 'var(--muted)';
+    const company = companiesByTicker[a.ticker];
+    const name = company ? company.name : a.ticker;
+    const price = a.prix_execution != null
+      ? (company ? formatPriceForIndex(a.prix_execution, company.index) : formatPrice(a.prix_execution))
+      : '—';
+    return `
+    <div class="portfolio-position-row">
+      <div class="portfolio-position-main">
+        <a class="company-name" href="#indices/${encodeURIComponent(a.ticker)}" style="color:${color}">${label}</a>
+        <span class="hero-sub">${escHtml(name)}${a.quantite != null ? ` · ${a.quantite} titre${a.quantite > 1 ? 's' : ''}` : ''}${a.date ? ` · ${a.date}` : ''}</span>
+      </div>
+      <div class="portfolio-position-pnl">
+        <span class="price-value">${price}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function ibkrBotUnlockHtml() {
+  return `<button class="toggle-btn" type="button" id="ibkrBotUnlockBtn">Voir solde, positions et historique complets (jeton requis)</button>`;
+}
+
+function renderIbkrBotDashboardBlock() {
+  const el = document.getElementById('ibkrBotDashboardBlock');
+  if (!el) return;
+  if (!ibkrBotDashboardData) {
+    el.innerHTML = ibkrBotUnlockHtml();
+    const unlockBtn = document.getElementById('ibkrBotUnlockBtn');
+    if (unlockBtn) unlockBtn.addEventListener('click', () => {
+      const token = getIbkrBotToken();
+      if (token) fetchIbkrBotDashboard();
+    });
+    return;
+  }
+  el.innerHTML = `
+    <h2>Solde</h2>
+    ${ibkrBotBalanceHtml(ibkrBotDashboardData)}
+    <h2>Positions ouvertes</h2>
+    ${ibkrBotPositionsHtml(ibkrBotDashboardData.positions)}
+    <h2>Actions récentes</h2>
+    ${ibkrBotActionsHtml(ibkrBotDashboardData.actions)}
+    <button class="toggle-btn" type="button" id="ibkrBotDashboardRefreshBtn">Actualiser</button>
+  `;
+  const refreshBtn = document.getElementById('ibkrBotDashboardRefreshBtn');
+  if (refreshBtn) refreshBtn.addEventListener('click', () => fetchIbkrBotDashboard());
+}
+
+// Jamais de prompt() force a l'ouverture du panneau (contrairement au Bot
+// Or) : le statut public reste utile sans jeton (spec 7, dernier point),
+// donc le tableau de bord protege est une amelioration optionnelle,
+// declenchee par clic sur ibkrBotUnlockBtn ou silencieusement si un
+// jeton est deja memorise.
+async function fetchIbkrBotDashboard() {
+  const token = localStorage.getItem('ibkrBotToken');
+  if (!token) {
+    ibkrBotDashboardData = null;
+    renderIbkrBotDashboardBlock();
+    return;
+  }
+  try {
+    const res = await fetch(`${IBKR_BOT_API_BASE_URL}/dashboard`, { headers: { 'X-Bot-Token': token } });
+    if (!res.ok) {
+      if (res.status === 401) localStorage.removeItem('ibkrBotToken');
+      throw new Error('échec de la requête (' + res.status + ')');
+    }
+    ibkrBotDashboardData = await res.json();
+  } catch (e) {
+    ibkrBotDashboardData = null;
+  }
+  if (!document.getElementById('ibkrBotDashboardBlock')) return;
+  if (ibkrBotStatusData) renderIbkrBotStatus();
+  renderIbkrBotDashboardBlock();
+}
+
 function wireIbkrBotDashboardSection() {
   loadIbkrBotStatus();
+  fetchIbkrBotDashboard();
 }
 
 // Coquille de la section "Bot Or" du carrousel Portefeuille : statut public
@@ -2964,6 +3076,7 @@ let indicesData = null;
 let realPortfolioData = null;
 let botStatusData = null;
 const BOT_API_BASE_URL = 'https://goldbot.fr:8443';
+const IBKR_BOT_API_BASE_URL = 'https://goldbot.fr:8444';
 
 // Pagination carrousel des sections Portefeuille (voir renderPager) : chaque
 // onglet garde son index de section courante d'un rendu à l'autre (ne

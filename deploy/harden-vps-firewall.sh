@@ -4,6 +4,7 @@ apt-get install -y ufw unattended-upgrades
 ufw allow 22
 ufw allow 80
 ufw allow 8443
+ufw allow 8444
 ufw --force enable
 ufw status
 

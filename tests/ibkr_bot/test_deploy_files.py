@@ -71,7 +71,8 @@ def test_the_ibkr_readme_documents_the_operational_essentials():
     contenu = _lire("README-ibkr.md")
     for attendu in ("ibkrbot", "IBKR_GATEWAY_URL", "IBKR_ACCOUNT_ID",
                     "chmod 600", "ibkr-bot-daily.timer", "kill_switch",
-                    "dry_run", "ibkr_bot.state", "2FA", "127.0.0.1"):
+                    "dry_run", "ibkr_bot.state", "2FA", "127.0.0.1",
+                    "IBKR_BOT_API_TOKEN", "ibkr-bot-api"):
         assert attendu in contenu, f"{attendu!r} absent de deploy/README-ibkr.md"
 
 

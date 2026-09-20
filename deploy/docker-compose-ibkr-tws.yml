@@ -24,6 +24,16 @@ services:
       READ_ONLY_API: "no"
       VNC_SERVER_PASSWORD_FILE: /run/secrets/vnc_password
       BYPASS_WARNING: "yes"
+      # Sans ces trois variables, IBC exige un login+2FA complet a CHAQUE
+      # redemarrage nocturne force par IBKR (~23h45 heure US) — constate
+      # en production (echec le 18/09, la nuit suivant un login reussi le
+      # 17/09), log "autorestart file not found: full authentication will
+      # be required". Avec elles, seul le redemarrage qui suit dimanche
+      # 01h00 heure US exige une reauthentification complete ; les autres
+      # nuits, IBC redemarre Gateway et reprend la session automatiquement.
+      TIME_ZONE: America/New_York
+      AUTO_RESTART_TIME: "11:59 PM"
+      TWOFA_TIMEOUT_ACTION: restart
     secrets:
       - tws_password
       - vnc_password

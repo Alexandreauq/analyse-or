@@ -1,0 +1,9 @@
+[Unit]
+Description=Bot Actions IBKR - rappel hebdomadaire de reauthentification Gateway
+
+[Service]
+Type=oneshot
+User=ibkrbot
+WorkingDirectory=/home/ibkrbot/analyse-or
+EnvironmentFile=/home/ibkrbot/analyse-or/.env
+ExecStart=/home/ibkrbot/analyse-or/venv/bin/python3 -m ibkr_bot.gateway_reminder

@@ -1,0 +1,10 @@
+[Unit]
+Description=Bot Actions IBKR - declenchement du rappel hebdomadaire (dimanche, heure du redemarrage Gateway)
+
+[Timer]
+OnCalendar=Sun *-*-* 23:59:00 America/New_York
+Persistent=false
+Unit=ibkr-gateway-reminder.service
+
+[Install]
+WantedBy=timers.target

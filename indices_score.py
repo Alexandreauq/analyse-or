@@ -3889,7 +3889,7 @@ def build_company_entry(
 
     valuation_targets = estimate_valuation_targets(data, cost_of_capital, cost_of_equity)
 
-    return {
+    entry = {
         "ticker": ticker,
         "name": name,
         "index": index_key,
@@ -3912,6 +3912,8 @@ def build_company_entry(
         "financial_analysis_html": financial_analysis_html,
         "financial_analysis_quarter": financial_analysis_quarter,
     }
+    entry["_price_history_daily"] = data["_price_history_daily"]
+    return entry
 
 
 def _attach_alerts_and_update_history(companies: list[dict]) -> tuple[list[dict], list[tuple]]:

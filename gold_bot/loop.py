@@ -21,6 +21,10 @@ import gold_bot.state as state
 # plafond gratuit de 800/jour qui avait motivé le passage à 120s
 # n'existe plus.
 POLL_INTERVAL_SECONDS = 60
+# Aligné sur STALE_THRESHOLD_MS (scalping_tracker.js) : au-delà de ce
+# délai entre "now" et l'horodatage de la dernière bougie reçue, les
+# données ne sont plus considérées fiables pour une décision.
+STALE_CANDLE_THRESHOLD_SECONDS = 5 * 60
 SYMBOL = "XAUUSD"
 DECISIONS_LOG_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "decisions_log.jsonl")
 # Fichier séparé de state.STATE_PATH (qui porte kill_switch/dry_run,
@@ -31,6 +35,30 @@ CIRCUIT_BREAKER_STATE_PATH = os.path.join(os.path.dirname(os.path.abspath(__file
 LATEST_CANDLES_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "latest_candles.json")
 LATEST_BALANCE_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "latest_balance.json")
 LATEST_POSITIONS_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "latest_positions.json")
+
+
+def is_market_closed(date: datetime) -> bool:
+    """XAU/USD (comme le forex) est fermé du vendredi ~22h UTC au
+    dimanche ~22h UTC — bornes volontairement prudentes (les brokers
+    varient de quelques dizaines de minutes selon le fournisseur de
+    liquidité), mieux vaut rater un peu de marché réel aux bords que
+    trader du bruit sur un marché fermé. Indépendant de la fraîcheur
+    annoncée par l'API (voir STALE_CANDLE_THRESHOLD_SECONDS dans
+    run_cycle) : Twelve Data peut renvoyer une bougie à l'horodatage à
+    jour même marché fermé — trouvé en production le week-end du
+    12-13/09/2026 côté paper-trading (29 fausses positions ouvertes sur
+    du bruit d'API), d'où ce garde basé uniquement sur l'horloge murale,
+    jamais sur les données reçues. Portage fidèle de isMarketClosed
+    (scalping_tracker.js). `date` doit être en UTC."""
+    day = date.weekday()  # lundi = 0 ... dimanche = 6
+    hour = date.hour
+    if day == 5:  # samedi : fermé toute la journée
+        return True
+    if day == 4 and hour >= 22:  # vendredi à partir de 22h UTC
+        return True
+    if day == 6 and hour < 22:  # dimanche avant 22h UTC
+        return True
+    return False
 
 
 def execute_steps(token: str, account_id: str, steps: list[dict],
@@ -127,13 +155,17 @@ def _with_retry(fn, *, attempts: int = NETWORK_RETRY_ATTEMPTS, delay_s: float = 
 
 def run_cycle(token: str, account_id: str, twelve_data_api_key: str,
               circuit_breaker: "risk.CircuitBreaker", region: str = broker.DEFAULT_MT5_REGION,
-              symbol: str = SYMBOL) -> dict:
-    """Un cycle complet : interrupteur d'urgence -> données réelles +
-    décision (dans un seul bloc try, jamais d'exception non capturée) ->
+              symbol: str = SYMBOL, now: datetime | None = None) -> dict:
+    """Un cycle complet : interrupteur d'urgence -> bougies -> garde
+    marché fermé/données périmées -> reste des données réelles + décision
+    (dans un seul bloc try, jamais d'exception non capturée) ->
     re-vérification de l'état juste avant l'exécution (l'interrupteur a
     pu être activé pendant la collecte, qui prend jusqu'à ~1 minute) ->
     exécution réelle seulement si toujours pas dry_run. Journalise
-    systématiquement le résultat, y compris les erreurs."""
+    systématiquement le résultat, y compris les erreurs. `now` est
+    injectable pour les tests (défaut : l'heure réelle), même convention
+    que runOnce (scalping_tracker.js)."""
+    now_dt = now or datetime.now(timezone.utc)
     current_state = state.load_state(state.STATE_PATH)
     if current_state["kill_switch"]:
         decision = {"action": "ignore", "reason": "interrupteur d'urgence activé"}
@@ -153,6 +185,21 @@ def run_cycle(token: str, account_id: str, twelve_data_api_key: str,
     try:
         candles = _with_retry(lambda: confluence.fetch_gold_candles(twelve_data_api_key))
         _save_cache({"candles": candles, "fetched_at": _now_iso()}, LATEST_CANDLES_PATH)
+
+        market_closed = is_market_closed(now_dt)
+        last_candle_time = datetime.fromisoformat(candles[-1]["time"].replace(" ", "T")).replace(tzinfo=timezone.utc)
+        data_stale = (now_dt - last_candle_time).total_seconds() > STALE_CANDLE_THRESHOLD_SECONDS
+        if market_closed or data_stale:
+            # Ni ouverture ni gestion de position ce cycle : les bougies
+            # reçues ne sont pas des données de marché fiables, même si
+            # leur horodatage paraît frais (voir is_market_closed). Évite
+            # aussi les 3 appels broker suivants (solde/positions/spec),
+            # inutiles puisqu'aucune décision n'en dépendra.
+            reason = "marché XAU/USD fermé (week-end)" if market_closed else "données périmées"
+            decision = {"action": "ignore", "reason": reason}
+            _log_decision(decision, path=DECISIONS_LOG_PATH)
+            return decision
+
         balance = _with_retry(lambda: broker.get_account_balance(token, account_id, region))
         _save_cache({"balance": balance, "fetched_at": _now_iso()}, LATEST_BALANCE_PATH)
         open_positions = _with_retry(lambda: bot.reconcile_positions(token, account_id, region))

@@ -2467,6 +2467,10 @@ def fetch_company_financials(ticker: str) -> dict:
     ratios["ma200"] = ma200
     ratios["shares_outstanding"] = shares_outstanding
     ratios["beta"] = beta
+    ratios["_price_history_daily"] = [
+        {"date": idx.strftime("%Y-%m-%d"), "ticker": ticker, "price": float(val)}
+        for idx, val in history.items()
+    ]
     return ratios
 
 

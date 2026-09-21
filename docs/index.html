@@ -870,6 +870,10 @@
   .signal-tracking-link:active { transform: scale(.97); }
 
   .signal-stats { display: flex; flex-direction: column; gap: 2px; margin: 0 0 20px; }
+  .portfolio-perf-chart { width: 100%; height: auto; margin-top: 8px; }
+  .portfolio-perf-legend { display: flex; gap: 16px; font-size: var(--text-sm); color: var(--muted); margin-top: 4px; }
+  .portfolio-perf-block { margin-bottom: 16px; }
+  .portfolio-benchmark-select { margin-bottom: 8px; }
   .signal-tracking-layout { display: flex; flex-direction: column; }
   .signal-table-wrap { overflow-x: auto; margin: 0 0 20px; }
   .signal-table { width: 100%; border-collapse: collapse; font-size: 12px; white-space: nowrap; }
@@ -1564,6 +1568,14 @@ async function loadPortfolioScreen() {
       realPortfolioData = null;
     }
   }
+  if (!priceHistoryData) {
+    try {
+      const res = await fetch('price_history.json?t=' + Date.now());
+      priceHistoryData = res.ok ? await res.json() : [];
+    } catch (e) {
+      priceHistoryData = [];
+    }
+  }
   if (!botStatusData) {
     await loadBotStatus();
   }
@@ -1740,6 +1752,55 @@ function concentrationBarsHtml(counts, labelFn) {
     </div>`).join('');
 }
 
+function performanceCurveSvg(curve, benchmarkCurve, benchmarkLabel) {
+  if (!curve.length) {
+    return '<div class="empty">Pas assez de données pour tracer une courbe (au moins un cours connu depuis l\'achat est nécessaire).</div>';
+  }
+  const width = 600, height = 200, padding = 28;
+  const allPoints = curve.concat(benchmarkCurve);
+  const minPct = Math.min(0, ...allPoints.map(p => p.pnlPct));
+  const maxPct = Math.max(0, ...allPoints.map(p => p.pnlPct));
+  const range = maxPct - minPct || 1;
+  const plotWidth = width - padding * 2;
+  const plotHeight = height - padding * 2;
+  const minDate = curve[0].date;
+  const maxDate = curve[curve.length - 1].date;
+  const dateSpanMs = new Date(maxDate) - new Date(minDate) || 1;
+  const x = date => padding + ((new Date(date) - new Date(minDate)) / dateSpanMs) * plotWidth;
+  const y = pct => padding + plotHeight - ((pct - minPct) / range) * plotHeight;
+  const toPolyline = points => points.map(p => `${x(p.date).toFixed(1)},${y(p.pnlPct).toFixed(1)}`).join(' ');
+  const lastPortfolio = curve[curve.length - 1];
+  const portfolioColor = lastPortfolio.pnlPct >= 0 ? 'var(--green-500)' : 'var(--rust)';
+  const zeroY = y(0).toFixed(1);
+  return `
+    <svg viewBox="0 0 ${width} ${height}" class="portfolio-perf-chart" role="img" aria-label="Courbe de performance du portefeuille">
+      <line x1="${padding}" y1="${zeroY}" x2="${width - padding}" y2="${zeroY}" stroke="var(--muted)" stroke-dasharray="4 3" />
+      ${benchmarkCurve.length ? `<polyline points="${toPolyline(benchmarkCurve)}" fill="none" stroke="var(--taupe-500)" stroke-width="1.5" />` : ''}
+      <polyline points="${toPolyline(curve)}" fill="none" stroke="${portfolioColor}" stroke-width="2" />
+    </svg>
+    <div class="portfolio-perf-legend">
+      <span style="color:${portfolioColor}">● Ton portefeuille (${formatPct(lastPortfolio.pnlPct)})</span>
+      ${benchmarkCurve.length ? `<span style="color:var(--taupe-500)">● ${escHtml(benchmarkLabel)} (${formatPct(benchmarkCurve[benchmarkCurve.length - 1].pnlPct)})</span>` : ''}
+    </div>`;
+}
+
+function wirePortfolioPerformanceBenchmarkSelectors(positions, closedPositions, companiesByTicker, currencyByIndex, priceHistoryByTicker) {
+  document.querySelectorAll('.portfolio-benchmark-select').forEach(select => {
+    select.addEventListener('change', () => {
+      const currency = select.dataset.currency;
+      const curve = computePortfolioPerformanceCurves(positions, closedPositions, companiesByTicker, currencyByIndex, priceHistoryByTicker)[currency];
+      const positionsForCurrency = [...positions, ...closedPositions].filter(p => {
+        const company = companiesByTicker[p.ticker];
+        return company && (currencyByIndex[company.index] === 'USD' ? 'USD' : 'EUR') === currency;
+      });
+      const benchmarkCurve = computeBenchmarkPerformanceCurve(positionsForCurrency, select.value, priceHistoryByTicker);
+      const label = select.options[select.selectedIndex].textContent;
+      const container = select.closest('.portfolio-perf-block').querySelector('.portfolio-perf-chart-container');
+      container.innerHTML = performanceCurveSvg(curve, benchmarkCurve, label);
+    });
+  });
+}
+
 function portfolioAnalysisHtml(positions, companiesByTicker, currencyByIndex) {
   if (!positions.length) {
     return '<div class="empty">Ajoute des positions pour voir apparaître une analyse ici.</div>';
@@ -1747,6 +1808,29 @@ function portfolioAnalysisHtml(positions, companiesByTicker, currencyByIndex) {
   const concentration = computePortfolioConcentration(positions, companiesByTicker, currencyByIndex);
   const health = computePortfolioHealth(positions, companiesByTicker);
   const attribution = computePortfolioAttribution(positions, companiesByTicker);
+  const closedPositions = loadClosedPortfolio();
+  const priceHistoryByTicker = groupPriceHistoryByTicker(priceHistoryData || []);
+  const performanceCurves = computePortfolioPerformanceCurves(positions, closedPositions, companiesByTicker, currencyByIndex, priceHistoryByTicker);
+  const indexNamesForBenchmark = { ...INDEX_DISPLAY_NAMES, ...(indicesData.index_names || {}) };
+  const benchmarkSelectHtml = currency => `
+    <select class="list-sort portfolio-benchmark-select" data-currency="${currency}">
+      ${Object.entries(INDEX_BENCHMARK_TICKERS).map(([key, yfTicker]) => `
+        <option value="${yfTicker}" ${key === 'CAC40' ? 'selected' : ''}>${indexNamesForBenchmark[key] || key}</option>`).join('')}
+    </select>`;
+  const performanceHtml = ['EUR', 'USD'].filter(currency => performanceCurves[currency].length).map(currency => {
+    const defaultBenchmarkTicker = INDEX_BENCHMARK_TICKERS.CAC40;
+    const positionsForCurrency = [...positions, ...closedPositions].filter(p => {
+      const company = companiesByTicker[p.ticker];
+      return company && (currencyByIndex[company.index] === 'USD' ? 'USD' : 'EUR') === currency;
+    });
+    const benchmarkCurve = computeBenchmarkPerformanceCurve(positionsForCurrency, defaultBenchmarkTicker, priceHistoryByTicker);
+    return `
+      <h3 class="portfolio-analysis-title">Performance (${currency})</h3>
+      <div class="portfolio-perf-block" data-currency="${currency}">
+        ${benchmarkSelectHtml(currency)}
+        <div class="portfolio-perf-chart-container">${performanceCurveSvg(performanceCurves[currency], benchmarkCurve, 'CAC40')}</div>
+      </div>`;
+  }).join('');
   const diagnosis = portfolioDiagnosisHtml(concentration, health, attribution);
   const indexNames = { ...INDEX_DISPLAY_NAMES, ...(indicesData.index_names || {}) };
 
@@ -1760,6 +1844,7 @@ function portfolioAnalysisHtml(positions, companiesByTicker, currencyByIndex) {
     </div>`).join('') : '<div class="list-empty">Aucune position avec un cours disponible.</div>';
 
   return `
+    ${performanceHtml}
     ${diagnosis}
     <h3 class="portfolio-analysis-title">Santé selon le modèle</h3>
     <div class="signal-stats">
@@ -1809,6 +1894,7 @@ function renderPortfolioActionsTab(companiesByTicker, currencyByIndex) {
       title: 'Analyse',
       desc: 'Concentration, santé du portefeuille selon le modèle et contribution de chaque ligne au P&L.',
       html: portfolioAnalysisHtml(positions, companiesByTicker, currencyByIndex),
+      wire: () => wirePortfolioPerformanceBenchmarkSelectors(positions, loadClosedPortfolio(), companiesByTicker, currencyByIndex, groupPriceHistoryByTicker(priceHistoryData || [])),
     },
     {
       title: 'Bot Actions',
@@ -1895,6 +1981,7 @@ function portfolioPositionsHtml(positions, companiesByTicker, currencyByIndex) {
           <span class="company-score" style="color:${company.score >= 0 ? 'var(--gold)' : 'var(--rust)'};">${company.score > 0 ? '+' : ''}${company.score}</span>
         </div>
         <div class="portfolio-position-actions">
+          <button class="toggle-btn portfolio-sell-btn" type="button" data-id="${position.id}">Vendre</button>
           <button class="toggle-btn portfolio-edit-btn" type="button" data-id="${position.id}">Modifier</button>
           <button class="toggle-btn portfolio-delete-btn" type="button" data-id="${position.id}">Supprimer</button>
         </div>
@@ -2634,6 +2721,37 @@ function wirePortfolioPositionActions(companiesByTicker) {
       renderPortfolioScreen();
     });
   });
+  document.querySelectorAll('.portfolio-sell-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const row = document.querySelector(`.portfolio-position-row[data-id="${btn.dataset.id}"]`);
+      const position = loadPortfolio().find(p => p.id === btn.dataset.id);
+      if (!position || !row) return;
+      const today = new Date().toISOString().slice(0, 10);
+      row.innerHTML = `
+        <div class="portfolio-form-row">
+          <input class="list-search" type="number" placeholder="Prix de vente" id="portfolioSellPrice-${position.id}" min="0" step="any">
+          <input class="list-search" type="date" value="${today}" id="portfolioSellDate-${position.id}">
+        </div>
+        <p class="portfolio-form-error" id="portfolioSellError-${position.id}" hidden></p>
+        <div class="portfolio-position-actions">
+          <button class="toggle-btn" type="button" id="portfolioSellConfirm-${position.id}">Confirmer la vente</button>
+          <button class="toggle-btn" type="button" id="portfolioSellCancel-${position.id}">Annuler</button>
+        </div>`;
+      document.getElementById(`portfolioSellCancel-${position.id}`).addEventListener('click', () => renderPortfolioScreen());
+      document.getElementById(`portfolioSellConfirm-${position.id}`).addEventListener('click', () => {
+        const sellPrice = parseFloat(document.getElementById(`portfolioSellPrice-${position.id}`).value);
+        const sellDate = document.getElementById(`portfolioSellDate-${position.id}`).value;
+        const result = closePosition(position.id, sellPrice, sellDate);
+        const errorEl = document.getElementById(`portfolioSellError-${position.id}`);
+        if (!result.ok) {
+          errorEl.textContent = result.error;
+          errorEl.hidden = false;
+          return;
+        }
+        renderPortfolioScreen();
+      });
+    });
+  });
   document.querySelectorAll('.portfolio-edit-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       const row = document.querySelector(`.portfolio-position-row[data-id="${btn.dataset.id}"]`);
@@ -3088,6 +3206,7 @@ const SLIDING_PANES = ['or', 'indices', 'portefeuille'];
 let indicesLoaded = false;
 let indicesData = null;
 let realPortfolioData = null;
+let priceHistoryData = null;
 let botStatusData = null;
 const BOT_API_BASE_URL = 'https://goldbot.fr:8443';
 const IBKR_BOT_API_BASE_URL = 'https://goldbot.fr:8444';
@@ -3181,6 +3300,15 @@ const INDEX_DISPLAY_NAMES = {
   DAX: 'DAX',
   NASDAQ: 'Nasdaq 100',
   DOW: 'Dow Jones',
+};
+
+// Ticker yfinance de chaque indice benchmark (miroir d'INDEX_YFINANCE_TICKERS
+// côté indices_score.py) — utilisé pour le sélecteur de benchmark de la
+// courbe de performance du portefeuille (voir portfolioAnalysisHtml).
+const INDEX_BENCHMARK_TICKERS = {
+  CAC40: '^FCHI', DAX: '^GDAXI', NASDAQ: '^NDX', DOW: '^DJI',
+  FTSE: '^FTSE', SMI: '^SSMI', IBEX35: '^IBEX', FTSEMIB: 'FTSEMIB.MI',
+  NIKKEI225: '^N225', HANGSENG: '^HSI',
 };
 
 // Traduction des secteurs (company.sector, valeurs Yahoo Finance en

@@ -167,6 +167,120 @@ function closePosition(id, sellPrice, sellDate, storage) {
 }
 
 /**
+ * Regroupe docs/price_history.json (liste plate {date, ticker, price})
+ * par ticker, trie chaque groupe par date croissante.
+ */
+function groupPriceHistoryByTicker(priceHistory) {
+  const byTicker = {};
+  priceHistory.forEach(entry => {
+    (byTicker[entry.ticker] = byTicker[entry.ticker] || []).push(entry);
+  });
+  Object.values(byTicker).forEach(entries => entries.sort((a, b) => (a.date < b.date ? -1 : 1)));
+  return byTicker;
+}
+
+/**
+ * Prix connu d'un ticker à la date D : la dernière entrée dont la date
+ * est <= D (jamais d'extrapolation future). null si aucune n'existe.
+ */
+function priceAtOrBefore(priceHistoryByTicker, ticker, date) {
+  const entries = priceHistoryByTicker[ticker];
+  if (!entries || !entries.length) return null;
+  let result = null;
+  for (const entry of entries) {
+    if (entry.date > date) break;
+    result = entry.price;
+  }
+  return result;
+}
+
+/**
+ * Une position (ouverte ou clôturée) est active à la date D si
+ * buy_date <= D et (sell_date absent OU sell_date >= D).
+ */
+function isPositionActiveOn(position, date) {
+  if (position.buy_date > date) return false;
+  if (position.sell_date && position.sell_date < date) return false;
+  return true;
+}
+
+function realPriceForPosition(position, date, priceHistoryByTicker) {
+  return priceAtOrBefore(priceHistoryByTicker, position.ticker, date);
+}
+
+function benchmarkPriceForPosition(indexTicker) {
+  return (position, date, priceHistoryByTicker) => priceAtOrBefore(priceHistoryByTicker, indexTicker, date);
+}
+
+/**
+ * Courbe de rendement en % pour un ensemble de positions sur toutes les
+ * dates disponibles dans priceHistoryByTicker pour les tickers de ces
+ * positions. `priceForPosition(position, date, priceHistoryByTicker)`
+ * fournit le prix à utiliser — le portefeuille réel l'appelle avec
+ * realPriceForPosition (prix de CHAQUE position), la courbe benchmark
+ * avec benchmarkPriceForPosition(indexTicker) (même prix d'indice pour
+ * TOUTES les positions) : même fonction d'agrégation dans les deux cas.
+ *
+ * pnlPct(D) = somme(value(D) - cost) / somme(cost) * 100 — pondéré par
+ * le capital investi, jamais une moyenne des % de chaque ligne.
+ */
+function computePerformanceCurve(positions, priceHistoryByTicker, priceForPosition) {
+  const dates = new Set();
+  positions.forEach(p => {
+    const entries = priceHistoryByTicker[p.ticker];
+    if (entries) entries.forEach(e => dates.add(e.date));
+  });
+  return Array.from(dates).sort().map(date => {
+    let totalCost = 0;
+    let totalPnlAbs = 0;
+    positions.forEach(position => {
+      if (!isPositionActiveOn(position, date)) return;
+      const price = priceForPosition(position, date, priceHistoryByTicker);
+      if (!Number.isFinite(price)) return;
+      const cost = position.buy_price * position.quantity;
+      const value = price * position.quantity;
+      totalCost += cost;
+      totalPnlAbs += value - cost;
+    });
+    return { date, pnlPct: totalCost !== 0 ? (totalPnlAbs / totalCost) * 100 : null };
+  }).filter(point => point.pnlPct !== null);
+}
+
+/**
+ * { EUR: [...], USD: [...] } — tableau vide pour une devise sans
+ * aucune position (ouverte ou clôturée), jamais de conversion entre
+ * devises (cohérent avec computePortfolioTotals).
+ */
+function computePortfolioPerformanceCurves(openPositions, closedPositions, companiesByTicker, currencyByIndex, priceHistoryByTicker) {
+  const allPositions = [...openPositions, ...closedPositions];
+  const byCurrency = { EUR: [], USD: [] };
+  allPositions.forEach(position => {
+    const company = companiesByTicker[position.ticker];
+    if (!company) return;
+    const currency = currencyByIndex[company.index] === 'USD' ? 'USD' : 'EUR';
+    byCurrency[currency].push(position);
+  });
+  const curves = {};
+  Object.keys(byCurrency).forEach(currency => {
+    curves[currency] = byCurrency[currency].length
+      ? computePerformanceCurve(byCurrency[currency], priceHistoryByTicker, realPriceForPosition)
+      : [];
+  });
+  return curves;
+}
+
+/**
+ * Courbe benchmark pour un ensemble de positions donné : réutilise
+ * EXACTEMENT les mêmes positions (mêmes buy_date/sell_date/cost) que
+ * computePortfolioPerformanceCurves pour cette devise, seule la source
+ * de prix change (indexTicker au lieu du ticker de chaque position) —
+ * comparaison apples-to-apples.
+ */
+function computeBenchmarkPerformanceCurve(positions, indexTicker, priceHistoryByTicker) {
+  return computePerformanceCurve(positions, priceHistoryByTicker, benchmarkPriceForPosition(indexTicker));
+}
+
+/**
  * `null` si currentPrice n'est pas un nombre fini (prix indisponible pour
  * ce ticker) — jamais NaN qui se propagerait silencieusement dans les
  * totaux du portefeuille.
@@ -303,5 +417,8 @@ if (typeof module !== 'undefined' && module.exports) {
     computePositionPnL, computePortfolioTotals, findOpportunities,
     computePortfolioConcentration, computePortfolioHealth, computePortfolioAttribution,
     PORTFOLIO_CLOSED_STORAGE_KEY, loadClosedPortfolio, saveClosedPortfolio, closePosition,
+    groupPriceHistoryByTicker, priceAtOrBefore, isPositionActiveOn, realPriceForPosition,
+    benchmarkPriceForPosition, computePerformanceCurve, computePortfolioPerformanceCurves,
+    computeBenchmarkPerformanceCurve,
   };
 }

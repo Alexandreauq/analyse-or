@@ -2783,6 +2783,43 @@ def _downsample_price_entries(entries: list[dict], today) -> list[dict]:
     return result
 
 
+def load_price_history(path=PRICE_HISTORY_PATH) -> list[dict]:
+    """Meme contrat que load_nikkei_hangseng_price_history : [] si le
+    fichier est absent ou corrompu, jamais d'exception."""
+    if not os.path.exists(path):
+        return []
+    try:
+        with open(path, encoding="utf-8") as fh:
+            return json.load(fh)
+    except json.JSONDecodeError:
+        return []
+
+
+def update_price_history(new_entries: list[dict], path=PRICE_HISTORY_PATH, today=None) -> list[dict]:
+    """Ajoute `new_entries` ({date, ticker, price}) a l'historique deja
+    accumule, retrimme chaque ticker independamment via
+    _downsample_price_entries (voir sa note d'idempotence), puis ecrit
+    le resultat. Degrade toujours vers [] sur erreur (fichier illisible,
+    NaN detecte par allow_nan=False...), ne fait jamais echouer main()."""
+    today = today or datetime.today().date()
+    try:
+        history = load_price_history(path)
+        history.extend(new_entries)
+        by_ticker: dict[str, list[dict]] = {}
+        for entry in history:
+            by_ticker.setdefault(entry["ticker"], []).append(entry)
+        trimmed = []
+        for ticker_entries in by_ticker.values():
+            trimmed.extend(_downsample_price_entries(ticker_entries, today))
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, "w", encoding="utf-8") as fh:
+            json.dump(trimmed, fh, ensure_ascii=False, indent=2, allow_nan=False)
+        return trimmed
+    except Exception as e:
+        print(f"Erreur historique de prix : {e}")
+        return []
+
+
 # Indices utilisés comme benchmark de chaque position (voir "index" sur
 # chaque société — CAC40/DAX) : tickers yfinance correspondants.
 INDEX_YFINANCE_TICKERS = {

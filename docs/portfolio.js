@@ -112,6 +112,60 @@ function removePosition(id, storage) {
   return { ok: true, positions };
 }
 
+const PORTFOLIO_CLOSED_STORAGE_KEY = 'analyse-or-portfolio-closed';
+
+/**
+ * Repli sur [] si storage est absent, la clé n'existe pas, le JSON est
+ * invalide, ou la valeur stockée n'est pas un tableau — même contrat
+ * que loadPortfolio.
+ */
+function loadClosedPortfolio(storage) {
+  const s = _resolveStorage(storage);
+  if (!s) return [];
+  try {
+    const raw = s.getItem(PORTFOLIO_CLOSED_STORAGE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (e) {
+    return [];
+  }
+}
+
+function saveClosedPortfolio(positions, storage) {
+  const s = _resolveStorage(storage);
+  if (!s) return false;
+  try {
+    s.setItem(PORTFOLIO_CLOSED_STORAGE_KEY, JSON.stringify(positions));
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+/**
+ * Déplace une position ouverte vers la liste clôturée (garde une trace
+ * de la vente : sell_price, sell_date), plutôt que de la supprimer —
+ * removePosition reste la vraie suppression (erreurs de saisie), reste
+ * inchangée, ne touche jamais cette liste.
+ */
+function closePosition(id, sellPrice, sellDate, storage) {
+  if (!Number.isFinite(sellPrice) || sellPrice <= 0) {
+    return { ok: false, error: 'Le prix de vente doit être un nombre positif.' };
+  }
+  const openPositions = loadPortfolio(storage);
+  const idx = openPositions.findIndex(p => p.id === id);
+  if (idx === -1) return { ok: false, error: 'Position introuvable.' };
+  const [position] = openPositions.splice(idx, 1);
+  const closedPosition = { ...position, sell_price: sellPrice, sell_date: sellDate };
+  const closedPositions = loadClosedPortfolio(storage);
+  closedPositions.push(closedPosition);
+  if (!savePortfolio(openPositions, storage) || !saveClosedPortfolio(closedPositions, storage)) {
+    return { ok: false, error: "La sauvegarde a échoué (stockage local indisponible ou plein)." };
+  }
+  return { ok: true, positions: openPositions, closedPositions };
+}
+
 /**
  * `null` si currentPrice n'est pas un nombre fini (prix indisponible pour
  * ce ticker) — jamais NaN qui se propagerait silencieusement dans les
@@ -248,5 +302,6 @@ if (typeof module !== 'undefined' && module.exports) {
     loadPortfolio, savePortfolio, addPosition, updatePosition, removePosition,
     computePositionPnL, computePortfolioTotals, findOpportunities,
     computePortfolioConcentration, computePortfolioHealth, computePortfolioAttribution,
+    PORTFOLIO_CLOSED_STORAGE_KEY, loadClosedPortfolio, saveClosedPortfolio, closePosition,
   };
 }

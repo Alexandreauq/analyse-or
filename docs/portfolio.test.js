@@ -8,6 +8,7 @@ const {
   loadPortfolio, savePortfolio, addPosition, updatePosition, removePosition,
   computePositionPnL, computePortfolioTotals, findOpportunities,
   computePortfolioConcentration, computePortfolioHealth, computePortfolioAttribution,
+  PORTFOLIO_CLOSED_STORAGE_KEY, loadClosedPortfolio, saveClosedPortfolio, closePosition,
 } = require('./portfolio.js');
 
 // Mock localStorage minimal — Node n'a pas cet objet nativement.
@@ -165,6 +166,61 @@ function test_removePosition_deletes_only_targeted_position() {
   assert.strictEqual(result.positions.length, 1);
   assert.strictEqual(result.positions[0].ticker, 'MC.PA');
   console.log('OK: test_removePosition_deletes_only_targeted_position');
+}
+
+function test_close_position_moves_it_from_open_to_closed() {
+  const storage = makeFakeStorage();
+  const { positions } = addPosition('MC.PA', 5, 90.0, '2026-01-15', storage);
+  const id = positions[0].id;
+
+  const result = closePosition(id, 95.5, '2026-09-15', storage);
+
+  assert.strictEqual(result.ok, true);
+  assert.strictEqual(result.positions.length, 0);
+  assert.strictEqual(result.closedPositions.length, 1);
+  assert.strictEqual(result.closedPositions[0].sell_price, 95.5);
+  assert.strictEqual(result.closedPositions[0].sell_date, '2026-09-15');
+  assert.strictEqual(result.closedPositions[0].ticker, 'MC.PA');
+  assert.strictEqual(loadPortfolio(storage).length, 0);
+  assert.strictEqual(loadClosedPortfolio(storage).length, 1);
+  console.log('OK: test_close_position_moves_it_from_open_to_closed');
+}
+
+function test_close_position_rejects_non_positive_sell_price() {
+  const storage = makeFakeStorage();
+  const { positions } = addPosition('MC.PA', 5, 90.0, '2026-01-15', storage);
+  const result = closePosition(positions[0].id, -1, '2026-09-15', storage);
+  assert.strictEqual(result.ok, false);
+  assert.strictEqual(loadPortfolio(storage).length, 1);
+  console.log('OK: test_close_position_rejects_non_positive_sell_price');
+}
+
+function test_close_position_returns_error_for_unknown_id() {
+  const storage = makeFakeStorage();
+  const result = closePosition('id-inconnu', 95.5, '2026-09-15', storage);
+  assert.strictEqual(result.ok, false);
+  console.log('OK: test_close_position_returns_error_for_unknown_id');
+}
+
+function test_remove_position_never_touches_the_closed_list() {
+  const storage = makeFakeStorage();
+  const { positions } = addPosition('MC.PA', 5, 90.0, '2026-01-15', storage);
+  removePosition(positions[0].id, storage);
+  assert.strictEqual(loadPortfolio(storage).length, 0);
+  assert.strictEqual(loadClosedPortfolio(storage).length, 0);
+  console.log('OK: test_remove_position_never_touches_the_closed_list');
+}
+
+function test_load_closed_portfolio_returns_empty_array_when_storage_absent() {
+  assert.deepStrictEqual(loadClosedPortfolio(null), []);
+  console.log('OK: test_load_closed_portfolio_returns_empty_array_when_storage_absent');
+}
+
+function test_load_closed_portfolio_degrades_to_empty_array_on_corrupt_json() {
+  const storage = makeFakeStorage();
+  storage.setItem(PORTFOLIO_CLOSED_STORAGE_KEY, 'pas du json');
+  assert.deepStrictEqual(loadClosedPortfolio(storage), []);
+  console.log('OK: test_load_closed_portfolio_degrades_to_empty_array_on_corrupt_json');
 }
 
 function test_computePositionPnL_gain() {
@@ -358,6 +414,12 @@ function main() {
   test_updatePosition_rejects_invalid_input();
   test_updatePosition_returns_error_for_unknown_id();
   test_removePosition_deletes_only_targeted_position();
+  test_close_position_moves_it_from_open_to_closed();
+  test_close_position_rejects_non_positive_sell_price();
+  test_close_position_returns_error_for_unknown_id();
+  test_remove_position_never_touches_the_closed_list();
+  test_load_closed_portfolio_returns_empty_array_when_storage_absent();
+  test_load_closed_portfolio_degrades_to_empty_array_on_corrupt_json();
   test_computePositionPnL_gain();
   test_computePositionPnL_loss();
   test_computePositionPnL_null_when_price_unavailable();

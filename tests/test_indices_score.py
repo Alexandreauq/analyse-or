@@ -4608,6 +4608,56 @@ def test_fetch_company_financials_does_not_override_other_tickers(monkeypatch):
     assert set(constructed_tickers) == {"MC.PA"}
 
 
+def test_fetch_company_financials_exposes_the_full_price_history_for_persistence(monkeypatch):
+    financials, balance_sheet, cashflow, _ = _make_fixture_statements()
+    financials.columns = pd.to_datetime(financials.columns)
+    balance_sheet.columns = pd.to_datetime(balance_sheet.columns)
+    cashflow.columns = pd.to_datetime(cashflow.columns)
+    quarterly = _fake_annual_df({"Diluted Average Shares": [100.0]}, [pd.Timestamp("2025-09-30")])
+    history_index = pd.date_range("2024-01-01", periods=3, freq="D")
+    history_close = pd.Series([100.0, 101.0, 102.0], index=history_index)
+
+    class _FakeTicker:
+        def __init__(self, ticker):
+            self._ticker = ticker
+
+        @property
+        def financials(self):
+            return financials
+
+        @property
+        def balance_sheet(self):
+            return balance_sheet
+
+        @property
+        def cashflow(self):
+            return cashflow
+
+        @property
+        def quarterly_financials(self):
+            return quarterly
+
+        @property
+        def info(self):
+            return {"sharesOutstanding": 1000.0, "beta": 0.9, "sector": "Basic Materials"}
+
+        def history(self, period=None):
+            return pd.DataFrame({"Close": history_close})
+
+    monkeypatch.setattr(indices_score.yf, "Ticker", _FakeTicker)
+    monkeypatch.setattr(indices_score.time, "sleep", lambda s: None)
+
+    result = indices_score.fetch_company_financials("MC.PA")
+
+    assert "_price_history_daily" in result
+    entries = result["_price_history_daily"]
+    assert len(entries) == 3
+    assert all(e["ticker"] == "MC.PA" for e in entries)
+    assert all(set(e.keys()) == {"date", "ticker", "price"} for e in entries)
+    assert entries == sorted(entries, key=lambda e: e["date"])
+    assert entries[-1]["price"] == pytest.approx(102.0)
+
+
 def test_load_signal_tracking_returns_empty_list_when_file_absent(monkeypatch, tmp_path):
     monkeypatch.setattr(indices_score, "SIGNAL_TRACKING_PATH", str(tmp_path / "does_not_exist.json"))
     assert indices_score.load_signal_tracking() == []

@@ -204,27 +204,45 @@ function isPositionActiveOn(position, date) {
   return true;
 }
 
-function realPriceForPosition(position, date, priceHistoryByTicker) {
-  return priceAtOrBefore(priceHistoryByTicker, position.ticker, date);
+function realValueForPosition(position, date, priceHistoryByTicker) {
+  const price = priceAtOrBefore(priceHistoryByTicker, position.ticker, date);
+  return Number.isFinite(price) ? price * position.quantity : null;
 }
 
-function benchmarkPriceForPosition(indexTicker) {
-  return (position, date, priceHistoryByTicker) => priceAtOrBefore(priceHistoryByTicker, indexTicker, date);
+/**
+ * Valeur "fantôme" à la date D si le même COÛT (pas la même quantité)
+ * avait été investi dans l'indice benchmark à la date d'achat de la
+ * position : cost * indexPrice(D) / indexPrice(buy_date). Nécessaire
+ * car la quantité réelle (actions de l'entreprise) n'a pas de sens
+ * multipliée par un niveau d'indice — les unités ne correspondent pas
+ * (corrige un bug trouvé lors de la vérification de l'UI : la formule
+ * initiale, qui réutilisait quantity * prix d'indice brut, donnait des
+ * % de benchmark aberrants, ex. +2983%).
+ */
+function benchmarkValueForPosition(indexTicker) {
+  return (position, date, priceHistoryByTicker) => {
+    const priceAtBuy = priceAtOrBefore(priceHistoryByTicker, indexTicker, position.buy_date);
+    const priceAtDate = priceAtOrBefore(priceHistoryByTicker, indexTicker, date);
+    if (!Number.isFinite(priceAtBuy) || priceAtBuy === 0 || !Number.isFinite(priceAtDate)) return null;
+    const cost = position.buy_price * position.quantity;
+    return cost * (priceAtDate / priceAtBuy);
+  };
 }
 
 /**
  * Courbe de rendement en % pour un ensemble de positions sur toutes les
  * dates disponibles dans priceHistoryByTicker pour les tickers de ces
- * positions. `priceForPosition(position, date, priceHistoryByTicker)`
- * fournit le prix à utiliser — le portefeuille réel l'appelle avec
- * realPriceForPosition (prix de CHAQUE position), la courbe benchmark
- * avec benchmarkPriceForPosition(indexTicker) (même prix d'indice pour
- * TOUTES les positions) : même fonction d'agrégation dans les deux cas.
+ * positions. `valueForPosition(position, date, priceHistoryByTicker)`
+ * fournit la VALEUR à la date D pour une position — le portefeuille réel
+ * l'appelle avec realValueForPosition (prix réel × quantité réelle), la
+ * courbe benchmark avec benchmarkValueForPosition(indexTicker) (même
+ * coût scalé par l'évolution de l'indice depuis l'achat) : même fonction
+ * d'agrégation dans les deux cas.
  *
  * pnlPct(D) = somme(value(D) - cost) / somme(cost) * 100 — pondéré par
  * le capital investi, jamais une moyenne des % de chaque ligne.
  */
-function computePerformanceCurve(positions, priceHistoryByTicker, priceForPosition) {
+function computePerformanceCurve(positions, priceHistoryByTicker, valueForPosition) {
   const dates = new Set();
   positions.forEach(p => {
     const entries = priceHistoryByTicker[p.ticker];
@@ -235,10 +253,9 @@ function computePerformanceCurve(positions, priceHistoryByTicker, priceForPositi
     let totalPnlAbs = 0;
     positions.forEach(position => {
       if (!isPositionActiveOn(position, date)) return;
-      const price = priceForPosition(position, date, priceHistoryByTicker);
-      if (!Number.isFinite(price)) return;
+      const value = valueForPosition(position, date, priceHistoryByTicker);
+      if (!Number.isFinite(value)) return;
       const cost = position.buy_price * position.quantity;
-      const value = price * position.quantity;
       totalCost += cost;
       totalPnlAbs += value - cost;
     });
@@ -263,7 +280,7 @@ function computePortfolioPerformanceCurves(openPositions, closedPositions, compa
   const curves = {};
   Object.keys(byCurrency).forEach(currency => {
     curves[currency] = byCurrency[currency].length
-      ? computePerformanceCurve(byCurrency[currency], priceHistoryByTicker, realPriceForPosition)
+      ? computePerformanceCurve(byCurrency[currency], priceHistoryByTicker, realValueForPosition)
       : [];
   });
   return curves;
@@ -277,7 +294,7 @@ function computePortfolioPerformanceCurves(openPositions, closedPositions, compa
  * comparaison apples-to-apples.
  */
 function computeBenchmarkPerformanceCurve(positions, indexTicker, priceHistoryByTicker) {
-  return computePerformanceCurve(positions, priceHistoryByTicker, benchmarkPriceForPosition(indexTicker));
+  return computePerformanceCurve(positions, priceHistoryByTicker, benchmarkValueForPosition(indexTicker));
 }
 
 /**
@@ -417,8 +434,8 @@ if (typeof module !== 'undefined' && module.exports) {
     computePositionPnL, computePortfolioTotals, findOpportunities,
     computePortfolioConcentration, computePortfolioHealth, computePortfolioAttribution,
     PORTFOLIO_CLOSED_STORAGE_KEY, loadClosedPortfolio, saveClosedPortfolio, closePosition,
-    groupPriceHistoryByTicker, priceAtOrBefore, isPositionActiveOn, realPriceForPosition,
-    benchmarkPriceForPosition, computePerformanceCurve, computePortfolioPerformanceCurves,
+    groupPriceHistoryByTicker, priceAtOrBefore, isPositionActiveOn, realValueForPosition,
+    benchmarkValueForPosition, computePerformanceCurve, computePortfolioPerformanceCurves,
     computeBenchmarkPerformanceCurve,
   };
 }

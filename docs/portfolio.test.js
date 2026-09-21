@@ -198,6 +198,14 @@ function test_close_position_rejects_non_positive_sell_price() {
   console.log('OK: test_close_position_rejects_non_positive_sell_price');
 }
 
+function test_close_position_rejects_empty_sell_date() {
+  const storage = makeFakeStorage();
+  const { positions } = addPosition('MC.PA', 5, 90.0, '2026-01-15', storage);
+  const result = closePosition(positions[0].id, 95.5, '', storage);
+  assert.strictEqual(result.ok, false);
+  assert.strictEqual(loadPortfolio(storage).length, 1);
+}
+
 function test_close_position_returns_error_for_unknown_id() {
   const storage = makeFakeStorage();
   const result = closePosition('id-inconnu', 95.5, '2026-09-15', storage);
@@ -527,6 +535,7 @@ function main() {
   test_removePosition_deletes_only_targeted_position();
   test_close_position_moves_it_from_open_to_closed();
   test_close_position_rejects_non_positive_sell_price();
+  test_close_position_rejects_empty_sell_date();
   test_close_position_returns_error_for_unknown_id();
   test_remove_position_never_touches_the_closed_list();
   test_load_closed_portfolio_returns_empty_array_when_storage_absent();

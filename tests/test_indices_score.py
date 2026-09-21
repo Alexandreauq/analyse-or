@@ -2308,6 +2308,17 @@ def test_update_price_history_degrades_to_empty_list_on_unexpected_failure(tmp_p
     assert result == []
 
 
+def test_update_price_history_rounds_prices_and_writes_compact_json(tmp_path):
+    path = str(tmp_path / "price_history.json")
+    entries = [{"date": "2026-09-21", "ticker": "MC.PA", "price": 620.123456789}]
+    result = indices_score.update_price_history(entries, path=path, today=_date(2026, 9, 21))
+    assert result[0]["price"] == 620.1235
+    with open(path, encoding="utf-8") as fh:
+        content = fh.read()
+    assert "\n  " not in content  # pas d'indentation
+    assert "620.1235" in content
+
+
 def test_compute_company_alerts_returns_info_when_nothing_triggers():
     alerts = indices_score.compute_company_alerts(
         "BN.PA", composite=5.0, current_price=100.0, entry_price=50.0,

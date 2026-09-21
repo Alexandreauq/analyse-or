@@ -153,6 +153,9 @@ function closePosition(id, sellPrice, sellDate, storage) {
   if (!Number.isFinite(sellPrice) || sellPrice <= 0) {
     return { ok: false, error: 'Le prix de vente doit être un nombre positif.' };
   }
+  if (!sellDate) {
+    return { ok: false, error: 'La date de vente est obligatoire.' };
+  }
   const openPositions = loadPortfolio(storage);
   const idx = openPositions.findIndex(p => p.id === id);
   if (idx === -1) return { ok: false, error: 'Position introuvable.' };

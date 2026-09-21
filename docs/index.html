@@ -1801,15 +1801,14 @@ function wirePortfolioPerformanceBenchmarkSelectors(positions, closedPositions, 
   });
 }
 
-function portfolioAnalysisHtml(positions, companiesByTicker, currencyByIndex) {
-  if (!positions.length) {
+function portfolioAnalysisHtml(positions, companiesByTicker, currencyByIndex, priceHistoryByTicker) {
+  const closedPositions = loadClosedPortfolio();
+  if (!positions.length && !closedPositions.length) {
     return '<div class="empty">Ajoute des positions pour voir apparaître une analyse ici.</div>';
   }
   const concentration = computePortfolioConcentration(positions, companiesByTicker, currencyByIndex);
   const health = computePortfolioHealth(positions, companiesByTicker);
   const attribution = computePortfolioAttribution(positions, companiesByTicker);
-  const closedPositions = loadClosedPortfolio();
-  const priceHistoryByTicker = groupPriceHistoryByTicker(priceHistoryData || []);
   const performanceCurves = computePortfolioPerformanceCurves(positions, closedPositions, companiesByTicker, currencyByIndex, priceHistoryByTicker);
   const indexNamesForBenchmark = { ...INDEX_DISPLAY_NAMES, ...(indicesData.index_names || {}) };
   const benchmarkSelectHtml = currency => `
@@ -1828,7 +1827,7 @@ function portfolioAnalysisHtml(positions, companiesByTicker, currencyByIndex) {
       <h3 class="portfolio-analysis-title">Performance (${currency})</h3>
       <div class="portfolio-perf-block" data-currency="${currency}">
         ${benchmarkSelectHtml(currency)}
-        <div class="portfolio-perf-chart-container">${performanceCurveSvg(performanceCurves[currency], benchmarkCurve, 'CAC40')}</div>
+        <div class="portfolio-perf-chart-container">${performanceCurveSvg(performanceCurves[currency], benchmarkCurve, indexNamesForBenchmark.CAC40 || 'CAC40')}</div>
       </div>`;
   }).join('');
   const diagnosis = portfolioDiagnosisHtml(concentration, health, attribution);
@@ -1869,6 +1868,8 @@ function portfolioAnalysisHtml(positions, companiesByTicker, currencyByIndex) {
 function renderPortfolioActionsTab(companiesByTicker, currencyByIndex) {
   const positions = loadPortfolio();
   const totals = computePortfolioTotals(positions, companiesByTicker, currencyByIndex);
+  const closedPositions = loadClosedPortfolio();
+  const priceHistoryByTicker = groupPriceHistoryByTicker(priceHistoryData || []);
 
   const heldTickers = new Set(positions.map(p => p.ticker));
   const opportunities = findOpportunities(indicesData.companies, heldTickers);
@@ -1893,8 +1894,8 @@ function renderPortfolioActionsTab(companiesByTicker, currencyByIndex) {
     {
       title: 'Analyse',
       desc: 'Concentration, santé du portefeuille selon le modèle et contribution de chaque ligne au P&L.',
-      html: portfolioAnalysisHtml(positions, companiesByTicker, currencyByIndex),
-      wire: () => wirePortfolioPerformanceBenchmarkSelectors(positions, loadClosedPortfolio(), companiesByTicker, currencyByIndex, groupPriceHistoryByTicker(priceHistoryData || [])),
+      html: portfolioAnalysisHtml(positions, companiesByTicker, currencyByIndex, priceHistoryByTicker),
+      wire: () => wirePortfolioPerformanceBenchmarkSelectors(positions, closedPositions, companiesByTicker, currencyByIndex, priceHistoryByTicker),
     },
     {
       title: 'Bot Actions',

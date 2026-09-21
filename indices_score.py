@@ -2815,10 +2815,17 @@ def update_price_history(new_entries: list[dict], path=PRICE_HISTORY_PATH, today
         trimmed = []
         for ticker_entries in by_ticker.values():
             trimmed.extend(_downsample_price_entries(ticker_entries, today))
+        # Arrondi a 4 decimales + separateurs compacts (pas d'indent) :
+        # la precision flottante brute de yfinance (jusqu'a 17 chiffres) et
+        # l'indentation gonflaient ce fichier vers 20+ Mo en regime permanent
+        # (720 tickers x ~329 points apres downsampling) — bien au-dela de
+        # la contrainte de taille visee par la spec. Aucun consommateur
+        # (docs/portfolio.js) n'a besoin de plus de 4 decimales.
+        rounded = [{**entry, "price": round(entry["price"], 4)} for entry in trimmed]
         os.makedirs(os.path.dirname(path), exist_ok=True)
         with open(path, "w", encoding="utf-8") as fh:
-            json.dump(trimmed, fh, ensure_ascii=False, indent=2, allow_nan=False)
-        return trimmed
+            json.dump(rounded, fh, ensure_ascii=False, allow_nan=False, separators=(",", ":"))
+        return rounded
     except Exception as e:
         print(f"Erreur historique de prix : {e}")
         return []

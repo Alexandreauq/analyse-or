@@ -2879,6 +2879,31 @@ def fetch_index_prices() -> dict:
     return prices
 
 
+def fetch_index_price_history() -> list[dict]:
+    """Historique complet (period='6y') du niveau de chaque indice
+    benchmark suivi (INDEX_YFINANCE_TICKERS) — alimente la courbe de
+    comparaison du portefeuille (docs/price_history.json). Distinct de
+    fetch_index_prices() qui ne renvoie qu'un instantane du jour (5
+    jours) pour index_price_at_entry — ne pas fusionner les deux, cette
+    derniere a un contrat different pour ses appelants existants. Une
+    liste vide par indice dont le fetch echoue individuellement, ou []
+    si yfinance n'est pas installe — ne fait jamais echouer les autres
+    indices ni lever d'exception."""
+    if yf is None:
+        return []
+    entries = []
+    for yf_ticker in INDEX_YFINANCE_TICKERS.values():
+        try:
+            history = yf.Ticker(yf_ticker).history(period="6y")["Close"].dropna()
+            entries.extend(
+                {"date": idx.strftime("%Y-%m-%d"), "ticker": yf_ticker, "price": float(val)}
+                for idx, val in history.items()
+            )
+        except Exception:
+            continue
+    return entries
+
+
 def _open_new_signal_positions(
     positions: list[dict], newly_triggered_entree: list[dict],
     index_prices: dict, today: str,

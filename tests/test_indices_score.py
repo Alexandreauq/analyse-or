@@ -4774,6 +4774,45 @@ def test_fetch_index_prices_returns_all_none_when_yfinance_unavailable(monkeypat
     }
 
 
+def test_fetch_index_price_history_returns_entries_for_each_tracked_index(monkeypatch):
+    class FakeTicker:
+        def __init__(self, symbol):
+            self.symbol = symbol
+
+        def history(self, period):
+            assert period == "6y"
+            return {"Close": pd.Series([7800.0, 7850.0], index=pd.to_datetime(["2026-09-20", "2026-09-21"]))}
+
+    monkeypatch.setattr(indices_score.yf, "Ticker", FakeTicker)
+    result = indices_score.fetch_index_price_history()
+    tickers = {e["ticker"] for e in result}
+    assert tickers == set(indices_score.INDEX_YFINANCE_TICKERS.values())
+    fchi_entries = [e for e in result if e["ticker"] == "^FCHI"]
+    assert len(fchi_entries) == 2
+
+
+def test_fetch_index_price_history_skips_an_index_whose_fetch_fails(monkeypatch):
+    class FakeTicker:
+        def __init__(self, symbol):
+            self.symbol = symbol
+
+        def history(self, period):
+            if self.symbol == "^FCHI":
+                raise RuntimeError("panne réseau")
+            return {"Close": pd.Series([19230.0], index=pd.to_datetime(["2026-09-21"]))}
+
+    monkeypatch.setattr(indices_score.yf, "Ticker", FakeTicker)
+    result = indices_score.fetch_index_price_history()
+    tickers = {e["ticker"] for e in result}
+    assert "^FCHI" not in tickers
+    assert "^GDAXI" in tickers
+
+
+def test_fetch_index_price_history_returns_empty_list_when_yfinance_unavailable(monkeypatch):
+    monkeypatch.setattr(indices_score, "yf", None)
+    assert indices_score.fetch_index_price_history() == []
+
+
 def test_open_new_signal_positions_creates_position_for_newly_triggered_company():
     company = {
         "ticker": "BN.PA", "name": "Danone", "index": "CAC40",

@@ -14,6 +14,14 @@ RISK_PROFILE_PARAMS: dict[int, dict[str, float]] = {
     5: {"risk_pct": 0.10, "threshold_pct": 0.175},
 }
 DEFAULT_RISK_PROFILE = 3
+# Levier max réellement disponible sur le compte Vantage/MT5 utilisé
+# (1:500 sur XAUUSD, confirmé par l'utilisateur) — un backstop contre un
+# bug (aucun plafond n'existait avant), pas une mesure de réduction du
+# risque : l'utilisateur trade volontairement jusqu'à ce levier, donc ce
+# plafond ne bloque que les cas où le dimensionnement par le risque
+# demanderait PLUS que ce que le compte peut réellement supporter (stop
+# extrêmement serré), jamais un usage normal du levier autorisé.
+MAX_LEVERAGE = 500
 
 
 def resolve_risk_profile(profile) -> int:
@@ -40,11 +48,22 @@ def risk_profile_params(profile) -> dict[str, float]:
 
 
 def compute_position_size(balance: float, entry: float, stop_loss: float,
-                           contract_size: float, risk_pct: float = 0.05) -> float:
+                           contract_size: float, risk_pct: float = 0.05,
+                           max_leverage: float = MAX_LEVERAGE) -> float:
     """Dimensionnement par le risque : la perte si le stop-loss est
     touché vaut risk_pct * balance — pas la valeur notionnelle engagée.
     Lève ValueError si entry == stop_loss (risque nul, division par zéro
-    évitée explicitement plutôt que renvoyer une taille infinie)."""
+    évitée explicitement plutôt que renvoyer une taille infinie).
+
+    Un stop très serré fait exploser la taille brute par le risque (le
+    risque en $ reste risk_pct*balance, mais le notionnel engagé pour
+    l'atteindre n'a aucune limite) — trouvé en production : un stop à
+    3.80$ pouvait demander ~950k$ de notionnel sur un compte à 10k$. La
+    taille est donc plafonnée pour que le notionnel (volume *
+    contract_size * entry) ne dépasse jamais balance * max_leverage : au
+    -delà, le trade accepte un risque en $ réel inférieur à
+    risk_pct*balance plutôt que de dépasser ce que le compte peut
+    réellement supporter."""
     if balance <= 0:
         raise ValueError("Le solde doit être strictement positif")
     if contract_size <= 0:
@@ -55,7 +74,9 @@ def compute_position_size(balance: float, entry: float, stop_loss: float,
     if distance == 0:
         raise ValueError("La distance entrée→stop-loss ne peut pas être nulle")
     risk_amount = balance * risk_pct
-    return risk_amount / (distance * contract_size)
+    size = risk_amount / (distance * contract_size)
+    max_size = (balance * max_leverage) / (contract_size * entry)
+    return min(size, max_size)
 
 
 class CircuitBreaker:

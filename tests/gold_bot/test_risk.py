@@ -22,6 +22,38 @@ def test_compute_position_size_raises_on_zero_distance():
         risk.compute_position_size(balance=10000, entry=2100, stop_loss=2100, contract_size=100)
 
 
+def test_compute_position_size_caps_notional_at_max_leverage():
+    # Stop très serré (0.20$) + risk_pct élevé -> taille brute par le
+    # risque : 1000 / (0.20*100) = 50 lots, notionnel 50*100*4300 =
+    # 21 500 000$, soit 2150x le solde de 10000$ -- très au-delà du
+    # levier max du compte (500x, voir MAX_LEVERAGE). Doit être
+    # plafonné à exactement 500x : volume = (10000*500)/(100*4300).
+    size = risk.compute_position_size(
+        balance=10000, entry=4300, stop_loss=4299.80, contract_size=100, risk_pct=0.10)
+    expected_capped = (10000 * risk.MAX_LEVERAGE) / (100 * 4300)
+    assert size == pytest.approx(expected_capped)
+    assert size < 50  # bien en dessous de la taille brute par le risque
+
+
+def test_compute_position_size_not_capped_within_leverage_limit():
+    # Cas de l'exemple de l'audit (~95x de levier) : sous le plafond de
+    # 500x -> taille inchangée, purement dimensionnée par le risque.
+    size = risk.compute_position_size(
+        balance=10000, entry=3610, stop_loss=3606.20, contract_size=100, risk_pct=0.10)
+    expected_uncapped = (10000 * 0.10) / (3.80 * 100)
+    assert size == pytest.approx(expected_uncapped)
+    notional = size * 100 * 3610
+    assert notional / 10000 < risk.MAX_LEVERAGE
+
+
+def test_compute_position_size_respects_custom_max_leverage():
+    size = risk.compute_position_size(
+        balance=10000, entry=4300, stop_loss=4299.80, contract_size=100,
+        risk_pct=0.10, max_leverage=50)
+    expected_capped = (10000 * 50) / (100 * 4300)
+    assert size == pytest.approx(expected_capped)
+
+
 def test_circuit_breaker_allows_when_under_threshold():
     cb = risk.CircuitBreaker(threshold_pct=0.10, now_fn=lambda: datetime(2026, 9, 10, tzinfo=timezone.utc))
     cb.check(10000)  # fixe le solde de départ du jour

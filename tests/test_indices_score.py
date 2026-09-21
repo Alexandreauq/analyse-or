@@ -2182,6 +2182,131 @@ def test_update_nikkei_hangseng_price_history_degrades_gracefully_on_failure(tmp
     assert result == []
 
 
+from datetime import date as _date
+
+
+def test_downsample_keeps_daily_entries_within_the_recent_window():
+    today = _date(2026, 9, 21)
+    entries = [
+        {"date": "2026-09-01", "ticker": "MC.PA", "price": 100.0},
+        {"date": "2026-09-02", "ticker": "MC.PA", "price": 101.0},
+        {"date": "2026-09-21", "ticker": "MC.PA", "price": 120.0},
+    ]
+    result = indices_score._downsample_price_entries(entries, today)
+    dates = sorted(e["date"] for e in result)
+    assert "2026-09-01" in dates
+    assert "2026-09-02" in dates
+    assert "2026-09-21" in dates
+
+
+def test_downsample_reduces_entries_older_than_30_days_to_one_per_iso_week():
+    today = _date(2026, 9, 21)
+    entries = [
+        {"date": "2026-01-05", "ticker": "MC.PA", "price": 90.0},  # lundi semaine 2
+        {"date": "2026-01-06", "ticker": "MC.PA", "price": 91.0},  # mardi meme semaine
+        {"date": "2026-01-09", "ticker": "MC.PA", "price": 93.0},  # vendredi meme semaine (le plus recent)
+    ]
+    result = indices_score._downsample_price_entries(entries, today)
+    assert len(result) == 1
+    assert result[0]["date"] == "2026-01-09"
+    assert result[0]["price"] == 93.0
+
+
+def test_downsample_drops_entries_older_than_six_years_retention():
+    today = _date(2026, 9, 21)
+    entries = [
+        {"date": "2019-01-01", "ticker": "MC.PA", "price": 50.0},  # > 2190 jours avant today
+        {"date": "2026-09-21", "ticker": "MC.PA", "price": 120.0},
+    ]
+    result = indices_score._downsample_price_entries(entries, today)
+    dates = [e["date"] for e in result]
+    assert "2019-01-01" not in dates
+    assert "2026-09-21" in dates
+
+
+def test_downsample_deduplicates_same_day_duplicate_entries_in_the_recent_window():
+    today = _date(2026, 9, 21)
+    entries = [
+        {"date": "2026-09-20", "ticker": "MC.PA", "price": 118.0},
+        {"date": "2026-09-20", "ticker": "MC.PA", "price": 119.0},
+    ]
+    result = indices_score._downsample_price_entries(entries, today)
+    assert len(result) == 1
+    assert result[0]["price"] == 119.0
+
+
+def test_downsample_returns_entries_sorted_by_date():
+    today = _date(2026, 9, 21)
+    entries = [
+        {"date": "2026-09-15", "ticker": "MC.PA", "price": 110.0},
+        {"date": "2019-06-01", "ticker": "MC.PA", "price": 40.0},
+        {"date": "2026-01-09", "ticker": "MC.PA", "price": 93.0},
+    ]
+    result = indices_score._downsample_price_entries(entries, today)
+    dates = [e["date"] for e in result]
+    assert dates == sorted(dates)
+
+
+def test_load_price_history_returns_empty_list_when_file_is_absent(tmp_path):
+    assert indices_score.load_price_history(str(tmp_path / "absent.json")) == []
+
+
+def test_load_price_history_degrades_to_empty_list_on_corrupt_json(tmp_path):
+    path = tmp_path / "corrompu.json"
+    path.write_text("pas du json", encoding="utf-8")
+    assert indices_score.load_price_history(str(path)) == []
+
+
+def test_update_price_history_writes_new_entries_to_a_fresh_file(tmp_path):
+    path = str(tmp_path / "price_history.json")
+    entries = [{"date": "2026-09-21", "ticker": "MC.PA", "price": 620.4}]
+    result = indices_score.update_price_history(entries, path=path, today=_date(2026, 9, 21))
+    assert result == entries
+    assert indices_score.load_price_history(path) == entries
+
+
+def test_update_price_history_accumulates_across_calls_and_downsamples(tmp_path):
+    path = str(tmp_path / "price_history.json")
+    indices_score.update_price_history(
+        [{"date": "2026-01-05", "ticker": "MC.PA", "price": 90.0}], path=path, today=_date(2026, 1, 5))
+    indices_score.update_price_history(
+        [{"date": "2026-09-21", "ticker": "MC.PA", "price": 120.0}], path=path, today=_date(2026, 9, 21))
+    result = indices_score.load_price_history(path)
+    dates = [e["date"] for e in result]
+    assert "2026-01-05" in dates  # seule entree de cette semaine ISO, conservee
+    assert "2026-09-21" in dates
+
+
+def test_update_price_history_trims_independently_per_ticker(tmp_path):
+    path = str(tmp_path / "price_history.json")
+    entries = [
+        {"date": "2026-09-21", "ticker": "MC.PA", "price": 620.4},
+        {"date": "2026-09-21", "ticker": "SAP.DE", "price": 210.0},
+    ]
+    result = indices_score.update_price_history(entries, path=path, today=_date(2026, 9, 21))
+    tickers = {e["ticker"] for e in result}
+    assert tickers == {"MC.PA", "SAP.DE"}
+
+
+def test_update_price_history_never_writes_nan(tmp_path):
+    path = str(tmp_path / "price_history.json")
+    entries = [{"date": "2026-09-21", "ticker": "MC.PA", "price": float("nan")}]
+    result = indices_score.update_price_history(entries, path=path, today=_date(2026, 9, 21))
+    assert result == []
+    with open(path, encoding="utf-8") as fh:
+        content = fh.read()
+    assert "NaN" not in content
+
+
+def test_update_price_history_degrades_to_empty_list_on_unexpected_failure(tmp_path, monkeypatch):
+    path = str(tmp_path / "sous_dossier_impossible" / "price_history.json")
+    fichier_bloquant = tmp_path / "sous_dossier_impossible"
+    fichier_bloquant.write_text("x", encoding="utf-8")
+    result = indices_score.update_price_history(
+        [{"date": "2026-09-21", "ticker": "MC.PA", "price": 620.4}], path=path, today=_date(2026, 9, 21))
+    assert result == []
+
+
 def test_compute_company_alerts_returns_info_when_nothing_triggers():
     alerts = indices_score.compute_company_alerts(
         "BN.PA", composite=5.0, current_price=100.0, entry_price=50.0,

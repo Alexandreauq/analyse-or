@@ -12,14 +12,23 @@ def _base_url(region: str) -> str:
     return f"https://mt-client-api-v1.{region}.agiliumtrade.ai"
 
 
-def get_account_balance(token: str, account_id: str, region: str = DEFAULT_MT5_REGION) -> float:
+def get_account_information(token: str, account_id: str, region: str = DEFAULT_MT5_REGION) -> dict:
+    """`balance` (capital réalisé) ET `equity` (balance + P&L flottant des
+    positions ouvertes) en un seul appel MetaApi — le coupe-circuit a
+    besoin d'`equity` pour voir une position ouverte en train de perdre
+    avant sa clôture (voir gold_bot.bot.decide_and_act)."""
     resp = requests.get(
         f"{_base_url(region)}/users/current/accounts/{account_id}/account-information",
         headers={"auth-token": token},
         timeout=15,
     )
     resp.raise_for_status()
-    return resp.json()["balance"]
+    data = resp.json()
+    return {"balance": data["balance"], "equity": data["equity"]}
+
+
+def get_account_balance(token: str, account_id: str, region: str = DEFAULT_MT5_REGION) -> float:
+    return get_account_information(token, account_id, region)["balance"]
 
 
 def get_open_positions(token: str, account_id: str, region: str = DEFAULT_MT5_REGION) -> list[dict]:

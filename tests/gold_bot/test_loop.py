@@ -109,7 +109,7 @@ def test_log_decision_appends_jsonl_with_timestamp(tmp_path):
 def test_run_cycle_no_action_when_kill_switch_engaged(monkeypatch, tmp_path):
     monkeypatch.setattr(loop.state, "load_state", lambda *a, **k: {"kill_switch": True, "dry_run": True})
     monkeypatch.setattr(loop, "DECISIONS_LOG_PATH", str(tmp_path / "decisions_log.jsonl"))
-    monkeypatch.setattr(loop.broker, "get_account_balance", lambda *a, **k: (_ for _ in ()).throw(AssertionError("ne doit pas être appelé")))
+    monkeypatch.setattr(loop.broker, "get_account_information", lambda *a, **k: (_ for _ in ()).throw(AssertionError("ne doit pas être appelé")))
 
     result = loop.run_cycle("tok", "acc", "td-key", loop.risk.CircuitBreaker())
 
@@ -123,7 +123,7 @@ def test_run_cycle_logs_dry_run_without_executing(monkeypatch, tmp_path):
     monkeypatch.setattr(loop, "LATEST_BALANCE_PATH", str(tmp_path / "latest_balance.json"))
     monkeypatch.setattr(loop, "LATEST_POSITIONS_PATH", str(tmp_path / "latest_positions.json"))
     monkeypatch.setattr(loop.confluence, "fetch_gold_candles", lambda api_key: [_FRESH_CANDLE])
-    monkeypatch.setattr(loop.broker, "get_account_balance", lambda *a, **k: 10000)
+    monkeypatch.setattr(loop.broker, "get_account_information", lambda *a, **k: {"balance": 10000, "equity": 10000})
     monkeypatch.setattr(loop.bot, "reconcile_positions", lambda *a, **k: [])
     monkeypatch.setattr(loop.broker, "get_symbol_specification", lambda *a, **k: {"contractSize": 100})
     fake_steps = [{"type": "ouverture_simulee", "symbol": "XAUUSD", "direction": "achat",
@@ -143,7 +143,7 @@ def test_run_cycle_applies_active_risk_profile_to_sizing_and_circuit_breaker(mon
     monkeypatch.setattr(loop, "LATEST_BALANCE_PATH", str(tmp_path / "latest_balance.json"))
     monkeypatch.setattr(loop, "LATEST_POSITIONS_PATH", str(tmp_path / "latest_positions.json"))
     monkeypatch.setattr(loop.confluence, "fetch_gold_candles", lambda api_key: [_FRESH_CANDLE])
-    monkeypatch.setattr(loop.broker, "get_account_balance", lambda *a, **k: 10000)
+    monkeypatch.setattr(loop.broker, "get_account_information", lambda *a, **k: {"balance": 10000, "equity": 10000})
     monkeypatch.setattr(loop.bot, "reconcile_positions", lambda *a, **k: [])
     monkeypatch.setattr(loop.broker, "get_symbol_specification", lambda *a, **k: {"contractSize": 100})
     captured = {}
@@ -168,7 +168,7 @@ def test_run_cycle_defaults_to_profile_3_when_risk_profile_absent_from_state(mon
     monkeypatch.setattr(loop, "LATEST_BALANCE_PATH", str(tmp_path / "latest_balance.json"))
     monkeypatch.setattr(loop, "LATEST_POSITIONS_PATH", str(tmp_path / "latest_positions.json"))
     monkeypatch.setattr(loop.confluence, "fetch_gold_candles", lambda api_key: [_FRESH_CANDLE])
-    monkeypatch.setattr(loop.broker, "get_account_balance", lambda *a, **k: 10000)
+    monkeypatch.setattr(loop.broker, "get_account_information", lambda *a, **k: {"balance": 10000, "equity": 10000})
     monkeypatch.setattr(loop.bot, "reconcile_positions", lambda *a, **k: [])
     monkeypatch.setattr(loop.broker, "get_symbol_specification", lambda *a, **k: {"contractSize": 100})
     captured = {}
@@ -193,7 +193,7 @@ def test_run_cycle_executes_when_not_dry_run(monkeypatch, tmp_path):
     monkeypatch.setattr(loop, "LATEST_BALANCE_PATH", str(tmp_path / "latest_balance.json"))
     monkeypatch.setattr(loop, "LATEST_POSITIONS_PATH", str(tmp_path / "latest_positions.json"))
     monkeypatch.setattr(loop.confluence, "fetch_gold_candles", lambda api_key: [_FRESH_CANDLE])
-    monkeypatch.setattr(loop.broker, "get_account_balance", lambda *a, **k: 10000)
+    monkeypatch.setattr(loop.broker, "get_account_information", lambda *a, **k: {"balance": 10000, "equity": 10000})
     monkeypatch.setattr(loop.bot, "reconcile_positions", lambda *a, **k: [])
     monkeypatch.setattr(loop.broker, "get_symbol_specification", lambda *a, **k: {"contractSize": 100})
     fake_steps = [{"type": "ouverture_simulee", "symbol": "XAUUSD", "direction": "achat",
@@ -217,7 +217,7 @@ def test_run_cycle_re_checks_kill_switch_before_executing(monkeypatch, tmp_path)
     monkeypatch.setattr(loop, "LATEST_BALANCE_PATH", str(tmp_path / "latest_balance.json"))
     monkeypatch.setattr(loop, "LATEST_POSITIONS_PATH", str(tmp_path / "latest_positions.json"))
     monkeypatch.setattr(loop.confluence, "fetch_gold_candles", lambda api_key: [_FRESH_CANDLE])
-    monkeypatch.setattr(loop.broker, "get_account_balance", lambda *a, **k: 10000)
+    monkeypatch.setattr(loop.broker, "get_account_information", lambda *a, **k: {"balance": 10000, "equity": 10000})
     monkeypatch.setattr(loop.bot, "reconcile_positions", lambda *a, **k: [])
     monkeypatch.setattr(loop.broker, "get_symbol_specification", lambda *a, **k: {"contractSize": 100})
     fake_steps = [{"type": "ouverture_simulee", "symbol": "XAUUSD", "direction": "achat",
@@ -328,7 +328,7 @@ def test_run_cycle_recovers_from_a_single_transient_network_blip(monkeypatch, tm
         return [_FRESH_CANDLE]
 
     monkeypatch.setattr(loop.confluence, "fetch_gold_candles", flaky_fetch_gold_candles)
-    monkeypatch.setattr(loop.broker, "get_account_balance", lambda *a, **k: 10000.0)
+    monkeypatch.setattr(loop.broker, "get_account_information", lambda *a, **k: {"balance": 10000.0, "equity": 10000.0})
     monkeypatch.setattr(loop.bot, "reconcile_positions", lambda *a, **k: [])
     monkeypatch.setattr(loop.broker, "get_symbol_specification", lambda *a, **k: {"contractSize": 100})
     monkeypatch.setattr(loop.bot, "decide_and_act", lambda *a, **k: {"action": "aucune", "reason": "signal neutre"})
@@ -349,7 +349,7 @@ def test_run_cycle_logs_error_when_decide_and_act_raises(monkeypatch, tmp_path):
     monkeypatch.setattr(loop, "LATEST_BALANCE_PATH", str(tmp_path / "latest_balance.json"))
     monkeypatch.setattr(loop, "LATEST_POSITIONS_PATH", str(tmp_path / "latest_positions.json"))
     monkeypatch.setattr(loop.confluence, "fetch_gold_candles", lambda api_key: [_FRESH_CANDLE])
-    monkeypatch.setattr(loop.broker, "get_account_balance", lambda *a, **k: 10000)
+    monkeypatch.setattr(loop.broker, "get_account_information", lambda *a, **k: {"balance": 10000, "equity": 10000})
     monkeypatch.setattr(loop.bot, "reconcile_positions", lambda *a, **k: [])
     monkeypatch.setattr(loop.broker, "get_symbol_specification", lambda *a, **k: {"contractSize": 100})
     monkeypatch.setattr(
@@ -380,7 +380,7 @@ def test_run_cycle_caches_candles_after_successful_fetch(monkeypatch, tmp_path):
     monkeypatch.setattr(loop, "LATEST_POSITIONS_PATH", str(tmp_path / "latest_positions.json"))
     fake_candles = [{"time": "2026-09-11 16:40:00", "close": 3651.5}]
     monkeypatch.setattr(loop.confluence, "fetch_gold_candles", lambda api_key: fake_candles)
-    monkeypatch.setattr(loop.broker, "get_account_balance", lambda *a, **k: 10000.0)
+    monkeypatch.setattr(loop.broker, "get_account_information", lambda *a, **k: {"balance": 10000.0, "equity": 10000.0})
     monkeypatch.setattr(loop.bot, "reconcile_positions", lambda *a, **k: [])
     monkeypatch.setattr(loop.broker, "get_symbol_specification", lambda *a, **k: {"contractSize": 100})
     monkeypatch.setattr(loop.bot, "decide_and_act", lambda *a, **k: {"action": "aucune", "reason": "signal neutre"})
@@ -399,7 +399,7 @@ def test_run_cycle_caches_balance_after_successful_fetch(monkeypatch, tmp_path):
     monkeypatch.setattr(loop, "LATEST_BALANCE_PATH", str(tmp_path / "latest_balance.json"))
     monkeypatch.setattr(loop, "LATEST_POSITIONS_PATH", str(tmp_path / "latest_positions.json"))
     monkeypatch.setattr(loop.confluence, "fetch_gold_candles", lambda api_key: [_FRESH_CANDLE])
-    monkeypatch.setattr(loop.broker, "get_account_balance", lambda *a, **k: 9140.10)
+    monkeypatch.setattr(loop.broker, "get_account_information", lambda *a, **k: {"balance": 9140.10, "equity": 9140.10})
     monkeypatch.setattr(loop.bot, "reconcile_positions", lambda *a, **k: [])
     monkeypatch.setattr(loop.broker, "get_symbol_specification", lambda *a, **k: {"contractSize": 100})
     monkeypatch.setattr(loop.bot, "decide_and_act", lambda *a, **k: {"action": "aucune", "reason": "signal neutre"})
@@ -420,7 +420,7 @@ def test_run_cycle_caches_positions_after_successful_fetch(monkeypatch, tmp_path
     fake_positions = [{"symbol": "XAUUSD", "type": "POSITION_TYPE_SELL", "volume": 2.0,
                         "openPrice": 4316.28, "currentPrice": 4316.49, "profit": -36.18}]
     monkeypatch.setattr(loop.confluence, "fetch_gold_candles", lambda api_key: [_FRESH_CANDLE])
-    monkeypatch.setattr(loop.broker, "get_account_balance", lambda *a, **k: 10000.0)
+    monkeypatch.setattr(loop.broker, "get_account_information", lambda *a, **k: {"balance": 10000.0, "equity": 10000.0})
     monkeypatch.setattr(loop.bot, "reconcile_positions", lambda *a, **k: fake_positions)
     monkeypatch.setattr(loop.broker, "get_symbol_specification", lambda *a, **k: {"contractSize": 100})
     monkeypatch.setattr(loop.bot, "decide_and_act", lambda *a, **k: {"action": "aucune", "reason": "signal neutre"})
@@ -443,7 +443,7 @@ def test_run_cycle_leaves_earlier_caches_intact_when_a_later_call_fails(monkeypa
     monkeypatch.setattr(loop, "LATEST_POSITIONS_PATH", str(tmp_path / "latest_positions.json"))
     monkeypatch.setattr(loop.time, "sleep", lambda s: None)  # échec persistant -> _with_retry épuise ses tentatives
     monkeypatch.setattr(loop.confluence, "fetch_gold_candles", lambda api_key: [_FRESH_CANDLE])
-    monkeypatch.setattr(loop.broker, "get_account_balance", lambda *a, **k: 10000.0)
+    monkeypatch.setattr(loop.broker, "get_account_information", lambda *a, **k: {"balance": 10000.0, "equity": 10000.0})
     monkeypatch.setattr(loop.bot, "reconcile_positions", lambda *a, **k: [])
     monkeypatch.setattr(
         loop.broker, "get_symbol_specification",
@@ -494,7 +494,7 @@ def test_run_cycle_picks_up_risk_profile_change_between_cycles(monkeypatch, tmp_
     monkeypatch.setattr(loop, "LATEST_BALANCE_PATH", str(tmp_path / "latest_balance.json"))
     monkeypatch.setattr(loop, "LATEST_POSITIONS_PATH", str(tmp_path / "latest_positions.json"))
     monkeypatch.setattr(loop.confluence, "fetch_gold_candles", lambda api_key: [_FRESH_CANDLE])
-    monkeypatch.setattr(loop.broker, "get_account_balance", lambda *a, **k: 10000.0)
+    monkeypatch.setattr(loop.broker, "get_account_information", lambda *a, **k: {"balance": 10000.0, "equity": 10000.0})
     monkeypatch.setattr(loop.bot, "reconcile_positions", lambda *a, **k: [])
     monkeypatch.setattr(loop.broker, "get_symbol_specification", lambda *a, **k: {"contractSize": 100})
     monkeypatch.setattr(loop.bot, "decide_and_act", lambda *a, **k: {"action": "aucune", "reason": "signal neutre"})
@@ -530,7 +530,7 @@ def test_run_cycle_picks_up_risk_profile_change_via_api_between_cycles(monkeypat
     monkeypatch.setattr(loop, "LATEST_BALANCE_PATH", str(tmp_path / "latest_balance.json"))
     monkeypatch.setattr(loop, "LATEST_POSITIONS_PATH", str(tmp_path / "latest_positions.json"))
     monkeypatch.setattr(loop.confluence, "fetch_gold_candles", lambda api_key: [_FRESH_CANDLE])
-    monkeypatch.setattr(loop.broker, "get_account_balance", lambda *a, **k: 10000.0)
+    monkeypatch.setattr(loop.broker, "get_account_information", lambda *a, **k: {"balance": 10000.0, "equity": 10000.0})
     monkeypatch.setattr(loop.bot, "reconcile_positions", lambda *a, **k: [])
     monkeypatch.setattr(loop.broker, "get_symbol_specification", lambda *a, **k: {"contractSize": 100})
     monkeypatch.setattr(loop.bot, "decide_and_act", lambda *a, **k: {"action": "aucune", "reason": "signal neutre"})
@@ -585,7 +585,7 @@ def test_run_cycle_ignores_when_market_closed(monkeypatch, tmp_path):
     saturday_noon = datetime(2026, 9, 12, 12, 0, tzinfo=timezone.utc)
     monkeypatch.setattr(loop.confluence, "fetch_gold_candles",
                          lambda api_key: [{"time": "2026-09-12 12:00:00", "close": 2100}])
-    monkeypatch.setattr(loop.broker, "get_account_balance",
+    monkeypatch.setattr(loop.broker, "get_account_information",
                          lambda *a, **k: (_ for _ in ()).throw(AssertionError("ne doit pas être appelé")))
 
     result = loop.run_cycle("tok", "acc", "td-key", loop.risk.CircuitBreaker(), now=saturday_noon)
@@ -600,7 +600,7 @@ def test_run_cycle_ignores_when_candle_data_is_stale(monkeypatch, tmp_path):
     # décalage, au-delà du seuil de 5 minutes.
     stale_now = datetime(2026, 9, 11, 16, 46, tzinfo=timezone.utc)
     monkeypatch.setattr(loop.confluence, "fetch_gold_candles", lambda api_key: [_FRESH_CANDLE])
-    monkeypatch.setattr(loop.broker, "get_account_balance",
+    monkeypatch.setattr(loop.broker, "get_account_information",
                          lambda *a, **k: (_ for _ in ()).throw(AssertionError("ne doit pas être appelé")))
 
     result = loop.run_cycle("tok", "acc", "td-key", loop.risk.CircuitBreaker(), now=stale_now)
@@ -632,7 +632,7 @@ def test_run_cycle_continues_when_market_open_and_data_fresh(monkeypatch, tmp_pa
     monkeypatch.setattr(loop, "LATEST_BALANCE_PATH", str(tmp_path / "latest_balance.json"))
     monkeypatch.setattr(loop, "LATEST_POSITIONS_PATH", str(tmp_path / "latest_positions.json"))
     monkeypatch.setattr(loop.confluence, "fetch_gold_candles", lambda api_key: [_FRESH_CANDLE])
-    monkeypatch.setattr(loop.broker, "get_account_balance", lambda *a, **k: 10000.0)
+    monkeypatch.setattr(loop.broker, "get_account_information", lambda *a, **k: {"balance": 10000.0, "equity": 10000.0})
     monkeypatch.setattr(loop.bot, "reconcile_positions", lambda *a, **k: [])
     monkeypatch.setattr(loop.broker, "get_symbol_specification", lambda *a, **k: {"contractSize": 100})
     monkeypatch.setattr(loop.bot, "decide_and_act", lambda *a, **k: {"action": "aucune", "reason": "signal neutre"})
@@ -653,7 +653,7 @@ def test_run_cycle_continues_when_a_dashboard_cache_write_fails(monkeypatch, tmp
     monkeypatch.setattr(loop, "LATEST_BALANCE_PATH", str(tmp_path / "latest_balance.json"))
     monkeypatch.setattr(loop, "LATEST_POSITIONS_PATH", str(tmp_path / "latest_positions.json"))
     monkeypatch.setattr(loop.confluence, "fetch_gold_candles", lambda api_key: [_FRESH_CANDLE])
-    monkeypatch.setattr(loop.broker, "get_account_balance", lambda *a, **k: 10000.0)
+    monkeypatch.setattr(loop.broker, "get_account_information", lambda *a, **k: {"balance": 10000.0, "equity": 10000.0})
     monkeypatch.setattr(loop.bot, "reconcile_positions", lambda *a, **k: [])
     monkeypatch.setattr(loop.broker, "get_symbol_specification", lambda *a, **k: {"contractSize": 100})
     monkeypatch.setattr(loop.bot, "decide_and_act", lambda *a, **k: {"action": "aucune", "reason": "signal neutre"})

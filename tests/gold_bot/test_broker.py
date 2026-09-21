@@ -23,7 +23,7 @@ def test_get_account_balance_returns_balance(monkeypatch):
     def fake_get(url, headers=None, timeout=None):
         captured["url"] = url
         captured["headers"] = headers
-        return _FakeMT5Response({"balance": 10234.5, "currency": "USD"})
+        return _FakeMT5Response({"balance": 10234.5, "equity": 10100.0, "currency": "USD"})
 
     monkeypatch.setattr(broker.requests, "get", fake_get)
     result = broker.get_account_balance("tok", "acc123", region="london")
@@ -40,6 +40,42 @@ def test_get_account_balance_raises_on_http_error(monkeypatch):
     monkeypatch.setattr(broker.requests, "get", lambda *a, **k: _FakeMT5Response({}, status_code=401))
     with pytest.raises(broker.requests.exceptions.HTTPError):
         broker.get_account_balance("bad-tok", "acc123")
+
+
+def test_get_account_information_returns_balance_and_equity(monkeypatch):
+    captured = {}
+
+    def fake_get(url, headers=None, timeout=None):
+        captured["url"] = url
+        captured["headers"] = headers
+        return _FakeMT5Response({"balance": 10234.5, "equity": 9800.25, "currency": "USD"})
+
+    monkeypatch.setattr(broker.requests, "get", fake_get)
+    result = broker.get_account_information("tok", "acc123", region="london")
+
+    assert result == {"balance": 10234.5, "equity": 9800.25}
+    assert captured["url"] == (
+        "https://mt-client-api-v1.london.agiliumtrade.ai"
+        "/users/current/accounts/acc123/account-information"
+    )
+    assert captured["headers"] == {"auth-token": "tok"}
+
+
+def test_get_account_information_raises_on_http_error(monkeypatch):
+    monkeypatch.setattr(broker.requests, "get", lambda *a, **k: _FakeMT5Response({}, status_code=401))
+    with pytest.raises(broker.requests.exceptions.HTTPError):
+        broker.get_account_information("bad-tok", "acc123")
+
+
+def test_get_account_balance_uses_get_account_information(monkeypatch):
+    """get_account_balance doit rester un simple accès à ["balance"] du
+    même appel réseau que get_account_information — un seul appel MetaApi,
+    jamais deux, pour ne pas doubler la consommation d'API par cycle."""
+    monkeypatch.setattr(
+        broker.requests, "get",
+        lambda *a, **k: _FakeMT5Response({"balance": 500.0, "equity": 480.0}),
+    )
+    assert broker.get_account_balance("tok", "acc123") == 500.0
 
 
 def test_get_open_positions_returns_list(monkeypatch):

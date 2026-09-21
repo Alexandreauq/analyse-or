@@ -9,6 +9,9 @@ const {
   computePositionPnL, computePortfolioTotals, findOpportunities,
   computePortfolioConcentration, computePortfolioHealth, computePortfolioAttribution,
   PORTFOLIO_CLOSED_STORAGE_KEY, loadClosedPortfolio, saveClosedPortfolio, closePosition,
+  groupPriceHistoryByTicker, priceAtOrBefore, isPositionActiveOn, realPriceForPosition,
+  benchmarkPriceForPosition, computePerformanceCurve, computePortfolioPerformanceCurves,
+  computeBenchmarkPerformanceCurve,
 } = require('./portfolio.js');
 
 // Mock localStorage minimal — Node n'a pas cet objet nativement.
@@ -395,6 +398,101 @@ function test_computePortfolioAttribution_skips_position_without_price() {
   console.log('OK: test_computePortfolioAttribution_skips_position_without_price');
 }
 
+function test_group_price_history_by_ticker_sorts_each_group_by_date() {
+  const history = [
+    { date: '2026-09-15', ticker: 'MC.PA', price: 110 },
+    { date: '2026-09-10', ticker: 'MC.PA', price: 105 },
+    { date: '2026-09-12', ticker: '^FCHI', price: 7800 },
+  ];
+  const grouped = groupPriceHistoryByTicker(history);
+  assert.deepStrictEqual(grouped['MC.PA'].map(e => e.date), ['2026-09-10', '2026-09-15']);
+  assert.strictEqual(grouped['^FCHI'].length, 1);
+}
+
+function test_price_at_or_before_returns_the_latest_entry_not_after_the_date() {
+  const grouped = { 'MC.PA': [{ date: '2026-09-10', price: 100 }, { date: '2026-09-15', price: 110 }] };
+  assert.strictEqual(priceAtOrBefore(grouped, 'MC.PA', '2026-09-12'), 100);
+  assert.strictEqual(priceAtOrBefore(grouped, 'MC.PA', '2026-09-20'), 110);
+}
+
+function test_price_at_or_before_never_looks_into_the_future() {
+  const grouped = { 'MC.PA': [{ date: '2026-09-10', price: 100 }] };
+  assert.strictEqual(priceAtOrBefore(grouped, 'MC.PA', '2026-09-05'), null);
+}
+
+function test_price_at_or_before_returns_null_for_an_unknown_ticker() {
+  assert.strictEqual(priceAtOrBefore({}, 'INCONNU.PA', '2026-09-12'), null);
+}
+
+function test_is_position_active_on_respects_buy_and_sell_dates() {
+  const open = { buy_date: '2026-01-15' };
+  assert.strictEqual(isPositionActiveOn(open, '2026-01-14'), false);
+  assert.strictEqual(isPositionActiveOn(open, '2026-01-15'), true);
+  assert.strictEqual(isPositionActiveOn(open, '2026-09-21'), true);
+
+  const closed = { buy_date: '2026-01-15', sell_date: '2026-06-01' };
+  assert.strictEqual(isPositionActiveOn(closed, '2026-05-31'), true);
+  assert.strictEqual(isPositionActiveOn(closed, '2026-06-01'), true);
+  assert.strictEqual(isPositionActiveOn(closed, '2026-06-02'), false);
+}
+
+function test_compute_performance_curve_weights_by_invested_capital_not_naive_average() {
+  const positions = [
+    { ticker: 'A', buy_date: '2026-01-01', quantity: 100, buy_price: 1.0 },   // cout 100
+    { ticker: 'B', buy_date: '2026-01-01', quantity: 1, buy_price: 1000.0 },  // cout 1000
+  ];
+  const priceHistoryByTicker = {
+    A: [{ date: '2026-02-01', price: 2.0 }],   // +100%
+    B: [{ date: '2026-02-01', price: 1010.0 }], // +1%
+  };
+  const curve = computePerformanceCurve(positions, priceHistoryByTicker, realPriceForPosition);
+  assert.strictEqual(curve.length, 1);
+  // pondere : (100 + 10) / (100 + 1000) * 100 = 10.0, PAS (100+1)/2 = 50.5 (moyenne naive)
+  assert.ok(Math.abs(curve[0].pnlPct - 10.0) < 0.001);
+}
+
+function test_compute_performance_curve_excludes_a_position_with_no_known_price_on_a_date_without_dropping_the_date() {
+  const positions = [
+    { ticker: 'A', buy_date: '2026-01-01', quantity: 10, buy_price: 10.0 },
+    { ticker: 'B', buy_date: '2026-03-01', quantity: 10, buy_price: 20.0 }, // pas encore actif au 02-01
+  ];
+  const priceHistoryByTicker = {
+    A: [{ date: '2026-02-01', price: 11.0 }],
+    B: [{ date: '2026-02-01', price: 21.0 }],
+  };
+  const curve = computePerformanceCurve(positions, priceHistoryByTicker, realPriceForPosition);
+  assert.strictEqual(curve.length, 1);
+  // seule A compte au 02-01 : (11-10)*10 / (10*10) * 100 = 10%
+  assert.ok(Math.abs(curve[0].pnlPct - 10.0) < 0.001);
+}
+
+function test_compute_portfolio_performance_curves_splits_by_currency_and_skips_empty_currency() {
+  const openPositions = [{ id: '1', ticker: 'MC.PA', buy_date: '2026-01-01', quantity: 5, buy_price: 90.0 }];
+  const companiesByTicker = { 'MC.PA': { index: 'CAC40' } };
+  const currencyByIndex = { CAC40: 'EUR' };
+  const priceHistoryByTicker = { 'MC.PA': [{ date: '2026-02-01', price: 100.0 }] };
+  const curves = computePortfolioPerformanceCurves([], [], companiesByTicker, currencyByIndex, priceHistoryByTicker);
+  assert.deepStrictEqual(curves, { EUR: [], USD: [] });
+
+  const curvesWithPosition = computePortfolioPerformanceCurves(
+    openPositions, [], companiesByTicker, currencyByIndex, priceHistoryByTicker);
+  assert.strictEqual(curvesWithPosition.EUR.length, 1);
+  assert.deepStrictEqual(curvesWithPosition.USD, []);
+}
+
+function test_compute_benchmark_performance_curve_reuses_the_same_positions_and_dates() {
+  const positions = [{ ticker: 'MC.PA', buy_date: '2026-01-01', quantity: 5, buy_price: 90.0 }];
+  const priceHistoryByTicker = {
+    'MC.PA': [{ date: '2026-02-01', price: 90.0 }],  // 0% sur le titre reel
+    '^FCHI': [{ date: '2026-02-01', price: 8000.0 }],
+  };
+  const benchmarkCurve = computeBenchmarkPerformanceCurve(positions, '^FCHI', priceHistoryByTicker);
+  assert.strictEqual(benchmarkCurve.length, 1);
+  assert.strictEqual(benchmarkCurve[0].date, '2026-02-01');
+  // valeur benchmark = 8000 * 5 = 40000, cout = 90*5 = 450 -> gros % positif attendu, different de 0%
+  assert.notStrictEqual(benchmarkCurve[0].pnlPct, 0);
+}
+
 function main() {
   test_validatePositionInput_accepts_positive_numbers();
   test_validatePositionInput_rejects_non_positive_quantity();
@@ -436,6 +534,15 @@ function main() {
   test_computePortfolioHealth_null_avg_score_when_no_scored_positions();
   test_computePortfolioAttribution_sorts_by_pnl_desc();
   test_computePortfolioAttribution_skips_position_without_price();
+  test_group_price_history_by_ticker_sorts_each_group_by_date();
+  test_price_at_or_before_returns_the_latest_entry_not_after_the_date();
+  test_price_at_or_before_never_looks_into_the_future();
+  test_price_at_or_before_returns_null_for_an_unknown_ticker();
+  test_is_position_active_on_respects_buy_and_sell_dates();
+  test_compute_performance_curve_weights_by_invested_capital_not_naive_average();
+  test_compute_performance_curve_excludes_a_position_with_no_known_price_on_a_date_without_dropping_the_date();
+  test_compute_portfolio_performance_curves_splits_by_currency_and_skips_empty_currency();
+  test_compute_benchmark_performance_curve_reuses_the_same_positions_and_dates();
   console.log('Tous les tests portfolio.test.js sont passés.');
 }
 

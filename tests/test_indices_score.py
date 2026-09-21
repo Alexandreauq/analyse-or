@@ -2886,6 +2886,8 @@ def test_main_writes_alerts_key_for_every_company(monkeypatch, tmp_path):
     monkeypatch.setattr(indices_score, "update_signal_tracking", lambda companies, newly_triggered_entree: [])
     monkeypatch.setattr(indices_score, "update_nikkei_hangseng_price_history", lambda companies: [])
     monkeypatch.setattr(indices_score, "fetch_index_prices", lambda: {"CAC40": None, "DAX": None, "NASDAQ": None, "DOW": None})
+    monkeypatch.setattr(indices_score, "update_price_history", lambda entries, **kwargs: entries)
+    monkeypatch.setattr(indices_score, "fetch_index_price_history", lambda: [])
     output_path = tmp_path / "indices.json"
     monkeypatch.setattr(indices_score, "OUTPUT_JSON_PATH", str(output_path))
 
@@ -2920,6 +2922,8 @@ def test_main_payload_includes_index_metadata(monkeypatch, tmp_path):
     monkeypatch.setattr(indices_score, "update_nikkei_hangseng_price_history", lambda companies: [])
     fake_index_prices = {"CAC40": 7600.5, "DAX": 19000.2, "NASDAQ": 20123.4, "DOW": 41234.5}
     monkeypatch.setattr(indices_score, "fetch_index_prices", lambda: fake_index_prices)
+    monkeypatch.setattr(indices_score, "update_price_history", lambda entries, **kwargs: entries)
+    monkeypatch.setattr(indices_score, "fetch_index_price_history", lambda: [])
     output_path = tmp_path / "indices.json"
     monkeypatch.setattr(indices_score, "OUTPUT_JSON_PATH", str(output_path))
 
@@ -2987,6 +2991,8 @@ def test_main_routes_risk_free_rate_by_currency(monkeypatch, tmp_path):
             "NIKKEI225": None, "HANGSENG": None,
         },
     )
+    monkeypatch.setattr(indices_score, "update_price_history", lambda entries, **kwargs: entries)
+    monkeypatch.setattr(indices_score, "fetch_index_price_history", lambda: [])
     output_path = tmp_path / "indices.json"
     monkeypatch.setattr(indices_score, "OUTPUT_JSON_PATH", str(output_path))
 
@@ -5134,6 +5140,8 @@ def test_main_calls_update_signal_tracking(monkeypatch, tmp_path):
     monkeypatch.setattr(indices_score, "update_signal_tracking", _fake_update_signal_tracking)
     monkeypatch.setattr(indices_score, "update_nikkei_hangseng_price_history", lambda companies: [])
     monkeypatch.setattr(indices_score, "fetch_index_prices", lambda: {"CAC40": None, "DAX": None, "NASDAQ": None, "DOW": None})
+    monkeypatch.setattr(indices_score, "update_price_history", lambda entries, **kwargs: entries)
+    monkeypatch.setattr(indices_score, "fetch_index_price_history", lambda: [])
 
     indices_score.main()
 

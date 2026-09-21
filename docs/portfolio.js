@@ -112,6 +112,194 @@ function removePosition(id, storage) {
   return { ok: true, positions };
 }
 
+const PORTFOLIO_CLOSED_STORAGE_KEY = 'analyse-or-portfolio-closed';
+
+/**
+ * Repli sur [] si storage est absent, la clé n'existe pas, le JSON est
+ * invalide, ou la valeur stockée n'est pas un tableau — même contrat
+ * que loadPortfolio.
+ */
+function loadClosedPortfolio(storage) {
+  const s = _resolveStorage(storage);
+  if (!s) return [];
+  try {
+    const raw = s.getItem(PORTFOLIO_CLOSED_STORAGE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (e) {
+    return [];
+  }
+}
+
+function saveClosedPortfolio(positions, storage) {
+  const s = _resolveStorage(storage);
+  if (!s) return false;
+  try {
+    s.setItem(PORTFOLIO_CLOSED_STORAGE_KEY, JSON.stringify(positions));
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+/**
+ * Déplace une position ouverte vers la liste clôturée (garde une trace
+ * de la vente : sell_price, sell_date), plutôt que de la supprimer —
+ * removePosition reste la vraie suppression (erreurs de saisie), reste
+ * inchangée, ne touche jamais cette liste.
+ */
+function closePosition(id, sellPrice, sellDate, storage) {
+  if (!Number.isFinite(sellPrice) || sellPrice <= 0) {
+    return { ok: false, error: 'Le prix de vente doit être un nombre positif.' };
+  }
+  if (!sellDate) {
+    return { ok: false, error: 'La date de vente est obligatoire.' };
+  }
+  const openPositions = loadPortfolio(storage);
+  const idx = openPositions.findIndex(p => p.id === id);
+  if (idx === -1) return { ok: false, error: 'Position introuvable.' };
+  const [position] = openPositions.splice(idx, 1);
+  const closedPosition = { ...position, sell_price: sellPrice, sell_date: sellDate };
+  const closedPositions = loadClosedPortfolio(storage);
+  closedPositions.push(closedPosition);
+  if (!savePortfolio(openPositions, storage) || !saveClosedPortfolio(closedPositions, storage)) {
+    return { ok: false, error: "La sauvegarde a échoué (stockage local indisponible ou plein)." };
+  }
+  return { ok: true, positions: openPositions, closedPositions };
+}
+
+/**
+ * Regroupe docs/price_history.json (liste plate {date, ticker, price})
+ * par ticker, trie chaque groupe par date croissante.
+ */
+function groupPriceHistoryByTicker(priceHistory) {
+  const byTicker = {};
+  priceHistory.forEach(entry => {
+    (byTicker[entry.ticker] = byTicker[entry.ticker] || []).push(entry);
+  });
+  Object.values(byTicker).forEach(entries => entries.sort((a, b) => (a.date < b.date ? -1 : 1)));
+  return byTicker;
+}
+
+/**
+ * Prix connu d'un ticker à la date D : la dernière entrée dont la date
+ * est <= D (jamais d'extrapolation future). null si aucune n'existe.
+ */
+function priceAtOrBefore(priceHistoryByTicker, ticker, date) {
+  const entries = priceHistoryByTicker[ticker];
+  if (!entries || !entries.length) return null;
+  let result = null;
+  for (const entry of entries) {
+    if (entry.date > date) break;
+    result = entry.price;
+  }
+  return result;
+}
+
+/**
+ * Une position (ouverte ou clôturée) est active à la date D si
+ * buy_date <= D et (sell_date absent OU sell_date >= D).
+ */
+function isPositionActiveOn(position, date) {
+  if (position.buy_date > date) return false;
+  if (position.sell_date && position.sell_date < date) return false;
+  return true;
+}
+
+function realValueForPosition(position, date, priceHistoryByTicker) {
+  const price = priceAtOrBefore(priceHistoryByTicker, position.ticker, date);
+  return Number.isFinite(price) ? price * position.quantity : null;
+}
+
+/**
+ * Valeur "fantôme" à la date D si le même COÛT (pas la même quantité)
+ * avait été investi dans l'indice benchmark à la date d'achat de la
+ * position : cost * indexPrice(D) / indexPrice(buy_date). Nécessaire
+ * car la quantité réelle (actions de l'entreprise) n'a pas de sens
+ * multipliée par un niveau d'indice — les unités ne correspondent pas
+ * (corrige un bug trouvé lors de la vérification de l'UI : la formule
+ * initiale, qui réutilisait quantity * prix d'indice brut, donnait des
+ * % de benchmark aberrants, ex. +2983%).
+ */
+function benchmarkValueForPosition(indexTicker) {
+  return (position, date, priceHistoryByTicker) => {
+    const priceAtBuy = priceAtOrBefore(priceHistoryByTicker, indexTicker, position.buy_date);
+    const priceAtDate = priceAtOrBefore(priceHistoryByTicker, indexTicker, date);
+    if (!Number.isFinite(priceAtBuy) || priceAtBuy === 0 || !Number.isFinite(priceAtDate)) return null;
+    const cost = position.buy_price * position.quantity;
+    return cost * (priceAtDate / priceAtBuy);
+  };
+}
+
+/**
+ * Courbe de rendement en % pour un ensemble de positions sur toutes les
+ * dates disponibles dans priceHistoryByTicker pour les tickers de ces
+ * positions. `valueForPosition(position, date, priceHistoryByTicker)`
+ * fournit la VALEUR à la date D pour une position — le portefeuille réel
+ * l'appelle avec realValueForPosition (prix réel × quantité réelle), la
+ * courbe benchmark avec benchmarkValueForPosition(indexTicker) (même
+ * coût scalé par l'évolution de l'indice depuis l'achat) : même fonction
+ * d'agrégation dans les deux cas.
+ *
+ * pnlPct(D) = somme(value(D) - cost) / somme(cost) * 100 — pondéré par
+ * le capital investi, jamais une moyenne des % de chaque ligne.
+ */
+function computePerformanceCurve(positions, priceHistoryByTicker, valueForPosition) {
+  const dates = new Set();
+  positions.forEach(p => {
+    const entries = priceHistoryByTicker[p.ticker];
+    if (entries) entries.forEach(e => dates.add(e.date));
+  });
+  return Array.from(dates).sort().map(date => {
+    let totalCost = 0;
+    let totalPnlAbs = 0;
+    positions.forEach(position => {
+      if (!isPositionActiveOn(position, date)) return;
+      const value = valueForPosition(position, date, priceHistoryByTicker);
+      if (!Number.isFinite(value)) return;
+      const cost = position.buy_price * position.quantity;
+      totalCost += cost;
+      totalPnlAbs += value - cost;
+    });
+    return { date, pnlPct: totalCost !== 0 ? (totalPnlAbs / totalCost) * 100 : null };
+  }).filter(point => point.pnlPct !== null);
+}
+
+/**
+ * { EUR: [...], USD: [...] } — tableau vide pour une devise sans
+ * aucune position (ouverte ou clôturée), jamais de conversion entre
+ * devises (cohérent avec computePortfolioTotals).
+ */
+function computePortfolioPerformanceCurves(openPositions, closedPositions, companiesByTicker, currencyByIndex, priceHistoryByTicker) {
+  const allPositions = [...openPositions, ...closedPositions];
+  const byCurrency = { EUR: [], USD: [] };
+  allPositions.forEach(position => {
+    const company = companiesByTicker[position.ticker];
+    if (!company) return;
+    const currency = currencyByIndex[company.index] === 'USD' ? 'USD' : 'EUR';
+    byCurrency[currency].push(position);
+  });
+  const curves = {};
+  Object.keys(byCurrency).forEach(currency => {
+    curves[currency] = byCurrency[currency].length
+      ? computePerformanceCurve(byCurrency[currency], priceHistoryByTicker, realValueForPosition)
+      : [];
+  });
+  return curves;
+}
+
+/**
+ * Courbe benchmark pour un ensemble de positions donné : réutilise
+ * EXACTEMENT les mêmes positions (mêmes buy_date/sell_date/cost) que
+ * computePortfolioPerformanceCurves pour cette devise, seule la source
+ * de prix change (indexTicker au lieu du ticker de chaque position) —
+ * comparaison apples-to-apples.
+ */
+function computeBenchmarkPerformanceCurve(positions, indexTicker, priceHistoryByTicker) {
+  return computePerformanceCurve(positions, priceHistoryByTicker, benchmarkValueForPosition(indexTicker));
+}
+
 /**
  * `null` si currentPrice n'est pas un nombre fini (prix indisponible pour
  * ce ticker) — jamais NaN qui se propagerait silencieusement dans les
@@ -248,5 +436,9 @@ if (typeof module !== 'undefined' && module.exports) {
     loadPortfolio, savePortfolio, addPosition, updatePosition, removePosition,
     computePositionPnL, computePortfolioTotals, findOpportunities,
     computePortfolioConcentration, computePortfolioHealth, computePortfolioAttribution,
+    PORTFOLIO_CLOSED_STORAGE_KEY, loadClosedPortfolio, saveClosedPortfolio, closePosition,
+    groupPriceHistoryByTicker, priceAtOrBefore, isPositionActiveOn, realValueForPosition,
+    benchmarkValueForPosition, computePerformanceCurve, computePortfolioPerformanceCurves,
+    computeBenchmarkPerformanceCurve,
   };
 }

@@ -200,14 +200,16 @@ def run_cycle(token: str, account_id: str, twelve_data_api_key: str,
             _log_decision(decision, path=DECISIONS_LOG_PATH)
             return decision
 
-        balance = _with_retry(lambda: broker.get_account_balance(token, account_id, region))
+        account_info = _with_retry(lambda: broker.get_account_information(token, account_id, region))
+        balance = account_info["balance"]
+        equity = account_info["equity"]
         _save_cache({"balance": balance, "fetched_at": _now_iso()}, LATEST_BALANCE_PATH)
         open_positions = _with_retry(lambda: bot.reconcile_positions(token, account_id, region))
         _save_cache({"positions": open_positions, "fetched_at": _now_iso()}, LATEST_POSITIONS_PATH)
         spec = _with_retry(lambda: broker.get_symbol_specification(token, account_id, symbol, region))
         contract_size = spec["contractSize"]
         decision = bot.decide_and_act(
-            candles, contract_size=contract_size, balance=balance,
+            candles, contract_size=contract_size, balance=balance, equity=equity,
             open_positions=open_positions, circuit_breaker=circuit_breaker, symbol=symbol,
             risk_pct=profile_params["risk_pct"],
         )

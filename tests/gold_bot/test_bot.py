@@ -17,7 +17,7 @@ def _open_circuit_breaker():
 
 def test_decide_and_act_no_action_on_neutral_signal(monkeypatch):
     monkeypatch.setattr(bot.confluence, "compute_signal", lambda candles: _signal("neutre"))
-    result = bot.decide_and_act([], contract_size=100, balance=10000, open_positions=[], circuit_breaker=_open_circuit_breaker())
+    result = bot.decide_and_act([], contract_size=100, balance=10000, equity=10000, open_positions=[], circuit_breaker=_open_circuit_breaker())
     assert result["action"] == "aucune"
     assert result["reason"] == "signal neutre"
 
@@ -27,7 +27,7 @@ def test_decide_and_act_opens_when_no_existing_position(monkeypatch):
         bot.confluence, "compute_signal",
         lambda candles: _signal("achat", entry=2100, stop_loss=2095, take_profit=2115),
     )
-    result = bot.decide_and_act([], contract_size=100, balance=10000, open_positions=[], circuit_breaker=_open_circuit_breaker())
+    result = bot.decide_and_act([], contract_size=100, balance=10000, equity=10000, open_positions=[], circuit_breaker=_open_circuit_breaker())
     assert result["action"] == "simulation"
     assert len(result["steps"]) == 1
     step = result["steps"][0]
@@ -42,7 +42,7 @@ def test_decide_and_act_uses_explicit_risk_pct_when_provided(monkeypatch):
         lambda candles: _signal("achat", entry=2100, stop_loss=2095, take_profit=2115),
     )
     result = bot.decide_and_act(
-        [], contract_size=100, balance=10000, open_positions=[],
+        [], contract_size=100, balance=10000, equity=10000, open_positions=[],
         circuit_breaker=_open_circuit_breaker(), risk_pct=0.10,
     )
     step = result["steps"][0]
@@ -55,7 +55,7 @@ def test_decide_and_act_no_action_when_same_direction_already_open(monkeypatch):
         lambda candles: _signal("achat", entry=2100, stop_loss=2095, take_profit=2115),
     )
     existing = [{"id": "1", "symbol": "XAUUSD", "type": "POSITION_TYPE_BUY"}]
-    result = bot.decide_and_act([], contract_size=100, balance=10000, open_positions=existing, circuit_breaker=_open_circuit_breaker())
+    result = bot.decide_and_act([], contract_size=100, balance=10000, equity=10000, open_positions=existing, circuit_breaker=_open_circuit_breaker())
     assert result["action"] == "aucune"
     assert result["reason"] == "position déjà ouverte dans le même sens"
 
@@ -66,7 +66,7 @@ def test_decide_and_act_closes_then_opens_on_opposite_signal(monkeypatch):
         lambda candles: _signal("vente", entry=2100, stop_loss=2110, take_profit=2085),
     )
     existing = [{"id": "1", "symbol": "XAUUSD", "type": "POSITION_TYPE_BUY"}]
-    result = bot.decide_and_act([], contract_size=100, balance=10000, open_positions=existing, circuit_breaker=_open_circuit_breaker())
+    result = bot.decide_and_act([], contract_size=100, balance=10000, equity=10000, open_positions=existing, circuit_breaker=_open_circuit_breaker())
     assert result["action"] == "simulation"
     assert len(result["steps"]) == 2
     assert result["steps"][0] == {"type": "clôture_simulee", "position_id": "1", "symbol": "XAUUSD"}
@@ -77,18 +77,62 @@ def test_decide_and_act_closes_then_opens_on_opposite_signal(monkeypatch):
 def test_decide_and_act_blocked_by_circuit_breaker():
     from datetime import datetime, timezone
     cb = risk.CircuitBreaker(threshold_pct=0.10, now_fn=lambda: datetime(2026, 9, 10, tzinfo=timezone.utc))
-    cb.check(10000)  # solde de départ du jour
+    cb.check(10000)  # référence de départ du jour (equity)
 
     import gold_bot.confluence as confluence
     real_compute_signal = confluence.compute_signal
     try:
         confluence.compute_signal = lambda candles: _signal("achat", entry=2100, stop_loss=2095, take_profit=2115)
-        result = bot.decide_and_act([], contract_size=100, balance=8900, open_positions=[], circuit_breaker=cb)  # -11% depuis 10000
+        # equity à -11% depuis 10000 -> coupe-circuit déclenché, même avec
+        # un balance encore intact (voir test ci-dessous pour la
+        # distinction explicite balance/equity, le coeur du correctif).
+        result = bot.decide_and_act([], contract_size=100, balance=10000, equity=8900,
+                                     open_positions=[], circuit_breaker=cb)
     finally:
         confluence.compute_signal = real_compute_signal
 
     assert result["action"] == "aucune"
     assert result["reason"] == "coupe-circuit journalier déclenché"
+
+
+def test_decide_and_act_circuit_breaker_reacts_to_equity_not_balance(monkeypatch):
+    """Le coeur du correctif : une position ouverte en perte flottante
+    (visible dans equity, pas encore dans balance tant qu'elle n'est pas
+    clôturée) doit déclencher le coupe-circuit — avant ce correctif,
+    balance seul ne l'aurait jamais vu venir."""
+    from datetime import datetime, timezone
+    cb = risk.CircuitBreaker(threshold_pct=0.10, now_fn=lambda: datetime(2026, 9, 10, tzinfo=timezone.utc))
+    cb.check(10000)  # référence de départ du jour (equity=10000)
+
+    monkeypatch.setattr(
+        bot.confluence, "compute_signal",
+        lambda candles: _signal("achat", entry=2100, stop_loss=2095, take_profit=2115),
+    )
+    # balance encore à 10000 (rien de réalisé) mais equity à 8900 (-11%,
+    # perte flottante d'une position ouverte) -> doit bloquer.
+    result = bot.decide_and_act([], contract_size=100, balance=10000, equity=8900,
+                                 open_positions=[], circuit_breaker=cb)
+
+    assert result["action"] == "aucune"
+    assert result["reason"] == "coupe-circuit journalier déclenché"
+
+
+def test_decide_and_act_circuit_breaker_not_tripped_by_stale_balance_when_equity_healthy(monkeypatch):
+    """Symétrique du test précédent : un balance en apparence bas (par
+    exemple juste après une clôture perdante déjà comptée) ne doit plus
+    bloquer si l'equity réelle est saine."""
+    from datetime import datetime, timezone
+    cb = risk.CircuitBreaker(threshold_pct=0.10, now_fn=lambda: datetime(2026, 9, 10, tzinfo=timezone.utc))
+    cb.check(10000)  # référence de départ du jour (equity=10000)
+
+    monkeypatch.setattr(
+        bot.confluence, "compute_signal",
+        lambda candles: _signal("achat", entry=2100, stop_loss=2095, take_profit=2115),
+    )
+    result = bot.decide_and_act([], contract_size=100, balance=8900, equity=10000,
+                                 open_positions=[], circuit_breaker=cb)
+
+    assert result["action"] == "simulation"
 
 
 def test_decide_and_act_never_calls_real_broker_order_functions(monkeypatch):
@@ -103,7 +147,7 @@ def test_decide_and_act_never_calls_real_broker_order_functions(monkeypatch):
     monkeypatch.setattr(bot.broker, "place_market_order", lambda *a, **k: called.__setitem__("place", True))
     monkeypatch.setattr(bot.broker, "close_position", lambda *a, **k: called.__setitem__("close", True))
 
-    bot.decide_and_act([], contract_size=100, balance=10000, open_positions=[], circuit_breaker=_open_circuit_breaker())
+    bot.decide_and_act([], contract_size=100, balance=10000, equity=10000, open_positions=[], circuit_breaker=_open_circuit_breaker())
 
     assert called == {"place": False, "close": False}
 
@@ -117,7 +161,7 @@ def test_decide_and_act_closes_all_matching_positions_on_reversal(monkeypatch):
         {"id": "1", "symbol": "XAUUSD", "type": "POSITION_TYPE_BUY"},
         {"id": "2", "symbol": "XAUUSD", "type": "POSITION_TYPE_BUY"},
     ]
-    result = bot.decide_and_act([], contract_size=100, balance=10000, open_positions=existing, circuit_breaker=_open_circuit_breaker())
+    result = bot.decide_and_act([], contract_size=100, balance=10000, equity=10000, open_positions=existing, circuit_breaker=_open_circuit_breaker())
     assert result["action"] == "simulation"
     close_steps = [s for s in result["steps"] if s["type"] == "clôture_simulee"]
     assert len(close_steps) == 2
@@ -134,7 +178,7 @@ def test_decide_and_act_no_action_when_any_matching_position_is_same_direction(m
         {"id": "1", "symbol": "XAUUSD", "type": "POSITION_TYPE_SELL"},
         {"id": "2", "symbol": "XAUUSD", "type": "POSITION_TYPE_BUY"},
     ]
-    result = bot.decide_and_act([], contract_size=100, balance=10000, open_positions=existing, circuit_breaker=_open_circuit_breaker())
+    result = bot.decide_and_act([], contract_size=100, balance=10000, equity=10000, open_positions=existing, circuit_breaker=_open_circuit_breaker())
     assert result["action"] == "aucune"
 
 
@@ -144,7 +188,7 @@ def test_decide_and_act_no_action_when_position_type_unrecognized(monkeypatch):
         lambda candles: _signal("achat", entry=2100, stop_loss=2095, take_profit=2115),
     )
     existing = [{"id": "1", "symbol": "XAUUSD", "type": "POSITION_TYPE_UNKNOWN"}]
-    result = bot.decide_and_act([], contract_size=100, balance=10000, open_positions=existing, circuit_breaker=_open_circuit_breaker())
+    result = bot.decide_and_act([], contract_size=100, balance=10000, equity=10000, open_positions=existing, circuit_breaker=_open_circuit_breaker())
     assert result["action"] == "aucune"
     assert "non reconnu" in result["reason"]
 
@@ -159,7 +203,7 @@ def test_decide_and_act_never_calls_real_broker_order_functions_on_reversal(monk
     monkeypatch.setattr(bot.broker, "place_market_order", lambda *a, **k: called.__setitem__("place", True))
     monkeypatch.setattr(bot.broker, "close_position", lambda *a, **k: called.__setitem__("close", True))
 
-    bot.decide_and_act([], contract_size=100, balance=10000, open_positions=existing, circuit_breaker=_open_circuit_breaker())
+    bot.decide_and_act([], contract_size=100, balance=10000, equity=10000, open_positions=existing, circuit_breaker=_open_circuit_breaker())
 
     assert called == {"place": False, "close": False}
 
@@ -175,7 +219,7 @@ def _blackout_candles():
 def test_decide_and_act_closes_open_position_during_news_blackout():
     existing = [{"id": "1", "symbol": "XAUUSD", "type": "POSITION_TYPE_BUY"}]
     result = bot.decide_and_act(
-        _blackout_candles(), contract_size=100, balance=10000,
+        _blackout_candles(), contract_size=100, balance=10000, equity=10000,
         open_positions=existing, circuit_breaker=_open_circuit_breaker(),
     )
     assert result["action"] == "simulation"
@@ -188,7 +232,7 @@ def test_decide_and_act_closes_all_matching_positions_during_news_blackout():
         {"id": "2", "symbol": "XAUUSD", "type": "POSITION_TYPE_SELL"},
     ]
     result = bot.decide_and_act(
-        _blackout_candles(), contract_size=100, balance=10000,
+        _blackout_candles(), contract_size=100, balance=10000, equity=10000,
         open_positions=existing, circuit_breaker=_open_circuit_breaker(),
     )
     assert result["action"] == "simulation"
@@ -200,7 +244,7 @@ def test_decide_and_act_closes_all_matching_positions_during_news_blackout():
 
 def test_decide_and_act_no_action_during_news_blackout_when_no_open_position():
     result = bot.decide_and_act(
-        _blackout_candles(), contract_size=100, balance=10000,
+        _blackout_candles(), contract_size=100, balance=10000, equity=10000,
         open_positions=[], circuit_breaker=_open_circuit_breaker(),
     )
     assert result["action"] == "aucune"
@@ -210,7 +254,7 @@ def test_decide_and_act_no_action_during_news_blackout_when_no_open_position():
 def test_decide_and_act_no_action_when_position_type_unrecognized_during_blackout():
     existing = [{"id": "1", "symbol": "XAUUSD", "type": "POSITION_TYPE_UNKNOWN"}]
     result = bot.decide_and_act(
-        _blackout_candles(), contract_size=100, balance=10000,
+        _blackout_candles(), contract_size=100, balance=10000, equity=10000,
         open_positions=existing, circuit_breaker=_open_circuit_breaker(),
     )
     assert result["action"] == "aucune"
@@ -224,7 +268,7 @@ def test_decide_and_act_never_calls_real_broker_order_functions_during_blackout(
     monkeypatch.setattr(bot.broker, "close_position", lambda *a, **k: called.__setitem__("close", True))
 
     bot.decide_and_act(
-        _blackout_candles(), contract_size=100, balance=10000,
+        _blackout_candles(), contract_size=100, balance=10000, equity=10000,
         open_positions=existing, circuit_breaker=_open_circuit_breaker(),
     )
 
@@ -234,7 +278,7 @@ def test_decide_and_act_never_calls_real_broker_order_functions_during_blackout(
 def test_decide_and_act_ignores_positions_for_other_symbols_during_blackout():
     existing = [{"id": "1", "symbol": "EURUSD", "type": "POSITION_TYPE_BUY"}]
     result = bot.decide_and_act(
-        _blackout_candles(), contract_size=100, balance=10000,
+        _blackout_candles(), contract_size=100, balance=10000, equity=10000,
         open_positions=existing, circuit_breaker=_open_circuit_breaker(), symbol="XAUUSD",
     )
     assert result["action"] == "aucune"

@@ -11,7 +11,7 @@ import gold_bot.confluence as confluence
 import gold_bot.risk as risk
 
 
-def decide_and_act(candles: list[dict], *, contract_size: float, balance: float,
+def decide_and_act(candles: list[dict], *, contract_size: float, balance: float, equity: float,
                     open_positions: list[dict], circuit_breaker: "risk.CircuitBreaker",
                     symbol: str = "XAUUSD", risk_pct: float = 0.05) -> dict:
     """Cœur de la boucle : évalue le signal, applique les règles de
@@ -33,6 +33,13 @@ def decide_and_act(candles: list[dict], *, contract_size: float, balance: float,
     inchangé (0.05, le profil 3) pour ne casser aucun appelant existant
     qui ne fournit pas ce paramètre.
 
+    `balance` (capital réalisé) sert uniquement au dimensionnement
+    (risk.compute_position_size) — convention standard, indépendante du
+    P&L flottant. `equity` (balance + P&L flottant des positions
+    ouvertes) sert uniquement au coupe-circuit : une position ouverte en
+    train de perdre doit pouvoir le déclencher avant sa clôture, pas
+    seulement une fois la perte réalisée dans balance.
+
     Gère toutes les positions correspondant à `symbol`, pas seulement la
     première trouvée (un redémarrage/crash pourrait en laisser
     plusieurs) — une position au type non reconnu bloque toute action
@@ -46,11 +53,12 @@ def decide_and_act(candles: list[dict], *, contract_size: float, balance: float,
     traitement dédié la position resterait ouverte pendant la
     publication au lieu d'être fermée avant qu'elle n'ait lieu."""
     signal = confluence.compute_signal(candles)
-    # Fixe le solde de référence du jour dès le premier cycle, même sur
-    # un signal neutre — sinon la référence ne serait fixée qu'au
-    # premier cycle *actionnable* du jour, potentiellement bien après
-    # l'ouverture UTC et sur un solde déjà dérivé.
-    circuit_breaker.check(balance)
+    # Fixe la référence du jour (equity, pas balance — voir docstring)
+    # dès le premier cycle, même sur un signal neutre — sinon la
+    # référence ne serait fixée qu'au premier cycle *actionnable* du
+    # jour, potentiellement bien après l'ouverture UTC et sur une equity
+    # déjà dérivée.
+    circuit_breaker.check(equity)
 
     matching = [p for p in open_positions if p.get("symbol") == symbol]
 
@@ -86,7 +94,7 @@ def decide_and_act(candles: list[dict], *, contract_size: float, balance: float,
     if signal["status"] in directions:
         return {"action": "aucune", "reason": "position déjà ouverte dans le même sens"}
 
-    if not circuit_breaker.can_open_position(balance):
+    if not circuit_breaker.can_open_position(equity):
         return {"action": "aucune", "reason": "coupe-circuit journalier déclenché"}
 
     steps = []

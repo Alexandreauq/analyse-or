@@ -1187,6 +1187,7 @@ def _fake_ratios():
         "latest_quarter_date": "2026-06-30",
         "is_financial": False,
         "is_trust": False,
+        "_price_history_daily": [],
     }
 
 
@@ -3932,6 +3933,7 @@ def _fake_financial_ratios():
         "latest_quarter_date": "2026-06-30",
         "is_financial": True,
         "is_trust": False,
+        "_price_history_daily": [],
     }
 
 
@@ -4003,6 +4005,32 @@ def test_build_company_entry_includes_also_indices(monkeypatch):
 
     assert with_also["also_indices"] == ["DOW"]
     assert without_also["also_indices"] == []  # défaut None -> [] plutôt qu'absent du dict
+
+
+def test_build_company_entry_carries_the_price_history_through(monkeypatch):
+    """fetch_company_financials expose desormais _price_history_daily
+    (voir test_fetch_company_financials_exposes_the_full_price_history_for_persistence)
+    — build_company_entry doit la faire remonter jusqu'a son dict de
+    sortie sans toucher aux champs publics existants, pour que main()
+    puisse ensuite la retirer (.pop) avant d'ecrire docs/indices.json et
+    la rediriger vers update_price_history (docs/price_history.json)."""
+    fake_ratios = _fake_financial_ratios()
+    fake_ratios["_price_history_daily"] = [
+        {"date": "2024-01-01", "ticker": "BNP.PA", "price": 60.0},
+    ]
+    monkeypatch.setattr(indices_score, "fetch_company_financials", lambda ticker: fake_ratios)
+    monkeypatch.setattr(indices_score, "fetch_news", lambda name, prev=None: [])
+    monkeypatch.setattr(indices_score, "generate_financial_analysis", lambda *a, **k: "<p>Analyse.</p>")
+
+    entry = indices_score.build_company_entry(
+        "BNP.PA", "BNP Paribas", risk_free_rate=0.03, previous_analyses={}, index_key="CAC40")
+
+    assert "_price_history_daily" in entry
+    assert entry["_price_history_daily"]
+    assert entry["_price_history_daily"] == fake_ratios["_price_history_daily"]
+    # Les champs publics existants restent inchanges par ce cablage.
+    assert entry["ticker"] == "BNP.PA"
+    assert entry["index"] == "CAC40"
 
 
 def test_financial_sector_tickers_are_in_companies():

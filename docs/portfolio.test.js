@@ -9,8 +9,8 @@ const {
   computePositionPnL, computePortfolioTotals, findOpportunities,
   computePortfolioConcentration, computePortfolioHealth, computePortfolioAttribution,
   PORTFOLIO_CLOSED_STORAGE_KEY, loadClosedPortfolio, saveClosedPortfolio, closePosition,
-  groupPriceHistoryByTicker, priceAtOrBefore, isPositionActiveOn, realPriceForPosition,
-  benchmarkPriceForPosition, computePerformanceCurve, computePortfolioPerformanceCurves,
+  groupPriceHistoryByTicker, priceAtOrBefore, isPositionActiveOn, realValueForPosition,
+  benchmarkValueForPosition, computePerformanceCurve, computePortfolioPerformanceCurves,
   computeBenchmarkPerformanceCurve,
 } = require('./portfolio.js');
 
@@ -445,7 +445,7 @@ function test_compute_performance_curve_weights_by_invested_capital_not_naive_av
     A: [{ date: '2026-02-01', price: 2.0 }],   // +100%
     B: [{ date: '2026-02-01', price: 1010.0 }], // +1%
   };
-  const curve = computePerformanceCurve(positions, priceHistoryByTicker, realPriceForPosition);
+  const curve = computePerformanceCurve(positions, priceHistoryByTicker, realValueForPosition);
   assert.strictEqual(curve.length, 1);
   // pondere : (100 + 10) / (100 + 1000) * 100 = 10.0, PAS (100+1)/2 = 50.5 (moyenne naive)
   assert.ok(Math.abs(curve[0].pnlPct - 10.0) < 0.001);
@@ -460,7 +460,7 @@ function test_compute_performance_curve_excludes_a_position_with_no_known_price_
     A: [{ date: '2026-02-01', price: 11.0 }],
     B: [{ date: '2026-02-01', price: 21.0 }],
   };
-  const curve = computePerformanceCurve(positions, priceHistoryByTicker, realPriceForPosition);
+  const curve = computePerformanceCurve(positions, priceHistoryByTicker, realValueForPosition);
   assert.strictEqual(curve.length, 1);
   // seule A compte au 02-01 : (11-10)*10 / (10*10) * 100 = 10%
   assert.ok(Math.abs(curve[0].pnlPct - 10.0) < 0.001);
@@ -480,17 +480,30 @@ function test_compute_portfolio_performance_curves_splits_by_currency_and_skips_
   assert.deepStrictEqual(curvesWithPosition.USD, []);
 }
 
-function test_compute_benchmark_performance_curve_reuses_the_same_positions_and_dates() {
-  const positions = [{ ticker: 'MC.PA', buy_date: '2026-01-01', quantity: 5, buy_price: 90.0 }];
+function test_compute_benchmark_performance_curve_scales_cost_by_index_ratio_since_buy_date() {
+  const positions = [{ ticker: 'MC.PA', buy_date: '2026-01-01', quantity: 5, buy_price: 90.0 }]; // cost = 450
   const priceHistoryByTicker = {
-    'MC.PA': [{ date: '2026-02-01', price: 90.0 }],  // 0% sur le titre reel
-    '^FCHI': [{ date: '2026-02-01', price: 8000.0 }],
+    'MC.PA': [{ date: '2026-02-01', price: 90.0 }],
+    '^FCHI': [
+      { date: '2026-01-01', price: 8000.0 },
+      { date: '2026-02-01', price: 8800.0 }, // +10% depuis l'achat
+    ],
   };
   const benchmarkCurve = computeBenchmarkPerformanceCurve(positions, '^FCHI', priceHistoryByTicker);
   assert.strictEqual(benchmarkCurve.length, 1);
   assert.strictEqual(benchmarkCurve[0].date, '2026-02-01');
-  // valeur benchmark = 8000 * 5 = 40000, cout = 90*5 = 450 -> gros % positif attendu, different de 0%
-  assert.notStrictEqual(benchmarkCurve[0].pnlPct, 0);
+  // 450 * (8800/8000) = 495, pnlPct = (495-450)/450*100 = 10.0
+  assert.ok(Math.abs(benchmarkCurve[0].pnlPct - 10.0) < 0.001, `expected ~10.0, got ${benchmarkCurve[0].pnlPct}`);
+}
+
+function test_compute_benchmark_performance_curve_returns_null_value_when_index_price_at_buy_date_is_unknown() {
+  const positions = [{ ticker: 'MC.PA', buy_date: '2026-01-01', quantity: 5, buy_price: 90.0 }];
+  const priceHistoryByTicker = {
+    'MC.PA': [{ date: '2026-02-01', price: 90.0 }],
+    '^FCHI': [{ date: '2026-02-01', price: 8800.0 }], // aucune entree a la date d'achat ou avant
+  };
+  const benchmarkCurve = computeBenchmarkPerformanceCurve(positions, '^FCHI', priceHistoryByTicker);
+  assert.strictEqual(benchmarkCurve.length, 0); // position exclue de cette date faute de prix d'indice au buy_date
 }
 
 function main() {
@@ -542,7 +555,8 @@ function main() {
   test_compute_performance_curve_weights_by_invested_capital_not_naive_average();
   test_compute_performance_curve_excludes_a_position_with_no_known_price_on_a_date_without_dropping_the_date();
   test_compute_portfolio_performance_curves_splits_by_currency_and_skips_empty_currency();
-  test_compute_benchmark_performance_curve_reuses_the_same_positions_and_dates();
+  test_compute_benchmark_performance_curve_scales_cost_by_index_ratio_since_buy_date();
+  test_compute_benchmark_performance_curve_returns_null_value_when_index_price_at_buy_date_is_unknown();
   console.log('Tous les tests portfolio.test.js sont passés.');
 }
 

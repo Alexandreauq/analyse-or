@@ -5139,3 +5139,88 @@ def test_main_calls_update_signal_tracking(monkeypatch, tmp_path):
 
     assert "companies" in called_with
     assert len(called_with["companies"]) == len(indices_score.COMPANIES)
+
+
+def test_main_persists_price_history_from_companies_and_indices(monkeypatch, tmp_path):
+    """Preuve que main() combine l'historique de prix des entreprises
+    (_price_history_daily, propage par build_company_entry) et celui des
+    indices benchmark (fetch_index_price_history), puis les transmet a
+    update_price_history — sans ca, docs/price_history.json ne serait
+    jamais alimente en production."""
+    monkeypatch.setattr(indices_score, "COMPANIES", [
+        {"ticker": "MC.PA", "name": "LVMH", "index": "CAC40"},
+    ])
+    monkeypatch.setattr(indices_score, "fetch_risk_free_rate", lambda series_id: 3.68)
+    monkeypatch.setattr(indices_score, "load_previous_company_analyses", lambda: {})
+    monkeypatch.setattr(
+        indices_score, "build_company_entry",
+        lambda ticker, name, risk_free_rate, previous_analyses, index_key="CAC40", also_indices=None: {
+            "ticker": ticker, "name": name, "index": index_key,
+            "score": 10.0, "interpretation": "Neutre",
+            "current_price": 50.0, "entry_price": 50.0,
+            "_price_history_daily": [
+                {"date": "2026-09-21", "ticker": ticker, "price": 50.0},
+            ],
+        },
+    )
+    monkeypatch.setattr(indices_score, "load_indices_history", lambda: [])
+    monkeypatch.setattr(indices_score, "append_indices_history", lambda entries: entries)
+    monkeypatch.setattr(indices_score, "update_signal_tracking", lambda companies, newly_triggered_entree: [])
+    monkeypatch.setattr(indices_score, "update_nikkei_hangseng_price_history", lambda companies: [])
+    monkeypatch.setattr(indices_score, "fetch_index_prices", lambda: {"CAC40": None, "DAX": None, "NASDAQ": None, "DOW": None})
+    output_path = tmp_path / "indices.json"
+    monkeypatch.setattr(indices_score, "OUTPUT_JSON_PATH", str(output_path))
+
+    captured = {}
+    def _fake_update_price_history(entries, **kwargs):
+        captured["entries"] = entries
+        return entries
+    monkeypatch.setattr(indices_score, "update_price_history", _fake_update_price_history)
+    monkeypatch.setattr(indices_score, "fetch_index_price_history", lambda: [
+        {"date": "2026-09-21", "ticker": "^FCHI", "price": 7850.2}])
+
+    indices_score.main()
+
+    tickers = {e["ticker"] for e in captured["entries"]}
+    assert "^FCHI" in tickers
+    assert "MC.PA" in tickers
+
+
+def test_main_never_writes_the_internal_price_history_key_to_indices_json(monkeypatch, tmp_path):
+    """La cle interne _price_history_daily (voir build_company_entry) ne
+    doit jamais atteindre docs/indices.json publie — elle est retiree
+    (.pop) dans main() avant construction du payload public, redirigee
+    exclusivement vers update_price_history (docs/price_history.json)."""
+    monkeypatch.setattr(indices_score, "COMPANIES", [
+        {"ticker": "MC.PA", "name": "LVMH", "index": "CAC40"},
+    ])
+    monkeypatch.setattr(indices_score, "fetch_risk_free_rate", lambda series_id: 3.68)
+    monkeypatch.setattr(indices_score, "load_previous_company_analyses", lambda: {})
+    monkeypatch.setattr(
+        indices_score, "build_company_entry",
+        lambda ticker, name, risk_free_rate, previous_analyses, index_key="CAC40", also_indices=None: {
+            "ticker": ticker, "name": name, "index": index_key,
+            "score": 10.0, "interpretation": "Neutre",
+            "current_price": 50.0, "entry_price": 50.0,
+            "_price_history_daily": [
+                {"date": "2026-09-21", "ticker": ticker, "price": 50.0},
+            ],
+        },
+    )
+    monkeypatch.setattr(indices_score, "load_indices_history", lambda: [])
+    monkeypatch.setattr(indices_score, "append_indices_history", lambda entries: entries)
+    monkeypatch.setattr(indices_score, "update_signal_tracking", lambda companies, newly_triggered_entree: [])
+    monkeypatch.setattr(indices_score, "update_nikkei_hangseng_price_history", lambda companies: [])
+    monkeypatch.setattr(indices_score, "fetch_index_prices", lambda: {"CAC40": None, "DAX": None, "NASDAQ": None, "DOW": None})
+    output_path = tmp_path / "indices.json"
+    monkeypatch.setattr(indices_score, "OUTPUT_JSON_PATH", str(output_path))
+
+    monkeypatch.setattr(indices_score, "update_price_history", lambda entries, **kwargs: entries)
+    monkeypatch.setattr(indices_score, "fetch_index_price_history", lambda: [])
+
+    indices_score.main()
+
+    with open(indices_score.OUTPUT_JSON_PATH, encoding="utf-8") as fh:
+        payload = json.load(fh)
+    for company in payload["companies"]:
+        assert "_price_history_daily" not in company

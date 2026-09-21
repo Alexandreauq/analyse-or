@@ -4241,6 +4241,12 @@ def main():
             print(f"Erreur pour {company['ticker']} ({company['name']}) : {e}")
             traceback.print_exc()
 
+    price_history_entries = []
+    for c in companies:
+        price_history_entries.extend(c.pop("_price_history_daily", []))
+    price_history_entries.extend(fetch_index_price_history())
+    update_price_history(price_history_entries)
+
     newly_triggered_entree, newly_triggered_major_news = _attach_alerts_and_update_history(companies)
     send_daily_digest_email(newly_triggered_entree, newly_triggered_major_news)
     update_signal_tracking(companies, newly_triggered_entree)

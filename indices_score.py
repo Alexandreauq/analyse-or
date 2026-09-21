@@ -23,7 +23,7 @@ import time
 import traceback
 import xml.etree.ElementTree as ET
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.utils import parsedate_to_datetime
@@ -2750,6 +2750,39 @@ NIKKEI_HANGSENG_PRICE_HISTORY_PATH = os.path.join(
 # — les autres ont déjà un graphique TradingView fonctionnel, pas besoin
 # d'accumuler un historique de prix pour eux.
 PRICE_HISTORY_RETENTION_PER_TICKER = 730
+PRICE_HISTORY_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "docs", "price_history.json")
+PRICE_HISTORY_RECENT_DAYS = 30  # entrees quotidiennes dans cette fenetre
+PRICE_HISTORY_RETENTION_DAYS = 2190  # 6 ans, au-dela l'entree la plus ancienne est supprimee
+
+
+def _downsample_price_entries(entries: list[dict], today) -> list[dict]:
+    """Regle de densite/retention pour docs/price_history.json (spec 3.3),
+    reappliquee integralement a chaque run, jamais dependante d'un etat
+    "deja downsample". Dedoublonne par date dans les PRICE_HISTORY_RECENT_DAYS
+    derniers jours (une entree par jour), reduit a une entree par semaine
+    ISO (la plus recente) au-dela, tronque a PRICE_HISTORY_RETENTION_DAYS.
+    Idempotente : `entries` peut contenir un seul point du jour ou tout
+    l'historique disponible, le resultat est le meme au global pres."""
+    cutoff_recent = today - timedelta(days=PRICE_HISTORY_RECENT_DAYS)
+    cutoff_retention = today - timedelta(days=PRICE_HISTORY_RETENTION_DAYS)
+    recent_by_date: dict[str, dict] = {}
+    older_by_week: dict[tuple, dict] = {}
+    for entry in entries:
+        entry_date = datetime.strptime(entry["date"], "%Y-%m-%d").date()
+        if entry_date < cutoff_retention:
+            continue
+        if entry_date >= cutoff_recent:
+            recent_by_date[entry["date"]] = entry
+            continue
+        week_key = entry_date.isocalendar()[:2]
+        existing = older_by_week.get(week_key)
+        if existing is None or entry["date"] > existing["date"]:
+            older_by_week[week_key] = entry
+    result = list(older_by_week.values()) + list(recent_by_date.values())
+    result.sort(key=lambda e: e["date"])
+    return result
+
+
 # Indices utilisés comme benchmark de chaque position (voir "index" sur
 # chaque société — CAC40/DAX) : tickers yfinance correspondants.
 INDEX_YFINANCE_TICKERS = {

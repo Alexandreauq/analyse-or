@@ -23,7 +23,7 @@ import time
 import traceback
 import xml.etree.ElementTree as ET
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.utils import parsedate_to_datetime
@@ -2467,6 +2467,10 @@ def fetch_company_financials(ticker: str) -> dict:
     ratios["ma200"] = ma200
     ratios["shares_outstanding"] = shares_outstanding
     ratios["beta"] = beta
+    ratios["_price_history_daily"] = [
+        {"date": idx.strftime("%Y-%m-%d"), "ticker": ticker, "price": float(val)}
+        for idx, val in history.items()
+    ]
     return ratios
 
 
@@ -2750,6 +2754,83 @@ NIKKEI_HANGSENG_PRICE_HISTORY_PATH = os.path.join(
 # — les autres ont déjà un graphique TradingView fonctionnel, pas besoin
 # d'accumuler un historique de prix pour eux.
 PRICE_HISTORY_RETENTION_PER_TICKER = 730
+PRICE_HISTORY_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "docs", "price_history.json")
+PRICE_HISTORY_RECENT_DAYS = 30  # entrees quotidiennes dans cette fenetre
+PRICE_HISTORY_RETENTION_DAYS = 2190  # 6 ans, au-dela l'entree la plus ancienne est supprimee
+
+
+def _downsample_price_entries(entries: list[dict], today) -> list[dict]:
+    """Regle de densite/retention pour docs/price_history.json (spec 3.3),
+    reappliquee integralement a chaque run, jamais dependante d'un etat
+    "deja downsample". Dedoublonne par date dans les PRICE_HISTORY_RECENT_DAYS
+    derniers jours (une entree par jour), reduit a une entree par semaine
+    ISO (la plus recente) au-dela, tronque a PRICE_HISTORY_RETENTION_DAYS.
+    Idempotente : `entries` peut contenir un seul point du jour ou tout
+    l'historique disponible, le resultat est le meme au global pres."""
+    cutoff_recent = today - timedelta(days=PRICE_HISTORY_RECENT_DAYS)
+    cutoff_retention = today - timedelta(days=PRICE_HISTORY_RETENTION_DAYS)
+    recent_by_date: dict[str, dict] = {}
+    older_by_week: dict[tuple, dict] = {}
+    for entry in entries:
+        entry_date = datetime.strptime(entry["date"], "%Y-%m-%d").date()
+        if entry_date < cutoff_retention:
+            continue
+        if entry_date >= cutoff_recent:
+            recent_by_date[entry["date"]] = entry
+            continue
+        week_key = entry_date.isocalendar()[:2]
+        existing = older_by_week.get(week_key)
+        if existing is None or entry["date"] > existing["date"]:
+            older_by_week[week_key] = entry
+    result = list(older_by_week.values()) + list(recent_by_date.values())
+    result.sort(key=lambda e: e["date"])
+    return result
+
+
+def load_price_history(path=PRICE_HISTORY_PATH) -> list[dict]:
+    """Meme contrat que load_nikkei_hangseng_price_history : [] si le
+    fichier est absent ou corrompu, jamais d'exception."""
+    if not os.path.exists(path):
+        return []
+    try:
+        with open(path, encoding="utf-8") as fh:
+            return json.load(fh)
+    except json.JSONDecodeError:
+        return []
+
+
+def update_price_history(new_entries: list[dict], path=PRICE_HISTORY_PATH, today=None) -> list[dict]:
+    """Ajoute `new_entries` ({date, ticker, price}) a l'historique deja
+    accumule, retrimme chaque ticker independamment via
+    _downsample_price_entries (voir sa note d'idempotence), puis ecrit
+    le resultat. Degrade toujours vers [] sur erreur (fichier illisible,
+    NaN detecte par allow_nan=False...), ne fait jamais echouer main()."""
+    today = today or datetime.today().date()
+    try:
+        history = load_price_history(path)
+        history.extend(new_entries)
+        by_ticker: dict[str, list[dict]] = {}
+        for entry in history:
+            by_ticker.setdefault(entry["ticker"], []).append(entry)
+        trimmed = []
+        for ticker_entries in by_ticker.values():
+            trimmed.extend(_downsample_price_entries(ticker_entries, today))
+        # Arrondi a 4 decimales + separateurs compacts (pas d'indent) :
+        # la precision flottante brute de yfinance (jusqu'a 17 chiffres) et
+        # l'indentation gonflaient ce fichier vers 20+ Mo en regime permanent
+        # (720 tickers x ~329 points apres downsampling) — bien au-dela de
+        # la contrainte de taille visee par la spec. Aucun consommateur
+        # (docs/portfolio.js) n'a besoin de plus de 4 decimales.
+        rounded = [{**entry, "price": round(entry["price"], 4)} for entry in trimmed]
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, "w", encoding="utf-8") as fh:
+            json.dump(rounded, fh, ensure_ascii=False, allow_nan=False, separators=(",", ":"))
+        return rounded
+    except Exception as e:
+        print(f"Erreur historique de prix : {e}")
+        return []
+
+
 # Indices utilisés comme benchmark de chaque position (voir "index" sur
 # chaque société — CAC40/DAX) : tickers yfinance correspondants.
 INDEX_YFINANCE_TICKERS = {
@@ -2803,6 +2884,31 @@ def fetch_index_prices() -> dict:
         except Exception:
             prices[index_key] = None
     return prices
+
+
+def fetch_index_price_history() -> list[dict]:
+    """Historique complet (period='6y') du niveau de chaque indice
+    benchmark suivi (INDEX_YFINANCE_TICKERS) — alimente la courbe de
+    comparaison du portefeuille (docs/price_history.json). Distinct de
+    fetch_index_prices() qui ne renvoie qu'un instantane du jour (5
+    jours) pour index_price_at_entry — ne pas fusionner les deux, cette
+    derniere a un contrat different pour ses appelants existants. Une
+    liste vide par indice dont le fetch echoue individuellement, ou []
+    si yfinance n'est pas installe — ne fait jamais echouer les autres
+    indices ni lever d'exception."""
+    if yf is None:
+        return []
+    entries = []
+    for yf_ticker in INDEX_YFINANCE_TICKERS.values():
+        try:
+            history = yf.Ticker(yf_ticker).history(period="6y")["Close"].dropna()
+            entries.extend(
+                {"date": idx.strftime("%Y-%m-%d"), "ticker": yf_ticker, "price": float(val)}
+                for idx, val in history.items()
+            )
+        except Exception:
+            continue
+    return entries
 
 
 def _open_new_signal_positions(
@@ -3815,7 +3921,7 @@ def build_company_entry(
 
     valuation_targets = estimate_valuation_targets(data, cost_of_capital, cost_of_equity)
 
-    return {
+    entry = {
         "ticker": ticker,
         "name": name,
         "index": index_key,
@@ -3838,6 +3944,8 @@ def build_company_entry(
         "financial_analysis_html": financial_analysis_html,
         "financial_analysis_quarter": financial_analysis_quarter,
     }
+    entry["_price_history_daily"] = data["_price_history_daily"]
+    return entry
 
 
 def _attach_alerts_and_update_history(companies: list[dict]) -> tuple[list[dict], list[tuple]]:
@@ -4139,6 +4247,12 @@ def main():
             # Enterprise, cause réelle invisible sans la trace).
             print(f"Erreur pour {company['ticker']} ({company['name']}) : {e}")
             traceback.print_exc()
+
+    price_history_entries = []
+    for c in companies:
+        price_history_entries.extend(c.pop("_price_history_daily", []))
+    price_history_entries.extend(fetch_index_price_history())
+    update_price_history(price_history_entries)
 
     newly_triggered_entree, newly_triggered_major_news = _attach_alerts_and_update_history(companies)
     send_daily_digest_email(newly_triggered_entree, newly_triggered_major_news)

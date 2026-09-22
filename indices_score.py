@@ -3544,6 +3544,46 @@ def fetch_risk_free_rate(series_id: str = FRED_RISK_FREE_SERIES) -> float | None
         return None
 
 
+# Ticker Yahoo Finance + sens de cotation pour convertir une devise vers
+# USD — vérifié empiriquement (query1.finance.yahoo.com/v8/finance/chart) :
+# EUR/GBP/CHF cotent XXXUSD=X en direct (USD par unité de devise, ex.
+# EURUSD=X≈1.15 -> multiplier) ; JPY/HKD cotent XXX=X en indirect (unités
+# de devise par USD, ex. JPY=X≈157 -> diviser). Confirmé croisé : JPY=X et
+# USDJPY=X renvoient la même valeur, CHFUSD=X et USDCHF=X sont réciproques
+# l'un de l'autre. USD n'a pas d'entrée : identité, voir fetch_fx_rate_to_usd.
+FX_TICKER_TO_USD = {
+    "EUR": ("EURUSD=X", "multiply"),
+    "GBP": ("GBPUSD=X", "multiply"),
+    "CHF": ("CHFUSD=X", "multiply"),
+    "JPY": ("JPY=X", "divide"),
+    "HKD": ("HKD=X", "divide"),
+}
+
+
+def fetch_fx_rate_to_usd(currency: str) -> float | None:
+    """Taux de change vers USD pour convertir une capitalisation boursière
+    en devise locale avant de la comparer aux seuils de _size_premium
+    (SIZE_PREMIUM_BANDS, en USD par convention) — voir estimate_cost_of_equity.
+    USD -> 1.0 sans appel réseau. None si la devise n'est pas gérée, si
+    yfinance n'est pas installé, ou si l'appel échoue (repli sur
+    COST_OF_CAPITAL_PROXY chez l'appelant final, même contrat que
+    fetch_risk_free_rate) — ne lève jamais d'exception."""
+    if currency == "USD":
+        return 1.0
+    mapping = FX_TICKER_TO_USD.get(currency)
+    if mapping is None or yf is None:
+        return None
+    ticker, direction = mapping
+    try:
+        history = yf.Ticker(ticker).history(period="5d")["Close"]
+        rate = float(history.iloc[-1]) if len(history) else None
+        if rate is None or _is_missing(rate) or rate <= 0:
+            return None
+        return rate if direction == "multiply" else 1 / rate
+    except Exception:
+        return None
+
+
 MARKET_RISK_PREMIUM = 5.0        # % prime de risque marché (hypothèse fixe)
 
 SIZE_PREMIUM_BANDS = [
@@ -3579,6 +3619,7 @@ DEBT_WEIGHT_CAP = 0.75  # part maximale de la dette dans la pondération du WACC
 
 def estimate_cost_of_equity(
     risk_free_rate: float | None, beta: float | None, market_cap: float | None,
+    fx_rate_to_usd: float | None,
 ) -> float | None:
     """Coût des seuls fonds propres (CAPM + prime de taille, Vernimmen) —
     sans mélange avec le coût de la dette, contrairement au WACC
@@ -3588,15 +3629,26 @@ def estimate_cost_of_equity(
     marché (ex : financement captif d'un constructeur auto) fait
     baisser le WACC sans rendre les fonds propres eux-mêmes moins
     exigeants. None si une donnée nécessaire manque/est invalide. Ne
-    lève jamais d'exception."""
+    lève jamais d'exception.
+
+    `market_cap` est attendu dans la devise locale de l'entreprise ;
+    `fx_rate_to_usd` (voir fetch_fx_rate_to_usd) le convertit en USD
+    juste avant _size_premium (dont les seuils sont en USD par
+    convention) — sans cette conversion, une capitalisation en yens ou
+    en dollars de Hong Kong se comparait directement aux mêmes seuils
+    qu'une capitalisation en euros ou en dollars US, ce qui faisait
+    passer la quasi-totalité de la cote japonaise/hongkongaise pour des
+    méga-capitalisations (prime de taille nulle)."""
     if (
         risk_free_rate is None or _is_missing(risk_free_rate)
         or beta is None or _is_missing(beta)
         or market_cap is None or _is_missing(market_cap) or market_cap <= 0
+        or fx_rate_to_usd is None or _is_missing(fx_rate_to_usd) or fx_rate_to_usd <= 0
     ):
         return None
     try:
-        return risk_free_rate + beta * MARKET_RISK_PREMIUM + _size_premium(market_cap)
+        market_cap_usd = market_cap * fx_rate_to_usd
+        return risk_free_rate + beta * MARKET_RISK_PREMIUM + _size_premium(market_cap_usd)
     except (TypeError, ValueError):
         return None
 
@@ -3607,6 +3659,7 @@ def estimate_wacc(
     market_cap: float | None,
     total_debt: float | None,
     tax_rate: float | None,
+    fx_rate_to_usd: float | None,
 ) -> float | None:
     """WACC par entreprise (CAPM + prime de taille, Vernimmen). None si une
     donnée nécessaire manque/est invalide — le repli sur
@@ -3618,8 +3671,13 @@ def estimate_wacc(
     (voir sa docstring) plutôt que d'utiliser directement le ratio de
     marché total_debt/(market_cap+total_debt), pour ne pas laisser une
     dette de financement captif (constructeurs auto notamment) écraser
-    le coût des fonds propres dans le mix."""
-    cost_of_equity = estimate_cost_of_equity(risk_free_rate, beta, market_cap)
+    le coût des fonds propres dans le mix.
+
+    `fx_rate_to_usd` n'est transmis qu'à estimate_cost_of_equity (pour la
+    prime de taille) — `market_cap` reste en devise locale pour le ratio
+    dette/capital ci-dessous, puisque `total_debt` est dans la même
+    devise locale : convertir l'un sans l'autre fausserait ce ratio."""
+    cost_of_equity = estimate_cost_of_equity(risk_free_rate, beta, market_cap, fx_rate_to_usd)
     if (
         cost_of_equity is None
         or total_debt is None or _is_missing(total_debt) or total_debt < 0
@@ -3764,7 +3822,13 @@ def load_previous_alerted_news_links() -> dict:
 def build_company_entry(
     ticker: str, name: str, risk_free_rate: float | None, previous_analyses: dict,
     index_key: str = "CAC40", also_indices: list[str] | None = None,
+    fx_rate_to_usd: float | None = 1.0,
 ) -> dict:
+    # `fx_rate_to_usd` par défaut à 1.0 (identité) plutôt que requis sans
+    # défaut : la plupart des appelants/tests de cette fonction ne portent
+    # pas sur le WACC/la conversion de devise — main() passe la vraie
+    # valeur calculée par devise (voir fetch_fx_rate_to_usd), tout appelant
+    # qui ne la fournit pas garde le comportement d'avant ce correctif.
     data = fetch_company_financials(ticker)
     sector = data["sector"]
 
@@ -3773,10 +3837,10 @@ def build_company_entry(
         if data["current_price"] is not None else None
     )
     wacc = estimate_wacc(
-        risk_free_rate, data["beta"], market_cap, data["total_debt"], data["tax_rate"]
+        risk_free_rate, data["beta"], market_cap, data["total_debt"], data["tax_rate"], fx_rate_to_usd,
     )
     cost_of_capital = wacc if wacc is not None else COST_OF_CAPITAL_PROXY
-    cost_of_equity = estimate_cost_of_equity(risk_free_rate, data["beta"], market_cap)
+    cost_of_equity = estimate_cost_of_equity(risk_free_rate, data["beta"], market_cap, fx_rate_to_usd)
 
     previous = previous_analyses.get(ticker, {})
     current_quarter = data["latest_quarter_date"]
@@ -4226,16 +4290,26 @@ def main():
         currency: fetch_risk_free_rate(series_id)
         for currency, series_id in RISK_FREE_SERIES_BY_CURRENCY.items()
     }
+    # Un taux de change vers USD par devise (voir FX_TICKER_TO_USD) — un
+    # seul appel par devise pour tout le run, même schéma que le taux sans
+    # risque. Sert uniquement à la prime de taille du WACC (voir
+    # estimate_cost_of_equity), pas au reste de l'analyse.
+    fx_rate_by_currency = {
+        currency: fetch_fx_rate_to_usd(currency)
+        for currency in set(INDEX_CURRENCY.values())
+    }
     previous_analyses = load_previous_company_analyses()
     companies = []
     for company in COMPANIES:
         try:
             currency = INDEX_CURRENCY.get(company["index"], "EUR")
             risk_free_rate = risk_free_rate_by_currency.get(currency)
+            fx_rate_to_usd = fx_rate_by_currency.get(currency)
             companies.append(
                 build_company_entry(
                     company["ticker"], company["name"], risk_free_rate, previous_analyses,
                     index_key=company["index"], also_indices=company.get("also_indices"),
+                    fx_rate_to_usd=fx_rate_to_usd,
                 )
             )
         except Exception as e:

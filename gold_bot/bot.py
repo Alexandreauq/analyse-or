@@ -12,6 +12,7 @@ import gold_bot.risk as risk
 
 
 def decide_and_act(candles: list[dict], *, contract_size: float, balance: float, equity: float,
+                    volume_step: float, min_volume: float, max_volume: float,
                     open_positions: list[dict], circuit_breaker: "risk.CircuitBreaker",
                     symbol: str = "XAUUSD", risk_pct: float = 0.05) -> dict:
     """Cœur de la boucle : évalue le signal, applique les règles de
@@ -39,6 +40,15 @@ def decide_and_act(candles: list[dict], *, contract_size: float, balance: float,
     ouvertes) sert uniquement au coupe-circuit : une position ouverte en
     train de perdre doit pouvoir le déclencher avant sa clôture, pas
     seulement une fois la perte réalisée dans balance.
+
+    `volume_step`/`min_volume`/`max_volume` viennent de
+    broker.get_symbol_specification() — la taille calculée par le risque
+    est arrondie au pas du broker avant toute décision (voir
+    risk.round_to_volume_step). Si le résultat tombe sous `min_volume`
+    (compte trop petit pour ce stop à ce niveau de risque), aucune
+    action n'est prise — ni clôture ni ouverture, même en cas de
+    renversement — plutôt que de clôturer une position existante sans
+    pouvoir rouvrir dans le nouveau sens.
 
     Gère toutes les positions correspondant à `symbol`, pas seulement la
     première trouvée (un redémarrage/crash pourrait en laisser
@@ -97,11 +107,15 @@ def decide_and_act(candles: list[dict], *, contract_size: float, balance: float,
     if not circuit_breaker.can_open_position(equity):
         return {"action": "aucune", "reason": "coupe-circuit journalier déclenché"}
 
+    raw_size = risk.compute_position_size(balance, signal["entry"], signal["stop_loss"], contract_size, risk_pct=risk_pct)
+    size = risk.round_to_volume_step(raw_size, volume_step, min_volume, max_volume)
+    if size is None:
+        return {"action": "aucune", "reason": "compte trop petit pour ce stop (volume sous le minimum du broker)"}
+
     steps = []
     for p in matching:
         steps.append({"type": "clôture_simulee", "position_id": p.get("id"), "symbol": symbol})
 
-    size = risk.compute_position_size(balance, signal["entry"], signal["stop_loss"], contract_size, risk_pct=risk_pct)
     steps.append({
         "type": "ouverture_simulee",
         "symbol": symbol,

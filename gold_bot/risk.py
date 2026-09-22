@@ -1,6 +1,7 @@
 # gold_bot/risk.py
 # Dimensionnement de position par le risque et coupe-circuit journalier
 # — voir docs/superpowers/specs/2026-09-10-bot-trading-or-design.md.
+import math
 from datetime import date, datetime, timezone
 
 import gold_bot.state as state
@@ -77,6 +78,27 @@ def compute_position_size(balance: float, entry: float, stop_loss: float,
     size = risk_amount / (distance * contract_size)
     max_size = (balance * max_leverage) / (contract_size * entry)
     return min(size, max_size)
+
+
+def round_to_volume_step(size: float, volume_step: float, min_volume: float, max_volume: float) -> float | None:
+    """Arrondit `size` au pas du broker (`volumeStep`, tel que renvoyé
+    par broker.get_symbol_specification) — toujours vers le BAS, jamais
+    vers le haut (arrondir au-dessus dépasserait le risque voulu,
+    risk_pct*balance). Renvoie None si le résultat tombe sous
+    `min_volume` : le compte est trop petit pour ce stop à ce niveau de
+    risque, plutôt qu'une taille que le broker rejetterait de toute
+    façon avec une erreur générique — trouvé en production : le volume
+    calculé pouvait tomber sous le lot minimum sans que ce cas précis
+    soit jamais diagnostiqué. Plafonne aussi à `max_volume` (filet de
+    sécurité supplémentaire, rarement atteint en pratique vu le plafond
+    de levier de compute_position_size)."""
+    if volume_step <= 0:
+        raise ValueError("Le pas de volume doit être strictement positif")
+    steps = math.floor(round(size / volume_step, 8))
+    rounded = round(steps * volume_step, 8)
+    if rounded < min_volume:
+        return None
+    return min(rounded, max_volume)
 
 
 class CircuitBreaker:

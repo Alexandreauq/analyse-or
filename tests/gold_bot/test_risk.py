@@ -54,6 +54,40 @@ def test_compute_position_size_respects_custom_max_leverage():
     assert size == pytest.approx(expected_capped)
 
 
+def test_round_to_volume_step_rounds_down_to_nearest_step():
+    # 1.037 lots, pas de 0.01 -> arrondi vers le bas à 1.03, jamais 1.04
+    # (arrondir vers le haut dépasserait risk_pct*balance).
+    result = risk.round_to_volume_step(1.037, volume_step=0.01, min_volume=0.01, max_volume=500)
+    assert result == pytest.approx(1.03)
+
+
+def test_round_to_volume_step_returns_none_below_minimum():
+    # 0.004 lots arrondi à 0.00 au pas de 0.01 -> sous le minimum (0.01)
+    # -> None (compte trop petit pour ce stop), pas une taille à zéro.
+    result = risk.round_to_volume_step(0.004, volume_step=0.01, min_volume=0.01, max_volume=500)
+    assert result is None
+
+
+def test_round_to_volume_step_returns_none_when_exactly_below_minimum():
+    result = risk.round_to_volume_step(0.009, volume_step=0.01, min_volume=0.01, max_volume=500)
+    assert result is None
+
+
+def test_round_to_volume_step_caps_at_broker_maximum():
+    result = risk.round_to_volume_step(750.0, volume_step=0.01, min_volume=0.01, max_volume=500)
+    assert result == pytest.approx(500)
+
+
+def test_round_to_volume_step_accepts_exact_minimum():
+    result = risk.round_to_volume_step(0.01, volume_step=0.01, min_volume=0.01, max_volume=500)
+    assert result == pytest.approx(0.01)
+
+
+def test_round_to_volume_step_raises_on_non_positive_step():
+    with pytest.raises(ValueError, match="pas"):
+        risk.round_to_volume_step(1.0, volume_step=0, min_volume=0.01, max_volume=500)
+
+
 def test_circuit_breaker_allows_when_under_threshold():
     cb = risk.CircuitBreaker(threshold_pct=0.10, now_fn=lambda: datetime(2026, 9, 10, tzinfo=timezone.utc))
     cb.check(10000)  # fixe le solde de départ du jour

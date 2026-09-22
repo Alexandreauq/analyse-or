@@ -210,6 +210,7 @@ def run_cycle(token: str, account_id: str, twelve_data_api_key: str,
         contract_size = spec["contractSize"]
         decision = bot.decide_and_act(
             candles, contract_size=contract_size, balance=balance, equity=equity,
+            volume_step=spec["volumeStep"], min_volume=spec["minVolume"], max_volume=spec["maxVolume"],
             open_positions=open_positions, circuit_breaker=circuit_breaker, symbol=symbol,
             risk_pct=profile_params["risk_pct"],
         )

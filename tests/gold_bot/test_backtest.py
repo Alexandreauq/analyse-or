@@ -225,7 +225,11 @@ def test_simulate_trades_closes_still_open_position_at_end_of_data():
     assert trades[0]["close_price"] == candles[-1]["close"]
 
 
-def test_simulate_trades_does_not_call_signal_fn_while_position_open():
+def test_simulate_trades_calls_signal_fn_every_cycle_even_with_position_open():
+    """La vraie boucle (gold_bot.bot.decide_and_act) réévalue le signal à
+    chaque cycle même position ouverte, pour détecter un éventuel
+    renversement — simulate_trades doit faire pareil, pas seulement
+    quand le compte est flat."""
     candles = _warmup_candles(confluence.SCALP_MIN_CANDLES)
     entry_time = datetime.strptime(candles[-1]["time"], "%Y-%m-%d %H:%M:%S")
     for i in range(5):
@@ -244,10 +248,75 @@ def test_simulate_trades_does_not_call_signal_fn_while_position_open():
 
     backtest.simulate_trades(candles, signal_fn=counting_signal_fn)
 
-    # Une seule position ouverte sur toute la série -> un seul appel au
-    # signal tant qu'elle reste ouverte (elle ne se ferme jamais ici,
-    # SL/TP très larges), jamais un deuxième pendant qu'elle est ouverte.
-    assert call_count["n"] == 1
+    # 1 appel pour ouvrir + 1 par bougie suivante (5) pour vérifier un
+    # éventuel renversement, même si la position reste ouverte (SL/TP
+    # très larges, jamais touchés ici) -> 6 appels au total.
+    assert call_count["n"] == 6
+
+
+def test_simulate_trades_closes_and_reopens_on_opposite_signal():
+    candles = _warmup_candles(confluence.SCALP_MIN_CANDLES)
+    entry_time = datetime.strptime(candles[-1]["time"], "%Y-%m-%d %H:%M:%S")
+    reversal_time = entry_time + timedelta(minutes=1)
+    candles.append(_candle(reversal_time.strftime("%Y-%m-%d %H:%M:%S"), 101, 103, 99, 102))
+
+    call_count = {"n": 0}
+
+    def signal_fn(window):
+        call_count["n"] += 1
+        if call_count["n"] == 1:
+            return {"status": "achat", "price": 100.0, "entry": 100.0, "stop_loss": 90.0,
+                    "take_profit": 200.0, "trend": "baissier", "pattern": {"name": "Marteau", "direction": "haussier"}}
+        return {"status": "vente", "price": 102.0, "entry": 102.0, "stop_loss": 112.0,
+                "take_profit": 80.0, "trend": "haussier", "pattern": {"name": "Étoile filante", "direction": "baissier"}}
+
+    trades = backtest.simulate_trades(candles, signal_fn=signal_fn)
+
+    # Le renversement clôture l'achat ET rouvre une vente à la même
+    # bougie -> 2 trades : l'achat clôturé "renversement", la vente
+    # nouvellement ouverte clôturée "fin_backtest" faute de données
+    # suivantes dans ce fixture.
+    assert len(trades) == 2
+    closed = trades[0]
+    assert closed["direction"] == "achat"
+    assert closed["close_reason"] == "renversement"
+    assert closed["close_price"] == 102.0  # clôture au close de la bougie de renversement
+    reopened = trades[1]
+    assert reopened["direction"] == "vente"
+    assert reopened["entry_price"] == 102.0
+    assert reopened["close_reason"] == "fin_backtest"
+
+
+def test_simulate_trades_same_direction_signal_does_not_close_position():
+    candles = _warmup_candles(confluence.SCALP_MIN_CANDLES)
+    entry_time = datetime.strptime(candles[-1]["time"], "%Y-%m-%d %H:%M:%S")
+    for i in range(3):
+        t = entry_time + timedelta(minutes=i + 1)
+        candles.append(_candle(t.strftime("%Y-%m-%d %H:%M:%S"), 100, 102, 98, 101))
+
+    trades = backtest.simulate_trades(
+        candles, signal_fn=_fire_once_then_neutral("achat", 100.0, 90.0, 200.0))
+
+    # Le signal ne se redéclenche jamais dans ce fixture (neutre après le
+    # premier appel) -> aucun renversement, la position reste ouverte
+    # jusqu'à la fin des données.
+    assert len(trades) == 1
+    assert trades[0]["close_reason"] == "fin_backtest"
+
+
+def test_simulate_trades_force_closes_open_position_during_news_blackout():
+    candles = _warmup_candles(confluence.SCALP_MIN_CANDLES)
+    entry_time = datetime.strptime(candles[-1]["time"], "%Y-%m-%d %H:%M:%S")
+    # CPI du 11/09/2026, 12h30 UTC (voir confluence.SCALP_HIGH_IMPACT_EVENTS_UTC).
+    blackout_time = datetime(2026, 9, 11, 12, 30, tzinfo=timezone.utc)
+    candles.append(_candle(blackout_time.strftime("%Y-%m-%d %H:%M:%S"), 100, 102, 98, 101))
+
+    trades = backtest.simulate_trades(
+        candles, signal_fn=_fire_once_then_neutral("achat", 100.0, 90.0, 200.0))
+
+    assert len(trades) == 1
+    assert trades[0]["close_reason"] == "news_blackout"
+    assert trades[0]["close_price"] == 101  # close de la bougie de black-out
 
 
 def test_simulate_trades_uses_a_rolling_window_not_the_full_history():

@@ -103,6 +103,18 @@ def _close_trade(trade: dict, close_price: float, reason: str, close_time: str) 
     trade["return_pct"] = return_pct
 
 
+def _open_trade_from_signal(signal: dict, entry_time: str) -> dict:
+    return {
+        "direction": signal["status"],
+        "entry_time": entry_time,
+        "entry_price": signal["entry"],
+        "stop_loss": signal["stop_loss"],
+        "take_profit": signal["take_profit"],
+        "trend_at_entry": signal["trend"],
+        "pattern_at_entry": signal["pattern"]["name"] if signal["pattern"] else None,
+    }
+
+
 def simulate_trades(candles: list[dict], window_size: int = SIGNAL_WINDOW_SIZE,
                      signal_fn=confluence.compute_signal) -> list[dict]:
     """Rejoue `signal_fn` (compute_signal par défaut) bougie par bougie,
@@ -111,18 +123,33 @@ def simulate_trades(candles: list[dict], window_size: int = SIGNAL_WINDOW_SIZE,
     de `window_size` bougies (jamais tout l'historique accumulé, pour
     refléter fidèlement ce que confluence.fetch_gold_candles renvoie
     réellement en production : toujours les 90 dernières bougies, jamais
-    plus). `signal_fn` n'est jamais rappelée tant qu'une position reste
-    ouverte. Une position encore ouverte à la fin de `candles` est clôturée
-    au dernier prix connu (raison "fin_backtest") plutôt qu'ignorée, pour
-    ne perdre aucun trade des statistiques. Toucher simultané SL et TP sur
-    une même bougie : le SL gagne toujours (même désambiguïsation prudente
-    que decidePositionOutcome, scalping_tracker.js)."""
+    plus).
+
+    Une position ouverte peut se clôturer de 3 façons, dans cet ordre de
+    priorité — même hiérarchie que gold_bot.bot.decide_and_act : (1) SL/TP
+    touché (SL gagnant en cas de toucher simultané sur la même bougie,
+    même désambiguïsation prudente que decidePositionOutcome,
+    scalping_tracker.js) ; (2) clôture forcée si la bougie courante tombe
+    dans une fenêtre de black-out macro (confluence.is_news_blackout),
+    même sans signal de retournement — reproduit le comportement réel de
+    decide_and_act, qui clôture toute position ouverte avant une
+    publication à fort impact indépendamment du signal ; (3) renversement
+    sur signal opposé — `signal_fn` est rappelée à chaque bougie tant
+    qu'une position reste ouverte (comme la vraie boucle, qui réévalue
+    compute_signal à chaque cycle même position ouverte), et un signal
+    dans le sens opposé clôture la position courante et en ouvre
+    immédiatement une nouvelle, à la même bougie. Un signal dans le même
+    sens ou neutre ne fait rien (position déjà ouverte dans le même sens,
+    comme decide_and_act). Une position encore ouverte à la fin de
+    `candles` est clôturée au dernier prix connu (raison "fin_backtest")
+    plutôt qu'ignorée, pour ne perdre aucun trade des statistiques."""
     trades: list[dict] = []
     open_trade: dict | None = None
     min_needed = confluence.SCALP_MIN_CANDLES
 
     for i in range(min_needed, len(candles) + 1):
         current = candles[i - 1]
+        window = candles[max(0, i - window_size):i]
 
         if open_trade is not None:
             is_achat = open_trade["direction"] == "achat"
@@ -139,20 +166,25 @@ def simulate_trades(candles: list[dict], window_size: int = SIGNAL_WINDOW_SIZE,
                 _close_trade(open_trade, tp, "tp_hit", current["time"])
                 trades.append(open_trade)
                 open_trade = None
+                continue
+
+            current_dt = datetime.fromisoformat(current["time"].replace(" ", "T")).replace(tzinfo=timezone.utc)
+            if confluence.is_news_blackout(current_dt):
+                _close_trade(open_trade, current["close"], "news_blackout", current["time"])
+                trades.append(open_trade)
+                open_trade = None
+                continue
+
+            signal = signal_fn(window)
+            if signal["status"] in ("achat", "vente") and signal["status"] != open_trade["direction"]:
+                _close_trade(open_trade, current["close"], "renversement", current["time"])
+                trades.append(open_trade)
+                open_trade = _open_trade_from_signal(signal, current["time"])
             continue
 
-        window = candles[max(0, i - window_size):i]
         signal = signal_fn(window)
         if signal["status"] in ("achat", "vente"):
-            open_trade = {
-                "direction": signal["status"],
-                "entry_time": current["time"],
-                "entry_price": signal["entry"],
-                "stop_loss": signal["stop_loss"],
-                "take_profit": signal["take_profit"],
-                "trend_at_entry": signal["trend"],
-                "pattern_at_entry": signal["pattern"]["name"] if signal["pattern"] else None,
-            }
+            open_trade = _open_trade_from_signal(signal, current["time"])
 
     if open_trade is not None:
         last = candles[-1]

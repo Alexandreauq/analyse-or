@@ -116,8 +116,10 @@ Email d'alerte "entrée" (gold_bot n'est pas concerné — ceci est le
   de la phase.
 - `stage` : `1`, `2`, `3`, `4`, ou `None` (historique insuffisant — 30
   semaines minimum requises).
-- `stage_label` : `"Base"`, `"Achat"`, `"Distribution"`, `"Déclin"`,
-  ou `"Neutre"` (Phase 1/3 non distinguée avec certitude — voir §5.3).
+- `stage_label` : `"Achat"` (stage 2), `"Déclin"` (stage 4), ou
+  `"Neutre"` (tout le reste, y compris quand `stage` vaut 1 ou 3 —
+  cette distinction interne n'est jamais exposée comme un label
+  "Base"/"Distribution" tant qu'elle n'est pas fiable, voir §5.3).
 - `volume_confirme` : `bool`, informatif — `True` si le volume de la
   semaine en cours dépasse 1,5x sa moyenne 30 semaines au moment d'un
   franchissement de la MM30s (voir §5.4).

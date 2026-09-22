@@ -1605,12 +1605,83 @@ def test_fetch_risk_free_rate_uses_series_id_argument(monkeypatch):
     assert captured["series_id"] == "DGS10"
 
 
+from indices_score import fetch_fx_rate_to_usd
+
+
+def _fake_ticker_returning(price):
+    class FakeHistory:
+        def __getitem__(self, key):
+            assert key == "Close"
+            import pandas as pd
+            return pd.Series([price - 0.01, price])
+
+    class FakeTicker:
+        def __init__(self, symbol):
+            self.symbol = symbol
+
+        def history(self, period):
+            assert period == "5d"
+            return FakeHistory()
+
+    return FakeTicker
+
+
+def test_fetch_fx_rate_to_usd_returns_1_for_usd_without_network_call(monkeypatch):
+    def _should_not_be_called(*a, **k):
+        raise AssertionError("USD ne doit déclencher aucun appel réseau")
+    monkeypatch.setattr(indices_score.yf, "Ticker", _should_not_be_called)
+    assert fetch_fx_rate_to_usd("USD") == 1.0
+
+
+def test_fetch_fx_rate_to_usd_multiplies_for_direct_quote_currencies(monkeypatch):
+    """EUR/GBP/CHF cotent XXXUSD=X en direct (USD par unité de devise) —
+    vérifié empiriquement sur l'API Yahoo Finance : EURUSD=X≈1.15 doit se
+    traduire par une multiplication, pas une division."""
+    monkeypatch.setattr(indices_score.yf, "Ticker", _fake_ticker_returning(1.15))
+    assert fetch_fx_rate_to_usd("EUR") == pytest.approx(1.15)
+
+
+def test_fetch_fx_rate_to_usd_divides_for_indirect_quote_currencies(monkeypatch):
+    """JPY/HKD cotent XXX=X en indirect (unités de devise par USD) —
+    vérifié empiriquement (JPY=X et USDJPY=X renvoient la même valeur) :
+    157 JPY pour 1 USD -> il faut DIVISER par 157, pas multiplier."""
+    monkeypatch.setattr(indices_score.yf, "Ticker", _fake_ticker_returning(157.0))
+    assert fetch_fx_rate_to_usd("JPY") == pytest.approx(1 / 157.0)
+
+
+def test_fetch_fx_rate_to_usd_hkd_divides_too(monkeypatch):
+    monkeypatch.setattr(indices_score.yf, "Ticker", _fake_ticker_returning(7.84))
+    assert fetch_fx_rate_to_usd("HKD") == pytest.approx(1 / 7.84)
+
+
+def test_fetch_fx_rate_to_usd_returns_none_for_unhandled_currency(monkeypatch):
+    monkeypatch.setattr(indices_score.yf, "Ticker", _fake_ticker_returning(1.0))
+    assert fetch_fx_rate_to_usd("XYZ") is None
+
+
+def test_fetch_fx_rate_to_usd_returns_none_on_fetch_failure(monkeypatch):
+    class FailingTicker:
+        def __init__(self, symbol):
+            pass
+
+        def history(self, period):
+            raise RuntimeError("panne réseau")
+
+    monkeypatch.setattr(indices_score.yf, "Ticker", FailingTicker)
+    assert fetch_fx_rate_to_usd("JPY") is None
+
+
+def test_fetch_fx_rate_to_usd_returns_none_when_yfinance_unavailable(monkeypatch):
+    monkeypatch.setattr(indices_score, "yf", None)
+    assert fetch_fx_rate_to_usd("EUR") is None
+
+
 from indices_score import _size_premium, estimate_wacc, estimate_cost_of_equity
 
 
 def test_estimate_cost_of_equity_nominal_case():
     # 3.68 + 1.2*5.0 + 0.0 (méga cap) = 9.68
-    result = estimate_cost_of_equity(risk_free_rate=3.68, beta=1.2, market_cap=100_000_000_000)
+    result = estimate_cost_of_equity(risk_free_rate=3.68, beta=1.2, market_cap=100_000_000_000, fx_rate_to_usd=1.0)
     assert result == pytest.approx(9.68)
 
 
@@ -1619,20 +1690,49 @@ def test_estimate_cost_of_equity_matches_wacc_equity_component():
     propres en interne (pas une formule dupliquée qui pourrait diverger)
     — vérifié en isolant le cas 100% fonds propres (dette nulle), où le
     WACC doit être strictement égal au coût des fonds propres seul."""
-    cost_of_equity = estimate_cost_of_equity(risk_free_rate=3.68, beta=1.2, market_cap=100_000_000_000)
+    cost_of_equity = estimate_cost_of_equity(risk_free_rate=3.68, beta=1.2, market_cap=100_000_000_000, fx_rate_to_usd=1.0)
     wacc = estimate_wacc(
         risk_free_rate=3.68, beta=1.2, market_cap=100_000_000_000,
-        total_debt=0.0, tax_rate=0.25,
+        total_debt=0.0, tax_rate=0.25, fx_rate_to_usd=1.0,
     )
     assert wacc == pytest.approx(cost_of_equity)
 
 
 def test_estimate_cost_of_equity_returns_none_when_market_cap_not_positive():
-    assert estimate_cost_of_equity(risk_free_rate=3.68, beta=1.2, market_cap=0.0) is None
+    assert estimate_cost_of_equity(risk_free_rate=3.68, beta=1.2, market_cap=0.0, fx_rate_to_usd=1.0) is None
 
 
 def test_estimate_cost_of_equity_returns_none_when_beta_missing():
-    assert estimate_cost_of_equity(risk_free_rate=3.68, beta=None, market_cap=100_000_000_000) is None
+    assert estimate_cost_of_equity(risk_free_rate=3.68, beta=None, market_cap=100_000_000_000, fx_rate_to_usd=1.0) is None
+
+
+def test_estimate_cost_of_equity_returns_none_when_fx_rate_missing():
+    assert estimate_cost_of_equity(
+        risk_free_rate=3.68, beta=1.2, market_cap=100_000_000_000, fx_rate_to_usd=None) is None
+
+
+def test_estimate_cost_of_equity_converts_market_cap_before_size_premium():
+    """Le bug corrigé : une capitalisation en devise locale (ex. yens)
+    doit être convertie en USD avant d'être comparée aux seuils de
+    SIZE_PREMIUM_BANDS (conçus en USD) — sans conversion, une petite
+    capitalisation japonaise passerait pour une méga-cap. 8 000 milliards
+    de yens à un taux de change de 1/157 -> ~50,96 Md$ (juste au-dessus du
+    seuil méga-cap 50Md$, prime 0.0) ; sans conversion, 8 000 milliards
+    comparés directement aux mêmes seuils donnerait aussi 0.0 par
+    coïncidence de valeur brute — donc on teste plutôt un cas où la
+    différence de résultat est sans ambiguïté (mid-cap réelle traitée à
+    tort comme méga-cap sans conversion)."""
+    # 300 milliards de yens ~= 1.91 Md$ à 1/157 -> petite capitalisation
+    # (prime 3.0), alors que 300 milliards bruts (sans conversion)
+    # dépasserait même le seuil méga-cap (50 milliards) -> prime 0.0.
+    fx_rate = 1 / 157.0
+    with_conversion = estimate_cost_of_equity(
+        risk_free_rate=1.0, beta=1.0, market_cap=300_000_000_000, fx_rate_to_usd=fx_rate)
+    without_conversion_equivalent = estimate_cost_of_equity(
+        risk_free_rate=1.0, beta=1.0, market_cap=300_000_000_000, fx_rate_to_usd=1.0)
+    assert with_conversion == pytest.approx(1.0 + 1.0 * 5.0 + 3.0)  # petite cap -> prime 3.0
+    assert without_conversion_equivalent == pytest.approx(1.0 + 1.0 * 5.0 + 0.0)  # méga cap -> prime 0.0
+    assert with_conversion != without_conversion_equivalent
 
 
 def test_size_premium_mega_cap():
@@ -1666,7 +1766,7 @@ def test_estimate_wacc_nominal_case():
     # WACC = (100/150)*9.68 + (50/150)*2.25 = 6.4533... + 0.75 = 7.2033...
     result = estimate_wacc(
         risk_free_rate=3.68, beta=1.2, market_cap=100_000_000_000,
-        total_debt=50_000_000_000, tax_rate=0.25,
+        total_debt=50_000_000_000, tax_rate=0.25, fx_rate_to_usd=1.0,
     )
     assert result == pytest.approx(7.203333333333333)
 
@@ -1683,7 +1783,7 @@ def test_estimate_wacc_caps_debt_weight_for_captive_finance_heavy_balance_sheet(
     # WACC = 0.25*9.68 + 0.75*2.25 = 2.42 + 1.6875 = 4.1075
     result = indices_score.estimate_wacc(
         risk_free_rate=3.68, beta=1.2, market_cap=60_000_000_000,
-        total_debt=200_000_000_000, tax_rate=0.25,
+        total_debt=200_000_000_000, tax_rate=0.25, fx_rate_to_usd=1.0,
     )
     assert result == pytest.approx(4.1075)
     # Sans plafond, le WACC serait plus bas (dominé par le coût de la
@@ -1695,49 +1795,86 @@ def test_estimate_wacc_caps_debt_weight_for_captive_finance_heavy_balance_sheet(
     assert result > uncapped
 
 
+def test_estimate_wacc_debt_weight_ratio_uses_local_currency_not_usd():
+    """Le correctif de conversion FX (pour _size_premium) ne doit PAS
+    toucher au ratio dette/capital (total_capital = market_cap +
+    total_debt) : total_debt reste en devise locale, donc si market_cap
+    était converti en USD à cet endroit, le ratio comparerait des choux
+    et des carottes. Vérifié en comparant un taux de change très
+    éloigné de 1.0 (1/157, JPY) au cas nominal déjà testé
+    (fx_rate_to_usd=1.0) : la pondération dette/capital doit être
+    identique dans les deux cas puisque market_cap et total_debt sont
+    dans la même devise (locale) dans les deux scénarios — seule la
+    prime de taille (donc le coût des fonds propres) doit différer."""
+    # Même E=100Md, D=50Md dans les deux cas (devise locale, JPY ici) ;
+    # seul fx_rate_to_usd change -> seule la prime de taille change.
+    wacc_usd_scale = estimate_wacc(
+        risk_free_rate=3.68, beta=1.2, market_cap=100_000_000_000,
+        total_debt=50_000_000_000, tax_rate=0.25, fx_rate_to_usd=1.0,
+    )
+    wacc_jpy_scale = estimate_wacc(
+        risk_free_rate=3.68, beta=1.2, market_cap=100_000_000_000,
+        total_debt=50_000_000_000, tax_rate=0.25, fx_rate_to_usd=1 / 157.0,
+    )
+    # 100 Md JPY / 157 ~= 637M$ -> petite capitalisation -> prime 3.0
+    # (au lieu de 0.0 pour 100 Md$ directement) -> Re plus élevé de 3.0.
+    cost_of_equity_usd_scale = estimate_cost_of_equity(
+        risk_free_rate=3.68, beta=1.2, market_cap=100_000_000_000, fx_rate_to_usd=1.0)
+    cost_of_equity_jpy_scale = estimate_cost_of_equity(
+        risk_free_rate=3.68, beta=1.2, market_cap=100_000_000_000, fx_rate_to_usd=1 / 157.0)
+    assert cost_of_equity_jpy_scale - cost_of_equity_usd_scale == pytest.approx(3.0)
+    # La pondération dette/capital (visible dans l'écart WACC vs coût des
+    # fonds propres seul) doit être identique dans les deux cas -> l'écart
+    # entre les deux WACC doit être EXACTEMENT la même pondération fonds
+    # propres (100/150) appliquée au même delta de coût des fonds propres.
+    equity_weight = 100_000_000_000 / 150_000_000_000
+    expected_delta = equity_weight * (cost_of_equity_jpy_scale - cost_of_equity_usd_scale)
+    assert wacc_jpy_scale - wacc_usd_scale == pytest.approx(expected_delta)
+
+
 def test_estimate_wacc_returns_none_when_risk_free_rate_missing():
     assert estimate_wacc(
         risk_free_rate=None, beta=1.2, market_cap=100_000_000_000,
-        total_debt=50_000_000_000, tax_rate=0.25,
+        total_debt=50_000_000_000, tax_rate=0.25, fx_rate_to_usd=1.0,
     ) is None
 
 
 def test_estimate_wacc_returns_none_when_beta_missing():
     assert estimate_wacc(
         risk_free_rate=3.68, beta=None, market_cap=100_000_000_000,
-        total_debt=50_000_000_000, tax_rate=0.25,
+        total_debt=50_000_000_000, tax_rate=0.25, fx_rate_to_usd=1.0,
     ) is None
 
 
 def test_estimate_wacc_returns_none_when_market_cap_not_positive():
     assert estimate_wacc(
         risk_free_rate=3.68, beta=1.2, market_cap=0.0,
-        total_debt=50_000_000_000, tax_rate=0.25,
+        total_debt=50_000_000_000, tax_rate=0.25, fx_rate_to_usd=1.0,
     ) is None
     assert estimate_wacc(
         risk_free_rate=3.68, beta=1.2, market_cap=-1.0,
-        total_debt=50_000_000_000, tax_rate=0.25,
+        total_debt=50_000_000_000, tax_rate=0.25, fx_rate_to_usd=1.0,
     ) is None
 
 
 def test_estimate_wacc_returns_none_when_total_debt_negative():
     assert estimate_wacc(
         risk_free_rate=3.68, beta=1.2, market_cap=100_000_000_000,
-        total_debt=-1.0, tax_rate=0.25,
+        total_debt=-1.0, tax_rate=0.25, fx_rate_to_usd=1.0,
     ) is None
 
 
 def test_estimate_wacc_returns_none_when_tax_rate_missing():
     assert estimate_wacc(
         risk_free_rate=3.68, beta=1.2, market_cap=100_000_000_000,
-        total_debt=50_000_000_000, tax_rate=None,
+        total_debt=50_000_000_000, tax_rate=None, fx_rate_to_usd=1.0,
     ) is None
 
 
 def test_estimate_wacc_returns_none_when_any_input_is_nan():
     assert estimate_wacc(
         risk_free_rate=float("nan"), beta=1.2, market_cap=100_000_000_000,
-        total_debt=50_000_000_000, tax_rate=0.25,
+        total_debt=50_000_000_000, tax_rate=0.25, fx_rate_to_usd=1.0,
     ) is None
 
 
@@ -1748,7 +1885,7 @@ def test_estimate_wacc_returns_none_when_beta_is_non_numeric():
     types incompatibles avec l'arithmétique)."""
     assert estimate_wacc(
         risk_free_rate=3.68, beta="1.2", market_cap=100_000_000_000,
-        total_debt=50_000_000_000, tax_rate=0.25,
+        total_debt=50_000_000_000, tax_rate=0.25, fx_rate_to_usd=1.0,
     ) is None
 
 
@@ -2874,11 +3011,12 @@ def test_main_writes_alerts_key_for_every_company(monkeypatch, tmp_path):
 
     sentinel_previous_analyses = {"__sentinel__": True}
     monkeypatch.setattr(indices_score, "fetch_risk_free_rate", lambda series_id: 3.68)
+    monkeypatch.setattr(indices_score, "fetch_fx_rate_to_usd", lambda currency: 1.0)
     monkeypatch.setattr(
         indices_score, "load_previous_company_analyses", lambda: sentinel_previous_analyses,
     )
 
-    def _fake_build_company_entry(ticker, name, risk_free_rate, previous_analyses, index_key="CAC40", also_indices=None):
+    def _fake_build_company_entry(ticker, name, risk_free_rate, previous_analyses, index_key="CAC40", also_indices=None, fx_rate_to_usd=1.0):
         assert previous_analyses is sentinel_previous_analyses, (
             "main() doit transmettre le previous_analyses réellement chargé "
             "par load_previous_company_analyses(), pas un dict vide/différent "
@@ -2918,10 +3056,11 @@ def test_main_payload_includes_index_metadata(monkeypatch, tmp_path):
     import json
 
     monkeypatch.setattr(indices_score, "fetch_risk_free_rate", lambda series_id: 3.68)
+    monkeypatch.setattr(indices_score, "fetch_fx_rate_to_usd", lambda currency: 1.0)
     monkeypatch.setattr(indices_score, "load_previous_company_analyses", lambda: {})
     monkeypatch.setattr(
         indices_score, "build_company_entry",
-        lambda ticker, name, risk_free_rate, previous_analyses, index_key="CAC40", also_indices=None: {
+        lambda ticker, name, risk_free_rate, previous_analyses, index_key="CAC40", also_indices=None, fx_rate_to_usd=1.0: {
             "ticker": ticker, "name": name, "index": index_key,
             "score": 10.0, "interpretation": "Neutre",
             "current_price": 50.0, "entry_price": 50.0,
@@ -2978,10 +3117,11 @@ def test_main_routes_risk_free_rate_by_currency(monkeypatch, tmp_path):
         }[series_id]
 
     monkeypatch.setattr(indices_score, "fetch_risk_free_rate", _fake_fetch_risk_free_rate)
+    monkeypatch.setattr(indices_score, "fetch_fx_rate_to_usd", lambda currency: 1.0)
     monkeypatch.setattr(indices_score, "load_previous_company_analyses", lambda: {})
     received_rates = {}
 
-    def _fake_build_company_entry(ticker, name, risk_free_rate, previous_analyses, index_key="CAC40", also_indices=None):
+    def _fake_build_company_entry(ticker, name, risk_free_rate, previous_analyses, index_key="CAC40", also_indices=None, fx_rate_to_usd=1.0):
         received_rates[ticker] = risk_free_rate
         return {
             "ticker": ticker, "name": name, "index": index_key,
@@ -5127,10 +5267,11 @@ def test_main_calls_update_signal_tracking(monkeypatch, tmp_path):
     """Preuve que main() appelle réellement update_signal_tracking —
     si l'appel était supprimé de main(), ce test doit échouer."""
     monkeypatch.setattr(indices_score, "fetch_risk_free_rate", lambda series_id: 3.68)
+    monkeypatch.setattr(indices_score, "fetch_fx_rate_to_usd", lambda currency: 1.0)
     monkeypatch.setattr(indices_score, "load_previous_company_analyses", lambda: {})
     monkeypatch.setattr(
         indices_score, "build_company_entry",
-        lambda ticker, name, risk_free_rate, previous_analyses, index_key="CAC40", also_indices=None: {
+        lambda ticker, name, risk_free_rate, previous_analyses, index_key="CAC40", also_indices=None, fx_rate_to_usd=1.0: {
             "ticker": ticker, "name": name, "index": index_key,
             "score": 10.0, "interpretation": "Neutre",
             "current_price": 50.0, "entry_price": 50.0,
@@ -5170,10 +5311,11 @@ def test_main_persists_price_history_from_companies_and_indices(monkeypatch, tmp
         {"ticker": "MC.PA", "name": "LVMH", "index": "CAC40"},
     ])
     monkeypatch.setattr(indices_score, "fetch_risk_free_rate", lambda series_id: 3.68)
+    monkeypatch.setattr(indices_score, "fetch_fx_rate_to_usd", lambda currency: 1.0)
     monkeypatch.setattr(indices_score, "load_previous_company_analyses", lambda: {})
     monkeypatch.setattr(
         indices_score, "build_company_entry",
-        lambda ticker, name, risk_free_rate, previous_analyses, index_key="CAC40", also_indices=None: {
+        lambda ticker, name, risk_free_rate, previous_analyses, index_key="CAC40", also_indices=None, fx_rate_to_usd=1.0: {
             "ticker": ticker, "name": name, "index": index_key,
             "score": 10.0, "interpretation": "Neutre",
             "current_price": 50.0, "entry_price": 50.0,
@@ -5214,10 +5356,11 @@ def test_main_never_writes_the_internal_price_history_key_to_indices_json(monkey
         {"ticker": "MC.PA", "name": "LVMH", "index": "CAC40"},
     ])
     monkeypatch.setattr(indices_score, "fetch_risk_free_rate", lambda series_id: 3.68)
+    monkeypatch.setattr(indices_score, "fetch_fx_rate_to_usd", lambda currency: 1.0)
     monkeypatch.setattr(indices_score, "load_previous_company_analyses", lambda: {})
     monkeypatch.setattr(
         indices_score, "build_company_entry",
-        lambda ticker, name, risk_free_rate, previous_analyses, index_key="CAC40", also_indices=None: {
+        lambda ticker, name, risk_free_rate, previous_analyses, index_key="CAC40", also_indices=None, fx_rate_to_usd=1.0: {
             "ticker": ticker, "name": name, "index": index_key,
             "score": 10.0, "interpretation": "Neutre",
             "current_price": 50.0, "entry_price": 50.0,

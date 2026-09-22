@@ -146,9 +146,18 @@ utilisé pour `score_rentabilite` etc.).
 ### 5.1 Rééchantillonnage hebdomadaire
 
 À partir de `history` (Series quotidienne déjà récupérée) et de son
-Volume associé (nouvellement gardé) :
+Volume associé (nouvellement gardé). **Point de correction identifié à
+la relecture** : `daily_closes` subit déjà un `dropna()` (purge des
+clôtures NaN, voir `indices_score.py:2415`) et, pour les valeurs FTSE,
+une division par 100 (conversion pence→livres, `indices_score.py:2398`)
+— aucune des deux ne doit s'appliquer au Volume (pas de notion de
+"pence" pour un volume, et un jour purgé côté Close doit l'être aussi
+côté Volume, sous peine de désaligner les deux séries). Le Volume est
+donc filtré sur le **même index de dates valides** que le Close déjà
+nettoyé, jamais sur son propre `dropna()` indépendant :
 
 ```python
+daily_volumes = daily_volumes.reindex(daily_closes.index)  # même dates que le Close nettoyé
 weekly_closes = daily_closes.resample("W").last().dropna()
 weekly_volumes = daily_volumes.resample("W").sum()
 ```
@@ -197,12 +206,21 @@ mesurer sa pente) — sinon `stage = None`.
 
 ### 5.4 Confirmation volume (informative)
 
+**Deuxième point de correction identifié à la relecture** : la moyenne
+de référence doit porter sur les 30 semaines qui *précèdent* la semaine
+courante, pas l'inclure — sinon un volume exceptionnel gonfle sa propre
+moyenne de comparaison et s'auto-masque partiellement :
+
 ```python
 WEINSTEIN_VOLUME_CONFIRMATION_MULTIPLE = 1.5
 
-avg_volume_30w = weekly_volumes.tail(30).mean()
+avg_volume_30w = weekly_volumes.iloc[-31:-1].mean()  # 30 semaines avant la courante, courante exclue
 volume_confirme = weekly_volumes.iloc[-1] > avg_volume_30w * WEINSTEIN_VOLUME_CONFIRMATION_MULTIPLE
 ```
+
+Nécessite donc 31 semaines pour ce calcul spécifique (au lieu de 30) —
+sans effet pratique sur le minimum global de la §5.3 (34 semaines,
+déjà supérieur).
 
 Calculé quel que soit le stage — reste `False` si `weekly_volumes` est
 indisponible (yfinance ne renvoie pas toujours un volume fiable, en
@@ -248,7 +266,12 @@ et `compute_company_alerts` restent inchangées.
 - Pente : cas pile au seuil de bruit (0,5% exactement — comparaison
   stricte), montante/descendante/plate sans ambiguïté.
 - Confirmation volume : au-dessus/en dessous du multiple, volume
-  manquant -> `False` sans exception.
+  manquant -> `False` sans exception ; un volume courant extrême ne
+  doit PAS faire remonter sa propre moyenne de référence (vérifie
+  explicitement l'exclusion `iloc[-31:-1]`, voir §5.4).
+- Alignement Close/Volume : une date purgée par le `dropna()` du Close
+  (ou une entreprise FTSE avec conversion pence→livres) ne doit
+  désaligner ni fausser le Volume correspondant (voir §5.1).
 - `estimate_entry_exit_prices` : Phase 2 inchangé vs comportement
   actuel ; Phase 4 exclut le candidat technique (avec et sans
   valorisation disponible en repli) ; Neutre inchangé.

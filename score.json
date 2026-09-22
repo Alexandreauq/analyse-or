@@ -1,25 +1,25 @@
 {
   "date": "2026-09-22",
-  "composite_score": 3.3,
+  "composite_score": 6.8,
   "interpretation": "Neutre — pas d'action",
   "factors": [
     {
       "name": "Taux réels US 10 ans",
-      "score": -5.0,
+      "score": -3.799999999999999,
       "weight": 0.3,
-      "raw_value": "2.68% (il y a ~45j : 2.43%)"
+      "raw_value": "2.62% (il y a ~45j : 2.43%)"
     },
     {
       "name": "Dollar (DXY)",
-      "score": 2.7550125122070312,
+      "score": 2.9949951171875,
       "weight": 0.15,
-      "raw_value": "100.59 (il y a 2 mois : 101.14)"
+      "raw_value": "100.54 (il y a 2 mois : 101.14)"
     },
     {
       "name": "Anticipations d'inflation",
-      "score": 1.6666666666666607,
+      "score": 1.3333333333333348,
       "weight": 0.15,
-      "raw_value": "2.34% (il y a ~45j : 2.29%)"
+      "raw_value": "2.33% (il y a ~45j : 2.29%)"
     },
     {
       "name": "Ton de la Fed",
@@ -47,9 +47,9 @@
     }
   ],
   "technical": {
-    "note": "Cours en-dessous de la MM200 (-3.5%) — tendance baissière",
-    "spot": 4395.7998046875,
-    "ma200": 4554.983001708984
+    "note": "Cours en-dessous de la MM200 (-3.4%) — tendance baissière",
+    "spot": 4401.0,
+    "ma200": 4555.009002685547
   },
   "calendar": [
     {

@@ -820,6 +820,21 @@
      hasMajorNewsAlert) : même forme, couleur distincte du badge "Profil
      financier" pour rester lisible quand les deux se cumulent. */
   .majeure-tag { border-color: var(--gold); color: var(--gold); }
+  /* Badge "Investisseur défensif" (Benjamin Graham) : signal positif fort
+     (voir compute_graham_defensive_badge, indices_score.py) — même forme
+     que .financial-tag, teinte verte pour se distinguer des tags neutres/
+     d'alerte quand ils se cumulent. Affiché seulement si éligible (pas de
+     variante "non éligible", même logique que .majeure-tag). */
+  .graham-tag { border-color: var(--green-500); color: var(--green-500); }
+  /* Liste des critères du badge Graham (voir renderGrahamCriteria) —
+     lignes compactes avec icône ✓/✗, plus légères que .factor-row car
+     pas de barre pondérée à afficher, juste un résultat booléen. */
+  .graham-criterion-row {
+    display: flex; align-items: baseline; gap: 8px;
+    padding: 8px 0; border-bottom: 1px solid var(--border); font-size: var(--text-sm);
+  }
+  .graham-criterion-row:last-child { border-bottom: none; }
+  .graham-criterion-icon { flex: 0 0 auto; font-weight: 700; }
   /* Badge code court d'indice (voir company.index/also_indices,
      indices_score.py) : purement informatif, pas une alerte — ton neutre
      pour rester distinct des badges "Profil financier"/"Actu majeure"
@@ -3950,6 +3965,51 @@ function renderSignalTracking(positions) {
   wireAccordionGroup(positions.map((_, i) => [`sigCardToggle-${i}`, `sigCardBody-${i}`, null]));
 }
 
+// Libellés FR des critères du badge "Investisseur défensif" (Graham) —
+// voir compute_graham_defensive_badge dans indices_score.py. structure_financiere
+// est absent du dict pour les profils financier/trust (hors périmètre pour
+// ce profil, voir spec) : renderGrahamCriteria n'affiche que les clés
+// réellement présentes dans company.graham_defensive.criteria.
+const GRAHAM_CRITERIA_LABELS = {
+  structure_financiere: 'Structure financière (liquidité)',
+  stabilite_benefices: 'Stabilité des bénéfices (aucune perte)',
+  dividendes: 'Historique de dividendes',
+  croissance_benefices: 'Croissance des bénéfices',
+  valorisation_pe: 'Valorisation raisonnable (P/E)',
+  valorisation_graham_number: 'Nombre de Graham (P/E × P/B)',
+};
+
+// Contenu de la section dépliable "Critères Graham" de la fiche société —
+// company.graham_defensive peut être absent (données anciennes en cache
+// côté navigateur, avant ce champ) : dégrade vers un message plutôt que
+// de lever une exception, même logique défensive que le reste du fichier.
+function renderGrahamCriteria(company) {
+  const badge = company.graham_defensive;
+  if (!badge) {
+    return '<p class="hero-sub">Données indisponibles pour cette société.</p>';
+  }
+  const rows = Object.keys(GRAHAM_CRITERIA_LABELS)
+    .filter(key => key in badge.criteria)
+    .map(key => {
+      const ok = badge.criteria[key];
+      const extra = key === 'dividendes'
+        ? ` — ${company.dividend_streak_years || 0} année(s) consécutive(s) (seuil : 10)`
+        : '';
+      return `
+        <div class="graham-criterion-row">
+          <span class="graham-criterion-icon" style="color:${ok ? 'var(--green-500)' : 'var(--rust)'}">${ok ? '✓' : '✗'}</span>
+          <span class="graham-criterion-name">${GRAHAM_CRITERIA_LABELS[key]}${extra}</span>
+        </div>`;
+    }).join('');
+  return `
+    <div class="notice">
+      Test strict (tous les critères applicables doivent être validés) inspiré
+      de « L'investisseur intelligent » de Benjamin Graham. Résultat :
+      <strong style="color:${badge.eligible ? 'var(--green-500)' : 'var(--rust)'}">${badge.eligible ? 'Éligible' : 'Non éligible'}</strong>.
+    </div>
+    ${rows}`;
+}
+
 function renderCompanyDetail(company) {
   // Résolu une seule fois ici (pas dans loadSideQuoteWidget) pour que le
   // template ci-dessous et l'appel de chargement du widget restent
@@ -4024,7 +4084,7 @@ function renderCompanyDetail(company) {
       <div class="company-main">
         <section class="hero">
           <div class="hero-number" style="color:${company.score >= 0 ? 'var(--green-500)' : 'var(--rust)'}">${company.score > 0 ? '+' : ''}${company.score}</div>
-          <div class="hero-label">${company.name} — ${company.interpretation}${hasMajorNewsAlert(company) ? '<br><span class="financial-tag majeure-tag" style="margin-left:0;">Actu majeure récente</span>' : ''}<br><span class="index-badges-row">${indexBadgesHtml}</span></div>
+          <div class="hero-label">${company.name} — ${company.interpretation}${hasMajorNewsAlert(company) ? '<br><span class="financial-tag majeure-tag" style="margin-left:0;">Actu majeure récente</span>' : ''}${company.graham_defensive && company.graham_defensive.eligible ? '<br><span class="financial-tag graham-tag" style="margin-left:0;">Investisseur défensif (Graham)</span>' : ''}<br><span class="index-badges-row">${indexBadgesHtml}</span></div>
         </section>
 
         ${company.is_financial ? `
@@ -4051,6 +4111,9 @@ function renderCompanyDetail(company) {
           <button class="toggle-btn" id="toggleCompanyDetail" type="button" aria-expanded="false">
             Détail du calcul <span class="chevron">▾</span>
           </button>
+          <button class="toggle-btn" id="toggleCompanyGraham" type="button" aria-expanded="false">
+            Critères Graham <span class="chevron">▾</span>
+          </button>
         </div>
         <div class="btn-row">
           <button class="toggle-btn" id="goToAnalysis" type="button">
@@ -4073,6 +4136,10 @@ function renderCompanyDetail(company) {
               : `Profil sectoriel : ${company.sector_profile} (${company.sector}).`}
           </div>
           ${factorsHtml}
+        </div>
+
+        <div class="section-wrap" id="companyGrahamWrap">
+          ${renderGrahamCriteria(company)}
         </div>
       </div>
 
@@ -4105,6 +4172,7 @@ function renderCompanyDetail(company) {
   wireAccordionGroup([
     ['toggleCompanyActu', 'companyActuWrap'],
     ['toggleCompanyDetail', 'companyDetailWrap'],
+    ['toggleCompanyGraham', 'companyGrahamWrap'],
   ], (key, wrap) => {
     if (wrap.id === 'companyDetailWrap') animateFactorBars();
   });

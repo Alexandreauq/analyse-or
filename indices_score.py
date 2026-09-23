@@ -1990,6 +1990,15 @@ def extract_ratios(financials, balance_sheet, cashflow, closes_by_year, shares_o
     cagr_ebitda = _cagr(
         _window_average(ebitda, old_cols), _window_average(ebitda, recent_cols), cagr_span
     )
+    # Critère Graham (croissance des bénéfices, voir spec §6.6) : même calcul
+    # que extract_ratios_financial (CAGR du résultat net lissé sur la même
+    # fenêtre que cagr_ca/cagr_ebitda) — absent avant ce correctif, ce qui
+    # faisait échouer silencieusement compute_graham_defensive_badge (repli
+    # ratios.get("cagr_net_income", 0.0)) pour le profil standard, utilisé
+    # par la grande majorité des sociétés.
+    cagr_net_income = _cagr(
+        _window_average(net_income, old_cols), _window_average(net_income, recent_cols), cagr_span
+    )
 
     # FCF = Flux de trésorerie opérationnel - |Capex| (proxy OCF standard),
     # et non le montage "EBITDA - IS théorique - ΔBFR - investissements" décrit
@@ -2094,6 +2103,7 @@ def extract_ratios(financials, balance_sheet, cashflow, closes_by_year, shares_o
         "structure_available": structure_available,
         "cagr_ca": cagr_ca,
         "cagr_ebitda": cagr_ebitda,
+        "cagr_net_income": cagr_net_income,
         "fcf_conversion": fcf_conversion,
         "fcf_conversion_available": fcf_conversion_available,
         "current_ev_ebitda": current_ev_ebitda,
@@ -4061,26 +4071,36 @@ def compute_graham_defensive_badge(ratios: dict, is_financial: bool, is_trust: b
     §6.8). Une donnée manquante dans `ratios` (dict incomplet) dégrade
     chaque critère concerné vers False plutôt que de lever une exception
     ou de compter comme une réussite."""
+    # bool(...) sur chaque critère assigné : `ratios` contient des
+    # numpy.float64 (issus d'indexation pandas Series dans extract_ratios/
+    # extract_ratios_financial), et une comparaison Python/numpy.float64
+    # produit un numpy.bool_ — PAS une sous-classe du bool Python. Un
+    # numpy.bool_ dans le payload final fait échouer json.dump(...,
+    # allow_nan=False) dans main() avec TypeError: Object of type bool_ is
+    # not JSON serializable, cassant l'export docs/indices.json sur tout
+    # run réel (trouvé en revue finale de branche, jamais capturé par les
+    # tests unitaires qui construisent `ratios` à la main avec des float
+    # Python natifs).
     criteria = {}
     if not (is_financial or is_trust):
-        criteria["structure_financiere"] = (
+        criteria["structure_financiere"] = bool(
             ratios.get("current_ratio", 0.0) >= GRAHAM_CURRENT_RATIO_MIN
         )
-    criteria["stabilite_benefices"] = ratios.get("no_loss_years", False)
-    criteria["dividendes"] = (
+    criteria["stabilite_benefices"] = bool(ratios.get("no_loss_years", False))
+    criteria["dividendes"] = bool(
         ratios.get("dividend_streak_years", 0) >= GRAHAM_DIVIDEND_STREAK_MIN_YEARS
     )
-    criteria["croissance_benefices"] = (
+    criteria["croissance_benefices"] = bool(
         ratios.get("cagr_net_income", 0.0) >= GRAHAM_EARNINGS_GROWTH_CAGR_MIN_PCT
     )
     current_pe = ratios.get("current_pe", 0.0)
-    criteria["valorisation_pe"] = 0 < current_pe <= GRAHAM_PE_MAX
+    criteria["valorisation_pe"] = bool(0 < current_pe <= GRAHAM_PE_MAX)
     current_pb = ratios.get("current_pb", 0.0)
     graham_number = current_pe * current_pb if current_pb > 0 else None
-    criteria["valorisation_graham_number"] = (
+    criteria["valorisation_graham_number"] = bool(
         graham_number is not None and 0 < graham_number <= GRAHAM_NUMBER_MAX
     )
-    return {"eligible": all(criteria.values()), "criteria": criteria}
+    return {"eligible": bool(all(criteria.values())), "criteria": criteria}
 
 
 def build_company_entry(

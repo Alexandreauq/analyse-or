@@ -1783,6 +1783,55 @@ def _window_average(row, cols: list) -> float:
     return sum(values) / len(values) if values else float("nan")
 
 
+# Badge "Investisseur défensif" (Benjamin Graham, L'investisseur
+# intelligent) — voir docs/superpowers/specs/2026-09-23-graham-defensive-investor-design.md.
+# Conseillé par des professionnels de la finance consultés par
+# l'utilisateur. N'affecte ni le score composite ni le déclenchement
+# des alertes (badge purement informatif, même philosophie que le
+# badge de phase Weinstein).
+GRAHAM_DIVIDEND_STREAK_MIN_YEARS = 10
+GRAHAM_CURRENT_RATIO_MIN = 2.0
+GRAHAM_EARNINGS_GROWTH_CAGR_MIN_PCT = 2.9  # ≈ (1.33)^(1/10) - 1, annualisé (Graham : +33% sur 10 ans)
+GRAHAM_PE_MAX = 15.0
+GRAHAM_NUMBER_MAX = 22.5  # P/E x P/B
+
+
+def compute_dividend_streak_years(dividends: pd.Series, today: "date | None" = None) -> int:
+    """Nombre d'années consécutives avec au moins un versement de
+    dividende, en remontant depuis l'année en cours. Tolère que le
+    dividende de l'année en cours ne soit pas encore tombé : démarre le
+    décompte à l'année en cours SI elle a déjà un versement, sinon à
+    l'année dernière — mais si NI l'année en cours NI l'année dernière
+    n'ont de versement, le streak est 0 (série considérée rompue), même
+    s'il y a eu des versements par le passé. Un trou ancien avant le
+    streak récent ne casse pas ce dernier (le décompte s'arrête dès la
+    première année sans versement en remontant, peu importe ce qui se
+    trouve plus loin). `today` injectable pour les tests — défaut :
+    date du jour réelle."""
+    today = today or date.today()
+    years_paid = {d.year for d in dividends.index}
+    start_year = today.year if today.year in years_paid else today.year - 1
+    streak = 0
+    year = start_year
+    while year in years_paid:
+        streak += 1
+        year -= 1
+    return streak
+
+
+def _compute_no_loss_years(net_income: pd.Series, years_cols: list) -> bool:
+    """True si `net_income` est positif sur TOUS les exercices de
+    `years_cols` (aucune perte) — False si un seul exercice est négatif
+    OU manquant (donnée manquante traitée comme un échec du critère,
+    jamais comme une réussite silencieuse — même philosophie que les
+    autres critères Graham de ce fichier, ex. valorisation_pe qui exige
+    current_pe > 0 plutôt que de laisser passer une donnée à 0/manquante)."""
+    return all(
+        not _is_missing(net_income[col]) and net_income[col] > 0
+        for col in years_cols
+    )
+
+
 def extract_ratios(financials, balance_sheet, cashflow, closes_by_year, shares_outstanding: float) -> dict:
     """
     Calcule les ratios bruts nécessaires aux fonctions de score à partir des

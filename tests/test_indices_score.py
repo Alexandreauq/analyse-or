@@ -2026,6 +2026,53 @@ def test_estimate_entry_exit_prices_returns_none_for_both_when_nothing_available
     assert result == {"entry": None, "exit": None}
 
 
+def test_estimate_entry_exit_prices_excludes_technical_candidate_in_declin_phase():
+    """Phase 4 (Déclin) : le repère technique (MM200) est exclu, seule
+    la valorisation reste — ne jamais proposer un point d'entrée sur un
+    titre en déclin confirmé même si son prix paraît bon marché."""
+    with_declin = estimate_entry_exit_prices(
+        fair_value=100.0, ma200=90.0, beta=1.0, ecart_pct_ma200=0.0, stage_label="Déclin",
+    )
+    without_stage = estimate_entry_exit_prices(
+        fair_value=100.0, ma200=90.0, beta=1.0, ecart_pct_ma200=0.0,
+    )
+    # Sans la phase Déclin, la MM200 pèse dans la moyenne -> résultat différent.
+    assert with_declin != without_stage
+    # Avec Déclin, seule la valorisation compte -> même résultat que ma200=None.
+    valuation_only = estimate_entry_exit_prices(
+        fair_value=100.0, ma200=None, beta=1.0, ecart_pct_ma200=0.0,
+    )
+    assert with_declin == valuation_only
+
+
+def test_estimate_entry_exit_prices_returns_none_in_declin_phase_without_valuation():
+    result = estimate_entry_exit_prices(
+        fair_value=None, ma200=90.0, beta=1.0, ecart_pct_ma200=0.0, stage_label="Déclin",
+    )
+    assert result == {"entry": None, "exit": None}
+
+
+def test_estimate_entry_exit_prices_keeps_technical_candidate_in_achat_phase():
+    """Phase 2 (Achat) : comportement inchangé par rapport à aujourd'hui."""
+    with_achat = estimate_entry_exit_prices(
+        fair_value=100.0, ma200=90.0, beta=1.0, ecart_pct_ma200=0.0, stage_label="Achat",
+    )
+    without_stage = estimate_entry_exit_prices(
+        fair_value=100.0, ma200=90.0, beta=1.0, ecart_pct_ma200=0.0,
+    )
+    assert with_achat == without_stage
+
+
+def test_estimate_entry_exit_prices_keeps_technical_candidate_when_neutre():
+    with_neutre = estimate_entry_exit_prices(
+        fair_value=100.0, ma200=90.0, beta=1.0, ecart_pct_ma200=0.0, stage_label="Neutre",
+    )
+    without_stage = estimate_entry_exit_prices(
+        fair_value=100.0, ma200=90.0, beta=1.0, ecart_pct_ma200=0.0,
+    )
+    assert with_neutre == without_stage
+
+
 def test_estimate_entry_exit_prices_ignores_ma200_when_it_is_nan():
     """Une MM200 NaN (calculable seulement avec un historique de cours
     insuffisant) ne doit pas être traitée comme un candidat valide — le

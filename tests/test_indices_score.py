@@ -1272,6 +1272,74 @@ def test_estimate_dcf_price_returns_none_when_discount_rate_too_close_to_termina
     ) is None
 
 
+from indices_score import compute_graham_defensive_badge
+
+
+def _graham_eligible_ratios(**overrides):
+    """Ratios standard qui satisfont TOUS les critères Graham par
+    défaut — chaque test override le(s) champ(s) qui doit échouer."""
+    base = {
+        "current_ratio": 2.5,
+        "no_loss_years": True,
+        "dividend_streak_years": 12,
+        "cagr_net_income": 4.0,
+        "current_pe": 12.0,
+        "current_pb": 1.5,
+    }
+    base.update(overrides)
+    return base
+
+
+def test_compute_graham_defensive_badge_eligible_when_all_criteria_met():
+    ratios = _graham_eligible_ratios()
+    result = compute_graham_defensive_badge(ratios, is_financial=False, is_trust=False)
+    assert result["eligible"] is True
+    assert len(result["criteria"]) == 6
+    assert result["criteria"]["structure_financiere"] is True
+
+
+def test_compute_graham_defensive_badge_not_eligible_when_one_criterion_fails():
+    ratios = _graham_eligible_ratios(current_pe=25.0)  # dépasse GRAHAM_PE_MAX
+    result = compute_graham_defensive_badge(ratios, is_financial=False, is_trust=False)
+    assert result["eligible"] is False
+    assert result["criteria"]["valorisation_pe"] is False
+    # Les autres critères restent corrects individuellement -> un seul
+    # échec suffit à invalider le badge global, pas les autres clés.
+    assert result["criteria"]["stabilite_benefices"] is True
+
+
+def test_compute_graham_defensive_badge_excludes_structure_financiere_for_financial_profile():
+    ratios = _graham_eligible_ratios()
+    result = compute_graham_defensive_badge(ratios, is_financial=True, is_trust=False)
+    assert "structure_financiere" not in result["criteria"]
+    assert len(result["criteria"]) == 5
+
+
+def test_compute_graham_defensive_badge_excludes_structure_financiere_for_trust_profile():
+    ratios = _graham_eligible_ratios()
+    result = compute_graham_defensive_badge(ratios, is_financial=False, is_trust=True)
+    assert "structure_financiere" not in result["criteria"]
+    assert len(result["criteria"]) == 5
+
+
+def test_compute_graham_defensive_badge_graham_number_criterion():
+    # P/E 14 x P/B 1.5 = 21 <= 22.5 -> vrai
+    ratios = _graham_eligible_ratios(current_pe=14.0, current_pb=1.5)
+    result = compute_graham_defensive_badge(ratios, is_financial=False, is_trust=False)
+    assert result["criteria"]["valorisation_graham_number"] is True
+
+    # P/E 14 x P/B 2.0 = 28 > 22.5 -> faux
+    ratios2 = _graham_eligible_ratios(current_pe=14.0, current_pb=2.0)
+    result2 = compute_graham_defensive_badge(ratios2, is_financial=False, is_trust=False)
+    assert result2["criteria"]["valorisation_graham_number"] is False
+
+
+def test_compute_graham_defensive_badge_missing_fields_degrade_to_false():
+    result = compute_graham_defensive_badge({}, is_financial=False, is_trust=False)
+    assert result["eligible"] is False
+    assert all(v is False for v in result["criteria"].values())
+
+
 def _fake_ratios():
     return {
         "roce": 15.0,

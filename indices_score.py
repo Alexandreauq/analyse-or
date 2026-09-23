@@ -3558,12 +3558,21 @@ def classify_weinstein_stage(weekly_closes: pd.Series, weekly_volumes: pd.Series
 def estimate_entry_exit_prices(
     fair_value: float | None, ma200: float | None,
     beta: float | None, ecart_pct_ma200: float | None,
+    stage_label: str | None = None,
 ) -> dict:
     """Combine repère de valorisation (juste valeur ± marge pondérée par le
     bêta) et repère technique (MM200 décalée selon la dynamique récente) en
     moyennant ceux disponibles. Renvoie {"entry": float | None,
     "exit": float | None} — None des deux côtés si ni la valorisation ni la
-    MM200 ne sont disponibles."""
+    MM200 ne sont disponibles.
+
+    `stage_label` (voir classify_weinstein_stage) : en phase "Déclin", le
+    repère technique est exclu des candidats — proposer un point d'entrée
+    fondé sur une MM200 alors que la MM30 semaines confirme un déclin
+    n'a pas de sens, même si le titre paraît bon marché par la
+    valorisation seule. `None` (défaut, comportement d'avant ce
+    correctif) ou toute autre valeur ("Achat", "Neutre") ne change rien
+    au calcul existant."""
     valuation_margin = _risk_adjusted_margin(
         beta, VALUATION_MARGIN_BASE, VALUATION_MARGIN_MIN, VALUATION_MARGIN_MAX
     )
@@ -3577,7 +3586,7 @@ def estimate_entry_exit_prices(
     if fair_value is not None:
         entry_candidates.append(fair_value * (1 - valuation_margin))
         exit_candidates.append(fair_value * (1 + valuation_margin))
-    if ma200 is not None and not _is_missing(ma200):
+    if ma200 is not None and not _is_missing(ma200) and stage_label != "Déclin":
         entry_candidates.append(ma200 * (1 + momentum_adjustment))
         exit_candidates.append(ma200 * (1 + technical_margin + momentum_adjustment))
     entry = sum(entry_candidates) / len(entry_candidates) if entry_candidates else None
@@ -3821,7 +3830,8 @@ def estimate_valuation_targets(
     )
     fair_value = estimate_fair_value(dcf_price, asset_price, multiple_price, sector_profile)
     entry_exit = estimate_entry_exit_prices(
-        fair_value, data["ma200"], data["beta"], data["ecart_pct_ma200"]
+        fair_value, data["ma200"], data["beta"], data["ecart_pct_ma200"],
+        stage_label=data.get("stage_label"),
     )
     return {
         "fair_value": fair_value,

@@ -535,12 +535,68 @@ def test_extract_ratios_computes_expected_keys():
         "fcf_conversion", "current_ev_ebitda", "avg_ev_ebitda_5y",
         "current_pe", "avg_pe_5y", "fcf", "net_debt", "equity",
         "tax_rate", "total_debt",
+        "current_pb", "avg_pb_5y", "current_ratio", "no_loss_years",
     ]:
         assert key in ratios, f"clé manquante : {key}"
     # Revenu croît régulièrement de 800 à 1000 sur 5 ans ; CAGR lissé
     # (moyenne des 2 exercices récents vs moyenne des 2 plus anciens,
     # cf. test dédié ci-dessous) ~ 5.7%/an sur cette série linéaire.
     assert 5.0 < ratios["cagr_ca"] < 6.5
+
+
+def test_extract_ratios_computes_current_pb():
+    financials, balance_sheet, cashflow, closes_by_year = _make_fixture_statements()
+    ratios = extract_ratios(
+        financials, balance_sheet, cashflow, closes_by_year, shares_outstanding=10.0
+    )
+    # market_cap = 100.0 (prix) * 10.0 (actions) = 1000.0 ; equity la plus
+    # récente (2025, ligne "Stockholders Equity" du fixture) = 50.0 ->
+    # P/B = 1000/50 = 20.0. (Note : le commentaire d'origine du brief
+    # indiquait equity=300, qui est en fait la valeur "Total Debt" du même
+    # exercice dans ce fixture — corrigé ici pour coller aux données réelles
+    # de _make_fixture_statements.)
+    assert ratios["current_pb"] == pytest.approx(1000.0 / 50.0)
+    assert ratios["avg_pb_5y"] > 0
+
+
+def test_extract_ratios_computes_current_ratio():
+    financials, balance_sheet, cashflow, closes_by_year = _make_fixture_statements()
+    balance_sheet.loc["Current Assets"] = [400, 380, 360, 340, 320]
+    balance_sheet.loc["Current Liabilities"] = [150, 145, 140, 135, 130]
+    ratios = extract_ratios(
+        financials, balance_sheet, cashflow, closes_by_year, shares_outstanding=10.0
+    )
+    # Dernier exercice (2025) : 400 / 150 ≈ 2.67
+    assert ratios["current_ratio"] == pytest.approx(400.0 / 150.0)
+
+
+def test_extract_ratios_current_ratio_zero_when_rows_absent():
+    financials, balance_sheet, cashflow, closes_by_year = _make_fixture_statements()
+    # Pas de lignes Current Assets/Current Liabilities dans ce fixture.
+    ratios = extract_ratios(
+        financials, balance_sheet, cashflow, closes_by_year, shares_outstanding=10.0
+    )
+    assert ratios["current_ratio"] == 0.0
+
+
+def test_extract_ratios_no_loss_years_true_for_all_positive_fixture():
+    financials, balance_sheet, cashflow, closes_by_year = _make_fixture_statements()
+    # _make_fixture_statements a un Net Income positif sur les 5 exercices
+    # (140, 130, 120, 108, 96).
+    ratios = extract_ratios(
+        financials, balance_sheet, cashflow, closes_by_year, shares_outstanding=10.0
+    )
+    assert ratios["no_loss_years"] is True
+
+
+def test_extract_ratios_no_loss_years_false_with_one_loss_year():
+    financials, balance_sheet, cashflow, closes_by_year = _make_fixture_statements()
+    years = list(financials.columns)
+    financials.loc["Net Income", years[2]] = -50.0  # une perte sur l'exercice du milieu
+    ratios = extract_ratios(
+        financials, balance_sheet, cashflow, closes_by_year, shares_outstanding=10.0
+    )
+    assert ratios["no_loss_years"] is False
 
 
 import math

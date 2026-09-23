@@ -1700,13 +1700,58 @@ def compute_composite(factors: list[FactorResult]) -> float:
 
 
 def interpret(composite: float) -> str:
-    if composite > 50:
-        return "Profil fondamental très solide"
-    if composite > 15:
-        return "Solide"
-    if composite > -15:
-        return "Neutre"
-    return "Fragile"
+    if composite > 60:
+        return "Profil fondamental très solide"   # top ~20% (score recalibré)
+    if composite > 20:
+        return "Solide"                            # ~20%
+    if composite > -20:
+        return "Neutre"                             # ~20%, autour de la médiane
+    if composite > -60:
+        return "Fragile"                            # ~20%
+    return "Très fragile"                            # ~20%
+
+
+SCORE_RECALIBRATION_MIN_POOL_SIZE = 20  # voir docs/superpowers/specs/2026-09-24-score-recalibration-design.md
+
+
+def compute_percentile_rank(value: float, pool: list[float]) -> float:
+    """Rang percentile de `value` au sein de `pool` (méthode du rang moyen
+    — gère les ex æquo sans biaiser vers le haut ou le bas). `pool` doit
+    contenir `value` lui-même (le score de la société fait partie de son
+    propre pool de comparaison). Renvoie une valeur entre 0 et 100."""
+    n = len(pool)
+    lower = sum(1 for v in pool if v < value)
+    equal = sum(1 for v in pool if v == value)
+    return 100 * (lower + 0.5 * equal) / n
+
+
+def _score_profile_key(company: dict) -> str:
+    if company.get("is_trust"):
+        return "trust"
+    if company.get("is_financial"):
+        return "financial"
+    return "standard"
+
+
+def recalibrate_scores_by_profile(companies: list[dict]) -> None:
+    """Mute company["score"] et company["interpretation"] en place pour
+    chaque société dont le profil a un pool >= SCORE_RECALIBRATION_MIN_POOL_SIZE.
+    Une société dans un profil au pool trop petit (ex: trust aujourd'hui,
+    0 société) garde son score brut déjà calculé par build_company_entry —
+    repli assumé, pas un oubli (voir spec)."""
+    pools: dict[str, list[float]] = {}
+    for c in companies:
+        pools.setdefault(_score_profile_key(c), []).append(c["score"])
+
+    for c in companies:
+        key = _score_profile_key(c)
+        pool = pools[key]
+        if len(pool) < SCORE_RECALIBRATION_MIN_POOL_SIZE:
+            continue  # repli : score brut déjà en place, on ne touche à rien
+        percentile = compute_percentile_rank(c["score"], pool)
+        new_score = round((percentile - 50) * 2, 1)
+        c["score"] = new_score
+        c["interpretation"] = interpret(new_score)
 
 
 def get_row(df, *aliases):
@@ -3299,7 +3344,7 @@ def append_indices_history(entries: list[dict], path=INDICES_HISTORY_PATH) -> li
     return trimmed
 
 
-RAPID_DROP_POINTS = 20   # même seuil que le volet Or
+RAPID_DROP_POINTS = 40   # recalibré (rang percentile) : un point d'écart pèse ~2x plus qu'avant, donc le seuil absolu double pour garder une sélectivité comparable — voir docs/superpowers/specs/2026-09-24-score-recalibration-design.md
 RAPID_DROP_DAYS = 5      # même fenêtre que le volet Or
 NEAR_ENTRY_PCT = 5.0     # écart max (%) au repère d'entrée pour "conditions réunies"
 
@@ -3338,10 +3383,10 @@ def compute_company_alerts(
         except (KeyError, TypeError):
             prev_composite = None
 
-    if prev_composite is not None and prev_composite <= 15 < composite:
+    if prev_composite is not None and prev_composite <= 0 < composite:
         alerts.append({
             "kind": "watch",
-            "title": "Score composite a franchi +15",
+            "title": "Score composite a franchi la médiane du profil",
             "detail": "Surveillance active enclenchée pour cette entreprise.",
             "date": today_str,
         })
@@ -3378,7 +3423,7 @@ def compute_company_alerts(
         current_price is not None and entry_price is not None and entry_price > 0
         and abs(current_price - entry_price) / entry_price * 100 < NEAR_ENTRY_PCT
     )
-    if composite > 15 and near_entry:
+    if composite > 0 and near_entry:
         alerts.append({
             "kind": "entree",
             "title": "Conditions d'entrée réunies",
@@ -4279,6 +4324,7 @@ def build_company_entry(
         "sector": sector,
         "sector_profile": sector_risk_profile(sector),
         "is_financial": data["is_financial"],
+        "is_trust": data["is_trust"],
         "score": composite,
         "interpretation": interpret(composite),
         "factors": [
@@ -4625,6 +4671,8 @@ def main():
         price_history_entries.extend(c.pop("_price_history_daily", []))
     price_history_entries.extend(fetch_index_price_history())
     update_price_history(price_history_entries)
+
+    recalibrate_scores_by_profile(companies)
 
     newly_triggered_entree, newly_triggered_major_news = _attach_alerts_and_update_history(companies)
     send_daily_digest_email(newly_triggered_entree, newly_triggered_major_news)

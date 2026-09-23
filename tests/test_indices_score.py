@@ -407,6 +407,117 @@ def test_interpret_bands():
     assert interpret(-30.0) == "Fragile"
 
 
+def test_compute_percentile_rank_min_value_is_near_zero():
+    pool = [10.0, 20.0, 30.0, 40.0, 50.0]
+    result = indices_score.compute_percentile_rank(10.0, pool)
+    assert result == 10.0  # 0 inférieurs, 1 égal (lui-même) -> 100*(0+0.5)/5
+
+
+def test_compute_percentile_rank_max_value_is_near_hundred():
+    pool = [10.0, 20.0, 30.0, 40.0, 50.0]
+    result = indices_score.compute_percentile_rank(50.0, pool)
+    assert result == 90.0  # 4 inférieurs, 1 égal -> 100*(4+0.5)/5
+
+
+def test_compute_percentile_rank_median_value():
+    pool = [10.0, 20.0, 30.0, 40.0, 50.0]
+    result = indices_score.compute_percentile_rank(30.0, pool)
+    assert result == 50.0  # 2 inférieurs, 1 égal -> 100*(2+0.5)/5
+
+
+def test_compute_percentile_rank_handles_ties():
+    pool = [10.0, 20.0, 20.0, 20.0, 50.0]
+    result = indices_score.compute_percentile_rank(20.0, pool)
+    # 1 strictement inférieur (10.0), 3 égaux (les trois 20.0) -> 100*(1+1.5)/5
+    assert result == 50.0
+
+
+def test_compute_percentile_rank_single_element_pool():
+    result = indices_score.compute_percentile_rank(42.0, [42.0])
+    assert result == 50.0  # seul élément du pool -> 100*(0+0.5)/1
+
+
+def test_score_profile_key_trust():
+    assert indices_score._score_profile_key({"is_trust": True, "is_financial": False}) == "trust"
+
+
+def test_score_profile_key_financial():
+    assert indices_score._score_profile_key({"is_trust": False, "is_financial": True}) == "financial"
+
+
+def test_score_profile_key_standard():
+    assert indices_score._score_profile_key({"is_trust": False, "is_financial": False}) == "standard"
+
+
+def test_score_profile_key_defaults_to_standard_when_keys_absent():
+    assert indices_score._score_profile_key({}) == "standard"
+
+
+def _make_companies_with_scores(scores: list[float], is_financial=False, is_trust=False) -> list[dict]:
+    return [
+        {
+            "ticker": f"T{i}", "score": s, "interpretation": "peu importe",
+            "is_financial": is_financial, "is_trust": is_trust,
+        }
+        for i, s in enumerate(scores)
+    ]
+
+
+def test_recalibrate_scores_by_profile_remaps_large_pool():
+    # 25 sociétés standard (>= seuil 20) avec des scores bruts variés.
+    companies = _make_companies_with_scores([float(i) for i in range(25)])
+    indices_score.recalibrate_scores_by_profile(companies)
+    # La société avec le score brut le plus bas (0.0) doit désormais avoir
+    # un score recalibré proche de -100 ; la plus haute (24.0), proche de +100.
+    assert companies[0]["score"] < -80
+    assert companies[-1]["score"] > 80
+    # Le score n'est plus la valeur brute d'origine.
+    assert companies[0]["score"] != 0.0
+
+
+def test_recalibrate_scores_by_profile_updates_interpretation():
+    companies = _make_companies_with_scores([float(i) for i in range(25)])
+    indices_score.recalibrate_scores_by_profile(companies)
+    for c in companies:
+        assert c["interpretation"] == indices_score.interpret(c["score"])
+
+
+def test_recalibrate_scores_by_profile_leaves_small_pool_untouched():
+    # 5 sociétés trust (< seuil 20) : score et interpretation doivent rester
+    # strictement identiques à ce qu'ils étaient avant l'appel.
+    companies = _make_companies_with_scores([1.0, 2.0, 3.0, 4.0, 5.0], is_trust=True)
+    for c in companies:
+        c["interpretation"] = "Neutre"  # valeur arbitraire posée avant l'appel
+    original = [dict(c) for c in companies]
+    indices_score.recalibrate_scores_by_profile(companies)
+    assert companies == original
+
+
+def test_recalibrate_scores_by_profile_groups_by_profile_independently():
+    # 25 standard (scores bruts 0..24) + 25 financier (scores bruts
+    # 100..124, plage totalement disjointe) : si les pools étaient
+    # incorrectement fusionnés en un seul de 50, TOUTES les sociétés
+    # standard se retrouveraient tassées en bas du classement (dominées
+    # par les scores financier, bien plus hauts) -- alors qu'avec un
+    # regroupement correct, la meilleure société standard doit être proche
+    # du sommet de SON PROPRE pool, peu importe les valeurs de l'autre
+    # groupe.
+    standard = _make_companies_with_scores([float(i) for i in range(25)], is_financial=False)
+    financial = _make_companies_with_scores([float(i) + 100.0 for i in range(25)], is_financial=True)
+    companies = standard + financial
+    indices_score.recalibrate_scores_by_profile(companies)
+    # Meilleure société standard (score brut 24.0, la plus haute de son
+    # propre pool de 25) : doit être proche de +100, pas écrasée par les
+    # scores financier.
+    best_standard = companies[24]
+    assert best_standard["score"] > 80
+    # Pire société financier (score brut 100.0, la plus basse de SON
+    # propre pool) : doit être proche de -100, pas portée en haut par sa
+    # valeur brute élevée en absolu.
+    worst_financial = companies[25]
+    assert worst_financial["score"] < -80
+
+
 import pandas as pd
 from datetime import date as _date
 from indices_score import get_row, extract_ratios, compute_dividend_streak_years, _compute_no_loss_years

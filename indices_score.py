@@ -4054,6 +4054,35 @@ def load_previous_alerted_news_links() -> dict:
         return {}
 
 
+def compute_graham_defensive_badge(ratios: dict, is_financial: bool, is_trust: bool) -> dict:
+    """Combine les critères Graham applicables au profil de la société en
+    un badge "Investisseur défensif" — test strict (tous les critères
+    présents doivent être vrais), pas un score compté sur N (voir spec
+    §6.8). Une donnée manquante dans `ratios` (dict incomplet) dégrade
+    chaque critère concerné vers False plutôt que de lever une exception
+    ou de compter comme une réussite."""
+    criteria = {}
+    if not (is_financial or is_trust):
+        criteria["structure_financiere"] = (
+            ratios.get("current_ratio", 0.0) >= GRAHAM_CURRENT_RATIO_MIN
+        )
+    criteria["stabilite_benefices"] = ratios.get("no_loss_years", False)
+    criteria["dividendes"] = (
+        ratios.get("dividend_streak_years", 0) >= GRAHAM_DIVIDEND_STREAK_MIN_YEARS
+    )
+    criteria["croissance_benefices"] = (
+        ratios.get("cagr_net_income", 0.0) >= GRAHAM_EARNINGS_GROWTH_CAGR_MIN_PCT
+    )
+    current_pe = ratios.get("current_pe", 0.0)
+    criteria["valorisation_pe"] = 0 < current_pe <= GRAHAM_PE_MAX
+    current_pb = ratios.get("current_pb", 0.0)
+    graham_number = current_pe * current_pb if current_pb > 0 else None
+    criteria["valorisation_graham_number"] = (
+        graham_number is not None and 0 < graham_number <= GRAHAM_NUMBER_MAX
+    )
+    return {"eligible": all(criteria.values()), "criteria": criteria}
+
+
 def build_company_entry(
     ticker: str, name: str, risk_free_rate: float | None, previous_analyses: dict,
     index_key: str = "CAC40", also_indices: list[str] | None = None,
@@ -4220,6 +4249,8 @@ def build_company_entry(
 
     valuation_targets = estimate_valuation_targets(data, cost_of_capital, cost_of_equity)
 
+    graham_defensive = compute_graham_defensive_badge(data, data["is_financial"], data["is_trust"])
+
     entry = {
         "ticker": ticker,
         "name": name,
@@ -4243,6 +4274,8 @@ def build_company_entry(
         "stage": data.get("stage"),
         "stage_label": data.get("stage_label", "Neutre"),
         "volume_confirme": data.get("volume_confirme", False),
+        "graham_defensive": graham_defensive,
+        "dividend_streak_years": data.get("dividend_streak_years", 0),
         "financial_analysis_html": financial_analysis_html,
         "financial_analysis_quarter": financial_analysis_quarter,
     }

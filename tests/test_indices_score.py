@@ -408,7 +408,8 @@ def test_interpret_bands():
 
 
 import pandas as pd
-from indices_score import get_row, extract_ratios
+from datetime import date as _date
+from indices_score import get_row, extract_ratios, compute_dividend_streak_years, _compute_no_loss_years
 
 
 def test_get_row_returns_first_matching_alias():
@@ -424,6 +425,67 @@ def test_get_row_raises_when_no_alias_matches():
         assert False, "expected KeyError"
     except KeyError:
         pass
+
+
+def _dividend_series(years_with_dividend: list[int]) -> pd.Series:
+    """Une Series indexée par une date arbitraire dans chaque année listée
+    (15 juin, sans incidence — seule l'année compte), valeur = 1.0
+    (peu importe le montant pour ces tests)."""
+    dates = [pd.Timestamp(f"{y}-06-15") for y in years_with_dividend]
+    return pd.Series([1.0] * len(dates), index=pd.DatetimeIndex(dates))
+
+
+def test_compute_dividend_streak_years_counts_consecutive_years_including_current():
+    dividends = _dividend_series([2020, 2021, 2022, 2023, 2024, 2025])
+    result = compute_dividend_streak_years(dividends, today=_date(2026, 3, 1))
+    # 2025 payé, mais pas encore 2026 (le dividende de l'année en cours
+    # n'est peut-être pas encore tombé) -> démarre à 2025, remonte
+    # jusqu'à 2020 incluse = 6 années consécutives.
+    assert result == 6
+
+
+def test_compute_dividend_streak_years_counts_current_year_if_already_paid():
+    dividends = _dividend_series([2024, 2025, 2026])
+    result = compute_dividend_streak_years(dividends, today=_date(2026, 9, 1))
+    assert result == 3
+
+
+def test_compute_dividend_streak_years_zero_when_broken_last_two_years():
+    dividends = _dividend_series([2015, 2016, 2017, 2018, 2019, 2020])  # ancien historique, rompu depuis
+    result = compute_dividend_streak_years(dividends, today=_date(2026, 3, 1))
+    assert result == 0
+
+
+def test_compute_dividend_streak_years_ignores_old_gap_before_current_streak():
+    # Trou en 2018 (aucun versement), mais streak récent ininterrompu
+    # depuis 2019 -> ne doit compter que le streak récent, pas être
+    # cassé par le trou ancien.
+    dividends = _dividend_series([2010, 2011, 2019, 2020, 2021, 2022, 2023, 2024, 2025])
+    result = compute_dividend_streak_years(dividends, today=_date(2026, 3, 1))
+    assert result == 7  # 2019..2025 inclus
+
+
+def test_compute_dividend_streak_years_empty_series_returns_zero():
+    result = compute_dividend_streak_years(pd.Series(dtype=float), today=_date(2026, 3, 1))
+    assert result == 0
+
+
+def test_compute_no_loss_years_true_when_all_positive():
+    years = ["2025-12-31", "2024-12-31", "2023-12-31"]
+    net_income = pd.Series([100.0, 90.0, 80.0], index=years)
+    assert _compute_no_loss_years(net_income, years) is True
+
+
+def test_compute_no_loss_years_false_when_one_year_negative():
+    years = ["2025-12-31", "2024-12-31", "2023-12-31"]
+    net_income = pd.Series([100.0, -10.0, 80.0], index=years)
+    assert _compute_no_loss_years(net_income, years) is False
+
+
+def test_compute_no_loss_years_false_when_one_year_missing():
+    years = ["2025-12-31", "2024-12-31", "2023-12-31"]
+    net_income = pd.Series([100.0, float("nan"), 80.0], index=years)
+    assert _compute_no_loss_years(net_income, years) is False
 
 
 def _make_fixture_statements():

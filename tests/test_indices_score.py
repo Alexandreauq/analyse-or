@@ -532,6 +532,7 @@ def test_extract_ratios_computes_expected_keys():
     )
     for key in [
         "roce", "roe", "net_debt_ebitda", "icr", "cagr_ca", "cagr_ebitda",
+        "cagr_net_income",
         "fcf_conversion", "current_ev_ebitda", "avg_ev_ebitda_5y",
         "current_pe", "avg_pe_5y", "fcf", "net_debt", "equity",
         "tax_rate", "total_debt",
@@ -542,6 +543,22 @@ def test_extract_ratios_computes_expected_keys():
     # (moyenne des 2 exercices récents vs moyenne des 2 plus anciens,
     # cf. test dédié ci-dessous) ~ 5.7%/an sur cette série linéaire.
     assert 5.0 < ratios["cagr_ca"] < 6.5
+
+
+def test_extract_ratios_computes_cagr_net_income():
+    """Régression : extract_ratios (profil standard) n'exposait pas
+    cagr_net_income avant ce correctif -> compute_graham_defensive_badge
+    retombait silencieusement sur ratios.get("cagr_net_income", 0.0) et le
+    critère croissance_benefices était toujours False pour ce profil
+    (utilisé par ~85% des sociétés). Net Income du fixture = [140, 130,
+    120, 108, 96] (plus récent en premier) -> croissance réelle, CAGR > 0
+    attendu."""
+    financials, balance_sheet, cashflow, closes_by_year = _make_fixture_statements()
+    ratios = extract_ratios(
+        financials, balance_sheet, cashflow, closes_by_year, shares_outstanding=10.0
+    )
+    assert "cagr_net_income" in ratios
+    assert ratios["cagr_net_income"] > 0
 
 
 def test_extract_ratios_computes_current_pb():
@@ -1338,6 +1355,37 @@ def test_compute_graham_defensive_badge_missing_fields_degrade_to_false():
     result = compute_graham_defensive_badge({}, is_financial=False, is_trust=False)
     assert result["eligible"] is False
     assert all(v is False for v in result["criteria"].values())
+
+
+def test_compute_graham_defensive_badge_output_is_json_serializable_with_real_ratios():
+    """Régression : `ratios` en production vient de extract_ratios/
+    extract_ratios_financial, où current_pe/current_pb/current_ratio sont
+    des numpy.float64 (indexation de pandas Series), pas des float Python
+    natifs comme dans _graham_eligible_ratios() (dict construit à la main
+    par les autres tests de ce fichier). Une comparaison Python/
+    numpy.float64 produit un numpy.bool_ -- qui n'est PAS une sous-classe
+    de bool et fait planter json.dump(..., allow_nan=False) dans main()
+    avec TypeError: Object of type bool_ is not JSON serializable. Ce test
+    utilise donc la VRAIE sortie de extract_ratios (pas le dict à la main)
+    pour reproduire fidèlement le bug tel qu'il se produit en production."""
+    import json
+
+    financials, balance_sheet, cashflow, closes_by_year = _make_fixture_statements()
+    ratios = extract_ratios(
+        financials, balance_sheet, cashflow, closes_by_year, shares_outstanding=10.0
+    )
+    ratios["dividend_streak_years"] = 12  # pas dans extract_ratios, ajouté séparément dans main()
+    result = compute_graham_defensive_badge(ratios, is_financial=False, is_trust=False)
+
+    # Ne doit jamais lever, contrairement au comportement avant le correctif.
+    json.dumps({"graham_defensive": result}, allow_nan=False)
+
+    for key, value in result["criteria"].items():
+        assert isinstance(value, bool), (
+            f"criteria[{key!r}] = {value!r} ({type(value)}) n'est pas un bool "
+            f"Python natif (probablement un numpy.bool_, non sérialisable en JSON)"
+        )
+    assert isinstance(result["eligible"], bool)
 
 
 def _fake_ratios():

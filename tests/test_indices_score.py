@@ -1906,6 +1906,103 @@ def test_estimate_fair_value_returns_none_when_no_method_is_available():
     assert estimate_fair_value(dcf_price=None, asset_price=None, multiple_price=None) is None
 
 
+from indices_score import classify_weinstein_stage
+
+
+def _weekly_series(values, start="2020-01-05"):
+    """Série pandas hebdomadaire (une valeur par dimanche, comme le
+    ferait .resample('W')) à partir d'une liste de valeurs, la plus
+    ancienne en premier."""
+    index = pd.date_range(start=start, periods=len(values), freq="W")
+    return pd.Series(values, index=index, dtype=float)
+
+
+def test_classify_weinstein_stage_returns_none_when_history_too_short():
+    closes = _weekly_series([100.0] * 33)  # 33 < WEINSTEIN_MIN_WEEKS (34)
+    volumes = _weekly_series([1000.0] * 33)
+    result = classify_weinstein_stage(closes, volumes)
+    assert result == {"stage": None, "stage_label": "Neutre", "volume_confirme": False}
+
+
+def test_classify_weinstein_stage_detects_achat_phase():
+    # MM30s clairement montante (prix croissant sur toute la fenêtre) et
+    # prix courant au-dessus de la MM30s -> Phase 2 (Achat).
+    closes = _weekly_series([100.0 + i * 2.0 for i in range(40)])
+    volumes = _weekly_series([1000.0] * 40)
+    result = classify_weinstein_stage(closes, volumes)
+    assert result["stage"] == 2
+    assert result["stage_label"] == "Achat"
+
+
+def test_classify_weinstein_stage_detects_declin_phase():
+    # MM30s clairement descendante et prix courant en dessous -> Phase 4 (Déclin).
+    closes = _weekly_series([300.0 - i * 2.0 for i in range(40)])
+    volumes = _weekly_series([1000.0] * 40)
+    result = classify_weinstein_stage(closes, volumes)
+    assert result["stage"] == 4
+    assert result["stage_label"] == "Déclin"
+
+
+def test_classify_weinstein_stage_flat_ma_is_neutre():
+    # Prix constant sur toute la fenêtre -> MM30s parfaitement plate -> Neutre.
+    closes = _weekly_series([100.0] * 40)
+    volumes = _weekly_series([1000.0] * 40)
+    result = classify_weinstein_stage(closes, volumes)
+    assert result["stage_label"] == "Neutre"
+    assert result["stage"] in (1, 3)  # best-effort interne, jamais exposé comme label
+
+
+def test_classify_weinstein_stage_price_ma_disagreement_is_neutre():
+    # Prix au-dessus d'une MM30s qui descend encore (transition typique,
+    # ni Achat ni Déclin au sens strict de la méthode) -> Neutre.
+    closes = _weekly_series([300.0 - i * 2.0 for i in range(36)] + [250.0, 260.0, 270.0, 280.0])
+    volumes = _weekly_series([1000.0] * 40)
+    result = classify_weinstein_stage(closes, volumes)
+    assert result["stage_label"] == "Neutre"
+
+
+def test_classify_weinstein_stage_volume_confirmed_when_spike_above_prior_average():
+    closes = _weekly_series([100.0 + i * 2.0 for i in range(40)])
+    volumes = _weekly_series([1000.0] * 39 + [2000.0])  # dernière semaine : 2x la moyenne des 30 précédentes
+    result = classify_weinstein_stage(closes, volumes)
+    assert result["volume_confirme"] is True
+
+
+def test_classify_weinstein_stage_volume_not_confirmed_below_multiple():
+    closes = _weekly_series([100.0 + i * 2.0 for i in range(40)])
+    volumes = _weekly_series([1000.0] * 39 + [1200.0])  # 1.2x, sous le multiple de 1.5x
+    result = classify_weinstein_stage(closes, volumes)
+    assert result["volume_confirme"] is False
+
+
+def test_classify_weinstein_stage_current_week_volume_excluded_from_its_own_baseline():
+    """Point de correction identifié à la relecture de la spec : un
+    volume extrême sur la semaine courante ne doit pas gonfler sa propre
+    moyenne de référence."""
+    closes = _weekly_series([100.0 + i * 2.0 for i in range(40)])
+    # Moyenne des 30 semaines précédentes = 1000 ; dernière semaine = 10000
+    # (10x) -> doit rester confirmé, pas dilué par sa propre valeur extrême
+    # dans le calcul de la moyenne.
+    volumes = _weekly_series([1000.0] * 39 + [10000.0])
+    result = classify_weinstein_stage(closes, volumes)
+    assert result["volume_confirme"] is True
+
+
+def test_classify_weinstein_stage_missing_volume_degrades_gracefully():
+    closes = _weekly_series([100.0 + i * 2.0 for i in range(40)])
+    volumes = _weekly_series([float("nan")] * 40)
+    result = classify_weinstein_stage(closes, volumes)
+    assert result["stage"] == 2  # le calcul de phase ne dépend pas du volume
+    assert result["volume_confirme"] is False
+
+
+def test_classify_weinstein_stage_never_raises_on_empty_series():
+    closes = pd.Series([], dtype=float)
+    volumes = pd.Series([], dtype=float)
+    result = classify_weinstein_stage(closes, volumes)
+    assert result == {"stage": None, "stage_label": "Neutre", "volume_confirme": False}
+
+
 from indices_score import estimate_entry_exit_prices
 
 
@@ -1927,6 +2024,53 @@ def test_estimate_entry_exit_prices_uses_only_technical_when_fair_value_missing(
 def test_estimate_entry_exit_prices_returns_none_for_both_when_nothing_available():
     result = estimate_entry_exit_prices(fair_value=None, ma200=None, beta=1.0, ecart_pct_ma200=0.0)
     assert result == {"entry": None, "exit": None}
+
+
+def test_estimate_entry_exit_prices_excludes_technical_candidate_in_declin_phase():
+    """Phase 4 (Déclin) : le repère technique (MM200) est exclu, seule
+    la valorisation reste — ne jamais proposer un point d'entrée sur un
+    titre en déclin confirmé même si son prix paraît bon marché."""
+    with_declin = estimate_entry_exit_prices(
+        fair_value=100.0, ma200=90.0, beta=1.0, ecart_pct_ma200=0.0, stage_label="Déclin",
+    )
+    without_stage = estimate_entry_exit_prices(
+        fair_value=100.0, ma200=90.0, beta=1.0, ecart_pct_ma200=0.0,
+    )
+    # Sans la phase Déclin, la MM200 pèse dans la moyenne -> résultat différent.
+    assert with_declin != without_stage
+    # Avec Déclin, seule la valorisation compte -> même résultat que ma200=None.
+    valuation_only = estimate_entry_exit_prices(
+        fair_value=100.0, ma200=None, beta=1.0, ecart_pct_ma200=0.0,
+    )
+    assert with_declin == valuation_only
+
+
+def test_estimate_entry_exit_prices_returns_none_in_declin_phase_without_valuation():
+    result = estimate_entry_exit_prices(
+        fair_value=None, ma200=90.0, beta=1.0, ecart_pct_ma200=0.0, stage_label="Déclin",
+    )
+    assert result == {"entry": None, "exit": None}
+
+
+def test_estimate_entry_exit_prices_keeps_technical_candidate_in_achat_phase():
+    """Phase 2 (Achat) : comportement inchangé par rapport à aujourd'hui."""
+    with_achat = estimate_entry_exit_prices(
+        fair_value=100.0, ma200=90.0, beta=1.0, ecart_pct_ma200=0.0, stage_label="Achat",
+    )
+    without_stage = estimate_entry_exit_prices(
+        fair_value=100.0, ma200=90.0, beta=1.0, ecart_pct_ma200=0.0,
+    )
+    assert with_achat == without_stage
+
+
+def test_estimate_entry_exit_prices_keeps_technical_candidate_when_neutre():
+    with_neutre = estimate_entry_exit_prices(
+        fair_value=100.0, ma200=90.0, beta=1.0, ecart_pct_ma200=0.0, stage_label="Neutre",
+    )
+    without_stage = estimate_entry_exit_prices(
+        fair_value=100.0, ma200=90.0, beta=1.0, ecart_pct_ma200=0.0,
+    )
+    assert with_neutre == without_stage
 
 
 def test_estimate_entry_exit_prices_ignores_ma200_when_it_is_nan():
@@ -2858,6 +3002,30 @@ def test_entry_alert_context_includes_dynamique_recente_and_news():
 def test_entry_alert_context_empty_when_no_data():
     company = _fake_entry_alert_company(factors=[], news=[])
     assert indices_score._entry_alert_context(company) == ""
+
+
+def test_entry_alert_context_mentions_weinstein_phase():
+    company = _fake_entry_alert_company(stage_label="Achat", volume_confirme=True)
+    context = indices_score._entry_alert_context(company)
+    assert "Phase Weinstein : Achat" in context
+    assert "volume confirmé" in context
+
+
+def test_entry_alert_context_mentions_neutre_phase_without_volume_suffix():
+    company = _fake_entry_alert_company(stage_label="Neutre", volume_confirme=False)
+    context = indices_score._entry_alert_context(company)
+    assert "Phase Weinstein : Neutre" in context
+    assert "volume confirmé" not in context
+
+
+def test_entry_alert_context_omits_weinstein_line_when_stage_label_absent():
+    """Ne casse pas le contrat existant "contexte vide si pas de
+    donnée" (voir test_entry_alert_context_empty_when_no_data,
+    juste au-dessus) : company sans stage_label -> pas de ligne."""
+    company = _fake_entry_alert_company(factors=[], news=[])
+    context = indices_score._entry_alert_context(company)
+    assert "Phase Weinstein" not in context
+    assert context == ""
 
 
 def test_entry_alert_item_html_omits_context_heading_when_no_context():
@@ -4115,6 +4283,19 @@ def test_build_company_entry_uses_financial_factors_for_financial_sector_tickers
     assert entry["fair_value"] is not None
 
 
+def test_build_company_entry_exposes_weinstein_stage_fields(monkeypatch):
+    monkeypatch.setattr(indices_score, "fetch_company_financials", lambda ticker: _fake_financial_ratios())
+    monkeypatch.setattr(indices_score, "fetch_news", lambda name, prev=None: [])
+    monkeypatch.setattr(indices_score, "generate_financial_analysis", lambda *a, **k: "<p>Analyse.</p>")
+
+    entry = indices_score.build_company_entry("BNP.PA", "BNP Paribas", 3.0, {}, index_key="CAC40")
+
+    # _fake_financial_ratios() ne fournit pas ces clés -> repli attendu.
+    assert entry["stage"] is None
+    assert entry["stage_label"] == "Neutre"
+    assert entry["volume_confirme"] is False
+
+
 def _fake_trust_ratios():
     ratios = _fake_financial_ratios()
     ratios["is_financial"] = False
@@ -4508,6 +4689,316 @@ def test_fetch_company_financials_ignores_market_cap_override_for_other_tickers(
     ratios = indices_score.fetch_company_financials("STLAP.PA")
 
     assert ratios["shares_outstanding"] == 2900941252
+
+
+def test_fetch_company_financials_exposes_weinstein_stage_from_weekly_volume_history(monkeypatch):
+    """Historique construit pour donner une MM30 semaines nettement
+    montante (Phase 2 Achat), avec Volume disponible dans la réponse
+    yfinance — vérifie le branchement complet Volume -> hebdomadaire ->
+    classify_weinstein_stage, pas seulement la fonction pure du Task 1."""
+    financials, balance_sheet, cashflow, _ = _make_fixture_statements()
+    financials.columns = pd.to_datetime(financials.columns)
+    balance_sheet.columns = pd.to_datetime(balance_sheet.columns)
+    cashflow.columns = pd.to_datetime(cashflow.columns)
+    quarterly = _fake_annual_df({"Diluted Average Shares": [100.0]}, [pd.Timestamp("2025-09-30")])
+
+    # 300 jours ouvrés (~43 semaines), prix croissant -> MM30s montante.
+    history_index = pd.bdate_range("2025-01-01", periods=300)
+    history_close = pd.Series([100.0 + i * 0.5 for i in range(300)], index=history_index)
+    history_volume = pd.Series([1000.0] * 300, index=history_index)
+
+    class _FakeTicker:
+        def __init__(self, ticker):
+            pass
+
+        @property
+        def financials(self):
+            return financials
+
+        @property
+        def balance_sheet(self):
+            return balance_sheet
+
+        @property
+        def cashflow(self):
+            return cashflow
+
+        @property
+        def quarterly_financials(self):
+            return quarterly
+
+        @property
+        def info(self):
+            return {"sharesOutstanding": 1000.0, "marketCap": None, "beta": 1.0, "sector": "Technology"}
+
+        def history(self, period=None):
+            return pd.DataFrame({"Close": history_close, "Volume": history_volume})
+
+    monkeypatch.setattr(indices_score.yf, "Ticker", _FakeTicker)
+    monkeypatch.setattr(indices_score.time, "sleep", lambda s: None)
+
+    ratios = indices_score.fetch_company_financials("TEST.PA")
+
+    assert ratios["stage"] == 2
+    assert ratios["stage_label"] == "Achat"
+    assert ratios["volume_confirme"] is False  # volume constant, pas de pic de cassure
+
+
+def test_fetch_company_financials_degrades_gracefully_when_volume_column_absent(monkeypatch):
+    """Les fixtures existantes de ce fichier ne renvoient qu'une colonne
+    "Close" (pas de "Volume") — le code doit s'en accommoder sans
+    exception, stage_label retombant sur "Neutre" au pire (jamais un
+    crash), conformément aux Global Constraints du plan."""
+    financials, balance_sheet, cashflow, _ = _make_fixture_statements()
+    financials.columns = pd.to_datetime(financials.columns)
+    balance_sheet.columns = pd.to_datetime(balance_sheet.columns)
+    cashflow.columns = pd.to_datetime(cashflow.columns)
+    quarterly = _fake_annual_df({"Diluted Average Shares": [100.0]}, [pd.Timestamp("2025-09-30")])
+    history_index = pd.date_range("2024-01-01", periods=250, freq="D")
+    history_close = pd.Series([4.80] * 250, index=history_index)
+
+    class _FakeTicker:
+        def __init__(self, ticker):
+            pass
+
+        @property
+        def financials(self):
+            return financials
+
+        @property
+        def balance_sheet(self):
+            return balance_sheet
+
+        @property
+        def cashflow(self):
+            return cashflow
+
+        @property
+        def quarterly_financials(self):
+            return quarterly
+
+        @property
+        def info(self):
+            return {"sharesOutstanding": 1000.0, "marketCap": None, "beta": 1.0, "sector": "Technology"}
+
+        def history(self, period=None):
+            return pd.DataFrame({"Close": history_close})  # pas de colonne "Volume"
+
+    monkeypatch.setattr(indices_score.yf, "Ticker", _FakeTicker)
+    monkeypatch.setattr(indices_score.time, "sleep", lambda s: None)
+
+    ratios = indices_score.fetch_company_financials("TEST2.PA")  # ne doit pas lever
+
+    assert ratios["volume_confirme"] is False
+    assert ratios["stage_label"] in ("Achat", "Déclin", "Neutre")
+
+
+def test_fetch_company_financials_excludes_dropped_close_date_volume_from_weekly_aggregate(monkeypatch):
+    """Reproduit précisément le risque d'alignement que le
+    `daily_volumes.reindex(history.index)` (placé APRÈS `history.dropna()`)
+    est censé neutraliser : une date dont le Close est NaN (donc purgée par
+    dropna()) porte ici un volume extrême et distinctif (999999.0, toutes
+    les autres dates valant 1000.0) — si le Volume de cette date n'est pas
+    aligné sur l'index Close déjà nettoyé, il fuit dans l'agrégat
+    hebdomadaire et fausse `volume_confirme`.
+
+    Cas construit à la main (vérifié par calcul manuel hors test, voir
+    commentaires) : l'avant-dernière date de l'historique (2026-02-23,
+    un lundi) a un Close NaN et un Volume de 999999.0 ; la toute dernière
+    date (2026-02-24, mardi) reste valide avec un Volume normal de
+    1000.0 — les deux dates tombent dans la même semaine calendaire.
+
+    - Alignement correct (ce que ce commit implémente) : la date NaN est
+      absente de `history.index` après dropna(), donc son Volume est
+      exclu de `daily_volumes` par le reindex -> la semaine courante ne
+      contient que le volume normal (1000.0), bien en-dessous du seuil
+      de confirmation (1.5x la moyenne des 30 semaines précédentes,
+      ~5000 chacune) -> `volume_confirme` doit être False.
+    - Bug qu'on veut détecter (reindex absent, déplacé avant le dropna(),
+      ou remplacé par un dropna() indépendant sur daily_volumes) : le
+      Volume de la date NaN resterait dans `daily_volumes` telle quelle
+      (le Volume lui-même n'est jamais NaN) et fuiterait dans la semaine
+      courante -> somme hebdomadaire ~1 000 999, très au-dessus du seuil
+      -> `volume_confirme` basculerait à tort à True. C'est exactement
+      cette bascule que ce test doit détecter si le reindex est cassé."""
+    financials, balance_sheet, cashflow, _ = _make_fixture_statements()
+    financials.columns = pd.to_datetime(financials.columns)
+    balance_sheet.columns = pd.to_datetime(balance_sheet.columns)
+    cashflow.columns = pd.to_datetime(cashflow.columns)
+    quarterly = _fake_annual_df({"Diluted Average Shares": [100.0]}, [pd.Timestamp("2025-09-30")])
+
+    history_index = pd.bdate_range("2025-01-01", periods=300)
+    history_close = pd.Series([100.0 + i * 0.5 for i in range(300)], index=history_index)
+    history_volume = pd.Series([1000.0] * 300, index=history_index)
+    nan_date = history_index[-2]  # 2026-02-23, lundi — même semaine que la dernière date
+    history_close.loc[nan_date] = float("nan")
+    history_volume.loc[nan_date] = 999999.0  # volume extrême sur la date dont le Close est NaN
+
+    class _FakeTicker:
+        def __init__(self, ticker):
+            pass
+
+        @property
+        def financials(self):
+            return financials
+
+        @property
+        def balance_sheet(self):
+            return balance_sheet
+
+        @property
+        def cashflow(self):
+            return cashflow
+
+        @property
+        def quarterly_financials(self):
+            return quarterly
+
+        @property
+        def info(self):
+            return {"sharesOutstanding": 1000.0, "marketCap": None, "beta": 1.0, "sector": "Technology"}
+
+        def history(self, period=None):
+            return pd.DataFrame({"Close": history_close, "Volume": history_volume})
+
+    monkeypatch.setattr(indices_score.yf, "Ticker", _FakeTicker)
+    monkeypatch.setattr(indices_score.time, "sleep", lambda s: None)
+
+    ratios = indices_score.fetch_company_financials("TEST3.PA")
+
+    # Si le volume de la date purgée avait fui dans l'agrégat hebdomadaire,
+    # la semaine courante afficherait ~1 000 999 (>> le seuil de
+    # confirmation) et volume_confirme serait True — la valeur correcte,
+    # avec l'exclusion, est bien en-dessous du seuil.
+    assert ratios["volume_confirme"] is False
+
+
+def test_fetch_company_financials_detects_volume_spike_despite_incomplete_current_week(monkeypatch):
+    """`indices.yml` tourne quotidiennement — la dernière semaine du
+    resample("W") est donc presque toujours EN COURS (incomplète) au
+    moment du run, pas seulement dans de rares cas limites. Avec
+    l'ancien `.sum()`, une semaine en cours ne contenant qu'UN jour de
+    bourse est comparée à une moyenne de 30 semaines PLEINES — même un
+    vrai pic de volume (3x le volume quotidien normal) serait dilué et
+    NE serait PAS détecté. `.mean()` compare des volumes quotidiens
+    moyens, donc reste sensible au pic quel que soit le nombre de jours
+    déjà écoulés dans la semaine courante.
+
+    Historique construit pour que la toute dernière date (2026-02-23)
+    soit un LUNDI, donc seule dans le bin de la semaine en cours (aucun
+    autre jour ouvré ne précède dans ce même bin ISO) — volume normal
+    1000.0 partout sauf ce dernier jour, à 3000.0 (pic réel x3).
+
+    Calcul vérifié à la main hors test :
+    - Avec .sum() (ancien comportement) : semaine courante = 3000.0
+      (un seul jour), baseline 30 semaines pleines = 5000.0/semaine ->
+      seuil 7500.0 -> 3000.0 < 7500.0 -> volume_confirme resterait
+      FAUSSEMENT False malgré le vrai pic x3.
+    - Avec .mean() (comportement attendu ici) : semaine courante =
+      3000.0 (moyenne d'un seul jour = lui-même), baseline = 1000.0/jour
+      -> seuil 1500.0 -> 3000.0 > 1500.0 -> volume_confirme = True,
+      détection correcte du pic."""
+    financials, balance_sheet, cashflow, _ = _make_fixture_statements()
+    financials.columns = pd.to_datetime(financials.columns)
+    balance_sheet.columns = pd.to_datetime(balance_sheet.columns)
+    cashflow.columns = pd.to_datetime(cashflow.columns)
+    quarterly = _fake_annual_df({"Diluted Average Shares": [100.0]}, [pd.Timestamp("2025-09-30")])
+
+    history_index = pd.bdate_range("2025-01-01", periods=299)  # se termine un lundi
+    history_close = pd.Series([100.0 + i * 0.5 for i in range(299)], index=history_index)
+    history_volume = pd.Series([1000.0] * 299, index=history_index)
+    history_volume.loc[history_index[-1]] = 3000.0  # pic réel x3 sur l'unique jour de la semaine en cours
+
+    class _FakeTicker:
+        def __init__(self, ticker):
+            pass
+
+        @property
+        def financials(self):
+            return financials
+
+        @property
+        def balance_sheet(self):
+            return balance_sheet
+
+        @property
+        def cashflow(self):
+            return cashflow
+
+        @property
+        def quarterly_financials(self):
+            return quarterly
+
+        @property
+        def info(self):
+            return {"sharesOutstanding": 1000.0, "marketCap": None, "beta": 1.0, "sector": "Technology"}
+
+        def history(self, period=None):
+            return pd.DataFrame({"Close": history_close, "Volume": history_volume})
+
+    monkeypatch.setattr(indices_score.yf, "Ticker", _FakeTicker)
+    monkeypatch.setattr(indices_score.time, "sleep", lambda s: None)
+
+    ratios = indices_score.fetch_company_financials("TEST5.PA")
+
+    assert ratios["volume_confirme"] is True
+
+
+def test_fetch_company_financials_falls_back_to_safe_weinstein_defaults_on_exception(monkeypatch):
+    """Global Constraints du plan : aucune exception liée à Weinstein ne
+    doit jamais remonter hors de fetch_company_financials — sinon
+    l'entreprise entière disparaîtrait de docs/indices.json (bloc
+    except par entreprise de main()), pas seulement ses champs
+    Weinstein. Simule une panne du calcul (classify_weinstein_stage lève)
+    et vérifie le repli gracieux vers les valeurs par défaut sûres."""
+    financials, balance_sheet, cashflow, _ = _make_fixture_statements()
+    financials.columns = pd.to_datetime(financials.columns)
+    balance_sheet.columns = pd.to_datetime(balance_sheet.columns)
+    cashflow.columns = pd.to_datetime(cashflow.columns)
+    quarterly = _fake_annual_df({"Diluted Average Shares": [100.0]}, [pd.Timestamp("2025-09-30")])
+    history_index = pd.bdate_range("2025-01-01", periods=300)
+    history_close = pd.Series([100.0 + i * 0.5 for i in range(300)], index=history_index)
+    history_volume = pd.Series([1000.0] * 300, index=history_index)
+
+    class _FakeTicker:
+        def __init__(self, ticker):
+            pass
+
+        @property
+        def financials(self):
+            return financials
+
+        @property
+        def balance_sheet(self):
+            return balance_sheet
+
+        @property
+        def cashflow(self):
+            return cashflow
+
+        @property
+        def quarterly_financials(self):
+            return quarterly
+
+        @property
+        def info(self):
+            return {"sharesOutstanding": 1000.0, "marketCap": None, "beta": 1.0, "sector": "Technology"}
+
+        def history(self, period=None):
+            return pd.DataFrame({"Close": history_close, "Volume": history_volume})
+
+    def _boom(weekly_closes, weekly_volumes):
+        raise RuntimeError("simulated classify_weinstein_stage failure")
+
+    monkeypatch.setattr(indices_score.yf, "Ticker", _FakeTicker)
+    monkeypatch.setattr(indices_score.time, "sleep", lambda s: None)
+    monkeypatch.setattr(indices_score, "classify_weinstein_stage", _boom)
+
+    ratios = indices_score.fetch_company_financials("TEST6.PA")  # ne doit pas lever
+
+    assert ratios["stage"] is None
+    assert ratios["stage_label"] == "Neutre"
+    assert ratios["volume_confirme"] is False
 
 
 def test_fetch_company_financials_converts_lse_pence_prices_to_pounds(monkeypatch):

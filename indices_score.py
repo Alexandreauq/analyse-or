@@ -2372,7 +2372,12 @@ def fetch_company_financials(ticker: str) -> dict:
     sector = info.get("sector")
     history_ticker = PRICE_HISTORY_TICKER_OVERRIDE.get(ticker, ticker)
     history_source = yf.Ticker(history_ticker) if history_ticker != ticker else t
-    history = history_source.history(period="6y")["Close"]
+    history_df = history_source.history(period="6y")
+    history = history_df["Close"]
+    daily_volumes = (
+        history_df["Volume"] if "Volume" in history_df.columns
+        else pd.Series(dtype=float, index=history_df.index)
+    )
     if ticker.endswith(".L"):
         # LSE (bug racine trouvé et corrigé le 2026-09-13) : yfinance
         # renvoie les prix des tickers londoniens en PENCE (GBp), alors que
@@ -2414,6 +2419,12 @@ def fetch_company_financials(ticker: str) -> dict:
     # donnees.
     history = history.dropna()
 
+    # Même index de dates que le Close déjà nettoyé (purge NaN + conversion
+    # pence/livres FTSE ci-dessus) — le Volume n'a ni l'un ni l'autre besoin
+    # (pas de notion de "pence" pour un volume), mais doit rester aligné sur
+    # les mêmes dates, sinon les deux séries se désynchronisent silencieusement.
+    daily_volumes = daily_volumes.reindex(history.index)
+
     closes_by_year = {}
     for col in financials.columns:
         target_date = col.date() if hasattr(col, "date") else col
@@ -2427,6 +2438,34 @@ def fetch_company_financials(ticker: str) -> dict:
         (current_price - ma200) / ma200 * 100
         if current_price is not None and ma200 else None
     )
+
+    try:
+        # `indices.yml` tourne quotidiennement (06:00 UTC) : la dernière
+        # semaine du resample("W") est donc quasi toujours EN COURS, pas
+        # complète. Avec .sum(), cette semaine partielle est comparée à
+        # une moyenne de 30 semaines COMPLÈTES * 1.5 — un run du mardi
+        # n'a que ~1/5 du volume d'une semaine pleine, donc
+        # volume_confirme devient un bruit dépendant du jour de la
+        # semaine plutôt qu'un vrai signal de volume. .mean() calcule le
+        # volume journalier MOYEN de la semaine, comparable qu'elle soit
+        # pleine ou partielle (même traitement pour la semaine courante
+        # que pour les 30 semaines de référence dans
+        # classify_weinstein_stage, donc la comparaison reste cohérente).
+        # Effet de bord bienvenu : une semaine sans aucun jour de bourse
+        # (cluster de jours fériés) donne NaN plutôt que 0.0, et
+        # .mean() sur la fenêtre de référence l'exclut automatiquement
+        # au lieu de tirer la moyenne vers le bas.
+        #
+        # Enveloppé dans un try/except (contrainte du plan : aucune
+        # exception liée à Weinstein ne doit jamais se propager) — sans
+        # ça, une exception ici remonterait jusqu'au bloc except par
+        # entreprise de main(), faisant disparaître toute l'entreprise
+        # de docs/indices.json, pas seulement ses champs Weinstein.
+        weekly_closes = history.resample("W").last().dropna()
+        weekly_volumes = daily_volumes.resample("W").mean()
+        weinstein = classify_weinstein_stage(weekly_closes, weekly_volumes)
+    except Exception:
+        weinstein = {"stage": None, "stage_label": "Neutre", "volume_confirme": False}
 
     if ticker in SHARES_OUTSTANDING_FROM_MARKET_CAP_TICKERS:
         market_cap = info.get("marketCap")
@@ -2450,6 +2489,9 @@ def fetch_company_financials(ticker: str) -> dict:
     ratios["is_trust"] = is_trust
     ratios["sector"] = SECTOR_OVERRIDE_BY_TICKER.get(ticker) or sector
     ratios["ecart_pct_ma200"] = ecart_pct_ma200
+    ratios["stage"] = weinstein["stage"]
+    ratios["stage_label"] = weinstein["stage_label"]
+    ratios["volume_confirme"] = weinstein["volume_confirme"]
     try:
         # Même précaution que build_financial_narrative_context pour le
         # même motif (voir son commentaire) : une entreprise dont le
@@ -3462,15 +3504,99 @@ def _momentum_adjustment(ecart_pct_ma200: float | None) -> float:
     )
 
 
+# Stage Analysis (Stan Weinstein, "Secrets for Profiting in Bull and
+# Bear Markets") — voir docs/superpowers/specs/2026-09-23-weinstein-stage-analysis-design.md.
+# Conseillée par des professionnels de la finance consultés par
+# l'utilisateur, pour affiner les repères d'entrée/sortie (§6 de la
+# spec) sans toucher au score composite (score_dynamique_recente reste
+# sur la MM200, inchangé — hors périmètre, voir spec §2).
+WEINSTEIN_MA_WEEKS = 30
+WEINSTEIN_SLOPE_LOOKBACK_WEEKS = 4
+WEINSTEIN_MIN_WEEKS = WEINSTEIN_MA_WEEKS + WEINSTEIN_SLOPE_LOOKBACK_WEEKS  # 34
+WEINSTEIN_SLOPE_NOISE_FLOOR_PCT = 0.5  # % sur 4 semaines, sous ce seuil -> MM30s "plate"
+WEINSTEIN_VOLUME_LOOKBACK_WEEKS = 30
+WEINSTEIN_VOLUME_CONFIRMATION_MULTIPLE = 1.5
+
+
+def classify_weinstein_stage(weekly_closes: pd.Series, weekly_volumes: pd.Series) -> dict:
+    """Classe une société en phase Weinstein à partir de sa MM30 semaines
+    et de sa pente (mesurée sur WEINSTEIN_SLOPE_LOOKBACK_WEEKS semaines) :
+
+    - Phase 2 "Achat" : prix > MM30s ET pente montante.
+    - Phase 4 "Déclin" : prix < MM30s ET pente descendante.
+    - Tout le reste (MM30s plate, ou prix/pente en désaccord — une
+      transition typique) : `stage_label="Neutre"`. `stage` reçoit
+      quand même une valeur interne best-effort (1 si le prix est dans
+      la moitié basse de son range 52 semaines, sinon 3) mais cette
+      distinction n'est JAMAIS exposée comme label "Base"/"Distribution"
+      tant qu'elle n'est pas fiable — voir spec §5.3.
+
+    `stage=None, stage_label="Neutre"` si `weekly_closes` a moins de
+    WEINSTEIN_MIN_WEEKS entrées (historique insuffisant) — jamais
+    d'exception, même en cas de série vide.
+
+    `volume_confirme` (informatif, n'affecte jamais `stage`) : True si
+    le volume de la semaine courante dépasse WEINSTEIN_VOLUME_CONFIRMATION_MULTIPLE
+    fois la moyenne des WEINSTEIN_VOLUME_LOOKBACK_WEEKS semaines
+    PRÉCÉDENTES (la semaine courante est explicitement exclue de sa
+    propre moyenne de référence, sinon un volume extrême gonflerait la
+    moyenne à laquelle on le compare — point de correction identifié à
+    la relecture de la spec, voir son §5.4)."""
+    result = {"stage": None, "stage_label": "Neutre", "volume_confirme": False}
+    if len(weekly_closes) < WEINSTEIN_MIN_WEEKS:
+        return result
+
+    ma30w = weekly_closes.rolling(WEINSTEIN_MA_WEEKS).mean()
+    current_price = float(weekly_closes.iloc[-1])
+    current_ma = float(ma30w.iloc[-1])
+    prior_ma = float(ma30w.iloc[-1 - WEINSTEIN_SLOPE_LOOKBACK_WEEKS])
+    if _is_missing(current_price) or _is_missing(current_ma) or _is_missing(prior_ma) or prior_ma == 0:
+        return result
+
+    slope_pct = (current_ma - prior_ma) / abs(prior_ma) * 100
+    rising = slope_pct > WEINSTEIN_SLOPE_NOISE_FLOOR_PCT
+    falling = slope_pct < -WEINSTEIN_SLOPE_NOISE_FLOOR_PCT
+    above = current_price > current_ma
+    below = current_price < current_ma
+
+    if above and rising:
+        result["stage"], result["stage_label"] = 2, "Achat"
+    elif below and falling:
+        result["stage"], result["stage_label"] = 4, "Déclin"
+    else:
+        window_52w = weekly_closes.tail(52)
+        low_52w, high_52w = float(window_52w.min()), float(window_52w.max())
+        midpoint = (low_52w + high_52w) / 2
+        result["stage"] = 1 if current_price <= midpoint else 3
+        # stage_label reste "Neutre" (défaut déjà posé ci-dessus)
+
+    if len(weekly_volumes) >= WEINSTEIN_VOLUME_LOOKBACK_WEEKS + 1:
+        recent_volume = weekly_volumes.iloc[-1]
+        baseline_volume = weekly_volumes.iloc[-(WEINSTEIN_VOLUME_LOOKBACK_WEEKS + 1):-1].mean()
+        if not _is_missing(recent_volume) and not _is_missing(baseline_volume) and baseline_volume > 0:
+            result["volume_confirme"] = bool(recent_volume > baseline_volume * WEINSTEIN_VOLUME_CONFIRMATION_MULTIPLE)
+
+    return result
+
+
 def estimate_entry_exit_prices(
     fair_value: float | None, ma200: float | None,
     beta: float | None, ecart_pct_ma200: float | None,
+    stage_label: str | None = None,
 ) -> dict:
     """Combine repère de valorisation (juste valeur ± marge pondérée par le
     bêta) et repère technique (MM200 décalée selon la dynamique récente) en
     moyennant ceux disponibles. Renvoie {"entry": float | None,
     "exit": float | None} — None des deux côtés si ni la valorisation ni la
-    MM200 ne sont disponibles."""
+    MM200 ne sont disponibles.
+
+    `stage_label` (voir classify_weinstein_stage) : en phase "Déclin", le
+    repère technique est exclu des candidats — proposer un point d'entrée
+    fondé sur une MM200 alors que la MM30 semaines confirme un déclin
+    n'a pas de sens, même si le titre paraît bon marché par la
+    valorisation seule. `None` (défaut, comportement d'avant ce
+    correctif) ou toute autre valeur ("Achat", "Neutre") ne change rien
+    au calcul existant."""
     valuation_margin = _risk_adjusted_margin(
         beta, VALUATION_MARGIN_BASE, VALUATION_MARGIN_MIN, VALUATION_MARGIN_MAX
     )
@@ -3484,7 +3610,7 @@ def estimate_entry_exit_prices(
     if fair_value is not None:
         entry_candidates.append(fair_value * (1 - valuation_margin))
         exit_candidates.append(fair_value * (1 + valuation_margin))
-    if ma200 is not None and not _is_missing(ma200):
+    if ma200 is not None and not _is_missing(ma200) and stage_label != "Déclin":
         entry_candidates.append(ma200 * (1 + momentum_adjustment))
         exit_candidates.append(ma200 * (1 + technical_margin + momentum_adjustment))
     entry = sum(entry_candidates) / len(entry_candidates) if entry_candidates else None
@@ -3728,7 +3854,8 @@ def estimate_valuation_targets(
     )
     fair_value = estimate_fair_value(dcf_price, asset_price, multiple_price, sector_profile)
     entry_exit = estimate_entry_exit_prices(
-        fair_value, data["ma200"], data["beta"], data["ecart_pct_ma200"]
+        fair_value, data["ma200"], data["beta"], data["ecart_pct_ma200"],
+        stage_label=data.get("stage_label"),
     )
     return {
         "fair_value": fair_value,
@@ -4005,6 +4132,9 @@ def build_company_entry(
         "entry_price": valuation_targets["entry_price"],
         "exit_price": valuation_targets["exit_price"],
         "wacc": cost_of_capital,
+        "stage": data.get("stage"),
+        "stage_label": data.get("stage_label", "Neutre"),
+        "volume_confirme": data.get("volume_confirme", False),
         "financial_analysis_html": financial_analysis_html,
         "financial_analysis_quarter": financial_analysis_quarter,
     }
@@ -4098,6 +4228,13 @@ def _entry_alert_context(company: dict) -> str:
         parts.append(
             f'<p style="color:#edeef3;font-size:13px;line-height:1.6;margin:0 0 14px;">'
             f'{dynamique["raw_value"]}</p>'
+        )
+    stage_label = company.get("stage_label")
+    if stage_label is not None:
+        volume_suffix = " (volume confirmé)" if company.get("volume_confirme") else ""
+        parts.append(
+            f'<p style="color:#edeef3;font-size:13px;line-height:1.6;margin:0 0 14px;">'
+            f'Phase Weinstein : {stage_label}{volume_suffix}</p>'
         )
     recent_news = [n for n in company.get("news", []) if n.get("summary")][:ENTRY_ALERT_NEWS_COUNT]
     for n in recent_news:

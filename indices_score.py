@@ -1709,6 +1709,49 @@ def interpret(composite: float) -> str:
     return "Fragile"
 
 
+SCORE_RECALIBRATION_MIN_POOL_SIZE = 20  # voir docs/superpowers/specs/2026-09-24-score-recalibration-design.md
+
+
+def compute_percentile_rank(value: float, pool: list[float]) -> float:
+    """Rang percentile de `value` au sein de `pool` (méthode du rang moyen
+    — gère les ex æquo sans biaiser vers le haut ou le bas). `pool` doit
+    contenir `value` lui-même (le score de la société fait partie de son
+    propre pool de comparaison). Renvoie une valeur entre 0 et 100."""
+    n = len(pool)
+    lower = sum(1 for v in pool if v < value)
+    equal = sum(1 for v in pool if v == value)
+    return 100 * (lower + 0.5 * equal) / n
+
+
+def _score_profile_key(company: dict) -> str:
+    if company.get("is_trust"):
+        return "trust"
+    if company.get("is_financial"):
+        return "financial"
+    return "standard"
+
+
+def recalibrate_scores_by_profile(companies: list[dict]) -> None:
+    """Mute company["score"] et company["interpretation"] en place pour
+    chaque société dont le profil a un pool >= SCORE_RECALIBRATION_MIN_POOL_SIZE.
+    Une société dans un profil au pool trop petit (ex: trust aujourd'hui,
+    0 société) garde son score brut déjà calculé par build_company_entry —
+    repli assumé, pas un oubli (voir spec)."""
+    pools: dict[str, list[float]] = {}
+    for c in companies:
+        pools.setdefault(_score_profile_key(c), []).append(c["score"])
+
+    for c in companies:
+        key = _score_profile_key(c)
+        pool = pools[key]
+        if len(pool) < SCORE_RECALIBRATION_MIN_POOL_SIZE:
+            continue  # repli : score brut déjà en place, on ne touche à rien
+        percentile = compute_percentile_rank(c["score"], pool)
+        new_score = round((percentile - 50) * 2, 1)
+        c["score"] = new_score
+        c["interpretation"] = interpret(new_score)
+
+
 def get_row(df, *aliases):
     """Renvoie la première ligne du DataFrame dont le libellé correspond à
     l'un des alias fournis. Les libellés de lignes yfinance varient parfois

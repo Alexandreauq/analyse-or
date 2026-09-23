@@ -401,10 +401,20 @@ def test_compute_composite_all_zero_is_neutral():
 
 
 def test_interpret_bands():
-    assert interpret(60.0) == "Profil fondamental très solide"
-    assert interpret(20.0) == "Solide"
+    assert interpret(70.0) == "Profil fondamental très solide"
+    assert interpret(30.0) == "Solide"
     assert interpret(0.0) == "Neutre"
     assert interpret(-30.0) == "Fragile"
+    assert interpret(-70.0) == "Très fragile"
+
+
+def test_interpret_boundary_values():
+    # Valeurs exactement aux bornes -- doivent tomber dans la bande DU
+    # DESSOUS (comparaison stricte ">", pas ">=").
+    assert interpret(60.0) == "Solide"
+    assert interpret(20.0) == "Neutre"
+    assert interpret(-20.0) == "Fragile"
+    assert interpret(-60.0) == "Très fragile"
 
 
 def test_compute_percentile_rank_min_value_is_near_zero():

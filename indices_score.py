@@ -1700,13 +1700,15 @@ def compute_composite(factors: list[FactorResult]) -> float:
 
 
 def interpret(composite: float) -> str:
-    if composite > 50:
-        return "Profil fondamental très solide"
-    if composite > 15:
-        return "Solide"
-    if composite > -15:
-        return "Neutre"
-    return "Fragile"
+    if composite > 60:
+        return "Profil fondamental très solide"   # top ~20% (score recalibré)
+    if composite > 20:
+        return "Solide"                            # ~20%
+    if composite > -20:
+        return "Neutre"                             # ~20%, autour de la médiane
+    if composite > -60:
+        return "Fragile"                            # ~20%
+    return "Très fragile"                            # ~20%
 
 
 SCORE_RECALIBRATION_MIN_POOL_SIZE = 20  # voir docs/superpowers/specs/2026-09-24-score-recalibration-design.md

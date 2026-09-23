@@ -3004,6 +3004,30 @@ def test_entry_alert_context_empty_when_no_data():
     assert indices_score._entry_alert_context(company) == ""
 
 
+def test_entry_alert_context_mentions_weinstein_phase():
+    company = _fake_entry_alert_company(stage_label="Achat", volume_confirme=True)
+    context = indices_score._entry_alert_context(company)
+    assert "Phase Weinstein : Achat" in context
+    assert "volume confirmé" in context
+
+
+def test_entry_alert_context_mentions_neutre_phase_without_volume_suffix():
+    company = _fake_entry_alert_company(stage_label="Neutre", volume_confirme=False)
+    context = indices_score._entry_alert_context(company)
+    assert "Phase Weinstein : Neutre" in context
+    assert "volume confirmé" not in context
+
+
+def test_entry_alert_context_omits_weinstein_line_when_stage_label_absent():
+    """Ne casse pas le contrat existant "contexte vide si pas de
+    donnée" (voir test_entry_alert_context_empty_when_no_data,
+    juste au-dessus) : company sans stage_label -> pas de ligne."""
+    company = _fake_entry_alert_company(factors=[], news=[])
+    context = indices_score._entry_alert_context(company)
+    assert "Phase Weinstein" not in context
+    assert context == ""
+
+
 def test_entry_alert_item_html_omits_context_heading_when_no_context():
     company = _fake_entry_alert_company(factors=[], news=[])
     html = indices_score._entry_alert_item_html(company)

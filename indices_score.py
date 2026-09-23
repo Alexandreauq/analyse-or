@@ -4205,6 +4205,13 @@ def _entry_alert_context(company: dict) -> str:
             f'<p style="color:#edeef3;font-size:13px;line-height:1.6;margin:0 0 14px;">'
             f'{dynamique["raw_value"]}</p>'
         )
+    stage_label = company.get("stage_label")
+    if stage_label is not None:
+        volume_suffix = " (volume confirmé)" if company.get("volume_confirme") else ""
+        parts.append(
+            f'<p style="color:#edeef3;font-size:13px;line-height:1.6;margin:0 0 14px;">'
+            f'Phase Weinstein : {stage_label}{volume_suffix}</p>'
+        )
     recent_news = [n for n in company.get("news", []) if n.get("summary")][:ENTRY_ALERT_NEWS_COUNT]
     for n in recent_news:
         meta = " · ".join(part for part in (n.get("source"), n.get("date")) if part)

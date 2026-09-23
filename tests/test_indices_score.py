@@ -4873,6 +4873,134 @@ def test_fetch_company_financials_excludes_dropped_close_date_volume_from_weekly
     assert ratios["volume_confirme"] is False
 
 
+def test_fetch_company_financials_detects_volume_spike_despite_incomplete_current_week(monkeypatch):
+    """`indices.yml` tourne quotidiennement — la dernière semaine du
+    resample("W") est donc presque toujours EN COURS (incomplète) au
+    moment du run, pas seulement dans de rares cas limites. Avec
+    l'ancien `.sum()`, une semaine en cours ne contenant qu'UN jour de
+    bourse est comparée à une moyenne de 30 semaines PLEINES — même un
+    vrai pic de volume (3x le volume quotidien normal) serait dilué et
+    NE serait PAS détecté. `.mean()` compare des volumes quotidiens
+    moyens, donc reste sensible au pic quel que soit le nombre de jours
+    déjà écoulés dans la semaine courante.
+
+    Historique construit pour que la toute dernière date (2026-02-23)
+    soit un LUNDI, donc seule dans le bin de la semaine en cours (aucun
+    autre jour ouvré ne précède dans ce même bin ISO) — volume normal
+    1000.0 partout sauf ce dernier jour, à 3000.0 (pic réel x3).
+
+    Calcul vérifié à la main hors test :
+    - Avec .sum() (ancien comportement) : semaine courante = 3000.0
+      (un seul jour), baseline 30 semaines pleines = 5000.0/semaine ->
+      seuil 7500.0 -> 3000.0 < 7500.0 -> volume_confirme resterait
+      FAUSSEMENT False malgré le vrai pic x3.
+    - Avec .mean() (comportement attendu ici) : semaine courante =
+      3000.0 (moyenne d'un seul jour = lui-même), baseline = 1000.0/jour
+      -> seuil 1500.0 -> 3000.0 > 1500.0 -> volume_confirme = True,
+      détection correcte du pic."""
+    financials, balance_sheet, cashflow, _ = _make_fixture_statements()
+    financials.columns = pd.to_datetime(financials.columns)
+    balance_sheet.columns = pd.to_datetime(balance_sheet.columns)
+    cashflow.columns = pd.to_datetime(cashflow.columns)
+    quarterly = _fake_annual_df({"Diluted Average Shares": [100.0]}, [pd.Timestamp("2025-09-30")])
+
+    history_index = pd.bdate_range("2025-01-01", periods=299)  # se termine un lundi
+    history_close = pd.Series([100.0 + i * 0.5 for i in range(299)], index=history_index)
+    history_volume = pd.Series([1000.0] * 299, index=history_index)
+    history_volume.loc[history_index[-1]] = 3000.0  # pic réel x3 sur l'unique jour de la semaine en cours
+
+    class _FakeTicker:
+        def __init__(self, ticker):
+            pass
+
+        @property
+        def financials(self):
+            return financials
+
+        @property
+        def balance_sheet(self):
+            return balance_sheet
+
+        @property
+        def cashflow(self):
+            return cashflow
+
+        @property
+        def quarterly_financials(self):
+            return quarterly
+
+        @property
+        def info(self):
+            return {"sharesOutstanding": 1000.0, "marketCap": None, "beta": 1.0, "sector": "Technology"}
+
+        def history(self, period=None):
+            return pd.DataFrame({"Close": history_close, "Volume": history_volume})
+
+    monkeypatch.setattr(indices_score.yf, "Ticker", _FakeTicker)
+    monkeypatch.setattr(indices_score.time, "sleep", lambda s: None)
+
+    ratios = indices_score.fetch_company_financials("TEST5.PA")
+
+    assert ratios["volume_confirme"] is True
+
+
+def test_fetch_company_financials_falls_back_to_safe_weinstein_defaults_on_exception(monkeypatch):
+    """Global Constraints du plan : aucune exception liée à Weinstein ne
+    doit jamais remonter hors de fetch_company_financials — sinon
+    l'entreprise entière disparaîtrait de docs/indices.json (bloc
+    except par entreprise de main()), pas seulement ses champs
+    Weinstein. Simule une panne du calcul (classify_weinstein_stage lève)
+    et vérifie le repli gracieux vers les valeurs par défaut sûres."""
+    financials, balance_sheet, cashflow, _ = _make_fixture_statements()
+    financials.columns = pd.to_datetime(financials.columns)
+    balance_sheet.columns = pd.to_datetime(balance_sheet.columns)
+    cashflow.columns = pd.to_datetime(cashflow.columns)
+    quarterly = _fake_annual_df({"Diluted Average Shares": [100.0]}, [pd.Timestamp("2025-09-30")])
+    history_index = pd.bdate_range("2025-01-01", periods=300)
+    history_close = pd.Series([100.0 + i * 0.5 for i in range(300)], index=history_index)
+    history_volume = pd.Series([1000.0] * 300, index=history_index)
+
+    class _FakeTicker:
+        def __init__(self, ticker):
+            pass
+
+        @property
+        def financials(self):
+            return financials
+
+        @property
+        def balance_sheet(self):
+            return balance_sheet
+
+        @property
+        def cashflow(self):
+            return cashflow
+
+        @property
+        def quarterly_financials(self):
+            return quarterly
+
+        @property
+        def info(self):
+            return {"sharesOutstanding": 1000.0, "marketCap": None, "beta": 1.0, "sector": "Technology"}
+
+        def history(self, period=None):
+            return pd.DataFrame({"Close": history_close, "Volume": history_volume})
+
+    def _boom(weekly_closes, weekly_volumes):
+        raise RuntimeError("simulated classify_weinstein_stage failure")
+
+    monkeypatch.setattr(indices_score.yf, "Ticker", _FakeTicker)
+    monkeypatch.setattr(indices_score.time, "sleep", lambda s: None)
+    monkeypatch.setattr(indices_score, "classify_weinstein_stage", _boom)
+
+    ratios = indices_score.fetch_company_financials("TEST6.PA")  # ne doit pas lever
+
+    assert ratios["stage"] is None
+    assert ratios["stage_label"] == "Neutre"
+    assert ratios["volume_confirme"] is False
+
+
 def test_fetch_company_financials_converts_lse_pence_prices_to_pounds(monkeypatch):
     """Bug racine trouvé le 2026-09-13 via le profil trust (score_valorisation_trust,
     qui compare current_pb à une valeur ABSOLUE et n'annule donc pas

@@ -2021,11 +2021,12 @@ def extract_ratios(financials, balance_sheet, cashflow, closes_by_year, shares_o
         sum(fcf_by_recent_year) / len(fcf_by_recent_year) if fcf_by_recent_year else fcf
     )
 
-    ev_ebitda_by_year, pe_by_year = [], []
+    ev_ebitda_by_year, pe_by_year, pb_by_year = [], [], []
     for col in years_cols:
         price = closes_by_year.get(col)
         total_debt_value = _safe_value(total_debt, col)
         cash_value = _safe_value(cash, col)
+        equity_value = _safe_value(equity, col)
         if (
             price is None
             or not ebitda[col]
@@ -2040,11 +2041,44 @@ def extract_ratios(financials, balance_sheet, cashflow, closes_by_year, shares_o
         net_debt_year = total_debt_value - cash_value
         ev_ebitda_by_year.append((market_cap + net_debt_year) / ebitda[col])
         pe_by_year.append(market_cap / net_income[col])
+        # Critère Graham (P/B universel — voir spec §6.7) : gardé sur une
+        # liste séparée, PAS bloqué par la même condition que ev_ebitda/pe
+        # ci-dessus au-delà de ce qui est déjà vérifié (price/net_income) —
+        # un exercice avec equity manquante est juste exclu de pb_by_year,
+        # sans empêcher ev_ebitda_by_year/pe_by_year de recevoir cet
+        # exercice s'ils sont par ailleurs valides.
+        if equity_value and not _is_missing(equity_value):
+            pb_by_year.append(market_cap / equity_value)
 
     current_ev_ebitda = ev_ebitda_by_year[0] if ev_ebitda_by_year else 0.0
     avg_ev_ebitda_5y = sum(ev_ebitda_by_year) / len(ev_ebitda_by_year) if ev_ebitda_by_year else 0.0
     current_pe = pe_by_year[0] if pe_by_year else 0.0
     avg_pe_5y = sum(pe_by_year) / len(pe_by_year) if pe_by_year else 0.0
+    current_pb = pb_by_year[0] if pb_by_year else 0.0
+    avg_pb_5y = sum(pb_by_year) / len(pb_by_year) if pb_by_year else 0.0
+
+    # Critère Graham (structure financière — profil standard uniquement,
+    # voir spec §6.2) : actif circulant / passif circulant du dernier
+    # exercice. _get_row_or_nan (pas get_row) : cette ligne est réellement
+    # absente chez certaines entreprises, pas un alias manquant à ajouter.
+    current_assets_row = _get_row_or_nan(balance_sheet, "Current Assets", "Total Current Assets")
+    current_liabilities_row = _get_row_or_nan(balance_sheet, "Current Liabilities", "Total Current Liabilities")
+    current_assets_latest = _safe_value(current_assets_row, latest)
+    current_liabilities_latest = _safe_value(current_liabilities_row, latest)
+    current_ratio = (
+        current_assets_latest / current_liabilities_latest
+        if (
+            not _is_missing(current_assets_latest)
+            and not _is_missing(current_liabilities_latest)
+            and current_liabilities_latest
+        )
+        else 0.0
+    )
+
+    # Critère Graham (stabilité des bénéfices, voir spec §6.3) : aucune
+    # perte sur les exercices disponibles.
+    no_loss_years = _compute_no_loss_years(net_income, years_cols)
+
     # Les deux listes se remplissent/se vident toujours ensemble (le même
     # `continue` du bloc ci-dessus saute l'année si ebitda OU net_income
     # manque), donc une seule condition suffit à couvrir les deux jambes
@@ -2066,6 +2100,10 @@ def extract_ratios(financials, balance_sheet, cashflow, closes_by_year, shares_o
         "avg_ev_ebitda_5y": avg_ev_ebitda_5y,
         "current_pe": current_pe,
         "avg_pe_5y": avg_pe_5y,
+        "current_pb": current_pb,
+        "avg_pb_5y": avg_pb_5y,
+        "current_ratio": current_ratio,
+        "no_loss_years": no_loss_years,
         "valuation_available": valuation_available,
         "fcf": fcf,
         "fcf_normalized": fcf_normalized,

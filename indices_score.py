@@ -4108,6 +4108,9 @@ def build_company_entry(
         "entry_price": valuation_targets["entry_price"],
         "exit_price": valuation_targets["exit_price"],
         "wacc": cost_of_capital,
+        "stage": data.get("stage"),
+        "stage_label": data.get("stage_label", "Neutre"),
+        "volume_confirme": data.get("volume_confirme", False),
         "financial_analysis_html": financial_analysis_html,
         "financial_analysis_quarter": financial_analysis_quarter,
     }

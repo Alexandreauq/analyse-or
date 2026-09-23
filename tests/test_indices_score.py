@@ -4259,6 +4259,19 @@ def test_build_company_entry_uses_financial_factors_for_financial_sector_tickers
     assert entry["fair_value"] is not None
 
 
+def test_build_company_entry_exposes_weinstein_stage_fields(monkeypatch):
+    monkeypatch.setattr(indices_score, "fetch_company_financials", lambda ticker: _fake_financial_ratios())
+    monkeypatch.setattr(indices_score, "fetch_news", lambda name, prev=None: [])
+    monkeypatch.setattr(indices_score, "generate_financial_analysis", lambda *a, **k: "<p>Analyse.</p>")
+
+    entry = indices_score.build_company_entry("BNP.PA", "BNP Paribas", 3.0, {}, index_key="CAC40")
+
+    # _fake_financial_ratios() ne fournit pas ces clés -> repli attendu.
+    assert entry["stage"] is None
+    assert entry["stage_label"] == "Neutre"
+    assert entry["volume_confirme"] is False
+
+
 def _fake_trust_ratios():
     ratios = _fake_financial_ratios()
     ratios["is_financial"] = False

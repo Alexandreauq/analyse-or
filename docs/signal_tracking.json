@@ -1238,6 +1238,27 @@
       "shadow_resolved": false,
       "shadow_price": null,
       "shadow_return_pct": null
+    },
+    {
+      "id": "2331.HK-2026-09-23",
+      "ticker": "2331.HK",
+      "name": "Li Ning Company",
+      "index": "HANGSENG",
+      "status": "open",
+      "entry_date": "2026-09-23",
+      "entry_price": 12.380000114440918,
+      "target_exit_price": 22.492743153022406,
+      "index_price_at_entry": 25042.7109375,
+      "close_date": null,
+      "close_price": null,
+      "close_reason": null,
+      "return_pct": null,
+      "index_price_at_close": null,
+      "index_return_pct": null,
+      "shadow_close_date": "2027-03-23",
+      "shadow_resolved": false,
+      "shadow_price": null,
+      "shadow_return_pct": null
     }
   ]
 }

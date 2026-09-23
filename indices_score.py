@@ -2234,12 +2234,18 @@ def extract_ratios_financial(financials, balance_sheet, cashflow, closes_by_year
     current_pb = pb_by_year[0] if pb_by_year else 0.0
     avg_pb_5y = sum(pb_by_year) / len(pb_by_year) if pb_by_year else 0.0
 
+    # Critère Graham (stabilité des bénéfices, voir spec §6.3) : aucune
+    # perte sur les exercices disponibles — même calcul que le profil
+    # standard (extract_ratios), fonction partagée.
+    no_loss_years = _compute_no_loss_years(net_income, years_cols)
+
     return {
         "roe": roe,
         "leverage_ratio": leverage_ratio,
         "cash_conversion": cash_conversion,
         "cagr_ca": cagr_ca,
         "cagr_net_income": cagr_net_income,
+        "no_loss_years": no_loss_years,
         "current_pe": current_pe,
         "avg_pe_5y": avg_pe_5y,
         "current_pb": current_pb,

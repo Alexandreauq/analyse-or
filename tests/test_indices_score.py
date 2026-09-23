@@ -4215,6 +4215,27 @@ def test_extract_ratios_financial_computes_expected_keys():
     assert ratios["net_debt"] == pytest.approx(300.0)
 
 
+def test_extract_ratios_financial_exposes_no_loss_years():
+    financials, balance_sheet, cashflow, closes_by_year = _make_financial_fixture_statements()
+    ratios = indices_score.extract_ratios_financial(
+        financials, balance_sheet, cashflow, closes_by_year, shares_outstanding=100.0
+    )
+    assert "no_loss_years" in ratios
+    # _make_financial_fixture_statements a un Net Income positif sur les
+    # 4 exercices (300.0, 280.0, 260.0, 240.0).
+    assert ratios["no_loss_years"] is True
+
+
+def test_extract_ratios_financial_no_loss_years_false_with_one_loss_year():
+    financials, balance_sheet, cashflow, closes_by_year = _make_financial_fixture_statements()
+    years = list(financials.columns)
+    financials.loc["Net Income", years[1]] = -50.0
+    ratios = indices_score.extract_ratios_financial(
+        financials, balance_sheet, cashflow, closes_by_year, shares_outstanding=100.0
+    )
+    assert ratios["no_loss_years"] is False
+
+
 def test_build_financial_narrative_context_omits_ebitda_ebit_for_financial_profile():
     financials, balance_sheet, cashflow, _ = _make_financial_fixture_statements()
     quarterly_financials = _fake_annual_df(

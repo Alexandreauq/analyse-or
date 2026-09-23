@@ -2372,7 +2372,12 @@ def fetch_company_financials(ticker: str) -> dict:
     sector = info.get("sector")
     history_ticker = PRICE_HISTORY_TICKER_OVERRIDE.get(ticker, ticker)
     history_source = yf.Ticker(history_ticker) if history_ticker != ticker else t
-    history = history_source.history(period="6y")["Close"]
+    history_df = history_source.history(period="6y")
+    history = history_df["Close"]
+    daily_volumes = (
+        history_df["Volume"] if "Volume" in history_df.columns
+        else pd.Series(dtype=float, index=history_df.index)
+    )
     if ticker.endswith(".L"):
         # LSE (bug racine trouvé et corrigé le 2026-09-13) : yfinance
         # renvoie les prix des tickers londoniens en PENCE (GBp), alors que
@@ -2414,6 +2419,12 @@ def fetch_company_financials(ticker: str) -> dict:
     # donnees.
     history = history.dropna()
 
+    # Même index de dates que le Close déjà nettoyé (purge NaN + conversion
+    # pence/livres FTSE ci-dessus) — le Volume n'a ni l'un ni l'autre besoin
+    # (pas de notion de "pence" pour un volume), mais doit rester aligné sur
+    # les mêmes dates, sinon les deux séries se désynchronisent silencieusement.
+    daily_volumes = daily_volumes.reindex(history.index)
+
     closes_by_year = {}
     for col in financials.columns:
         target_date = col.date() if hasattr(col, "date") else col
@@ -2427,6 +2438,10 @@ def fetch_company_financials(ticker: str) -> dict:
         (current_price - ma200) / ma200 * 100
         if current_price is not None and ma200 else None
     )
+
+    weekly_closes = history.resample("W").last().dropna()
+    weekly_volumes = daily_volumes.resample("W").sum()
+    weinstein = classify_weinstein_stage(weekly_closes, weekly_volumes)
 
     if ticker in SHARES_OUTSTANDING_FROM_MARKET_CAP_TICKERS:
         market_cap = info.get("marketCap")
@@ -2450,6 +2465,9 @@ def fetch_company_financials(ticker: str) -> dict:
     ratios["is_trust"] = is_trust
     ratios["sector"] = SECTOR_OVERRIDE_BY_TICKER.get(ticker) or sector
     ratios["ecart_pct_ma200"] = ecart_pct_ma200
+    ratios["stage"] = weinstein["stage"]
+    ratios["stage_label"] = weinstein["stage_label"]
+    ratios["volume_confirme"] = weinstein["volume_confirme"]
     try:
         # Même précaution que build_financial_narrative_context pour le
         # même motif (voir son commentaire) : une entreprise dont le

@@ -4607,6 +4607,108 @@ def test_fetch_company_financials_ignores_market_cap_override_for_other_tickers(
     assert ratios["shares_outstanding"] == 2900941252
 
 
+def test_fetch_company_financials_exposes_weinstein_stage_from_weekly_volume_history(monkeypatch):
+    """Historique construit pour donner une MM30 semaines nettement
+    montante (Phase 2 Achat), avec Volume disponible dans la réponse
+    yfinance — vérifie le branchement complet Volume -> hebdomadaire ->
+    classify_weinstein_stage, pas seulement la fonction pure du Task 1."""
+    financials, balance_sheet, cashflow, _ = _make_fixture_statements()
+    financials.columns = pd.to_datetime(financials.columns)
+    balance_sheet.columns = pd.to_datetime(balance_sheet.columns)
+    cashflow.columns = pd.to_datetime(cashflow.columns)
+    quarterly = _fake_annual_df({"Diluted Average Shares": [100.0]}, [pd.Timestamp("2025-09-30")])
+
+    # 300 jours ouvrés (~43 semaines), prix croissant -> MM30s montante.
+    history_index = pd.bdate_range("2025-01-01", periods=300)
+    history_close = pd.Series([100.0 + i * 0.5 for i in range(300)], index=history_index)
+    history_volume = pd.Series([1000.0] * 300, index=history_index)
+
+    class _FakeTicker:
+        def __init__(self, ticker):
+            pass
+
+        @property
+        def financials(self):
+            return financials
+
+        @property
+        def balance_sheet(self):
+            return balance_sheet
+
+        @property
+        def cashflow(self):
+            return cashflow
+
+        @property
+        def quarterly_financials(self):
+            return quarterly
+
+        @property
+        def info(self):
+            return {"sharesOutstanding": 1000.0, "marketCap": None, "beta": 1.0, "sector": "Technology"}
+
+        def history(self, period=None):
+            return pd.DataFrame({"Close": history_close, "Volume": history_volume})
+
+    monkeypatch.setattr(indices_score.yf, "Ticker", _FakeTicker)
+    monkeypatch.setattr(indices_score.time, "sleep", lambda s: None)
+
+    ratios = indices_score.fetch_company_financials("TEST.PA")
+
+    assert ratios["stage"] == 2
+    assert ratios["stage_label"] == "Achat"
+    assert ratios["volume_confirme"] is False  # volume constant, pas de pic de cassure
+
+
+def test_fetch_company_financials_degrades_gracefully_when_volume_column_absent(monkeypatch):
+    """Les fixtures existantes de ce fichier ne renvoient qu'une colonne
+    "Close" (pas de "Volume") — le code doit s'en accommoder sans
+    exception, stage_label retombant sur "Neutre" au pire (jamais un
+    crash), conformément aux Global Constraints du plan."""
+    financials, balance_sheet, cashflow, _ = _make_fixture_statements()
+    financials.columns = pd.to_datetime(financials.columns)
+    balance_sheet.columns = pd.to_datetime(balance_sheet.columns)
+    cashflow.columns = pd.to_datetime(cashflow.columns)
+    quarterly = _fake_annual_df({"Diluted Average Shares": [100.0]}, [pd.Timestamp("2025-09-30")])
+    history_index = pd.date_range("2024-01-01", periods=250, freq="D")
+    history_close = pd.Series([4.80] * 250, index=history_index)
+
+    class _FakeTicker:
+        def __init__(self, ticker):
+            pass
+
+        @property
+        def financials(self):
+            return financials
+
+        @property
+        def balance_sheet(self):
+            return balance_sheet
+
+        @property
+        def cashflow(self):
+            return cashflow
+
+        @property
+        def quarterly_financials(self):
+            return quarterly
+
+        @property
+        def info(self):
+            return {"sharesOutstanding": 1000.0, "marketCap": None, "beta": 1.0, "sector": "Technology"}
+
+        def history(self, period=None):
+            return pd.DataFrame({"Close": history_close})  # pas de colonne "Volume"
+
+    monkeypatch.setattr(indices_score.yf, "Ticker", _FakeTicker)
+    monkeypatch.setattr(indices_score.time, "sleep", lambda s: None)
+
+    ratios = indices_score.fetch_company_financials("TEST2.PA")  # ne doit pas lever
+
+    assert ratios["volume_confirme"] is False
+    assert ratios["stage_label"] in ("Achat", "Déclin", "Neutre")
+
+
 def test_fetch_company_financials_converts_lse_pence_prices_to_pounds(monkeypatch):
     """Bug racine trouvé le 2026-09-13 via le profil trust (score_valorisation_trust,
     qui compare current_pb à une valeur ABSOLUE et n'annule donc pas

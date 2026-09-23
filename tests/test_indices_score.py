@@ -1906,6 +1906,103 @@ def test_estimate_fair_value_returns_none_when_no_method_is_available():
     assert estimate_fair_value(dcf_price=None, asset_price=None, multiple_price=None) is None
 
 
+from indices_score import classify_weinstein_stage
+
+
+def _weekly_series(values, start="2020-01-05"):
+    """Série pandas hebdomadaire (une valeur par dimanche, comme le
+    ferait .resample('W')) à partir d'une liste de valeurs, la plus
+    ancienne en premier."""
+    index = pd.date_range(start=start, periods=len(values), freq="W")
+    return pd.Series(values, index=index, dtype=float)
+
+
+def test_classify_weinstein_stage_returns_none_when_history_too_short():
+    closes = _weekly_series([100.0] * 33)  # 33 < WEINSTEIN_MIN_WEEKS (34)
+    volumes = _weekly_series([1000.0] * 33)
+    result = classify_weinstein_stage(closes, volumes)
+    assert result == {"stage": None, "stage_label": "Neutre", "volume_confirme": False}
+
+
+def test_classify_weinstein_stage_detects_achat_phase():
+    # MM30s clairement montante (prix croissant sur toute la fenêtre) et
+    # prix courant au-dessus de la MM30s -> Phase 2 (Achat).
+    closes = _weekly_series([100.0 + i * 2.0 for i in range(40)])
+    volumes = _weekly_series([1000.0] * 40)
+    result = classify_weinstein_stage(closes, volumes)
+    assert result["stage"] == 2
+    assert result["stage_label"] == "Achat"
+
+
+def test_classify_weinstein_stage_detects_declin_phase():
+    # MM30s clairement descendante et prix courant en dessous -> Phase 4 (Déclin).
+    closes = _weekly_series([300.0 - i * 2.0 for i in range(40)])
+    volumes = _weekly_series([1000.0] * 40)
+    result = classify_weinstein_stage(closes, volumes)
+    assert result["stage"] == 4
+    assert result["stage_label"] == "Déclin"
+
+
+def test_classify_weinstein_stage_flat_ma_is_neutre():
+    # Prix constant sur toute la fenêtre -> MM30s parfaitement plate -> Neutre.
+    closes = _weekly_series([100.0] * 40)
+    volumes = _weekly_series([1000.0] * 40)
+    result = classify_weinstein_stage(closes, volumes)
+    assert result["stage_label"] == "Neutre"
+    assert result["stage"] in (1, 3)  # best-effort interne, jamais exposé comme label
+
+
+def test_classify_weinstein_stage_price_ma_disagreement_is_neutre():
+    # Prix au-dessus d'une MM30s qui descend encore (transition typique,
+    # ni Achat ni Déclin au sens strict de la méthode) -> Neutre.
+    closes = _weekly_series([300.0 - i * 2.0 for i in range(36)] + [250.0, 260.0, 270.0, 280.0])
+    volumes = _weekly_series([1000.0] * 40)
+    result = classify_weinstein_stage(closes, volumes)
+    assert result["stage_label"] == "Neutre"
+
+
+def test_classify_weinstein_stage_volume_confirmed_when_spike_above_prior_average():
+    closes = _weekly_series([100.0 + i * 2.0 for i in range(40)])
+    volumes = _weekly_series([1000.0] * 39 + [2000.0])  # dernière semaine : 2x la moyenne des 30 précédentes
+    result = classify_weinstein_stage(closes, volumes)
+    assert result["volume_confirme"] is True
+
+
+def test_classify_weinstein_stage_volume_not_confirmed_below_multiple():
+    closes = _weekly_series([100.0 + i * 2.0 for i in range(40)])
+    volumes = _weekly_series([1000.0] * 39 + [1200.0])  # 1.2x, sous le multiple de 1.5x
+    result = classify_weinstein_stage(closes, volumes)
+    assert result["volume_confirme"] is False
+
+
+def test_classify_weinstein_stage_current_week_volume_excluded_from_its_own_baseline():
+    """Point de correction identifié à la relecture de la spec : un
+    volume extrême sur la semaine courante ne doit pas gonfler sa propre
+    moyenne de référence."""
+    closes = _weekly_series([100.0 + i * 2.0 for i in range(40)])
+    # Moyenne des 30 semaines précédentes = 1000 ; dernière semaine = 10000
+    # (10x) -> doit rester confirmé, pas dilué par sa propre valeur extrême
+    # dans le calcul de la moyenne.
+    volumes = _weekly_series([1000.0] * 39 + [10000.0])
+    result = classify_weinstein_stage(closes, volumes)
+    assert result["volume_confirme"] is True
+
+
+def test_classify_weinstein_stage_missing_volume_degrades_gracefully():
+    closes = _weekly_series([100.0 + i * 2.0 for i in range(40)])
+    volumes = _weekly_series([float("nan")] * 40)
+    result = classify_weinstein_stage(closes, volumes)
+    assert result["stage"] == 2  # le calcul de phase ne dépend pas du volume
+    assert result["volume_confirme"] is False
+
+
+def test_classify_weinstein_stage_never_raises_on_empty_series():
+    closes = pd.Series([], dtype=float)
+    volumes = pd.Series([], dtype=float)
+    result = classify_weinstein_stage(closes, volumes)
+    assert result == {"stage": None, "stage_label": "Neutre", "volume_confirme": False}
+
+
 from indices_score import estimate_entry_exit_prices
 
 

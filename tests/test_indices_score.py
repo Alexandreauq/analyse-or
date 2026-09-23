@@ -2988,9 +2988,11 @@ def test_compute_company_alerts_no_watch_when_already_above_0():
 def test_compute_company_alerts_risque_on_rapid_drop():
     from datetime import datetime, timedelta
     recent_date = (datetime.today() - timedelta(days=2)).strftime("%Y-%m-%d")
-    previous_history = [{"date": recent_date, "ticker": "BN.PA", "composite": 40.0}]
+    # drop de -45 : juste au-dessus du seuil recalibré RAPID_DROP_POINTS=40
+    # (auparavant -25 pour un seuil à 20, même marge relative).
+    previous_history = [{"date": recent_date, "ticker": "BN.PA", "composite": 80.0}]
     alerts = indices_score.compute_company_alerts(
-        "BN.PA", composite=15.0, current_price=100.0, entry_price=50.0,
+        "BN.PA", composite=35.0, current_price=100.0, entry_price=50.0,
         previous_history=previous_history,
     )
     kinds = [a["kind"] for a in alerts]
@@ -3000,9 +3002,12 @@ def test_compute_company_alerts_risque_on_rapid_drop():
 def test_compute_company_alerts_no_risque_when_drop_outside_window():
     from datetime import datetime, timedelta
     old_date = (datetime.today() - timedelta(days=30)).strftime("%Y-%m-%d")
-    previous_history = [{"date": old_date, "ticker": "BN.PA", "composite": 40.0}]
+    # Même magnitude de chute (-45) que test_..._risque_on_rapid_drop, mais
+    # hors fenêtre : doit rester silencieux malgré une chute qui franchirait
+    # le seuil RAPID_DROP_POINTS si elle était récente.
+    previous_history = [{"date": old_date, "ticker": "BN.PA", "composite": 80.0}]
     alerts = indices_score.compute_company_alerts(
-        "BN.PA", composite=15.0, current_price=100.0, entry_price=50.0,
+        "BN.PA", composite=35.0, current_price=100.0, entry_price=50.0,
         previous_history=previous_history,
     )
     kinds = [a["kind"] for a in alerts]
@@ -3053,12 +3058,12 @@ def test_compute_company_alerts_ignores_malformed_dates():
     from datetime import datetime, timedelta
     recent_date = (datetime.today() - timedelta(days=2)).strftime("%Y-%m-%d")
     previous_history = [
-        {"date": "pas-une-date", "ticker": "BN.PA", "composite": 40.0},  # malformed
-        {"date": recent_date, "ticker": "BN.PA", "composite": 40.0},      # valid
+        {"date": "pas-une-date", "ticker": "BN.PA", "composite": 80.0},  # malformed
+        {"date": recent_date, "ticker": "BN.PA", "composite": 80.0},      # valid
     ]
-    # Ne doit pas lever, et doit détecter la chute de 40->15 en ignorant l'entrée malformée
+    # Ne doit pas lever, et doit détecter la chute de 80->35 en ignorant l'entrée malformée
     alerts = indices_score.compute_company_alerts(
-        "BN.PA", composite=15.0, current_price=100.0, entry_price=50.0,
+        "BN.PA", composite=35.0, current_price=100.0, entry_price=50.0,
         previous_history=previous_history,
     )
     kinds = [a["kind"] for a in alerts]
@@ -4688,6 +4693,10 @@ def test_build_company_entry_uses_trust_factors_for_trust_tickers(monkeypatch):
     entry = indices_score.build_company_entry("III.L", "3i Group", 3.0, {}, index_key="FTSE")
 
     assert entry["is_financial"] is False
+    # Régression : is_trust doit être recopié depuis data["is_trust"] jusque
+    # dans l'entrée finale, sinon les trusts ne sont jamais isolés dans leur
+    # propre pool de recalibration par _score_profile_key.
+    assert entry["is_trust"] is True
     assert [f["name"] for f in entry["factors"]] == [
         "Rentabilité / création de valeur", "Structure financière / solvabilité",
         "Croissance", "Génération de cash", "Valorisation relative",

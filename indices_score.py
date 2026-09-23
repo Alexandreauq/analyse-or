@@ -3344,7 +3344,7 @@ def append_indices_history(entries: list[dict], path=INDICES_HISTORY_PATH) -> li
     return trimmed
 
 
-RAPID_DROP_POINTS = 20   # même seuil que le volet Or
+RAPID_DROP_POINTS = 40   # recalibré (rang percentile) : un point d'écart pèse ~2x plus qu'avant, donc le seuil absolu double pour garder une sélectivité comparable — voir docs/superpowers/specs/2026-09-24-score-recalibration-design.md
 RAPID_DROP_DAYS = 5      # même fenêtre que le volet Or
 NEAR_ENTRY_PCT = 5.0     # écart max (%) au repère d'entrée pour "conditions réunies"
 
@@ -3386,7 +3386,7 @@ def compute_company_alerts(
     if prev_composite is not None and prev_composite <= 0 < composite:
         alerts.append({
             "kind": "watch",
-            "title": "Score composite a franchi +15",
+            "title": "Score composite a franchi la médiane du profil",
             "detail": "Surveillance active enclenchée pour cette entreprise.",
             "date": today_str,
         })
@@ -4324,6 +4324,7 @@ def build_company_entry(
         "sector": sector,
         "sector_profile": sector_risk_profile(sector),
         "is_financial": data["is_financial"],
+        "is_trust": data["is_trust"],
         "score": composite,
         "interpretation": interpret(composite),
         "factors": [

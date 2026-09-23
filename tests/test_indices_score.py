@@ -6241,6 +6241,65 @@ def test_main_calls_update_signal_tracking(monkeypatch, tmp_path):
     assert len(called_with["companies"]) == len(indices_score.COMPANIES)
 
 
+def test_main_recalibrates_scores_before_alerts_and_signal_tracking(monkeypatch, tmp_path):
+    """Preuve que main() appelle recalibrate_scores_by_profile AVANT
+    _attach_alerts_and_update_history/update_signal_tracking — si l'appel
+    était supprimé ou mal placé, ce test doit échouer."""
+    monkeypatch.setattr(indices_score, "fetch_risk_free_rate", lambda series_id: 3.68)
+    monkeypatch.setattr(indices_score, "fetch_fx_rate_to_usd", lambda currency: 1.0)
+    monkeypatch.setattr(indices_score, "load_previous_company_analyses", lambda: {})
+
+    # Scores bruts variés (pas tous identiques) pour que le percentile ait
+    # un sens à vérifier -- indexé par position d'appel, car
+    # build_company_entry est appelé une fois par ticker de COMPANIES (plus
+    # de 20, donc le pool "standard" dépasse largement le seuil de
+    # recalibration).
+    call_counter = {"n": 0}
+
+    def _fake_build_company_entry(ticker, name, risk_free_rate, previous_analyses, index_key="CAC40", also_indices=None, fx_rate_to_usd=1.0):
+        call_counter["n"] += 1
+        return {
+            "ticker": ticker, "name": name, "index": index_key,
+            "score": float(call_counter["n"]), "interpretation": "peu importe",
+            "current_price": 50.0, "entry_price": 50.0,
+            "is_financial": False, "is_trust": False,
+        }
+
+    monkeypatch.setattr(indices_score, "build_company_entry", _fake_build_company_entry)
+    monkeypatch.setattr(indices_score, "load_indices_history", lambda: [])
+    monkeypatch.setattr(indices_score, "append_indices_history", lambda entries: entries)
+    output_path = tmp_path / "indices.json"
+    monkeypatch.setattr(indices_score, "OUTPUT_JSON_PATH", str(output_path))
+
+    called_with = {}
+
+    def _fake_update_signal_tracking(companies, newly_triggered_entree):
+        called_with["companies"] = companies
+        return []
+
+    monkeypatch.setattr(indices_score, "update_signal_tracking", _fake_update_signal_tracking)
+    monkeypatch.setattr(indices_score, "update_nikkei_hangseng_price_history", lambda companies: [])
+    monkeypatch.setattr(indices_score, "fetch_index_prices", lambda: {"CAC40": None, "DAX": None, "NASDAQ": None, "DOW": None})
+    monkeypatch.setattr(indices_score, "update_price_history", lambda entries, **kwargs: entries)
+    monkeypatch.setattr(indices_score, "fetch_index_price_history", lambda: [])
+
+    indices_score.main()
+
+    companies = called_with["companies"]
+    n = len(companies)
+    assert n >= indices_score.SCORE_RECALIBRATION_MIN_POOL_SIZE
+    # Les scores bruts posés par le mock étaient 1.0, 2.0, ..., n (jamais
+    # négatifs) -- si recalibrate_scores_by_profile n'avait pas tourné
+    # avant que update_signal_tracking les voie, AUCUN score ne serait
+    # négatif. Après recalibration (rang percentile remis sur -100/+100),
+    # les sociétés du bas du classement doivent avoir un score négatif.
+    scores = [c["score"] for c in companies]
+    assert min(scores) < 0
+    assert max(scores) > 0
+    # Le score n'est plus la valeur brute posée par le mock (1.0..n).
+    assert scores != [float(i + 1) for i in range(n)]
+
+
 def test_main_persists_price_history_from_companies_and_indices(monkeypatch, tmp_path):
     """Preuve que main() combine l'historique de prix des entreprises
     (_price_history_daily, propage par build_company_entry) et celui des

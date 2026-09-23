@@ -4669,6 +4669,8 @@ def main():
     price_history_entries.extend(fetch_index_price_history())
     update_price_history(price_history_entries)
 
+    recalibrate_scores_by_profile(companies)
+
     newly_triggered_entree, newly_triggered_major_news = _attach_alerts_and_update_history(companies)
     send_daily_digest_email(newly_triggered_entree, newly_triggered_major_news)
     update_signal_tracking(companies, newly_triggered_entree)

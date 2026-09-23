@@ -208,7 +208,7 @@ def test_fetch_dividend_history_returns_empty_series_on_exception():
 
     result = indices_score.fetch_dividend_history(_FailingTicker())
     assert len(result) == 0
-
+```
 
 Cette dernière fonction a besoin d'une date figée : `fetch_company_financials` appelle `compute_dividend_streak_years(dividends)` sans lui passer `today` explicitement (voir Task 2 Step 3 ci-dessous), donc le vrai `date.today()` du module `indices_score` est utilisé — sans le figer, le test serait non déterministe (le résultat dépendrait du jour réel d'exécution). Ajoute cette classe utilitaire dans `tests/test_indices_score.py`, juste avant `test_fetch_company_financials_exposes_dividend_streak_years` — réutilise l'alias `_date` déjà introduit au Task 1 (`from datetime import date as _date`), ne le réimporte pas une deuxième fois :
 

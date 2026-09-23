@@ -4709,6 +4709,86 @@ def test_fetch_company_financials_degrades_gracefully_when_volume_column_absent(
     assert ratios["stage_label"] in ("Achat", "Déclin", "Neutre")
 
 
+def test_fetch_company_financials_excludes_dropped_close_date_volume_from_weekly_aggregate(monkeypatch):
+    """Reproduit précisément le risque d'alignement que le
+    `daily_volumes.reindex(history.index)` (placé APRÈS `history.dropna()`)
+    est censé neutraliser : une date dont le Close est NaN (donc purgée par
+    dropna()) porte ici un volume extrême et distinctif (999999.0, toutes
+    les autres dates valant 1000.0) — si le Volume de cette date n'est pas
+    aligné sur l'index Close déjà nettoyé, il fuit dans l'agrégat
+    hebdomadaire et fausse `volume_confirme`.
+
+    Cas construit à la main (vérifié par calcul manuel hors test, voir
+    commentaires) : l'avant-dernière date de l'historique (2026-02-23,
+    un lundi) a un Close NaN et un Volume de 999999.0 ; la toute dernière
+    date (2026-02-24, mardi) reste valide avec un Volume normal de
+    1000.0 — les deux dates tombent dans la même semaine calendaire.
+
+    - Alignement correct (ce que ce commit implémente) : la date NaN est
+      absente de `history.index` après dropna(), donc son Volume est
+      exclu de `daily_volumes` par le reindex -> la semaine courante ne
+      contient que le volume normal (1000.0), bien en-dessous du seuil
+      de confirmation (1.5x la moyenne des 30 semaines précédentes,
+      ~5000 chacune) -> `volume_confirme` doit être False.
+    - Bug qu'on veut détecter (reindex absent, déplacé avant le dropna(),
+      ou remplacé par un dropna() indépendant sur daily_volumes) : le
+      Volume de la date NaN resterait dans `daily_volumes` telle quelle
+      (le Volume lui-même n'est jamais NaN) et fuiterait dans la semaine
+      courante -> somme hebdomadaire ~1 000 999, très au-dessus du seuil
+      -> `volume_confirme` basculerait à tort à True. C'est exactement
+      cette bascule que ce test doit détecter si le reindex est cassé."""
+    financials, balance_sheet, cashflow, _ = _make_fixture_statements()
+    financials.columns = pd.to_datetime(financials.columns)
+    balance_sheet.columns = pd.to_datetime(balance_sheet.columns)
+    cashflow.columns = pd.to_datetime(cashflow.columns)
+    quarterly = _fake_annual_df({"Diluted Average Shares": [100.0]}, [pd.Timestamp("2025-09-30")])
+
+    history_index = pd.bdate_range("2025-01-01", periods=300)
+    history_close = pd.Series([100.0 + i * 0.5 for i in range(300)], index=history_index)
+    history_volume = pd.Series([1000.0] * 300, index=history_index)
+    nan_date = history_index[-2]  # 2026-02-23, lundi — même semaine que la dernière date
+    history_close.loc[nan_date] = float("nan")
+    history_volume.loc[nan_date] = 999999.0  # volume extrême sur la date dont le Close est NaN
+
+    class _FakeTicker:
+        def __init__(self, ticker):
+            pass
+
+        @property
+        def financials(self):
+            return financials
+
+        @property
+        def balance_sheet(self):
+            return balance_sheet
+
+        @property
+        def cashflow(self):
+            return cashflow
+
+        @property
+        def quarterly_financials(self):
+            return quarterly
+
+        @property
+        def info(self):
+            return {"sharesOutstanding": 1000.0, "marketCap": None, "beta": 1.0, "sector": "Technology"}
+
+        def history(self, period=None):
+            return pd.DataFrame({"Close": history_close, "Volume": history_volume})
+
+    monkeypatch.setattr(indices_score.yf, "Ticker", _FakeTicker)
+    monkeypatch.setattr(indices_score.time, "sleep", lambda s: None)
+
+    ratios = indices_score.fetch_company_financials("TEST3.PA")
+
+    # Si le volume de la date purgée avait fui dans l'agrégat hebdomadaire,
+    # la semaine courante afficherait ~1 000 999 (>> le seuil de
+    # confirmation) et volume_confirme serait True — la valeur correcte,
+    # avec l'exclusion, est bien en-dessous du seuil.
+    assert ratios["volume_confirme"] is False
+
+
 def test_fetch_company_financials_converts_lse_pence_prices_to_pounds(monkeypatch):
     """Bug racine trouvé le 2026-09-13 via le profil trust (score_valorisation_trust,
     qui compare current_pb à une valeur ABSOLUE et n'annule donc pas

@@ -3383,7 +3383,7 @@ def compute_company_alerts(
         except (KeyError, TypeError):
             prev_composite = None
 
-    if prev_composite is not None and prev_composite <= 15 < composite:
+    if prev_composite is not None and prev_composite <= 0 < composite:
         alerts.append({
             "kind": "watch",
             "title": "Score composite a franchi +15",
@@ -3423,7 +3423,7 @@ def compute_company_alerts(
         current_price is not None and entry_price is not None and entry_price > 0
         and abs(current_price - entry_price) / entry_price * 100 < NEAR_ENTRY_PCT
     )
-    if composite > 15 and near_entry:
+    if composite > 0 and near_entry:
         alerts.append({
             "kind": "entree",
             "title": "Conditions d'entrée réunies",

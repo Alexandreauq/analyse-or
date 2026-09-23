@@ -2964,17 +2964,17 @@ def test_compute_company_alerts_returns_info_when_nothing_triggers():
     assert alerts[0]["kind"] == "info"
 
 
-def test_compute_company_alerts_watch_when_score_crosses_15_upward():
-    previous_history = [{"date": "2026-09-05", "ticker": "BN.PA", "composite": 10.0}]
+def test_compute_company_alerts_watch_when_score_crosses_0_upward():
+    previous_history = [{"date": "2026-09-05", "ticker": "BN.PA", "composite": -5.0}]
     alerts = indices_score.compute_company_alerts(
-        "BN.PA", composite=20.0, current_price=100.0, entry_price=50.0,
+        "BN.PA", composite=5.0, current_price=100.0, entry_price=50.0,
         previous_history=previous_history,
     )
     kinds = [a["kind"] for a in alerts]
     assert "watch" in kinds
 
 
-def test_compute_company_alerts_no_watch_when_already_above_15():
+def test_compute_company_alerts_no_watch_when_already_above_0():
     """Ne doit se déclencher qu'au franchissement, pas rester actif en continu."""
     previous_history = [{"date": "2026-09-05", "ticker": "BN.PA", "composite": 20.0}]
     alerts = indices_score.compute_company_alerts(
@@ -3029,7 +3029,7 @@ def test_compute_company_alerts_no_entree_when_price_far_from_entry():
 
 def test_compute_company_alerts_no_entree_when_score_not_favorable():
     alerts = indices_score.compute_company_alerts(
-        "BN.PA", composite=5.0, current_price=101.0, entry_price=100.0,
+        "BN.PA", composite=-5.0, current_price=101.0, entry_price=100.0,
         previous_history=[],
     )
     kinds = [a["kind"] for a in alerts]

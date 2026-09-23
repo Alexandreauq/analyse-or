@@ -1676,14 +1676,15 @@ function renderToc(prefix, sections, index) {
 }
 
 // Qualificatif texte du score moyen — mêmes seuils que interpret() côté
-// indices_score.py (>50 très solide, >15 solide, >-15 neutre, sinon
-// fragile), pour rester cohérent avec le vocabulaire utilisé ailleurs
-// sur le site plutôt que d'inventer de nouveaux seuils.
+// indices_score.py (>60 très solide, >20 solide, >-20 neutre, >-60
+// fragile, sinon très fragile), pour rester cohérent avec le vocabulaire
+// utilisé ailleurs sur le site plutôt que d'inventer de nouveaux seuils.
 function scoreQualifier(score) {
-  if (score > 50) return 'très solide';
-  if (score > 15) return 'solide';
-  if (score > -15) return 'neutre';
-  return 'fragile';
+  if (score > 60) return 'très solide';
+  if (score > 20) return 'solide';
+  if (score > -20) return 'neutre';
+  if (score > -60) return 'fragile';
+  return 'très fragile';
 }
 
 // Diagnostic "à la humaine" — deux listes (points positifs / points qui
@@ -1729,7 +1730,7 @@ function portfolioDiagnosisHtml(concentration, health, attribution) {
   if (health.avgScore != null) {
     const qualifier = scoreQualifier(health.avgScore);
     const scoreTxt = `${health.avgScore > 0 ? '+' : ''}${health.avgScore.toFixed(1)}`;
-    if (health.avgScore > 15) {
+    if (health.avgScore > 0) {
       good.push(`Le score moyen du modèle est de ${scoreTxt} (profil ${qualifier}) : la sélection de titres reste globalement de bonne qualité fondamentale selon les propres critères du site.`);
     } else {
       bad.push(`Le score moyen du modèle n'est que de ${scoreTxt} (profil ${qualifier}) : une partie des positions n'est plus dans la zone que le modèle juge solide — vaut le coup de revérifier lesquelles.`);

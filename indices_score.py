@@ -2439,9 +2439,33 @@ def fetch_company_financials(ticker: str) -> dict:
         if current_price is not None and ma200 else None
     )
 
-    weekly_closes = history.resample("W").last().dropna()
-    weekly_volumes = daily_volumes.resample("W").sum()
-    weinstein = classify_weinstein_stage(weekly_closes, weekly_volumes)
+    try:
+        # `indices.yml` tourne quotidiennement (06:00 UTC) : la dernière
+        # semaine du resample("W") est donc quasi toujours EN COURS, pas
+        # complète. Avec .sum(), cette semaine partielle est comparée à
+        # une moyenne de 30 semaines COMPLÈTES * 1.5 — un run du mardi
+        # n'a que ~1/5 du volume d'une semaine pleine, donc
+        # volume_confirme devient un bruit dépendant du jour de la
+        # semaine plutôt qu'un vrai signal de volume. .mean() calcule le
+        # volume journalier MOYEN de la semaine, comparable qu'elle soit
+        # pleine ou partielle (même traitement pour la semaine courante
+        # que pour les 30 semaines de référence dans
+        # classify_weinstein_stage, donc la comparaison reste cohérente).
+        # Effet de bord bienvenu : une semaine sans aucun jour de bourse
+        # (cluster de jours fériés) donne NaN plutôt que 0.0, et
+        # .mean() sur la fenêtre de référence l'exclut automatiquement
+        # au lieu de tirer la moyenne vers le bas.
+        #
+        # Enveloppé dans un try/except (contrainte du plan : aucune
+        # exception liée à Weinstein ne doit jamais se propager) — sans
+        # ça, une exception ici remonterait jusqu'au bloc except par
+        # entreprise de main(), faisant disparaître toute l'entreprise
+        # de docs/indices.json, pas seulement ses champs Weinstein.
+        weekly_closes = history.resample("W").last().dropna()
+        weekly_volumes = daily_volumes.resample("W").mean()
+        weinstein = classify_weinstein_stage(weekly_closes, weekly_volumes)
+    except Exception:
+        weinstein = {"stage": None, "stage_label": "Neutre", "volume_confirme": False}
 
     if ticker in SHARES_OUTSTANDING_FROM_MARKET_CAP_TICKERS:
         market_cap = info.get("marketCap")

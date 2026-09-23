@@ -109,11 +109,11 @@ Email d'alerte "entrée" (gold_bot n'est pas concerné — ceci est le
 
 ### 4.1 Champs internes ajoutés à `ratios` (`fetch_company_financials`)
 
-- `weekly_volumes` : série pandas des volumes hebdomadaires (somme des
-  volumes quotidiens de chaque semaine ISO), même fenêtre que
-  `history` (6 ans). Interne, non exposée telle quelle dans
-  `docs/indices.json` (trop volumineuse) — sert uniquement au calcul
-  de la phase.
+- `weekly_volumes` : série pandas des volumes hebdomadaires (moyenne des
+  volumes quotidiens de chaque semaine ISO — pas la somme, voir §5.1
+  pour pourquoi), même fenêtre que `history` (6 ans). Interne, non
+  exposée telle quelle dans `docs/indices.json` (trop volumineuse) —
+  sert uniquement au calcul de la phase.
 - `stage` : `1`, `2`, `3`, `4`, ou `None` (historique insuffisant — 30
   semaines minimum requises).
 - `stage_label` : `"Achat"` (stage 2), `"Déclin"` (stage 4), ou
@@ -121,8 +121,9 @@ Email d'alerte "entrée" (gold_bot n'est pas concerné — ceci est le
   cette distinction interne n'est jamais exposée comme un label
   "Base"/"Distribution" tant qu'elle n'est pas fiable, voir §5.3).
 - `volume_confirme` : `bool`, informatif — `True` si le volume de la
-  semaine en cours dépasse 1,5x sa moyenne 30 semaines au moment d'un
-  franchissement de la MM30s (voir §5.4).
+  semaine en cours dépasse 1,5x sa moyenne 30 semaines. Calculé
+  systématiquement, quel que soit `stage`/`stage_label` — pas
+  seulement lors d'un franchissement de la MM30s (voir §5.4).
 
 ### 4.2 `docs/indices.json`
 
@@ -161,8 +162,18 @@ nettoyé, jamais sur son propre `dropna()` indépendant :
 ```python
 daily_volumes = daily_volumes.reindex(daily_closes.index)  # même dates que le Close nettoyé
 weekly_closes = daily_closes.resample("W").last().dropna()
-weekly_volumes = daily_volumes.resample("W").sum()
+weekly_volumes = daily_volumes.resample("W").mean()
 ```
+
+**Pourquoi `.mean()` et pas `.sum()`** : le pipeline tourne
+quotidiennement, donc la dernière semaine du resample est presque
+toujours EN COURS (incomplète) au moment du run. Avec `.sum()`, cette
+semaine partielle serait comparée à une moyenne de 30 semaines
+COMPLÈTES — un run du mardi n'aurait que ~1/5 du volume d'une semaine
+pleine, rendant `volume_confirme` dépendant du jour de la semaine plutôt
+que du volume réel. `.mean()` (volume quotidien moyen de la semaine)
+reste comparable qu'une semaine soit pleine ou partielle, pour la
+semaine courante comme pour les 30 semaines de référence.
 
 ### 5.2 MM30 semaines et sa pente
 

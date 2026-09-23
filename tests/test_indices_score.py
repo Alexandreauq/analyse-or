@@ -4855,6 +4855,89 @@ def test_fetch_company_financials_degrades_gracefully_when_volume_column_absent(
     assert ratios["stage_label"] in ("Achat", "Déclin", "Neutre")
 
 
+def test_fetch_dividend_history_returns_dividends_property(monkeypatch):
+    class _FakeTickerWithDividends:
+        @property
+        def dividends(self):
+            return pd.Series([1.0, 1.1], index=pd.DatetimeIndex(["2025-06-15", "2026-06-15"]))
+
+    result = indices_score.fetch_dividend_history(_FakeTickerWithDividends())
+    assert len(result) == 2
+
+
+def test_fetch_dividend_history_returns_empty_series_on_exception():
+    class _FailingTicker:
+        @property
+        def dividends(self):
+            raise RuntimeError("panne réseau")
+
+    result = indices_score.fetch_dividend_history(_FailingTicker())
+    assert len(result) == 0
+
+
+class _FrozenDate(_date):
+    """Sous-classe de datetime.date dont .today() renvoie une date figée —
+    permet de monkeypatcher `indices_score.date` (la classe entière, pas
+    une instance) pour un test déterministe, indépendant du jour réel
+    d'exécution."""
+    @classmethod
+    def today(cls):
+        return _date(2026, 9, 23)
+
+
+def test_fetch_company_financials_exposes_dividend_streak_years(monkeypatch):
+    financials, balance_sheet, cashflow, _ = _make_fixture_statements()
+    financials.columns = pd.to_datetime(financials.columns)
+    balance_sheet.columns = pd.to_datetime(balance_sheet.columns)
+    cashflow.columns = pd.to_datetime(cashflow.columns)
+    quarterly = _fake_annual_df({"Diluted Average Shares": [100.0]}, [pd.Timestamp("2025-09-30")])
+    history_index = pd.date_range("2024-01-01", periods=250, freq="D")
+    history_close = pd.Series([4.80] * 250, index=history_index)
+    fake_dividends = pd.Series(
+        [1.0, 1.0, 1.0],
+        index=pd.DatetimeIndex(["2023-06-15", "2024-06-15", "2025-06-15"]),
+    )
+
+    class _FakeTicker:
+        def __init__(self, ticker):
+            pass
+
+        @property
+        def financials(self):
+            return financials
+
+        @property
+        def balance_sheet(self):
+            return balance_sheet
+
+        @property
+        def cashflow(self):
+            return cashflow
+
+        @property
+        def quarterly_financials(self):
+            return quarterly
+
+        @property
+        def info(self):
+            return {"sharesOutstanding": 1000.0, "marketCap": None, "beta": 1.0, "sector": "Technology"}
+
+        @property
+        def dividends(self):
+            return fake_dividends
+
+        def history(self, period=None):
+            return pd.DataFrame({"Close": history_close})
+
+    monkeypatch.setattr(indices_score.yf, "Ticker", _FakeTicker)
+    monkeypatch.setattr(indices_score.time, "sleep", lambda s: None)
+    monkeypatch.setattr(indices_score, "date", _FrozenDate)
+
+    ratios = indices_score.fetch_company_financials("TEST3.PA")
+
+    assert ratios["dividend_streak_years"] == 3  # 2023, 2024, 2025 consécutifs, 2026 pas encore tombé
+
+
 def test_fetch_company_financials_excludes_dropped_close_date_volume_from_weekly_aggregate(monkeypatch):
     """Reproduit précisément le risque d'alignement que le
     `daily_volumes.reindex(history.index)` (placé APRÈS `history.dropna()`)

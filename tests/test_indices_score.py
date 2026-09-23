@@ -401,10 +401,131 @@ def test_compute_composite_all_zero_is_neutral():
 
 
 def test_interpret_bands():
-    assert interpret(60.0) == "Profil fondamental très solide"
-    assert interpret(20.0) == "Solide"
+    assert interpret(70.0) == "Profil fondamental très solide"
+    assert interpret(30.0) == "Solide"
     assert interpret(0.0) == "Neutre"
     assert interpret(-30.0) == "Fragile"
+    assert interpret(-70.0) == "Très fragile"
+
+
+def test_interpret_boundary_values():
+    # Valeurs exactement aux bornes -- doivent tomber dans la bande DU
+    # DESSOUS (comparaison stricte ">", pas ">=").
+    assert interpret(60.0) == "Solide"
+    assert interpret(20.0) == "Neutre"
+    assert interpret(-20.0) == "Fragile"
+    assert interpret(-60.0) == "Très fragile"
+
+
+def test_compute_percentile_rank_min_value_is_near_zero():
+    pool = [10.0, 20.0, 30.0, 40.0, 50.0]
+    result = indices_score.compute_percentile_rank(10.0, pool)
+    assert result == 10.0  # 0 inférieurs, 1 égal (lui-même) -> 100*(0+0.5)/5
+
+
+def test_compute_percentile_rank_max_value_is_near_hundred():
+    pool = [10.0, 20.0, 30.0, 40.0, 50.0]
+    result = indices_score.compute_percentile_rank(50.0, pool)
+    assert result == 90.0  # 4 inférieurs, 1 égal -> 100*(4+0.5)/5
+
+
+def test_compute_percentile_rank_median_value():
+    pool = [10.0, 20.0, 30.0, 40.0, 50.0]
+    result = indices_score.compute_percentile_rank(30.0, pool)
+    assert result == 50.0  # 2 inférieurs, 1 égal -> 100*(2+0.5)/5
+
+
+def test_compute_percentile_rank_handles_ties():
+    pool = [10.0, 20.0, 20.0, 20.0, 50.0]
+    result = indices_score.compute_percentile_rank(20.0, pool)
+    # 1 strictement inférieur (10.0), 3 égaux (les trois 20.0) -> 100*(1+1.5)/5
+    assert result == 50.0
+
+
+def test_compute_percentile_rank_single_element_pool():
+    result = indices_score.compute_percentile_rank(42.0, [42.0])
+    assert result == 50.0  # seul élément du pool -> 100*(0+0.5)/1
+
+
+def test_score_profile_key_trust():
+    assert indices_score._score_profile_key({"is_trust": True, "is_financial": False}) == "trust"
+
+
+def test_score_profile_key_financial():
+    assert indices_score._score_profile_key({"is_trust": False, "is_financial": True}) == "financial"
+
+
+def test_score_profile_key_standard():
+    assert indices_score._score_profile_key({"is_trust": False, "is_financial": False}) == "standard"
+
+
+def test_score_profile_key_defaults_to_standard_when_keys_absent():
+    assert indices_score._score_profile_key({}) == "standard"
+
+
+def _make_companies_with_scores(scores: list[float], is_financial=False, is_trust=False) -> list[dict]:
+    return [
+        {
+            "ticker": f"T{i}", "score": s, "interpretation": "peu importe",
+            "is_financial": is_financial, "is_trust": is_trust,
+        }
+        for i, s in enumerate(scores)
+    ]
+
+
+def test_recalibrate_scores_by_profile_remaps_large_pool():
+    # 25 sociétés standard (>= seuil 20) avec des scores bruts variés.
+    companies = _make_companies_with_scores([float(i) for i in range(25)])
+    indices_score.recalibrate_scores_by_profile(companies)
+    # La société avec le score brut le plus bas (0.0) doit désormais avoir
+    # un score recalibré proche de -100 ; la plus haute (24.0), proche de +100.
+    assert companies[0]["score"] < -80
+    assert companies[-1]["score"] > 80
+    # Le score n'est plus la valeur brute d'origine.
+    assert companies[0]["score"] != 0.0
+
+
+def test_recalibrate_scores_by_profile_updates_interpretation():
+    companies = _make_companies_with_scores([float(i) for i in range(25)])
+    indices_score.recalibrate_scores_by_profile(companies)
+    for c in companies:
+        assert c["interpretation"] == indices_score.interpret(c["score"])
+
+
+def test_recalibrate_scores_by_profile_leaves_small_pool_untouched():
+    # 5 sociétés trust (< seuil 20) : score et interpretation doivent rester
+    # strictement identiques à ce qu'ils étaient avant l'appel.
+    companies = _make_companies_with_scores([1.0, 2.0, 3.0, 4.0, 5.0], is_trust=True)
+    for c in companies:
+        c["interpretation"] = "Neutre"  # valeur arbitraire posée avant l'appel
+    original = [dict(c) for c in companies]
+    indices_score.recalibrate_scores_by_profile(companies)
+    assert companies == original
+
+
+def test_recalibrate_scores_by_profile_groups_by_profile_independently():
+    # 25 standard (scores bruts 0..24) + 25 financier (scores bruts
+    # 100..124, plage totalement disjointe) : si les pools étaient
+    # incorrectement fusionnés en un seul de 50, TOUTES les sociétés
+    # standard se retrouveraient tassées en bas du classement (dominées
+    # par les scores financier, bien plus hauts) -- alors qu'avec un
+    # regroupement correct, la meilleure société standard doit être proche
+    # du sommet de SON PROPRE pool, peu importe les valeurs de l'autre
+    # groupe.
+    standard = _make_companies_with_scores([float(i) for i in range(25)], is_financial=False)
+    financial = _make_companies_with_scores([float(i) + 100.0 for i in range(25)], is_financial=True)
+    companies = standard + financial
+    indices_score.recalibrate_scores_by_profile(companies)
+    # Meilleure société standard (score brut 24.0, la plus haute de son
+    # propre pool de 25) : doit être proche de +100, pas écrasée par les
+    # scores financier.
+    best_standard = companies[24]
+    assert best_standard["score"] > 80
+    # Pire société financier (score brut 100.0, la plus basse de SON
+    # propre pool) : doit être proche de -100, pas portée en haut par sa
+    # valeur brute élevée en absolu.
+    worst_financial = companies[25]
+    assert worst_financial["score"] < -80
 
 
 import pandas as pd
@@ -2843,17 +2964,17 @@ def test_compute_company_alerts_returns_info_when_nothing_triggers():
     assert alerts[0]["kind"] == "info"
 
 
-def test_compute_company_alerts_watch_when_score_crosses_15_upward():
-    previous_history = [{"date": "2026-09-05", "ticker": "BN.PA", "composite": 10.0}]
+def test_compute_company_alerts_watch_when_score_crosses_0_upward():
+    previous_history = [{"date": "2026-09-05", "ticker": "BN.PA", "composite": -5.0}]
     alerts = indices_score.compute_company_alerts(
-        "BN.PA", composite=20.0, current_price=100.0, entry_price=50.0,
+        "BN.PA", composite=5.0, current_price=100.0, entry_price=50.0,
         previous_history=previous_history,
     )
     kinds = [a["kind"] for a in alerts]
     assert "watch" in kinds
 
 
-def test_compute_company_alerts_no_watch_when_already_above_15():
+def test_compute_company_alerts_no_watch_when_already_above_0():
     """Ne doit se déclencher qu'au franchissement, pas rester actif en continu."""
     previous_history = [{"date": "2026-09-05", "ticker": "BN.PA", "composite": 20.0}]
     alerts = indices_score.compute_company_alerts(
@@ -2867,9 +2988,11 @@ def test_compute_company_alerts_no_watch_when_already_above_15():
 def test_compute_company_alerts_risque_on_rapid_drop():
     from datetime import datetime, timedelta
     recent_date = (datetime.today() - timedelta(days=2)).strftime("%Y-%m-%d")
-    previous_history = [{"date": recent_date, "ticker": "BN.PA", "composite": 40.0}]
+    # drop de -45 : juste au-dessus du seuil recalibré RAPID_DROP_POINTS=40
+    # (auparavant -25 pour un seuil à 20, même marge relative).
+    previous_history = [{"date": recent_date, "ticker": "BN.PA", "composite": 80.0}]
     alerts = indices_score.compute_company_alerts(
-        "BN.PA", composite=15.0, current_price=100.0, entry_price=50.0,
+        "BN.PA", composite=35.0, current_price=100.0, entry_price=50.0,
         previous_history=previous_history,
     )
     kinds = [a["kind"] for a in alerts]
@@ -2879,9 +3002,12 @@ def test_compute_company_alerts_risque_on_rapid_drop():
 def test_compute_company_alerts_no_risque_when_drop_outside_window():
     from datetime import datetime, timedelta
     old_date = (datetime.today() - timedelta(days=30)).strftime("%Y-%m-%d")
-    previous_history = [{"date": old_date, "ticker": "BN.PA", "composite": 40.0}]
+    # Même magnitude de chute (-45) que test_..._risque_on_rapid_drop, mais
+    # hors fenêtre : doit rester silencieux malgré une chute qui franchirait
+    # le seuil RAPID_DROP_POINTS si elle était récente.
+    previous_history = [{"date": old_date, "ticker": "BN.PA", "composite": 80.0}]
     alerts = indices_score.compute_company_alerts(
-        "BN.PA", composite=15.0, current_price=100.0, entry_price=50.0,
+        "BN.PA", composite=35.0, current_price=100.0, entry_price=50.0,
         previous_history=previous_history,
     )
     kinds = [a["kind"] for a in alerts]
@@ -2908,7 +3034,7 @@ def test_compute_company_alerts_no_entree_when_price_far_from_entry():
 
 def test_compute_company_alerts_no_entree_when_score_not_favorable():
     alerts = indices_score.compute_company_alerts(
-        "BN.PA", composite=5.0, current_price=101.0, entry_price=100.0,
+        "BN.PA", composite=-5.0, current_price=101.0, entry_price=100.0,
         previous_history=[],
     )
     kinds = [a["kind"] for a in alerts]
@@ -2932,12 +3058,12 @@ def test_compute_company_alerts_ignores_malformed_dates():
     from datetime import datetime, timedelta
     recent_date = (datetime.today() - timedelta(days=2)).strftime("%Y-%m-%d")
     previous_history = [
-        {"date": "pas-une-date", "ticker": "BN.PA", "composite": 40.0},  # malformed
-        {"date": recent_date, "ticker": "BN.PA", "composite": 40.0},      # valid
+        {"date": "pas-une-date", "ticker": "BN.PA", "composite": 80.0},  # malformed
+        {"date": recent_date, "ticker": "BN.PA", "composite": 80.0},      # valid
     ]
-    # Ne doit pas lever, et doit détecter la chute de 40->15 en ignorant l'entrée malformée
+    # Ne doit pas lever, et doit détecter la chute de 80->35 en ignorant l'entrée malformée
     alerts = indices_score.compute_company_alerts(
-        "BN.PA", composite=15.0, current_price=100.0, entry_price=50.0,
+        "BN.PA", composite=35.0, current_price=100.0, entry_price=50.0,
         previous_history=previous_history,
     )
     kinds = [a["kind"] for a in alerts]
@@ -4567,6 +4693,10 @@ def test_build_company_entry_uses_trust_factors_for_trust_tickers(monkeypatch):
     entry = indices_score.build_company_entry("III.L", "3i Group", 3.0, {}, index_key="FTSE")
 
     assert entry["is_financial"] is False
+    # Régression : is_trust doit être recopié depuis data["is_trust"] jusque
+    # dans l'entrée finale, sinon les trusts ne sont jamais isolés dans leur
+    # propre pool de recalibration par _score_profile_key.
+    assert entry["is_trust"] is True
     assert [f["name"] for f in entry["factors"]] == [
         "Rentabilité / création de valeur", "Structure financière / solvabilité",
         "Croissance", "Génération de cash", "Valorisation relative",
@@ -6128,6 +6258,73 @@ def test_main_calls_update_signal_tracking(monkeypatch, tmp_path):
 
     assert "companies" in called_with
     assert len(called_with["companies"]) == len(indices_score.COMPANIES)
+
+
+def test_main_recalibrates_scores_before_alerts_and_signal_tracking(monkeypatch, tmp_path):
+    """Preuve que main() appelle recalibrate_scores_by_profile AVANT
+    _attach_alerts_and_update_history/update_signal_tracking — si l'appel
+    était supprimé ou mal placé, ce test doit échouer."""
+    monkeypatch.setattr(indices_score, "fetch_risk_free_rate", lambda series_id: 3.68)
+    monkeypatch.setattr(indices_score, "fetch_fx_rate_to_usd", lambda currency: 1.0)
+    monkeypatch.setattr(indices_score, "load_previous_company_analyses", lambda: {})
+
+    # Scores bruts variés (pas tous identiques) pour que le percentile ait
+    # un sens à vérifier -- indexé par position d'appel, car
+    # build_company_entry est appelé une fois par ticker de COMPANIES (plus
+    # de 20, donc le pool "standard" dépasse largement le seuil de
+    # recalibration).
+    call_counter = {"n": 0}
+
+    def _fake_build_company_entry(ticker, name, risk_free_rate, previous_analyses, index_key="CAC40", also_indices=None, fx_rate_to_usd=1.0):
+        call_counter["n"] += 1
+        return {
+            "ticker": ticker, "name": name, "index": index_key,
+            "score": float(call_counter["n"]), "interpretation": "peu importe",
+            "current_price": 50.0, "entry_price": 50.0,
+            "is_financial": False, "is_trust": False,
+        }
+
+    monkeypatch.setattr(indices_score, "build_company_entry", _fake_build_company_entry)
+    monkeypatch.setattr(indices_score, "load_indices_history", lambda: [])
+    monkeypatch.setattr(indices_score, "append_indices_history", lambda entries: entries)
+    output_path = tmp_path / "indices.json"
+    monkeypatch.setattr(indices_score, "OUTPUT_JSON_PATH", str(output_path))
+
+    called_with = {}
+
+    def _fake_update_signal_tracking(companies, newly_triggered_entree):
+        # Snapshot des scores AU MOMENT DE L'APPEL (copie de floats, pas une
+        # référence aux dicts) -- companies est le même objet liste tout au
+        # long de main() et recalibrate_scores_by_profile mute les dicts en
+        # place, donc si on lisait companies après le retour de main(), les
+        # mutations seraient visibles quel que soit l'ordre réel des appels.
+        # Seul un instantané pris ici, pendant l'appel, prouve l'ordre.
+        called_with["scores_at_call_time"] = [c["score"] for c in companies]
+        called_with["n_at_call_time"] = len(companies)
+        return []
+
+    monkeypatch.setattr(indices_score, "update_signal_tracking", _fake_update_signal_tracking)
+    monkeypatch.setattr(indices_score, "update_nikkei_hangseng_price_history", lambda companies: [])
+    monkeypatch.setattr(indices_score, "fetch_index_prices", lambda: {"CAC40": None, "DAX": None, "NASDAQ": None, "DOW": None})
+    monkeypatch.setattr(indices_score, "update_price_history", lambda entries, **kwargs: entries)
+    monkeypatch.setattr(indices_score, "fetch_index_price_history", lambda: [])
+
+    indices_score.main()
+
+    scores = called_with["scores_at_call_time"]
+    n = called_with["n_at_call_time"]
+    assert n >= indices_score.SCORE_RECALIBRATION_MIN_POOL_SIZE
+    # Les scores bruts posés par le mock étaient 1.0, 2.0, ..., n (jamais
+    # négatifs) -- si recalibrate_scores_by_profile n'avait pas encore tourné
+    # au moment où update_signal_tracking est appelé (parce que supprimé ou
+    # déplacé après cet appel), le snapshot ci-dessus montrerait encore les
+    # scores bruts non recalibrés (tous positifs). Après recalibration (rang
+    # percentile remis sur -100/+100), les sociétés du bas du classement
+    # doivent avoir un score négatif au moment de l'appel.
+    assert min(scores) < 0
+    assert max(scores) > 0
+    # Le score n'est plus la valeur brute posée par le mock (1.0..n).
+    assert scores != [float(i + 1) for i in range(n)]
 
 
 def test_main_persists_price_history_from_companies_and_indices(monkeypatch, tmp_path):

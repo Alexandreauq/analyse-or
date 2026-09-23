@@ -1217,6 +1217,27 @@
       "shadow_resolved": false,
       "shadow_price": null,
       "shadow_return_pct": null
+    },
+    {
+      "id": "0241.HK-2026-09-23",
+      "ticker": "0241.HK",
+      "name": "Alibaba Health Information Technology",
+      "index": "HANGSENG",
+      "status": "open",
+      "entry_date": "2026-09-23",
+      "entry_price": 2.8299999237060547,
+      "target_exit_price": 4.80930393534355,
+      "index_price_at_entry": 24834.650390625,
+      "close_date": null,
+      "close_price": null,
+      "close_reason": null,
+      "return_pct": null,
+      "index_price_at_close": null,
+      "index_return_pct": null,
+      "shadow_close_date": "2027-03-23",
+      "shadow_resolved": false,
+      "shadow_price": null,
+      "shadow_return_pct": null
     }
   ]
 }

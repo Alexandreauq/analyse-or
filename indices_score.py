@@ -2407,6 +2407,17 @@ def _fetch_statement_with_retry(ticker: str, attribute_name: str):
     return statement
 
 
+def fetch_dividend_history(ticker_obj) -> pd.Series:
+    """Historique complet des dividendes versés (yfinance
+    Ticker.dividends, Series indexée par date d'ex-dividende, valeur =
+    montant versé). Série vide si l'entreprise n'a jamais versé de
+    dividende, ou si l'appel échoue — jamais d'exception."""
+    try:
+        return ticker_obj.dividends
+    except Exception:
+        return pd.Series(dtype=float)
+
+
 def fetch_company_financials(ticker: str) -> dict:
     if yf is None:
         raise RuntimeError("yfinance n'est pas installé (pip install yfinance)")
@@ -2516,6 +2527,9 @@ def fetch_company_financials(ticker: str) -> dict:
     except Exception:
         weinstein = {"stage": None, "stage_label": "Neutre", "volume_confirme": False}
 
+    dividends = fetch_dividend_history(t)
+    dividend_streak_years = compute_dividend_streak_years(dividends)
+
     if ticker in SHARES_OUTSTANDING_FROM_MARKET_CAP_TICKERS:
         market_cap = info.get("marketCap")
         if market_cap and current_price:
@@ -2541,6 +2555,7 @@ def fetch_company_financials(ticker: str) -> dict:
     ratios["stage"] = weinstein["stage"]
     ratios["stage_label"] = weinstein["stage_label"]
     ratios["volume_confirme"] = weinstein["volume_confirme"]
+    ratios["dividend_streak_years"] = dividend_streak_years
     try:
         # Même précaution que build_financial_narrative_context pour le
         # même motif (voir son commentaire) : une entreprise dont le

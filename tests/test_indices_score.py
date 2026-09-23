@@ -6274,7 +6274,14 @@ def test_main_recalibrates_scores_before_alerts_and_signal_tracking(monkeypatch,
     called_with = {}
 
     def _fake_update_signal_tracking(companies, newly_triggered_entree):
-        called_with["companies"] = companies
+        # Snapshot des scores AU MOMENT DE L'APPEL (copie de floats, pas une
+        # référence aux dicts) -- companies est le même objet liste tout au
+        # long de main() et recalibrate_scores_by_profile mute les dicts en
+        # place, donc si on lisait companies après le retour de main(), les
+        # mutations seraient visibles quel que soit l'ordre réel des appels.
+        # Seul un instantané pris ici, pendant l'appel, prouve l'ordre.
+        called_with["scores_at_call_time"] = [c["score"] for c in companies]
+        called_with["n_at_call_time"] = len(companies)
         return []
 
     monkeypatch.setattr(indices_score, "update_signal_tracking", _fake_update_signal_tracking)
@@ -6285,15 +6292,16 @@ def test_main_recalibrates_scores_before_alerts_and_signal_tracking(monkeypatch,
 
     indices_score.main()
 
-    companies = called_with["companies"]
-    n = len(companies)
+    scores = called_with["scores_at_call_time"]
+    n = called_with["n_at_call_time"]
     assert n >= indices_score.SCORE_RECALIBRATION_MIN_POOL_SIZE
     # Les scores bruts posés par le mock étaient 1.0, 2.0, ..., n (jamais
-    # négatifs) -- si recalibrate_scores_by_profile n'avait pas tourné
-    # avant que update_signal_tracking les voie, AUCUN score ne serait
-    # négatif. Après recalibration (rang percentile remis sur -100/+100),
-    # les sociétés du bas du classement doivent avoir un score négatif.
-    scores = [c["score"] for c in companies]
+    # négatifs) -- si recalibrate_scores_by_profile n'avait pas encore tourné
+    # au moment où update_signal_tracking est appelé (parce que supprimé ou
+    # déplacé après cet appel), le snapshot ci-dessus montrerait encore les
+    # scores bruts non recalibrés (tous positifs). Après recalibration (rang
+    # percentile remis sur -100/+100), les sociétés du bas du classement
+    # doivent avoir un score négatif au moment de l'appel.
     assert min(scores) < 0
     assert max(scores) > 0
     # Le score n'est plus la valeur brute posée par le mock (1.0..n).

@@ -3462,6 +3462,81 @@ def _momentum_adjustment(ecart_pct_ma200: float | None) -> float:
     )
 
 
+# Stage Analysis (Stan Weinstein, "Secrets for Profiting in Bull and
+# Bear Markets") — voir docs/superpowers/specs/2026-09-23-weinstein-stage-analysis-design.md.
+# Conseillée par des professionnels de la finance consultés par
+# l'utilisateur, pour affiner les repères d'entrée/sortie (§6 de la
+# spec) sans toucher au score composite (score_dynamique_recente reste
+# sur la MM200, inchangé — hors périmètre, voir spec §2).
+WEINSTEIN_MA_WEEKS = 30
+WEINSTEIN_SLOPE_LOOKBACK_WEEKS = 4
+WEINSTEIN_MIN_WEEKS = WEINSTEIN_MA_WEEKS + WEINSTEIN_SLOPE_LOOKBACK_WEEKS  # 34
+WEINSTEIN_SLOPE_NOISE_FLOOR_PCT = 0.5  # % sur 4 semaines, sous ce seuil -> MM30s "plate"
+WEINSTEIN_VOLUME_LOOKBACK_WEEKS = 30
+WEINSTEIN_VOLUME_CONFIRMATION_MULTIPLE = 1.5
+
+
+def classify_weinstein_stage(weekly_closes: pd.Series, weekly_volumes: pd.Series) -> dict:
+    """Classe une société en phase Weinstein à partir de sa MM30 semaines
+    et de sa pente (mesurée sur WEINSTEIN_SLOPE_LOOKBACK_WEEKS semaines) :
+
+    - Phase 2 "Achat" : prix > MM30s ET pente montante.
+    - Phase 4 "Déclin" : prix < MM30s ET pente descendante.
+    - Tout le reste (MM30s plate, ou prix/pente en désaccord — une
+      transition typique) : `stage_label="Neutre"`. `stage` reçoit
+      quand même une valeur interne best-effort (1 si le prix est dans
+      la moitié basse de son range 52 semaines, sinon 3) mais cette
+      distinction n'est JAMAIS exposée comme label "Base"/"Distribution"
+      tant qu'elle n'est pas fiable — voir spec §5.3.
+
+    `stage=None, stage_label="Neutre"` si `weekly_closes` a moins de
+    WEINSTEIN_MIN_WEEKS entrées (historique insuffisant) — jamais
+    d'exception, même en cas de série vide.
+
+    `volume_confirme` (informatif, n'affecte jamais `stage`) : True si
+    le volume de la semaine courante dépasse WEINSTEIN_VOLUME_CONFIRMATION_MULTIPLE
+    fois la moyenne des WEINSTEIN_VOLUME_LOOKBACK_WEEKS semaines
+    PRÉCÉDENTES (la semaine courante est explicitement exclue de sa
+    propre moyenne de référence, sinon un volume extrême gonflerait la
+    moyenne à laquelle on le compare — point de correction identifié à
+    la relecture de la spec, voir son §5.4)."""
+    result = {"stage": None, "stage_label": "Neutre", "volume_confirme": False}
+    if len(weekly_closes) < WEINSTEIN_MIN_WEEKS:
+        return result
+
+    ma30w = weekly_closes.rolling(WEINSTEIN_MA_WEEKS).mean()
+    current_price = float(weekly_closes.iloc[-1])
+    current_ma = float(ma30w.iloc[-1])
+    prior_ma = float(ma30w.iloc[-1 - WEINSTEIN_SLOPE_LOOKBACK_WEEKS])
+    if _is_missing(current_price) or _is_missing(current_ma) or _is_missing(prior_ma) or prior_ma == 0:
+        return result
+
+    slope_pct = (current_ma - prior_ma) / abs(prior_ma) * 100
+    rising = slope_pct > WEINSTEIN_SLOPE_NOISE_FLOOR_PCT
+    falling = slope_pct < -WEINSTEIN_SLOPE_NOISE_FLOOR_PCT
+    above = current_price > current_ma
+    below = current_price < current_ma
+
+    if above and rising:
+        result["stage"], result["stage_label"] = 2, "Achat"
+    elif below and falling:
+        result["stage"], result["stage_label"] = 4, "Déclin"
+    else:
+        window_52w = weekly_closes.tail(52)
+        low_52w, high_52w = float(window_52w.min()), float(window_52w.max())
+        midpoint = (low_52w + high_52w) / 2
+        result["stage"] = 1 if current_price <= midpoint else 3
+        # stage_label reste "Neutre" (défaut déjà posé ci-dessus)
+
+    if len(weekly_volumes) >= WEINSTEIN_VOLUME_LOOKBACK_WEEKS + 1:
+        recent_volume = weekly_volumes.iloc[-1]
+        baseline_volume = weekly_volumes.iloc[-(WEINSTEIN_VOLUME_LOOKBACK_WEEKS + 1):-1].mean()
+        if not _is_missing(recent_volume) and not _is_missing(baseline_volume) and baseline_volume > 0:
+            result["volume_confirme"] = bool(recent_volume > baseline_volume * WEINSTEIN_VOLUME_CONFIRMATION_MULTIPLE)
+
+    return result
+
+
 def estimate_entry_exit_prices(
     fair_value: float | None, ma200: float | None,
     beta: float | None, ecart_pct_ma200: float | None,

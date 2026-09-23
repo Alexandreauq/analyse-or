@@ -430,6 +430,11 @@
     "composite": 27.0
   },
   {
+    "date": "2026-09-23",
+    "ticker": "MC.PA",
+    "composite": 23.8
+  },
+  {
     "date": "2026-09-06",
     "ticker": "TTE.PA",
     "composite": 15.9
@@ -853,6 +858,11 @@
     "date": "2026-09-23",
     "ticker": "TTE.PA",
     "composite": 10.8
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "TTE.PA",
+    "composite": 24.7
   },
   {
     "date": "2026-09-23",
@@ -1290,6 +1300,11 @@
     "composite": 55.1
   },
   {
+    "date": "2026-09-23",
+    "ticker": "SU.PA",
+    "composite": 55.1
+  },
+  {
     "date": "2026-09-06",
     "ticker": "SAN.PA",
     "composite": 29.9
@@ -1708,6 +1723,11 @@
     "date": "2026-09-23",
     "ticker": "SAN.PA",
     "composite": 38.3
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "SAN.PA",
+    "composite": 34.8
   },
   {
     "date": "2026-09-23",
@@ -2140,6 +2160,11 @@
     "composite": 29.3
   },
   {
+    "date": "2026-09-23",
+    "ticker": "BN.PA",
+    "composite": 29.3
+  },
+  {
     "date": "2026-09-06",
     "ticker": "AIR.PA",
     "composite": 60.1
@@ -2535,6 +2560,11 @@
     "composite": 69.6
   },
   {
+    "date": "2026-09-23",
+    "ticker": "AIR.PA",
+    "composite": 66.2
+  },
+  {
     "date": "2026-09-06",
     "ticker": "OR.PA",
     "composite": 65.2
@@ -2923,6 +2953,11 @@
     "date": "2026-09-23",
     "ticker": "OR.PA",
     "composite": 68.1
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "OR.PA",
+    "composite": 58.8
   },
   {
     "date": "2026-09-23",
@@ -3325,6 +3360,11 @@
     "composite": 49.5
   },
   {
+    "date": "2026-09-23",
+    "ticker": "DG.PA",
+    "composite": 49.5
+  },
+  {
     "date": "2026-09-06",
     "ticker": "RMS.PA",
     "composite": 55.0
@@ -3713,6 +3753,11 @@
     "date": "2026-09-23",
     "ticker": "RMS.PA",
     "composite": 51.3
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "RMS.PA",
+    "composite": 47.3
   },
   {
     "date": "2026-09-23",
@@ -4115,6 +4160,11 @@
     "composite": 39.2
   },
   {
+    "date": "2026-09-23",
+    "ticker": "ENGI.PA",
+    "composite": 39.2
+  },
+  {
     "date": "2026-09-06",
     "ticker": "ORA.PA",
     "composite": 30.9
@@ -4508,6 +4558,11 @@
     "date": "2026-09-23",
     "ticker": "ORA.PA",
     "composite": 30.8
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "ORA.PA",
+    "composite": 25.8
   },
   {
     "date": "2026-09-06",
@@ -4905,6 +4960,11 @@
     "composite": -39.6
   },
   {
+    "date": "2026-09-23",
+    "ticker": "STMPA.PA",
+    "composite": -39.6
+  },
+  {
     "date": "2026-09-06",
     "ticker": "STLAP.PA",
     "composite": 6.2
@@ -5300,6 +5360,11 @@
     "composite": -23.6
   },
   {
+    "date": "2026-09-23",
+    "ticker": "STLAP.PA",
+    "composite": -18.6
+  },
+  {
     "date": "2026-09-06",
     "ticker": "CA.PA",
     "composite": 50.9
@@ -5693,6 +5758,11 @@
     "date": "2026-09-23",
     "ticker": "CA.PA",
     "composite": 43.2
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "CA.PA",
+    "composite": 45.2
   },
   {
     "date": "2026-09-06",
@@ -6085,6 +6155,11 @@
     "composite": -22.9
   },
   {
+    "date": "2026-09-23",
+    "ticker": "MT.PA",
+    "composite": -22.9
+  },
+  {
     "date": "2026-09-06",
     "ticker": "SAF.PA",
     "composite": 73.5
@@ -6458,6 +6533,11 @@
     "date": "2026-09-23",
     "ticker": "SAF.PA",
     "composite": 74.7
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "SAF.PA",
+    "composite": 73.2
   },
   {
     "date": "2026-09-23",
@@ -6845,6 +6925,11 @@
     "composite": 43.3
   },
   {
+    "date": "2026-09-23",
+    "ticker": "LR.PA",
+    "composite": 43.3
+  },
+  {
     "date": "2026-09-06",
     "ticker": "SGO.PA",
     "composite": 23.9
@@ -7223,6 +7308,11 @@
     "date": "2026-09-23",
     "ticker": "SGO.PA",
     "composite": 16.6
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "SGO.PA",
+    "composite": 20.6
   },
   {
     "date": "2026-09-06",
@@ -7605,6 +7695,11 @@
     "composite": 69.6
   },
   {
+    "date": "2026-09-23",
+    "ticker": "HO.PA",
+    "composite": 71.5
+  },
+  {
     "date": "2026-09-06",
     "ticker": "CAP.PA",
     "composite": 33.6
@@ -7985,6 +8080,11 @@
     "composite": 33.3
   },
   {
+    "date": "2026-09-23",
+    "ticker": "CAP.PA",
+    "composite": 33.3
+  },
+  {
     "date": "2026-09-06",
     "ticker": "RI.PA",
     "composite": 22.7
@@ -8358,6 +8458,11 @@
     "date": "2026-09-23",
     "ticker": "RI.PA",
     "composite": 4.3
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "RI.PA",
+    "composite": 3.9
   },
   {
     "date": "2026-09-23",
@@ -8745,6 +8850,11 @@
     "composite": -36.9
   },
   {
+    "date": "2026-09-23",
+    "ticker": "RNO.PA",
+    "composite": -36.9
+  },
+  {
     "date": "2026-09-06",
     "ticker": "ERF.PA",
     "composite": 21.9
@@ -9125,6 +9235,11 @@
     "composite": 20.2
   },
   {
+    "date": "2026-09-23",
+    "ticker": "ERF.PA",
+    "composite": 20.2
+  },
+  {
     "date": "2026-09-06",
     "ticker": "VIE.PA",
     "composite": 45.5
@@ -9493,6 +9608,11 @@
     "date": "2026-09-23",
     "ticker": "VIE.PA",
     "composite": 41.2
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "VIE.PA",
+    "composite": 35.9
   },
   {
     "date": "2026-09-23",
@@ -9875,6 +9995,11 @@
     "composite": -61.5
   },
   {
+    "date": "2026-09-23",
+    "ticker": "KER.PA",
+    "composite": -61.5
+  },
+  {
     "date": "2026-09-06",
     "ticker": "EL.PA",
     "composite": 0.3
@@ -10238,6 +10363,11 @@
     "date": "2026-09-23",
     "ticker": "EL.PA",
     "composite": 3.1
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "EL.PA",
+    "composite": 8.7
   },
   {
     "date": "2026-09-23",
@@ -10615,6 +10745,11 @@
     "composite": 76.3
   },
   {
+    "date": "2026-09-23",
+    "ticker": "PUB.PA",
+    "composite": 76.2
+  },
+  {
     "date": "2026-09-06",
     "ticker": "DSY.PA",
     "composite": 58.1
@@ -10973,6 +11108,11 @@
     "date": "2026-09-23",
     "ticker": "DSY.PA",
     "composite": 64.3
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "DSY.PA",
+    "composite": 57.6
   },
   {
     "date": "2026-09-23",
@@ -11350,6 +11490,11 @@
     "composite": 17.4
   },
   {
+    "date": "2026-09-23",
+    "ticker": "URW.PA",
+    "composite": 17.4
+  },
+  {
     "date": "2026-09-06",
     "ticker": "ENX.PA",
     "composite": 62.9
@@ -11720,6 +11865,11 @@
     "composite": 39.4
   },
   {
+    "date": "2026-09-23",
+    "ticker": "ENX.PA",
+    "composite": 35.6
+  },
+  {
     "date": "2026-09-06",
     "ticker": "FGR.PA",
     "composite": 45.2
@@ -12083,6 +12233,11 @@
     "date": "2026-09-23",
     "ticker": "FGR.PA",
     "composite": 22.8
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "FGR.PA",
+    "composite": 22.7
   },
   {
     "date": "2026-09-23",
@@ -12460,6 +12615,11 @@
     "composite": 59.0
   },
   {
+    "date": "2026-09-23",
+    "ticker": "BVI.PA",
+    "composite": 60.2
+  },
+  {
     "date": "2026-09-06",
     "ticker": "EN.PA",
     "composite": 36.0
@@ -12830,6 +12990,11 @@
     "composite": 32.2
   },
   {
+    "date": "2026-09-23",
+    "ticker": "EN.PA",
+    "composite": 32.2
+  },
+  {
     "date": "2026-09-07",
     "ticker": "AI.PA",
     "composite": 34.7
@@ -13173,6 +13338,11 @@
     "date": "2026-09-23",
     "ticker": "AI.PA",
     "composite": 40.5
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "AI.PA",
+    "composite": 29.8
   },
   {
     "date": "2026-09-23",
@@ -13530,6 +13700,11 @@
     "composite": 21.4
   },
   {
+    "date": "2026-09-23",
+    "ticker": "ML.PA",
+    "composite": 17.7
+  },
+  {
     "date": "2026-09-07",
     "ticker": "AC.PA",
     "composite": 25.0
@@ -13880,6 +14055,11 @@
     "composite": 32.9
   },
   {
+    "date": "2026-09-23",
+    "ticker": "AC.PA",
+    "composite": 32.9
+  },
+  {
     "date": "2026-09-07",
     "ticker": "BNP.PA",
     "composite": 47.9
@@ -14213,6 +14393,11 @@
     "date": "2026-09-23",
     "ticker": "BNP.PA",
     "composite": 52.4
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "BNP.PA",
+    "composite": 49.7
   },
   {
     "date": "2026-09-23",
@@ -14570,6 +14755,11 @@
     "composite": 30.1
   },
   {
+    "date": "2026-09-23",
+    "ticker": "GLE.PA",
+    "composite": 30.1
+  },
+  {
     "date": "2026-09-07",
     "ticker": "ACA.PA",
     "composite": 22.7
@@ -14908,6 +15098,11 @@
     "date": "2026-09-23",
     "ticker": "ACA.PA",
     "composite": 24.9
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "ACA.PA",
+    "composite": 27.9
   },
   {
     "date": "2026-09-23",
@@ -15260,6 +15455,11 @@
     "composite": 70.5
   },
   {
+    "date": "2026-09-23",
+    "ticker": "CS.PA",
+    "composite": 70.5
+  },
+  {
     "date": "2026-09-07",
     "ticker": "SAP.DE",
     "composite": 74.4
@@ -15588,6 +15788,11 @@
     "date": "2026-09-23",
     "ticker": "SAP.DE",
     "composite": 81.0
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "SAP.DE",
+    "composite": 85.3
   },
   {
     "date": "2026-09-23",
@@ -15930,6 +16135,11 @@
     "composite": 33.1
   },
   {
+    "date": "2026-09-23",
+    "ticker": "SIE.DE",
+    "composite": 33.3
+  },
+  {
     "date": "2026-09-07",
     "ticker": "DTE.DE",
     "composite": 41.3
@@ -16253,6 +16463,11 @@
     "date": "2026-09-23",
     "ticker": "DTE.DE",
     "composite": 47.2
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "DTE.DE",
+    "composite": 46.7
   },
   {
     "date": "2026-09-23",
@@ -16600,6 +16815,11 @@
     "composite": -48.5
   },
   {
+    "date": "2026-09-23",
+    "ticker": "VOW3.DE",
+    "composite": -48.5
+  },
+  {
     "date": "2026-09-07",
     "ticker": "MBG.DE",
     "composite": -12.9
@@ -16928,6 +17148,11 @@
     "date": "2026-09-23",
     "ticker": "MBG.DE",
     "composite": -42.8
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "MBG.DE",
+    "composite": -43.2
   },
   {
     "date": "2026-09-23",
@@ -17268,6 +17493,11 @@
     "date": "2026-09-23",
     "ticker": "BAS.DE",
     "composite": -0.3
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "BAS.DE",
+    "composite": -0.5
   },
   {
     "date": "2026-09-07",
@@ -17605,6 +17835,11 @@
     "composite": -53.8
   },
   {
+    "date": "2026-09-23",
+    "ticker": "BAYN.DE",
+    "composite": -53.8
+  },
+  {
     "date": "2026-09-07",
     "ticker": "SHL.DE",
     "composite": -15.4
@@ -17933,6 +18168,11 @@
     "date": "2026-09-23",
     "ticker": "SHL.DE",
     "composite": 7.4
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "SHL.DE",
+    "composite": 7.3
   },
   {
     "date": "2026-09-23",
@@ -18275,6 +18515,11 @@
     "composite": 56.1
   },
   {
+    "date": "2026-09-23",
+    "ticker": "ADS.DE",
+    "composite": 56.1
+  },
+  {
     "date": "2026-09-07",
     "ticker": "HEN3.DE",
     "composite": 55.3
@@ -18610,6 +18855,11 @@
     "composite": 59.0
   },
   {
+    "date": "2026-09-23",
+    "ticker": "HEN3.DE",
+    "composite": 59.0
+  },
+  {
     "date": "2026-09-07",
     "ticker": "DHL.DE",
     "composite": 28.6
@@ -18928,6 +19178,11 @@
     "date": "2026-09-23",
     "ticker": "DHL.DE",
     "composite": 25.4
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "DHL.DE",
+    "composite": 27.7
   },
   {
     "date": "2026-09-23",
@@ -19260,6 +19515,11 @@
     "composite": -24.3
   },
   {
+    "date": "2026-09-23",
+    "ticker": "IFX.DE",
+    "composite": -24.3
+  },
+  {
     "date": "2026-09-07",
     "ticker": "MRK.DE",
     "composite": 19.1
@@ -19578,6 +19838,11 @@
     "date": "2026-09-23",
     "ticker": "MRK.DE",
     "composite": 17.7
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "MRK.DE",
+    "composite": 17.6
   },
   {
     "date": "2026-09-23",
@@ -19908,6 +20173,11 @@
     "date": "2026-09-23",
     "ticker": "FRE.DE",
     "composite": 6.3
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "FRE.DE",
+    "composite": 7.7
   },
   {
     "date": "2026-09-07",
@@ -20235,6 +20505,11 @@
     "composite": -39.3
   },
   {
+    "date": "2026-09-23",
+    "ticker": "CON.DE",
+    "composite": -35.3
+  },
+  {
     "date": "2026-09-07",
     "ticker": "RWE.DE",
     "composite": 42.4
@@ -20560,6 +20835,11 @@
     "composite": 52.7
   },
   {
+    "date": "2026-09-23",
+    "ticker": "RWE.DE",
+    "composite": 52.7
+  },
+  {
     "date": "2026-09-07",
     "ticker": "RHM.DE",
     "composite": 64.3
@@ -20861,6 +21141,11 @@
   },
   {
     "date": "2026-09-22",
+    "ticker": "RHM.DE",
+    "composite": 70.3
+  },
+  {
+    "date": "2026-09-23",
     "ticker": "RHM.DE",
     "composite": 70.3
   },
@@ -21205,6 +21490,11 @@
     "composite": 46.4
   },
   {
+    "date": "2026-09-23",
+    "ticker": "BEI.DE",
+    "composite": 46.4
+  },
+  {
     "date": "2026-09-07",
     "ticker": "MTX.DE",
     "composite": 63.5
@@ -21523,6 +21813,11 @@
     "date": "2026-09-23",
     "ticker": "MTX.DE",
     "composite": 69.0
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "MTX.DE",
+    "composite": 69.4
   },
   {
     "date": "2026-09-23",
@@ -21850,6 +22145,11 @@
     "composite": 38.6
   },
   {
+    "date": "2026-09-23",
+    "ticker": "EOAN.DE",
+    "composite": 38.6
+  },
+  {
     "date": "2026-09-07",
     "ticker": "DBK.DE",
     "composite": 48.0
@@ -22165,6 +22465,11 @@
     "composite": 44.5
   },
   {
+    "date": "2026-09-23",
+    "ticker": "DBK.DE",
+    "composite": 44.5
+  },
+  {
     "date": "2026-09-07",
     "ticker": "CBK.DE",
     "composite": 41.2
@@ -22468,6 +22773,11 @@
     "date": "2026-09-23",
     "ticker": "CBK.DE",
     "composite": 27.7
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "CBK.DE",
+    "composite": 27.5
   },
   {
     "date": "2026-09-23",
@@ -22795,6 +23105,11 @@
     "composite": 81.5
   },
   {
+    "date": "2026-09-23",
+    "ticker": "ALV.DE",
+    "composite": 80.7
+  },
+  {
     "date": "2026-09-07",
     "ticker": "MUV2.DE",
     "composite": -46.2
@@ -23103,6 +23418,11 @@
     "date": "2026-09-23",
     "ticker": "MUV2.DE",
     "composite": -39.2
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "MUV2.DE",
+    "composite": -39.3
   },
   {
     "date": "2026-09-23",
@@ -23420,6 +23740,11 @@
     "composite": 64.2
   },
   {
+    "date": "2026-09-23",
+    "ticker": "DB1.DE",
+    "composite": 64.2
+  },
+  {
     "date": "2026-09-07",
     "ticker": "SY1.DE",
     "composite": 23.7
@@ -23723,6 +24048,11 @@
     "date": "2026-09-23",
     "ticker": "SY1.DE",
     "composite": 33.5
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "SY1.DE",
+    "composite": 33.0
   },
   {
     "date": "2026-09-23",
@@ -24040,6 +24370,11 @@
     "composite": 72.6
   },
   {
+    "date": "2026-09-23",
+    "ticker": "ZAL.DE",
+    "composite": 77.6
+  },
+  {
     "date": "2026-09-07",
     "ticker": "P911.DE",
     "composite": -53.0
@@ -24390,6 +24725,11 @@
     "composite": -0.8
   },
   {
+    "date": "2026-09-23",
+    "ticker": "DTG.DE",
+    "composite": -0.8
+  },
+  {
     "date": "2026-09-07",
     "ticker": "QIA.DE",
     "composite": 26.1
@@ -24693,6 +25033,11 @@
     "date": "2026-09-23",
     "ticker": "QIA.DE",
     "composite": 27.5
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "QIA.DE",
+    "composite": 27.7
   },
   {
     "date": "2026-09-23",
@@ -25050,6 +25395,11 @@
     "composite": 0.6
   },
   {
+    "date": "2026-09-23",
+    "ticker": "BNR.DE",
+    "composite": 0.6
+  },
+  {
     "date": "2026-09-07",
     "ticker": "HEI.DE",
     "composite": 28.5
@@ -25360,6 +25710,11 @@
     "composite": 15.7
   },
   {
+    "date": "2026-09-23",
+    "ticker": "HEI.DE",
+    "composite": 15.7
+  },
+  {
     "date": "2026-09-07",
     "ticker": "VNA.DE",
     "composite": -1.9
@@ -25648,6 +26003,11 @@
     "date": "2026-09-22",
     "ticker": "VNA.DE",
     "composite": 6.0
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "VNA.DE",
+    "composite": 5.8
   },
   {
     "date": "2026-09-23",
@@ -25965,6 +26325,11 @@
     "composite": -44.3
   },
   {
+    "date": "2026-09-23",
+    "ticker": "BMW.DE",
+    "composite": -49.6
+  },
+  {
     "date": "2026-09-07",
     "ticker": "ENR.DE",
     "composite": 72.5
@@ -26258,6 +26623,11 @@
     "date": "2026-09-23",
     "ticker": "ENR.DE",
     "composite": 71.6
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "ENR.DE",
+    "composite": 71.5
   },
   {
     "date": "2026-09-23",
@@ -26593,6 +26963,11 @@
     "date": "2026-09-23",
     "ticker": "G1A.DE",
     "composite": 65.5
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "G1A.DE",
+    "composite": 61.6
   },
   {
     "date": "2026-09-07",
@@ -26895,6 +27270,11 @@
     "composite": 82.9
   },
   {
+    "date": "2026-09-23",
+    "ticker": "HNR1.DE",
+    "composite": 82.9
+  },
+  {
     "date": "2026-09-08",
     "ticker": "FME.DE",
     "composite": 25.3
@@ -27165,6 +27545,11 @@
     "composite": 14.7
   },
   {
+    "date": "2026-09-23",
+    "ticker": "FME.DE",
+    "composite": 14.4
+  },
+  {
     "date": "2026-09-08",
     "ticker": "PAH3.DE",
     "composite": 11.2
@@ -27433,6 +27818,11 @@
     "date": "2026-09-23",
     "ticker": "PAH3.DE",
     "composite": -23.8
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "PAH3.DE",
+    "composite": -25.1
   },
   {
     "date": "2026-09-08",
@@ -27705,6 +28095,11 @@
     "composite": 73.0
   },
   {
+    "date": "2026-09-23",
+    "ticker": "G24.DE",
+    "composite": 73.0
+  },
+  {
     "date": "2026-09-09",
     "ticker": "ADBE",
     "composite": 79.3
@@ -27925,6 +28320,11 @@
     "composite": 78.0
   },
   {
+    "date": "2026-09-23",
+    "ticker": "ADBE",
+    "composite": 74.9
+  },
+  {
     "date": "2026-09-09",
     "ticker": "AMD",
     "composite": 28.0
@@ -28126,6 +28526,11 @@
   },
   {
     "date": "2026-09-22",
+    "ticker": "AMD",
+    "composite": 38.0
+  },
+  {
+    "date": "2026-09-23",
     "ticker": "AMD",
     "composite": 38.0
   },
@@ -28365,6 +28770,11 @@
     "composite": 46.2
   },
   {
+    "date": "2026-09-23",
+    "ticker": "ABNB",
+    "composite": 45.8
+  },
+  {
     "date": "2026-09-09",
     "ticker": "ALNY",
     "composite": 69.1
@@ -28568,6 +28978,11 @@
     "date": "2026-09-22",
     "ticker": "ALNY",
     "composite": 75.6
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "ALNY",
+    "composite": 73.9
   },
   {
     "date": "2026-09-23",
@@ -28805,6 +29220,11 @@
     "composite": 59.7
   },
   {
+    "date": "2026-09-23",
+    "ticker": "GOOGL",
+    "composite": 59.6
+  },
+  {
     "date": "2026-09-09",
     "ticker": "GOOG",
     "composite": 59.1
@@ -29018,6 +29438,11 @@
     "date": "2026-09-23",
     "ticker": "GOOG",
     "composite": 60.7
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "GOOG",
+    "composite": 59.5
   },
   {
     "date": "2026-09-23",
@@ -29245,6 +29670,11 @@
     "composite": 62.2
   },
   {
+    "date": "2026-09-23",
+    "ticker": "AMZN",
+    "composite": 64.0
+  },
+  {
     "date": "2026-09-09",
     "ticker": "AEP",
     "composite": 7.2
@@ -29458,6 +29888,11 @@
     "date": "2026-09-23",
     "ticker": "AEP",
     "composite": 8.0
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "AEP",
+    "composite": 7.8
   },
   {
     "date": "2026-09-23",
@@ -29685,6 +30120,11 @@
     "composite": 62.6
   },
   {
+    "date": "2026-09-23",
+    "ticker": "AMGN",
+    "composite": 62.5
+  },
+  {
     "date": "2026-09-09",
     "ticker": "ADI",
     "composite": -6.6
@@ -29898,6 +30338,11 @@
     "date": "2026-09-23",
     "ticker": "ADI",
     "composite": -0.3
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "ADI",
+    "composite": -2.5
   },
   {
     "date": "2026-09-23",
@@ -30125,6 +30570,11 @@
     "composite": 53.6
   },
   {
+    "date": "2026-09-23",
+    "ticker": "AAPL",
+    "composite": 53.6
+  },
+  {
     "date": "2026-09-09",
     "ticker": "AMAT",
     "composite": 51.8
@@ -30345,6 +30795,11 @@
     "composite": 61.5
   },
   {
+    "date": "2026-09-23",
+    "ticker": "AMAT",
+    "composite": 61.4
+  },
+  {
     "date": "2026-09-09",
     "ticker": "APP",
     "composite": 65.7
@@ -30558,6 +31013,11 @@
     "date": "2026-09-23",
     "ticker": "APP",
     "composite": 58.2
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "APP",
+    "composite": 57.4
   },
   {
     "date": "2026-09-23",
@@ -30785,6 +31245,11 @@
     "composite": 36.9
   },
   {
+    "date": "2026-09-23",
+    "ticker": "ARM",
+    "composite": 36.9
+  },
+  {
     "date": "2026-09-09",
     "ticker": "ALAB",
     "composite": 27.2
@@ -30998,6 +31463,11 @@
     "date": "2026-09-23",
     "ticker": "ALAB",
     "composite": 32.2
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "ALAB",
+    "composite": 30.5
   },
   {
     "date": "2026-09-23",
@@ -31225,6 +31695,11 @@
     "composite": 78.6
   },
   {
+    "date": "2026-09-23",
+    "ticker": "ADSK",
+    "composite": 78.6
+  },
+  {
     "date": "2026-09-09",
     "ticker": "ADP",
     "composite": 67.3
@@ -31438,6 +31913,11 @@
     "date": "2026-09-23",
     "ticker": "ADP",
     "composite": 67.4
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "ADP",
+    "composite": 67.3
   },
   {
     "date": "2026-09-09",
@@ -31655,6 +32135,11 @@
     "composite": -18.2
   },
   {
+    "date": "2026-09-23",
+    "ticker": "AXON",
+    "composite": -18.3
+  },
+  {
     "date": "2026-09-09",
     "ticker": "BKR",
     "composite": 54.2
@@ -31868,6 +32353,11 @@
     "date": "2026-09-23",
     "ticker": "BKR",
     "composite": 59.4
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "BKR",
+    "composite": 57.1
   },
   {
     "date": "2026-09-23",
@@ -32095,6 +32585,11 @@
     "composite": 4.0
   },
   {
+    "date": "2026-09-23",
+    "ticker": "BKNG",
+    "composite": 4.0
+  },
+  {
     "date": "2026-09-09",
     "ticker": "AVGO",
     "composite": 47.1
@@ -32313,6 +32808,11 @@
     "date": "2026-09-23",
     "ticker": "AVGO",
     "composite": 38.2
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "AVGO",
+    "composite": 38.3
   },
   {
     "date": "2026-09-09",
@@ -32535,6 +33035,11 @@
     "composite": 76.8
   },
   {
+    "date": "2026-09-23",
+    "ticker": "CDNS",
+    "composite": 76.5
+  },
+  {
     "date": "2026-09-09",
     "ticker": "CTAS",
     "composite": 64.2
@@ -32753,6 +33258,11 @@
     "date": "2026-09-23",
     "ticker": "CTAS",
     "composite": 72.5
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "CTAS",
+    "composite": 72.0
   },
   {
     "date": "2026-09-09",
@@ -32975,6 +33485,11 @@
     "composite": 46.9
   },
   {
+    "date": "2026-09-23",
+    "ticker": "CSCO",
+    "composite": 46.8
+  },
+  {
     "date": "2026-09-09",
     "ticker": "CCEP",
     "composite": 51.9
@@ -33188,6 +33703,11 @@
     "date": "2026-09-23",
     "ticker": "CCEP",
     "composite": 47.4
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "CCEP",
+    "composite": 46.8
   },
   {
     "date": "2026-09-23",
@@ -33415,6 +33935,11 @@
     "composite": 58.2
   },
   {
+    "date": "2026-09-23",
+    "ticker": "CMCSA",
+    "composite": 58.1
+  },
+  {
     "date": "2026-09-09",
     "ticker": "CEG",
     "composite": 51.9
@@ -33628,6 +34153,11 @@
     "date": "2026-09-23",
     "ticker": "CEG",
     "composite": 56.6
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "CEG",
+    "composite": 57.0
   },
   {
     "date": "2026-09-23",
@@ -33855,6 +34385,11 @@
     "composite": 62.3
   },
   {
+    "date": "2026-09-23",
+    "ticker": "CPRT",
+    "composite": 62.7
+  },
+  {
     "date": "2026-09-09",
     "ticker": "CRWV",
     "composite": -48.9
@@ -34068,6 +34603,11 @@
     "date": "2026-09-23",
     "ticker": "CRWV",
     "composite": -41.6
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "CRWV",
+    "composite": -41.0
   },
   {
     "date": "2026-09-23",
@@ -34295,6 +34835,11 @@
     "composite": 63.5
   },
   {
+    "date": "2026-09-23",
+    "ticker": "COST",
+    "composite": 63.5
+  },
+  {
     "date": "2026-09-09",
     "ticker": "CRWD",
     "composite": 10.0
@@ -34508,6 +35053,11 @@
     "date": "2026-09-23",
     "ticker": "CRWD",
     "composite": 4.0
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "CRWD",
+    "composite": 8.0
   },
   {
     "date": "2026-09-23",
@@ -34735,6 +35285,11 @@
     "composite": 5.3
   },
   {
+    "date": "2026-09-23",
+    "ticker": "CSX",
+    "composite": 5.3
+  },
+  {
     "date": "2026-09-09",
     "ticker": "DDOG",
     "composite": 4.2
@@ -34938,6 +35493,11 @@
     "date": "2026-09-22",
     "ticker": "DDOG",
     "composite": 10.2
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "DDOG",
+    "composite": 11.7
   },
   {
     "date": "2026-09-23",
@@ -35175,6 +35735,11 @@
     "composite": 72.5
   },
   {
+    "date": "2026-09-23",
+    "ticker": "DXCM",
+    "composite": 72.5
+  },
+  {
     "date": "2026-09-09",
     "ticker": "FANG",
     "composite": -15.7
@@ -35393,6 +35958,11 @@
     "date": "2026-09-23",
     "ticker": "FANG",
     "composite": -28.7
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "FANG",
+    "composite": -28.6
   },
   {
     "date": "2026-09-09",
@@ -35615,6 +36185,11 @@
     "composite": 25.1
   },
   {
+    "date": "2026-09-23",
+    "ticker": "DASH",
+    "composite": 24.8
+  },
+  {
     "date": "2026-09-09",
     "ticker": "EXC",
     "composite": 5.4
@@ -35828,6 +36403,11 @@
     "date": "2026-09-23",
     "ticker": "EXC",
     "composite": 1.0
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "EXC",
+    "composite": 0.5
   },
   {
     "date": "2026-09-23",
@@ -36055,6 +36635,11 @@
     "composite": 64.9
   },
   {
+    "date": "2026-09-23",
+    "ticker": "FAST",
+    "composite": 65.0
+  },
+  {
     "date": "2026-09-09",
     "ticker": "FER",
     "composite": 36.2
@@ -36268,6 +36853,11 @@
     "date": "2026-09-23",
     "ticker": "FER",
     "composite": 45.6
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "FER",
+    "composite": 45.4
   },
   {
     "date": "2026-09-23",
@@ -36495,6 +37085,11 @@
     "composite": 32.3
   },
   {
+    "date": "2026-09-23",
+    "ticker": "FTNT",
+    "composite": 32.3
+  },
+  {
     "date": "2026-09-09",
     "ticker": "GEHC",
     "composite": 42.6
@@ -36708,6 +37303,11 @@
     "date": "2026-09-23",
     "ticker": "GEHC",
     "composite": 50.2
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "GEHC",
+    "composite": 50.6
   },
   {
     "date": "2026-09-23",
@@ -36935,6 +37535,11 @@
     "composite": 64.1
   },
   {
+    "date": "2026-09-23",
+    "ticker": "GILD",
+    "composite": 64.1
+  },
+  {
     "date": "2026-09-09",
     "ticker": "HONA",
     "composite": 45.5
@@ -37148,6 +37753,11 @@
     "date": "2026-09-23",
     "ticker": "HONA",
     "composite": 52.5
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "HONA",
+    "composite": 51.1
   },
   {
     "date": "2026-09-23",
@@ -37375,6 +37985,11 @@
     "composite": 47.8
   },
   {
+    "date": "2026-09-23",
+    "ticker": "HON",
+    "composite": 47.9
+  },
+  {
     "date": "2026-09-09",
     "ticker": "IDXX",
     "composite": 58.4
@@ -37595,6 +38210,11 @@
     "composite": 63.9
   },
   {
+    "date": "2026-09-23",
+    "ticker": "IDXX",
+    "composite": 64.0
+  },
+  {
     "date": "2026-09-09",
     "ticker": "INTC",
     "composite": -48.4
@@ -37808,6 +38428,11 @@
     "date": "2026-09-23",
     "ticker": "INTC",
     "composite": -46.4
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "INTC",
+    "composite": -50.1
   },
   {
     "date": "2026-09-23",
@@ -38035,6 +38660,11 @@
     "composite": 78.4
   },
   {
+    "date": "2026-09-23",
+    "ticker": "INTU",
+    "composite": 78.4
+  },
+  {
     "date": "2026-09-09",
     "ticker": "ISRG",
     "composite": 60.0
@@ -38253,6 +38883,11 @@
     "date": "2026-09-23",
     "ticker": "ISRG",
     "composite": 45.9
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "ISRG",
+    "composite": 45.3
   },
   {
     "date": "2026-09-09",
@@ -38475,6 +39110,11 @@
     "composite": 34.6
   },
   {
+    "date": "2026-09-23",
+    "ticker": "KDP",
+    "composite": 34.7
+  },
+  {
     "date": "2026-09-09",
     "ticker": "KLAC",
     "composite": 58.7
@@ -38695,6 +39335,11 @@
     "composite": 68.9
   },
   {
+    "date": "2026-09-23",
+    "ticker": "KLAC",
+    "composite": 69.0
+  },
+  {
     "date": "2026-09-09",
     "ticker": "KHC",
     "composite": -10.5
@@ -38908,6 +39553,11 @@
     "date": "2026-09-23",
     "ticker": "KHC",
     "composite": -25.9
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "KHC",
+    "composite": -26.6
   },
   {
     "date": "2026-09-23",
@@ -39135,6 +39785,11 @@
     "composite": 70.7
   },
   {
+    "date": "2026-09-23",
+    "ticker": "LRCX",
+    "composite": 70.6
+  },
+  {
     "date": "2026-09-09",
     "ticker": "LIN",
     "composite": 41.1
@@ -39348,6 +40003,11 @@
     "date": "2026-09-23",
     "ticker": "LIN",
     "composite": 44.8
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "LIN",
+    "composite": 45.4
   },
   {
     "date": "2026-09-23",
@@ -39575,6 +40235,11 @@
     "composite": -13.3
   },
   {
+    "date": "2026-09-23",
+    "ticker": "LITE",
+    "composite": -15.3
+  },
+  {
     "date": "2026-09-09",
     "ticker": "MAR",
     "composite": 31.6
@@ -39788,6 +40453,11 @@
     "date": "2026-09-23",
     "ticker": "MAR",
     "composite": 42.3
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "MAR",
+    "composite": 43.1
   },
   {
     "date": "2026-09-23",
@@ -40015,6 +40685,11 @@
     "composite": 57.6
   },
   {
+    "date": "2026-09-23",
+    "ticker": "MRVL",
+    "composite": 57.6
+  },
+  {
     "date": "2026-09-09",
     "ticker": "MELI",
     "composite": 68.3
@@ -40228,6 +40903,11 @@
     "date": "2026-09-23",
     "ticker": "MELI",
     "composite": 72.1
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "MELI",
+    "composite": 71.2
   },
   {
     "date": "2026-09-23",
@@ -40455,6 +41135,11 @@
     "composite": 69.0
   },
   {
+    "date": "2026-09-23",
+    "ticker": "META",
+    "composite": 64.6
+  },
+  {
     "date": "2026-09-09",
     "ticker": "MCHP",
     "composite": -43.6
@@ -40668,6 +41353,11 @@
     "date": "2026-09-23",
     "ticker": "MCHP",
     "composite": -33.3
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "MCHP",
+    "composite": -33.1
   },
   {
     "date": "2026-09-23",
@@ -40895,6 +41585,11 @@
     "composite": 38.3
   },
   {
+    "date": "2026-09-23",
+    "ticker": "MU",
+    "composite": 38.3
+  },
+  {
     "date": "2026-09-09",
     "ticker": "MSFT",
     "composite": 67.5
@@ -41113,6 +41808,11 @@
     "date": "2026-09-23",
     "ticker": "MSFT",
     "composite": 69.2
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "MSFT",
+    "composite": 69.1
   },
   {
     "date": "2026-09-09",
@@ -41335,6 +42035,11 @@
     "composite": -3.6
   },
   {
+    "date": "2026-09-23",
+    "ticker": "MSTR",
+    "composite": -3.5
+  },
+  {
     "date": "2026-09-09",
     "ticker": "MDLZ",
     "composite": 28.7
@@ -41553,6 +42258,11 @@
     "date": "2026-09-23",
     "ticker": "MDLZ",
     "composite": 27.0
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "MDLZ",
+    "composite": 37.1
   },
   {
     "date": "2026-09-09",
@@ -41775,6 +42485,11 @@
     "composite": 76.3
   },
   {
+    "date": "2026-09-23",
+    "ticker": "MPWR",
+    "composite": 76.3
+  },
+  {
     "date": "2026-09-09",
     "ticker": "MNST",
     "composite": 71.2
@@ -41988,6 +42703,11 @@
     "date": "2026-09-23",
     "ticker": "MNST",
     "composite": 56.8
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "MNST",
+    "composite": 56.5
   },
   {
     "date": "2026-09-23",
@@ -42215,6 +42935,11 @@
     "composite": -23.1
   },
   {
+    "date": "2026-09-23",
+    "ticker": "NBIS",
+    "composite": -22.4
+  },
+  {
     "date": "2026-09-09",
     "ticker": "NFLX",
     "composite": 52.6
@@ -42435,6 +43160,11 @@
     "composite": 51.6
   },
   {
+    "date": "2026-09-23",
+    "ticker": "NFLX",
+    "composite": 59.6
+  },
+  {
     "date": "2026-09-09",
     "ticker": "NVDA",
     "composite": 80.4
@@ -42648,6 +43378,11 @@
     "date": "2026-09-23",
     "ticker": "NVDA",
     "composite": 78.2
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "NVDA",
+    "composite": 81.5
   },
   {
     "date": "2026-09-23",
@@ -42875,6 +43610,11 @@
     "composite": 10.1
   },
   {
+    "date": "2026-09-23",
+    "ticker": "NXPI",
+    "composite": 10.1
+  },
+  {
     "date": "2026-09-09",
     "ticker": "ORLY",
     "composite": 38.8
@@ -43095,6 +43835,11 @@
     "composite": 49.1
   },
   {
+    "date": "2026-09-23",
+    "ticker": "ORLY",
+    "composite": 49.0
+  },
+  {
     "date": "2026-09-09",
     "ticker": "ODFL",
     "composite": 39.3
@@ -43308,6 +44053,11 @@
     "date": "2026-09-23",
     "ticker": "ODFL",
     "composite": 33.3
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "ODFL",
+    "composite": 33.7
   },
   {
     "date": "2026-09-23",
@@ -43535,6 +44285,11 @@
     "composite": 17.7
   },
   {
+    "date": "2026-09-23",
+    "ticker": "PCAR",
+    "composite": 13.8
+  },
+  {
     "date": "2026-09-09",
     "ticker": "PLTR",
     "composite": 68.7
@@ -43748,6 +44503,11 @@
     "date": "2026-09-23",
     "ticker": "PLTR",
     "composite": 65.7
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "PLTR",
+    "composite": 77.4
   },
   {
     "date": "2026-09-23",
@@ -43975,6 +44735,11 @@
     "composite": 33.2
   },
   {
+    "date": "2026-09-23",
+    "ticker": "PANW",
+    "composite": 33.2
+  },
+  {
     "date": "2026-09-09",
     "ticker": "PAYX",
     "composite": 69.3
@@ -44193,6 +44958,11 @@
     "date": "2026-09-23",
     "ticker": "PAYX",
     "composite": 65.1
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "PAYX",
+    "composite": 66.9
   },
   {
     "date": "2026-09-09",
@@ -44415,6 +45185,11 @@
     "composite": 68.5
   },
   {
+    "date": "2026-09-23",
+    "ticker": "PYPL",
+    "composite": 68.4
+  },
+  {
     "date": "2026-09-09",
     "ticker": "PDD",
     "composite": 66.9
@@ -44628,6 +45403,11 @@
     "date": "2026-09-23",
     "ticker": "PDD",
     "composite": 67.3
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "PDD",
+    "composite": 72.3
   },
   {
     "date": "2026-09-23",
@@ -44855,6 +45635,11 @@
     "composite": 43.9
   },
   {
+    "date": "2026-09-23",
+    "ticker": "PEP",
+    "composite": 50.6
+  },
+  {
     "date": "2026-09-09",
     "ticker": "QCOM",
     "composite": 33.0
@@ -45068,6 +45853,11 @@
     "date": "2026-09-23",
     "ticker": "QCOM",
     "composite": 45.6
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "QCOM",
+    "composite": 39.8
   },
   {
     "date": "2026-09-23",
@@ -45295,6 +46085,11 @@
     "composite": 62.7
   },
   {
+    "date": "2026-09-23",
+    "ticker": "REGN",
+    "composite": 62.8
+  },
+  {
     "date": "2026-09-09",
     "ticker": "RKLB",
     "composite": -21.6
@@ -45515,6 +46310,11 @@
     "composite": -22.1
   },
   {
+    "date": "2026-09-23",
+    "ticker": "RKLB",
+    "composite": -16.4
+  },
+  {
     "date": "2026-09-09",
     "ticker": "ROP",
     "composite": 21.1
@@ -45728,6 +46528,11 @@
     "date": "2026-09-23",
     "ticker": "ROP",
     "composite": 16.0
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "ROP",
+    "composite": 16.1
   },
   {
     "date": "2026-09-23",
@@ -45955,6 +46760,11 @@
     "composite": 64.6
   },
   {
+    "date": "2026-09-23",
+    "ticker": "ROST",
+    "composite": 64.5
+  },
+  {
     "date": "2026-09-09",
     "ticker": "SNDK",
     "composite": 66.0
@@ -46168,6 +46978,11 @@
     "date": "2026-09-23",
     "ticker": "SNDK",
     "composite": 76.0
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "SNDK",
+    "composite": 70.0
   },
   {
     "date": "2026-09-23",
@@ -46395,6 +47210,11 @@
     "composite": 73.3
   },
   {
+    "date": "2026-09-23",
+    "ticker": "STX",
+    "composite": 73.3
+  },
+  {
     "date": "2026-09-09",
     "ticker": "SHOP",
     "composite": 31.4
@@ -46615,6 +47435,11 @@
     "composite": 36.0
   },
   {
+    "date": "2026-09-23",
+    "ticker": "SHOP",
+    "composite": 35.9
+  },
+  {
     "date": "2026-09-09",
     "ticker": "SPCX",
     "composite": -22.8
@@ -46833,6 +47658,11 @@
     "date": "2026-09-23",
     "ticker": "SPCX",
     "composite": -17.7
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "SPCX",
+    "composite": -17.9
   },
   {
     "date": "2026-09-09",
@@ -47055,6 +47885,11 @@
     "composite": 0.4
   },
   {
+    "date": "2026-09-23",
+    "ticker": "SBUX",
+    "composite": 0.5
+  },
+  {
     "date": "2026-09-09",
     "ticker": "SNPS",
     "composite": -13.3
@@ -47273,6 +48108,11 @@
     "date": "2026-09-23",
     "ticker": "SNPS",
     "composite": -5.2
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "SNPS",
+    "composite": -4.0
   },
   {
     "date": "2026-09-09",
@@ -47495,6 +48335,11 @@
     "composite": 36.5
   },
   {
+    "date": "2026-09-23",
+    "ticker": "TMUS",
+    "composite": 33.9
+  },
+  {
     "date": "2026-09-09",
     "ticker": "TTWO",
     "composite": -26.0
@@ -47715,6 +48560,11 @@
     "composite": -38.5
   },
   {
+    "date": "2026-09-23",
+    "ticker": "TTWO",
+    "composite": -38.6
+  },
+  {
     "date": "2026-09-09",
     "ticker": "TER",
     "composite": 35.8
@@ -47928,6 +48778,11 @@
     "date": "2026-09-23",
     "ticker": "TER",
     "composite": 43.6
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "TER",
+    "composite": 44.0
   },
   {
     "date": "2026-09-23",
@@ -48155,6 +49010,11 @@
     "composite": -14.9
   },
   {
+    "date": "2026-09-23",
+    "ticker": "TSLA",
+    "composite": -14.9
+  },
+  {
     "date": "2026-09-09",
     "ticker": "TXN",
     "composite": 20.4
@@ -48375,6 +49235,11 @@
     "composite": 31.0
   },
   {
+    "date": "2026-09-23",
+    "ticker": "TXN",
+    "composite": 31.1
+  },
+  {
     "date": "2026-09-09",
     "ticker": "TRI",
     "composite": 50.2
@@ -48588,6 +49453,11 @@
     "date": "2026-09-23",
     "ticker": "TRI",
     "composite": 53.4
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "TRI",
+    "composite": 54.3
   },
   {
     "date": "2026-09-23",
@@ -48815,6 +49685,11 @@
     "composite": 54.7
   },
   {
+    "date": "2026-09-23",
+    "ticker": "VRTX",
+    "composite": 54.7
+  },
+  {
     "date": "2026-09-09",
     "ticker": "WMT",
     "composite": 46.7
@@ -49035,6 +49910,11 @@
     "composite": 50.1
   },
   {
+    "date": "2026-09-23",
+    "ticker": "WMT",
+    "composite": 50.2
+  },
+  {
     "date": "2026-09-09",
     "ticker": "WBD",
     "composite": -22.1
@@ -49248,6 +50128,11 @@
     "date": "2026-09-23",
     "ticker": "WBD",
     "composite": -28.7
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "WBD",
+    "composite": -20.1
   },
   {
     "date": "2026-09-23",
@@ -49475,6 +50360,11 @@
     "composite": 78.5
   },
   {
+    "date": "2026-09-23",
+    "ticker": "WDC",
+    "composite": 78.5
+  },
+  {
     "date": "2026-09-09",
     "ticker": "WDAY",
     "composite": 34.7
@@ -49678,6 +50568,11 @@
     "date": "2026-09-22",
     "ticker": "WDAY",
     "composite": 44.6
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "WDAY",
+    "composite": 43.4
   },
   {
     "date": "2026-09-23",
@@ -49915,6 +50810,11 @@
     "composite": -25.7
   },
   {
+    "date": "2026-09-23",
+    "ticker": "XEL",
+    "composite": -25.7
+  },
+  {
     "date": "2026-09-10",
     "ticker": "ASML",
     "composite": 80.3
@@ -50120,6 +51020,11 @@
     "composite": 71.1
   },
   {
+    "date": "2026-09-23",
+    "ticker": "ASML",
+    "composite": 71.1
+  },
+  {
     "date": "2026-09-10",
     "ticker": "MMM",
     "composite": 28.5
@@ -50313,6 +51218,11 @@
     "date": "2026-09-23",
     "ticker": "MMM",
     "composite": 30.3
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "MMM",
+    "composite": 31.1
   },
   {
     "date": "2026-09-23",
@@ -50520,6 +51430,11 @@
     "composite": -9.6
   },
   {
+    "date": "2026-09-23",
+    "ticker": "BA",
+    "composite": -12.2
+  },
+  {
     "date": "2026-09-10",
     "ticker": "CAT",
     "composite": 57.9
@@ -50720,6 +51635,11 @@
     "composite": 57.9
   },
   {
+    "date": "2026-09-23",
+    "ticker": "CAT",
+    "composite": 58.0
+  },
+  {
     "date": "2026-09-10",
     "ticker": "CVX",
     "composite": 3.1
@@ -50913,6 +51833,11 @@
     "date": "2026-09-23",
     "ticker": "CVX",
     "composite": -3.1
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "CVX",
+    "composite": -2.0
   },
   {
     "date": "2026-09-23",
@@ -51120,6 +52045,11 @@
     "composite": 48.5
   },
   {
+    "date": "2026-09-23",
+    "ticker": "KO",
+    "composite": 48.5
+  },
+  {
     "date": "2026-09-10",
     "ticker": "DIS",
     "composite": 30.1
@@ -51313,6 +52243,11 @@
     "date": "2026-09-23",
     "ticker": "DIS",
     "composite": 25.8
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "DIS",
+    "composite": 27.4
   },
   {
     "date": "2026-09-23",
@@ -51520,6 +52455,11 @@
     "composite": 54.8
   },
   {
+    "date": "2026-09-23",
+    "ticker": "GS",
+    "composite": 49.4
+  },
+  {
     "date": "2026-09-10",
     "ticker": "HD",
     "composite": 27.8
@@ -51718,6 +52658,11 @@
     "date": "2026-09-23",
     "ticker": "HD",
     "composite": 25.6
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "HD",
+    "composite": 25.5
   },
   {
     "date": "2026-09-10",
@@ -51920,6 +52865,11 @@
     "composite": 49.3
   },
   {
+    "date": "2026-09-23",
+    "ticker": "IBM",
+    "composite": 49.2
+  },
+  {
     "date": "2026-09-10",
     "ticker": "JNJ",
     "composite": 57.2
@@ -52118,6 +53068,11 @@
     "date": "2026-09-23",
     "ticker": "JNJ",
     "composite": 59.2
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "JNJ",
+    "composite": 60.2
   },
   {
     "date": "2026-09-10",
@@ -52320,6 +53275,11 @@
     "composite": 30.6
   },
   {
+    "date": "2026-09-23",
+    "ticker": "MCD",
+    "composite": 30.7
+  },
+  {
     "date": "2026-09-10",
     "ticker": "MRK",
     "composite": 70.6
@@ -52501,6 +53461,11 @@
   },
   {
     "date": "2026-09-22",
+    "ticker": "MRK",
+    "composite": 68.5
+  },
+  {
+    "date": "2026-09-23",
     "ticker": "MRK",
     "composite": 68.5
   },
@@ -52720,6 +53685,11 @@
     "composite": 32.2
   },
   {
+    "date": "2026-09-23",
+    "ticker": "NKE",
+    "composite": 27.5
+  },
+  {
     "date": "2026-09-10",
     "ticker": "PG",
     "composite": 50.1
@@ -52918,6 +53888,11 @@
     "date": "2026-09-23",
     "ticker": "PG",
     "composite": 51.0
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "PG",
+    "composite": 50.9
   },
   {
     "date": "2026-09-10",
@@ -53120,6 +54095,11 @@
     "composite": 62.6
   },
   {
+    "date": "2026-09-23",
+    "ticker": "CRM",
+    "composite": 62.7
+  },
+  {
     "date": "2026-09-10",
     "ticker": "SHW",
     "composite": 41.8
@@ -53320,6 +54300,11 @@
     "composite": 44.7
   },
   {
+    "date": "2026-09-23",
+    "ticker": "SHW",
+    "composite": 44.8
+  },
+  {
     "date": "2026-09-10",
     "ticker": "UNH",
     "composite": 27.7
@@ -53513,6 +54498,11 @@
     "date": "2026-09-23",
     "ticker": "UNH",
     "composite": 23.7
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "UNH",
+    "composite": 25.6
   },
   {
     "date": "2026-09-23",
@@ -53720,6 +54710,11 @@
     "composite": 71.6
   },
   {
+    "date": "2026-09-23",
+    "ticker": "V",
+    "composite": 71.6
+  },
+  {
     "date": "2026-09-10",
     "ticker": "AXP",
     "composite": 65.5
@@ -53908,6 +54903,11 @@
     "date": "2026-09-23",
     "ticker": "AXP",
     "composite": 66.3
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "AXP",
+    "composite": 65.4
   },
   {
     "date": "2026-09-23",
@@ -54110,6 +55110,11 @@
     "composite": 59.6
   },
   {
+    "date": "2026-09-23",
+    "ticker": "JPM",
+    "composite": 56.2
+  },
+  {
     "date": "2026-09-10",
     "ticker": "TRV",
     "composite": 63.7
@@ -54305,6 +55310,11 @@
     "composite": 63.0
   },
   {
+    "date": "2026-09-23",
+    "ticker": "TRV",
+    "composite": 62.9
+  },
+  {
     "date": "2026-09-12",
     "ticker": "ADM.L",
     "composite": 80.8
@@ -54458,6 +55468,11 @@
     "date": "2026-09-23",
     "ticker": "ADM.L",
     "composite": 69.1
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "ADM.L",
+    "composite": 68.6
   },
   {
     "date": "2026-09-23",
@@ -54625,6 +55640,11 @@
     "composite": 59.0
   },
   {
+    "date": "2026-09-23",
+    "ticker": "AAF.L",
+    "composite": 59.0
+  },
+  {
     "date": "2026-09-12",
     "ticker": "AAL.L",
     "composite": -31.9
@@ -54785,6 +55805,11 @@
     "composite": -29.7
   },
   {
+    "date": "2026-09-23",
+    "ticker": "AAL.L",
+    "composite": -28.4
+  },
+  {
     "date": "2026-09-12",
     "ticker": "ANTO.L",
     "composite": 36.1
@@ -54938,6 +55963,11 @@
     "date": "2026-09-23",
     "ticker": "ANTO.L",
     "composite": 47.5
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "ANTO.L",
+    "composite": 45.9
   },
   {
     "date": "2026-09-23",
@@ -55105,6 +56135,11 @@
     "composite": 6.6
   },
   {
+    "date": "2026-09-23",
+    "ticker": "ABF.L",
+    "composite": 6.6
+  },
+  {
     "date": "2026-09-12",
     "ticker": "AZN.L",
     "composite": 48.5
@@ -55258,6 +56293,11 @@
     "date": "2026-09-23",
     "ticker": "AZN.L",
     "composite": 66.6
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "AZN.L",
+    "composite": 66.5
   },
   {
     "date": "2026-09-23",
@@ -55425,6 +56465,11 @@
     "composite": 59.7
   },
   {
+    "date": "2026-09-23",
+    "ticker": "AUTO.L",
+    "composite": 59.7
+  },
+  {
     "date": "2026-09-12",
     "ticker": "AV.L",
     "composite": -14.3
@@ -55578,6 +56623,11 @@
     "date": "2026-09-23",
     "ticker": "AV.L",
     "composite": -23.5
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "AV.L",
+    "composite": -20.4
   },
   {
     "date": "2026-09-23",
@@ -55745,6 +56795,11 @@
     "composite": 54.5
   },
   {
+    "date": "2026-09-23",
+    "ticker": "BAB.L",
+    "composite": 54.5
+  },
+  {
     "date": "2026-09-12",
     "ticker": "BA.L",
     "composite": 61.4
@@ -55898,6 +56953,11 @@
     "date": "2026-09-23",
     "ticker": "BA.L",
     "composite": 63.7
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "BA.L",
+    "composite": 64.3
   },
   {
     "date": "2026-09-23",
@@ -56065,6 +57125,11 @@
     "composite": 42.0
   },
   {
+    "date": "2026-09-23",
+    "ticker": "BARC.L",
+    "composite": 42.0
+  },
+  {
     "date": "2026-09-12",
     "ticker": "BTRW.L",
     "composite": -40.0
@@ -56218,6 +57283,11 @@
     "date": "2026-09-23",
     "ticker": "BTRW.L",
     "composite": -34.8
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "BTRW.L",
+    "composite": -35.0
   },
   {
     "date": "2026-09-23",
@@ -56385,6 +57455,11 @@
     "composite": 64.0
   },
   {
+    "date": "2026-09-23",
+    "ticker": "BEZ.L",
+    "composite": 64.0
+  },
+  {
     "date": "2026-09-12",
     "ticker": "BP.L",
     "composite": 27.6
@@ -56538,6 +57613,11 @@
     "date": "2026-09-23",
     "ticker": "BP.L",
     "composite": 19.6
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "BP.L",
+    "composite": 20.1
   },
   {
     "date": "2026-09-23",
@@ -56705,6 +57785,11 @@
     "composite": 38.3
   },
   {
+    "date": "2026-09-23",
+    "ticker": "BATS.L",
+    "composite": 38.3
+  },
+  {
     "date": "2026-09-12",
     "ticker": "BLND.L",
     "composite": -15.1
@@ -56858,6 +57943,11 @@
     "date": "2026-09-23",
     "ticker": "BLND.L",
     "composite": -19.7
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "BLND.L",
+    "composite": -20.3
   },
   {
     "date": "2026-09-23",
@@ -57025,6 +58115,11 @@
     "composite": -13.2
   },
   {
+    "date": "2026-09-23",
+    "ticker": "BT-A.L",
+    "composite": -16.5
+  },
+  {
     "date": "2026-09-12",
     "ticker": "BNZL.L",
     "composite": 68.3
@@ -57178,6 +58273,11 @@
     "date": "2026-09-23",
     "ticker": "BNZL.L",
     "composite": 59.4
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "BNZL.L",
+    "composite": 58.6
   },
   {
     "date": "2026-09-23",
@@ -57345,6 +58445,11 @@
     "composite": -44.2
   },
   {
+    "date": "2026-09-23",
+    "ticker": "BRBY.L",
+    "composite": -44.2
+  },
+  {
     "date": "2026-09-12",
     "ticker": "CNA.L",
     "composite": 31.8
@@ -57498,6 +58603,11 @@
     "date": "2026-09-23",
     "ticker": "CNA.L",
     "composite": 46.5
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "CNA.L",
+    "composite": 46.3
   },
   {
     "date": "2026-09-23",
@@ -57665,6 +58775,11 @@
     "composite": 63.4
   },
   {
+    "date": "2026-09-23",
+    "ticker": "CCH.L",
+    "composite": 63.4
+  },
+  {
     "date": "2026-09-12",
     "ticker": "CPG.L",
     "composite": 55.1
@@ -57825,6 +58940,11 @@
     "composite": 53.7
   },
   {
+    "date": "2026-09-23",
+    "ticker": "CPG.L",
+    "composite": 53.7
+  },
+  {
     "date": "2026-09-12",
     "ticker": "CCC.L",
     "composite": 50.0
@@ -57966,6 +59086,11 @@
   },
   {
     "date": "2026-09-22",
+    "ticker": "CCC.L",
+    "composite": 54.0
+  },
+  {
+    "date": "2026-09-23",
     "ticker": "CCC.L",
     "composite": 54.0
   },
@@ -58145,6 +59270,11 @@
     "composite": 39.7
   },
   {
+    "date": "2026-09-23",
+    "ticker": "CTEC.L",
+    "composite": 39.7
+  },
+  {
     "date": "2026-09-12",
     "ticker": "CRDA.L",
     "composite": -33.6
@@ -58305,6 +59435,11 @@
     "composite": -31.3
   },
   {
+    "date": "2026-09-23",
+    "ticker": "CRDA.L",
+    "composite": -33.3
+  },
+  {
     "date": "2026-09-12",
     "ticker": "DCC.L",
     "composite": 16.7
@@ -58458,6 +59593,11 @@
     "date": "2026-09-23",
     "ticker": "DCC.L",
     "composite": 26.3
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "DCC.L",
+    "composite": 19.6
   },
   {
     "date": "2026-09-23",
@@ -58625,6 +59765,11 @@
     "composite": 20.4
   },
   {
+    "date": "2026-09-23",
+    "ticker": "DGE.L",
+    "composite": 20.8
+  },
+  {
     "date": "2026-09-12",
     "ticker": "DPLM.L",
     "composite": 71.6
@@ -58778,6 +59923,11 @@
     "date": "2026-09-23",
     "ticker": "DPLM.L",
     "composite": 60.1
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "DPLM.L",
+    "composite": 62.1
   },
   {
     "date": "2026-09-23",
@@ -58945,6 +60095,11 @@
     "composite": 73.0
   },
   {
+    "date": "2026-09-23",
+    "ticker": "EDV.L",
+    "composite": 73.0
+  },
+  {
     "date": "2026-09-12",
     "ticker": "ENT.L",
     "composite": -47.8
@@ -59088,6 +60243,11 @@
     "date": "2026-09-22",
     "ticker": "ENT.L",
     "composite": -50.7
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "ENT.L",
+    "composite": -51.7
   },
   {
     "date": "2026-09-23",
@@ -59265,6 +60425,11 @@
     "composite": 68.5
   },
   {
+    "date": "2026-09-23",
+    "ticker": "EXPN.L",
+    "composite": 68.5
+  },
+  {
     "date": "2026-09-12",
     "ticker": "FRES.L",
     "composite": 58.1
@@ -59423,6 +60588,11 @@
     "date": "2026-09-23",
     "ticker": "FRES.L",
     "composite": 63.4
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "FRES.L",
+    "composite": 61.1
   },
   {
     "date": "2026-09-12",
@@ -59585,6 +60755,11 @@
     "composite": 62.0
   },
   {
+    "date": "2026-09-23",
+    "ticker": "GAW.L",
+    "composite": 65.4
+  },
+  {
     "date": "2026-09-12",
     "ticker": "GLEN.L",
     "composite": -51.6
@@ -59738,6 +60913,11 @@
     "date": "2026-09-23",
     "ticker": "GLEN.L",
     "composite": -49.1
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "GLEN.L",
+    "composite": -52.8
   },
   {
     "date": "2026-09-23",
@@ -59905,6 +61085,11 @@
     "composite": 37.0
   },
   {
+    "date": "2026-09-23",
+    "ticker": "GSK.L",
+    "composite": 37.0
+  },
+  {
     "date": "2026-09-12",
     "ticker": "HLN.L",
     "composite": 47.0
@@ -60053,6 +61238,11 @@
     "date": "2026-09-23",
     "ticker": "HLN.L",
     "composite": 50.1
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "HLN.L",
+    "composite": 50.0
   },
   {
     "date": "2026-09-23",
@@ -60225,6 +61415,11 @@
     "composite": 66.0
   },
   {
+    "date": "2026-09-23",
+    "ticker": "HLMA.L",
+    "composite": 58.2
+  },
+  {
     "date": "2026-09-12",
     "ticker": "HSX.L",
     "composite": 66.1
@@ -60385,6 +61580,11 @@
     "composite": 68.6
   },
   {
+    "date": "2026-09-23",
+    "ticker": "HSX.L",
+    "composite": 63.2
+  },
+  {
     "date": "2026-09-12",
     "ticker": "HWDN.L",
     "composite": 35.9
@@ -60538,6 +61738,11 @@
     "date": "2026-09-23",
     "ticker": "HWDN.L",
     "composite": 37.7
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "HWDN.L",
+    "composite": 37.5
   },
   {
     "date": "2026-09-23",
@@ -60705,6 +61910,11 @@
     "composite": 65.9
   },
   {
+    "date": "2026-09-23",
+    "ticker": "HSBA.L",
+    "composite": 62.5
+  },
+  {
     "date": "2026-09-12",
     "ticker": "IGG.L",
     "composite": 35.4
@@ -60858,6 +62068,11 @@
     "date": "2026-09-23",
     "ticker": "IGG.L",
     "composite": 28.5
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "IGG.L",
+    "composite": 27.8
   },
   {
     "date": "2026-09-23",
@@ -61025,6 +62240,11 @@
     "composite": 61.6
   },
   {
+    "date": "2026-09-23",
+    "ticker": "IHG.L",
+    "composite": 61.6
+  },
+  {
     "date": "2026-09-12",
     "ticker": "IMI.L",
     "composite": 53.7
@@ -61183,6 +62403,11 @@
     "date": "2026-09-23",
     "ticker": "IMI.L",
     "composite": 58.3
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "IMI.L",
+    "composite": 60.0
   },
   {
     "date": "2026-09-12",
@@ -61345,6 +62570,11 @@
     "composite": 24.9
   },
   {
+    "date": "2026-09-23",
+    "ticker": "IMB.L",
+    "composite": 24.9
+  },
+  {
     "date": "2026-09-12",
     "ticker": "INF.L",
     "composite": -25.6
@@ -61493,6 +62723,11 @@
     "date": "2026-09-23",
     "ticker": "INF.L",
     "composite": -15.1
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "INF.L",
+    "composite": -10.8
   },
   {
     "date": "2026-09-23",
@@ -61665,6 +62900,11 @@
     "composite": 61.4
   },
   {
+    "date": "2026-09-23",
+    "ticker": "IAG.L",
+    "composite": 61.4
+  },
+  {
     "date": "2026-09-12",
     "ticker": "ITRK.L",
     "composite": 52.0
@@ -61825,6 +63065,11 @@
     "composite": 48.2
   },
   {
+    "date": "2026-09-23",
+    "ticker": "ITRK.L",
+    "composite": 51.2
+  },
+  {
     "date": "2026-09-12",
     "ticker": "INVP.L",
     "composite": 40.0
@@ -61978,6 +63223,11 @@
     "date": "2026-09-23",
     "ticker": "INVP.L",
     "composite": 37.9
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "INVP.L",
+    "composite": 37.5
   },
   {
     "date": "2026-09-23",
@@ -62145,6 +63395,11 @@
     "composite": 43.1
   },
   {
+    "date": "2026-09-23",
+    "ticker": "JD.L",
+    "composite": 43.1
+  },
+  {
     "date": "2026-09-12",
     "ticker": "KGF.L",
     "composite": -13.7
@@ -62298,6 +63553,11 @@
     "date": "2026-09-23",
     "ticker": "KGF.L",
     "composite": -7.1
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "KGF.L",
+    "composite": -10.3
   },
   {
     "date": "2026-09-23",
@@ -62465,6 +63725,11 @@
     "composite": -12.9
   },
   {
+    "date": "2026-09-23",
+    "ticker": "LAND.L",
+    "composite": -12.9
+  },
+  {
     "date": "2026-09-12",
     "ticker": "LGEN.L",
     "composite": 3.1
@@ -62618,6 +63883,11 @@
     "date": "2026-09-23",
     "ticker": "LGEN.L",
     "composite": -5.6
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "LGEN.L",
+    "composite": -3.4
   },
   {
     "date": "2026-09-23",
@@ -62785,6 +64055,11 @@
     "composite": 57.4
   },
   {
+    "date": "2026-09-23",
+    "ticker": "BGEO.L",
+    "composite": 57.4
+  },
+  {
     "date": "2026-09-12",
     "ticker": "LLOY.L",
     "composite": 29.6
@@ -62943,6 +64218,11 @@
     "date": "2026-09-23",
     "ticker": "LLOY.L",
     "composite": 46.2
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "LLOY.L",
+    "composite": 42.9
   },
   {
     "date": "2026-09-12",
@@ -63105,6 +64385,11 @@
     "composite": 19.8
   },
   {
+    "date": "2026-09-23",
+    "ticker": "LSEG.L",
+    "composite": 26.5
+  },
+  {
     "date": "2026-09-12",
     "ticker": "LMP.L",
     "composite": 4.6
@@ -63258,6 +64543,11 @@
     "date": "2026-09-23",
     "ticker": "LMP.L",
     "composite": -6.1
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "LMP.L",
+    "composite": -6.5
   },
   {
     "date": "2026-09-23",
@@ -63425,6 +64715,11 @@
     "composite": 3.0
   },
   {
+    "date": "2026-09-23",
+    "ticker": "MNG.L",
+    "composite": 3.1
+  },
+  {
     "date": "2026-09-12",
     "ticker": "MKS.L",
     "composite": -11.0
@@ -63578,6 +64873,11 @@
     "date": "2026-09-23",
     "ticker": "MKS.L",
     "composite": 7.3
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "MKS.L",
+    "composite": 7.1
   },
   {
     "date": "2026-09-23",
@@ -63745,6 +65045,11 @@
     "composite": 32.0
   },
   {
+    "date": "2026-09-23",
+    "ticker": "MRO.L",
+    "composite": 32.0
+  },
+  {
     "date": "2026-09-12",
     "ticker": "MTLN.L",
     "composite": 6.0
@@ -63893,6 +65198,11 @@
     "date": "2026-09-23",
     "ticker": "MTLN.L",
     "composite": 7.5
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "MTLN.L",
+    "composite": 8.5
   },
   {
     "date": "2026-09-23",
@@ -64065,6 +65375,11 @@
     "composite": -10.7
   },
   {
+    "date": "2026-09-23",
+    "ticker": "NG.L",
+    "composite": -10.7
+  },
+  {
     "date": "2026-09-12",
     "ticker": "NWG.L",
     "composite": 63.1
@@ -64218,6 +65533,11 @@
     "date": "2026-09-23",
     "ticker": "NWG.L",
     "composite": 67.9
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "NWG.L",
+    "composite": 67.7
   },
   {
     "date": "2026-09-23",
@@ -64385,6 +65705,11 @@
     "composite": 62.6
   },
   {
+    "date": "2026-09-23",
+    "ticker": "NXT.L",
+    "composite": 62.6
+  },
+  {
     "date": "2026-09-12",
     "ticker": "PSON.L",
     "composite": 42.4
@@ -64538,6 +65863,11 @@
     "date": "2026-09-23",
     "ticker": "PSON.L",
     "composite": 38.3
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "PSON.L",
+    "composite": 38.7
   },
   {
     "date": "2026-09-23",
@@ -64705,6 +66035,11 @@
     "composite": -23.5
   },
   {
+    "date": "2026-09-23",
+    "ticker": "PSN.L",
+    "composite": -23.5
+  },
+  {
     "date": "2026-09-12",
     "ticker": "PRU.L",
     "composite": 46.3
@@ -64865,6 +66200,11 @@
     "composite": 40.2
   },
   {
+    "date": "2026-09-23",
+    "ticker": "PRU.L",
+    "composite": 42.7
+  },
+  {
     "date": "2026-09-12",
     "ticker": "RKT.L",
     "composite": 48.5
@@ -65018,6 +66358,11 @@
     "date": "2026-09-23",
     "ticker": "RKT.L",
     "composite": 36.1
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "RKT.L",
+    "composite": 35.6
   },
   {
     "date": "2026-09-23",
@@ -65185,6 +66530,11 @@
     "composite": 54.2
   },
   {
+    "date": "2026-09-23",
+    "ticker": "REL.L",
+    "composite": 54.2
+  },
+  {
     "date": "2026-09-12",
     "ticker": "RTO.L",
     "composite": -1.1
@@ -65338,6 +66688,11 @@
     "date": "2026-09-23",
     "ticker": "RTO.L",
     "composite": 8.4
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "RTO.L",
+    "composite": 8.5
   },
   {
     "date": "2026-09-23",
@@ -65505,6 +66860,11 @@
     "composite": 33.8
   },
   {
+    "date": "2026-09-23",
+    "ticker": "RIO.L",
+    "composite": 33.8
+  },
+  {
     "date": "2026-09-12",
     "ticker": "RR.L",
     "composite": 55.2
@@ -65658,6 +67018,11 @@
     "date": "2026-09-23",
     "ticker": "RR.L",
     "composite": 55.8
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "RR.L",
+    "composite": 56.3
   },
   {
     "date": "2026-09-23",
@@ -65825,6 +67190,11 @@
     "composite": 69.7
   },
   {
+    "date": "2026-09-23",
+    "ticker": "SGE.L",
+    "composite": 69.7
+  },
+  {
     "date": "2026-09-12",
     "ticker": "SBRY.L",
     "composite": 0.3
@@ -65978,6 +67348,11 @@
     "date": "2026-09-23",
     "ticker": "SBRY.L",
     "composite": 14.3
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "SBRY.L",
+    "composite": 14.0
   },
   {
     "date": "2026-09-23",
@@ -66145,6 +67520,11 @@
     "composite": 72.6
   },
   {
+    "date": "2026-09-23",
+    "ticker": "SDR.L",
+    "composite": 72.6
+  },
+  {
     "date": "2026-09-12",
     "ticker": "SGRO.L",
     "composite": -7.3
@@ -66298,6 +67678,11 @@
     "date": "2026-09-23",
     "ticker": "SGRO.L",
     "composite": -6.9
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "SGRO.L",
+    "composite": -17.0
   },
   {
     "date": "2026-09-23",
@@ -66465,6 +67850,11 @@
     "composite": 5.5
   },
   {
+    "date": "2026-09-23",
+    "ticker": "SVT.L",
+    "composite": 5.5
+  },
+  {
     "date": "2026-09-12",
     "ticker": "SHEL.L",
     "composite": 30.5
@@ -66618,6 +68008,11 @@
     "date": "2026-09-23",
     "ticker": "SHEL.L",
     "composite": 19.4
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "SHEL.L",
+    "composite": 24.7
   },
   {
     "date": "2026-09-23",
@@ -66785,6 +68180,11 @@
     "composite": 48.2
   },
   {
+    "date": "2026-09-23",
+    "ticker": "SN.L",
+    "composite": 48.2
+  },
+  {
     "date": "2026-09-12",
     "ticker": "SMIN.L",
     "composite": -6.8
@@ -66938,6 +68338,11 @@
     "date": "2026-09-23",
     "ticker": "SMIN.L",
     "composite": 7.1
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "SMIN.L",
+    "composite": 9.2
   },
   {
     "date": "2026-09-23",
@@ -67105,6 +68510,11 @@
     "composite": 20.5
   },
   {
+    "date": "2026-09-23",
+    "ticker": "SPX.L",
+    "composite": 20.5
+  },
+  {
     "date": "2026-09-12",
     "ticker": "SSE.L",
     "composite": 21.9
@@ -67263,6 +68673,11 @@
     "date": "2026-09-23",
     "ticker": "SSE.L",
     "composite": 22.3
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "SSE.L",
+    "composite": 23.7
   },
   {
     "date": "2026-09-12",
@@ -67425,6 +68840,11 @@
     "composite": 79.9
   },
   {
+    "date": "2026-09-23",
+    "ticker": "STAN.L",
+    "composite": 78.2
+  },
+  {
     "date": "2026-09-12",
     "ticker": "SDLF.L",
     "composite": -21.2
@@ -67578,6 +68998,11 @@
     "date": "2026-09-23",
     "ticker": "SDLF.L",
     "composite": -20.8
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "SDLF.L",
+    "composite": -21.3
   },
   {
     "date": "2026-09-23",
@@ -67745,6 +69170,11 @@
     "composite": 37.2
   },
   {
+    "date": "2026-09-23",
+    "ticker": "TSCO.L",
+    "composite": 40.2
+  },
+  {
     "date": "2026-09-12",
     "ticker": "ULVR.L",
     "composite": 40.0
@@ -67898,6 +69328,11 @@
     "date": "2026-09-23",
     "ticker": "ULVR.L",
     "composite": 34.9
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "ULVR.L",
+    "composite": 33.4
   },
   {
     "date": "2026-09-23",
@@ -68065,6 +69500,11 @@
     "composite": 22.1
   },
   {
+    "date": "2026-09-23",
+    "ticker": "UU.L",
+    "composite": 22.1
+  },
+  {
     "date": "2026-09-12",
     "ticker": "VOD.L",
     "composite": -34.9
@@ -68218,6 +69658,11 @@
     "date": "2026-09-23",
     "ticker": "VOD.L",
     "composite": -29.8
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "VOD.L",
+    "composite": -29.6
   },
   {
     "date": "2026-09-23",
@@ -68385,6 +69830,11 @@
     "composite": 14.6
   },
   {
+    "date": "2026-09-23",
+    "ticker": "WEIR.L",
+    "composite": 14.6
+  },
+  {
     "date": "2026-09-12",
     "ticker": "WTB.L",
     "composite": -42.4
@@ -68543,6 +69993,11 @@
     "date": "2026-09-23",
     "ticker": "WTB.L",
     "composite": -35.9
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "WTB.L",
+    "composite": -35.0
   },
   {
     "date": "2026-09-12",
@@ -68705,6 +70160,11 @@
     "composite": 75.1
   },
   {
+    "date": "2026-09-23",
+    "ticker": "ABBN.SW",
+    "composite": 69.3
+  },
+  {
     "date": "2026-09-12",
     "ticker": "ALC.SW",
     "composite": 48.9
@@ -68858,6 +70318,11 @@
     "date": "2026-09-23",
     "ticker": "ALC.SW",
     "composite": 48.1
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "ALC.SW",
+    "composite": 48.3
   },
   {
     "date": "2026-09-23",
@@ -69025,6 +70490,11 @@
     "composite": 19.5
   },
   {
+    "date": "2026-09-23",
+    "ticker": "AMRZ.SW",
+    "composite": 19.5
+  },
+  {
     "date": "2026-09-12",
     "ticker": "GEBN.SW",
     "composite": 39.4
@@ -69178,6 +70648,11 @@
     "date": "2026-09-23",
     "ticker": "GEBN.SW",
     "composite": 39.6
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "GEBN.SW",
+    "composite": 39.3
   },
   {
     "date": "2026-09-23",
@@ -69505,6 +70980,11 @@
     "composite": -0.2
   },
   {
+    "date": "2026-09-23",
+    "ticker": "HOLN.SW",
+    "composite": -0.2
+  },
+  {
     "date": "2026-09-12",
     "ticker": "KNIN.SW",
     "composite": 36.2
@@ -69646,6 +71126,11 @@
   },
   {
     "date": "2026-09-22",
+    "ticker": "KNIN.SW",
+    "composite": 42.2
+  },
+  {
+    "date": "2026-09-23",
     "ticker": "KNIN.SW",
     "composite": 42.2
   },
@@ -69825,6 +71310,11 @@
     "composite": 83.4
   },
   {
+    "date": "2026-09-23",
+    "ticker": "LOGN.SW",
+    "composite": 81.4
+  },
+  {
     "date": "2026-09-12",
     "ticker": "LONN.SW",
     "composite": 24.5
@@ -69973,6 +71463,11 @@
     "date": "2026-09-23",
     "ticker": "LONN.SW",
     "composite": 26.7
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "LONN.SW",
+    "composite": 26.6
   },
   {
     "date": "2026-09-23",
@@ -70145,6 +71640,11 @@
     "composite": 30.2
   },
   {
+    "date": "2026-09-23",
+    "ticker": "NESN.SW",
+    "composite": 30.2
+  },
+  {
     "date": "2026-09-12",
     "ticker": "NOVN.SW",
     "composite": 50.5
@@ -70305,6 +71805,11 @@
     "composite": 57.2
   },
   {
+    "date": "2026-09-23",
+    "ticker": "NOVN.SW",
+    "composite": 63.9
+  },
+  {
     "date": "2026-09-12",
     "ticker": "PGHN.SW",
     "composite": 48.8
@@ -70448,6 +71953,11 @@
     "date": "2026-09-22",
     "ticker": "PGHN.SW",
     "composite": 62.0
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "PGHN.SW",
+    "composite": 61.0
   },
   {
     "date": "2026-09-23",
@@ -70625,6 +72135,11 @@
     "composite": 52.0
   },
   {
+    "date": "2026-09-23",
+    "ticker": "CFR.SW",
+    "composite": 52.0
+  },
+  {
     "date": "2026-09-12",
     "ticker": "ROP.SW",
     "composite": 47.7
@@ -70778,6 +72293,11 @@
     "date": "2026-09-23",
     "ticker": "ROP.SW",
     "composite": 45.1
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "ROP.SW",
+    "composite": 49.3
   },
   {
     "date": "2026-09-23",
@@ -70945,6 +72465,11 @@
     "composite": 44.4
   },
   {
+    "date": "2026-09-23",
+    "ticker": "SIKA.SW",
+    "composite": 44.4
+  },
+  {
     "date": "2026-09-12",
     "ticker": "SREN.SW",
     "composite": 60.2
@@ -71098,6 +72623,11 @@
     "date": "2026-09-23",
     "ticker": "SREN.SW",
     "composite": 57.8
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "SREN.SW",
+    "composite": 57.9
   },
   {
     "date": "2026-09-23",
@@ -71265,6 +72795,11 @@
     "composite": 42.3
   },
   {
+    "date": "2026-09-23",
+    "ticker": "SCMN.SW",
+    "composite": 42.3
+  },
+  {
     "date": "2026-09-12",
     "ticker": "UBSG.SW",
     "composite": 46.8
@@ -71425,6 +72960,11 @@
     "composite": 37.1
   },
   {
+    "date": "2026-09-23",
+    "ticker": "UBSG.SW",
+    "composite": 37.1
+  },
+  {
     "date": "2026-09-12",
     "ticker": "ZURN.SW",
     "composite": 57.2
@@ -71578,6 +73118,11 @@
     "date": "2026-09-23",
     "ticker": "ZURN.SW",
     "composite": 64.4
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "ZURN.SW",
+    "composite": 64.1
   },
   {
     "date": "2026-09-23",
@@ -71905,6 +73450,11 @@
     "composite": 8.5
   },
   {
+    "date": "2026-09-23",
+    "ticker": "ANE.MC",
+    "composite": 6.7
+  },
+  {
     "date": "2026-09-12",
     "ticker": "ACX.MC",
     "composite": -43.4
@@ -72048,6 +73598,11 @@
     "date": "2026-09-22",
     "ticker": "ACX.MC",
     "composite": -44.5
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "ACX.MC",
+    "composite": -54.5
   },
   {
     "date": "2026-09-23",
@@ -72225,6 +73780,11 @@
     "composite": 52.3
   },
   {
+    "date": "2026-09-23",
+    "ticker": "ACS.MC",
+    "composite": 52.3
+  },
+  {
     "date": "2026-09-12",
     "ticker": "AENA.MC",
     "composite": 48.0
@@ -72378,6 +73938,11 @@
     "date": "2026-09-23",
     "ticker": "AENA.MC",
     "composite": 65.8
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "AENA.MC",
+    "composite": 61.1
   },
   {
     "date": "2026-09-23",
@@ -72545,6 +74110,11 @@
     "composite": 66.2
   },
   {
+    "date": "2026-09-23",
+    "ticker": "AMS.MC",
+    "composite": 66.2
+  },
+  {
     "date": "2026-09-12",
     "ticker": "SAB.MC",
     "composite": 60.4
@@ -72686,6 +74256,11 @@
   },
   {
     "date": "2026-09-22",
+    "ticker": "SAB.MC",
+    "composite": 50.4
+  },
+  {
+    "date": "2026-09-23",
     "ticker": "SAB.MC",
     "composite": 50.4
   },
@@ -72865,6 +74440,11 @@
     "composite": 46.1
   },
   {
+    "date": "2026-09-23",
+    "ticker": "SAN.MC",
+    "composite": 46.1
+  },
+  {
     "date": "2026-09-12",
     "ticker": "BKT.MC",
     "composite": 50.7
@@ -73018,6 +74598,11 @@
     "date": "2026-09-23",
     "ticker": "BKT.MC",
     "composite": 33.4
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "BKT.MC",
+    "composite": 33.3
   },
   {
     "date": "2026-09-23",
@@ -73185,6 +74770,11 @@
     "composite": 69.9
   },
   {
+    "date": "2026-09-23",
+    "ticker": "BBVA.MC",
+    "composite": 69.9
+  },
+  {
     "date": "2026-09-12",
     "ticker": "CABK.MC",
     "composite": 62.7
@@ -73345,6 +74935,11 @@
     "composite": 66.6
   },
   {
+    "date": "2026-09-23",
+    "ticker": "CABK.MC",
+    "composite": 64.2
+  },
+  {
     "date": "2026-09-12",
     "ticker": "CLNX.MC",
     "composite": -26.2
@@ -73498,6 +75093,11 @@
     "date": "2026-09-23",
     "ticker": "CLNX.MC",
     "composite": -26.7
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "CLNX.MC",
+    "composite": -26.8
   },
   {
     "date": "2026-09-23",
@@ -73665,6 +75265,11 @@
     "composite": 4.3
   },
   {
+    "date": "2026-09-23",
+    "ticker": "ENG.MC",
+    "composite": 4.3
+  },
+  {
     "date": "2026-09-12",
     "ticker": "ELE.MC",
     "composite": 32.6
@@ -73818,6 +75423,11 @@
     "date": "2026-09-23",
     "ticker": "ELE.MC",
     "composite": 32.1
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "ELE.MC",
+    "composite": 31.9
   },
   {
     "date": "2026-09-23",
@@ -73985,6 +75595,11 @@
     "composite": 16.7
   },
   {
+    "date": "2026-09-23",
+    "ticker": "FDR.MC",
+    "composite": 17.0
+  },
+  {
     "date": "2026-09-12",
     "ticker": "GRF.MC",
     "composite": 28.7
@@ -74138,6 +75753,11 @@
     "date": "2026-09-23",
     "ticker": "GRF.MC",
     "composite": 27.9
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "GRF.MC",
+    "composite": 27.6
   },
   {
     "date": "2026-09-23",
@@ -74305,6 +75925,11 @@
     "composite": 2.4
   },
   {
+    "date": "2026-09-23",
+    "ticker": "IBE.MC",
+    "composite": 24.1
+  },
+  {
     "date": "2026-09-12",
     "ticker": "ITX.MC",
     "composite": 68.2
@@ -74458,6 +76083,11 @@
     "date": "2026-09-23",
     "ticker": "ITX.MC",
     "composite": 60.2
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "ITX.MC",
+    "composite": 62.2
   },
   {
     "date": "2026-09-23",
@@ -74625,6 +76255,11 @@
     "composite": 50.7
   },
   {
+    "date": "2026-09-23",
+    "ticker": "IDR.MC",
+    "composite": 50.7
+  },
+  {
     "date": "2026-09-12",
     "ticker": "COL.MC",
     "composite": -9.7
@@ -74778,6 +76413,11 @@
     "date": "2026-09-23",
     "ticker": "COL.MC",
     "composite": -10.4
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "COL.MC",
+    "composite": -0.5
   },
   {
     "date": "2026-09-23",
@@ -74945,6 +76585,11 @@
     "composite": 26.4
   },
   {
+    "date": "2026-09-23",
+    "ticker": "ROVI.MC",
+    "composite": 26.4
+  },
+  {
     "date": "2026-09-12",
     "ticker": "LOG.MC",
     "composite": 66.8
@@ -75088,6 +76733,11 @@
     "date": "2026-09-22",
     "ticker": "LOG.MC",
     "composite": 77.1
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "LOG.MC",
+    "composite": 74.5
   },
   {
     "date": "2026-09-23",
@@ -75265,6 +76915,11 @@
     "composite": 29.4
   },
   {
+    "date": "2026-09-23",
+    "ticker": "MRL.MC",
+    "composite": 29.4
+  },
+  {
     "date": "2026-09-12",
     "ticker": "NTGY.MC",
     "composite": 43.1
@@ -75425,6 +77080,11 @@
     "composite": 32.3
   },
   {
+    "date": "2026-09-23",
+    "ticker": "NTGY.MC",
+    "composite": 32.3
+  },
+  {
     "date": "2026-09-12",
     "ticker": "PUIG.MC",
     "composite": 69.2
@@ -75573,6 +77233,11 @@
     "date": "2026-09-23",
     "ticker": "PUIG.MC",
     "composite": 60.1
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "PUIG.MC",
+    "composite": 61.8
   },
   {
     "date": "2026-09-23",
@@ -75745,6 +77410,11 @@
     "composite": -7.7
   },
   {
+    "date": "2026-09-23",
+    "ticker": "RED.MC",
+    "composite": -7.7
+  },
+  {
     "date": "2026-09-12",
     "ticker": "REP.MC",
     "composite": 20.4
@@ -75886,6 +77556,11 @@
   },
   {
     "date": "2026-09-22",
+    "ticker": "REP.MC",
+    "composite": 9.3
+  },
+  {
+    "date": "2026-09-23",
     "ticker": "REP.MC",
     "composite": 9.3
   },
@@ -76065,6 +77740,11 @@
     "composite": 35.4
   },
   {
+    "date": "2026-09-23",
+    "ticker": "SCYR.MC",
+    "composite": 35.4
+  },
+  {
     "date": "2026-09-12",
     "ticker": "SLR.MC",
     "composite": 17.9
@@ -76218,6 +77898,11 @@
     "date": "2026-09-23",
     "ticker": "SLR.MC",
     "composite": 15.5
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "SLR.MC",
+    "composite": 15.4
   },
   {
     "date": "2026-09-23",
@@ -76385,6 +78070,11 @@
     "composite": -31.7
   },
   {
+    "date": "2026-09-23",
+    "ticker": "TEF.MC",
+    "composite": -32.0
+  },
+  {
     "date": "2026-09-12",
     "ticker": "UNI.MC",
     "composite": 44.0
@@ -76526,6 +78216,11 @@
   },
   {
     "date": "2026-09-22",
+    "ticker": "UNI.MC",
+    "composite": 56.3
+  },
+  {
+    "date": "2026-09-23",
     "ticker": "UNI.MC",
     "composite": 56.3
   },
@@ -76705,6 +78400,11 @@
     "composite": 16.7
   },
   {
+    "date": "2026-09-23",
+    "ticker": "A2A.MI",
+    "composite": 4.0
+  },
+  {
     "date": "2026-09-12",
     "ticker": "AMP.MI",
     "composite": 20.1
@@ -76858,6 +78558,11 @@
     "date": "2026-09-23",
     "ticker": "AMP.MI",
     "composite": 15.7
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "AMP.MI",
+    "composite": 16.1
   },
   {
     "date": "2026-09-23",
@@ -77025,6 +78730,11 @@
     "composite": 30.7
   },
   {
+    "date": "2026-09-23",
+    "ticker": "AVIO.MI",
+    "composite": 30.7
+  },
+  {
     "date": "2026-09-12",
     "ticker": "AZM.MI",
     "composite": 79.7
@@ -77178,6 +78888,11 @@
     "date": "2026-09-23",
     "ticker": "AZM.MI",
     "composite": 80.0
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "AZM.MI",
+    "composite": 79.9
   },
   {
     "date": "2026-09-23",
@@ -77345,6 +79060,11 @@
     "composite": 45.6
   },
   {
+    "date": "2026-09-23",
+    "ticker": "BMPS.MI",
+    "composite": 45.6
+  },
+  {
     "date": "2026-09-12",
     "ticker": "BAMI.MI",
     "composite": 64.3
@@ -77498,6 +79218,11 @@
     "date": "2026-09-23",
     "ticker": "BAMI.MI",
     "composite": 62.3
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "BAMI.MI",
+    "composite": 66.3
   },
   {
     "date": "2026-09-23",
@@ -77665,6 +79390,11 @@
     "composite": 66.1
   },
   {
+    "date": "2026-09-23",
+    "ticker": "BPE.MI",
+    "composite": 66.1
+  },
+  {
     "date": "2026-09-12",
     "ticker": "BC.MI",
     "composite": 35.8
@@ -77818,6 +79548,11 @@
     "date": "2026-09-23",
     "ticker": "BC.MI",
     "composite": 37.1
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "BC.MI",
+    "composite": 37.3
   },
   {
     "date": "2026-09-23",
@@ -77985,6 +79720,11 @@
     "composite": 30.1
   },
   {
+    "date": "2026-09-23",
+    "ticker": "BZU.MI",
+    "composite": 30.1
+  },
+  {
     "date": "2026-09-12",
     "ticker": "CPR.MI",
     "composite": 18.3
@@ -78138,6 +79878,11 @@
     "date": "2026-09-23",
     "ticker": "CPR.MI",
     "composite": 35.6
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "CPR.MI",
+    "composite": 35.2
   },
   {
     "date": "2026-09-23",
@@ -78305,6 +80050,11 @@
     "composite": 11.7
   },
   {
+    "date": "2026-09-23",
+    "ticker": "DIA.MI",
+    "composite": 11.7
+  },
+  {
     "date": "2026-09-12",
     "ticker": "ENEL.MI",
     "composite": 18.9
@@ -78458,6 +80208,11 @@
     "date": "2026-09-23",
     "ticker": "ENEL.MI",
     "composite": 15.9
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "ENEL.MI",
+    "composite": 12.8
   },
   {
     "date": "2026-09-23",
@@ -78625,6 +80380,11 @@
     "composite": 20.7
   },
   {
+    "date": "2026-09-23",
+    "ticker": "ENI.MI",
+    "composite": 19.5
+  },
+  {
     "date": "2026-09-12",
     "ticker": "RACE.MI",
     "composite": 59.3
@@ -78778,6 +80538,11 @@
     "date": "2026-09-23",
     "ticker": "RACE.MI",
     "composite": 59.9
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "RACE.MI",
+    "composite": 61.9
   },
   {
     "date": "2026-09-23",
@@ -78945,6 +80710,11 @@
     "composite": 32.3
   },
   {
+    "date": "2026-09-23",
+    "ticker": "FCT.MI",
+    "composite": 32.3
+  },
+  {
     "date": "2026-09-12",
     "ticker": "G.MI",
     "composite": 73.2
@@ -79098,6 +80868,11 @@
     "date": "2026-09-23",
     "ticker": "G.MI",
     "composite": 71.3
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "G.MI",
+    "composite": 68.9
   },
   {
     "date": "2026-09-23",
@@ -79265,6 +81040,11 @@
     "composite": 15.4
   },
   {
+    "date": "2026-09-23",
+    "ticker": "HER.MI",
+    "composite": 19.4
+  },
+  {
     "date": "2026-09-12",
     "ticker": "ISP.MI",
     "composite": 64.7
@@ -79425,6 +81205,11 @@
     "composite": 54.4
   },
   {
+    "date": "2026-09-23",
+    "ticker": "ISP.MI",
+    "composite": 54.4
+  },
+  {
     "date": "2026-09-12",
     "ticker": "INW.MI",
     "composite": 7.9
@@ -79573,6 +81358,11 @@
     "date": "2026-09-23",
     "ticker": "INW.MI",
     "composite": 7.6
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "INW.MI",
+    "composite": 7.4
   },
   {
     "date": "2026-09-23",
@@ -79745,6 +81535,11 @@
     "composite": 16.9
   },
   {
+    "date": "2026-09-23",
+    "ticker": "IG.MI",
+    "composite": 16.9
+  },
+  {
     "date": "2026-09-12",
     "ticker": "IVG.MI",
     "composite": 3.4
@@ -79886,6 +81681,11 @@
   },
   {
     "date": "2026-09-22",
+    "ticker": "IVG.MI",
+    "composite": 8.5
+  },
+  {
+    "date": "2026-09-23",
     "ticker": "IVG.MI",
     "composite": 8.5
   },
@@ -80065,6 +81865,11 @@
     "composite": 55.1
   },
   {
+    "date": "2026-09-23",
+    "ticker": "LDO.MI",
+    "composite": 55.1
+  },
+  {
     "date": "2026-09-12",
     "ticker": "LTMC.MI",
     "composite": 52.4
@@ -80225,6 +82030,11 @@
     "composite": 53.7
   },
   {
+    "date": "2026-09-23",
+    "ticker": "LTMC.MI",
+    "composite": 53.7
+  },
+  {
     "date": "2026-09-12",
     "ticker": "MB.MI",
     "composite": 74.4
@@ -80368,6 +82178,11 @@
     "date": "2026-09-22",
     "ticker": "MB.MI",
     "composite": 69.4
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "MB.MI",
+    "composite": 59.4
   },
   {
     "date": "2026-09-23",
@@ -80545,6 +82360,11 @@
     "composite": 55.1
   },
   {
+    "date": "2026-09-23",
+    "ticker": "MONC.MI",
+    "composite": 52.9
+  },
+  {
     "date": "2026-09-12",
     "ticker": "NEXI.MI",
     "composite": -3.1
@@ -80705,6 +82525,11 @@
     "composite": -20.6
   },
   {
+    "date": "2026-09-23",
+    "ticker": "NEXI.MI",
+    "composite": -20.6
+  },
+  {
     "date": "2026-09-12",
     "ticker": "PST.MI",
     "composite": 62.3
@@ -80853,6 +82678,11 @@
     "date": "2026-09-23",
     "ticker": "PST.MI",
     "composite": 54.1
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "PST.MI",
+    "composite": 52.8
   },
   {
     "date": "2026-09-23",
@@ -81025,6 +82855,11 @@
     "composite": 74.5
   },
   {
+    "date": "2026-09-23",
+    "ticker": "PRY.MI",
+    "composite": 74.5
+  },
+  {
     "date": "2026-09-12",
     "ticker": "REC.MI",
     "composite": 58.5
@@ -81183,6 +83018,11 @@
     "date": "2026-09-23",
     "ticker": "REC.MI",
     "composite": 58.8
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "REC.MI",
+    "composite": 48.8
   },
   {
     "date": "2026-09-12",
@@ -81345,6 +83185,11 @@
     "composite": 45.9
   },
   {
+    "date": "2026-09-23",
+    "ticker": "SPM.MI",
+    "composite": 35.4
+  },
+  {
     "date": "2026-09-12",
     "ticker": "SRG.MI",
     "composite": 18.7
@@ -81498,6 +83343,11 @@
     "date": "2026-09-23",
     "ticker": "SRG.MI",
     "composite": 8.3
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "SRG.MI",
+    "composite": 2.6
   },
   {
     "date": "2026-09-23",
@@ -81665,6 +83515,11 @@
     "composite": -7.1
   },
   {
+    "date": "2026-09-23",
+    "ticker": "TIT.MI",
+    "composite": -17.1
+  },
+  {
     "date": "2026-09-12",
     "ticker": "TEN.MI",
     "composite": 41.1
@@ -81818,6 +83673,11 @@
     "date": "2026-09-23",
     "ticker": "TEN.MI",
     "composite": 30.3
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "TEN.MI",
+    "composite": 30.7
   },
   {
     "date": "2026-09-23",
@@ -81985,6 +83845,11 @@
     "composite": 24.9
   },
   {
+    "date": "2026-09-23",
+    "ticker": "TRN.MI",
+    "composite": 24.9
+  },
+  {
     "date": "2026-09-12",
     "ticker": "UCG.MI",
     "composite": 66.1
@@ -82145,6 +84010,11 @@
     "composite": 56.4
   },
   {
+    "date": "2026-09-23",
+    "ticker": "UCG.MI",
+    "composite": 56.4
+  },
+  {
     "date": "2026-09-12",
     "ticker": "UNI.MI",
     "composite": 73.7
@@ -82286,6 +84156,11 @@
   },
   {
     "date": "2026-09-22",
+    "ticker": "UNI.MI",
+    "composite": 73.7
+  },
+  {
+    "date": "2026-09-23",
     "ticker": "UNI.MI",
     "composite": 73.7
   },
@@ -82465,6 +84340,11 @@
     "composite": 71.0
   },
   {
+    "date": "2026-09-23",
+    "ticker": "6857.T",
+    "composite": 71.0
+  },
+  {
     "date": "2026-09-12",
     "ticker": "5201.T",
     "composite": 11.9
@@ -82606,6 +84486,11 @@
   },
   {
     "date": "2026-09-22",
+    "ticker": "5201.T",
+    "composite": 7.2
+  },
+  {
+    "date": "2026-09-23",
     "ticker": "5201.T",
     "composite": 7.2
   },
@@ -82785,6 +84670,11 @@
     "composite": 33.4
   },
   {
+    "date": "2026-09-23",
+    "ticker": "2802.T",
+    "composite": 33.4
+  },
+  {
     "date": "2026-09-12",
     "ticker": "6770.T",
     "composite": 34.8
@@ -82926,6 +84816,11 @@
   },
   {
     "date": "2026-09-22",
+    "ticker": "6770.T",
+    "composite": 27.7
+  },
+  {
+    "date": "2026-09-23",
     "ticker": "6770.T",
     "composite": 27.7
   },
@@ -83105,6 +85000,11 @@
     "composite": 5.5
   },
   {
+    "date": "2026-09-23",
+    "ticker": "6113.T",
+    "composite": 5.5
+  },
+  {
     "date": "2026-09-12",
     "ticker": "9202.T",
     "composite": 69.1
@@ -83246,6 +85146,11 @@
   },
   {
     "date": "2026-09-22",
+    "ticker": "9202.T",
+    "composite": 66.6
+  },
+  {
+    "date": "2026-09-23",
     "ticker": "9202.T",
     "composite": 66.6
   },
@@ -83425,6 +85330,11 @@
     "composite": 60.0
   },
   {
+    "date": "2026-09-23",
+    "ticker": "8304.T",
+    "composite": 60.0
+  },
+  {
     "date": "2026-09-12",
     "ticker": "543A.T",
     "composite": 38.7
@@ -83566,6 +85476,11 @@
   },
   {
     "date": "2026-09-22",
+    "ticker": "543A.T",
+    "composite": 22.0
+  },
+  {
+    "date": "2026-09-23",
     "ticker": "543A.T",
     "composite": 22.0
   },
@@ -83745,6 +85660,11 @@
     "composite": 5.8
   },
   {
+    "date": "2026-09-23",
+    "ticker": "2502.T",
+    "composite": 5.8
+  },
+  {
     "date": "2026-09-12",
     "ticker": "3407.T",
     "composite": 33.2
@@ -83886,6 +85806,11 @@
   },
   {
     "date": "2026-09-22",
+    "ticker": "3407.T",
+    "composite": 36.8
+  },
+  {
+    "date": "2026-09-23",
     "ticker": "3407.T",
     "composite": 36.8
   },
@@ -84065,6 +85990,11 @@
     "composite": 76.7
   },
   {
+    "date": "2026-09-23",
+    "ticker": "4503.T",
+    "composite": 76.7
+  },
+  {
     "date": "2026-09-12",
     "ticker": "7832.T",
     "composite": 73.6
@@ -84225,6 +86155,11 @@
     "composite": 73.6
   },
   {
+    "date": "2026-09-23",
+    "ticker": "7832.T",
+    "composite": 73.6
+  },
+  {
     "date": "2026-09-12",
     "ticker": "6532.T",
     "composite": 65.9
@@ -84366,6 +86301,11 @@
   },
   {
     "date": "2026-09-22",
+    "ticker": "6532.T",
+    "composite": 65.9
+  },
+  {
+    "date": "2026-09-23",
     "ticker": "6532.T",
     "composite": 65.9
   },
@@ -84545,6 +86485,11 @@
     "composite": 44.2
   },
   {
+    "date": "2026-09-23",
+    "ticker": "5108.T",
+    "composite": 44.2
+  },
+  {
     "date": "2026-09-12",
     "ticker": "7751.T",
     "composite": 34.0
@@ -84705,6 +86650,11 @@
     "composite": 35.3
   },
   {
+    "date": "2026-09-23",
+    "ticker": "7751.T",
+    "composite": 35.3
+  },
+  {
     "date": "2026-09-12",
     "ticker": "9022.T",
     "composite": 37.5
@@ -84846,6 +86796,11 @@
   },
   {
     "date": "2026-09-22",
+    "ticker": "9022.T",
+    "composite": 36.1
+  },
+  {
+    "date": "2026-09-23",
     "ticker": "9022.T",
     "composite": 36.1
   },
@@ -85025,6 +86980,11 @@
     "composite": 51.9
   },
   {
+    "date": "2026-09-23",
+    "ticker": "8331.T",
+    "composite": 51.9
+  },
+  {
     "date": "2026-09-12",
     "ticker": "4519.T",
     "composite": 44.0
@@ -85166,6 +87126,11 @@
   },
   {
     "date": "2026-09-22",
+    "ticker": "4519.T",
+    "composite": 26.2
+  },
+  {
+    "date": "2026-09-23",
     "ticker": "4519.T",
     "composite": 26.2
   },
@@ -85345,6 +87310,11 @@
     "composite": 56.8
   },
   {
+    "date": "2026-09-23",
+    "ticker": "1721.T",
+    "composite": 56.8
+  },
+  {
     "date": "2026-09-12",
     "ticker": "8253.T",
     "composite": -12.1
@@ -85486,6 +87456,11 @@
   },
   {
     "date": "2026-09-22",
+    "ticker": "8253.T",
+    "composite": -14.0
+  },
+  {
+    "date": "2026-09-23",
     "ticker": "8253.T",
     "composite": -14.0
   },
@@ -85665,6 +87640,11 @@
     "composite": 60.6
   },
   {
+    "date": "2026-09-23",
+    "ticker": "4751.T",
+    "composite": 60.6
+  },
+  {
     "date": "2026-09-12",
     "ticker": "7912.T",
     "composite": 39.7
@@ -85806,6 +87786,11 @@
   },
   {
     "date": "2026-09-22",
+    "ticker": "7912.T",
+    "composite": 32.2
+  },
+  {
+    "date": "2026-09-23",
     "ticker": "7912.T",
     "composite": 32.2
   },
@@ -85985,6 +87970,11 @@
     "composite": 67.5
   },
   {
+    "date": "2026-09-23",
+    "ticker": "8750.T",
+    "composite": 67.5
+  },
+  {
     "date": "2026-09-12",
     "ticker": "4568.T",
     "composite": 63.8
@@ -86126,6 +88116,11 @@
   },
   {
     "date": "2026-09-22",
+    "ticker": "4568.T",
+    "composite": 67.2
+  },
+  {
+    "date": "2026-09-23",
     "ticker": "4568.T",
     "composite": 67.2
   },
@@ -86305,6 +88300,11 @@
     "composite": 50.2
   },
   {
+    "date": "2026-09-23",
+    "ticker": "6367.T",
+    "composite": 50.2
+  },
+  {
     "date": "2026-09-12",
     "ticker": "1925.T",
     "composite": 23.2
@@ -86446,6 +88446,11 @@
   },
   {
     "date": "2026-09-22",
+    "ticker": "1925.T",
+    "composite": 21.2
+  },
+  {
+    "date": "2026-09-23",
     "ticker": "1925.T",
     "composite": 21.2
   },
@@ -86625,6 +88630,11 @@
     "composite": 55.3
   },
   {
+    "date": "2026-09-23",
+    "ticker": "2432.T",
+    "composite": 55.3
+  },
+  {
     "date": "2026-09-12",
     "ticker": "4061.T",
     "composite": -40.7
@@ -86766,6 +88776,11 @@
   },
   {
     "date": "2026-09-22",
+    "ticker": "4061.T",
+    "composite": -49.5
+  },
+  {
+    "date": "2026-09-23",
     "ticker": "4061.T",
     "composite": -49.5
   },
@@ -86945,6 +88960,11 @@
     "composite": 48.9
   },
   {
+    "date": "2026-09-23",
+    "ticker": "6902.T",
+    "composite": 48.9
+  },
+  {
     "date": "2026-09-12",
     "ticker": "4324.T",
     "composite": -6.0
@@ -87086,6 +89106,11 @@
   },
   {
     "date": "2026-09-22",
+    "ticker": "4324.T",
+    "composite": -8.2
+  },
+  {
+    "date": "2026-09-23",
     "ticker": "4324.T",
     "composite": -8.2
   },
@@ -87265,6 +89290,11 @@
     "composite": 36.4
   },
   {
+    "date": "2026-09-23",
+    "ticker": "6146.T",
+    "composite": 36.4
+  },
+  {
     "date": "2026-09-12",
     "ticker": "5714.T",
     "composite": 43.4
@@ -87406,6 +89436,11 @@
   },
   {
     "date": "2026-09-22",
+    "ticker": "5714.T",
+    "composite": 32.1
+  },
+  {
+    "date": "2026-09-23",
     "ticker": "5714.T",
     "composite": 32.1
   },
@@ -87585,6 +89620,11 @@
     "composite": -2.6
   },
   {
+    "date": "2026-09-23",
+    "ticker": "9020.T",
+    "composite": -2.6
+  },
+  {
     "date": "2026-09-12",
     "ticker": "6361.T",
     "composite": 31.9
@@ -87726,6 +89766,11 @@
   },
   {
     "date": "2026-09-22",
+    "ticker": "6361.T",
+    "composite": 41.9
+  },
+  {
+    "date": "2026-09-23",
     "ticker": "6361.T",
     "composite": 41.9
   },
@@ -87905,6 +89950,11 @@
     "composite": 38.9
   },
   {
+    "date": "2026-09-23",
+    "ticker": "4523.T",
+    "composite": 38.9
+  },
+  {
     "date": "2026-09-12",
     "ticker": "5020.T",
     "composite": 13.8
@@ -88046,6 +90096,11 @@
   },
   {
     "date": "2026-09-22",
+    "ticker": "5020.T",
+    "composite": 20.8
+  },
+  {
+    "date": "2026-09-23",
     "ticker": "5020.T",
     "composite": 20.8
   },
@@ -88225,6 +90280,11 @@
     "composite": 10.4
   },
   {
+    "date": "2026-09-23",
+    "ticker": "6954.T",
+    "composite": 10.4
+  },
+  {
     "date": "2026-09-12",
     "ticker": "9983.T",
     "composite": 52.1
@@ -88366,6 +90426,11 @@
   },
   {
     "date": "2026-09-22",
+    "ticker": "9983.T",
+    "composite": 57.8
+  },
+  {
+    "date": "2026-09-23",
     "ticker": "9983.T",
     "composite": 57.8
   },
@@ -88545,6 +90610,11 @@
     "composite": 61.6
   },
   {
+    "date": "2026-09-23",
+    "ticker": "6504.T",
+    "composite": 61.6
+  },
+  {
     "date": "2026-09-12",
     "ticker": "4901.T",
     "composite": 10.6
@@ -88705,6 +90775,11 @@
     "composite": 22.5
   },
   {
+    "date": "2026-09-23",
+    "ticker": "4901.T",
+    "composite": 22.5
+  },
+  {
     "date": "2026-09-12",
     "ticker": "5803.T",
     "composite": 70.3
@@ -88846,6 +90921,11 @@
   },
   {
     "date": "2026-09-22",
+    "ticker": "5803.T",
+    "composite": 59.4
+  },
+  {
+    "date": "2026-09-23",
     "ticker": "5803.T",
     "composite": 59.4
   },
@@ -89025,6 +91105,11 @@
     "composite": 62.3
   },
   {
+    "date": "2026-09-23",
+    "ticker": "6702.T",
+    "composite": 62.3
+  },
+  {
     "date": "2026-09-12",
     "ticker": "8354.T",
     "composite": 20.1
@@ -89166,6 +91251,11 @@
   },
   {
     "date": "2026-09-22",
+    "ticker": "8354.T",
+    "composite": 19.9
+  },
+  {
+    "date": "2026-09-23",
     "ticker": "8354.T",
     "composite": 19.9
   },
@@ -89345,6 +91435,11 @@
     "composite": 43.0
   },
   {
+    "date": "2026-09-23",
+    "ticker": "5801.T",
+    "composite": 43.0
+  },
+  {
     "date": "2026-09-12",
     "ticker": "1808.T",
     "composite": 35.1
@@ -89486,6 +91581,11 @@
   },
   {
     "date": "2026-09-22",
+    "ticker": "1808.T",
+    "composite": 30.0
+  },
+  {
+    "date": "2026-09-23",
     "ticker": "1808.T",
     "composite": 30.0
   },
@@ -89665,6 +91765,11 @@
     "composite": 58.9
   },
   {
+    "date": "2026-09-23",
+    "ticker": "6501.T",
+    "composite": 58.9
+  },
+  {
     "date": "2026-09-12",
     "ticker": "6305.T",
     "composite": 29.7
@@ -89806,6 +91911,11 @@
   },
   {
     "date": "2026-09-22",
+    "ticker": "6305.T",
+    "composite": 14.0
+  },
+  {
+    "date": "2026-09-23",
     "ticker": "6305.T",
     "composite": 14.0
   },
@@ -89985,6 +92095,11 @@
     "composite": -16.2
   },
   {
+    "date": "2026-09-23",
+    "ticker": "7267.T",
+    "composite": -16.2
+  },
+  {
     "date": "2026-09-12",
     "ticker": "7741.T",
     "composite": 62.1
@@ -90145,6 +92260,11 @@
     "composite": 52.0
   },
   {
+    "date": "2026-09-23",
+    "ticker": "7741.T",
+    "composite": 52.0
+  },
+  {
     "date": "2026-09-12",
     "ticker": "4062.T",
     "composite": 27.7
@@ -90286,6 +92406,11 @@
   },
   {
     "date": "2026-09-22",
+    "ticker": "4062.T",
+    "composite": 24.1
+  },
+  {
+    "date": "2026-09-23",
     "ticker": "4062.T",
     "composite": 24.1
   },
@@ -90465,6 +92590,11 @@
     "composite": -4.0
   },
   {
+    "date": "2026-09-23",
+    "ticker": "5019.T",
+    "composite": -4.0
+  },
+  {
     "date": "2026-09-12",
     "ticker": "7013.T",
     "composite": 42.1
@@ -90625,6 +92755,11 @@
     "composite": 47.7
   },
   {
+    "date": "2026-09-23",
+    "ticker": "7013.T",
+    "composite": 45.1
+  },
+  {
     "date": "2026-09-12",
     "ticker": "1605.T",
     "composite": 18.3
@@ -90766,6 +92901,11 @@
   },
   {
     "date": "2026-09-22",
+    "ticker": "1605.T",
+    "composite": 27.8
+  },
+  {
+    "date": "2026-09-23",
     "ticker": "1605.T",
     "composite": 27.8
   },
@@ -90945,6 +93085,11 @@
     "composite": 65.1
   },
   {
+    "date": "2026-09-23",
+    "ticker": "3099.T",
+    "composite": 65.1
+  },
+  {
     "date": "2026-09-12",
     "ticker": "7202.T",
     "composite": 19.0
@@ -91086,6 +93231,11 @@
   },
   {
     "date": "2026-09-22",
+    "ticker": "7202.T",
+    "composite": 15.4
+  },
+  {
+    "date": "2026-09-23",
     "ticker": "7202.T",
     "composite": 15.4
   },
@@ -91425,6 +93575,11 @@
     "composite": 16.3
   },
   {
+    "date": "2026-09-23",
+    "ticker": "3086.T",
+    "composite": 16.3
+  },
+  {
     "date": "2026-09-12",
     "ticker": "8697.T",
     "composite": 75.1
@@ -91578,6 +93733,11 @@
     "date": "2026-09-23",
     "ticker": "8697.T",
     "composite": 78.6
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "8697.T",
+    "composite": 75.3
   },
   {
     "date": "2026-09-23",
@@ -91745,6 +93905,11 @@
     "composite": 26.1
   },
   {
+    "date": "2026-09-23",
+    "ticker": "5631.T",
+    "composite": 26.1
+  },
+  {
     "date": "2026-09-12",
     "ticker": "2914.T",
     "composite": 42.5
@@ -91886,6 +94051,11 @@
   },
   {
     "date": "2026-09-22",
+    "ticker": "2914.T",
+    "composite": 43.8
+  },
+  {
+    "date": "2026-09-23",
     "ticker": "2914.T",
     "composite": 43.8
   },
@@ -92065,6 +94235,11 @@
     "composite": -63.1
   },
   {
+    "date": "2026-09-23",
+    "ticker": "5411.T",
+    "composite": -63.1
+  },
+  {
     "date": "2026-09-12",
     "ticker": "1963.T",
     "composite": 61.3
@@ -92206,6 +94381,11 @@
   },
   {
     "date": "2026-09-22",
+    "ticker": "1963.T",
+    "composite": 61.5
+  },
+  {
+    "date": "2026-09-23",
     "ticker": "1963.T",
     "composite": 61.5
   },
@@ -92385,6 +94565,11 @@
     "composite": -26.1
   },
   {
+    "date": "2026-09-23",
+    "ticker": "6473.T",
+    "composite": -26.1
+  },
+  {
     "date": "2026-09-12",
     "ticker": "1812.T",
     "composite": 35.7
@@ -92545,6 +94730,11 @@
     "composite": 36.5
   },
   {
+    "date": "2026-09-23",
+    "ticker": "1812.T",
+    "composite": 36.5
+  },
+  {
     "date": "2026-09-12",
     "ticker": "7004.T",
     "composite": -11.5
@@ -92686,6 +94876,11 @@
   },
   {
     "date": "2026-09-22",
+    "ticker": "7004.T",
+    "composite": -18.7
+  },
+  {
+    "date": "2026-09-23",
     "ticker": "7004.T",
     "composite": -18.7
   },
@@ -92865,6 +95060,11 @@
     "composite": 40.3
   },
   {
+    "date": "2026-09-23",
+    "ticker": "4452.T",
+    "composite": 40.3
+  },
+  {
     "date": "2026-09-12",
     "ticker": "7012.T",
     "composite": 46.4
@@ -93025,6 +95225,11 @@
     "composite": 27.8
   },
   {
+    "date": "2026-09-23",
+    "ticker": "7012.T",
+    "composite": 27.8
+  },
+  {
     "date": "2026-09-12",
     "ticker": "9107.T",
     "composite": 24.3
@@ -93166,6 +95371,11 @@
   },
   {
     "date": "2026-09-22",
+    "ticker": "9107.T",
+    "composite": 14.3
+  },
+  {
+    "date": "2026-09-23",
     "ticker": "9107.T",
     "composite": 14.3
   },
@@ -93345,6 +95555,11 @@
     "composite": 53.4
   },
   {
+    "date": "2026-09-23",
+    "ticker": "9433.T",
+    "composite": 53.4
+  },
+  {
     "date": "2026-09-12",
     "ticker": "9008.T",
     "composite": 26.0
@@ -93486,6 +95701,11 @@
   },
   {
     "date": "2026-09-22",
+    "ticker": "9008.T",
+    "composite": 20.9
+  },
+  {
+    "date": "2026-09-23",
     "ticker": "9008.T",
     "composite": 20.9
   },
@@ -93665,6 +95885,11 @@
     "composite": 42.3
   },
   {
+    "date": "2026-09-23",
+    "ticker": "6861.T",
+    "composite": 42.3
+  },
+  {
     "date": "2026-09-12",
     "ticker": "2801.T",
     "composite": 58.5
@@ -93808,6 +96033,11 @@
     "date": "2026-09-22",
     "ticker": "2801.T",
     "composite": 67.7
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "2801.T",
+    "composite": 57.7
   },
   {
     "date": "2026-09-23",
@@ -93985,6 +96215,11 @@
     "composite": 48.4
   },
   {
+    "date": "2026-09-23",
+    "ticker": "285A.T",
+    "composite": 48.4
+  },
+  {
     "date": "2026-09-12",
     "ticker": "2503.T",
     "composite": 24.3
@@ -94126,6 +96361,11 @@
   },
   {
     "date": "2026-09-22",
+    "ticker": "2503.T",
+    "composite": 25.4
+  },
+  {
+    "date": "2026-09-23",
     "ticker": "2503.T",
     "composite": 25.4
   },
@@ -94305,6 +96545,11 @@
     "composite": 0.4
   },
   {
+    "date": "2026-09-23",
+    "ticker": "5406.T",
+    "composite": 0.4
+  },
+  {
     "date": "2026-09-12",
     "ticker": "6301.T",
     "composite": 43.5
@@ -94446,6 +96691,11 @@
   },
   {
     "date": "2026-09-22",
+    "ticker": "6301.T",
+    "composite": 37.7
+  },
+  {
+    "date": "2026-09-23",
     "ticker": "6301.T",
     "composite": 37.7
   },
@@ -94625,6 +96875,11 @@
     "composite": 64.5
   },
   {
+    "date": "2026-09-23",
+    "ticker": "9766.T",
+    "composite": 74.5
+  },
+  {
     "date": "2026-09-12",
     "ticker": "4902.T",
     "composite": 24.4
@@ -94766,6 +97021,11 @@
   },
   {
     "date": "2026-09-22",
+    "ticker": "4902.T",
+    "composite": 24.1
+  },
+  {
+    "date": "2026-09-23",
     "ticker": "4902.T",
     "composite": 24.1
   },
@@ -94945,6 +97205,11 @@
     "composite": 10.4
   },
   {
+    "date": "2026-09-23",
+    "ticker": "6326.T",
+    "composite": 10.4
+  },
+  {
     "date": "2026-09-12",
     "ticker": "3405.T",
     "composite": -20.4
@@ -95105,6 +97370,11 @@
     "composite": -26.7
   },
   {
+    "date": "2026-09-23",
+    "ticker": "3405.T",
+    "composite": -26.7
+  },
+  {
     "date": "2026-09-12",
     "ticker": "6971.T",
     "composite": 21.4
@@ -95246,6 +97516,11 @@
   },
   {
     "date": "2026-09-22",
+    "ticker": "6971.T",
+    "composite": 24.6
+  },
+  {
+    "date": "2026-09-23",
     "ticker": "6971.T",
     "composite": 24.6
   },
@@ -95425,6 +97700,11 @@
     "composite": 32.2
   },
   {
+    "date": "2026-09-23",
+    "ticker": "6920.T",
+    "composite": 32.2
+  },
+  {
     "date": "2026-09-12",
     "ticker": "4689.T",
     "composite": 31.9
@@ -95583,6 +97863,11 @@
     "date": "2026-09-23",
     "ticker": "4689.T",
     "composite": 23.3
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "4689.T",
+    "composite": 24.5
   },
   {
     "date": "2026-09-12",
@@ -95745,6 +98030,11 @@
     "composite": 48.6
   },
   {
+    "date": "2026-09-23",
+    "ticker": "2413.T",
+    "composite": 48.6
+  },
+  {
     "date": "2026-09-12",
     "ticker": "8002.T",
     "composite": 24.0
@@ -95886,6 +98176,11 @@
   },
   {
     "date": "2026-09-22",
+    "ticker": "8002.T",
+    "composite": 27.1
+  },
+  {
+    "date": "2026-09-23",
     "ticker": "8002.T",
     "composite": 27.1
   },
@@ -96065,6 +98360,11 @@
     "composite": -28.2
   },
   {
+    "date": "2026-09-23",
+    "ticker": "7261.T",
+    "composite": -28.2
+  },
+  {
     "date": "2026-09-12",
     "ticker": "2269.T",
     "composite": 19.0
@@ -96206,6 +98506,11 @@
   },
   {
     "date": "2026-09-22",
+    "ticker": "2269.T",
+    "composite": 12.1
+  },
+  {
+    "date": "2026-09-23",
     "ticker": "2269.T",
     "composite": 12.1
   },
@@ -96385,6 +98690,11 @@
     "composite": 30.2
   },
   {
+    "date": "2026-09-23",
+    "ticker": "4385.T",
+    "composite": 30.2
+  },
+  {
     "date": "2026-09-12",
     "ticker": "6479.T",
     "composite": 35.9
@@ -96526,6 +98836,11 @@
   },
   {
     "date": "2026-09-22",
+    "ticker": "6479.T",
+    "composite": 30.2
+  },
+  {
+    "date": "2026-09-23",
     "ticker": "6479.T",
     "composite": 30.2
   },
@@ -96705,6 +99020,11 @@
     "composite": -51.9
   },
   {
+    "date": "2026-09-23",
+    "ticker": "4188.T",
+    "composite": -51.9
+  },
+  {
     "date": "2026-09-12",
     "ticker": "8058.T",
     "composite": 9.5
@@ -96848,6 +99168,11 @@
     "date": "2026-09-22",
     "ticker": "8058.T",
     "composite": 7.6
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "8058.T",
+    "composite": 17.6
   },
   {
     "date": "2026-09-23",
@@ -97013,6 +99338,11 @@
     "date": "2026-09-23",
     "ticker": "6503.T",
     "composite": 54.8
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "6503.T",
+    "composite": 54.3
   },
   {
     "date": "2026-09-23",
@@ -97345,6 +99675,11 @@
     "composite": 46.7
   },
   {
+    "date": "2026-09-23",
+    "ticker": "7011.T",
+    "composite": 46.7
+  },
+  {
     "date": "2026-09-12",
     "ticker": "5711.T",
     "composite": -6.8
@@ -97486,6 +99821,11 @@
   },
   {
     "date": "2026-09-22",
+    "ticker": "5711.T",
+    "composite": -0.1
+  },
+  {
+    "date": "2026-09-23",
     "ticker": "5711.T",
     "composite": -0.1
   },
@@ -97665,6 +100005,11 @@
     "composite": -10.7
   },
   {
+    "date": "2026-09-23",
+    "ticker": "7211.T",
+    "composite": -10.7
+  },
+  {
     "date": "2026-09-12",
     "ticker": "8306.T",
     "composite": 44.5
@@ -97806,6 +100151,11 @@
   },
   {
     "date": "2026-09-22",
+    "ticker": "8306.T",
+    "composite": 44.4
+  },
+  {
+    "date": "2026-09-23",
     "ticker": "8306.T",
     "composite": 44.4
   },
@@ -97985,6 +100335,11 @@
     "composite": -1.4
   },
   {
+    "date": "2026-09-23",
+    "ticker": "8031.T",
+    "composite": -1.4
+  },
+  {
     "date": "2026-09-12",
     "ticker": "4183.T",
     "composite": -47.6
@@ -98126,6 +100481,11 @@
   },
   {
     "date": "2026-09-22",
+    "ticker": "4183.T",
+    "composite": -50.3
+  },
+  {
+    "date": "2026-09-23",
     "ticker": "4183.T",
     "composite": -50.3
   },
@@ -98305,6 +100665,11 @@
     "composite": 0.3
   },
   {
+    "date": "2026-09-23",
+    "ticker": "8801.T",
+    "composite": 0.3
+  },
+  {
     "date": "2026-09-12",
     "ticker": "5706.T",
     "composite": 41.8
@@ -98446,6 +100811,11 @@
   },
   {
     "date": "2026-09-22",
+    "ticker": "5706.T",
+    "composite": 51.8
+  },
+  {
+    "date": "2026-09-23",
     "ticker": "5706.T",
     "composite": 51.8
   },
@@ -98625,6 +100995,11 @@
     "composite": 31.8
   },
   {
+    "date": "2026-09-23",
+    "ticker": "8411.T",
+    "composite": 31.8
+  },
+  {
     "date": "2026-09-12",
     "ticker": "8725.T",
     "composite": 69.9
@@ -98766,6 +101141,11 @@
   },
   {
     "date": "2026-09-22",
+    "ticker": "8725.T",
+    "composite": 69.9
+  },
+  {
+    "date": "2026-09-23",
     "ticker": "8725.T",
     "composite": 69.9
   },
@@ -98926,6 +101306,11 @@
   },
   {
     "date": "2026-09-22",
+    "ticker": "6981.T",
+    "composite": 44.4
+  },
+  {
+    "date": "2026-09-23",
     "ticker": "6981.T",
     "composite": 44.4
   },
@@ -99105,6 +101490,11 @@
     "composite": 62.1
   },
   {
+    "date": "2026-09-23",
+    "ticker": "6701.T",
+    "composite": 62.1
+  },
+  {
     "date": "2026-09-12",
     "ticker": "3659.T",
     "composite": 31.6
@@ -99265,6 +101655,11 @@
     "composite": 33.9
   },
   {
+    "date": "2026-09-23",
+    "ticker": "3659.T",
+    "composite": 33.9
+  },
+  {
     "date": "2026-09-12",
     "ticker": "5333.T",
     "composite": 41.9
@@ -99406,6 +101801,11 @@
   },
   {
     "date": "2026-09-22",
+    "ticker": "5333.T",
+    "composite": 36.5
+  },
+  {
+    "date": "2026-09-23",
     "ticker": "5333.T",
     "composite": 36.5
   },
@@ -99585,6 +101985,11 @@
     "composite": 26.2
   },
   {
+    "date": "2026-09-23",
+    "ticker": "2282.T",
+    "composite": 34.7
+  },
+  {
     "date": "2026-09-12",
     "ticker": "2871.T",
     "composite": 42.4
@@ -99726,6 +102131,11 @@
   },
   {
     "date": "2026-09-22",
+    "ticker": "2871.T",
+    "composite": 36.2
+  },
+  {
+    "date": "2026-09-23",
     "ticker": "2871.T",
     "composite": 36.2
   },
@@ -99905,6 +102315,11 @@
     "composite": -30.2
   },
   {
+    "date": "2026-09-23",
+    "ticker": "7731.T",
+    "composite": -20.2
+  },
+  {
     "date": "2026-09-12",
     "ticker": "7974.T",
     "composite": 29.7
@@ -100065,6 +102480,11 @@
     "composite": 19.8
   },
   {
+    "date": "2026-09-23",
+    "ticker": "7974.T",
+    "composite": 19.8
+  },
+  {
     "date": "2026-09-12",
     "ticker": "9147.T",
     "composite": -44.3
@@ -100206,6 +102626,11 @@
   },
   {
     "date": "2026-09-22",
+    "ticker": "9147.T",
+    "composite": -49.6
+  },
+  {
+    "date": "2026-09-23",
     "ticker": "9147.T",
     "composite": -49.6
   },
@@ -100385,6 +102810,11 @@
     "composite": -44.0
   },
   {
+    "date": "2026-09-23",
+    "ticker": "5401.T",
+    "composite": -44.0
+  },
+  {
     "date": "2026-09-12",
     "ticker": "9101.T",
     "composite": -1.8
@@ -100526,6 +102956,11 @@
   },
   {
     "date": "2026-09-22",
+    "ticker": "9101.T",
+    "composite": 5.4
+  },
+  {
+    "date": "2026-09-23",
     "ticker": "9101.T",
     "composite": 5.4
   },
@@ -100686,6 +103121,11 @@
   },
   {
     "date": "2026-09-22",
+    "ticker": "4021.T",
+    "composite": 67.8
+  },
+  {
+    "date": "2026-09-23",
     "ticker": "4021.T",
     "composite": 67.8
   },
@@ -100865,6 +103305,11 @@
     "composite": -66.7
   },
   {
+    "date": "2026-09-23",
+    "ticker": "7201.T",
+    "composite": -66.7
+  },
+  {
     "date": "2026-09-12",
     "ticker": "2002.T",
     "composite": 57.3
@@ -101006,6 +103451,11 @@
   },
   {
     "date": "2026-09-22",
+    "ticker": "2002.T",
+    "composite": 38.8
+  },
+  {
+    "date": "2026-09-23",
     "ticker": "2002.T",
     "composite": 38.8
   },
@@ -101185,6 +103635,11 @@
     "composite": 18.9
   },
   {
+    "date": "2026-09-23",
+    "ticker": "1332.T",
+    "composite": 18.9
+  },
+  {
     "date": "2026-09-12",
     "ticker": "9843.T",
     "composite": 54.6
@@ -101345,6 +103800,11 @@
     "composite": 57.7
   },
   {
+    "date": "2026-09-23",
+    "ticker": "9843.T",
+    "composite": 57.7
+  },
+  {
     "date": "2026-09-12",
     "ticker": "6988.T",
     "composite": 28.6
@@ -101486,6 +103946,11 @@
   },
   {
     "date": "2026-09-22",
+    "ticker": "6988.T",
+    "composite": 11.4
+  },
+  {
+    "date": "2026-09-23",
     "ticker": "6988.T",
     "composite": 11.4
   },
@@ -101665,6 +104130,11 @@
     "composite": 26.0
   },
   {
+    "date": "2026-09-23",
+    "ticker": "4307.T",
+    "composite": 26.0
+  },
+  {
     "date": "2026-09-12",
     "ticker": "6471.T",
     "composite": -29.2
@@ -101806,6 +104276,11 @@
   },
   {
     "date": "2026-09-22",
+    "ticker": "6471.T",
+    "composite": -47.7
+  },
+  {
+    "date": "2026-09-23",
     "ticker": "6471.T",
     "composite": -47.7
   },
@@ -101985,6 +104460,11 @@
     "composite": -12.6
   },
   {
+    "date": "2026-09-23",
+    "ticker": "6472.T",
+    "composite": -12.6
+  },
+  {
     "date": "2026-09-12",
     "ticker": "9432.T",
     "composite": 4.8
@@ -102126,6 +104606,11 @@
   },
   {
     "date": "2026-09-22",
+    "ticker": "9432.T",
+    "composite": 14.5
+  },
+  {
+    "date": "2026-09-23",
     "ticker": "9432.T",
     "composite": 14.5
   },
@@ -102305,6 +104790,11 @@
     "composite": 50.6
   },
   {
+    "date": "2026-09-23",
+    "ticker": "1802.T",
+    "composite": 50.6
+  },
+  {
     "date": "2026-09-12",
     "ticker": "9007.T",
     "composite": -20.3
@@ -102446,6 +104936,11 @@
   },
   {
     "date": "2026-09-22",
+    "ticker": "9007.T",
+    "composite": -24.7
+  },
+  {
+    "date": "2026-09-23",
     "ticker": "9007.T",
     "composite": -24.7
   },
@@ -102625,6 +105120,11 @@
     "composite": -6.4
   },
   {
+    "date": "2026-09-23",
+    "ticker": "3861.T",
+    "composite": -6.4
+  },
+  {
     "date": "2026-09-12",
     "ticker": "6103.T",
     "composite": -10.8
@@ -102766,6 +105266,11 @@
   },
   {
     "date": "2026-09-22",
+    "ticker": "6103.T",
+    "composite": -23.8
+  },
+  {
+    "date": "2026-09-23",
     "ticker": "6103.T",
     "composite": -23.8
   },
@@ -103086,6 +105591,11 @@
   },
   {
     "date": "2026-09-22",
+    "ticker": "6645.T",
+    "composite": -9.6
+  },
+  {
+    "date": "2026-09-23",
     "ticker": "6645.T",
     "composite": -9.6
   },
@@ -103265,6 +105775,11 @@
     "composite": 82.1
   },
   {
+    "date": "2026-09-23",
+    "ticker": "4661.T",
+    "composite": 82.1
+  },
+  {
     "date": "2026-09-12",
     "ticker": "9532.T",
     "composite": 40.8
@@ -103423,6 +105938,11 @@
     "date": "2026-09-23",
     "ticker": "9532.T",
     "composite": 48.1
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "9532.T",
+    "composite": 47.0
   },
   {
     "date": "2026-09-12",
@@ -103585,6 +106105,11 @@
     "composite": 75.4
   },
   {
+    "date": "2026-09-23",
+    "ticker": "4578.T",
+    "composite": 75.4
+  },
+  {
     "date": "2026-09-12",
     "ticker": "7532.T",
     "composite": 41.9
@@ -103726,6 +106251,11 @@
   },
   {
     "date": "2026-09-22",
+    "ticker": "7532.T",
+    "composite": 41.7
+  },
+  {
+    "date": "2026-09-23",
     "ticker": "7532.T",
     "composite": 41.7
   },
@@ -103905,6 +106435,11 @@
     "composite": -15.4
   },
   {
+    "date": "2026-09-23",
+    "ticker": "6752.T",
+    "composite": -15.4
+  },
+  {
     "date": "2026-09-12",
     "ticker": "4755.T",
     "composite": 32.7
@@ -104065,6 +106600,11 @@
     "composite": 35.3
   },
   {
+    "date": "2026-09-23",
+    "ticker": "4755.T",
+    "composite": 35.3
+  },
+  {
     "date": "2026-09-12",
     "ticker": "6098.T",
     "composite": 53.5
@@ -104206,6 +106746,11 @@
   },
   {
     "date": "2026-09-22",
+    "ticker": "6098.T",
+    "composite": 58.5
+  },
+  {
+    "date": "2026-09-23",
     "ticker": "6098.T",
     "composite": 58.5
   },
@@ -104385,6 +106930,11 @@
     "composite": -21.3
   },
   {
+    "date": "2026-09-23",
+    "ticker": "6723.T",
+    "composite": -21.3
+  },
+  {
     "date": "2026-09-12",
     "ticker": "8308.T",
     "composite": 26.1
@@ -104526,6 +107076,11 @@
   },
   {
     "date": "2026-09-22",
+    "ticker": "8308.T",
+    "composite": 16.1
+  },
+  {
+    "date": "2026-09-23",
     "ticker": "8308.T",
     "composite": 16.1
   },
@@ -104705,6 +107260,11 @@
     "composite": -37.6
   },
   {
+    "date": "2026-09-23",
+    "ticker": "4004.T",
+    "composite": -37.6
+  },
+  {
     "date": "2026-09-12",
     "ticker": "7752.T",
     "composite": -9.7
@@ -104846,6 +107406,11 @@
   },
   {
     "date": "2026-09-22",
+    "ticker": "7752.T",
+    "composite": -2.8
+  },
+  {
+    "date": "2026-09-23",
     "ticker": "7752.T",
     "composite": -2.8
   },
@@ -105025,6 +107590,11 @@
     "composite": -11.1
   },
   {
+    "date": "2026-09-23",
+    "ticker": "6963.T",
+    "composite": -11.1
+  },
+  {
     "date": "2026-09-12",
     "ticker": "7453.T",
     "composite": 58.6
@@ -105166,6 +107736,11 @@
   },
   {
     "date": "2026-09-22",
+    "ticker": "7453.T",
+    "composite": 57.4
+  },
+  {
+    "date": "2026-09-23",
     "ticker": "7453.T",
     "composite": 57.4
   },
@@ -105345,6 +107920,11 @@
     "composite": 34.1
   },
   {
+    "date": "2026-09-23",
+    "ticker": "2501.T",
+    "composite": 34.1
+  },
+  {
     "date": "2026-09-12",
     "ticker": "7735.T",
     "composite": 60.7
@@ -105498,6 +108078,11 @@
     "date": "2026-09-23",
     "ticker": "7735.T",
     "composite": 67.3
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "7735.T",
+    "composite": 66.3
   },
   {
     "date": "2026-09-23",
@@ -105665,6 +108250,11 @@
     "composite": 51.5
   },
   {
+    "date": "2026-09-23",
+    "ticker": "9735.T",
+    "composite": 51.5
+  },
+  {
     "date": "2026-09-12",
     "ticker": "6724.T",
     "composite": 9.7
@@ -105806,6 +108396,11 @@
   },
   {
     "date": "2026-09-22",
+    "ticker": "6724.T",
+    "composite": 12.7
+  },
+  {
+    "date": "2026-09-23",
     "ticker": "6724.T",
     "composite": 12.7
   },
@@ -105985,6 +108580,11 @@
     "composite": 27.3
   },
   {
+    "date": "2026-09-23",
+    "ticker": "1928.T",
+    "composite": 27.3
+  },
+  {
     "date": "2026-09-12",
     "ticker": "3382.T",
     "composite": 16.9
@@ -106126,6 +108726,11 @@
   },
   {
     "date": "2026-09-22",
+    "ticker": "3382.T",
+    "composite": 15.2
+  },
+  {
+    "date": "2026-09-23",
     "ticker": "3382.T",
     "composite": 15.2
   },
@@ -106305,6 +108910,11 @@
     "composite": 8.4
   },
   {
+    "date": "2026-09-23",
+    "ticker": "6753.T",
+    "composite": 8.4
+  },
+  {
     "date": "2026-09-12",
     "ticker": "3697.T",
     "composite": 74.4
@@ -106458,6 +109068,11 @@
     "date": "2026-09-23",
     "ticker": "3697.T",
     "composite": 84.3
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "3697.T",
+    "composite": 77.6
   },
   {
     "date": "2026-09-23",
@@ -106625,6 +109240,11 @@
     "composite": 22.7
   },
   {
+    "date": "2026-09-23",
+    "ticker": "1803.T",
+    "composite": 39.5
+  },
+  {
     "date": "2026-09-12",
     "ticker": "4063.T",
     "composite": 22.1
@@ -106785,6 +109405,11 @@
     "composite": 29.4
   },
   {
+    "date": "2026-09-23",
+    "ticker": "4063.T",
+    "composite": 29.4
+  },
+  {
     "date": "2026-09-12",
     "ticker": "4507.T",
     "composite": 41.3
@@ -106926,6 +109551,11 @@
   },
   {
     "date": "2026-09-22",
+    "ticker": "4507.T",
+    "composite": 43.4
+  },
+  {
+    "date": "2026-09-23",
     "ticker": "4507.T",
     "composite": 43.4
   },
@@ -107105,6 +109735,11 @@
     "composite": -28.7
   },
   {
+    "date": "2026-09-23",
+    "ticker": "4911.T",
+    "composite": -28.7
+  },
+  {
     "date": "2026-09-12",
     "ticker": "5831.T",
     "composite": 50.5
@@ -107263,6 +109898,11 @@
     "date": "2026-09-23",
     "ticker": "5831.T",
     "composite": 46.0
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "5831.T",
+    "composite": 45.2
   },
   {
     "date": "2026-09-12",
@@ -107425,6 +110065,11 @@
     "composite": 16.8
   },
   {
+    "date": "2026-09-23",
+    "ticker": "6273.T",
+    "composite": 16.8
+  },
+  {
     "date": "2026-09-12",
     "ticker": "6526.T",
     "composite": 3.0
@@ -107566,6 +110211,11 @@
   },
   {
     "date": "2026-09-22",
+    "ticker": "6526.T",
+    "composite": -13.1
+  },
+  {
+    "date": "2026-09-23",
     "ticker": "6526.T",
     "composite": -13.1
   },
@@ -107745,6 +110395,11 @@
     "composite": 12.6
   },
   {
+    "date": "2026-09-23",
+    "ticker": "9434.T",
+    "composite": 13.4
+  },
+  {
     "date": "2026-09-12",
     "ticker": "9984.T",
     "composite": 57.4
@@ -107898,6 +110553,11 @@
     "date": "2026-09-23",
     "ticker": "9984.T",
     "composite": 62.7
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "9984.T",
+    "composite": 58.6
   },
   {
     "date": "2026-09-23",
@@ -108065,6 +110725,11 @@
     "composite": -11.7
   },
   {
+    "date": "2026-09-23",
+    "ticker": "2768.T",
+    "composite": -11.7
+  },
+  {
     "date": "2026-09-12",
     "ticker": "8630.T",
     "composite": 54.0
@@ -108206,6 +110871,11 @@
   },
   {
     "date": "2026-09-22",
+    "ticker": "8630.T",
+    "composite": 51.2
+  },
+  {
+    "date": "2026-09-23",
     "ticker": "8630.T",
     "composite": 51.2
   },
@@ -108385,6 +111055,11 @@
     "composite": 45.5
   },
   {
+    "date": "2026-09-23",
+    "ticker": "6758.T",
+    "composite": 45.5
+  },
+  {
     "date": "2026-09-12",
     "ticker": "7270.T",
     "composite": 2.4
@@ -108538,6 +111213,11 @@
     "date": "2026-09-23",
     "ticker": "7270.T",
     "composite": 4.8
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "7270.T",
+    "composite": 9.8
   },
   {
     "date": "2026-09-23",
@@ -108705,6 +111385,11 @@
     "composite": -54.7
   },
   {
+    "date": "2026-09-23",
+    "ticker": "3436.T",
+    "composite": -54.7
+  },
+  {
     "date": "2026-09-12",
     "ticker": "4005.T",
     "composite": 18.0
@@ -108846,6 +111531,11 @@
   },
   {
     "date": "2026-09-22",
+    "ticker": "4005.T",
+    "composite": 17.0
+  },
+  {
+    "date": "2026-09-23",
     "ticker": "4005.T",
     "composite": 17.0
   },
@@ -109025,6 +111715,11 @@
     "composite": 43.0
   },
   {
+    "date": "2026-09-23",
+    "ticker": "8053.T",
+    "composite": 43.0
+  },
+  {
     "date": "2026-09-12",
     "ticker": "5802.T",
     "composite": 43.8
@@ -109166,6 +111861,11 @@
   },
   {
     "date": "2026-09-22",
+    "ticker": "5802.T",
+    "composite": 53.6
+  },
+  {
+    "date": "2026-09-23",
     "ticker": "5802.T",
     "composite": 53.6
   },
@@ -109345,6 +112045,11 @@
     "composite": -9.1
   },
   {
+    "date": "2026-09-23",
+    "ticker": "6302.T",
+    "composite": -9.1
+  },
+  {
     "date": "2026-09-12",
     "ticker": "5713.T",
     "composite": 9.9
@@ -109486,6 +112191,11 @@
   },
   {
     "date": "2026-09-22",
+    "ticker": "5713.T",
+    "composite": 16.9
+  },
+  {
+    "date": "2026-09-23",
     "ticker": "5713.T",
     "composite": 16.9
   },
@@ -109665,6 +112375,11 @@
     "composite": 38.7
   },
   {
+    "date": "2026-09-23",
+    "ticker": "8316.T",
+    "composite": 38.7
+  },
+  {
     "date": "2026-09-12",
     "ticker": "8309.T",
     "composite": 58.1
@@ -109806,6 +112521,11 @@
   },
   {
     "date": "2026-09-22",
+    "ticker": "8309.T",
+    "composite": 58.1
+  },
+  {
+    "date": "2026-09-23",
     "ticker": "8309.T",
     "composite": 58.1
   },
@@ -109985,6 +112705,11 @@
     "composite": 13.9
   },
   {
+    "date": "2026-09-23",
+    "ticker": "4506.T",
+    "composite": 13.9
+  },
+  {
     "date": "2026-09-12",
     "ticker": "8830.T",
     "composite": -44.4
@@ -110126,6 +112851,11 @@
   },
   {
     "date": "2026-09-22",
+    "ticker": "8830.T",
+    "composite": -44.4
+  },
+  {
+    "date": "2026-09-23",
     "ticker": "8830.T",
     "composite": -44.4
   },
@@ -110305,6 +113035,11 @@
     "composite": 38.8
   },
   {
+    "date": "2026-09-23",
+    "ticker": "7269.T",
+    "composite": 62.8
+  },
+  {
     "date": "2026-09-12",
     "ticker": "8795.T",
     "composite": 47.4
@@ -110446,6 +113181,11 @@
   },
   {
     "date": "2026-09-22",
+    "ticker": "8795.T",
+    "composite": 47.1
+  },
+  {
+    "date": "2026-09-23",
     "ticker": "8795.T",
     "composite": 47.1
   },
@@ -110625,6 +113365,11 @@
     "composite": 47.3
   },
   {
+    "date": "2026-09-23",
+    "ticker": "1801.T",
+    "composite": 47.3
+  },
+  {
     "date": "2026-09-12",
     "ticker": "6976.T",
     "composite": 5.0
@@ -110766,6 +113511,11 @@
   },
   {
     "date": "2026-09-22",
+    "ticker": "6976.T",
+    "composite": 4.9
+  },
+  {
+    "date": "2026-09-23",
     "ticker": "6976.T",
     "composite": 4.9
   },
@@ -110945,6 +113695,11 @@
     "composite": -49.1
   },
   {
+    "date": "2026-09-23",
+    "ticker": "8233.T",
+    "composite": -49.1
+  },
+  {
     "date": "2026-09-12",
     "ticker": "4502.T",
     "composite": -23.0
@@ -111098,6 +113853,11 @@
     "date": "2026-09-23",
     "ticker": "4502.T",
     "composite": -12.7
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "4502.T",
+    "composite": -14.7
   },
   {
     "date": "2026-09-23",
@@ -111265,6 +114025,11 @@
     "composite": 60.3
   },
   {
+    "date": "2026-09-23",
+    "ticker": "6762.T",
+    "composite": 60.3
+  },
+  {
     "date": "2026-09-12",
     "ticker": "3401.T",
     "composite": -9.5
@@ -111406,6 +114171,11 @@
   },
   {
     "date": "2026-09-22",
+    "ticker": "3401.T",
+    "composite": -26.6
+  },
+  {
+    "date": "2026-09-23",
     "ticker": "3401.T",
     "composite": -26.6
   },
@@ -111585,6 +114355,11 @@
     "composite": 59.5
   },
   {
+    "date": "2026-09-23",
+    "ticker": "4543.T",
+    "composite": 59.5
+  },
+  {
     "date": "2026-09-12",
     "ticker": "9001.T",
     "composite": 7.0
@@ -111726,6 +114501,11 @@
   },
   {
     "date": "2026-09-22",
+    "ticker": "9001.T",
+    "composite": 3.6
+  },
+  {
+    "date": "2026-09-23",
     "ticker": "9001.T",
     "composite": 3.6
   },
@@ -111905,6 +114685,11 @@
     "composite": 57.3
   },
   {
+    "date": "2026-09-23",
+    "ticker": "9602.T",
+    "composite": 57.3
+  },
+  {
     "date": "2026-09-12",
     "ticker": "5301.T",
     "composite": -4.6
@@ -112046,6 +114831,11 @@
   },
   {
     "date": "2026-09-22",
+    "ticker": "5301.T",
+    "composite": -10.6
+  },
+  {
+    "date": "2026-09-23",
     "ticker": "5301.T",
     "composite": -10.6
   },
@@ -112206,6 +114996,11 @@
   },
   {
     "date": "2026-09-22",
+    "ticker": "8766.T",
+    "composite": 40.3
+  },
+  {
+    "date": "2026-09-23",
     "ticker": "8766.T",
     "composite": 40.3
   },
@@ -112385,6 +115180,11 @@
     "composite": 5.5
   },
   {
+    "date": "2026-09-23",
+    "ticker": "4043.T",
+    "composite": 5.5
+  },
+  {
     "date": "2026-09-12",
     "ticker": "8035.T",
     "composite": 51.4
@@ -112538,6 +115338,11 @@
     "date": "2026-09-23",
     "ticker": "8035.T",
     "composite": 30.9
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "8035.T",
+    "composite": 29.2
   },
   {
     "date": "2026-09-23",
@@ -112705,6 +115510,11 @@
     "composite": -1.4
   },
   {
+    "date": "2026-09-23",
+    "ticker": "9531.T",
+    "composite": 8.9
+  },
+  {
     "date": "2026-09-12",
     "ticker": "7911.T",
     "composite": 16.9
@@ -112865,6 +115675,11 @@
     "composite": 10.0
   },
   {
+    "date": "2026-09-23",
+    "ticker": "7911.T",
+    "composite": 10.0
+  },
+  {
     "date": "2026-09-12",
     "ticker": "3402.T",
     "composite": 6.7
@@ -113006,6 +115821,11 @@
   },
   {
     "date": "2026-09-22",
+    "ticker": "3402.T",
+    "composite": 4.4
+  },
+  {
+    "date": "2026-09-23",
     "ticker": "3402.T",
     "composite": 4.4
   },
@@ -113185,6 +116005,11 @@
     "composite": 2.6
   },
   {
+    "date": "2026-09-23",
+    "ticker": "5332.T",
+    "composite": 2.6
+  },
+  {
     "date": "2026-09-12",
     "ticker": "7203.T",
     "composite": 3.2
@@ -113345,6 +116170,11 @@
     "composite": 6.5
   },
   {
+    "date": "2026-09-23",
+    "ticker": "7203.T",
+    "composite": 6.5
+  },
+  {
     "date": "2026-09-12",
     "ticker": "8015.T",
     "composite": 55.8
@@ -113486,6 +116316,11 @@
   },
   {
     "date": "2026-09-22",
+    "ticker": "8015.T",
+    "composite": 54.4
+  },
+  {
+    "date": "2026-09-23",
     "ticker": "8015.T",
     "composite": 54.4
   },
@@ -113665,6 +116500,11 @@
     "composite": 39.4
   },
   {
+    "date": "2026-09-23",
+    "ticker": "4704.T",
+    "composite": 39.4
+  },
+  {
     "date": "2026-09-12",
     "ticker": "4208.T",
     "composite": 7.7
@@ -113806,6 +116646,11 @@
   },
   {
     "date": "2026-09-22",
+    "ticker": "4208.T",
+    "composite": 3.5
+  },
+  {
+    "date": "2026-09-23",
     "ticker": "4208.T",
     "composite": 3.5
   },
@@ -113985,6 +116830,11 @@
     "composite": 22.4
   },
   {
+    "date": "2026-09-23",
+    "ticker": "7951.T",
+    "composite": 22.4
+  },
+  {
     "date": "2026-09-12",
     "ticker": "7272.T",
     "composite": -5.3
@@ -114145,6 +116995,11 @@
     "composite": -3.4
   },
   {
+    "date": "2026-09-23",
+    "ticker": "7272.T",
+    "composite": -3.4
+  },
+  {
     "date": "2026-09-12",
     "ticker": "9064.T",
     "composite": 9.8
@@ -114286,6 +117141,11 @@
   },
   {
     "date": "2026-09-22",
+    "ticker": "9064.T",
+    "composite": 3.4
+  },
+  {
+    "date": "2026-09-23",
     "ticker": "9064.T",
     "composite": 3.4
   },
@@ -114465,6 +117325,11 @@
     "composite": -24.7
   },
   {
+    "date": "2026-09-23",
+    "ticker": "6506.T",
+    "composite": -24.7
+  },
+  {
     "date": "2026-09-12",
     "ticker": "6841.T",
     "composite": 51.8
@@ -114625,6 +117490,11 @@
     "composite": 60.6
   },
   {
+    "date": "2026-09-23",
+    "ticker": "6841.T",
+    "composite": 60.6
+  },
+  {
     "date": "2026-09-12",
     "ticker": "7186.T",
     "composite": 52.9
@@ -114766,6 +117636,11 @@
   },
   {
     "date": "2026-09-22",
+    "ticker": "7186.T",
+    "composite": 50.2
+  },
+  {
+    "date": "2026-09-23",
     "ticker": "7186.T",
     "composite": 50.2
   },
@@ -114945,6 +117820,11 @@
     "composite": 27.2
   },
   {
+    "date": "2026-09-23",
+    "ticker": "5101.T",
+    "composite": 27.2
+  },
+  {
     "date": "2026-09-12",
     "ticker": "3092.T",
     "composite": 59.3
@@ -115088,6 +117968,11 @@
     "date": "2026-09-22",
     "ticker": "3092.T",
     "composite": 51.5
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "3092.T",
+    "composite": 61.5
   },
   {
     "date": "2026-09-23",
@@ -115265,6 +118150,11 @@
     "composite": 60.1
   },
   {
+    "date": "2026-09-23",
+    "ticker": "1299.HK",
+    "composite": 60.1
+  },
+  {
     "date": "2026-09-12",
     "ticker": "9988.HK",
     "composite": 17.6
@@ -115418,6 +118308,11 @@
     "date": "2026-09-23",
     "ticker": "9988.HK",
     "composite": 19.8
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "9988.HK",
+    "composite": 25.5
   },
   {
     "date": "2026-09-23",
@@ -115585,6 +118480,11 @@
     "composite": 58.7
   },
   {
+    "date": "2026-09-23",
+    "ticker": "0241.HK",
+    "composite": 58.7
+  },
+  {
     "date": "2026-09-12",
     "ticker": "2600.HK",
     "composite": 46.1
@@ -115726,6 +118626,11 @@
   },
   {
     "date": "2026-09-22",
+    "ticker": "2600.HK",
+    "composite": 45.8
+  },
+  {
+    "date": "2026-09-23",
     "ticker": "2600.HK",
     "composite": 45.8
   },
@@ -115905,6 +118810,11 @@
     "composite": 63.1
   },
   {
+    "date": "2026-09-23",
+    "ticker": "2020.HK",
+    "composite": 63.1
+  },
+  {
     "date": "2026-09-12",
     "ticker": "9888.HK",
     "composite": -47.9
@@ -116046,6 +118956,11 @@
   },
   {
     "date": "2026-09-22",
+    "ticker": "9888.HK",
+    "composite": -47.9
+  },
+  {
+    "date": "2026-09-23",
     "ticker": "9888.HK",
     "composite": -47.9
   },
@@ -116225,6 +119140,11 @@
     "composite": 38.7
   },
   {
+    "date": "2026-09-23",
+    "ticker": "3988.HK",
+    "composite": 38.0
+  },
+  {
     "date": "2026-09-12",
     "ticker": "6160.HK",
     "composite": 64.1
@@ -116373,6 +119293,11 @@
     "date": "2026-09-23",
     "ticker": "6160.HK",
     "composite": 75.6
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "6160.HK",
+    "composite": 75.7
   },
   {
     "date": "2026-09-23",
@@ -116545,6 +119470,11 @@
     "composite": 58.1
   },
   {
+    "date": "2026-09-23",
+    "ticker": "2388.HK",
+    "composite": 58.1
+  },
+  {
     "date": "2026-09-12",
     "ticker": "1876.HK",
     "composite": 15.4
@@ -116693,6 +119623,11 @@
     "date": "2026-09-23",
     "ticker": "1876.HK",
     "composite": 18.2
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "1876.HK",
+    "composite": 18.3
   },
   {
     "date": "2026-09-23",
@@ -116865,6 +119800,11 @@
     "composite": 24.4
   },
   {
+    "date": "2026-09-23",
+    "ticker": "1211.HK",
+    "composite": 24.4
+  },
+  {
     "date": "2026-09-12",
     "ticker": "0285.HK",
     "composite": 67.5
@@ -117008,6 +119948,11 @@
     "date": "2026-09-22",
     "ticker": "0285.HK",
     "composite": 64.0
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "0285.HK",
+    "composite": 76.5
   },
   {
     "date": "2026-09-23",
@@ -117185,6 +120130,11 @@
     "composite": 39.2
   },
   {
+    "date": "2026-09-23",
+    "ticker": "0939.HK",
+    "composite": 39.2
+  },
+  {
     "date": "2026-09-12",
     "ticker": "1378.HK",
     "composite": 47.8
@@ -117326,6 +120276,11 @@
   },
   {
     "date": "2026-09-22",
+    "ticker": "1378.HK",
+    "composite": 57.8
+  },
+  {
+    "date": "2026-09-23",
     "ticker": "1378.HK",
     "composite": 57.8
   },
@@ -117505,6 +120460,11 @@
     "composite": 83.1
   },
   {
+    "date": "2026-09-23",
+    "ticker": "2628.HK",
+    "composite": 83.1
+  },
+  {
     "date": "2026-09-12",
     "ticker": "2319.HK",
     "composite": 12.5
@@ -117665,6 +120625,11 @@
     "composite": 10.7
   },
   {
+    "date": "2026-09-23",
+    "ticker": "2319.HK",
+    "composite": 10.7
+  },
+  {
     "date": "2026-09-12",
     "ticker": "3968.HK",
     "composite": 44.1
@@ -117808,6 +120773,11 @@
     "date": "2026-09-22",
     "ticker": "3968.HK",
     "composite": 43.9
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "3968.HK",
+    "composite": 43.7
   },
   {
     "date": "2026-09-23",
@@ -117985,6 +120955,11 @@
     "composite": 18.2
   },
   {
+    "date": "2026-09-23",
+    "ticker": "0941.HK",
+    "composite": 18.2
+  },
+  {
     "date": "2026-09-12",
     "ticker": "3993.HK",
     "composite": 39.5
@@ -118133,6 +121108,11 @@
     "date": "2026-09-23",
     "ticker": "3993.HK",
     "composite": 38.7
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "3993.HK",
+    "composite": 38.6
   },
   {
     "date": "2026-09-23",
@@ -118305,6 +121285,11 @@
     "composite": -45.9
   },
   {
+    "date": "2026-09-23",
+    "ticker": "0688.HK",
+    "composite": -45.9
+  },
+  {
     "date": "2026-09-12",
     "ticker": "0291.HK",
     "composite": 42.5
@@ -118446,6 +121431,11 @@
   },
   {
     "date": "2026-09-22",
+    "ticker": "0291.HK",
+    "composite": 42.5
+  },
+  {
+    "date": "2026-09-23",
     "ticker": "0291.HK",
     "composite": 42.5
   },
@@ -118625,6 +121615,11 @@
     "composite": 8.9
   },
   {
+    "date": "2026-09-23",
+    "ticker": "1109.HK",
+    "composite": 8.9
+  },
+  {
     "date": "2026-09-12",
     "ticker": "1209.HK",
     "composite": 59.2
@@ -118773,6 +121768,11 @@
     "date": "2026-09-23",
     "ticker": "1209.HK",
     "composite": 59.2
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "1209.HK",
+    "composite": 59.3
   },
   {
     "date": "2026-09-23",
@@ -118945,6 +121945,11 @@
     "composite": 6.9
   },
   {
+    "date": "2026-09-23",
+    "ticker": "0836.HK",
+    "composite": 6.9
+  },
+  {
     "date": "2026-09-12",
     "ticker": "1088.HK",
     "composite": 30.7
@@ -119093,6 +122098,11 @@
     "date": "2026-09-23",
     "ticker": "1088.HK",
     "composite": 39.9
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "1088.HK",
+    "composite": 39.7
   },
   {
     "date": "2026-09-23",
@@ -119265,6 +122275,11 @@
     "composite": 8.7
   },
   {
+    "date": "2026-09-23",
+    "ticker": "0728.HK",
+    "composite": 8.7
+  },
+  {
     "date": "2026-09-12",
     "ticker": "0762.HK",
     "composite": -12.0
@@ -119425,6 +122440,11 @@
     "composite": -12.3
   },
   {
+    "date": "2026-09-23",
+    "ticker": "0762.HK",
+    "composite": -12.3
+  },
+  {
     "date": "2026-09-12",
     "ticker": "1929.HK",
     "composite": 36.4
@@ -119566,6 +122586,11 @@
   },
   {
     "date": "2026-09-22",
+    "ticker": "1929.HK",
+    "composite": 34.1
+  },
+  {
+    "date": "2026-09-23",
     "ticker": "1929.HK",
     "composite": 34.1
   },
@@ -119745,6 +122770,11 @@
     "composite": -29.5
   },
   {
+    "date": "2026-09-23",
+    "ticker": "0267.HK",
+    "composite": -29.5
+  },
+  {
     "date": "2026-09-12",
     "ticker": "1113.HK",
     "composite": -16.4
@@ -119905,6 +122935,11 @@
     "composite": -17.9
   },
   {
+    "date": "2026-09-23",
+    "ticker": "1113.HK",
+    "composite": -17.9
+  },
+  {
     "date": "2026-09-12",
     "ticker": "0001.HK",
     "composite": -26.1
@@ -120046,6 +123081,11 @@
   },
   {
     "date": "2026-09-22",
+    "ticker": "0001.HK",
+    "composite": -27.0
+  },
+  {
+    "date": "2026-09-23",
     "ticker": "0001.HK",
     "composite": -27.0
   },
@@ -120225,6 +123265,11 @@
     "composite": -5.6
   },
   {
+    "date": "2026-09-23",
+    "ticker": "1038.HK",
+    "composite": -5.6
+  },
+  {
     "date": "2026-09-12",
     "ticker": "0002.HK",
     "composite": 32.8
@@ -120373,6 +123418,11 @@
     "date": "2026-09-23",
     "ticker": "0002.HK",
     "composite": 31.8
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "0002.HK",
+    "composite": 31.6
   },
   {
     "date": "2026-09-23",
@@ -120545,6 +123595,11 @@
     "composite": 31.6
   },
   {
+    "date": "2026-09-23",
+    "ticker": "0883.HK",
+    "composite": 31.6
+  },
+  {
     "date": "2026-09-12",
     "ticker": "3750.HK",
     "composite": 69.7
@@ -120693,6 +123748,11 @@
     "date": "2026-09-23",
     "ticker": "3750.HK",
     "composite": 69.5
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "3750.HK",
+    "composite": 69.8
   },
   {
     "date": "2026-09-23",
@@ -120865,6 +123925,11 @@
     "composite": 34.3
   },
   {
+    "date": "2026-09-23",
+    "ticker": "1093.HK",
+    "composite": 34.3
+  },
+  {
     "date": "2026-09-12",
     "ticker": "2688.HK",
     "composite": 25.1
@@ -121018,6 +124083,11 @@
     "date": "2026-09-23",
     "ticker": "2688.HK",
     "composite": 15.4
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "2688.HK",
+    "composite": 25.4
   },
   {
     "date": "2026-09-23",
@@ -121185,6 +124255,11 @@
     "composite": 65.7
   },
   {
+    "date": "2026-09-23",
+    "ticker": "0027.HK",
+    "composite": 65.7
+  },
+  {
     "date": "2026-09-12",
     "ticker": "0175.HK",
     "composite": 66.1
@@ -121345,6 +124420,11 @@
     "composite": 70.9
   },
   {
+    "date": "2026-09-23",
+    "ticker": "0175.HK",
+    "composite": 70.9
+  },
+  {
     "date": "2026-09-12",
     "ticker": "6862.HK",
     "composite": 55.0
@@ -121493,6 +124573,11 @@
     "date": "2026-09-23",
     "ticker": "6862.HK",
     "composite": 48.3
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "6862.HK",
+    "composite": 45.0
   },
   {
     "date": "2026-09-23",
@@ -121665,6 +124750,11 @@
     "composite": 64.3
   },
   {
+    "date": "2026-09-23",
+    "ticker": "6690.HK",
+    "composite": 64.3
+  },
+  {
     "date": "2026-09-12",
     "ticker": "0101.HK",
     "composite": -44.0
@@ -121808,6 +124898,11 @@
     "date": "2026-09-22",
     "ticker": "0101.HK",
     "composite": -35.2
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "0101.HK",
+    "composite": -35.1
   },
   {
     "date": "2026-09-23",
@@ -121985,6 +125080,11 @@
     "composite": 76.8
   },
   {
+    "date": "2026-09-23",
+    "ticker": "3692.HK",
+    "composite": 76.8
+  },
+  {
     "date": "2026-09-12",
     "ticker": "0012.HK",
     "composite": -37.2
@@ -122128,6 +125228,11 @@
     "date": "2026-09-22",
     "ticker": "0012.HK",
     "composite": -36.5
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "0012.HK",
+    "composite": -36.7
   },
   {
     "date": "2026-09-23",
@@ -122305,6 +125410,11 @@
     "composite": 30.4
   },
   {
+    "date": "2026-09-23",
+    "ticker": "1044.HK",
+    "composite": 30.4
+  },
+  {
     "date": "2026-09-12",
     "ticker": "0003.HK",
     "composite": 1.3
@@ -122453,6 +125563,11 @@
     "date": "2026-09-23",
     "ticker": "0003.HK",
     "composite": 0.7
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "0003.HK",
+    "composite": 0.6
   },
   {
     "date": "2026-09-23",
@@ -122625,6 +125740,11 @@
     "composite": 29.0
   },
   {
+    "date": "2026-09-23",
+    "ticker": "0388.HK",
+    "composite": 31.0
+  },
+  {
     "date": "2026-09-12",
     "ticker": "1347.HK",
     "composite": -61.2
@@ -122773,6 +125893,11 @@
     "date": "2026-09-23",
     "ticker": "1347.HK",
     "composite": -51.2
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "1347.HK",
+    "composite": -50.8
   },
   {
     "date": "2026-09-23",
@@ -122945,6 +126070,11 @@
     "composite": 34.5
   },
   {
+    "date": "2026-09-23",
+    "ticker": "1398.HK",
+    "composite": 34.5
+  },
+  {
     "date": "2026-09-12",
     "ticker": "1801.HK",
     "composite": 71.0
@@ -123088,6 +126218,11 @@
     "date": "2026-09-22",
     "ticker": "1801.HK",
     "composite": 76.4
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "1801.HK",
+    "composite": 76.5
   },
   {
     "date": "2026-09-23",
@@ -123265,6 +126400,11 @@
     "composite": -3.7
   },
   {
+    "date": "2026-09-23",
+    "ticker": "1519.HK",
+    "composite": -3.7
+  },
+  {
     "date": "2026-09-12",
     "ticker": "6618.HK",
     "composite": 70.0
@@ -123413,6 +126553,11 @@
     "date": "2026-09-23",
     "ticker": "6618.HK",
     "composite": 75.0
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "6618.HK",
+    "composite": 73.3
   },
   {
     "date": "2026-09-23",
@@ -123585,6 +126730,11 @@
     "composite": 57.3
   },
   {
+    "date": "2026-09-23",
+    "ticker": "2618.HK",
+    "composite": 57.3
+  },
+  {
     "date": "2026-09-12",
     "ticker": "9618.HK",
     "composite": 53.2
@@ -123738,6 +126888,11 @@
     "date": "2026-09-23",
     "ticker": "9618.HK",
     "composite": 46.0
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "9618.HK",
+    "composite": 47.5
   },
   {
     "date": "2026-09-23",
@@ -123905,6 +127060,11 @@
     "composite": 24.5
   },
   {
+    "date": "2026-09-23",
+    "ticker": "1024.HK",
+    "composite": 24.5
+  },
+  {
     "date": "2026-09-12",
     "ticker": "6181.HK",
     "composite": 37.4
@@ -124065,6 +127225,11 @@
     "composite": 37.4
   },
   {
+    "date": "2026-09-23",
+    "ticker": "6181.HK",
+    "composite": 37.4
+  },
+  {
     "date": "2026-09-12",
     "ticker": "0992.HK",
     "composite": 58.9
@@ -124208,6 +127373,11 @@
     "date": "2026-09-22",
     "ticker": "0992.HK",
     "composite": 65.6
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "0992.HK",
+    "composite": 66.4
   },
   {
     "date": "2026-09-23",
@@ -124385,6 +127555,11 @@
     "composite": -15.6
   },
   {
+    "date": "2026-09-23",
+    "ticker": "2015.HK",
+    "composite": -15.6
+  },
+  {
     "date": "2026-09-12",
     "ticker": "2331.HK",
     "composite": 38.3
@@ -124545,6 +127720,11 @@
     "composite": 41.6
   },
   {
+    "date": "2026-09-23",
+    "ticker": "2331.HK",
+    "composite": 41.6
+  },
+  {
     "date": "2026-09-12",
     "ticker": "0823.HK",
     "composite": -13.6
@@ -124686,6 +127866,11 @@
   },
   {
     "date": "2026-09-22",
+    "ticker": "0823.HK",
+    "composite": -26.1
+  },
+  {
+    "date": "2026-09-23",
     "ticker": "0823.HK",
     "composite": -26.1
   },
@@ -124865,6 +128050,11 @@
     "composite": -60.7
   },
   {
+    "date": "2026-09-23",
+    "ticker": "0960.HK",
+    "composite": -60.7
+  },
+  {
     "date": "2026-09-12",
     "ticker": "3690.HK",
     "composite": -4.4
@@ -125008,6 +128198,11 @@
     "date": "2026-09-22",
     "ticker": "3690.HK",
     "composite": -8.4
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "3690.HK",
+    "composite": -8.5
   },
   {
     "date": "2026-09-23",
@@ -125185,6 +128380,11 @@
     "composite": 67.4
   },
   {
+    "date": "2026-09-23",
+    "ticker": "0300.HK",
+    "composite": 67.4
+  },
+  {
     "date": "2026-09-12",
     "ticker": "0066.HK",
     "composite": 19.6
@@ -125333,6 +128533,11 @@
     "date": "2026-09-23",
     "ticker": "0066.HK",
     "composite": 29.0
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "0066.HK",
+    "composite": 28.9
   },
   {
     "date": "2026-09-23",
@@ -125505,6 +128710,11 @@
     "composite": 74.3
   },
   {
+    "date": "2026-09-23",
+    "ticker": "9999.HK",
+    "composite": 74.3
+  },
+  {
     "date": "2026-09-12",
     "ticker": "9901.HK",
     "composite": 68.5
@@ -125665,6 +128875,11 @@
     "composite": 71.7
   },
   {
+    "date": "2026-09-23",
+    "ticker": "9901.HK",
+    "composite": 71.7
+  },
+  {
     "date": "2026-09-12",
     "ticker": "9633.HK",
     "composite": 60.5
@@ -125808,6 +129023,11 @@
     "date": "2026-09-22",
     "ticker": "9633.HK",
     "composite": 60.4
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "9633.HK",
+    "composite": 60.3
   },
   {
     "date": "2026-09-23",
@@ -125985,6 +129205,11 @@
     "composite": 1.2
   },
   {
+    "date": "2026-09-23",
+    "ticker": "0316.HK",
+    "composite": 1.2
+  },
+  {
     "date": "2026-09-12",
     "ticker": "0857.HK",
     "composite": 27.5
@@ -126145,6 +129370,11 @@
     "composite": 25.7
   },
   {
+    "date": "2026-09-23",
+    "ticker": "0857.HK",
+    "composite": 25.7
+  },
+  {
     "date": "2026-09-12",
     "ticker": "2318.HK",
     "composite": 72.2
@@ -126288,6 +129518,11 @@
     "date": "2026-09-22",
     "ticker": "2318.HK",
     "composite": 72.2
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "2318.HK",
+    "composite": 72.0
   },
   {
     "date": "2026-09-23",
@@ -126465,6 +129700,11 @@
     "composite": 63.9
   },
   {
+    "date": "2026-09-23",
+    "ticker": "9992.HK",
+    "composite": 63.9
+  },
+  {
     "date": "2026-09-12",
     "ticker": "0006.HK",
     "composite": 11.2
@@ -126618,6 +129858,11 @@
     "date": "2026-09-23",
     "ticker": "0006.HK",
     "composite": 9.6
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "0006.HK",
+    "composite": 4.6
   },
   {
     "date": "2026-09-23",
@@ -126785,6 +130030,11 @@
     "composite": 35.4
   },
   {
+    "date": "2026-09-23",
+    "ticker": "1928.HK",
+    "composite": 31.4
+  },
+  {
     "date": "2026-09-12",
     "ticker": "0981.HK",
     "composite": -36.9
@@ -126928,6 +130178,11 @@
     "date": "2026-09-22",
     "ticker": "0981.HK",
     "composite": -35.9
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "0981.HK",
+    "composite": -36.3
   },
   {
     "date": "2026-09-23",
@@ -127105,6 +130360,11 @@
     "composite": 34.4
   },
   {
+    "date": "2026-09-23",
+    "ticker": "2313.HK",
+    "composite": 34.4
+  },
+  {
     "date": "2026-09-12",
     "ticker": "1177.HK",
     "composite": 49.1
@@ -127253,6 +130513,11 @@
     "date": "2026-09-23",
     "ticker": "1177.HK",
     "composite": 63.7
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "1177.HK",
+    "composite": 63.4
   },
   {
     "date": "2026-09-23",
@@ -127425,6 +130690,11 @@
     "composite": -7.4
   },
   {
+    "date": "2026-09-23",
+    "ticker": "0386.HK",
+    "composite": -26.7
+  },
+  {
     "date": "2026-09-12",
     "ticker": "1099.HK",
     "composite": 16.6
@@ -127573,6 +130843,11 @@
     "date": "2026-09-23",
     "ticker": "1099.HK",
     "composite": 16.3
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "1099.HK",
+    "composite": 16.2
   },
   {
     "date": "2026-09-23",
@@ -127745,6 +131020,11 @@
     "composite": -1.5
   },
   {
+    "date": "2026-09-23",
+    "ticker": "0016.HK",
+    "composite": -1.5
+  },
+  {
     "date": "2026-09-12",
     "ticker": "2382.HK",
     "composite": 69.8
@@ -127898,6 +131178,11 @@
     "date": "2026-09-23",
     "ticker": "2382.HK",
     "composite": 61.4
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "2382.HK",
+    "composite": 66.4
   },
   {
     "date": "2026-09-23",
@@ -128065,6 +131350,11 @@
     "composite": 65.8
   },
   {
+    "date": "2026-09-23",
+    "ticker": "0669.HK",
+    "composite": 65.8
+  },
+  {
     "date": "2026-09-12",
     "ticker": "0700.HK",
     "composite": 53.5
@@ -128208,6 +131498,11 @@
     "date": "2026-09-22",
     "ticker": "0700.HK",
     "composite": 45.0
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "0700.HK",
+    "composite": 44.5
   },
   {
     "date": "2026-09-23",
@@ -128385,6 +131680,11 @@
     "composite": 54.6
   },
   {
+    "date": "2026-09-23",
+    "ticker": "0322.HK",
+    "composite": 54.6
+  },
+  {
     "date": "2026-09-12",
     "ticker": "9961.HK",
     "composite": 54.0
@@ -128528,6 +131828,11 @@
     "date": "2026-09-22",
     "ticker": "9961.HK",
     "composite": 47.3
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "9961.HK",
+    "composite": 54.0
   },
   {
     "date": "2026-09-23",
@@ -128705,6 +132010,11 @@
     "composite": 73.7
   },
   {
+    "date": "2026-09-23",
+    "ticker": "2338.HK",
+    "composite": 73.7
+  },
+  {
     "date": "2026-09-12",
     "ticker": "0288.HK",
     "composite": 42.4
@@ -128865,6 +132175,11 @@
     "composite": 49.9
   },
   {
+    "date": "2026-09-23",
+    "ticker": "0288.HK",
+    "composite": 49.0
+  },
+  {
     "date": "2026-09-12",
     "ticker": "1997.HK",
     "composite": -25.1
@@ -129006,6 +132321,11 @@
   },
   {
     "date": "2026-09-22",
+    "ticker": "1997.HK",
+    "composite": -25.1
+  },
+  {
+    "date": "2026-09-23",
     "ticker": "1997.HK",
     "composite": -25.1
   },
@@ -129345,6 +132665,11 @@
     "composite": 67.3
   },
   {
+    "date": "2026-09-23",
+    "ticker": "2269.HK",
+    "composite": 67.3
+  },
+  {
     "date": "2026-09-12",
     "ticker": "1810.HK",
     "composite": 53.6
@@ -129493,6 +132818,11 @@
     "date": "2026-09-23",
     "ticker": "1810.HK",
     "composite": 64.2
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "1810.HK",
+    "composite": 63.9
   },
   {
     "date": "2026-09-23",
@@ -129665,6 +132995,11 @@
     "composite": -1.3
   },
   {
+    "date": "2026-09-23",
+    "ticker": "0868.HK",
+    "composite": -1.3
+  },
+  {
     "date": "2026-09-12",
     "ticker": "0968.HK",
     "composite": -47.7
@@ -129806,6 +133141,11 @@
   },
   {
     "date": "2026-09-22",
+    "ticker": "0968.HK",
+    "composite": -47.7
+  },
+  {
+    "date": "2026-09-23",
     "ticker": "0968.HK",
     "composite": -47.7
   },
@@ -129985,6 +133325,11 @@
     "composite": 63.3
   },
   {
+    "date": "2026-09-23",
+    "ticker": "2899.HK",
+    "composite": 63.3
+  },
+  {
     "date": "2026-09-12",
     "ticker": "2057.HK",
     "composite": 63.7
@@ -130128,6 +133473,11 @@
     "date": "2026-09-22",
     "ticker": "2057.HK",
     "composite": 62.7
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "2057.HK",
+    "composite": 62.6
   },
   {
     "date": "2026-09-23",
@@ -130293,6 +133643,11 @@
     "date": "2026-09-23",
     "ticker": "STJ.L",
     "composite": 12.8
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "STJ.L",
+    "composite": 14.1
   },
   {
     "date": "2026-09-23",
@@ -130610,6 +133965,11 @@
     "composite": 8.6
   },
   {
+    "date": "2026-09-23",
+    "ticker": "9502.T",
+    "composite": 8.6
+  },
+  {
     "date": "2026-09-12",
     "ticker": "8601.T",
     "composite": 54.4
@@ -130763,6 +134123,11 @@
     "date": "2026-09-23",
     "ticker": "8601.T",
     "composite": 57.2
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "8601.T",
+    "composite": 59.9
   },
   {
     "date": "2026-09-12",
@@ -130920,6 +134285,11 @@
     "composite": 57.8
   },
   {
+    "date": "2026-09-23",
+    "ticker": "9201.T",
+    "composite": 57.8
+  },
+  {
     "date": "2026-09-12",
     "ticker": "6178.T",
     "composite": -17.8
@@ -131056,6 +134426,11 @@
   },
   {
     "date": "2026-09-22",
+    "ticker": "6178.T",
+    "composite": -23.6
+  },
+  {
+    "date": "2026-09-23",
     "ticker": "6178.T",
     "composite": -23.6
   },
@@ -131230,6 +134605,11 @@
     "composite": 37.0
   },
   {
+    "date": "2026-09-23",
+    "ticker": "9503.T",
+    "composite": 37.0
+  },
+  {
     "date": "2026-09-12",
     "ticker": "9009.T",
     "composite": 32.1
@@ -131366,6 +134746,11 @@
   },
   {
     "date": "2026-09-22",
+    "ticker": "9009.T",
+    "composite": 26.2
+  },
+  {
+    "date": "2026-09-23",
     "ticker": "9009.T",
     "composite": 26.2
   },
@@ -131540,6 +134925,11 @@
     "composite": -3.2
   },
   {
+    "date": "2026-09-23",
+    "ticker": "4151.T",
+    "composite": -3.2
+  },
+  {
     "date": "2026-09-12",
     "ticker": "8252.T",
     "composite": -8.3
@@ -131695,6 +135085,11 @@
     "composite": -11.2
   },
   {
+    "date": "2026-09-23",
+    "ticker": "8252.T",
+    "composite": -11.2
+  },
+  {
     "date": "2026-09-12",
     "ticker": "9104.T",
     "composite": -23.1
@@ -131831,6 +135226,11 @@
   },
   {
     "date": "2026-09-22",
+    "ticker": "9104.T",
+    "composite": -25.0
+  },
+  {
+    "date": "2026-09-23",
     "ticker": "9104.T",
     "composite": -25.0
   },
@@ -131986,6 +135386,11 @@
   },
   {
     "date": "2026-09-22",
+    "ticker": "5214.T",
+    "composite": 31.8
+  },
+  {
+    "date": "2026-09-23",
     "ticker": "5214.T",
     "composite": 31.8
   },
@@ -132160,6 +135565,11 @@
     "composite": 65.4
   },
   {
+    "date": "2026-09-23",
+    "ticker": "8604.T",
+    "composite": 65.4
+  },
+  {
     "date": "2026-09-12",
     "ticker": "8591.T",
     "composite": 70.9
@@ -132315,6 +135725,11 @@
     "composite": 75.9
   },
   {
+    "date": "2026-09-23",
+    "ticker": "8591.T",
+    "composite": 75.9
+  },
+  {
     "date": "2026-09-12",
     "ticker": "5233.T",
     "composite": -4.3
@@ -132451,6 +135866,11 @@
   },
   {
     "date": "2026-09-22",
+    "ticker": "5233.T",
+    "composite": -7.7
+  },
+  {
+    "date": "2026-09-23",
     "ticker": "5233.T",
     "composite": -7.7
   },
@@ -132625,6 +136045,11 @@
     "composite": -53.2
   },
   {
+    "date": "2026-09-23",
+    "ticker": "9501.T",
+    "composite": -53.2
+  },
+  {
     "date": "2026-09-12",
     "ticker": "8804.T",
     "composite": -3.3
@@ -132780,6 +136205,11 @@
     "composite": -6.9
   },
   {
+    "date": "2026-09-23",
+    "ticker": "8804.T",
+    "composite": -6.9
+  },
+  {
     "date": "2026-09-12",
     "ticker": "9005.T",
     "composite": -25.4
@@ -132916,6 +136346,11 @@
   },
   {
     "date": "2026-09-22",
+    "ticker": "9005.T",
+    "composite": -15.6
+  },
+  {
+    "date": "2026-09-23",
     "ticker": "9005.T",
     "composite": -15.6
   },
@@ -133090,6 +136525,11 @@
     "composite": 2.2
   },
   {
+    "date": "2026-09-23",
+    "ticker": "3289.T",
+    "composite": 2.2
+  },
+  {
     "date": "2026-09-12",
     "ticker": "4042.T",
     "composite": 18.6
@@ -133226,6 +136666,11 @@
   },
   {
     "date": "2026-09-22",
+    "ticker": "4042.T",
+    "composite": 12.4
+  },
+  {
+    "date": "2026-09-23",
     "ticker": "4042.T",
     "composite": 12.4
   },
@@ -133400,6 +136845,11 @@
     "composite": 20.6
   },
   {
+    "date": "2026-09-23",
+    "ticker": "9021.T",
+    "composite": 20.6
+  },
+  {
     "date": "2026-09-12",
     "ticker": "III.L",
     "composite": -15.8
@@ -133543,6 +136993,11 @@
     "date": "2026-09-23",
     "ticker": "III.L",
     "composite": 49.7
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "III.L",
+    "composite": 49.1
   },
   {
     "date": "2026-09-23",
@@ -133700,6 +137155,11 @@
     "composite": 11.7
   },
   {
+    "date": "2026-09-23",
+    "ticker": "ABDN.L",
+    "composite": 11.0
+  },
+  {
     "date": "2026-09-12",
     "ticker": "ALW.L",
     "composite": -13.8
@@ -133843,6 +137303,11 @@
     "date": "2026-09-23",
     "ticker": "ALW.L",
     "composite": -1.8
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "ALW.L",
+    "composite": -3.6
   },
   {
     "date": "2026-09-23",
@@ -134000,6 +137465,11 @@
     "composite": 21.1
   },
   {
+    "date": "2026-09-23",
+    "ticker": "FCIT.L",
+    "composite": 21.1
+  },
+  {
     "date": "2026-09-12",
     "ticker": "ICG.L",
     "composite": -4.5
@@ -134143,6 +137613,11 @@
     "date": "2026-09-23",
     "ticker": "ICG.L",
     "composite": 23.0
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "ICG.L",
+    "composite": 22.9
   },
   {
     "date": "2026-09-23",
@@ -134300,6 +137775,11 @@
     "composite": 21.5
   },
   {
+    "date": "2026-09-23",
+    "ticker": "PSH.L",
+    "composite": 21.5
+  },
+  {
     "date": "2026-09-12",
     "ticker": "PCT.L",
     "composite": -9.5
@@ -134443,6 +137923,11 @@
     "date": "2026-09-23",
     "ticker": "PCT.L",
     "composite": 66.0
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "PCT.L",
+    "composite": 65.6
   },
   {
     "date": "2026-09-23",
@@ -134600,6 +138085,11 @@
     "composite": 44.1
   },
   {
+    "date": "2026-09-23",
+    "ticker": "SMT.L",
+    "composite": 44.1
+  },
+  {
     "date": "2026-09-12",
     "ticker": "BBOX.L",
     "composite": -19.5
@@ -134743,6 +138233,11 @@
     "date": "2026-09-23",
     "ticker": "BBOX.L",
     "composite": -13.3
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "BBOX.L",
+    "composite": -16.5
   },
   {
     "date": "2026-09-23",
@@ -134900,6 +138395,11 @@
     "composite": 15.4
   },
   {
+    "date": "2026-09-23",
+    "ticker": "SLHN.SW",
+    "composite": 15.4
+  },
+  {
     "date": "2026-09-12",
     "ticker": "MAP.MC",
     "composite": 63.0
@@ -135048,6 +138548,11 @@
     "date": "2026-09-23",
     "ticker": "MAP.MC",
     "composite": 70.3
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "MAP.MC",
+    "composite": 69.2
   },
   {
     "date": "2026-09-12",
@@ -135200,6 +138705,11 @@
     "composite": 50.6
   },
   {
+    "date": "2026-09-23",
+    "ticker": "BMED.MI",
+    "composite": 50.6
+  },
+  {
     "date": "2026-09-12",
     "ticker": "FBK.MI",
     "composite": -6.2
@@ -135343,6 +138853,11 @@
     "date": "2026-09-23",
     "ticker": "FBK.MI",
     "composite": 59.3
+  },
+  {
+    "date": "2026-09-23",
+    "ticker": "FBK.MI",
+    "composite": 59.7
   },
   {
     "date": "2026-09-23",

@@ -629,6 +629,21 @@ def test_compute_no_loss_years_false_when_one_year_missing():
     assert _compute_no_loss_years(net_income, years) is False
 
 
+def test_compute_no_loss_years_true_when_trailing_oldest_year_missing():
+    # Cas réel (audit C6) : yfinance ne fournit quasiment jamais le 5e
+    # exercice de Net Income, systématiquement NaN en bout de série
+    # (le plus ancien) — ce n'est pas une vraie perte manquante.
+    years = ["2025-12-31", "2024-12-31", "2023-12-31"]
+    net_income = pd.Series([100.0, 90.0, float("nan")], index=years)
+    assert _compute_no_loss_years(net_income, years) is True
+
+
+def test_compute_no_loss_years_false_when_all_years_missing():
+    years = ["2025-12-31", "2024-12-31", "2023-12-31"]
+    net_income = pd.Series([float("nan"), float("nan"), float("nan")], index=years)
+    assert _compute_no_loss_years(net_income, years) is False
+
+
 def _make_fixture_statements():
     years = ["2025-12-31", "2024-12-31", "2023-12-31", "2022-12-31", "2021-12-31"]
     financials = pd.DataFrame(

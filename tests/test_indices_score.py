@@ -707,6 +707,37 @@ def test_extract_ratios_negative_ebitda_marks_structure_and_cash_generation_unav
     assert ratios["fcf_conversion"] == 0.0
 
 
+def test_extract_ratios_missing_shares_outstanding_leaves_valuation_unavailable():
+    """Audit 2026-09-24, constat C5 : sharesOutstanding manquant chez
+    yfinance devient 0.0 par convention (fetch_company_financials) — sans
+    ce garde, market_cap = price * 0 = 0 rendait EV/EBITDA exactement
+    égal à dette nette/EBITDA et P/E exactement à 0.0x, publiés comme de
+    vraies valeurs. 13 sociétés touchées en production (dont ALV.DE, qui
+    avait déclenché une alerte "entrée" sans aucune valorisation réelle
+    derrière)."""
+    financials, balance_sheet, cashflow, closes_by_year = _make_fixture_statements()
+    ratios = extract_ratios(
+        financials, balance_sheet, cashflow, closes_by_year, shares_outstanding=0.0
+    )
+    assert ratios["valuation_available"] is False
+    assert ratios["current_pe"] == 0.0
+    assert ratios["current_ev_ebitda"] == 0.0
+    assert ratios["current_pb"] == 0.0
+
+
+def test_extract_ratios_financial_missing_shares_outstanding_leaves_pe_pb_zero():
+    """Même correctif que le profil standard, côté extract_ratios_financial
+    (audit 2026-09-24, constat C5)."""
+    financials, balance_sheet, cashflow, closes_by_year = _make_financial_fixture_statements()
+    ratios = indices_score.extract_ratios_financial(
+        financials, balance_sheet, cashflow, closes_by_year, shares_outstanding=0.0
+    )
+    assert ratios["current_pe"] == 0.0
+    assert ratios["current_pb"] == 0.0
+    assert ratios["avg_pe_5y"] == 0.0
+    assert ratios["avg_pb_5y"] == 0.0
+
+
 def test_extract_ratios_computes_cagr_net_income():
     """Régression : extract_ratios (profil standard) n'exposait pas
     cagr_net_income avant ce correctif -> compute_graham_defensive_badge

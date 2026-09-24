@@ -2111,6 +2111,16 @@ def extract_ratios(financials, balance_sheet, cashflow, closes_by_year, shares_o
         equity_value = _safe_value(equity, col)
         if (
             price is None
+            # sharesOutstanding manquant chez yfinance (audit 2026-09-24,
+            # constat C5) : `shares_outstanding` reçu vaut 0.0 par
+            # convention (voir fetch_company_financials) — sans ce garde,
+            # market_cap = price * 0 = 0 plus bas rendait EV/EBITDA
+            # exactement égal à dette nette/EBITDA et P/E exactement à
+            # 0.0x, publiés comme de vraies valeurs au lieu d'une
+            # valorisation indisponible (13 sociétés touchées, dont
+            # ALV.DE qui avait déclenché une alerte "entrée" sans aucune
+            # valorisation réelle derrière).
+            or not shares_outstanding
             or not ebitda[col]
             or not net_income[col]
             or _is_missing(ebitda[col])
@@ -2304,6 +2314,12 @@ def extract_ratios_financial(financials, balance_sheet, cashflow, closes_by_year
         equity_value = _safe_value(equity, col)
         if (
             price is None
+            # sharesOutstanding manquant (audit 2026-09-24, constat C5) —
+            # même correctif que le profil standard (extract_ratios) :
+            # sans ce garde, market_cap = price * 0 = 0 rendait P/E et
+            # P/B exactement à 0.0x au lieu d'une valorisation
+            # indisponible.
+            or not shares_outstanding
             or not net_income[col] or _is_missing(net_income[col])
             or not equity_value or _is_missing(equity_value)
         ):

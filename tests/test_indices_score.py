@@ -4773,12 +4773,13 @@ def test_build_financial_narrative_context_degrades_gracefully_when_capex_entire
     assert "FCF non disponible" in context
 
 
-def test_score_rentabilite_financiere_rewards_roe_above_cost_of_capital():
-    good = indices_score.score_rentabilite_financiere(roe=15.0, cost_of_capital=8.0)
-    bad = indices_score.score_rentabilite_financiere(roe=2.0, cost_of_capital=8.0)
+def test_score_rentabilite_financiere_rewards_roe_above_cost_of_equity():
+    good = indices_score.score_rentabilite_financiere(roe=15.0, cost_of_equity=8.0)
+    bad = indices_score.score_rentabilite_financiere(roe=2.0, cost_of_equity=8.0)
     assert good.score > 0
     assert bad.score < 0
     assert "profil financier" in good.raw_value.lower()
+    assert "capitaux propres" in good.raw_value.lower()
 
 
 def test_score_structure_financiere_bancaire_bands():
@@ -4920,6 +4921,34 @@ def test_build_company_entry_uses_financial_factors_for_financial_sector_tickers
     # que sur l'approche patrimoniale (equity/shares_outstanding = 25.0),
     # qui doit rester calculable malgré l'absence de FCF/EBITDA.
     assert entry["fair_value"] is not None
+
+
+def test_build_company_entry_uses_cost_of_equity_not_wacc_for_financial_roe(monkeypatch):
+    # audit I4 : le facteur "Rentabilité" du profil financier doit
+    # comparer le ROE au coût des CAPITAUX PROPRES (Ke), pas au WACC --
+    # avec une dette élevée (plausible pour une banque), WACC et Ke
+    # divergent nettement, ce qui permet de vérifier laquelle des deux
+    # valeurs est réellement utilisée dans le texte du facteur.
+    ratios = _fake_financial_ratios()
+    ratios["total_debt"] = 3000.0
+    monkeypatch.setattr(indices_score, "fetch_company_financials", lambda ticker: ratios)
+    monkeypatch.setattr(indices_score, "fetch_news", lambda name, prev=None: [])
+    monkeypatch.setattr(indices_score, "generate_financial_analysis", lambda *a, **k: "<p>Analyse.</p>")
+
+    market_cap = ratios["current_price"] * ratios["shares_outstanding"]
+    expected_cost_of_equity = indices_score.estimate_cost_of_equity(3.0, ratios["beta"], market_cap, 1.0)
+    expected_wacc = indices_score.estimate_wacc(
+        3.0, ratios["beta"], market_cap, ratios["total_debt"], ratios["tax_rate"], 1.0,
+    )
+    # Vérifie d'abord que la fixture crée bien un écart mesurable -- sinon
+    # le test ne prouverait rien.
+    assert abs(expected_cost_of_equity - expected_wacc) > 1.0
+
+    entry = indices_score.build_company_entry("BNP.PA", "BNP Paribas", 3.0, {}, index_key="CAC40")
+
+    raw_value = entry["factors"][0]["raw_value"]
+    assert f"{expected_cost_of_equity:.1f}%" in raw_value
+    assert f"{expected_wacc:.1f}%" not in raw_value
 
 
 def test_build_company_entry_exposes_score_raw_equal_to_score_before_recalibration(monkeypatch):

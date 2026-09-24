@@ -3365,6 +3365,20 @@ def fetch_index_price_history() -> list[dict]:
     return entries
 
 
+def _current_methodology_version() -> str | None:
+    """SHA du commit déployé au moment de l'ouverture d'une position
+    (audit I9, volet 1) : GITHUB_SHA est une variable d'environnement
+    standard, toujours présente sur un run GitHub Actions (pas besoin de
+    la déclarer explicitement dans le workflow) — None en dehors de CI
+    (tests locaux), dégradation attendue plutôt qu'une erreur. Permet de
+    savoir a posteriori si une position a été ouverte avant ou après un
+    correctif de méthodologie donné, sans quoi une analyse de performance
+    agrégée mélangerait silencieusement des positions sélectionnées sous
+    des règles de scoring différentes (13 correctifs de méthodologie en
+    une seule journée le 2026-09-24, C1-C6/I1-I8)."""
+    return os.environ.get("GITHUB_SHA")
+
+
 def _open_new_signal_positions(
     positions: list[dict], newly_triggered_entree: list[dict],
     index_prices: dict, today: str,
@@ -3379,6 +3393,7 @@ def _open_new_signal_positions(
         datetime.strptime(today, "%Y-%m-%d").date()
         + relativedelta(months=SIGNAL_SHADOW_DELAY_MONTHS)
     ).strftime("%Y-%m-%d")
+    methodology_version = _current_methodology_version()
     for company in newly_triggered_entree:
         ticker = company["ticker"]
         if ticker in open_tickers:
@@ -3397,6 +3412,7 @@ def _open_new_signal_positions(
             "entry_price": company["current_price"],
             "target_exit_price": company["exit_price"],
             "index_price_at_entry": index_prices.get(company["index"]),
+            "methodology_version": methodology_version,
             "close_date": None,
             "close_price": None,
             "close_reason": None,
@@ -3414,18 +3430,38 @@ def _open_new_signal_positions(
 
 def _close_eligible_positions(
     positions: list[dict], companies_by_ticker: dict, index_prices: dict, today: str,
+    roster_tickers: set[str] | None = None,
 ) -> list[dict]:
     """Clôture toute position "open" dont une condition est remplie —
     stop-loss (SIGNAL_STOP_LOSS_PCT) -> objectif atteint -> délai max,
     dans cet ordre de priorité. Une position dont le ticker n'est plus
-    dans companies_by_ticker (sorti de l'indice) ou sans current_price
-    est laissée intacte plutôt que clôturée sur une donnée périmée."""
+    dans companies_by_ticker sans current_price est laissée intacte
+    plutôt que clôturée sur une donnée périmée -- SAUF si `roster_tickers`
+    est fourni et que le ticker n'y figure plus DU TOUT (audit I9, volet
+    2) : contrairement à un simple raté de fetch ce run-là (transitoire,
+    le ticker reste dans le roster), un ticker retiré du roster (révision
+    d'indice, ex. Hang Seng 2026-09) ne reviendra jamais dans
+    companies_by_ticker -- sans ce garde, la position restait bloquée
+    "open" indéfiniment, sans jamais pouvoir se clôturer ni résoudre son
+    benchmark fantôme, polluant silencieusement les statistiques de
+    performance. Clôturée avec close_reason="ticker_retire_indice",
+    close_price/return_pct=None (donnée finale non mesurable) plutôt que
+    d'inventer un chiffre. `roster_tickers=None` (défaut, appelants
+    existants) ne change rien au comportement d'avant ce correctif."""
     today_date = datetime.strptime(today, "%Y-%m-%d").date()
     for position in positions:
         if position["status"] != "open":
             continue
         company = companies_by_ticker.get(position["ticker"])
         if company is None or _is_missing(company.get("current_price")):
+            if (
+                company is None and roster_tickers is not None
+                and position["ticker"] not in roster_tickers
+            ):
+                position["status"] = "closed"
+                position["close_date"] = today
+                position["close_reason"] = "ticker_retire_indice"
+                position["shadow_resolved"] = True
             continue
         current_price = company["current_price"]
         entry_price = position["entry_price"]
@@ -3504,8 +3540,9 @@ def update_signal_tracking(companies: list[dict], newly_triggered_entree: list[d
         index_prices = fetch_index_prices()
         today = datetime.today().strftime("%Y-%m-%d")
 
+        roster_tickers = {c["ticker"] for c in COMPANIES}
         positions = _open_new_signal_positions(positions, newly_triggered_entree, index_prices, today)
-        positions = _close_eligible_positions(positions, companies_by_ticker, index_prices, today)
+        positions = _close_eligible_positions(positions, companies_by_ticker, index_prices, today, roster_tickers)
         positions = _resolve_pending_shadow_benchmarks(positions, companies_by_ticker, today)
 
         save_signal_tracking(positions)

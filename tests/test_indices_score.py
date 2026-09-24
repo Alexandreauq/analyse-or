@@ -6959,6 +6959,36 @@ def test_open_new_signal_positions_creates_position_for_newly_triggered_company(
     assert p["shadow_price"] is None
 
 
+def test_open_new_signal_positions_stores_methodology_version_from_github_sha(monkeypatch):
+    """audit I9, volet 1 : une position doit garder trace du commit actif
+    à son ouverture (GITHUB_SHA, variable standard GitHub Actions), pour
+    distinguer a posteriori les positions ouvertes avant/après un
+    correctif de méthodologie donné."""
+    monkeypatch.setenv("GITHUB_SHA", "abc123def456")
+    company = {
+        "ticker": "BN.PA", "name": "Danone", "index": "CAC40",
+        "current_price": 100.0, "exit_price": 130.0,
+    }
+    positions = indices_score._open_new_signal_positions(
+        [], [company], {"CAC40": 7850.0}, today="2026-09-08",
+    )
+    assert positions[0]["methodology_version"] == "abc123def456"
+
+
+def test_open_new_signal_positions_methodology_version_none_outside_ci(monkeypatch):
+    """En dehors de GitHub Actions (tests locaux), GITHUB_SHA n'existe
+    pas -- dégradation attendue vers None, pas une erreur."""
+    monkeypatch.delenv("GITHUB_SHA", raising=False)
+    company = {
+        "ticker": "BN.PA", "name": "Danone", "index": "CAC40",
+        "current_price": 100.0, "exit_price": 130.0,
+    }
+    positions = indices_score._open_new_signal_positions(
+        [], [company], {"CAC40": 7850.0}, today="2026-09-08",
+    )
+    assert positions[0]["methodology_version"] is None
+
+
 def test_open_new_signal_positions_skips_ticker_with_already_open_position():
     company = {
         "ticker": "BN.PA", "name": "Danone", "index": "CAC40",
@@ -7088,14 +7118,48 @@ def test_close_eligible_positions_leaves_open_when_no_condition_met():
 
 
 def test_close_eligible_positions_leaves_open_when_ticker_not_in_companies():
-    """Ticker sorti de l'indice (ex: recomposition DAX) : pas de cours
-    disponible aujourd'hui, position laissée intacte plutôt que
-    clôturée sur une donnée périmée ou une exception."""
+    """Panne de fetch transitoire (ticker toujours dans le roster, raté
+    ce run-là seulement) : sans roster_tickers fourni (comportement
+    d'avant l'audit I9, volet 2), pas de cours disponible aujourd'hui,
+    position laissée intacte plutôt que clôturée sur une donnée périmée
+    ou une exception."""
     position = _fake_open_position()
     result = indices_score._close_eligible_positions(
         [position], {}, {"CAC40": 7600.0}, today="2026-09-08",
     )
     assert result[0]["status"] == "open"
+
+
+def test_close_eligible_positions_leaves_open_when_ticker_missing_but_still_in_roster():
+    """audit I9, volet 2 : ticker absent de companies_by_ticker (panne de
+    fetch transitoire) mais toujours présent dans roster_tickers -- reste
+    "open", pas clôturé à tort."""
+    position = _fake_open_position()
+    result = indices_score._close_eligible_positions(
+        [position], {}, {"CAC40": 7600.0}, today="2026-09-08",
+        roster_tickers={"BN.PA", "MC.PA"},
+    )
+    assert result[0]["status"] == "open"
+
+
+def test_close_eligible_positions_closes_when_ticker_removed_from_roster():
+    """audit I9, volet 2 : ticker sorti DÉFINITIVEMENT du roster (révision
+    d'indice, ex. Hang Seng 2026-09) -- ne reviendra jamais dans
+    companies_by_ticker, doit être clôturé plutôt que rester "open" pour
+    toujours et polluer silencieusement les statistiques de performance.
+    close_price/return_pct restent None : pas de donnée finale mesurable,
+    pas de chiffre inventé."""
+    position = _fake_open_position()
+    result = indices_score._close_eligible_positions(
+        [position], {}, {"CAC40": 7600.0}, today="2026-09-08",
+        roster_tickers={"MC.PA"},  # "BN.PA" n'y figure plus
+    )
+    assert result[0]["status"] == "closed"
+    assert result[0]["close_reason"] == "ticker_retire_indice"
+    assert result[0]["close_date"] == "2026-09-08"
+    assert result[0]["close_price"] is None
+    assert result[0]["return_pct"] is None
+    assert result[0]["shadow_resolved"] is True
 
 
 def test_close_eligible_positions_ignores_already_closed_positions():

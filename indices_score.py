@@ -3197,7 +3197,13 @@ OUTPUT_JSON_PATH = os.path.join(
 INDICES_HISTORY_PATH = os.path.join(
     os.path.dirname(os.path.abspath(__file__)), "indices_history.json"
 )
-HISTORY_RETENTION_PER_TICKER = 730  # ~2 ans, une entrée par jour et par ticker
+HISTORY_RETENTION_DAYS = 730  # ~2 ans -- rétention par date calendaire, pas
+                               # par nombre d'écritures (audit Minor #4) :
+                               # le workflow tourne parfois plusieurs fois
+                               # par jour (runs manuels de vérification),
+                               # donc garder "les 730 dernières entrées"
+                               # couvrait en réalité moins d'un an, pas ~2
+                               # ans comme annoncé.
 
 SIGNAL_TRACKING_PATH = os.path.join(
     os.path.dirname(os.path.abspath(__file__)), "docs", "signal_tracking.json"
@@ -3213,7 +3219,15 @@ NIKKEI_HANGSENG_PRICE_HISTORY_PATH = os.path.join(
 # docs/company_quote_widget.js). Limité à ces deux indices pour l'instant
 # — les autres ont déjà un graphique TradingView fonctionnel, pas besoin
 # d'accumuler un historique de prix pour eux.
-PRICE_HISTORY_RETENTION_PER_TICKER = 730
+NIKKEI_HANGSENG_HISTORY_RETENTION_DAYS = 730  # même correctif que
+                                                # HISTORY_RETENTION_DAYS,
+                                                # rétention par date plutôt
+                                                # que par nombre d'écritures
+                                                # (audit Minor #4) -- nom
+                                                # distinct de
+                                                # PRICE_HISTORY_RETENTION_DAYS
+                                                # (docs/price_history.json,
+                                                # fichier différent, 6 ans)
 PRICE_HISTORY_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "docs", "price_history.json")
 PRICE_HISTORY_RECENT_DAYS = 30  # entrees quotidiennes dans cette fenetre
 PRICE_HISTORY_RETENTION_DAYS = 2190  # 6 ans, au-dela l'entree la plus ancienne est supprimee
@@ -3578,11 +3592,16 @@ def update_nikkei_hangseng_price_history(
     le cours est disponible (_is_missing exclut None/NaN — comme pour
     signal_tracking.json, ce fichier n'est jamais régénéré à partir de
     zéro, seulement complété, donc un NaN écrit ici resterait invalide
-    pour toujours), puis retrimme chaque ticker indépendamment à
-    PRICE_HISTORY_RETENTION_PER_TICKER (même mécanique qu'
-    append_indices_history — pas de déduplication par jour, une entrée
-    par exécution du workflow, comme pour indices_history.json). Dégrade
-    toujours vers [] en cas d'erreur — ne fait jamais échouer main()."""
+    pour toujours), puis retrimme aux NIKKEI_HANGSENG_HISTORY_RETENTION_DAYS
+    derniers jours calendaires -- pas les N dernières écritures (même
+    correctif qu'append_indices_history, audit Minor #4 : le workflow
+    tourne parfois plusieurs fois par jour, une rétention par nombre
+    d'écritures couvre alors moins que prévu). Exclut aussi tout ticker
+    qui n'est plus dans NIKKEI225_COMPANIES/HANGSENG_COMPANIES (révision
+    d'indice) -- sans ça son historique reste figé indéfiniment dans le
+    fichier, jamais nettoyé faute de nouvelles écritures pour le retrimer.
+    Dégrade toujours vers [] en cas d'erreur — ne fait jamais échouer
+    main()."""
     try:
         today_str = datetime.today().strftime("%Y-%m-%d")
         new_entries = [
@@ -3592,12 +3611,14 @@ def update_nikkei_hangseng_price_history(
         ]
         history = load_nikkei_hangseng_price_history(path)
         history.extend(new_entries)
-        by_ticker: dict[str, list[dict]] = {}
-        for entry in history:
-            by_ticker.setdefault(entry["ticker"], []).append(entry)
-        trimmed = []
-        for ticker_entries in by_ticker.values():
-            trimmed.extend(ticker_entries[-PRICE_HISTORY_RETENTION_PER_TICKER:])
+        roster_tickers = {c["ticker"] for c in NIKKEI225_COMPANIES + HANGSENG_COMPANIES}
+        cutoff = (
+            datetime.today().date() - timedelta(days=NIKKEI_HANGSENG_HISTORY_RETENTION_DAYS)
+        ).strftime("%Y-%m-%d")
+        trimmed = [
+            e for e in history
+            if e.get("ticker") in roster_tickers and e.get("date", "") >= cutoff
+        ]
         os.makedirs(os.path.dirname(path), exist_ok=True)
         with open(path, "w", encoding="utf-8") as fh:
             json.dump(trimmed, fh, ensure_ascii=False, indent=2, allow_nan=False)
@@ -3620,17 +3641,25 @@ def load_indices_history(path=INDICES_HISTORY_PATH) -> list[dict]:
 
 
 def append_indices_history(entries: list[dict], path=INDICES_HISTORY_PATH) -> list[dict]:
-    """Ajoute les entrées du jour (une par entreprise) et retrimme chaque
-    ticker indépendamment à HISTORY_RETENTION_PER_TICKER, pour que l'ajout
-    d'une entreprise ne tronque jamais l'historique d'une autre."""
+    """Ajoute les entrées du jour (une par entreprise) et retrimme aux
+    HISTORY_RETENTION_DAYS derniers jours calendaires -- pas les N
+    dernières écritures (audit Minor #4) : le workflow tourne parfois
+    plusieurs fois par jour (runs manuels de vérification), donc garder
+    "les 730 dernières entrées" par ticker couvrait en réalité moins
+    d'un an, pas ~2 ans comme annoncé. Exclut aussi tout ticker qui n'est
+    plus dans COMPANIES (révision d'indice, ex. Hang Seng 2026-09) --
+    sans ça son historique reste figé indéfiniment dans le fichier,
+    jamais nettoyé faute de nouvelles écritures pour le retrimer (même
+    correctif que la clôture des positions orphelines de
+    signal_tracking.json, audit I9)."""
     history = load_indices_history(path)
     history.extend(entries)
-    by_ticker: dict[str, list[dict]] = {}
-    for entry in history:
-        by_ticker.setdefault(entry["ticker"], []).append(entry)
-    trimmed = []
-    for ticker_entries in by_ticker.values():
-        trimmed.extend(ticker_entries[-HISTORY_RETENTION_PER_TICKER:])
+    roster_tickers = {c["ticker"] for c in COMPANIES}
+    cutoff = (datetime.today().date() - timedelta(days=HISTORY_RETENTION_DAYS)).strftime("%Y-%m-%d")
+    trimmed = [
+        e for e in history
+        if e.get("ticker") in roster_tickers and e.get("date", "") >= cutoff
+    ]
     with open(path, "w", encoding="utf-8") as fh:
         json.dump(trimmed, fh, ensure_ascii=False, indent=2)
     return trimmed

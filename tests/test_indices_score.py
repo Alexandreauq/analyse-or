@@ -512,6 +512,21 @@ def test_recalibrate_scores_by_profile_updates_interpretation():
         assert c["interpretation"] == indices_score.interpret(c["score"])
 
 
+def test_recalibrate_scores_by_profile_leaves_score_raw_untouched():
+    # score_raw doit rester la trace du score brut d'origine même après
+    # recalibrage -- sinon plus aucun moyen d'expliquer un score
+    # recalibré négatif pour une société dont tous les facteurs bruts
+    # étaient positifs (audit I1).
+    companies = _make_companies_with_scores([float(i) for i in range(25)])
+    for c in companies:
+        c["score_raw"] = c["score"]
+    original_raw = [c["score_raw"] for c in companies]
+    indices_score.recalibrate_scores_by_profile(companies)
+    assert [c["score_raw"] for c in companies] == original_raw
+    # Le score affiché, lui, a bien changé (recalibrage appliqué).
+    assert companies[0]["score"] != companies[0]["score_raw"]
+
+
 def test_recalibrate_scores_by_profile_leaves_small_pool_untouched():
     # 5 sociétés trust (< seuil 20) : score et interpretation doivent rester
     # strictement identiques à ce qu'ils étaient avant l'appel.
@@ -4815,6 +4830,19 @@ def test_build_company_entry_uses_financial_factors_for_financial_sector_tickers
     # que sur l'approche patrimoniale (equity/shares_outstanding = 25.0),
     # qui doit rester calculable malgré l'absence de FCF/EBITDA.
     assert entry["fair_value"] is not None
+
+
+def test_build_company_entry_exposes_score_raw_equal_to_score_before_recalibration(monkeypatch):
+    # build_company_entry ne recalibre jamais lui-même (recalibrate_scores_by_profile
+    # s'applique après, sur l'ensemble du pool) -- à ce stade, score_raw doit donc
+    # toujours être strictement identique à score (audit I1).
+    monkeypatch.setattr(indices_score, "fetch_company_financials", lambda ticker: _fake_financial_ratios())
+    monkeypatch.setattr(indices_score, "fetch_news", lambda name, prev=None: [])
+    monkeypatch.setattr(indices_score, "generate_financial_analysis", lambda *a, **k: "<p>Analyse.</p>")
+
+    entry = indices_score.build_company_entry("BNP.PA", "BNP Paribas", 3.0, {}, index_key="CAC40")
+
+    assert entry["score_raw"] == entry["score"]
 
 
 def test_build_company_entry_exposes_weinstein_stage_fields(monkeypatch):

@@ -4525,6 +4525,7 @@ def build_company_entry(
         "is_financial": data["is_financial"],
         "is_trust": data["is_trust"],
         "score": composite,
+        "score_raw": composite,
         "interpretation": interpret(composite),
         "factors": [
             {"name": f.name, "score": f.score, "weight": f.weight, "raw_value": f.raw_value}

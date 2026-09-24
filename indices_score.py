@@ -1901,15 +1901,36 @@ def compute_dividend_streak_years(dividends: pd.Series, today: "date | None" = N
 
 
 def _compute_no_loss_years(net_income: pd.Series, years_cols: list) -> bool:
-    """True si `net_income` est positif sur TOUS les exercices de
-    `years_cols` (aucune perte) — False si un seul exercice est négatif
-    OU manquant (donnée manquante traitée comme un échec du critère,
-    jamais comme une réussite silencieuse — même philosophie que les
-    autres critères Graham de ce fichier, ex. valorisation_pe qui exige
-    current_pe > 0 plutôt que de laisser passer une donnée à 0/manquante)."""
+    """True si `net_income` est positif sur TOUS les exercices exploitables
+    de `years_cols` (aucune perte) — False si un seul exercice exploitable
+    est négatif, ou si aucun exercice n'est exploitable (donnée manquante
+    traitée comme un échec du critère, jamais comme une réussite
+    silencieuse — même philosophie que les autres critères Graham de ce
+    fichier, ex. valorisation_pe qui exige current_pe > 0 plutôt que de
+    laisser passer une donnée à 0/manquante).
+
+    `years_cols` est trié du plus récent au plus ancien — les exercices
+    manquants en FIN de liste (les plus anciens) sont exclus du contrôle
+    avant de l'appliquer (audit 2026-09-24, constat C6) : yfinance ne
+    fournit quasiment jamais un 5e exercice annuel complet pour
+    Net Income (vérifié en direct sur Apple, Coca-Cola, J&J, LVMH,
+    L'Oréal, Hermès — le 5e exercice est systématiquement NaN, un
+    artefact structurel de la fenêtre de données de la source, pas une
+    vraie absence d'information) — exiger les 5 exercices à la fois
+    faisait donc échouer ce critère pour la quasi-totalité des sociétés,
+    y compris celles n'ayant jamais essuyé de perte. Un NaN au MILIEU de
+    la série (un vrai trou de données, pas cet artefact de fenêtre)
+    continue de faire échouer le critère normalement — seuls les
+    exercices manquants en bout de série sont ignorés, pas n'importe
+    lequel."""
+    trimmed = list(years_cols)
+    while trimmed and _is_missing(net_income[trimmed[-1]]):
+        trimmed.pop()
+    if not trimmed:
+        return False
     return all(
         not _is_missing(net_income[col]) and net_income[col] > 0
-        for col in years_cols
+        for col in trimmed
     )
 
 

@@ -1950,6 +1950,39 @@ def test_estimate_asset_based_price_no_discount_when_roe_meets_cost_of_capital()
     assert result == 4.0
 
 
+def test_estimate_asset_based_price_still_capped_at_1_by_default_with_high_roe():
+    """allow_premium=False (défaut) : même avec un ROE très supérieur au
+    coût du capital, le facteur qualité reste plafonné à 1.0 -- pour les
+    sociétés standard/cycliques, le DCF/multiples portent déjà cet upside
+    dans la moyenne pondérée (audit I5, comportement par défaut
+    inchangé)."""
+    # ratio ROE/coût du capital = 40/8 = 5.0, très au-dessus de 1.0
+    result = estimate_asset_based_price(equity=200.0, shares_outstanding=50.0, roe=40.0, cost_of_capital=8.0)
+    assert result == 4.0
+
+
+def test_estimate_asset_based_price_allows_premium_when_flag_set():
+    """allow_premium=True (profils financier/trust, audit I5) : un ROE
+    au-dessus du coût du capital donne désormais une prime au-dessus de
+    la valeur comptable, pas seulement l'absence de décote."""
+    # ratio = 10/8 = 1.25
+    result = estimate_asset_based_price(
+        equity=200.0, shares_outstanding=50.0, roe=10.0, cost_of_capital=8.0, allow_premium=True,
+    )
+    assert result == pytest.approx(4.0 * 1.25)
+
+
+def test_estimate_asset_based_price_premium_capped_at_asset_quality_ceiling():
+    """allow_premium=True : la prime reste plafonnée à ASSET_QUALITY_CEILING
+    même pour un ratio ROE/coût du capital extrême -- pas de prime
+    débridée pour un Ke très faible face à un ROE exceptionnel."""
+    # ratio = 40/8 = 5.0, bien au-dessus d'ASSET_QUALITY_CEILING (3.0)
+    result = estimate_asset_based_price(
+        equity=200.0, shares_outstanding=50.0, roe=40.0, cost_of_capital=8.0, allow_premium=True,
+    )
+    assert result == pytest.approx(4.0 * indices_score.ASSET_QUALITY_CEILING)
+
+
 def test_estimate_asset_based_price_discounted_when_roe_below_cost_of_capital():
     """ROE sous le coût du capital : la valeur comptable est décotée
     proportionnellement (modèle du résultat résiduel / justified P/B) —
@@ -2739,6 +2772,44 @@ def test_estimate_valuation_targets_uses_cost_of_equity_for_asset_quality_discou
     low_benchmark = estimate_valuation_targets(data, cost_of_capital=4.0)
     high_benchmark = estimate_valuation_targets(data, cost_of_capital=4.0, cost_of_equity=12.0)
     assert high_benchmark["fair_value"] < low_benchmark["fair_value"]
+
+
+def test_estimate_valuation_targets_allows_premium_above_book_value_for_financial_profile():
+    """audit I5 : pour un profil financier, fcf=0.0 et current_ev_ebitda=0.0
+    désactivent structurellement DCF et multiples (voir
+    extract_ratios_financial) -- la méthode patrimoniale est alors la
+    SEULE source de fair_value, et un ROE nettement supérieur au coût des
+    capitaux propres doit pouvoir se traduire par une prime au-dessus de
+    la valeur comptable, pas rester plafonné à elle."""
+    data = {
+        "fcf": 0.0, "cagr_ebitda": 0.0, "net_debt": 0.0, "shares_outstanding": 10.0,
+        "equity": 800.0,  # book value/action = 80.0
+        "current_price": 100.0, "current_ev_ebitda": 0.0, "avg_ev_ebitda_5y": 0.0,
+        "ma200": 100.0, "beta": 1.0, "ecart_pct_ma200": 0.0, "fcf_normalized": 0.0,
+        "sector": "Financial Services", "roe": 20.0,
+        "is_financial": True, "is_trust": False,
+    }
+    result = estimate_valuation_targets(data, cost_of_capital=8.0, cost_of_equity=8.0)
+    # ratio ROE/Ke = 20/8 = 2.5 -> fair_value = 80 * 2.5 = 200, > book value
+    assert result["fair_value"] == pytest.approx(200.0)
+
+
+def test_estimate_valuation_targets_keeps_cap_at_book_value_for_standard_profile():
+    """Même ROE/coût des capitaux propres que le test ci-dessus, mais sans
+    is_financial/is_trust : le plafond à 1.0 doit rester en place (profil
+    standard, où DCF/multiples portent déjà l'upside dans la moyenne
+    pondérée -- ici absents seulement parce que la fixture les désactive
+    pour isoler la méthode patrimoniale, pas parce que c'est structurel
+    pour ce profil)."""
+    data = {
+        "fcf": 0.0, "cagr_ebitda": 0.0, "net_debt": 0.0, "shares_outstanding": 10.0,
+        "equity": 800.0,
+        "current_price": 100.0, "current_ev_ebitda": 0.0, "avg_ev_ebitda_5y": 0.0,
+        "ma200": 100.0, "beta": 1.0, "ecart_pct_ma200": 0.0, "fcf_normalized": 0.0,
+        "sector": "Unknown", "roe": 20.0,
+    }
+    result = estimate_valuation_targets(data, cost_of_capital=8.0, cost_of_equity=8.0)
+    assert result["fair_value"] == pytest.approx(80.0)
 
 
 def test_estimate_valuation_targets_falls_back_to_cost_of_capital_when_cost_of_equity_absent():

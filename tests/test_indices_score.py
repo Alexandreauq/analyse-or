@@ -5789,16 +5789,34 @@ def test_fetch_company_financials_converts_statements_when_financial_currency_di
     avant le branchement extract_ratios vs extract_ratios_financial).
     "equity" est utilisé pour l'assertion (pas "net_income", qui n'est
     exposé dans AUCUN des deux dicts de retour) — "equity" l'est dans
-    les deux, donc le choix reste valable quel que soit le profil."""
+    les deux, donc le choix reste valable quel que soit le profil.
+
+    Couvre aussi quarterly_financials (revue finale 2026-09-24, constat
+    I1) : sans conversion, le texte injecté dans le prompt d'analyse IA
+    (build_financial_narrative_context) mélangerait un CA annuel converti
+    avec un CA trimestriel resté dans financial_currency. La ligne "Total
+    Revenue" est ajoutée à la fixture trimestrielle (absente jusqu'ici,
+    qui ne portait qu'un comptage d'actions) pour pouvoir l'observer ;
+    quarterly_yoy_growth_ca ne convient pas pour cette assertion (c'est
+    un ratio trimestre/trimestre qui annule le taux de change des deux
+    côtés), donc on lit directement le DataFrame `quarterly` capturé par
+    la fake ticker après l'appel -- fetch_company_financials le convertit
+    en place (`.loc[...] = ...`), donc `quarterly` reflète l'état
+    post-conversion."""
     financials, balance_sheet, cashflow, _ = _make_fixture_statements()
     financials.columns = pd.to_datetime(financials.columns)
     balance_sheet.columns = pd.to_datetime(balance_sheet.columns)
     cashflow.columns = pd.to_datetime(cashflow.columns)
-    quarterly = _fake_annual_df({"Diluted Average Shares": [100.0]}, [pd.Timestamp("2025-09-30")])
+    quarterly = _fake_annual_df(
+        {"Diluted Average Shares": [100.0], "Total Revenue": [50.0]},
+        [pd.Timestamp("2025-09-30")],
+    )
     history_index = pd.date_range("2024-01-01", periods=250, freq="D")
     history_close = pd.Series([100.0] * 250, index=history_index)
     equity_before_conversion = balance_sheet.loc["Stockholders Equity"].copy()
     tax_rate_before_conversion = financials.loc["Tax Rate For Calcs"].copy()
+    quarterly_revenue_before_conversion = quarterly.loc["Total Revenue"].copy()
+    quarterly_shares_before_conversion = quarterly.loc["Diluted Average Shares"].copy()
 
     class _FakeTicker:
         def __init__(self, ticker):
@@ -5843,6 +5861,17 @@ def test_fetch_company_financials_converts_statements_when_financial_currency_di
     # doit surtout PAS être multiplié par le taux de change (sinon
     # 0.25*2.0=0.5, un taux d'imposition de 50% inventé de toutes pièces).
     assert ratios["tax_rate"] == pytest.approx(tax_rate_before_conversion.iloc[0])
+    # quarterly_financials doit être converti par le même taux que les
+    # comptes annuels (constat I1), sinon le texte du prompt IA mélange
+    # des devises.
+    assert quarterly.loc["Total Revenue"].iloc[0] == pytest.approx(
+        quarterly_revenue_before_conversion.iloc[0] * 2.0
+    )
+    # "Diluted Average Shares" (comptage d'actions, pas un montant) ne
+    # doit surtout PAS être multiplié par le taux de change (constat M1).
+    assert quarterly.loc["Diluted Average Shares"].iloc[0] == pytest.approx(
+        quarterly_shares_before_conversion.iloc[0]
+    )
 
 
 def test_fetch_company_financials_degrades_shares_outstanding_when_fx_rate_unavailable(monkeypatch):

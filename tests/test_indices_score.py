@@ -512,6 +512,25 @@ def test_recalibrate_scores_by_profile_updates_interpretation():
         assert c["interpretation"] == indices_score.interpret(c["score"])
 
 
+def test_recalibrate_scores_by_profile_marks_recalibrated_companies_true():
+    # audit I3 : score_recalibrated distingue un score percentile (pool
+    # >= seuil, échelle uniforme) d'un score brut laissé tel quel.
+    companies = _make_companies_with_scores([float(i) for i in range(25)])
+    indices_score.recalibrate_scores_by_profile(companies)
+    assert all(c["score_recalibrated"] is True for c in companies)
+
+
+def test_recalibrate_scores_by_profile_leaves_small_pool_score_recalibrated_false():
+    # Profil trust (< seuil) : jamais recalibré -- score_recalibrated doit
+    # rester à sa valeur par défaut posée par build_company_entry (False),
+    # pas devenir True par erreur.
+    companies = _make_companies_with_scores([1.0, 2.0, 3.0, 4.0, 5.0], is_trust=True)
+    for c in companies:
+        c["score_recalibrated"] = False
+    indices_score.recalibrate_scores_by_profile(companies)
+    assert all(c["score_recalibrated"] is False for c in companies)
+
+
 def test_recalibrate_scores_by_profile_leaves_score_raw_untouched():
     # score_raw doit rester la trace du score brut d'origine même après
     # recalibrage -- sinon plus aucun moyen d'expliquer un score
@@ -4914,6 +4933,20 @@ def test_build_company_entry_exposes_score_raw_equal_to_score_before_recalibrati
     entry = indices_score.build_company_entry("BNP.PA", "BNP Paribas", 3.0, {}, index_key="CAC40")
 
     assert entry["score_raw"] == entry["score"]
+
+
+def test_build_company_entry_defaults_score_recalibrated_to_false(monkeypatch):
+    # build_company_entry ne recalibre jamais (voir test ci-dessus) -- le
+    # défaut doit être False, changé en True uniquement par
+    # recalibrate_scores_by_profile pour les profils au pool suffisant
+    # (audit I3).
+    monkeypatch.setattr(indices_score, "fetch_company_financials", lambda ticker: _fake_financial_ratios())
+    monkeypatch.setattr(indices_score, "fetch_news", lambda name, prev=None: [])
+    monkeypatch.setattr(indices_score, "generate_financial_analysis", lambda *a, **k: "<p>Analyse.</p>")
+
+    entry = indices_score.build_company_entry("BNP.PA", "BNP Paribas", 3.0, {}, index_key="CAC40")
+
+    assert entry["score_recalibrated"] is False
 
 
 def test_build_company_entry_exposes_weinstein_stage_fields(monkeypatch):

@@ -1770,11 +1770,17 @@ def _score_profile_key(company: dict) -> str:
 
 
 def recalibrate_scores_by_profile(companies: list[dict]) -> None:
-    """Mute company["score"] et company["interpretation"] en place pour
-    chaque société dont le profil a un pool >= SCORE_RECALIBRATION_MIN_POOL_SIZE.
-    Une société dans un profil au pool trop petit (ex: trust aujourd'hui,
-    0 société) garde son score brut déjà calculé par build_company_entry —
-    repli assumé, pas un oubli (voir spec)."""
+    """Mute company["score"], company["interpretation"] et
+    company["score_recalibrated"] en place pour chaque société dont le
+    profil a un pool >= SCORE_RECALIBRATION_MIN_POOL_SIZE. Une société
+    dans un profil au pool trop petit (ex: trust aujourd'hui, 9 sociétés
+    -- une liste curée qui n'a structurellement aucune raison d'atteindre
+    le seuil un jour, pas une situation temporaire) garde son score brut
+    déjà calculé par build_company_entry et score_recalibrated=False —
+    repli assumé, pas un oubli (voir spec). Ce booléen (audit I3) permet
+    de distinguer un score percentile (échelle uniforme par construction)
+    d'un score brut (échelle propre au profil, pas comparable en l'état)
+    sans avoir à redériver la taille du pool à la lecture."""
     pools: dict[str, list[float]] = {}
     for c in companies:
         pools.setdefault(_score_profile_key(c), []).append(c["score"])
@@ -1788,6 +1794,7 @@ def recalibrate_scores_by_profile(companies: list[dict]) -> None:
         new_score = round((percentile - 50) * 2, 1)
         c["score"] = new_score
         c["interpretation"] = interpret(new_score)
+        c["score_recalibrated"] = True
 
 
 def get_row(df, *aliases):
@@ -4561,6 +4568,7 @@ def build_company_entry(
         "is_trust": data["is_trust"],
         "score": composite,
         "score_raw": composite,
+        "score_recalibrated": False,
         "interpretation": interpret(composite),
         "factors": [
             {"name": f.name, "score": f.score, "weight": f.weight, "raw_value": f.raw_value}

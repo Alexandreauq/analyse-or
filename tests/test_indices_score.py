@@ -803,6 +803,55 @@ def test_extract_ratios_computes_cagr_net_income():
     assert ratios["cagr_net_income"] > 0
 
 
+def test_extract_ratios_uses_current_price_for_latest_year_only():
+    """audit I6 : current_pb (et current_pe/current_ev_ebitda) doivent
+    refléter le cours du JOUR, pas le cours de clôture du dernier
+    exercice fiscal -- seule l'année la plus récente utilise
+    current_price ; les années antérieures (moyenne 5 ans) restent sur
+    closes_by_year, le prix de LEUR propre époque."""
+    financials, balance_sheet, cashflow, closes_by_year = _make_fixture_statements()
+    # closes_by_year vaut 100.0 pour toutes les années (fixture) ; le
+    # cours du jour est nettement différent (150.0) pour prouver que
+    # c'est bien lui qui est utilisé pour l'année la plus récente.
+    ratios = extract_ratios(
+        financials, balance_sheet, cashflow, closes_by_year, shares_outstanding=10.0,
+        current_price=150.0,
+    )
+    # equity la plus récente (2025) = 50.0 -> P/B = (150*10)/50 = 30.0,
+    # PAS 20.0 (qu'on aurait obtenu avec le cours de clôture d'exercice).
+    assert ratios["current_pb"] == pytest.approx(1500.0 / 50.0)
+    # avg_pb_5y : seule l'année 2025 utilise le cours du jour (150), les
+    # 4 autres (equity 45/40/35/30) restent sur closes_by_year (100).
+    expected_avg_pb_5y = (1500.0 / 50.0 + 1000.0 / 45.0 + 1000.0 / 40.0 + 1000.0 / 35.0 + 1000.0 / 30.0) / 5
+    assert ratios["avg_pb_5y"] == pytest.approx(expected_avg_pb_5y)
+
+
+def test_extract_ratios_falls_back_to_closes_by_year_when_current_price_absent():
+    """Rétrocompatibilité : current_price=None (défaut) laisse le
+    comportement identique à avant ce correctif -- repli sur
+    closes_by_year même pour l'année la plus récente."""
+    financials, balance_sheet, cashflow, closes_by_year = _make_fixture_statements()
+    ratios = extract_ratios(
+        financials, balance_sheet, cashflow, closes_by_year, shares_outstanding=10.0,
+        current_price=None,
+    )
+    assert ratios["current_pb"] == pytest.approx(1000.0 / 50.0)
+
+
+def test_extract_ratios_financial_uses_current_price_for_latest_year_only():
+    """Même correctif que le profil standard, côté extract_ratios_financial
+    (audit I6)."""
+    financials, balance_sheet, cashflow, closes_by_year = _make_financial_fixture_statements()
+    ratios = indices_score.extract_ratios_financial(
+        financials, balance_sheet, cashflow, closes_by_year, shares_outstanding=100.0,
+        current_price=80.0,
+    )
+    # closes_by_year vaut 50.0 pour toutes les années (fixture) ; equity
+    # la plus récente (2025) = 3000.0 -> P/B = (80*100)/3000 = 2.667,
+    # PAS (50*100)/3000 = 1.667 (cours de clôture d'exercice).
+    assert ratios["current_pb"] == pytest.approx(80.0 * 100.0 / 3000.0)
+
+
 def test_extract_ratios_computes_current_pb():
     financials, balance_sheet, cashflow, closes_by_year = _make_fixture_statements()
     ratios = extract_ratios(
@@ -6281,6 +6330,64 @@ def test_fetch_company_financials_drops_trailing_nan_rows_from_current_price(mon
     assert ratios["current_price"] == pytest.approx(88.5)
     assert not math.isnan(ratios["current_price"])
     assert ratios["ma200"] is not None and not math.isnan(ratios["ma200"])
+
+
+def test_fetch_company_financials_passes_current_price_to_extract_ratios(monkeypatch):
+    """audit I6 : fetch_company_financials doit transmettre son propre
+    current_price (cours du jour) à extract_ratios -- sinon le paramètre
+    optionnel ajouté pour ce correctif ne sert qu'aux tests unitaires
+    directs de extract_ratios, jamais en production."""
+    financials, balance_sheet, cashflow, _ = _make_fixture_statements()
+    financials.columns = pd.to_datetime(financials.columns)
+    balance_sheet.columns = pd.to_datetime(balance_sheet.columns)
+    cashflow.columns = pd.to_datetime(cashflow.columns)
+    quarterly = _fake_annual_df({"Diluted Average Shares": [100.0]}, [pd.Timestamp("2025-09-30")])
+    history_index = pd.date_range("2024-01-01", periods=250, freq="D")
+    history_close = pd.Series([42.0] * 250, index=history_index)
+
+    class _FakeTicker:
+        def __init__(self, ticker):
+            pass
+
+        @property
+        def financials(self):
+            return financials
+
+        @property
+        def balance_sheet(self):
+            return balance_sheet
+
+        @property
+        def cashflow(self):
+            return cashflow
+
+        @property
+        def quarterly_financials(self):
+            return quarterly
+
+        @property
+        def info(self):
+            return {"sharesOutstanding": 1000.0, "beta": 0.9, "sector": "Basic Materials"}
+
+        def history(self, period=None):
+            return pd.DataFrame({"Close": history_close})
+
+    monkeypatch.setattr(indices_score.yf, "Ticker", _FakeTicker)
+    monkeypatch.setattr(indices_score.time, "sleep", lambda s: None)
+
+    captured = {}
+    original = indices_score.extract_ratios
+
+    def _spy(financials, balance_sheet, cashflow, closes_by_year, shares_outstanding, current_price=None):
+        captured["current_price"] = current_price
+        return original(financials, balance_sheet, cashflow, closes_by_year, shares_outstanding, current_price)
+
+    monkeypatch.setattr(indices_score, "extract_ratios", _spy)
+
+    ratios = indices_score.fetch_company_financials("MC.PA")
+
+    assert captured["current_price"] == pytest.approx(42.0)
+    assert captured["current_price"] == ratios["current_price"]
 
 
 def test_fetch_company_financials_uses_price_history_override_for_mtpa(monkeypatch):

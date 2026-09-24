@@ -1945,13 +1945,29 @@ def _compute_no_loss_years(net_income: pd.Series, years_cols: list) -> bool:
     )
 
 
-def extract_ratios(financials, balance_sheet, cashflow, closes_by_year, shares_outstanding: float) -> dict:
+def extract_ratios(
+    financials, balance_sheet, cashflow, closes_by_year, shares_outstanding: float,
+    current_price: float | None = None,
+) -> dict:
     """
     Calcule les ratios bruts nécessaires aux fonctions de score à partir des
     états financiers yfinance (financials, balance_sheet, cashflow — colonnes
     = dates d'exercice, la plus récente en premier) et des cours de clôture
     par date d'exercice (closes_by_year, même clés que les colonnes).
-    """
+
+    `current_price` (optionnel, audit I6) : cours du jour réellement
+    récent (voir fetch_company_financials), utilisé à la place de
+    closes_by_year pour le SEUL exercice le plus récent lors du calcul
+    de current_pe/current_ev_ebitda/current_pb — sans lui, ces multiples
+    "actuels" étaient calculés avec le cours de CLÔTURE D'EXERCICE
+    FISCAL (potentiellement vieux de plusieurs mois), pas le cours du
+    jour, faussant le facteur "Valorisation relative" et
+    estimate_multiple_based_price (qui combine ce multiple "actuel" au
+    vrai cours du jour). Les exercices antérieurs (moyenne 5 ans)
+    restent sur closes_by_year, correctement — ils doivent refléter le
+    prix de LEUR propre époque. Défaut None pour ne rien changer au
+    comportement des appelants existants qui ne le fournissent pas
+    (repli sur closes_by_year, comme avant)."""
     years_cols = list(financials.columns)  # plus récent en premier
     n_years = len(years_cols)
     latest = years_cols[0]
@@ -2161,7 +2177,7 @@ def extract_ratios(financials, balance_sheet, cashflow, closes_by_year, shares_o
 
     ev_ebitda_by_year, pe_by_year, pb_by_year = [], [], []
     for col in years_cols:
-        price = closes_by_year.get(col)
+        price = current_price if (col == years_cols[0] and current_price is not None) else closes_by_year.get(col)
         total_debt_value = _safe_value(total_debt, col)
         cash_value = _safe_value(cash, col)
         equity_value = _safe_value(equity, col)
@@ -2263,13 +2279,22 @@ def extract_ratios(financials, balance_sheet, cashflow, closes_by_year, shares_o
     }
 
 
-def extract_ratios_financial(financials, balance_sheet, cashflow, closes_by_year, shares_outstanding: float) -> dict:
+def extract_ratios_financial(
+    financials, balance_sheet, cashflow, closes_by_year, shares_outstanding: float,
+    current_price: float | None = None,
+) -> dict:
     """Variante d'extract_ratios pour les banques/assurances de
     FINANCIAL_SECTOR_TICKERS : ni EBITDA ni (pour les banques) EBIT
     n'existent dans leurs comptes yfinance — voir le commentaire sur
     FINANCIAL_SECTOR_TICKERS. Calcule ROE, ratio de levier (capitaux
     propres/actif total), conversion cash (OCF/résultat net), P/E et P/B
     plutôt que ROCE/dette nette-EBITDA/ICR/FCF-EBITDA/EV-EBITDA.
+
+    `current_price` (optionnel, audit I6) : même correctif que
+    extract_ratios — cours du jour utilisé à la place de closes_by_year
+    pour le seul exercice le plus récent lors du calcul de
+    current_pe/current_pb, les exercices antérieurs restant sur
+    closes_by_year. Défaut None, rétrocompatible.
 
     fcf/cagr_ebitda/current_ev_ebitda/avg_ev_ebitda_5y sont tout de même
     présents dans le dict renvoyé, à des valeurs neutres (0.0) :
@@ -2366,7 +2391,7 @@ def extract_ratios_financial(financials, balance_sheet, cashflow, closes_by_year
 
     pe_by_year, pb_by_year = [], []
     for col in years_cols:
-        price = closes_by_year.get(col)
+        price = current_price if (col == years_cols[0] and current_price is not None) else closes_by_year.get(col)
         equity_value = _safe_value(equity, col)
         if (
             price is None
@@ -2820,9 +2845,13 @@ def fetch_company_financials(ticker: str) -> dict:
         # calcule déjà tout ce dont le profil trust a besoin (roe, equity,
         # cagr_ca/cagr_net_income, current_pb — le proxy de décote/prime sur
         # NAV). Seul le SCORING diverge ensuite (voir build_company_entry).
-        ratios = extract_ratios_financial(financials, balance_sheet, cashflow, closes_by_year, shares_outstanding)
+        ratios = extract_ratios_financial(
+            financials, balance_sheet, cashflow, closes_by_year, shares_outstanding, current_price,
+        )
     else:
-        ratios = extract_ratios(financials, balance_sheet, cashflow, closes_by_year, shares_outstanding)
+        ratios = extract_ratios(
+            financials, balance_sheet, cashflow, closes_by_year, shares_outstanding, current_price,
+        )
     ratios["is_financial"] = is_financial
     ratios["is_trust"] = is_trust
     ratios["sector"] = SECTOR_OVERRIDE_BY_TICKER.get(ticker) or sector

@@ -3598,6 +3598,35 @@ def test_compute_company_alerts_entree_when_score_favorable_and_price_near_entry
     assert "entree" in kinds
 
 
+def test_compute_company_alerts_no_entree_during_declin_stage():
+    """audit I8 : même score favorable et cours proche du repère d'entrée,
+    l'alerte "entree" ne doit jamais se déclencher en phase Weinstein
+    "Déclin" -- cohérent avec estimate_entry_exit_prices, qui exclut déjà
+    le repère technique (MM200) dans ce cas."""
+    alerts = indices_score.compute_company_alerts(
+        "BN.PA", composite_raw=20.0, current_price=102.0, entry_price=100.0,
+        previous_history=[], stage_label="Déclin",
+    )
+    kinds = [a["kind"] for a in alerts]
+    assert "entree" not in kinds
+
+
+def test_compute_company_alerts_entree_active_when_stage_label_none_or_other():
+    """Rétrocompatibilité : stage_label=None (défaut, appelants existants)
+    ou toute autre valeur ("Achat", "Neutre"...) ne change rien au
+    déclenchement de l'alerte "entree"."""
+    baseline = indices_score.compute_company_alerts(
+        "BN.PA", composite_raw=20.0, current_price=102.0, entry_price=100.0,
+        previous_history=[],
+    )
+    with_neutral_stage = indices_score.compute_company_alerts(
+        "BN.PA", composite_raw=20.0, current_price=102.0, entry_price=100.0,
+        previous_history=[], stage_label="Neutre",
+    )
+    assert "entree" in [a["kind"] for a in baseline]
+    assert "entree" in [a["kind"] for a in with_neutral_stage]
+
+
 def test_compute_company_alerts_no_entree_when_price_far_from_entry():
     alerts = indices_score.compute_company_alerts(
         "BN.PA", composite_raw=20.0, current_price=130.0, entry_price=100.0,

@@ -878,6 +878,26 @@ def test_extract_ratios_implied_cost_of_debt_none_when_interest_expense_row_abse
     assert ratios["implied_cost_of_debt"] is None
 
 
+def test_extract_ratios_icr_uses_implied_cost_of_debt_when_available():
+    """audit Minor #5, point 1 : l'ICR doit utiliser implied_cost_of_debt
+    (I7 volet 1) plutôt que le taux proxy fixe DEBT_INTEREST_RATE_PROXY
+    quand il est disponible -- un reliquat du fix I7 laissait encore
+    l'ICR sur le taux unique de 3% malgré un coût de la dette propre à
+    la société déjà calculé juste à côté pour le WACC."""
+    financials, balance_sheet, cashflow, closes_by_year = _make_fixture_statements()
+    # Total Debt le plus récent (fixture) = 300.0 -> Interest Expense = 18.0
+    # donne un coût de la dette implicite de 6%, nettement au-dessus du
+    # proxy fixe (3%).
+    financials.loc["Interest Expense"] = [18.0, 17.0, 16.0, 15.0, 14.0]
+    ratios = extract_ratios(
+        financials, balance_sheet, cashflow, closes_by_year, shares_outstanding=10.0
+    )
+    # EBIT le plus récent (fixture) = 150.0 -> ICR = 150 / (300 * 0.06)
+    assert ratios["icr"] == pytest.approx(150.0 / (300.0 * 0.06))
+    # Nettement différent du calcul sur le proxy fixe (150/(300*0.03))
+    assert ratios["icr"] != pytest.approx(150.0 / (300.0 * 0.03))
+
+
 def test_extract_ratios_computes_current_pb():
     financials, balance_sheet, cashflow, closes_by_year = _make_fixture_statements()
     ratios = extract_ratios(

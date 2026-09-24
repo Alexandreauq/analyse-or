@@ -2152,11 +2152,17 @@ def extract_ratios(
         total_debt_latest and not _is_missing(total_debt_latest)
         and not _is_missing(ebit[latest])
     )
+    # implied_cost_of_debt (audit I7 volet 1) en priorité, repli sur
+    # DEBT_INTEREST_RATE_PROXY si non calculable (audit Minor #5, point 1) :
+    # l'ICR utilisait encore le taux proxy fixe même quand un coût de la
+    # dette propre à l'entreprise était déjà disponible pour le WACC juste
+    # à côté — un reliquat du fix I7, pas une décision délibérée.
+    icr_rate = implied_cost_of_debt if implied_cost_of_debt is not None else DEBT_INTEREST_RATE_PROXY
     icr = (
-        ebit[latest] / (total_debt_latest * (DEBT_INTEREST_RATE_PROXY / 100))
+        ebit[latest] / (total_debt_latest * (icr_rate / 100))
         if icr_available else 10.0
-    )  # proxy frais financiers si non isolés (DEBT_INTEREST_RATE_PROXY) — parenthèses
-    # nécessaires pour rester strictement identique à l'ancien littéral `* 0.03`
+    )  # proxy frais financiers si non isolés — parenthèses nécessaires
+    # pour rester strictement identique à l'ancien littéral `* 0.03`
     # (l'associativité par défaut donnait `(total_debt * 3.0) / 100`, qui diffère
     # de `total_debt * 0.03` d'1 ULP sur ~35% des valeurs)
     # Neutre dès que l'UN des deux sous-indicateurs manque : moyenner un

@@ -3773,33 +3773,48 @@ DCF_MIN_DISCOUNT_SPREAD = 1.0  # points d'écart minimum entre le taux
 
 def estimate_dcf_price(
     fcf: float, cagr_ebitda: float, net_debt: float, shares_outstanding: float,
-    discount_rate_pct: float,
+    discount_rate_pct: float, risk_free_rate: float | None = None,
 ) -> float | None:
     """Prix par action implicite d'un DCF simplifié : projette le FCF actuel
     sur 5 ans au taux de croissance historique de l'EBITDA (plafonné entre
     -5% et +15%/an pour éviter d'extrapoler un chiffre bruité de façon
     absurde), actualise au coût du capital fourni par l'appelant (WACC de
     l'entreprise, ou COST_OF_CAPITAL_PROXY en repli), ajoute une valeur
-    terminale à croissance perpétuelle de 2%. None si le FCF de départ
-    n'est pas positif (DCF non pertinent), si le nombre d'actions est
-    nul/inconnu, si le taux d'actualisation est trop proche/inférieur à
-    la croissance terminale (Gordon growth dégénère vers une valeur
-    négative ou déraisonnablement grande — voir DCF_MIN_DISCOUNT_SPREAD),
-    ou si la valeur des capitaux propres implicite (valeur d'entreprise -
-    dette nette) ressort négative (audit 2026-09-24, constat C4) : un FCF
-    de départ positif ne garantit pas ce résultat quand la dette nette
-    est très élevée — sans ce garde, le prix par action affiché pouvait
-    être négatif (cas réels : Boeing -154.96, Meituan -17.09, 4506.T
-    -2422 avant ce correctif)."""
+    terminale à croissance perpétuelle plafonnée à 2% (DCF_TERMINAL_GROWTH).
+    None si le FCF de départ n'est pas positif (DCF non pertinent), si le
+    nombre d'actions est nul/inconnu, si le taux d'actualisation est trop
+    proche/inférieur à la croissance terminale (Gordon growth dégénère vers
+    une valeur négative ou déraisonnablement grande — voir
+    DCF_MIN_DISCOUNT_SPREAD), ou si la valeur des capitaux propres
+    implicite (valeur d'entreprise - dette nette) ressort négative (audit
+    2026-09-24, constat C4) : un FCF de départ positif ne garantit pas ce
+    résultat quand la dette nette est très élevée — sans ce garde, le prix
+    par action affiché pouvait être négatif (cas réels : Boeing -154.96,
+    Meituan -17.09, 4506.T -2422 avant ce correctif).
+
+    `risk_free_rate` (optionnel, audit I7 volet 2) : la croissance
+    perpétuelle ne peut théoriquement pas dépasser durablement le taux
+    sans risque de l'économie considérée (proxy du taux de croissance
+    nominal long terme) — quand fourni, la croissance terminale effective
+    devient min(DCF_TERMINAL_GROWTH, risk_free_rate), plutôt que 2% fixe
+    pour toutes les devises. N'a d'effet que pour les devises dont le taux
+    sans risque est structurellement sous 2% (JPY, CHF notamment) ; sans
+    effet pour EUR/USD/GBP, généralement au-dessus. Défaut None,
+    rétrocompatible (2% fixe comme avant)."""
+    effective_terminal_growth = (
+        min(DCF_TERMINAL_GROWTH, risk_free_rate)
+        if risk_free_rate is not None and not _is_missing(risk_free_rate)
+        else DCF_TERMINAL_GROWTH
+    )
     if (
         _is_missing(fcf) or fcf <= 0 or not shares_outstanding or _is_missing(net_debt)
         or _is_missing(discount_rate_pct)
-        or discount_rate_pct - DCF_TERMINAL_GROWTH < DCF_MIN_DISCOUNT_SPREAD
+        or discount_rate_pct - effective_terminal_growth < DCF_MIN_DISCOUNT_SPREAD
     ):
         return None
     growth = _clamp(cagr_ebitda, DCF_GROWTH_FLOOR, DCF_GROWTH_CAP) / 100
     discount_rate = discount_rate_pct / 100
-    terminal_growth = DCF_TERMINAL_GROWTH / 100
+    terminal_growth = effective_terminal_growth / 100
 
     pv_fcf = 0.0
     fcf_t = fcf
@@ -4351,6 +4366,7 @@ FAIR_VALUE_SANITY_CEILING = 6.0   # ni au-dessus de 6x le cours actuel (audit I7
 
 def estimate_valuation_targets(
     data: dict, cost_of_capital: float, cost_of_equity: float | None = None,
+    risk_free_rate: float | None = None,
 ) -> dict:
     """Combine DCF, actif net et multiples en une juste valeur (pondérée
     par le profil sectoriel — voir VALUATION_METHOD_WEIGHTS), puis en
@@ -4361,7 +4377,10 @@ def estimate_valuation_targets(
     de référence à la décote qualité de la valeur comptable
     (estimate_asset_based_price) au lieu du WACC — repli sur
     `cost_of_capital` si absent, pour ne rien changer au comportement des
-    appelants existants qui ne le fournissent pas.
+    appelants existants qui ne le fournissent pas. `risk_free_rate`
+    (optionnel, audit I7 volet 2) : transmis tel quel à estimate_dcf_price
+    pour plafonner la croissance terminale du DCF au taux sans risque de
+    la devise de l'entreprise — voir sa docstring.
 
     La juste valeur combinée est bornée entre FAIR_VALUE_SANITY_FLOOR et
     FAIR_VALUE_SANITY_CEILING fois `current_price` (audit I7) — filet de
@@ -4376,7 +4395,7 @@ def estimate_valuation_targets(
     dcf_fcf = data["fcf_normalized"] if sector_profile == "cyclique" else data["fcf"]
     dcf_price = estimate_dcf_price(
         dcf_fcf, data["cagr_ebitda"], data["net_debt"], data["shares_outstanding"],
-        cost_of_capital,
+        cost_of_capital, risk_free_rate,
     )
     asset_price = estimate_asset_based_price(
         data["equity"], data["shares_outstanding"], data["roe"],
@@ -4698,7 +4717,7 @@ def build_company_entry(
         ]
     composite = compute_composite(factors)
 
-    valuation_targets = estimate_valuation_targets(data, cost_of_capital, cost_of_equity)
+    valuation_targets = estimate_valuation_targets(data, cost_of_capital, cost_of_equity, risk_free_rate)
 
     graham_defensive = compute_graham_defensive_badge(data, data["is_financial"], data["is_trust"])
 

@@ -1533,6 +1533,61 @@ def test_estimate_dcf_price_clamps_growth_at_the_floor():
     assert under_floor == at_floor
 
 
+def test_estimate_dcf_price_caps_terminal_growth_at_risk_free_rate_when_lower():
+    """audit I7, volet 2 : une croissance perpétuelle de 2% fixe est
+    incohérente pour une devise dont le taux sans risque est
+    structurellement plus bas (JPY, CHF) -- la croissance terminale
+    effective doit être plafonnée au taux sans risque quand il est
+    inférieur à DCF_TERMINAL_GROWTH, produisant une valeur terminale (et
+    donc un prix implicite) plus basse."""
+    default_terminal_growth = estimate_dcf_price(
+        fcf=100.0, cagr_ebitda=10.0, net_debt=200.0, shares_outstanding=50.0,
+        discount_rate_pct=8.0,
+    )
+    capped_at_risk_free_rate = estimate_dcf_price(
+        fcf=100.0, cagr_ebitda=10.0, net_debt=200.0, shares_outstanding=50.0,
+        discount_rate_pct=8.0, risk_free_rate=0.5,
+    )
+    assert capped_at_risk_free_rate < default_terminal_growth
+
+
+def test_estimate_dcf_price_terminal_growth_unaffected_when_risk_free_rate_above_default():
+    """Le taux sans risque de la plupart des devises (EUR/USD/GBP) est
+    généralement au-dessus de DCF_TERMINAL_GROWTH (2%) -- dans ce cas, le
+    plafond ne change rien (min(2.0, risk_free_rate) reste 2.0)."""
+    default_terminal_growth = estimate_dcf_price(
+        fcf=100.0, cagr_ebitda=10.0, net_debt=200.0, shares_outstanding=50.0,
+        discount_rate_pct=8.0,
+    )
+    with_high_risk_free_rate = estimate_dcf_price(
+        fcf=100.0, cagr_ebitda=10.0, net_debt=200.0, shares_outstanding=50.0,
+        discount_rate_pct=8.0, risk_free_rate=5.0,
+    )
+    assert with_high_risk_free_rate == default_terminal_growth
+
+
+def test_estimate_dcf_price_guard_clause_uses_effective_terminal_growth():
+    """Le garde-fou DCF_MIN_DISCOUNT_SPREAD doit comparer le taux
+    d'actualisation à la croissance terminale EFFECTIVE (après plafond
+    risk_free_rate), pas à la constante fixe -- sinon un cas valide
+    (écart largement suffisant une fois le plafond appliqué) serait
+    rejeté à tort."""
+    # discount_rate_pct=2.5, DCF_TERMINAL_GROWTH=2.0 -> écart 0.5, sous
+    # DCF_MIN_DISCOUNT_SPREAD=1.0 -> None sans le plafond.
+    blocked_without_cap = estimate_dcf_price(
+        fcf=100.0, cagr_ebitda=10.0, net_debt=200.0, shares_outstanding=50.0,
+        discount_rate_pct=2.5,
+    )
+    assert blocked_without_cap is None
+    # Avec risk_free_rate=0.5 -> croissance terminale effective = 0.5,
+    # écart = 2.5-0.5 = 2.0, largement au-dessus du seuil -> doit passer.
+    allowed_with_cap = estimate_dcf_price(
+        fcf=100.0, cagr_ebitda=10.0, net_debt=200.0, shares_outstanding=50.0,
+        discount_rate_pct=2.5, risk_free_rate=0.5,
+    )
+    assert allowed_with_cap is not None
+
+
 def test_estimate_dcf_price_returns_none_when_fcf_not_positive():
     assert estimate_dcf_price(
         fcf=0.0, cagr_ebitda=10.0, net_debt=200.0, shares_outstanding=50.0,
@@ -3001,6 +3056,22 @@ def test_estimate_valuation_targets_skips_sanity_clamp_when_current_price_missin
     result = estimate_valuation_targets(data, cost_of_capital=8.0, cost_of_equity=8.0)
     # equity/shares_outstanding = 10000.0, quality_factor plafonné à 1.0 (profil standard)
     assert result["fair_value"] == pytest.approx(10000.0)
+
+
+def test_estimate_valuation_targets_passes_risk_free_rate_to_dcf():
+    """audit I7, volet 2 : risk_free_rate doit transiter jusqu'à
+    estimate_dcf_price -- un taux sans risque bas (JPY/CHF) doit réduire
+    la juste valeur via la croissance terminale plafonnée."""
+    data = {
+        "fcf": 100.0, "cagr_ebitda": 10.0, "net_debt": 200.0, "shares_outstanding": 50.0,
+        "equity": 0.0,  # asset_price désactivé (equity <= 0)
+        "current_price": None, "current_ev_ebitda": 0.0, "avg_ev_ebitda_5y": 0.0,
+        "ma200": None, "beta": 1.0, "ecart_pct_ma200": None, "fcf_normalized": 100.0,
+        "sector": "Unknown", "roe": 10.0,
+    }
+    without_risk_free_rate = estimate_valuation_targets(data, cost_of_capital=8.0)
+    with_low_risk_free_rate = estimate_valuation_targets(data, cost_of_capital=8.0, risk_free_rate=0.5)
+    assert with_low_risk_free_rate["fair_value"] < without_risk_free_rate["fair_value"]
 
 
 def test_estimate_valuation_targets_falls_back_to_cost_of_capital_when_cost_of_equity_absent():

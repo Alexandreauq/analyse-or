@@ -3209,15 +3209,13 @@ def test_append_indices_history_adds_new_entries(tmp_path):
     assert indices_score.load_indices_history(path=str(path)) == result
 
 
-def test_append_indices_history_trims_independently_per_ticker(tmp_path):
-    """Ajouter une entrée au ticker A ne doit jamais tronquer l'historique
-    du ticker B — chaque ticker garde sa propre fenêtre de rétention."""
+def test_append_indices_history_keeps_recent_entries_for_other_tickers(tmp_path):
+    """Ajouter une entrée au ticker A ne doit jamais faire disparaître
+    l'historique récent du ticker B."""
     import json
     path = tmp_path / "history.json"
-    existing = (
-        [{"date": f"2020-01-{i:02d}", "ticker": "MC.PA", "composite": float(i)} for i in range(1, 10)]
-        + [{"date": f"2020-01-{i:02d}", "ticker": "TTE.PA", "composite": float(i)} for i in range(1, 5)]
-    )
+    recent_date = (datetime.today().date() - timedelta(days=100)).strftime("%Y-%m-%d")
+    existing = [{"date": recent_date, "ticker": "TTE.PA", "composite": 5.0}]
     path.write_text(json.dumps(existing), encoding="utf-8")
 
     result = indices_score.append_indices_history(
@@ -3226,18 +3224,22 @@ def test_append_indices_history_trims_independently_per_ticker(tmp_path):
     )
     tte_entries = [e for e in result if e["ticker"] == "TTE.PA"]
     mc_entries = [e for e in result if e["ticker"] == "MC.PA"]
-    assert len(tte_entries) == 4  # inchangé
-    assert len(mc_entries) == 10  # 9 existantes + 1 nouvelle
+    assert len(tte_entries) == 1  # inchangé
     assert mc_entries[-1] == {"date": "2026-09-06", "ticker": "MC.PA", "composite": 99.0}
 
 
-def test_append_indices_history_retains_only_last_730_entries_per_ticker(tmp_path):
+def test_append_indices_history_drops_entries_older_than_retention_window(tmp_path):
+    """audit Minor #4 : rétention par date calendaire (HISTORY_RETENTION_DAYS),
+    pas par nombre d'écritures -- une entrée vieille de plus de 730 jours
+    doit disparaître, même s'il n'y en a qu'une seule au total pour ce
+    ticker (avant ce correctif, "garder les 730 dernières écritures"
+    aurait laissé passer une entrée bien plus vieille que 2 ans si le
+    workflow tournait rarement, ou au contraire couvert bien moins de 2
+    ans s'il tournait plusieurs fois par jour)."""
     import json
     path = tmp_path / "history.json"
-    existing = [
-        {"date": f"2020-{(i % 12) + 1:02d}-01", "ticker": "MC.PA", "composite": float(i)}
-        for i in range(735)
-    ]
+    old_date = (datetime.today().date() - timedelta(days=800)).strftime("%Y-%m-%d")
+    existing = [{"date": old_date, "ticker": "MC.PA", "composite": 1.0}]
     path.write_text(json.dumps(existing), encoding="utf-8")
 
     result = indices_score.append_indices_history(
@@ -3245,8 +3247,27 @@ def test_append_indices_history_retains_only_last_730_entries_per_ticker(tmp_pat
         path=str(path),
     )
     mc_entries = [e for e in result if e["ticker"] == "MC.PA"]
-    assert len(mc_entries) == 730
-    assert mc_entries[-1]["composite"] == 42.0
+    assert len(mc_entries) == 1
+    assert mc_entries[0]["composite"] == 42.0
+
+
+def test_append_indices_history_drops_tickers_no_longer_in_companies(tmp_path):
+    """audit Minor #4 : un ticker retiré d'un indice (révision) ne doit
+    plus jamais réapparaître après retrim, même avec une date récente --
+    sinon son historique reste figé indéfiniment (plus aucune écriture
+    ne vient jamais le retrimer, contrairement à un ticker toujours
+    actif qui se retrimme à chaque run)."""
+    import json
+    path = tmp_path / "history.json"
+    recent_date = (datetime.today().date() - timedelta(days=1)).strftime("%Y-%m-%d")
+    existing = [{"date": recent_date, "ticker": "TICKER_RETIRE_FICTIF", "composite": 5.0}]
+    path.write_text(json.dumps(existing), encoding="utf-8")
+
+    result = indices_score.append_indices_history(
+        [{"date": "2026-09-06", "ticker": "MC.PA", "composite": 99.0}],
+        path=str(path),
+    )
+    assert all(e["ticker"] != "TICKER_RETIRE_FICTIF" for e in result)
 
 
 def test_load_nikkei_hangseng_price_history_returns_empty_list_when_file_absent(tmp_path):
@@ -3292,12 +3313,10 @@ def test_update_nikkei_hangseng_price_history_skips_missing_price(tmp_path):
     assert result == []
 
 
-def test_update_nikkei_hangseng_price_history_trims_independently_per_ticker(tmp_path):
+def test_update_nikkei_hangseng_price_history_keeps_recent_entries_for_other_tickers(tmp_path):
     path = tmp_path / "history.json"
-    existing = (
-        [{"date": f"2020-01-{i:02d}", "ticker": "9984.T", "price": float(i)} for i in range(1, 10)]
-        + [{"date": f"2020-01-{i:02d}", "ticker": "1299.HK", "price": float(i)} for i in range(1, 5)]
-    )
+    recent_date = (datetime.today().date() - timedelta(days=100)).strftime("%Y-%m-%d")
+    existing = [{"date": recent_date, "ticker": "1299.HK", "price": 5.0}]
     path.write_text(json.dumps(existing), encoding="utf-8")
 
     result = indices_score.update_nikkei_hangseng_price_history(
@@ -3305,25 +3324,39 @@ def test_update_nikkei_hangseng_price_history_trims_independently_per_ticker(tmp
     )
     hk_entries = [e for e in result if e["ticker"] == "1299.HK"]
     nikkei_entries = [e for e in result if e["ticker"] == "9984.T"]
-    assert len(hk_entries) == 4  # inchangé
-    assert len(nikkei_entries) == 10  # 9 existantes + 1 nouvelle
+    assert len(hk_entries) == 1  # inchangé
     assert nikkei_entries[-1]["price"] == 99.0
 
 
-def test_update_nikkei_hangseng_price_history_retains_only_last_730_entries_per_ticker(tmp_path):
+def test_update_nikkei_hangseng_price_history_drops_entries_older_than_retention_window(tmp_path):
+    """audit Minor #4 : rétention par date calendaire
+    (NIKKEI_HANGSENG_HISTORY_RETENTION_DAYS), pas par nombre d'écritures --
+    même correctif qu'append_indices_history."""
     path = tmp_path / "history.json"
-    existing = [
-        {"date": f"2020-{(i % 12) + 1:02d}-01", "ticker": "9984.T", "price": float(i)}
-        for i in range(735)
-    ]
+    old_date = (datetime.today().date() - timedelta(days=800)).strftime("%Y-%m-%d")
+    existing = [{"date": old_date, "ticker": "9984.T", "price": 1.0}]
     path.write_text(json.dumps(existing), encoding="utf-8")
 
     result = indices_score.update_nikkei_hangseng_price_history(
         [{"ticker": "9984.T", "index": "NIKKEI225", "current_price": 42.0}], path=str(path)
     )
     entries = [e for e in result if e["ticker"] == "9984.T"]
-    assert len(entries) == 730
-    assert entries[-1]["price"] == 42.0
+    assert len(entries) == 1
+    assert entries[0]["price"] == 42.0
+
+
+def test_update_nikkei_hangseng_price_history_drops_tickers_no_longer_in_roster(tmp_path):
+    """audit Minor #4 : un ticker retiré du Nikkei 225/Hang Seng ne doit
+    plus jamais réapparaître après retrim, même avec une date récente."""
+    path = tmp_path / "history.json"
+    recent_date = (datetime.today().date() - timedelta(days=1)).strftime("%Y-%m-%d")
+    existing = [{"date": recent_date, "ticker": "TICKER_RETIRE_FICTIF", "price": 5.0}]
+    path.write_text(json.dumps(existing), encoding="utf-8")
+
+    result = indices_score.update_nikkei_hangseng_price_history(
+        [{"ticker": "9984.T", "index": "NIKKEI225", "current_price": 99.0}], path=str(path)
+    )
+    assert all(e["ticker"] != "TICKER_RETIRE_FICTIF" for e in result)
 
 
 def test_update_nikkei_hangseng_price_history_degrades_gracefully_on_failure(tmp_path, monkeypatch):

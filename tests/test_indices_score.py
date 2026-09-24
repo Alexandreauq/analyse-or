@@ -5473,13 +5473,16 @@ def test_fetch_company_financials_converts_lse_pence_prices_to_pounds(monkeypatc
     """Bug racine trouvé le 2026-09-13 via le profil trust (score_valorisation_trust,
     qui compare current_pb à une valeur ABSOLUE et n'annule donc pas
     l'erreur d'échelle comme le fait chaque autre facteur en se comparant
-    à sa propre moyenne 5 ans) : yfinance renvoie les prix des tickers
-    londoniens (.L) en PENCE, alors que les comptes annuels sont en
+    à sa propre moyenne 5 ans) : yfinance renvoie les prix de CERTAINS
+    tickers londoniens (.L) en PENCE, alors que les comptes annuels sont en
     LIVRES — sans conversion, market_cap = price * shares_outstanding
     mélange les unités d'un facteur ~100 pour P/E, P/B, EV/EBITDA, DCF, et
     fair_value/entry_price/exit_price (qui mélangeaient carrément une
     méthode en pence avec deux méthodes en livres). Reproduit ici avec un
-    cours constant de 1478.0 (pence, cas réel Scottish Mortgage) : doit
+    cours constant de 1478.0 (pence, cas réel Scottish Mortgage) et
+    info["currency"]="GBp" (le signal réel qui déclenche la conversion
+    depuis le 2026-09-24, pas juste le suffixe .L — voir le test
+    ..._leaves_lse_non_gbp_prices_unconverted juste après) : doit
     ressortir à 14.78 (livres) partout en aval."""
     financials, balance_sheet, cashflow, _ = _make_fixture_statements()
     financials.columns = pd.to_datetime(financials.columns)
@@ -5511,7 +5514,7 @@ def test_fetch_company_financials_converts_lse_pence_prices_to_pounds(monkeypatc
 
         @property
         def info(self):
-            return {"sharesOutstanding": 1000.0, "beta": 0.9, "sector": "Energy"}
+            return {"sharesOutstanding": 1000.0, "beta": 0.9, "sector": "Energy", "currency": "GBp"}
 
         def history(self, period=None):
             return pd.DataFrame({"Close": history_close})
@@ -5523,7 +5526,7 @@ def test_fetch_company_financials_converts_lse_pence_prices_to_pounds(monkeypatc
     # standard) : la conversion pence/livre se fait dans
     # fetch_company_financials avant tout branchement extract_ratios vs
     # extract_ratios_financier, donc le choix du chemin d'extraction n'a
-    # pas d'importance ici — seul compte le suffixe .L du ticker.
+    # pas d'importance ici — seul compte info["currency"].
     ratios = indices_score.fetch_company_financials("SHEL.L")
 
     assert ratios["current_price"] == pytest.approx(14.78)
@@ -5531,9 +5534,10 @@ def test_fetch_company_financials_converts_lse_pence_prices_to_pounds(monkeypatc
 
 
 def test_fetch_company_financials_leaves_non_lse_prices_unconverted(monkeypatch):
-    """Contre-exemple délibéré : la conversion ne doit s'appliquer qu'aux
-    tickers .L — un ticker Euronext/Xetra/NASDAQ à un prix de 1478.0 (déjà
-    dans la bonne unité, en euros/dollars) ne doit pas être divisé par 100."""
+    """Contre-exemple délibéré : la conversion ne doit s'appliquer que si
+    info["currency"] == "GBp" — un ticker Euronext/Xetra/NASDAQ (pas .L,
+    et sans ce champ dans son info) à un prix de 1478.0 (déjà dans la
+    bonne unité, en euros/dollars) ne doit pas être divisé par 100."""
     financials, balance_sheet, cashflow, _ = _make_fixture_statements()
     financials.columns = pd.to_datetime(financials.columns)
     balance_sheet.columns = pd.to_datetime(balance_sheet.columns)
@@ -5575,6 +5579,58 @@ def test_fetch_company_financials_leaves_non_lse_prices_unconverted(monkeypatch)
     ratios = indices_score.fetch_company_financials("MC.PA")
 
     assert ratios["current_price"] == pytest.approx(1478.0)
+
+
+def test_fetch_company_financials_leaves_lse_non_gbp_prices_unconverted(monkeypatch):
+    """Le bug réel corrigé le 2026-09-24 : contrairement à ce que supposait
+    le premier correctif du 2026-09-13, TOUS les tickers .L ne cotent pas
+    en pence — certains (IHG.L, CPG.L cotent en USD ; MTLN.L en EUR,
+    confirmé via l'API Yahoo Finance : meta.currency) sont des doubles
+    cotations dont la devise de référence n'est pas la livre. Diviser
+    leur prix par 100 les faisait apparaître ~100x moins chers qu'en
+    réalité (IHG.L : juste valeur affichée à 70x le cours). Un ticker .L
+    avec info["currency"]="USD" ne doit PAS être divisé par 100."""
+    financials, balance_sheet, cashflow, _ = _make_fixture_statements()
+    financials.columns = pd.to_datetime(financials.columns)
+    balance_sheet.columns = pd.to_datetime(balance_sheet.columns)
+    cashflow.columns = pd.to_datetime(cashflow.columns)
+    quarterly = _fake_annual_df({"Diluted Average Shares": [100.0]}, [pd.Timestamp("2025-09-30")])
+    history_index = pd.date_range("2024-01-01", periods=250, freq="D")
+    history_close = pd.Series([156.45] * 250, index=history_index)
+
+    class _FakeTicker:
+        def __init__(self, ticker):
+            pass
+
+        @property
+        def financials(self):
+            return financials
+
+        @property
+        def balance_sheet(self):
+            return balance_sheet
+
+        @property
+        def cashflow(self):
+            return cashflow
+
+        @property
+        def quarterly_financials(self):
+            return quarterly
+
+        @property
+        def info(self):
+            return {"sharesOutstanding": 1000.0, "beta": 0.9, "sector": "Consumer Cyclical", "currency": "USD"}
+
+        def history(self, period=None):
+            return pd.DataFrame({"Close": history_close})
+
+    monkeypatch.setattr(indices_score.yf, "Ticker", _FakeTicker)
+    monkeypatch.setattr(indices_score.time, "sleep", lambda s: None)
+
+    ratios = indices_score.fetch_company_financials("IHG.L")
+
+    assert ratios["current_price"] == pytest.approx(156.45)
 
 
 def test_fetch_company_financials_drops_trailing_nan_rows_from_current_price(monkeypatch):

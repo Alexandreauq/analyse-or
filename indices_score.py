@@ -2537,28 +2537,29 @@ def fetch_company_financials(ticker: str) -> dict:
         history_df["Volume"] if "Volume" in history_df.columns
         else pd.Series(dtype=float, index=history_df.index)
     )
-    if ticker.endswith(".L"):
-        # LSE (bug racine trouvé et corrigé le 2026-09-13) : yfinance
-        # renvoie les prix des tickers londoniens en PENCE (GBp), alors que
-        # les comptes annuels (bilan/résultat) sont en LIVRES (GBP) — un
-        # écart de convention propre à la City, hérité de la période
-        # pré-décimalisation. Sans cette conversion, tout
-        # `market_cap = price * shares_outstanding` calculé en aval (P/E,
-        # P/B, EV/EBITDA, DCF, valorisation par multiple, juste valeur)
-        # mélange les unités d'un facteur ~100. Repéré en production via le
-        # tout nouveau profil trust (score_valorisation_trust, qui compare
-        # à une valeur ABSOLUE — 1.0 — donc n'annule pas l'erreur d'échelle
-        # comme le fait chaque autre facteur en se comparant à sa propre
-        # moyenne 5 ans) : HSBC/Barclays/Lloyds affichaient déjà un P/E et
-        # un P/B ~100x trop élevés (score correct par coïncidence, ratio
-        # auto-référentiel), et fair_value/entry_price/exit_price
-        # mélangeaient carrément une méthode en pence (retour au multiple,
-        # dérivée directement du cours) avec deux méthodes en livres (DCF,
-        # actif net) — un vrai mélange d'unités, incohérent pour les 99
-        # entreprises FTSE. Converti ici, à la source, pour que tout calcul
-        # en aval (closes_by_year, current_price, ma200, et tout ce qui en
-        # dérive) soit cohérent sans replâtrage consommateur par
-        # consommateur.
+    if info.get("currency") == "GBp":
+        # LSE (bug racine trouvé et corrigé le 2026-09-13, condition
+        # affinée le 2026-09-24) : yfinance renvoie les prix de CERTAINS
+        # tickers londoniens en PENCE (GBp), alors que les comptes annuels
+        # (bilan/résultat) sont en LIVRES (GBP) — un écart de convention
+        # propre à la City, hérité de la période pré-décimalisation. Sans
+        # cette conversion, tout `market_cap = price * shares_outstanding`
+        # calculé en aval (P/E, P/B, EV/EBITDA, DCF, valorisation par
+        # multiple, juste valeur) mélange les unités d'un facteur ~100.
+        #
+        # Le premier correctif supposait que TOUT ticker `.L` cote en
+        # pence — faux : IHG.L/CPG.L cotent en USD, MTLN.L en EUR (double
+        # cotation Londres pour des sociétés dont la devise de référence
+        # n'est pas la livre), confirmé par requête directe à l'API Yahoo
+        # Finance (`.../v8/finance/chart/<ticker>` → `meta.currency`).
+        # Diviser leur prix par 100 les faisait apparaître ~100x moins
+        # chers (IHG.L : juste valeur affichée à 70x le cours). `info`
+        # (déjà récupéré plus haut dans cette fonction, aucun appel réseau
+        # supplémentaire) porte ce même champ `currency` — `"GBp"` pour
+        # les tickers réellement cotés en pence (HSBC, Barclays, Anglo
+        # American...), autre chose (`"GBP"`, `"USD"`, `"EUR"`...) sinon.
+        # Absent : ne pas diviser (repli prudent, cohérent avec le reste
+        # du fichier — pas de conversion sans donnée pour la justifier).
         history = history / 100.0
 
     # Purge les lignes NaN en fin de serie (constate en production le

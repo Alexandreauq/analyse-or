@@ -961,6 +961,12 @@ INDEX_CURRENCY = {
     "NIKKEI225": "JPY", "HANGSENG": "HKD",
 }
 
+# Même mapping que CURRENCY_SYMBOL côté frontend (docs/index.html) — pour
+# l'email (audit Minor #1, l'email affichait "€" en dur pour toutes les
+# devises, ex. Nasdaq/Dow en USD). Un nouvel indice dans une devise
+# inédite a donc une entrée à ajouter ici ET côté frontend.
+CURRENCY_SYMBOL = {"EUR": "€", "USD": "$", "GBP": "£", "CHF": "CHF", "JPY": "¥", "HKD": "HK$"}
+
 SECTOR_PROFILES = {
     "Utilities": "defensif",
     "Consumer Defensive": "defensif",
@@ -4913,6 +4919,7 @@ def _entry_alert_item_html(company: dict) -> str:
     email autonome) — mêmes données que l'ancien email par entreprise,
     condensées."""
     index_name = INDEX_NAMES.get(company.get("index"), company.get("index", ""))
+    currency_symbol = CURRENCY_SYMBOL.get(INDEX_CURRENCY.get(company.get("index"), "EUR"), "€")
     score = company["score"]
     score_color = "#b99a68" if score >= 0 else "#a35540"
     detail = _entry_alert_detail(company)
@@ -4930,11 +4937,11 @@ def _entry_alert_item_html(company: dict) -> str:
           <table style="width:100%;border-collapse:collapse;margin:0 0 10px;">
             <tr>
               <td style="padding:3px 0;color:#8a90a3;font-size:12px;font-family:Arial,sans-serif;">Cours actuel</td>
-              <td style="padding:3px 0;color:#edeef3;font-size:12px;font-family:Arial,sans-serif;text-align:right;">{company['current_price']:.2f} €</td>
+              <td style="padding:3px 0;color:#edeef3;font-size:12px;font-family:Arial,sans-serif;text-align:right;">{company['current_price']:.2f} {currency_symbol}</td>
             </tr>
             <tr>
               <td style="padding:3px 0;color:#8a90a3;font-size:12px;font-family:Arial,sans-serif;">Repère d'entrée / sortie</td>
-              <td style="padding:3px 0;color:#edeef3;font-size:12px;font-family:Arial,sans-serif;text-align:right;">{company['entry_price']:.2f} € / {company['exit_price']:.2f} €</td>
+              <td style="padding:3px 0;color:#edeef3;font-size:12px;font-family:Arial,sans-serif;text-align:right;">{company['entry_price']:.2f} {currency_symbol} / {company['exit_price']:.2f} {currency_symbol}</td>
             </tr>
           </table>
           {f'''<p style="color:#8a90a3;font-size:11px;letter-spacing:0.06em;text-transform:uppercase;margin:0 0 8px;">

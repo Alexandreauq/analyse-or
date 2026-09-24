@@ -3509,21 +3509,54 @@ def append_indices_history(entries: list[dict], path=INDICES_HISTORY_PATH) -> li
     return trimmed
 
 
-RAPID_DROP_POINTS = 40   # recalibré (rang percentile) : un point d'écart pèse ~2x plus qu'avant, donc le seuil absolu double pour garder une sélectivité comparable — voir docs/superpowers/specs/2026-09-24-score-recalibration-design.md
+RAPID_DROP_POINTS = 20   # même seuil que le volet Or -- valeur d'origine, jamais retunée depuis (audit I2) : le score BRUT n'a pas changé d'échelle, seul le score AFFICHÉ (percentile) a été recalibré
 RAPID_DROP_DAYS = 5      # même fenêtre que le volet Or
 NEAR_ENTRY_PCT = 5.0     # écart max (%) au repère d'entrée pour "conditions réunies"
+HYSTERESIS_BAND = 5.0    # bande morte (points, échelle du score BRUT) pour watch/entree (audit I2) : reprend la tolérance de NEAR_ENTRY_PCT
+
+
+def _last_confirmed_regime(previous_history: list[dict], band: float) -> float | None:
+    """Dernière valeur `composite_raw` de l'historique (trié par date),
+    strictement en dehors de la bande morte [-band, +band] -- base de
+    l'hystérésis des alertes watch/entree (audit I2) : un score qui
+    oscille près de 0 ne doit pas faire apparaître/disparaître une
+    alerte à chaque petit mouvement, seul un franchissement confirmé
+    (hors bande) vaut changement de régime. None si l'historique ne
+    contient aucune valeur exploitable -- composite_raw absent
+    (entrées antérieures à l'ajout de ce champ, dégradation gracieuse)
+    ou toutes dans la bande morte."""
+    dated = []
+    for e in previous_history:
+        try:
+            raw = e["composite_raw"]
+            date = e["date"]
+        except (KeyError, TypeError):
+            continue
+        if raw is None:
+            continue
+        dated.append((date, raw))
+    dated.sort(key=lambda item: item[0])
+    for _date, raw in reversed(dated):
+        if abs(raw) > band:
+            return raw
+    return None
 
 
 def compute_company_alerts(
-    ticker: str, composite: float, current_price: float | None,
+    ticker: str, composite_raw: float, current_price: float | None,
     entry_price: float | None, previous_history: list[dict],
     news_items: list[dict] | None = None,
 ) -> list[dict]:
     """Alertes de franchissement de seuil pour une entreprise, à partir de
     son propre sous-historique (déjà filtré par ticker par l'appelant).
-    `news_items` est optionnel (défaut None) pour ne rien changer au
-    comportement des appelants existants qui ne le fournissent pas. Ne
-    lève jamais d'exception ; renvoie toujours au moins une alerte
+    `composite_raw` est le score BRUT (avant recalibrage percentile,
+    voir score_raw / audit I1) -- watch/risque/entree se basent tous les
+    trois sur cette valeur, pas sur le score affiché : le score percentile
+    est relatif au pool et bouge même quand les fondamentaux propres de la
+    société n'ont pas changé, ce qui générait des alertes sans substance
+    (audit I2). `news_items` est optionnel (défaut None) pour ne rien
+    changer au comportement des appelants existants qui ne le fournissent
+    pas. Ne lève jamais d'exception ; renvoie toujours au moins une alerte
     (`info` neutre si rien ne se déclenche — calculé après l'alerte
     "actu_majeure" ci-dessous, pas avant, pour ne jamais afficher "pas de
     signal actif" en même temps qu'une vraie actu majeure).
@@ -3541,14 +3574,12 @@ def compute_company_alerts(
     today_str = datetime.today().strftime("%d/%m/%Y")
     alerts = []
 
-    prev_composite = None
-    if previous_history:
-        try:
-            prev_composite = previous_history[-1]["composite"]
-        except (KeyError, TypeError):
-            prev_composite = None
+    last_regime = _last_confirmed_regime(previous_history, HYSTERESIS_BAND)
 
-    if prev_composite is not None and prev_composite <= 0 < composite:
+    if (
+        last_regime is not None and last_regime <= -HYSTERESIS_BAND
+        and composite_raw > HYSTERESIS_BAND
+    ):
         alerts.append({
             "kind": "watch",
             "title": "Score composite a franchi la médiane du profil",
@@ -3569,13 +3600,13 @@ def compute_company_alerts(
     recent_composites = []
     for e in recent:
         try:
-            recent_composites.append(e["composite"])
+            recent_composites.append(e["composite_raw"])
         except (KeyError, TypeError):
-            # Ignore entries with a missing/malformed "composite" key
+            # Ignore entries with a missing/malformed "composite_raw" key
             pass
     if recent_composites:
         max_recent = max(recent_composites)
-        drop = composite - max_recent
+        drop = composite_raw - max_recent
         if drop <= -RAPID_DROP_POINTS:
             alerts.append({
                 "kind": "risque",
@@ -3588,7 +3619,11 @@ def compute_company_alerts(
         current_price is not None and entry_price is not None and entry_price > 0
         and abs(current_price - entry_price) / entry_price * 100 < NEAR_ENTRY_PCT
     )
-    if composite > 0 and near_entry:
+    score_favorable = (
+        composite_raw > HYSTERESIS_BAND if abs(composite_raw) > HYSTERESIS_BAND
+        else (last_regime is not None and last_regime > HYSTERESIS_BAND)
+    )
+    if score_favorable and near_entry:
         alerts.append({
             "kind": "entree",
             "title": "Conditions d'entrée réunies",
@@ -4574,7 +4609,7 @@ def _attach_alerts_and_update_history(companies: list[dict]) -> tuple[list[dict]
         for company in companies:
             ticker_history = [e for e in history if e["ticker"] == company["ticker"]]
             company["alerts"] = compute_company_alerts(
-                company["ticker"], company["score"], company["current_price"],
+                company["ticker"], company["score_raw"], company["current_price"],
                 company["entry_price"], ticker_history,
                 news_items=company.get("news", []),
             )
@@ -4592,6 +4627,7 @@ def _attach_alerts_and_update_history(companies: list[dict]) -> tuple[list[dict]
                     newly_triggered_major_news.append((company, alert))
             new_entries.append({
                 "date": today_str, "ticker": company["ticker"], "composite": company["score"],
+                "composite_raw": company["score_raw"],
             })
         append_indices_history(new_entries)
     except Exception as e:

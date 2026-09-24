@@ -2561,6 +2561,14 @@ def fetch_dividend_history(ticker_obj) -> pd.Series:
         return pd.Series(dtype=float)
 
 
+# Lignes de `financials` qui ne sont PAS des montants monétaires — ne
+# doivent jamais être multipliées par un taux de change (voir le
+# câblage de la conversion devise dans fetch_company_financials,
+# constat C1). "Tax Rate For Calcs" est un ratio (0.25 = 25%), pas une
+# somme d'argent.
+NON_MONETARY_FINANCIALS_ROWS = {"Tax Rate For Calcs"}
+
+
 def fetch_company_financials(ticker: str) -> dict:
     if yf is None:
         raise RuntimeError("yfinance n'est pas installé (pip install yfinance)")
@@ -2605,6 +2613,51 @@ def fetch_company_financials(ticker: str) -> dict:
         # Absent : ne pas diviser (repli prudent, cohérent avec le reste
         # du fichier — pas de conversion sans donnée pour la justifier).
         history = history / 100.0
+
+    quote_currency = "GBP" if info.get("currency") == "GBp" else info.get("currency")
+    financial_currency = info.get("financialCurrency")
+    currency_mismatch_unresolved = False
+    if financial_currency and quote_currency and financial_currency != quote_currency:
+        # Devise de référence des comptes ≠ devise de cotation (audit
+        # 2026-09-24, constat C1) : cas des doubles cotations / sociétés
+        # dont le siège de reporting diffère de la place de cotation
+        # principale (ex: AIA 1299.HK cote en HKD, comptes en USD — P/E
+        # affiché à 129.2x au lieu de ~16.5x avant ce correctif, écart
+        # correspondant exactement au taux HKD/USD). Convertit les 3
+        # DataFrames de comptes vers la devise de cotation, à la source,
+        # même principe que la conversion pence/livre juste au-dessus :
+        # tout calcul en aval (market_cap = price * shares_outstanding
+        # combiné à ces comptes) reste cohérent sans replâtrage
+        # consommateur par consommateur.
+        fx_rate = fetch_fx_rate(financial_currency, quote_currency)
+        if fx_rate is not None:
+            # "Tax Rate For Calcs" (ligne de `financials`) est un ratio
+            # (ex: 0.25 = 25%), PAS un montant monétaire — la multiplier
+            # par le taux de change la corromprait (0.25 * 7.8 = 1.95,
+            # un taux d'imposition de 195%), ce qui fausserait ensuite
+            # ROCE et le coût de la dette après impôt du WACC pour
+            # TOUTES les sociétés à devise non réconciliée, pas
+            # seulement celles visées par ce correctif. `balance_sheet`
+            # et `cashflow` ne portent aucune ligne de ce type (toutes
+            # leurs lignes extraites en aval — dette, cash, capitaux
+            # propres, flux de trésorerie — sont des montants) : converties
+            # intégralement.
+            monetary_rows = ~financials.index.isin(NON_MONETARY_FINANCIALS_ROWS)
+            financials.loc[monetary_rows] = financials.loc[monetary_rows] * fx_rate
+            balance_sheet = balance_sheet * fx_rate
+            cashflow = cashflow * fx_rate
+        else:
+            currency_mismatch_unresolved = True
+
+    if currency_mismatch_unresolved:
+        # Devises non réconciliables (taux introuvable) : dégrade vers
+        # shares_outstanding=0.0, qui fait déjà tomber proprement les
+        # ratios prix/comptes (P/E, P/B, EV/EBITDA, valorisation — voir
+        # extract_ratios, constat C5, déjà corrigé) sans invalider les
+        # ratios purement comptables (ROE, ROCE, levier, croissance),
+        # qui restent corrects même non convertis — ce sont des ratios
+        # internes aux comptes, cohérents quelle que soit la devise.
+        shares_outstanding = 0.0
 
     # Purge les lignes NaN en fin de serie (constate en production le
     # 2026-09-19 : 131 entreprises europeennes d'un coup, .iloc[-1]
@@ -3908,6 +3961,7 @@ FX_TICKER_TO_USD = {
     "CHF": ("CHFUSD=X", "multiply"),
     "JPY": ("JPY=X", "divide"),
     "HKD": ("HKD=X", "divide"),
+    "CNY": ("CNY=X", "divide"),  # cotation indirecte comme JPY/HKD (constat C1 — Hang Seng reportant en CNY)
 }
 
 
@@ -3933,6 +3987,22 @@ def fetch_fx_rate_to_usd(currency: str) -> float | None:
         return rate if direction == "multiply" else 1 / rate
     except Exception:
         return None
+
+
+def fetch_fx_rate(from_currency: str, to_currency: str) -> float | None:
+    """Taux de change pour convertir un montant de `from_currency` vers
+    `to_currency`, composé à partir de fetch_fx_rate_to_usd (pivot USD —
+    toutes les devises gérées sont cotées contre USD, pratique de marché
+    standard). None si l'une des deux devises n'est pas gérée ou si
+    l'appel réseau échoue — jamais d'exception (fetch_fx_rate_to_usd ne
+    lève déjà jamais)."""
+    if from_currency == to_currency:
+        return 1.0
+    rate_from_usd = fetch_fx_rate_to_usd(from_currency)
+    rate_to_usd = fetch_fx_rate_to_usd(to_currency)
+    if rate_from_usd is None or rate_to_usd is None:
+        return None
+    return rate_from_usd / rate_to_usd
 
 
 MARKET_RISK_PREMIUM = 5.0        # % prime de risque marché (hypothèse fixe)

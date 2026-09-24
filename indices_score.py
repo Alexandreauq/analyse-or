@@ -1017,10 +1017,34 @@ PRICE_HISTORY_TICKER_OVERRIDE = {
 # diagnostic (c'est marketCap qui est l'outlier là, sharesOutstanding est
 # juste), et Michelin (ML.PA) a un marketCap Yahoo carrément à zéro — une
 # règle générale aurait dégradé ces deux-là au lieu de les corriger.
+#
+# Extension du 2026-09-24 (audit, constat C3) : même famille de bug pour
+# les sociétés chinoises à double cotation A-shares/H-shares (Shanghai/
+# Shenzhen + Hong Kong) — sharesOutstanding sur le ticker .HK ne compte
+# que les actions H, alors que résultat net/capitaux propres couvrent la
+# société entière (A+H). Chaque ticker ci-dessous revérifié
+# individuellement (prix × sharesOutstanding vs marketCap réel, même
+# méthode que ci-dessus) avant ajout — 2 tickers initialement suspectés
+# par l'audit (1299.HK AIA, 1928.HK Sands China) ont été EXCLUS après
+# vérification : leur ratio calculé était ~1.0 (aucun problème réel, pas
+# des A+H — AIA n'avait que le problème de devise du constat C1, déjà
+# corrigé séparément).
 SHARES_OUTSTANDING_FROM_MARKET_CAP_TICKERS = {
     "VOW3.DE",  # Volkswagen
     "HEN3.DE",  # Henkel
     "MRK.DE",   # Merck KGaA
+    "1398.HK",  # ICBC — ratio vérifié 0.24
+    "3988.HK",  # Bank of China — ratio vérifié 0.26
+    "2318.HK",  # Ping An Insurance — ratio vérifié 0.41
+    "3968.HK",  # China Merchants Bank — ratio vérifié 0.18
+    "2628.HK",  # China Life Insurance — ratio vérifié 0.26
+    "0857.HK",  # PetroChina — ratio vérifié 0.12
+    "0728.HK",  # China Telecom — ratio vérifié 0.15
+    "1099.HK",  # Sinopharm Group — ratio vérifié 0.43
+    "2600.HK",  # Aluminum Corporation of China (Chalco) — ratio vérifié 0.22
+    "3993.HK",  # CMOC Group — ratio vérifié 0.18
+    "3750.HK",  # Contemporary Amperex Technology (CATL) — ratio vérifié 0.05
+    "0300.HK",  # Midea Group — ratio vérifié 0.09
 }
 
 # Banques et assurances françaises (BNP Paribas, Société Générale, Crédit

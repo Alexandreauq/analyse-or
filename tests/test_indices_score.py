@@ -7328,6 +7328,54 @@ def test_main_calls_update_signal_tracking(monkeypatch, tmp_path):
     assert len(called_with["companies"]) == len(indices_score.COMPANIES)
 
 
+def test_main_writes_indices_json_before_email_and_signal_tracking(monkeypatch, tmp_path):
+    """audit I10 : docs/indices.json doit être écrit AVANT l'envoi de
+    l'email et l'ouverture des positions de suivi -- sinon un échec entre
+    les deux laisserait le fichier qui fait foi pour le dédoublonnage
+    (load_previous_alert_kinds/load_previous_alerted_news_links) périmé,
+    et la même alerte redéclencherait un email en double au run suivant."""
+    monkeypatch.setattr(indices_score, "fetch_risk_free_rate", lambda series_id: 3.68)
+    monkeypatch.setattr(indices_score, "fetch_fx_rate_to_usd", lambda currency: 1.0)
+    monkeypatch.setattr(indices_score, "load_previous_company_analyses", lambda: {})
+    monkeypatch.setattr(
+        indices_score, "build_company_entry",
+        lambda ticker, name, risk_free_rate, previous_analyses, index_key="CAC40", also_indices=None, fx_rate_to_usd=1.0: {
+            "ticker": ticker, "name": name, "index": index_key,
+            "score": 10.0, "interpretation": "Neutre",
+            "current_price": 50.0, "entry_price": 50.0,
+        },
+    )
+    monkeypatch.setattr(indices_score, "load_indices_history", lambda: [])
+    monkeypatch.setattr(indices_score, "append_indices_history", lambda entries: entries)
+    output_path = tmp_path / "indices.json"
+    monkeypatch.setattr(indices_score, "OUTPUT_JSON_PATH", str(output_path))
+    monkeypatch.setattr(indices_score, "update_nikkei_hangseng_price_history", lambda companies: [])
+    monkeypatch.setattr(
+        indices_score, "fetch_index_prices",
+        lambda: {"CAC40": None, "DAX": None, "NASDAQ": None, "DOW": None},
+    )
+    monkeypatch.setattr(indices_score, "update_price_history", lambda entries, **kwargs: entries)
+    monkeypatch.setattr(indices_score, "fetch_index_price_history", lambda: [])
+
+    file_existed_at = {}
+
+    def _fake_send_daily_digest_email(newly_triggered_entree, newly_triggered_major_news):
+        file_existed_at["email"] = output_path.exists()
+        return False
+
+    def _fake_update_signal_tracking(companies, newly_triggered_entree):
+        file_existed_at["signal_tracking"] = output_path.exists()
+        return []
+
+    monkeypatch.setattr(indices_score, "send_daily_digest_email", _fake_send_daily_digest_email)
+    monkeypatch.setattr(indices_score, "update_signal_tracking", _fake_update_signal_tracking)
+
+    indices_score.main()
+
+    assert file_existed_at["email"] is True
+    assert file_existed_at["signal_tracking"] is True
+
+
 def test_main_recalibrates_scores_before_alerts_and_signal_tracking(monkeypatch, tmp_path):
     """Preuve que main() appelle recalibrate_scores_by_profile AVANT
     _attach_alerts_and_update_history/update_signal_tracking — si l'appel

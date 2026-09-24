@@ -5127,9 +5127,6 @@ def main():
     recalibrate_scores_by_profile(companies)
 
     newly_triggered_entree, newly_triggered_major_news = _attach_alerts_and_update_history(companies)
-    send_daily_digest_email(newly_triggered_entree, newly_triggered_major_news)
-    update_signal_tracking(companies, newly_triggered_entree)
-    update_nikkei_hangseng_price_history(companies)
 
     payload = {
         "updated": datetime.today().strftime("%Y-%m-%d"),
@@ -5152,6 +5149,16 @@ def main():
     # s'execute jamais apres un python3 indices_score.py en echec) que
     # publier un JSON invalide qui casse le chargement du site pour tout
     # le monde, silencieusement.
+    #
+    # Écrit AVANT l'email/le signal-tracking (audit I10) : ces deux effets
+    # de bord déterminent "nouveau signal depuis hier" en comparant à CE
+    # MÊME docs/indices.json (load_previous_alert_kinds/
+    # load_previous_alerted_news_links) -- s'ils s'exécutaient avant cette
+    # écriture et qu'une panne survenait entre les deux (ex. fetch_index_prices
+    # ci-dessus), l'email serait déjà parti / la position déjà ouverte, mais
+    # le fichier qui fait foi pour le dédoublonnage du run suivant ne
+    # refléterait jamais ce déclenchement -- même alerte redéclenchée, même
+    # email renvoyé en double au run suivant.
     os.makedirs(os.path.dirname(OUTPUT_JSON_PATH), exist_ok=True)
     with open(OUTPUT_JSON_PATH, "w", encoding="utf-8") as fh:
         json.dump(payload, fh, ensure_ascii=False, indent=2, allow_nan=False)
@@ -5159,6 +5166,10 @@ def main():
     print(f"Données exportées vers : {OUTPUT_JSON_PATH}")
     for c in companies:
         print(f"  {c['ticker']:<8} {c['name']:<20} score {c['score']:+.1f}  ({c['interpretation']})")
+
+    send_daily_digest_email(newly_triggered_entree, newly_triggered_major_news)
+    update_signal_tracking(companies, newly_triggered_entree)
+    update_nikkei_hangseng_price_history(companies)
 
 
 if __name__ == "__main__":

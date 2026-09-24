@@ -1456,18 +1456,22 @@ def score_valorisation(
 # réutilisant les indicateurs standards du secteur. Croissance, dynamique
 # récente et actualité récente restent inchangées (indépendantes d'EBITDA).
 
-def score_rentabilite_financiere(roe: float, cost_of_capital: float) -> FactorResult:
+def score_rentabilite_financiere(roe: float, cost_of_equity: float) -> FactorResult:
     """ROE (résultat net / capitaux propres) à la place du ROCE : pour un
     établissement financier, le levier fait partie intégrante du modèle
-    économique plutôt qu'un effet à isoler — même logique d'écart au coût
-    du capital que score_rentabilite, appliquée au ROE."""
-    spread = roe - cost_of_capital
+    économique plutôt qu'un effet à isoler. Comparé au coût des CAPITAUX
+    PROPRES (Ke), pas au WACC (audit I4) : le ROE mesure un rendement pour
+    les seuls actionnaires, le WACC mélange dette et capitaux propres et
+    est structurellement inférieur au Ke (la dette, moins chère, tire la
+    moyenne pondérée vers le bas) -- le comparer au WACC surestimait
+    systématiquement la création de valeur pour l'actionnaire."""
+    spread = roe - cost_of_equity
     score = _clamp((spread / ROCE_SPREAD_SCALE) * 10)
     return FactorResult(
         "Rentabilité / création de valeur",
         score,
         WEIGHTS["rentabilite"],
-        f"ROE {roe:.1f}% vs coût du capital {cost_of_capital:.1f}% (profil financier)",
+        f"ROE {roe:.1f}% vs coût des capitaux propres {cost_of_equity:.1f}% (profil financier)",
     )
 
 
@@ -4500,9 +4504,14 @@ def build_company_entry(
         print(f"Erreur récupération news pour {name} : {e}")
         news = []
 
+    # ROE (rendement pour les seuls actionnaires) benchmarké au coût des
+    # capitaux propres, pas au WACC -- repli sur cost_of_capital seulement
+    # si le Ke n'a pas pu être calculé (audit I4, voir score_rentabilite_financiere).
+    cost_of_equity_for_roe = cost_of_equity if cost_of_equity is not None else cost_of_capital
+
     if data["is_financial"]:
         factors = [
-            score_rentabilite_financiere(data["roe"], cost_of_capital),
+            score_rentabilite_financiere(data["roe"], cost_of_equity_for_roe),
             score_structure_financiere_bancaire(data["leverage_ratio"]),
             score_croissance_financiere(data["cagr_ca"], data["cagr_net_income"]),
             score_generation_cash_financiere(data["cash_conversion"]),
@@ -4517,7 +4526,7 @@ def build_company_entry(
         ]
     elif data["is_trust"]:
         factors = [
-            score_rentabilite_financiere(data["roe"], cost_of_capital),
+            score_rentabilite_financiere(data["roe"], cost_of_equity_for_roe),
             score_structure_financiere_trust(data["net_debt"], data["equity"]),
             score_croissance_financiere(data["cagr_ca"], data["cagr_net_income"]),
             score_generation_cash_trust(),

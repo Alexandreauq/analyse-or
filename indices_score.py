@@ -1267,9 +1267,43 @@ NET_DEBT_EBITDA_RISKY = 5.5         # seuil Standard, ajusté par profil sectori
 ICR_CRITICAL = 3.0                  # seuil Standard, ajusté par profil sectoriel
 DEBT_INTEREST_RATE_PROXY = 3.0      # % taux d'intérêt proxy sur la dette totale
                                      # (frais financiers non fiablement isolés
-                                     # chez ces entreprises) — utilisé pour l'ICR
-                                     # et repris tel quel pour le coût de la
-                                     # dette dans le calcul du WACC (Task 4).
+                                     # chez ces entreprises) — utilisé pour l'ICR,
+                                     # et pour le coût de la dette du WACC en
+                                     # repli seulement quand implied_cost_of_debt
+                                     # n'est pas calculable (audit I7, volet 1 —
+                                     # avant ce correctif, repris tel quel pour
+                                     # TOUTES les sociétés).
+DEBT_INTEREST_RATE_FLOOR = 1.5      # % plancher du coût de la dette implicite
+                                     # (audit I7, volet 1) — évite la distorsion
+                                     # "financement captif" (ex. Toyota : Interest
+                                     # Expense/Total Debt ~0.14%, dette de crédit
+                                     # auto à très faible marge, pas le vrai coût
+                                     # de la dette opérationnelle de l'entreprise ;
+                                     # même angle mort déjà connu de DEBT_WEIGHT_CAP
+                                     # ci-dessous, mais sur le TAUX plutôt que le POIDS).
+DEBT_INTEREST_RATE_CEILING = 12.0   # % plafond du coût de la dette implicite —
+                                     # évite qu'une donnée ponctuelle aberrante
+                                     # (frais financiers exceptionnels un exercice
+                                     # donné) ne produise un WACC déraisonnable.
+
+
+def _compute_implied_cost_of_debt(interest_expense_latest: float, total_debt_latest: float) -> float | None:
+    """|Interest Expense| / Total Debt de l'exercice le plus récent, en %,
+    borné entre DEBT_INTEREST_RATE_FLOOR et DEBT_INTEREST_RATE_CEILING
+    (audit I7, volet 1). None si l'une des deux données manque/est NaN ou
+    si total_debt_latest est nul/négatif — le repli sur
+    DEBT_INTEREST_RATE_PROXY se fait chez l'appelant (estimate_wacc), pas
+    ici, même convention que estimate_wacc lui-même vis-à-vis de
+    COST_OF_CAPITAL_PROXY."""
+    if (
+        _is_missing(interest_expense_latest) or _is_missing(total_debt_latest)
+        or not total_debt_latest or total_debt_latest <= 0
+    ):
+        return None
+    return _clamp(
+        abs(interest_expense_latest) / total_debt_latest * 100,
+        DEBT_INTEREST_RATE_FLOOR, DEBT_INTEREST_RATE_CEILING,
+    )
 
 
 def _score_leverage(ratio: float, comfortable: float, risky: float) -> float:
@@ -2005,6 +2039,11 @@ def extract_ratios(
     total_debt = _get_row_or_nan(balance_sheet, "Total Debt")
     cash = get_row(balance_sheet, "Cash And Cash Equivalents", "Cash Cash Equivalents And Short Term Investments")
     equity = get_row(balance_sheet, "Stockholders Equity", "Common Stock Equity")
+    # _get_row_or_nan (pas get_row) : ligne optionnelle, coût de la dette
+    # implicite du WACC (audit I7, volet 1) — repli sur DEBT_INTEREST_RATE_PROXY
+    # chez l'appelant (estimate_wacc) si absente/NaN, même convention que les
+    # autres lignes optionnelles de cette fonction.
+    interest_expense = _get_row_or_nan(financials, "Interest Expense", "Interest Expense Non Operating")
 
     # Replis en cascade : "Net PPE Purchase And Sale" (ex : Veolia
     # Environnement, pas de ligne "Capital Expenditure" isolée — nette les
@@ -2046,6 +2085,8 @@ def extract_ratios(
     total_debt_latest = _safe_value(total_debt, latest)
     cash_latest = _safe_value(cash, latest)
     equity_latest = _safe_value(equity, latest)
+    interest_expense_latest = _safe_value(interest_expense, latest)
+    implied_cost_of_debt = _compute_implied_cost_of_debt(interest_expense_latest, total_debt_latest)
 
     net_debt_latest = (
         total_debt_latest - cash_latest
@@ -2278,6 +2319,7 @@ def extract_ratios(
         "equity": equity_latest,
         "tax_rate": tax_rate[latest],
         "total_debt": total_debt_latest,
+        "implied_cost_of_debt": implied_cost_of_debt,
     }
 
 
@@ -4251,6 +4293,7 @@ def estimate_wacc(
     total_debt: float | None,
     tax_rate: float | None,
     fx_rate_to_usd: float | None,
+    implied_cost_of_debt: float | None = None,
 ) -> float | None:
     """WACC par entreprise (CAPM + prime de taille, Vernimmen). None si une
     donnée nécessaire manque/est invalide — le repli sur
@@ -4264,6 +4307,13 @@ def estimate_wacc(
     dette de financement captif (constructeurs auto notamment) écraser
     le coût des fonds propres dans le mix.
 
+    `implied_cost_of_debt` (optionnel, audit I7 volet 1 — voir
+    _compute_implied_cost_of_debt) : coût de la dette PRE-tax propre à
+    l'entreprise (|Interest Expense|/Total Debt, borné), utilisé à la
+    place de DEBT_INTEREST_RATE_PROXY (taux unique de 3% pour toutes les
+    sociétés) quand fourni. Défaut None, rétrocompatible (repli sur
+    DEBT_INTEREST_RATE_PROXY comme avant).
+
     `fx_rate_to_usd` n'est transmis qu'à estimate_cost_of_equity (pour la
     prime de taille) — `market_cap` reste en devise locale pour le ratio
     dette/capital ci-dessous, puisque `total_debt` est dans la même
@@ -4276,7 +4326,10 @@ def estimate_wacc(
     ):
         return None
     try:
-        cost_of_debt_after_tax = DEBT_INTEREST_RATE_PROXY * (1 - tax_rate)
+        cost_of_debt_pretax = (
+            implied_cost_of_debt if implied_cost_of_debt is not None else DEBT_INTEREST_RATE_PROXY
+        )
+        cost_of_debt_after_tax = cost_of_debt_pretax * (1 - tax_rate)
         total_capital = market_cap + total_debt
         debt_weight = min(total_debt / total_capital, DEBT_WEIGHT_CAP)
         equity_weight = 1 - debt_weight
@@ -4494,6 +4547,7 @@ def build_company_entry(
     )
     wacc = estimate_wacc(
         risk_free_rate, data["beta"], market_cap, data["total_debt"], data["tax_rate"], fx_rate_to_usd,
+        data.get("implied_cost_of_debt"),
     )
     cost_of_capital = wacc if wacc is not None else COST_OF_CAPITAL_PROXY
     cost_of_equity = estimate_cost_of_equity(risk_free_rate, data["beta"], market_cap, fx_rate_to_usd)

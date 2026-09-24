@@ -3744,13 +3744,17 @@ def estimate_dcf_price(
     return equity_value / shares_outstanding
 
 
-ASSET_QUALITY_FLOOR = 0.3  # décote maximale (70%) appliquée à la valeur
-                            # comptable — voir estimate_asset_based_price
+ASSET_QUALITY_FLOOR = 0.3    # décote maximale (70%) appliquée à la valeur
+                              # comptable — voir estimate_asset_based_price
+ASSET_QUALITY_CEILING = 3.0  # prime maximale (audit I5, profils financier/trust
+                              # uniquement, allow_premium=True) — voir
+                              # estimate_asset_based_price
 
 
 def estimate_asset_based_price(
     equity: float, shares_outstanding: float,
     roe: float | None = None, cost_of_capital: float | None = None,
+    allow_premium: bool = False,
 ) -> float | None:
     """Valeur comptable par action (capitaux propres / actions en
     circulation), pondérée par un facteur qualité ROE/coût du capital
@@ -3765,10 +3769,22 @@ def estimate_asset_based_price(
     `roe`/`cost_of_capital` optionnels (défaut None) pour ne rien changer
     au comportement des appelants existants qui ne les fournissent pas —
     renvoie alors la valeur comptable brute (facteur 1.0), comme avant.
-    Le facteur est plafonné à 1.0 (jamais de prime au-dessus du book
-    value brut — les méthodes DCF/multiples portent déjà l'upside des
-    entreprises performantes) et à ASSET_QUALITY_FLOOR au plancher (décote
-    jamais totale, cette approximation reste simplifiée). None si les
+
+    Le facteur est plafonné à 1.0 par défaut (jamais de prime au-dessus du
+    book value brut — les méthodes DCF/multiples portent déjà l'upside des
+    entreprises performantes DANS LA MOYENNE PONDÉRÉE) et à
+    ASSET_QUALITY_FLOOR au plancher (décote jamais totale, cette
+    approximation reste simplifiée). `allow_premium=True` (audit I5)
+    relève ce plafond à ASSET_QUALITY_CEILING : réservé aux profils
+    financier/trust, pour qui extract_ratios_financial fixe
+    structurellement fcf=0.0 et current_ev_ebitda=0.0 (pas de notion
+    d'EBITDA/FCF standard pour une banque) — DCF et multiples renvoient
+    donc toujours None pour ces profils, cette méthode patrimoniale est
+    leur SEULE source de juste valeur, et la justification du plafond à
+    1.0 ("les autres méthodes portent déjà l'upside") ne tient jamais
+    pour eux : un établissement dont le ROE dépasse largement son coût
+    des capitaux propres voyait sa juste valeur plafonnée à sa valeur
+    comptable brute, quelle que soit sa qualité réelle. None si les
     capitaux propres sont négatifs ou nuls (base non significative comme
     plancher de valorisation) ou si le nombre d'actions est nul/inconnu."""
     if not shares_outstanding or _is_missing(equity) or equity <= 0:
@@ -3779,7 +3795,8 @@ def estimate_asset_based_price(
         or cost_of_capital is None or _is_missing(cost_of_capital) or cost_of_capital <= 0
     ):
         return book_value_per_share
-    quality_factor = _clamp(roe / cost_of_capital, ASSET_QUALITY_FLOOR, 1.0)
+    ceiling = ASSET_QUALITY_CEILING if allow_premium else 1.0
+    quality_factor = _clamp(roe / cost_of_capital, ASSET_QUALITY_FLOOR, ceiling)
     return book_value_per_share * quality_factor
 
 
@@ -4253,6 +4270,7 @@ def estimate_valuation_targets(
     asset_price = estimate_asset_based_price(
         data["equity"], data["shares_outstanding"], data["roe"],
         cost_of_equity if cost_of_equity is not None else cost_of_capital,
+        allow_premium=bool(data.get("is_financial") or data.get("is_trust")),
     )
     multiple_price = (
         estimate_multiple_based_price(

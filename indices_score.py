@@ -817,11 +817,13 @@ NIKKEI225_COMPANIES = [
 # (confirmé : "700.HK" sans padding renvoie 404, "0700.HK" fonctionne).
 # Devise HKD : Hong Kong n'étant pas membre de l'OCDE, aucune série FRED
 # de taux long terme n'existe pour le HKD (confirmé, IRLTLT01HKM156N
-# renvoie 404) — RISK_FREE_SERIES_BY_CURRENCY n'a donc volontairement
-# aucune entrée "HKD", le code retombe déjà proprement sur
-# COST_OF_CAPITAL_PROXY via risk_free_rate_by_currency.get(). Sourcé le
-# 2026-09-12 via le communiqué officiel Hang Seng Indexes Company du
-# 21/08/2026 (révision effective au 07/09/2026) — voir
+# renvoie 404) — RISK_FREE_SERIES_BY_CURRENCY utilise donc le Treasury US
+# (DGS10) pour le HKD, pas COST_OF_CAPITAL_PROXY (audit I7, volet 4) : le
+# peg HKD/USD (currency board depuis 1983) rend le Treasury US nettement
+# plus pertinent qu'un proxy générique déconnecté de tout marché réel —
+# voir RISK_FREE_SERIES_BY_CURRENCY pour le détail. Sourcé le 2026-09-12
+# via le communiqué officiel Hang Seng Indexes Company du 21/08/2026
+# (révision effective au 07/09/2026) — voir
 # docs/superpowers/hangseng-research-report.md pour le détail complet.
 HANGSENG_COMPANIES = [
     {"ticker": "1299.HK", "name": "AIA Group"},
@@ -4066,12 +4068,21 @@ FRED_RISK_FREE_SERIES_JP = "IRLTLT01JPM156N"  # JGB 10 ans (Japon), FRED/OCDE, m
 # NASDAQ/DOW (USD) utilisent le Treasury US, FTSE (GBP) utilise le gilt
 # UK. Rempli dans main() une fois les taux récupérés (un seul appel FRED
 # par série et par run, pas par entreprise).
+#
+# HKD -> Treasury US (DGS10), pas le proxy générique COST_OF_CAPITAL_PROXY
+# (audit I7, volet 4) : aucune série FRED de taux long terme n'existe pour
+# le HKD (Hong Kong hors OCDE, voir le commentaire au-dessus de
+# HANGSENG_COMPANIES) -- ce fait ne change pas -- mais le peg HKD/USD
+# (currency board depuis 1983, ~7.8 HKD/USD) rend le Treasury US bien plus
+# pertinent comme proxy que le repli générique déconnecté de tout marché
+# réel, qui s'appliquait jusqu'ici à toutes les sociétés HKD.
 RISK_FREE_SERIES_BY_CURRENCY = {
     "EUR": FRED_RISK_FREE_SERIES,
     "USD": FRED_RISK_FREE_SERIES_US,
     "GBP": FRED_RISK_FREE_SERIES_UK,
     "CHF": FRED_RISK_FREE_SERIES_CH,
     "JPY": FRED_RISK_FREE_SERIES_JP,
+    "HKD": FRED_RISK_FREE_SERIES_US,
 }
 
 

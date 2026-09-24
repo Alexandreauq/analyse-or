@@ -4116,7 +4116,10 @@ def test_main_routes_risk_free_rate_by_currency(monkeypatch, tmp_path):
     assert received_rates[ibex_ticker] == 3.68
     assert received_rates[nikkei_ticker] == 2.67
     assert received_rates[ftsemib_ticker] == 3.68
-    assert received_rates[hangseng_ticker] is None
+    # HKD n'a pas sa propre série FRED (Hong Kong hors OCDE) mais utilise
+    # le Treasury US (DGS10) vu le peg HKD/USD (audit I7, volet 4) --
+    # reçoit donc le même taux que le Nasdaq, pas None/proxy générique.
+    assert received_rates[hangseng_ticker] == 4.20
 
 
 import pandas as pd
@@ -5328,13 +5331,15 @@ def test_hangseng_financial_sector_tickers_are_in_hangseng_companies():
     assert len(hangseng_financial_tickers) == 8
 
 
-def test_hkd_has_no_risk_free_series_and_falls_back_gracefully():
+def test_hkd_uses_us_treasury_series_given_the_hkd_usd_peg():
     """Hong Kong n'est pas membre de l'OCDE — aucune série FRED de taux
-    long terme n'existe pour le HKD (IRLTLT01HKM156N confirmé absent).
-    RISK_FREE_SERIES_BY_CURRENCY n'a donc volontairement aucune entrée
-    "HKD" : le code doit retomber sur COST_OF_CAPITAL_PROXY plutôt que
-    planter ou utiliser un faux identifiant de série."""
-    assert "HKD" not in indices_score.RISK_FREE_SERIES_BY_CURRENCY
+    long terme n'existe pour le HKD (IRLTLT01HKM156N confirmé absent) --
+    ce fait ne change pas. Mais RISK_FREE_SERIES_BY_CURRENCY utilise
+    désormais le Treasury US (DGS10) pour le HKD plutôt que de retomber
+    sur le proxy générique COST_OF_CAPITAL_PROXY (audit I7, volet 4) : le
+    peg HKD/USD (currency board depuis 1983) rend le Treasury US
+    nettement plus pertinent qu'un taux déconnecté de tout marché réel."""
+    assert indices_score.RISK_FREE_SERIES_BY_CURRENCY["HKD"] == indices_score.FRED_RISK_FREE_SERIES_US
 
 
 def test_dow_companies_does_not_duplicate_tickers_already_in_nasdaq():

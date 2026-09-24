@@ -3749,9 +3749,16 @@ def compute_company_alerts(
                 "date": today_str,
             })
 
+    # Bande asymétrique (audit Minor #2, ex-abs()) : "conditions d'entrée
+    # réunies" doit signifier que le cours est encore atteignable au
+    # repère d'entrée ou en dessous, pas qu'il l'a déjà dépassé — avec
+    # abs(), 14 des 23 alertes "entree" actives le 2026-09-24 avaient un
+    # cours AU-DESSUS du repère (jusqu'à +5%), ce qui n'a pas de sens
+    # pour un signal d'achat.
     near_entry = (
         current_price is not None and entry_price is not None and entry_price > 0
-        and abs(current_price - entry_price) / entry_price * 100 < NEAR_ENTRY_PCT
+        and current_price <= entry_price
+        and (entry_price - current_price) / entry_price * 100 < NEAR_ENTRY_PCT
     )
     score_favorable = (
         composite_raw > HYSTERESIS_BAND if abs(composite_raw) > HYSTERESIS_BAND

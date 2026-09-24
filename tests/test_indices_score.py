@@ -3591,11 +3591,25 @@ def test_compute_company_alerts_no_risque_when_drop_outside_window():
 
 def test_compute_company_alerts_entree_when_score_favorable_and_price_near_entry():
     alerts = indices_score.compute_company_alerts(
-        "BN.PA", composite_raw=20.0, current_price=102.0, entry_price=100.0,
+        "BN.PA", composite_raw=20.0, current_price=98.0, entry_price=100.0,
         previous_history=[],
     )
     kinds = [a["kind"] for a in alerts]
     assert "entree" in kinds
+
+
+def test_compute_company_alerts_no_entree_when_price_above_entry():
+    """audit Minor #2 : un cours déjà AU-DESSUS du repère d'entrée (même
+    de peu) ne doit plus déclencher "entree" -- l'ancienne bande
+    symétrique (abs()) le laissait passer jusqu'à +5%, ce qui n'a pas de
+    sens pour un signal d'achat ("encore atteignable", pas "déjà
+    dépassé")."""
+    alerts = indices_score.compute_company_alerts(
+        "BN.PA", composite_raw=20.0, current_price=102.0, entry_price=100.0,
+        previous_history=[],
+    )
+    kinds = [a["kind"] for a in alerts]
+    assert "entree" not in kinds
 
 
 def test_compute_company_alerts_no_entree_during_declin_stage():
@@ -3616,11 +3630,11 @@ def test_compute_company_alerts_entree_active_when_stage_label_none_or_other():
     ou toute autre valeur ("Achat", "Neutre"...) ne change rien au
     déclenchement de l'alerte "entree"."""
     baseline = indices_score.compute_company_alerts(
-        "BN.PA", composite_raw=20.0, current_price=102.0, entry_price=100.0,
+        "BN.PA", composite_raw=20.0, current_price=98.0, entry_price=100.0,
         previous_history=[],
     )
     with_neutral_stage = indices_score.compute_company_alerts(
-        "BN.PA", composite_raw=20.0, current_price=102.0, entry_price=100.0,
+        "BN.PA", composite_raw=20.0, current_price=98.0, entry_price=100.0,
         previous_history=[], stage_label="Neutre",
     )
     assert "entree" in [a["kind"] for a in baseline]
@@ -3652,7 +3666,7 @@ def test_compute_company_alerts_entree_stays_active_when_score_dips_into_dead_zo
     redéclenche le lendemain) à cause d'un mouvement mineur (audit I2)."""
     previous_history = [{"date": "2026-09-05", "ticker": "BN.PA", "composite_raw": 15.0}]
     alerts = indices_score.compute_company_alerts(
-        "BN.PA", composite_raw=2.0, current_price=102.0, entry_price=100.0,
+        "BN.PA", composite_raw=2.0, current_price=98.0, entry_price=100.0,
         previous_history=previous_history,
     )
     kinds = [a["kind"] for a in alerts]

@@ -3629,7 +3629,7 @@ def _last_confirmed_regime(previous_history: list[dict], band: float) -> float |
 def compute_company_alerts(
     ticker: str, composite_raw: float, current_price: float | None,
     entry_price: float | None, previous_history: list[dict],
-    news_items: list[dict] | None = None,
+    news_items: list[dict] | None = None, stage_label: str | None = None,
 ) -> list[dict]:
     """Alertes de franchissement de seuil pour une entreprise, à partir de
     son propre sous-historique (déjà filtré par ticker par l'appelant).
@@ -3640,7 +3640,14 @@ def compute_company_alerts(
     société n'ont pas changé, ce qui générait des alertes sans substance
     (audit I2). `news_items` est optionnel (défaut None) pour ne rien
     changer au comportement des appelants existants qui ne le fournissent
-    pas. Ne lève jamais d'exception ; renvoie toujours au moins une alerte
+    pas. `stage_label` (voir classify_weinstein_stage, audit I8) : en
+    phase "Déclin", l'alerte "entree" ne se déclenche jamais, même si le
+    cours est proche du repère d'entrée et le score favorable — cohérent
+    avec estimate_entry_exit_prices, qui exclut déjà le repère technique
+    (MM200) en phase "Déclin" ; recommander une entrée sur un titre en
+    repli confirmé contredirait cette même logique. `None` (défaut,
+    comportement d'avant ce correctif) ne change rien au calcul existant.
+    Ne lève jamais d'exception ; renvoie toujours au moins une alerte
     (`info` neutre si rien ne se déclenche — calculé après l'alerte
     "actu_majeure" ci-dessous, pas avant, pour ne jamais afficher "pas de
     signal actif" en même temps qu'une vraie actu majeure).
@@ -3707,7 +3714,7 @@ def compute_company_alerts(
         composite_raw > HYSTERESIS_BAND if abs(composite_raw) > HYSTERESIS_BAND
         else (last_regime is not None and last_regime > HYSTERESIS_BAND)
     )
-    if score_favorable and near_entry:
+    if score_favorable and near_entry and stage_label != "Déclin":
         alerts.append({
             "kind": "entree",
             "title": "Conditions d'entrée réunies",
@@ -4783,7 +4790,7 @@ def _attach_alerts_and_update_history(companies: list[dict]) -> tuple[list[dict]
             company["alerts"] = compute_company_alerts(
                 company["ticker"], company["score_raw"], company["current_price"],
                 company["entry_price"], ticker_history,
-                news_items=company.get("news", []),
+                news_items=company.get("news", []), stage_label=company.get("stage_label"),
             )
             today_kinds = {a["kind"] for a in company["alerts"]}
             if "entree" in today_kinds and "entree" not in previous_alert_kinds.get(company["ticker"], set()):

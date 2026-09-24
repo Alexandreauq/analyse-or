@@ -1386,7 +1386,7 @@ def score_croissance(cagr_ca: float, cagr_ebitda: float) -> FactorResult:
         "Croissance",
         base,
         WEIGHTS["croissance"],
-        f"CAGR CA {cagr_ca:+.1f}%/an, CAGR EBITDA {cagr_ebitda:+.1f}%/an (5 ans)",
+        f"CAGR CA {cagr_ca:+.1f}%/an, CAGR EBITDA {cagr_ebitda:+.1f}%/an (CAGR lissé)",
     )
 
 
@@ -1558,7 +1558,7 @@ def score_croissance_financiere(cagr_ca: float, cagr_net_income: float) -> Facto
     return FactorResult(
         base.name, base.score, base.weight,
         f"CAGR CA {cagr_ca:+.1f}%/an, CAGR résultat net {cagr_net_income:+.1f}%/an "
-        f"(5 ans, profil financier)",
+        f"(CAGR lissé, profil financier)",
     )
 
 

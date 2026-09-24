@@ -129,6 +129,17 @@ def test_score_croissance_strong_aligned_growth():
     assert result.score == 10.0  # moyenne 12% / échelle 10% -> plafonné à +10
 
 
+def test_score_croissance_raw_value_does_not_claim_a_fixed_year_count():
+    """audit Minor #5, point 2 : le libellé affichait "(5 ans)" alors que
+    la fenêtre CAGR effective (lissage sur 2 exercices, cagr_span =
+    n_years - smoothing_window) varie selon les données disponibles et
+    ne vaut 5 dans aucun cas réel -- "(CAGR lissé)" reste correct sans
+    revendiquer un nombre d'années précis."""
+    result = score_croissance(cagr_ca=12.0, cagr_ebitda=12.0)
+    assert "5 ans" not in result.raw_value
+    assert "CAGR lissé" in result.raw_value
+
+
 def test_score_croissance_no_growth_is_neutral():
     result = score_croissance(cagr_ca=0.0, cagr_ebitda=0.0)
     assert result.score == 0.0
@@ -5266,6 +5277,7 @@ def test_score_croissance_financiere_reuses_score_croissance_math():
     assert result.score == expected.score
     assert "résultat net" in result.raw_value
     assert "EBITDA" not in result.raw_value
+    assert "5 ans" not in result.raw_value  # audit Minor #5, point 2
 
 
 def test_score_generation_cash_financiere_wider_scale_than_standard():

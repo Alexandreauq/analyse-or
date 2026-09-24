@@ -3123,9 +3123,41 @@ def test_update_price_history_rounds_prices_and_writes_compact_json(tmp_path):
     assert "620.1235" in content
 
 
+def test_last_confirmed_regime_returns_none_for_empty_history():
+    assert indices_score._last_confirmed_regime([], 5.0) is None
+
+
+def test_last_confirmed_regime_returns_none_when_all_values_in_dead_zone():
+    history = [
+        {"date": "2026-09-01", "composite_raw": -3.0},
+        {"date": "2026-09-02", "composite_raw": 4.0},
+    ]
+    assert indices_score._last_confirmed_regime(history, 5.0) is None
+
+
+def test_last_confirmed_regime_returns_most_recent_value_outside_band_by_date():
+    # Volontairement pas dans l'ordre chronologique de la liste, pour
+    # vérifier que le tri se fait bien par date et pas par ordre de liste.
+    history = [
+        {"date": "2026-09-10", "composite_raw": 30.0},
+        {"date": "2026-09-01", "composite_raw": -20.0},
+        {"date": "2026-09-05", "composite_raw": 2.0},  # dans la bande morte, ignoré
+    ]
+    assert indices_score._last_confirmed_regime(history, 5.0) == 30.0
+
+
+def test_last_confirmed_regime_ignores_entries_missing_composite_raw():
+    """Entrées d'historique antérieures à l'ajout de composite_raw (audit
+    I2) -- dégradation gracieuse plutôt qu'une KeyError."""
+    history = [
+        {"date": "2026-09-01", "composite": -20.0},  # ancien format, pas de composite_raw
+    ]
+    assert indices_score._last_confirmed_regime(history, 5.0) is None
+
+
 def test_compute_company_alerts_returns_info_when_nothing_triggers():
     alerts = indices_score.compute_company_alerts(
-        "BN.PA", composite=5.0, current_price=100.0, entry_price=50.0,
+        "BN.PA", composite_raw=5.0, current_price=100.0, entry_price=50.0,
         previous_history=[],
     )
     assert len(alerts) == 1
@@ -3133,9 +3165,11 @@ def test_compute_company_alerts_returns_info_when_nothing_triggers():
 
 
 def test_compute_company_alerts_watch_when_score_crosses_0_upward():
-    previous_history = [{"date": "2026-09-05", "ticker": "BN.PA", "composite": -5.0}]
+    # -10.0 puis +10.0 : franchissement confirmé, chaque valeur est hors de
+    # la bande morte HYSTERESIS_BAND=5.0 (audit I2).
+    previous_history = [{"date": "2026-09-05", "ticker": "BN.PA", "composite_raw": -10.0}]
     alerts = indices_score.compute_company_alerts(
-        "BN.PA", composite=5.0, current_price=100.0, entry_price=50.0,
+        "BN.PA", composite_raw=10.0, current_price=100.0, entry_price=50.0,
         previous_history=previous_history,
     )
     kinds = [a["kind"] for a in alerts]
@@ -3144,9 +3178,30 @@ def test_compute_company_alerts_watch_when_score_crosses_0_upward():
 
 def test_compute_company_alerts_no_watch_when_already_above_0():
     """Ne doit se déclencher qu'au franchissement, pas rester actif en continu."""
-    previous_history = [{"date": "2026-09-05", "ticker": "BN.PA", "composite": 20.0}]
+    previous_history = [{"date": "2026-09-05", "ticker": "BN.PA", "composite_raw": 20.0}]
     alerts = indices_score.compute_company_alerts(
-        "BN.PA", composite=22.0, current_price=100.0, entry_price=50.0,
+        "BN.PA", composite_raw=22.0, current_price=100.0, entry_price=50.0,
+        previous_history=previous_history,
+    )
+    kinds = [a["kind"] for a in alerts]
+    assert "watch" not in kinds
+
+
+def test_compute_company_alerts_no_watch_when_oscillating_in_dead_zone():
+    """Sans hystérésis, un score qui oscille autour de 0 dans la bande
+    morte [-5, +5] redéclencherait watch à chaque repassage au-dessus de 0
+    (l'ancienne logique ne comparait que la veille au jour même, sans
+    mémoire du régime) : ici la veille était à -1.0 et aujourd'hui à 2.0,
+    un franchissement de 0 au sens strict -- mais aucune valeur de
+    l'historique n'est jamais sortie de la bande morte, donc aucun régime
+    confirmé n'existe, et watch ne doit PAS se déclencher (audit I2)."""
+    previous_history = [
+        {"date": "2026-09-01", "ticker": "BN.PA", "composite_raw": -3.0},
+        {"date": "2026-09-03", "ticker": "BN.PA", "composite_raw": 2.0},
+        {"date": "2026-09-05", "ticker": "BN.PA", "composite_raw": -1.0},
+    ]
+    alerts = indices_score.compute_company_alerts(
+        "BN.PA", composite_raw=2.0, current_price=100.0, entry_price=50.0,
         previous_history=previous_history,
     )
     kinds = [a["kind"] for a in alerts]
@@ -3156,11 +3211,11 @@ def test_compute_company_alerts_no_watch_when_already_above_0():
 def test_compute_company_alerts_risque_on_rapid_drop():
     from datetime import datetime, timedelta
     recent_date = (datetime.today() - timedelta(days=2)).strftime("%Y-%m-%d")
-    # drop de -45 : juste au-dessus du seuil recalibré RAPID_DROP_POINTS=40
-    # (auparavant -25 pour un seuil à 20, même marge relative).
-    previous_history = [{"date": recent_date, "ticker": "BN.PA", "composite": 80.0}]
+    # drop de -45 : bien au-dessus du seuil RAPID_DROP_POINTS=20 (valeur
+    # d'origine, échelle du score BRUT -- jamais retunée, audit I2).
+    previous_history = [{"date": recent_date, "ticker": "BN.PA", "composite_raw": 80.0}]
     alerts = indices_score.compute_company_alerts(
-        "BN.PA", composite=35.0, current_price=100.0, entry_price=50.0,
+        "BN.PA", composite_raw=35.0, current_price=100.0, entry_price=50.0,
         previous_history=previous_history,
     )
     kinds = [a["kind"] for a in alerts]
@@ -3173,9 +3228,9 @@ def test_compute_company_alerts_no_risque_when_drop_outside_window():
     # Même magnitude de chute (-45) que test_..._risque_on_rapid_drop, mais
     # hors fenêtre : doit rester silencieux malgré une chute qui franchirait
     # le seuil RAPID_DROP_POINTS si elle était récente.
-    previous_history = [{"date": old_date, "ticker": "BN.PA", "composite": 80.0}]
+    previous_history = [{"date": old_date, "ticker": "BN.PA", "composite_raw": 80.0}]
     alerts = indices_score.compute_company_alerts(
-        "BN.PA", composite=35.0, current_price=100.0, entry_price=50.0,
+        "BN.PA", composite_raw=35.0, current_price=100.0, entry_price=50.0,
         previous_history=previous_history,
     )
     kinds = [a["kind"] for a in alerts]
@@ -3184,7 +3239,7 @@ def test_compute_company_alerts_no_risque_when_drop_outside_window():
 
 def test_compute_company_alerts_entree_when_score_favorable_and_price_near_entry():
     alerts = indices_score.compute_company_alerts(
-        "BN.PA", composite=20.0, current_price=102.0, entry_price=100.0,
+        "BN.PA", composite_raw=20.0, current_price=102.0, entry_price=100.0,
         previous_history=[],
     )
     kinds = [a["kind"] for a in alerts]
@@ -3193,7 +3248,7 @@ def test_compute_company_alerts_entree_when_score_favorable_and_price_near_entry
 
 def test_compute_company_alerts_no_entree_when_price_far_from_entry():
     alerts = indices_score.compute_company_alerts(
-        "BN.PA", composite=20.0, current_price=130.0, entry_price=100.0,
+        "BN.PA", composite_raw=20.0, current_price=130.0, entry_price=100.0,
         previous_history=[],
     )
     kinds = [a["kind"] for a in alerts]
@@ -3202,18 +3257,32 @@ def test_compute_company_alerts_no_entree_when_price_far_from_entry():
 
 def test_compute_company_alerts_no_entree_when_score_not_favorable():
     alerts = indices_score.compute_company_alerts(
-        "BN.PA", composite=-5.0, current_price=101.0, entry_price=100.0,
+        "BN.PA", composite_raw=-10.0, current_price=101.0, entry_price=100.0,
         previous_history=[],
     )
     kinds = [a["kind"] for a in alerts]
     assert "entree" not in kinds
 
 
+def test_compute_company_alerts_entree_stays_active_when_score_dips_into_dead_zone():
+    """Un régime confirmé favorable (dernière valeur hors bande morte > +5)
+    doit garder "entree" actif même si le score du jour retombe dans la
+    bande morte -- évite qu'un signal disparaisse (et son email associé se
+    redéclenche le lendemain) à cause d'un mouvement mineur (audit I2)."""
+    previous_history = [{"date": "2026-09-05", "ticker": "BN.PA", "composite_raw": 15.0}]
+    alerts = indices_score.compute_company_alerts(
+        "BN.PA", composite_raw=2.0, current_price=102.0, entry_price=100.0,
+        previous_history=previous_history,
+    )
+    kinds = [a["kind"] for a in alerts]
+    assert "entree" in kinds
+
+
 def test_compute_company_alerts_handles_missing_current_or_entry_price():
     """Ne doit jamais lever, même si le cours ou le repère d'entrée est
     manquant (yfinance en panne, valorisation non calculable ce jour-là)."""
     alerts = indices_score.compute_company_alerts(
-        "BN.PA", composite=20.0, current_price=None, entry_price=None,
+        "BN.PA", composite_raw=20.0, current_price=None, entry_price=None,
         previous_history=[],
     )
     assert isinstance(alerts, list)
@@ -3226,12 +3295,12 @@ def test_compute_company_alerts_ignores_malformed_dates():
     from datetime import datetime, timedelta
     recent_date = (datetime.today() - timedelta(days=2)).strftime("%Y-%m-%d")
     previous_history = [
-        {"date": "pas-une-date", "ticker": "BN.PA", "composite": 80.0},  # malformed
-        {"date": recent_date, "ticker": "BN.PA", "composite": 80.0},      # valid
+        {"date": "pas-une-date", "ticker": "BN.PA", "composite_raw": 80.0},  # malformed
+        {"date": recent_date, "ticker": "BN.PA", "composite_raw": 80.0},      # valid
     ]
     # Ne doit pas lever, et doit détecter la chute de 80->35 en ignorant l'entrée malformée
     alerts = indices_score.compute_company_alerts(
-        "BN.PA", composite=35.0, current_price=100.0, entry_price=50.0,
+        "BN.PA", composite_raw=35.0, current_price=100.0, entry_price=50.0,
         previous_history=previous_history,
     )
     kinds = [a["kind"] for a in alerts]
@@ -3245,7 +3314,7 @@ def test_compute_company_alerts_actu_majeure_when_recent():
         "date": _days_ago(1), "summary": "Résumé.", "importance": "majeure",
     }]
     alerts = indices_score.compute_company_alerts(
-        "BN.PA", composite=5.0, current_price=100.0, entry_price=50.0,
+        "BN.PA", composite_raw=5.0, current_price=100.0, entry_price=50.0,
         previous_history=[], news_items=news_items,
     )
     kinds = [a["kind"] for a in alerts]
@@ -3259,7 +3328,7 @@ def test_compute_company_alerts_no_actu_majeure_for_non_majeure_news():
         "date": _days_ago(1), "summary": "Résumé.", "importance": "notable",
     }]
     alerts = indices_score.compute_company_alerts(
-        "BN.PA", composite=5.0, current_price=100.0, entry_price=50.0,
+        "BN.PA", composite_raw=5.0, current_price=100.0, entry_price=50.0,
         previous_history=[], news_items=news_items,
     )
     assert "actu_majeure" not in [a["kind"] for a in alerts]
@@ -3277,7 +3346,7 @@ def test_compute_company_alerts_actu_majeure_persists_even_if_already_emailed():
         "date": _days_ago(1), "summary": "Résumé.", "importance": "majeure",
     }]
     alerts = indices_score.compute_company_alerts(
-        "BN.PA", composite=5.0, current_price=100.0, entry_price=50.0,
+        "BN.PA", composite_raw=5.0, current_price=100.0, entry_price=50.0,
         previous_history=[], news_items=news_items,
     )
     assert "actu_majeure" in [a["kind"] for a in alerts]
@@ -3289,7 +3358,7 @@ def test_compute_company_alerts_no_actu_majeure_outside_news_window():
         "date": _days_ago(30), "summary": "Résumé.", "importance": "majeure",
     }]
     alerts = indices_score.compute_company_alerts(
-        "BN.PA", composite=5.0, current_price=100.0, entry_price=50.0,
+        "BN.PA", composite_raw=5.0, current_price=100.0, entry_price=50.0,
         previous_history=[], news_items=news_items,
     )
     assert "actu_majeure" not in [a["kind"] for a in alerts]
@@ -3304,7 +3373,7 @@ def test_compute_company_alerts_no_actu_majeure_without_link():
         "date": _days_ago(1), "summary": "Résumé.", "importance": "majeure",
     }]
     alerts = indices_score.compute_company_alerts(
-        "BN.PA", composite=5.0, current_price=100.0, entry_price=50.0,
+        "BN.PA", composite_raw=5.0, current_price=100.0, entry_price=50.0,
         previous_history=[], news_items=news_items,
     )
     assert "actu_majeure" not in [a["kind"] for a in alerts]
@@ -3312,8 +3381,8 @@ def test_compute_company_alerts_no_actu_majeure_without_link():
 
 def test_attach_alerts_and_update_history_sets_alerts_key(monkeypatch):
     companies = [
-        {"ticker": "BN.PA", "score": 20.0, "current_price": 102.0, "entry_price": 100.0},
-        {"ticker": "MC.PA", "score": 5.0, "current_price": 200.0, "entry_price": 150.0},
+        {"ticker": "BN.PA", "score": 20.0, "score_raw": 20.0, "current_price": 102.0, "entry_price": 100.0},
+        {"ticker": "MC.PA", "score": 5.0, "score_raw": 5.0, "current_price": 200.0, "entry_price": 150.0},
     ]
     monkeypatch.setattr(indices_score, "load_indices_history", lambda: [])
     recorded = {}
@@ -3328,18 +3397,18 @@ def test_attach_alerts_and_update_history_sets_alerts_key(monkeypatch):
     assert len(companies[0]["alerts"]) >= 1
     assert isinstance(companies[1]["alerts"], list)
     assert recorded["entries"] == [
-        {"date": recorded["entries"][0]["date"], "ticker": "BN.PA", "composite": 20.0},
-        {"date": recorded["entries"][1]["date"], "ticker": "MC.PA", "composite": 5.0},
+        {"date": recorded["entries"][0]["date"], "ticker": "BN.PA", "composite": 20.0, "composite_raw": 20.0},
+        {"date": recorded["entries"][1]["date"], "ticker": "MC.PA", "composite": 5.0, "composite_raw": 5.0},
     ]
 
 
 def test_attach_alerts_and_update_history_filters_history_per_ticker(monkeypatch):
     """L'historique passé à compute_company_alerts pour une entreprise ne
     doit contenir que les entrées de son propre ticker."""
-    companies = [{"ticker": "BN.PA", "score": 20.0, "current_price": 102.0, "entry_price": 100.0}]
+    companies = [{"ticker": "BN.PA", "score": 20.0, "score_raw": 20.0, "current_price": 102.0, "entry_price": 100.0}]
     mixed_history = [
-        {"date": "2026-09-01", "ticker": "MC.PA", "composite": 99.0},
-        {"date": "2026-09-01", "ticker": "BN.PA", "composite": 10.0},
+        {"date": "2026-09-01", "ticker": "MC.PA", "composite": 99.0, "composite_raw": 99.0},
+        {"date": "2026-09-01", "ticker": "BN.PA", "composite": 10.0, "composite_raw": 10.0},
     ]
     monkeypatch.setattr(indices_score, "load_indices_history", lambda: mixed_history)
     monkeypatch.setattr(indices_score, "append_indices_history", lambda entries: entries)
@@ -3347,15 +3416,17 @@ def test_attach_alerts_and_update_history_filters_history_per_ticker(monkeypatch
     captured = {}
     original = indices_score.compute_company_alerts
 
-    def _spy(ticker, composite, current_price, entry_price, previous_history, **kwargs):
+    def _spy(ticker, composite_raw, current_price, entry_price, previous_history, **kwargs):
         captured["previous_history"] = previous_history
-        return original(ticker, composite, current_price, entry_price, previous_history, **kwargs)
+        return original(ticker, composite_raw, current_price, entry_price, previous_history, **kwargs)
 
     monkeypatch.setattr(indices_score, "compute_company_alerts", _spy)
 
     indices_score._attach_alerts_and_update_history(companies)
 
-    assert captured["previous_history"] == [{"date": "2026-09-01", "ticker": "BN.PA", "composite": 10.0}]
+    assert captured["previous_history"] == [
+        {"date": "2026-09-01", "ticker": "BN.PA", "composite": 10.0, "composite_raw": 10.0},
+    ]
 
 
 def test_attach_alerts_and_update_history_degrades_gracefully_on_failure(monkeypatch):
@@ -3419,7 +3490,7 @@ def test_attach_alerts_and_update_history_flags_newly_triggered_entree_signal(mo
     """Une entreprise dont le signal "entree" apparaît aujourd'hui, sans
     être actif hier, doit être renvoyée par _attach_alerts_and_update_history
     — c'est ce que main() utilise pour déclencher l'email d'alerte."""
-    companies = [{"ticker": "BN.PA", "score": 20.0, "current_price": 100.0, "entry_price": 100.0}]
+    companies = [{"ticker": "BN.PA", "score": 20.0, "score_raw": 20.0, "current_price": 100.0, "entry_price": 100.0}]
     monkeypatch.setattr(indices_score, "load_indices_history", lambda: [])
     monkeypatch.setattr(indices_score, "append_indices_history", lambda entries: entries)
     monkeypatch.setattr(indices_score, "load_previous_alert_kinds", lambda: {})
@@ -3434,7 +3505,7 @@ def test_attach_alerts_and_update_history_does_not_reflag_persisting_entree_sign
     """Une entreprise dont le signal "entree" était déjà actif hier ne
     doit pas être renvoyée à nouveau aujourd'hui — évite un email par
     jour tant que le cours reste proche du repère d'entrée."""
-    companies = [{"ticker": "BN.PA", "score": 20.0, "current_price": 100.0, "entry_price": 100.0}]
+    companies = [{"ticker": "BN.PA", "score": 20.0, "score_raw": 20.0, "current_price": 100.0, "entry_price": 100.0}]
     monkeypatch.setattr(indices_score, "load_indices_history", lambda: [])
     monkeypatch.setattr(indices_score, "append_indices_history", lambda entries: entries)
     monkeypatch.setattr(indices_score, "load_previous_alert_kinds", lambda: {"BN.PA": {"entree"}})
@@ -3449,7 +3520,7 @@ def test_attach_alerts_and_update_history_flags_new_actu_majeure_link(monkeypatc
     """Une actu majeure dont le lien n'a jamais été signalé doit déclencher
     un email — c'est ce que main() utilise pour l'alerte actu majeure."""
     companies = [{
-        "ticker": "BN.PA", "name": "Danone", "score": 5.0, "current_price": 100.0, "entry_price": 50.0,
+        "ticker": "BN.PA", "name": "Danone", "score": 5.0, "score_raw": 5.0, "current_price": 100.0, "entry_price": 50.0,
         "news": [{"title": "Rachat surprise", "link": "https://example.com/a",
                   "date": datetime.today().strftime("%Y-%m-%d"), "summary": "Résumé.", "importance": "majeure"}],
     }]
@@ -3470,7 +3541,7 @@ def test_attach_alerts_and_update_history_persists_actu_majeure_alert_but_does_n
     dans company["alerts"] — panneau Alertes + badge du site restent
     corrects — mais ne doit PAS redéclencher un email chaque jour."""
     companies = [{
-        "ticker": "BN.PA", "name": "Danone", "score": 5.0, "current_price": 100.0, "entry_price": 50.0,
+        "ticker": "BN.PA", "name": "Danone", "score": 5.0, "score_raw": 5.0, "current_price": 100.0, "entry_price": 50.0,
         "news": [{"title": "Rachat surprise", "link": "https://example.com/a",
                   "date": datetime.today().strftime("%Y-%m-%d"), "summary": "Résumé.", "importance": "majeure"}],
     }]
@@ -3720,7 +3791,7 @@ def test_main_writes_alerts_key_for_every_company(monkeypatch, tmp_path):
             "est silencieusement désactivé en production."
         )
         return {
-            "ticker": ticker, "name": name, "index": index_key, "score": 20.0,
+            "ticker": ticker, "name": name, "index": index_key, "score": 20.0, "score_raw": 20.0,
             "interpretation": "Solide",
             "current_price": 100.0, "entry_price": 100.0,
         }

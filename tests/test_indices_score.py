@@ -2138,6 +2138,37 @@ def test_fetch_fx_rate_to_usd_returns_none_when_yfinance_unavailable(monkeypatch
     assert fetch_fx_rate_to_usd("EUR") is None
 
 
+def test_fetch_fx_rate_same_currency_returns_1_without_network_call(monkeypatch):
+    def _should_not_be_called(*a, **k):
+        raise AssertionError("devises identiques : aucun appel réseau attendu")
+    monkeypatch.setattr(indices_score, "fetch_fx_rate_to_usd", _should_not_be_called)
+    assert indices_score.fetch_fx_rate("USD", "USD") == 1.0
+
+
+def test_fetch_fx_rate_composes_via_usd_pivot(monkeypatch):
+    """USD/HKD proche du cas réel AIA : financialCurrency=USD,
+    quote_currency=HKD, taux HKD/USD ≈ 7.8 -> convertir un montant USD
+    vers HKD doit multiplier par ≈7.8."""
+    rates = {"USD": 1.0, "HKD": 1 / 7.8}  # fetch_fx_rate_to_usd("HKD") : HKD=X coté indirect, déjà divisé
+
+    def _fake_fetch_fx_rate_to_usd(currency):
+        return rates.get(currency)
+
+    monkeypatch.setattr(indices_score, "fetch_fx_rate_to_usd", _fake_fetch_fx_rate_to_usd)
+    result = indices_score.fetch_fx_rate("USD", "HKD")
+    assert result == pytest.approx(7.8, rel=0.01)
+
+
+def test_fetch_fx_rate_returns_none_when_from_currency_unhandled(monkeypatch):
+    monkeypatch.setattr(indices_score, "fetch_fx_rate_to_usd", lambda c: None if c == "XYZ" else 1.0)
+    assert indices_score.fetch_fx_rate("XYZ", "USD") is None
+
+
+def test_fetch_fx_rate_returns_none_when_to_currency_unhandled(monkeypatch):
+    monkeypatch.setattr(indices_score, "fetch_fx_rate_to_usd", lambda c: None if c == "XYZ" else 1.0)
+    assert indices_score.fetch_fx_rate("USD", "XYZ") is None
+
+
 from indices_score import _size_premium, estimate_wacc, estimate_cost_of_equity
 
 
@@ -5738,6 +5769,215 @@ def test_fetch_company_financials_leaves_lse_non_gbp_prices_unconverted(monkeypa
     ratios = indices_score.fetch_company_financials("IHG.L")
 
     assert ratios["current_price"] == pytest.approx(156.45)
+
+
+def test_fetch_company_financials_converts_statements_when_financial_currency_differs(monkeypatch):
+    """Inspiré du cas réel AIA (1299.HK) : comptes en USD
+    (financialCurrency), cotation en HKD (currency) — sans conversion,
+    market_cap (en HKD) combiné à des capitaux propres en USD faussait
+    P/B d'un facteur ~7.8. Un taux de 2.0 (valeur simple pour le test)
+    doit multiplier Stockholders Equity par 2.0.
+
+    NOTE : utilise un ticker fictif hors FINANCIAL_SECTOR_TICKERS/
+    TRUST_TICKERS ("TEST3.PA", pas "1299.HK") pour router vers
+    extract_ratios (profil standard) plutôt qu'extract_ratios_financial
+    — AIA elle-même est dans FINANCIAL_SECTOR_TICKERS, mais son profil
+    financier a des exigences de fixture différentes (ex: ligne "Total
+    Assets" absente de _make_fixture_statements()) sans rapport avec ce
+    qu'on teste ici ; le mécanisme de conversion devise est identique
+    pour les deux profils (câblé en amont, dans fetch_company_financials,
+    avant le branchement extract_ratios vs extract_ratios_financial).
+    "equity" est utilisé pour l'assertion (pas "net_income", qui n'est
+    exposé dans AUCUN des deux dicts de retour) — "equity" l'est dans
+    les deux, donc le choix reste valable quel que soit le profil.
+
+    Couvre aussi quarterly_financials (revue finale 2026-09-24, constat
+    I1) : sans conversion, le texte injecté dans le prompt d'analyse IA
+    (build_financial_narrative_context) mélangerait un CA annuel converti
+    avec un CA trimestriel resté dans financial_currency. La ligne "Total
+    Revenue" est ajoutée à la fixture trimestrielle (absente jusqu'ici,
+    qui ne portait qu'un comptage d'actions) pour pouvoir l'observer ;
+    quarterly_yoy_growth_ca ne convient pas pour cette assertion (c'est
+    un ratio trimestre/trimestre qui annule le taux de change des deux
+    côtés), donc on lit directement le DataFrame `quarterly` capturé par
+    la fake ticker après l'appel -- fetch_company_financials le convertit
+    en place (`.loc[...] = ...`), donc `quarterly` reflète l'état
+    post-conversion."""
+    financials, balance_sheet, cashflow, _ = _make_fixture_statements()
+    financials.columns = pd.to_datetime(financials.columns)
+    balance_sheet.columns = pd.to_datetime(balance_sheet.columns)
+    cashflow.columns = pd.to_datetime(cashflow.columns)
+    quarterly = _fake_annual_df(
+        {"Diluted Average Shares": [100.0], "Total Revenue": [50.0]},
+        [pd.Timestamp("2025-09-30")],
+    )
+    history_index = pd.date_range("2024-01-01", periods=250, freq="D")
+    history_close = pd.Series([100.0] * 250, index=history_index)
+    equity_before_conversion = balance_sheet.loc["Stockholders Equity"].copy()
+    tax_rate_before_conversion = financials.loc["Tax Rate For Calcs"].copy()
+    quarterly_revenue_before_conversion = quarterly.loc["Total Revenue"].copy()
+    quarterly_shares_before_conversion = quarterly.loc["Diluted Average Shares"].copy()
+
+    class _FakeTicker:
+        def __init__(self, ticker):
+            pass
+
+        @property
+        def financials(self):
+            return financials
+
+        @property
+        def balance_sheet(self):
+            return balance_sheet
+
+        @property
+        def cashflow(self):
+            return cashflow
+
+        @property
+        def quarterly_financials(self):
+            return quarterly
+
+        @property
+        def info(self):
+            return {
+                "sharesOutstanding": 1000.0, "beta": 0.9, "sector": "Industrials",
+                "currency": "HKD", "financialCurrency": "USD",
+            }
+
+        def history(self, period=None):
+            return pd.DataFrame({"Close": history_close})
+
+    monkeypatch.setattr(indices_score.yf, "Ticker", _FakeTicker)
+    monkeypatch.setattr(indices_score.time, "sleep", lambda s: None)
+    monkeypatch.setattr(indices_score, "fetch_fx_rate", lambda f, t: 2.0)
+
+    ratios = indices_score.fetch_company_financials("TEST3.PA")
+
+    # equity (le plus récent exercice) doit refléter la conversion x2.0
+    # appliquée aux DataFrames de comptes.
+    assert ratios["equity"] == pytest.approx(equity_before_conversion.iloc[0] * 2.0)
+    # tax_rate est un RATIO (0.25 = 25%), pas un montant monétaire -- ne
+    # doit surtout PAS être multiplié par le taux de change (sinon
+    # 0.25*2.0=0.5, un taux d'imposition de 50% inventé de toutes pièces).
+    assert ratios["tax_rate"] == pytest.approx(tax_rate_before_conversion.iloc[0])
+    # quarterly_financials doit être converti par le même taux que les
+    # comptes annuels (constat I1), sinon le texte du prompt IA mélange
+    # des devises.
+    assert quarterly.loc["Total Revenue"].iloc[0] == pytest.approx(
+        quarterly_revenue_before_conversion.iloc[0] * 2.0
+    )
+    # "Diluted Average Shares" (comptage d'actions, pas un montant) ne
+    # doit surtout PAS être multiplié par le taux de change (constat M1).
+    assert quarterly.loc["Diluted Average Shares"].iloc[0] == pytest.approx(
+        quarterly_shares_before_conversion.iloc[0]
+    )
+
+
+def test_fetch_company_financials_degrades_shares_outstanding_when_fx_rate_unavailable(monkeypatch):
+    """financialCurrency diffère de currency, mais fetch_fx_rate ne peut
+    pas obtenir de taux (devise non gérée ou panne réseau) : repli sur
+    shares_outstanding=0.0 (mécanisme du constat C5, déjà en place) —
+    les ratios prix/comptes tombent proprement à "indisponible" sans
+    inventer un taux. Ticker fictif hors FINANCIAL_SECTOR_TICKERS/
+    TRUST_TICKERS (même raison que le test précédent — évite un profil
+    dont la fixture standard ne couvre pas toutes les lignes requises)."""
+    financials, balance_sheet, cashflow, _ = _make_fixture_statements()
+    financials.columns = pd.to_datetime(financials.columns)
+    balance_sheet.columns = pd.to_datetime(balance_sheet.columns)
+    cashflow.columns = pd.to_datetime(cashflow.columns)
+    quarterly = _fake_annual_df({"Diluted Average Shares": [100.0]}, [pd.Timestamp("2025-09-30")])
+    history_index = pd.date_range("2024-01-01", periods=250, freq="D")
+    history_close = pd.Series([100.0] * 250, index=history_index)
+
+    class _FakeTicker:
+        def __init__(self, ticker):
+            pass
+
+        @property
+        def financials(self):
+            return financials
+
+        @property
+        def balance_sheet(self):
+            return balance_sheet
+
+        @property
+        def cashflow(self):
+            return cashflow
+
+        @property
+        def quarterly_financials(self):
+            return quarterly
+
+        @property
+        def info(self):
+            return {
+                "sharesOutstanding": 1000.0, "beta": 0.9, "sector": "Industrials",
+                "currency": "HKD", "financialCurrency": "USD",
+            }
+
+        def history(self, period=None):
+            return pd.DataFrame({"Close": history_close})
+
+    monkeypatch.setattr(indices_score.yf, "Ticker", _FakeTicker)
+    monkeypatch.setattr(indices_score.time, "sleep", lambda s: None)
+    monkeypatch.setattr(indices_score, "fetch_fx_rate", lambda f, t: None)
+
+    ratios = indices_score.fetch_company_financials("TEST3.PA")
+
+    assert ratios["shares_outstanding"] == 0.0
+
+
+def test_fetch_company_financials_no_conversion_when_financial_currency_absent(monkeypatch):
+    """financialCurrency absent (None) : aucune conversion tentée,
+    comportement actuel inchangé — ne doit pas dégrader shares_outstanding
+    ni appeler fetch_fx_rate (cas majoritaire, pas de régression)."""
+    financials, balance_sheet, cashflow, _ = _make_fixture_statements()
+    financials.columns = pd.to_datetime(financials.columns)
+    balance_sheet.columns = pd.to_datetime(balance_sheet.columns)
+    cashflow.columns = pd.to_datetime(cashflow.columns)
+    quarterly = _fake_annual_df({"Diluted Average Shares": [100.0]}, [pd.Timestamp("2025-09-30")])
+    history_index = pd.date_range("2024-01-01", periods=250, freq="D")
+    history_close = pd.Series([100.0] * 250, index=history_index)
+
+    class _FakeTicker:
+        def __init__(self, ticker):
+            pass
+
+        @property
+        def financials(self):
+            return financials
+
+        @property
+        def balance_sheet(self):
+            return balance_sheet
+
+        @property
+        def cashflow(self):
+            return cashflow
+
+        @property
+        def quarterly_financials(self):
+            return quarterly
+
+        @property
+        def info(self):
+            return {"sharesOutstanding": 1000.0, "beta": 0.9, "sector": "Technology", "currency": "USD"}
+
+        def history(self, period=None):
+            return pd.DataFrame({"Close": history_close})
+
+    def _should_not_be_called(*a, **k):
+        raise AssertionError("financialCurrency absent : fetch_fx_rate ne doit pas être appelé")
+
+    monkeypatch.setattr(indices_score.yf, "Ticker", _FakeTicker)
+    monkeypatch.setattr(indices_score.time, "sleep", lambda s: None)
+    monkeypatch.setattr(indices_score, "fetch_fx_rate", _should_not_be_called)
+
+    ratios = indices_score.fetch_company_financials("MSFT")
+
+    assert ratios["shares_outstanding"] == 1000.0
 
 
 def test_fetch_company_financials_drops_trailing_nan_rows_from_current_price(monkeypatch):

@@ -4274,6 +4274,17 @@ def estimate_wacc(
         return None
 
 
+FAIR_VALUE_SANITY_FLOOR = 0.15    # fair_value ne descend jamais sous 15% du cours actuel
+FAIR_VALUE_SANITY_CEILING = 6.0   # ni au-dessus de 6x le cours actuel (audit I7) — calibré
+                                   # sur la distribution réelle observée (p1≈0.12x, p99≈5.0x
+                                   # sur les 695 sociétés valorisées, 2026-09-24) ; sans cette
+                                   # borne, une valeur terminale de Gordon dégénérée (WACC à
+                                   # peine au-dessus de DCF_MIN_DISCOUNT_SPREAD) ou une
+                                   # moyenne EV/EBITDA 5 ans faussée par un exercice aberrant
+                                   # pouvait produire une juste valeur absurde (cas réels :
+                                   # Rakuten 4755.T à 46x le cours, Fincantieri FCT.MI à 11x).
+
+
 def estimate_valuation_targets(
     data: dict, cost_of_capital: float, cost_of_equity: float | None = None,
 ) -> dict:
@@ -4286,7 +4297,14 @@ def estimate_valuation_targets(
     de référence à la décote qualité de la valeur comptable
     (estimate_asset_based_price) au lieu du WACC — repli sur
     `cost_of_capital` si absent, pour ne rien changer au comportement des
-    appelants existants qui ne le fournissent pas."""
+    appelants existants qui ne le fournissent pas.
+
+    La juste valeur combinée est bornée entre FAIR_VALUE_SANITY_FLOOR et
+    FAIR_VALUE_SANITY_CEILING fois `current_price` (audit I7) — filet de
+    sécurité final, appliqué quelle que soit la méthode à l'origine d'un
+    résultat dégénéré, plutôt que de traquer chaque cause possible
+    individuellement. Aucune borne appliquée si `current_price` est
+    indisponible (rien à quoi comparer)."""
     sector_profile = sector_risk_profile(data["sector"])
     # Point de départ du DCF lissé sur 2 exercices pour les cycliques (voir
     # extract_ratios/fcf_normalized) plutôt que le seul dernier exercice,
@@ -4308,6 +4326,12 @@ def estimate_valuation_targets(
         if data["current_price"] is not None else None
     )
     fair_value = estimate_fair_value(dcf_price, asset_price, multiple_price, sector_profile)
+    if fair_value is not None and data["current_price"]:
+        fair_value = _clamp(
+            fair_value,
+            data["current_price"] * FAIR_VALUE_SANITY_FLOOR,
+            data["current_price"] * FAIR_VALUE_SANITY_CEILING,
+        )
     entry_exit = estimate_entry_exit_prices(
         fair_value, data["ma200"], data["beta"], data["ecart_pct_ma200"],
         stage_label=data.get("stage_label"),

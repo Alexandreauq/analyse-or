@@ -2861,6 +2861,52 @@ def test_estimate_valuation_targets_keeps_cap_at_book_value_for_standard_profile
     assert result["fair_value"] == pytest.approx(80.0)
 
 
+def test_estimate_valuation_targets_clamps_fair_value_to_sanity_ceiling():
+    """audit I7 : cas réel Rakuten (4755.T, fair_value à 46x le cours) --
+    une valeur patrimoniale extrême ne doit pas produire une fair_value
+    déconnectée du cours réel, bornée à FAIR_VALUE_SANITY_CEILING fois
+    current_price."""
+    data = {
+        "fcf": 0.0, "cagr_ebitda": 0.0, "net_debt": 0.0, "shares_outstanding": 10.0,
+        "equity": 100000.0,  # book value/action = 10000.0, très au-dessus du cours
+        "current_price": 50.0, "current_ev_ebitda": 0.0, "avg_ev_ebitda_5y": 0.0,
+        "ma200": 50.0, "beta": 1.0, "ecart_pct_ma200": 0.0, "fcf_normalized": 0.0,
+        "sector": "Unknown", "roe": 20.0,
+    }
+    result = estimate_valuation_targets(data, cost_of_capital=8.0, cost_of_equity=8.0)
+    assert result["fair_value"] == pytest.approx(50.0 * indices_score.FAIR_VALUE_SANITY_CEILING)
+
+
+def test_estimate_valuation_targets_clamps_fair_value_to_sanity_floor():
+    """audit I7 : symétrique du test précédent -- une valeur patrimoniale
+    quasi nulle ne doit pas non plus produire une fair_value démesurément
+    basse par rapport au cours réel."""
+    data = {
+        "fcf": 0.0, "cagr_ebitda": 0.0, "net_debt": 0.0, "shares_outstanding": 10.0,
+        "equity": 1.0,  # book value/action = 0.1, très en dessous du cours
+        "current_price": 100.0, "current_ev_ebitda": 0.0, "avg_ev_ebitda_5y": 0.0,
+        "ma200": 100.0, "beta": 1.0, "ecart_pct_ma200": 0.0, "fcf_normalized": 0.0,
+        "sector": "Unknown", "roe": -50.0,
+    }
+    result = estimate_valuation_targets(data, cost_of_capital=8.0, cost_of_equity=8.0)
+    assert result["fair_value"] == pytest.approx(100.0 * indices_score.FAIR_VALUE_SANITY_FLOOR)
+
+
+def test_estimate_valuation_targets_skips_sanity_clamp_when_current_price_missing():
+    """Rien à quoi comparer sans current_price -- ne doit ni lever ni
+    tronquer arbitrairement la fair_value (repli sur DCF/multiples seuls,
+    déjà couvert ailleurs)."""
+    data = {
+        "fcf": 0.0, "cagr_ebitda": 0.0, "net_debt": 0.0, "shares_outstanding": 10.0,
+        "equity": 100000.0, "current_price": None, "current_ev_ebitda": 0.0, "avg_ev_ebitda_5y": 0.0,
+        "ma200": None, "beta": 1.0, "ecart_pct_ma200": None, "fcf_normalized": 0.0,
+        "sector": "Unknown", "roe": 20.0,
+    }
+    result = estimate_valuation_targets(data, cost_of_capital=8.0, cost_of_equity=8.0)
+    # equity/shares_outstanding = 10000.0, quality_factor plafonné à 1.0 (profil standard)
+    assert result["fair_value"] == pytest.approx(10000.0)
+
+
 def test_estimate_valuation_targets_falls_back_to_cost_of_capital_when_cost_of_equity_absent():
     """Rétrocompatibilité : sans `cost_of_equity` fourni, le comportement
     doit rester identique à avant (repli sur `cost_of_capital`)."""

@@ -3958,6 +3958,28 @@ def test_entry_alert_item_html_includes_company_details():
     assert "CAC 40" in html  # nom affiché de l'indice, pas la clé brute
     assert "#indices/BN.PA" in html
     assert "Score favorable" in html  # détail de l'alerte "entree" elle-même
+    assert "63.50 €" in html  # devise CAC40 = EUR
+
+
+def test_entry_alert_item_html_uses_correct_currency_symbol_for_non_eur_index():
+    """audit Minor #1 : l'email affichait "€" en dur pour toutes les
+    devises -- une société Nasdaq (USD) doit afficher "$", pas "€"."""
+    company = _fake_entry_alert_company(
+        ticker="AAPL", name="Apple", index="NASDAQ",
+        current_price=190.0, entry_price=185.0, exit_price=220.0,
+    )
+    html = indices_score._entry_alert_item_html(company)
+    assert "190.00 $" in html
+    assert "185.00 $ / 220.00 $" in html
+    assert "€" not in html
+
+
+def test_entry_alert_item_html_defaults_to_eur_for_unknown_index():
+    """Repli sur € pour un index_key inconnu (ne devrait jamais arriver
+    en pratique, mais ne doit pas lever) -- comportement inchangé."""
+    company = _fake_entry_alert_company(index="UNKNOWN_INDEX")
+    html = indices_score._entry_alert_item_html(company)
+    assert "€" in html
 
 
 def test_entry_alert_context_includes_dynamique_recente_and_news():

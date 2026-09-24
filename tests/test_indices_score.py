@@ -852,6 +852,32 @@ def test_extract_ratios_financial_uses_current_price_for_latest_year_only():
     assert ratios["current_pb"] == pytest.approx(80.0 * 100.0 / 3000.0)
 
 
+def test_extract_ratios_computes_implied_cost_of_debt_from_interest_expense():
+    """audit I7, volet 1 : extract_ratios doit exposer implied_cost_of_debt
+    à partir de la ligne Interest Expense, absente du fixture de base
+    (_make_fixture_statements) -- ajoutée ici explicitement."""
+    financials, balance_sheet, cashflow, closes_by_year = _make_fixture_statements()
+    years = list(financials.columns)
+    # Total Debt le plus récent (fixture) = 300.0 -> Interest Expense = 9.0
+    # donne un coût de la dette implicite de 3.0%.
+    financials.loc["Interest Expense"] = [9.0, 8.5, 8.0, 7.5, 7.0]
+    ratios = extract_ratios(
+        financials, balance_sheet, cashflow, closes_by_year, shares_outstanding=10.0
+    )
+    assert ratios["implied_cost_of_debt"] == pytest.approx(3.0)
+
+
+def test_extract_ratios_implied_cost_of_debt_none_when_interest_expense_row_absent():
+    """Rétrocompatibilité : le fixture de base n'a pas de ligne Interest
+    Expense -- implied_cost_of_debt doit être None (repli chez
+    l'appelant), pas planter."""
+    financials, balance_sheet, cashflow, closes_by_year = _make_fixture_statements()
+    ratios = extract_ratios(
+        financials, balance_sheet, cashflow, closes_by_year, shares_outstanding=10.0
+    )
+    assert ratios["implied_cost_of_debt"] is None
+
+
 def test_extract_ratios_computes_current_pb():
     financials, balance_sheet, cashflow, closes_by_year = _make_fixture_statements()
     ratios = extract_ratios(
@@ -2381,6 +2407,76 @@ def test_size_premium_boundary_is_strict():
     assert _size_premium(50_000_000_000) == 0.5
     assert _size_premium(10_000_000_000) == 1.5
     assert _size_premium(2_000_000_000) == 3.0
+
+
+def test_compute_implied_cost_of_debt_nominal_case():
+    # |interest_expense|/total_debt = 30/1000 = 3.0%, dans la fourchette
+    # [DEBT_INTEREST_RATE_FLOOR, DEBT_INTEREST_RATE_CEILING] -- pas de clamp.
+    result = indices_score._compute_implied_cost_of_debt(30.0, 1000.0)
+    assert result == pytest.approx(3.0)
+
+
+def test_compute_implied_cost_of_debt_uses_absolute_value():
+    """interest_expense peut être remonté négatif par yfinance selon la
+    convention de signe de la ligne -- le ratio doit rester positif."""
+    result = indices_score._compute_implied_cost_of_debt(-30.0, 1000.0)
+    assert result == pytest.approx(3.0)
+
+
+def test_compute_implied_cost_of_debt_floors_at_rate_floor():
+    """Cas réel Toyota (7203.T) : dette de financement captif (crédit
+    auto) à très faible marge, ~0.14% -- doit être remonté à
+    DEBT_INTEREST_RATE_FLOOR, pas laissé tel quel (audit I7, volet 1)."""
+    result = indices_score._compute_implied_cost_of_debt(60.0, 43000.0)  # ~0.14%
+    assert result == pytest.approx(indices_score.DEBT_INTEREST_RATE_FLOOR)
+
+
+def test_compute_implied_cost_of_debt_caps_at_rate_ceiling():
+    """Cas réel Rocket Lab (RKLB) : ~10.4%, sous le plafond -- mais un
+    ratio plus extrême doit être plafonné à DEBT_INTEREST_RATE_CEILING."""
+    result = indices_score._compute_implied_cost_of_debt(300.0, 1000.0)  # 30%
+    assert result == pytest.approx(indices_score.DEBT_INTEREST_RATE_CEILING)
+
+
+def test_compute_implied_cost_of_debt_none_when_interest_expense_missing():
+    """Cas réel Apple (AAPL) : la ligne Interest Expense existe mais peut
+    être NaN pour l'exercice le plus récent -- repli chez l'appelant
+    (estimate_wacc), pas ici."""
+    assert indices_score._compute_implied_cost_of_debt(float("nan"), 1000.0) is None
+
+
+def test_compute_implied_cost_of_debt_none_when_total_debt_missing_zero_or_negative():
+    assert indices_score._compute_implied_cost_of_debt(30.0, float("nan")) is None
+    assert indices_score._compute_implied_cost_of_debt(30.0, 0.0) is None
+    assert indices_score._compute_implied_cost_of_debt(30.0, -100.0) is None
+
+
+def test_estimate_wacc_uses_implied_cost_of_debt_when_provided():
+    """audit I7, volet 1 : un coût de la dette propre à l'entreprise doit
+    remplacer DEBT_INTEREST_RATE_PROXY (3.0%) quand fourni."""
+    # Rd_after_tax = 8.0 * (1 - 0.25) = 6.0 (au lieu de 3.0*(1-0.25)=2.25)
+    # WACC = (100/150)*9.68 + (50/150)*6.0 = 6.4533... + 2.0 = 8.4533...
+    result = estimate_wacc(
+        risk_free_rate=3.68, beta=1.2, market_cap=100_000_000_000,
+        total_debt=50_000_000_000, tax_rate=0.25, fx_rate_to_usd=1.0,
+        implied_cost_of_debt=8.0,
+    )
+    assert result == pytest.approx(8.453333333333333)
+
+
+def test_estimate_wacc_falls_back_to_proxy_when_implied_cost_of_debt_absent():
+    """Rétrocompatibilité : sans implied_cost_of_debt fourni (défaut
+    None), le résultat doit rester identique à avant ce correctif."""
+    with_none = estimate_wacc(
+        risk_free_rate=3.68, beta=1.2, market_cap=100_000_000_000,
+        total_debt=50_000_000_000, tax_rate=0.25, fx_rate_to_usd=1.0,
+        implied_cost_of_debt=None,
+    )
+    without_arg = estimate_wacc(
+        risk_free_rate=3.68, beta=1.2, market_cap=100_000_000_000,
+        total_debt=50_000_000_000, tax_rate=0.25, fx_rate_to_usd=1.0,
+    )
+    assert with_none == without_arg == pytest.approx(7.203333333333333)
 
 
 def test_estimate_wacc_nominal_case():

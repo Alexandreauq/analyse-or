@@ -2561,12 +2561,20 @@ def fetch_dividend_history(ticker_obj) -> pd.Series:
         return pd.Series(dtype=float)
 
 
-# Lignes de `financials` qui ne sont PAS des montants monétaires — ne
+# Lignes de `financials` (et `quarterly_financials`, même convention de
+# libellés côté yfinance) qui ne sont PAS des montants monétaires — ne
 # doivent jamais être multipliées par un taux de change (voir le
 # câblage de la conversion devise dans fetch_company_financials,
 # constat C1). "Tax Rate For Calcs" est un ratio (0.25 = 25%), pas une
-# somme d'argent.
-NON_MONETARY_FINANCIALS_ROWS = {"Tax Rate For Calcs"}
+# somme d'argent ; "Diluted/Basic Average Shares" sont des comptages
+# d'actions (revue finale 2026-09-24, constat M1).
+NON_MONETARY_FINANCIALS_ROWS = {"Tax Rate For Calcs", "Diluted Average Shares", "Basic Average Shares"}
+
+# Lignes de `balance_sheet` qui ne sont PAS des montants monétaires —
+# même principe que NON_MONETARY_FINANCIALS_ROWS ci-dessus : ce sont
+# des comptages d'actions, pas des sommes d'argent (revue finale
+# 2026-09-24, constat M1).
+NON_MONETARY_BALANCE_SHEET_ROWS = {"Ordinary Shares Number", "Share Issued", "Treasury Shares Number"}
 
 
 def fetch_company_financials(ticker: str) -> dict:
@@ -2638,13 +2646,27 @@ def fetch_company_financials(ticker: str) -> dict:
             # ROCE et le coût de la dette après impôt du WACC pour
             # TOUTES les sociétés à devise non réconciliée, pas
             # seulement celles visées par ce correctif. `balance_sheet`
-            # et `cashflow` ne portent aucune ligne de ce type (toutes
-            # leurs lignes extraites en aval — dette, cash, capitaux
-            # propres, flux de trésorerie — sont des montants) : converties
-            # intégralement.
+            # porte elle aussi des lignes non monétaires — des comptages
+            # d'actions ("Ordinary Shares Number", "Share Issued",
+            # "Treasury Shares Number"), exclues ici selon le même
+            # principe (revue finale 2026-09-24, constat M1). `cashflow`
+            # ne porte aucune ligne de ce type (toutes ses lignes
+            # extraites en aval — flux de trésorerie — sont des
+            # montants) : convertie intégralement.
             monetary_rows = ~financials.index.isin(NON_MONETARY_FINANCIALS_ROWS)
             financials.loc[monetary_rows] = financials.loc[monetary_rows] * fx_rate
-            balance_sheet = balance_sheet * fx_rate
+            # quarterly_financials alimente le texte injecté dans le
+            # prompt d'analyse IA (build_financial_narrative_context) aux
+            # côtés des comptes annuels ci-dessus — sans cette conversion,
+            # les chiffres trimestriels restent dans financial_currency
+            # pendant que les chiffres annuels passent en quote_currency,
+            # mélangeant les deux devises dans un même texte (revue finale
+            # 2026-09-24, constat I1 ; ex: AIA, revenu trimestriel
+            # apparaissant ~1/31 de l'annuel au lieu de ~1/4).
+            quarterly_monetary_rows = ~quarterly_financials.index.isin(NON_MONETARY_FINANCIALS_ROWS)
+            quarterly_financials.loc[quarterly_monetary_rows] = quarterly_financials.loc[quarterly_monetary_rows] * fx_rate
+            balance_sheet_monetary_rows = ~balance_sheet.index.isin(NON_MONETARY_BALANCE_SHEET_ROWS)
+            balance_sheet.loc[balance_sheet_monetary_rows] = balance_sheet.loc[balance_sheet_monetary_rows] * fx_rate
             cashflow = cashflow * fx_rate
         else:
             currency_mismatch_unresolved = True
@@ -2727,7 +2749,7 @@ def fetch_company_financials(ticker: str) -> dict:
     dividends = fetch_dividend_history(t)
     dividend_streak_years = compute_dividend_streak_years(dividends)
 
-    if ticker in SHARES_OUTSTANDING_FROM_MARKET_CAP_TICKERS:
+    if ticker in SHARES_OUTSTANDING_FROM_MARKET_CAP_TICKERS and not currency_mismatch_unresolved:
         market_cap = info.get("marketCap")
         if market_cap and current_price:
             shares_outstanding = market_cap / current_price

@@ -3526,6 +3526,23 @@ def test_compute_company_alerts_watch_when_score_crosses_0_upward():
     )
     kinds = [a["kind"] for a in alerts]
     assert "watch" in kinds
+    watch_alert = next(a for a in alerts if a["kind"] == "watch")
+    assert "médiane du profil" in watch_alert["title"]
+
+
+def test_compute_company_alerts_watch_title_avoids_median_wording_when_not_recalibrated():
+    """audit Minor #3 : "franchi la médiane du profil" est inexact pour un
+    profil resté sur le score brut (trust, jamais recalibré en
+    percentile) -- 0 y est un seuil neutre absolu, pas une médiane
+    relative au pool."""
+    previous_history = [{"date": "2026-09-05", "ticker": "III.L", "composite_raw": -10.0}]
+    alerts = indices_score.compute_company_alerts(
+        "III.L", composite_raw=10.0, current_price=100.0, entry_price=50.0,
+        previous_history=previous_history, score_recalibrated=False,
+    )
+    watch_alert = next(a for a in alerts if a["kind"] == "watch")
+    assert "médiane du profil" not in watch_alert["title"]
+    assert "seuil neutre" in watch_alert["title"]
 
 
 def test_compute_company_alerts_no_watch_when_already_above_0():

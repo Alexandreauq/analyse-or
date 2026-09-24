@@ -3673,6 +3673,7 @@ def compute_company_alerts(
     ticker: str, composite_raw: float, current_price: float | None,
     entry_price: float | None, previous_history: list[dict],
     news_items: list[dict] | None = None, stage_label: str | None = None,
+    score_recalibrated: bool = True,
 ) -> list[dict]:
     """Alertes de franchissement de seuil pour une entreprise, à partir de
     son propre sous-historique (déjà filtré par ticker par l'appelant).
@@ -3690,6 +3691,12 @@ def compute_company_alerts(
     (MM200) en phase "Déclin" ; recommander une entrée sur un titre en
     repli confirmé contredirait cette même logique. `None` (défaut,
     comportement d'avant ce correctif) ne change rien au calcul existant.
+    `score_recalibrated` (voir score_recalibrated / audit I3, défaut True
+    -- rétrocompatible) : le titre de l'alerte "watch" ne parle de
+    "médiane du profil" que pour un profil réellement recalibré en
+    percentile ; pour un profil resté sur le score brut (trust, pool
+    structurellement trop petit), 0 est un seuil neutre absolu, pas une
+    médiane relative au pool (audit Minor #3).
     Ne lève jamais d'exception ; renvoie toujours au moins une alerte
     (`info` neutre si rien ne se déclenche — calculé après l'alerte
     "actu_majeure" ci-dessous, pas avant, pour ne jamais afficher "pas de
@@ -3714,9 +3721,13 @@ def compute_company_alerts(
         last_regime is not None and last_regime <= -HYSTERESIS_BAND
         and composite_raw > HYSTERESIS_BAND
     ):
+        watch_title = (
+            "Score composite a franchi la médiane du profil" if score_recalibrated
+            else "Score composite a franchi le seuil neutre"
+        )
         alerts.append({
             "kind": "watch",
-            "title": "Score composite a franchi la médiane du profil",
+            "title": watch_title,
             "detail": "Surveillance active enclenchée pour cette entreprise.",
             "date": today_str,
         })
@@ -4841,6 +4852,7 @@ def _attach_alerts_and_update_history(companies: list[dict]) -> tuple[list[dict]
                 company["ticker"], company["score_raw"], company["current_price"],
                 company["entry_price"], ticker_history,
                 news_items=company.get("news", []), stage_label=company.get("stage_label"),
+                score_recalibrated=company.get("score_recalibrated", True),
             )
             today_kinds = {a["kind"] for a in company["alerts"]}
             if "entree" in today_kinds and "entree" not in previous_alert_kinds.get(company["ticker"], set()):

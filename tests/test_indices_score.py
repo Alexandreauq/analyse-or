@@ -199,6 +199,26 @@ def test_score_valorisation_premium_with_weak_growth_is_penalized():
     assert result.score < 0
 
 
+def test_score_valorisation_negative_pe_is_neutral_not_maximally_favorable():
+    """Audit 2026-09-24, constat C4 : un P/E négatif (résultat net
+    déficitaire) comparé à une moyenne 5 ans positive n'est pas une
+    "décote" — avant ce correctif, `_premium_score` lisait
+    current/avg_5y < 0 comme une décote MAXIMALE (+10.0, "très bon
+    marché") au lieu d'un signal non comparable. Cas réel : Anglo
+    American, P/E -8.8x vs moyenne 15.9x, obtenait +4.1 sur ce facteur
+    avant le correctif."""
+    result = score_valorisation(
+        current_ev_ebitda=13.0, avg_ev_ebitda_5y=10.0,  # EV/EBITDA neutre/légèrement pénalisant
+        current_pe=-8.8, avg_pe_5y=15.9,
+        cagr_ebitda=1.0,
+    )
+    # Le facteur combine EV/EBITDA (légèrement pénalisant) et P/E (neutre
+    # depuis ce correctif, plus jamais fortement positif) -> score global
+    # nettement inférieur à ce qu'un P/E lu comme "très bon marché"
+    # aurait produit.
+    assert result.score < 2.0
+
+
 def test_score_valorisation_premium_with_strong_growth_is_dampened():
     weak_growth = score_valorisation(
         current_ev_ebitda=13.0, avg_ev_ebitda_5y=10.0,
@@ -664,6 +684,27 @@ def test_extract_ratios_computes_expected_keys():
     # (moyenne des 2 exercices récents vs moyenne des 2 plus anciens,
     # cf. test dédié ci-dessous) ~ 5.7%/an sur cette série linéaire.
     assert 5.0 < ratios["cagr_ca"] < 6.5
+
+
+def test_extract_ratios_negative_ebitda_marks_structure_and_cash_generation_unavailable():
+    """Audit 2026-09-24, constat C4 : `bool(ebitda[latest] and ...)` était
+    déjà vrai pour un EBITDA NÉGATIF (un nombre non-nul est "truthy" en
+    Python) — net_debt_ebitda_available/fcf_conversion_available
+    valaient donc True, et les ratios qui en résultaient (dette nette
+    positive / EBITDA négatif -> ratio négatif ; FCF et EBITDA tous deux
+    négatifs -> ratio positif) étaient notés comme une vraie mesure au
+    lieu d'être traités comme une donnée indisponible. Cas réels : KHC
+    (levier -5.3x), Renault (-8.9x), MSTR (conversion cash 415%)."""
+    financials, balance_sheet, cashflow, closes_by_year = _make_fixture_statements()
+    years = list(financials.columns)
+    financials.loc["EBITDA", years[0]] = -50.0  # exercice le plus récent
+    ratios = extract_ratios(
+        financials, balance_sheet, cashflow, closes_by_year, shares_outstanding=10.0
+    )
+    assert ratios["structure_available"] is False
+    assert ratios["fcf_conversion_available"] is False
+    assert ratios["net_debt_ebitda"] == 0.0
+    assert ratios["fcf_conversion"] == 0.0
 
 
 def test_extract_ratios_computes_cagr_net_income():
@@ -1373,6 +1414,19 @@ def test_estimate_dcf_price_returns_none_when_net_debt_is_nan():
     assert result is None
 
 
+def test_estimate_dcf_price_returns_none_when_equity_value_is_negative():
+    """Audit 2026-09-24, constat C4 : un FCF de départ positif ne garantit
+    pas une valeur des capitaux propres positive quand la dette nette est
+    très élevée — avant ce correctif, `equity_value / shares_outstanding`
+    pouvait ressortir négatif et s'afficher tel quel comme prix par
+    action (cas réels : Boeing -154.96, Meituan -17.09)."""
+    result = estimate_dcf_price(
+        fcf=50.0, cagr_ebitda=2.0, net_debt=1_000_000.0, shares_outstanding=50.0,
+        discount_rate_pct=8.0,
+    )
+    assert result is None
+
+
 def test_estimate_dcf_price_varies_with_discount_rate():
     """Preuve que `discount_rate_pct` est réellement pris en compte (et pas
     silencieusement ignoré au profit d'une constante interne) : deux taux
@@ -1867,6 +1921,28 @@ def test_estimate_multiple_based_price_returns_none_when_current_ev_ebitda_is_na
     current_ev_ebitda` (NaN est "truthy") et doit dégrader vers None."""
     result = estimate_multiple_based_price(
         current_price=100.0, current_ev_ebitda=float("nan"), avg_ev_ebitda_5y=8.0
+    )
+    assert result is None
+
+
+def test_estimate_multiple_based_price_returns_none_when_current_ev_ebitda_is_negative():
+    """Audit 2026-09-24, constat C4 : `not current_ev_ebitda` ne filtrait
+    que le zéro exact, pas le négatif — un EV/EBITDA négatif produisait
+    un ratio de retour au multiple négatif, donc un "prix implicite"
+    négatif affiché à l'écran."""
+    result = estimate_multiple_based_price(
+        current_price=100.0, current_ev_ebitda=-5.0, avg_ev_ebitda_5y=8.0
+    )
+    assert result is None
+
+
+def test_estimate_multiple_based_price_returns_none_when_avg_ev_ebitda_is_negative():
+    """Même correctif que ci-dessus, côté moyenne 5 ans cette fois — une
+    société dont l'EBITDA a été négatif sur toute la fenêtre n'a pas de
+    multiple moyen interprétable sur cette méthode de retour à la
+    moyenne."""
+    result = estimate_multiple_based_price(
+        current_price=100.0, current_ev_ebitda=13.0, avg_ev_ebitda_5y=-3.0
     )
     assert result is None
 

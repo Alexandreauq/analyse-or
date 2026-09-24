@@ -1358,8 +1358,20 @@ VALUATION_GROWTH_DAMPENING_FACTOR = 0.4  # atténuation de la pénalité si croi
 
 def _premium_score(current: float, avg_5y: float, cagr_ebitda: float) -> float:
     """Décote vs moyenne 5 ans -> score positif (favorable) ; prime -> score
-    négatif, mais atténué si la croissance de l'EBITDA justifie une prime."""
-    if avg_5y == 0:
+    négatif, mais atténué si la croissance de l'EBITDA justifie une prime.
+
+    `current <= 0` (audit 2026-09-24, constat C4) : un multiple actuel
+    négatif (P/E ou EV/EBITDA négatif, résultat net/EBITDA déficitaire)
+    n'est pas une "décote" comparable à une moyenne 5 ans positive — le
+    calcul `current / avg_5y` donne un ratio négatif, lu par la branche
+    `premium_pct <= 0` comme une décote MAXIMALE (+10.0, "très bon
+    marché") au lieu de signaler une société qui perd de l'argent. Cas
+    réels : Anglo American (P/E -8.8x vs moyenne 15.9x -> +4.1 avant ce
+    correctif), 19 des 38 sociétés à P/E négatif du panel. Neutre (0.0),
+    même traitement que le garde `avg_5y == 0` déjà présent juste
+    en dessous — pas de signal de valorisation exploitable ici, pas de
+    pénalité inventée sans base claire non plus."""
+    if avg_5y == 0 or current <= 0:
         return 0.0
     premium_pct = (current / avg_5y - 1.0) * 100
     if premium_pct <= 0:
@@ -2003,7 +2015,17 @@ def extract_ratios(financials, balance_sheet, cashflow, closes_by_year, shares_o
         if equity_latest and not _is_missing(equity_latest) else 0.0
     )
 
-    net_debt_ebitda_available = bool(ebitda[latest] and not _is_missing(ebitda[latest]))
+    # > 0, pas seulement "non-nul" (audit 2026-09-24, constat C4) : un
+    # EBITDA négatif rendait déjà `net_debt_ebitda_available` vrai (`bool`
+    # sur un nombre négatif est True), donc le ratio dette nette/EBITDA
+    # négatif — cas KHC (-5.3x), Renault (-8.9x) — passait pour une
+    # vraie mesure de levier au lieu d'être traité comme une donnée
+    # indisponible ; score_structure_financiere notait alors +10.0 (une
+    # dette nette positive divisée par un EBITDA négatif donne un ratio
+    # négatif, lu comme un endettement quasi nul).
+    net_debt_ebitda_available = bool(
+        ebitda[latest] and ebitda[latest] > 0 and not _is_missing(ebitda[latest])
+    )
     net_debt_ebitda = net_debt_latest / ebitda[latest] if net_debt_ebitda_available else 0.0
     icr_available = bool(
         total_debt_latest and not _is_missing(total_debt_latest)
@@ -2057,7 +2079,13 @@ def extract_ratios(financials, balance_sheet, cashflow, closes_by_year, shares_o
         op_cash_flow_latest + capex_latest
         if not _is_missing(op_cash_flow_latest) and not _is_missing(capex_latest) else 0.0
     )
-    fcf_conversion_available = bool(ebitda[latest] and not _is_missing(ebitda[latest]))
+    # > 0, même correctif que net_debt_ebitda_available juste au-dessus
+    # (audit 2026-09-24, constat C4) : FCF et EBITDA tous deux négatifs
+    # redonnent un ratio POSITIF, lu à tort comme une excellente
+    # conversion de cash — cas MSTR (415%), RKLB (207%), Meituan (212%).
+    fcf_conversion_available = bool(
+        ebitda[latest] and ebitda[latest] > 0 and not _is_missing(ebitda[latest])
+    )
     fcf_conversion = (fcf / ebitda[latest]) * 100 if fcf_conversion_available else 0.0
 
     # FCF lissé sur la même fenêtre que le CAGR (recent_cols, 1-2 exercices)
@@ -3499,9 +3527,15 @@ def estimate_dcf_price(
     l'entreprise, ou COST_OF_CAPITAL_PROXY en repli), ajoute une valeur
     terminale à croissance perpétuelle de 2%. None si le FCF de départ
     n'est pas positif (DCF non pertinent), si le nombre d'actions est
-    nul/inconnu, ou si le taux d'actualisation est trop proche/inférieur à
+    nul/inconnu, si le taux d'actualisation est trop proche/inférieur à
     la croissance terminale (Gordon growth dégénère vers une valeur
-    négative ou déraisonnablement grande — voir DCF_MIN_DISCOUNT_SPREAD)."""
+    négative ou déraisonnablement grande — voir DCF_MIN_DISCOUNT_SPREAD),
+    ou si la valeur des capitaux propres implicite (valeur d'entreprise -
+    dette nette) ressort négative (audit 2026-09-24, constat C4) : un FCF
+    de départ positif ne garantit pas ce résultat quand la dette nette
+    est très élevée — sans ce garde, le prix par action affiché pouvait
+    être négatif (cas réels : Boeing -154.96, Meituan -17.09, 4506.T
+    -2422 avant ce correctif)."""
     if (
         _is_missing(fcf) or fcf <= 0 or not shares_outstanding or _is_missing(net_debt)
         or _is_missing(discount_rate_pct)
@@ -3523,6 +3557,8 @@ def estimate_dcf_price(
 
     enterprise_value = pv_fcf + pv_terminal
     equity_value = enterprise_value - net_debt
+    if equity_value <= 0:
+        return None
     return equity_value / shares_outstanding
 
 
@@ -3573,8 +3609,17 @@ def estimate_multiple_based_price(
     multiple — approximation qui ignore l'effet de la dette nette fixe,
     documentée comme telle (cf. Methodologie_Analyse_Indices.md), plutôt
     que de reconstruire précisément EV et capitalisation. None si le
-    multiple actuel est nul/absent."""
-    if not current_ev_ebitda or _is_missing(current_ev_ebitda) or _is_missing(current_price) or _is_missing(avg_ev_ebitda_5y):
+    multiple actuel ou moyen est nul/négatif/absent (audit 2026-09-24,
+    constat C4 : `not current_ev_ebitda` ne filtrait que le zéro exact —
+    un EV/EBITDA négatif produisait un ratio de retour au multiple
+    négatif, donc un "prix implicite" négatif affiché à l'écran ; un
+    multiple négatif, actuel ou moyen, n'est de toute façon pas
+    interprétable sur cette méthode de retour à la moyenne)."""
+    if (
+        _is_missing(current_ev_ebitda) or current_ev_ebitda <= 0
+        or _is_missing(avg_ev_ebitda_5y) or avg_ev_ebitda_5y <= 0
+        or _is_missing(current_price)
+    ):
         return None
     return current_price * (avg_ev_ebitda_5y / current_ev_ebitda)
 

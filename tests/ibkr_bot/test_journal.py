@@ -172,7 +172,8 @@ def test_build_position_record_produces_exactly_what_portfolio_needs():
     par portfolio.exit_reason et portfolio.reconcile — on les appelle donc
     POUR DE VRAI sur le resultat plutot que d'assert des noms de cles."""
     signal = {"id": "MC.PA-2026-09-15", "ticker": "MC.PA", "name": "LVMH",
-              "index": "CAC40", "currency": "EUR", "entry_date": "2026-09-15",
+              "index": "CAC40", "currency": "EUR", "sector": "Consumer Cyclical",
+              "entry_date": "2026-09-15",
               "paper_entry_price": 88.0, "target_exit_price": 120.0,
               "score": 55.2, "current_price": 90.0}
     plan = {"ticker": "MC.PA", "quantite": 5, "devise_cotation": "EUR",
@@ -194,6 +195,7 @@ def test_build_position_record_produces_exactly_what_portfolio_needs():
     assert position["date_limite"] == "2027-03-15"
     assert position["target_exit_price"] == 120.0
     assert position["devise"] == "EUR"
+    assert position["sector"] == "Consumer Cyclical"  # audit plafond diversification
 
     # Relue par les VRAIES fonctions de Plan A, sans adaptation :
     company = {"ticker": "MC.PA", "current_price": 70.0}

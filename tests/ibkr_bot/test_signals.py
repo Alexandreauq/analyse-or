@@ -64,7 +64,10 @@ def test_collect_new_signals_does_not_rebuy_a_signal_opened_yesterday():
 def test_collect_new_signals_attaches_score_currency_and_current_price():
     positions = [_paper_position()]
     indices = _indices(companies=[
-        {"ticker": "GLE.PA", "index": "CAC40", "score": 12.4, "current_price": 74.1},
+        {
+            "ticker": "GLE.PA", "index": "CAC40", "score": 12.4, "current_price": 74.1,
+            "sector": "Financial Services",
+        },
     ])
     found, _ = signals.collect_new_signals(indices, positions, today="2026-09-14")
 
@@ -74,6 +77,7 @@ def test_collect_new_signals_attaches_score_currency_and_current_price():
         "name": "Societe Generale",
         "index": "CAC40",
         "currency": "EUR",
+        "sector": "Financial Services",
         "entry_date": "2026-09-14",
         "paper_entry_price": 73.63,
         "target_exit_price": 105.19,

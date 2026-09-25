@@ -167,8 +167,10 @@ def compute_macd(closes: list[float], fast_period: int, slow_period: int, signal
 
 def compute_bollinger(closes: list[float], period: int, mult: float) -> dict:
     """Bandes de Bollinger : MM `period` ± mult × écart-type population.
-    Dernier point uniquement. Non utilisé par compute_signal (comme dans
-    le JS d'origine) — conservé pour parité de test."""
+    Dernier point uniquement. Utilisé par compute_signal comme
+    confirmation structurelle supplémentaire depuis l'audit Or du
+    2026-09-21 (point mineur, resté non câblé jusque-là malgré
+    SCALP_BOLLINGER_PERIOD/MULT déjà définis)."""
     window = closes[-period:]
     mean = sum(window) / period
     variance = sum((c - mean) ** 2 for c in window) / period
@@ -347,6 +349,7 @@ def compute_signal(candles: list[dict]) -> dict:
     closes = [c["close"] for c in candles]
     rsi = compute_rsi(closes, SCALP_RSI_PERIOD)
     macd = compute_macd(closes, SCALP_MACD_FAST, SCALP_MACD_SLOW, SCALP_MACD_SIGNAL)
+    bollinger = compute_bollinger(closes, SCALP_BOLLINGER_PERIOD, SCALP_BOLLINGER_MULT)
     pattern = match_candlestick_pattern(candles, trend)
 
     near_support = levels["support"] is not None and abs(price - levels["support"]) <= SCALP_LEVEL_PROXIMITY
@@ -354,8 +357,23 @@ def compute_signal(candles: list[dict]) -> dict:
     broke_resistance = levels["resistance"] is not None and price > levels["resistance"]
     broke_support = levels["support"] is not None and price < levels["support"]
 
-    structurel_achat = trend == "baissier" and (near_support or broke_resistance)
-    structurel_vente = trend == "haussier" and (near_resistance or broke_support)
+    # Confirmation structurelle supplémentaire (audit Or 2026-09-21, point
+    # mineur "Bollinger calculées mais jamais utilisées") : le prix doit
+    # aussi toucher/dépasser la bande Bollinger correspondante, en plus de
+    # la proximité support/résistance déjà en place — pas une alternative
+    # (OU), une exigence en plus (ET), pour rester sélectif sur un edge
+    # déjà mince au backtest (41,7% de trades gagnants sur l'échantillon
+    # du 21/09). SCALP_BOLLINGER_PERIOD/MULT existaient déjà (utilisés
+    # pour SCALP_MIN_CANDLES) mais n'avaient jamais servi au calcul du
+    # signal lui-même, gardés pour parité avec docs/scalping.js.
+    structurel_achat = (
+        trend == "baissier" and (near_support or broke_resistance)
+        and price <= bollinger["lower"]
+    )
+    structurel_vente = (
+        trend == "haussier" and (near_resistance or broke_support)
+        and price >= bollinger["upper"]
+    )
 
     confirmation_achat = rsi < 70 and macd["macd"] > macd["signal"] and pattern is not None and pattern["direction"] == "haussier"
     confirmation_vente = rsi > 30 and macd["macd"] < macd["signal"] and pattern is not None and pattern["direction"] == "baissier"

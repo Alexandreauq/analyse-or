@@ -280,7 +280,20 @@ def _build_bearish_then_hammer_candles():
     composantes (detect_pivots, classify_trend, compute_rsi, compute_macd,
     match_candlestick_pattern) ont déjà leurs propres tests à valeurs
     exactes ci-dessus ; ce test est un test d'intégration qui verrouille
-    le comportement réel, pas une réinvention du calcul."""
+    le comportement réel, pas une réinvention du calcul.
+
+    Troisième piège, ajouté avec la confirmation Bollinger (audit Or
+    2026-09-21) : une jambe d'approche en RAMPE LINÉAIRE simple (un seul
+    pas constant sur toute la jambe) ne fait jamais passer le prix sous
+    la bande basse, quelle que soit son amplitude — une série qui décline
+    en douceur a elle-même une volatilité répartie sur toute sa longueur,
+    donc son dernier point ne s'écarte jamais de 2 écarts-types de sa
+    propre moyenne glissante. Remplacé par une base quasi plate (faible
+    bruit ±0.05) suivie d'une accélération nette sur les derniers pas
+    seulement — un vrai décrochage, pas une pente régulière — pour que la
+    fenêtre Bollinger de 20 bougies (dominée par la base calme) ait un
+    écart-type resserré face à la chute brutale de fin, permettant à la
+    clôture finale de passer sous la bande basse."""
     candles = []
     price = 2200.0
     turn_wick = 1.2  # mèche renforcée sur les bougies de creux/sommet, pour
@@ -313,11 +326,22 @@ def _build_bearish_then_hammer_candles():
     # Jambe d'approche : ramène le prix de son niveau courant jusqu'au futur
     # open de la bougie Marteau, calculé pour que sa clôture finisse à
     # `close_margin` au-dessus du support (dans la tolérance SCALP_LEVEL_PROXIMITY).
+    # Base quasi plate (bruit ±0.05) puis décrochage net sur les 3 derniers
+    # pas seulement (voir docstring, piège Bollinger) — pas une rampe
+    # linéaire uniforme.
     n_target = 35
     remaining = n_target - len(candles)
     final_open_target = support_price + close_margin - final_up
-    step = (final_open_target - price) / remaining
-    for _ in range(remaining):
+    flat_steps = remaining - 3
+    for i in range(flat_steps):
+        open_ = price
+        close = price + (0.05 if i % 2 == 0 else -0.05)
+        high = max(open_, close) + 0.15
+        low = min(open_, close) - 0.15
+        candles.append(_candle(open_, high, low, close))
+        price = close
+    step = (final_open_target - price) / 3
+    for _ in range(3):
         open_ = price
         close = price + step
         high = max(open_, close) + 0.3
@@ -343,6 +367,26 @@ def test_compute_signal_full_achat_scenario():
     assert result["pattern"]["name"] == "Marteau"
     assert result["entry"] == candles[-1]["close"]
     assert result["stop_loss"] < result["entry"] < result["take_profit"]
+
+
+def test_compute_signal_neutre_when_achat_bollinger_not_touched(monkeypatch):
+    """Confirmation Bollinger obligatoire (audit Or 2026-09-21, point
+    mineur) : même structure + confirmation réunies que le scénario
+    complet, mais si le prix ne touche/dépasse pas la bande basse, le
+    signal doit rester neutre. Isole cette seule condition en forçant la
+    bande hors de portée plutôt que de re-calibrer les bougies (déjà
+    finement réglées, voir docstring de _build_bearish_then_hammer_candles)."""
+    candles = _build_bearish_then_hammer_candles()
+    price = candles[-1]["close"]
+
+    def bande_hors_de_portee(closes, period, mult):
+        return {"middle": price - 10, "upper": price - 1, "lower": price - 1}
+
+    monkeypatch.setattr(confluence, "compute_bollinger", bande_hors_de_portee)
+    result = confluence.compute_signal(candles)
+    assert result["status"] == "neutre"
+    assert result["stop_loss"] is None
+    assert result["take_profit"] is None
 
 
 def test_compute_signal_neutre_when_achat_ratio_insufficient(monkeypatch):
@@ -377,7 +421,10 @@ def _build_bullish_then_shooting_star_candles():
     fonction miroir ci-dessus (zigzag obligatoire pour avoir des pivots,
     `turn_wick` pour éviter les égalités de high/low sur les bougies de
     retournement) — voir sa docstring pour le détail. Exécuté pendant le
-    développement pour confirmer qu'il produit bien un signal 'vente'."""
+    développement pour confirmer qu'il produit bien un signal 'vente'.
+    Même piège Bollinger que la fonction miroir : jambe d'approche en
+    base quasi plate + décrochage sur les 3 derniers pas seulement, pas
+    une rampe linéaire uniforme."""
     candles = []
     price = 2100.0
     turn_wick = 1.2
@@ -409,8 +456,16 @@ def _build_bullish_then_shooting_star_candles():
     n_target = 35
     remaining = n_target - len(candles)
     final_open_target = (resistance_price - close_margin) + final_down
-    step = (final_open_target - price) / remaining
-    for _ in range(remaining):
+    flat_steps = remaining - 3
+    for i in range(flat_steps):
+        open_ = price
+        close = price + (0.05 if i % 2 == 0 else -0.05)
+        high = max(open_, close) + 0.15
+        low = min(open_, close) - 0.15
+        candles.append(_candle(open_, high, low, close))
+        price = close
+    step = (final_open_target - price) / 3
+    for _ in range(3):
         open_ = price
         close = price + step
         high = max(open_, close) + 0.3
@@ -436,6 +491,21 @@ def test_compute_signal_full_vente_scenario():
     assert result["pattern"]["name"] == "Étoile filante"
     assert result["entry"] == candles[-1]["close"]
     assert result["take_profit"] < result["entry"] < result["stop_loss"]
+
+
+def test_compute_signal_neutre_when_vente_bollinger_not_touched(monkeypatch):
+    """Symétrique de test_compute_signal_neutre_when_achat_bollinger_not_touched."""
+    candles = _build_bullish_then_shooting_star_candles()
+    price = candles[-1]["close"]
+
+    def bande_hors_de_portee(closes, period, mult):
+        return {"middle": price + 10, "upper": price + 1, "lower": price + 1}
+
+    monkeypatch.setattr(confluence, "compute_bollinger", bande_hors_de_portee)
+    result = confluence.compute_signal(candles)
+    assert result["status"] == "neutre"
+    assert result["stop_loss"] is None
+    assert result["take_profit"] is None
 
 
 def test_compute_signal_neutre_when_vente_ratio_insufficient(monkeypatch):

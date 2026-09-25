@@ -1840,6 +1840,7 @@ function portfolioAnalysisHtml(positions, companiesByTicker, currencyByIndex, pr
     positions, dividendHistoryByTicker, companiesByTicker, currencyByIndex);
   const yieldOnCostRows = computeYieldOnCost(positions, dividendHistoryByTicker, companiesByTicker);
   const performanceCurves = computePortfolioPerformanceCurves(positions, closedPositions, companiesByTicker, currencyByIndex, priceHistoryByTicker);
+  const riskFreeRateByCurrency = indicesData.risk_free_rate_by_currency || {};
   const indexNamesForBenchmark = { ...INDEX_DISPLAY_NAMES, ...(indicesData.index_names || {}) };
   const benchmarkSelectHtml = currency => `
     <select class="list-sort portfolio-benchmark-select" data-currency="${currency}">
@@ -1853,11 +1854,17 @@ function portfolioAnalysisHtml(positions, companiesByTicker, currencyByIndex, pr
       return company && (currencyByIndex[company.index] === 'USD' ? 'USD' : 'EUR') === currency;
     });
     const benchmarkCurve = computeBenchmarkPerformanceCurve(positionsForCurrency, defaultBenchmarkTicker, priceHistoryByTicker);
+    const riskMetrics = computePortfolioRiskMetrics(performanceCurves[currency], riskFreeRateByCurrency[currency]);
     return `
       <h3 class="portfolio-analysis-title">Performance (${currency})</h3>
       <div class="portfolio-perf-block" data-currency="${currency}">
         ${benchmarkSelectHtml(currency)}
         <div class="portfolio-perf-chart-container">${performanceCurveSvg(performanceCurves[currency], benchmarkCurve, indexNamesForBenchmark.CAC40 || 'CAC40')}</div>
+        <div class="signal-stats">
+          <div class="price-row"><span class="price-label">Volatilité annualisée</span><span class="price-value">${riskMetrics.volatility != null ? riskMetrics.volatility.toFixed(1) + '%' : '—'}</span></div>
+          <div class="price-row"><span class="price-label">Sharpe ratio</span><span class="price-value">${riskMetrics.sharpe != null ? (riskMetrics.sharpe > 0 ? '+' : '') + riskMetrics.sharpe.toFixed(2) : '—'}</span></div>
+          <div class="price-row"><span class="price-label">Max drawdown</span><span class="price-value ${pctClass(riskMetrics.maxDrawdown)}">${riskMetrics.maxDrawdown != null ? formatPct(riskMetrics.maxDrawdown) : '—'}</span></div>
+        </div>
       </div>`;
   }).join('');
   const diagnosis = portfolioDiagnosisHtml(concentration, health, attribution);

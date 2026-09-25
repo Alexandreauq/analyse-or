@@ -548,6 +548,101 @@ function computePortfolioAttribution(positions, companiesByTicker) {
   return rows;
 }
 
+/**
+ * Un point par tranche de 7 jours calendaires (le plus recent de la
+ * tranche), a partir d'une courbe {date, pnlPct}[] deja triee par date
+ * croissante (meme forme que computePerformanceCurve). Necessaire pour
+ * obtenir une periodicite uniforme avant de calculer volatilite/Sharpe --
+ * la courbe source melange quotidien (<30j) et hebdomadaire (au-dela),
+ * meme downsampling que docs/price_history.json. Regroupement par
+ * tranche de 7 jours depuis l'epoch, pas un vrai decoupage ISO (inutile
+ * ici, seule une periodicite reguliere compte pour une statistique).
+ */
+function resampleCurveWeekly(curve) {
+  const byWeek = {};
+  curve.forEach(point => {
+    const daysSinceEpoch = Math.floor(new Date(point.date + 'T00:00:00Z').getTime() / 86400000);
+    const weekKey = Math.floor(daysSinceEpoch / 7);
+    const existing = byWeek[weekKey];
+    if (!existing || point.date > existing.date) byWeek[weekKey] = point;
+  });
+  return Object.keys(byWeek).sort((a, b) => Number(a) - Number(b)).map(k => byWeek[k]);
+}
+
+/**
+ * Variations point-a-point de pnlPct entre points consecutifs (en points
+ * de %, pas un rendement compose -- voir la note de conception : une
+ * vraie methode de rendement pondere dans le temps a ete explicitement
+ * exclue du perimetre de la courbe de performance elle-meme, spec
+ * 2026-09-20 §8). Utilise pour la volatilite/le Sharpe.
+ */
+function computePeriodicChanges(points) {
+  const changes = [];
+  for (let i = 1; i < points.length; i++) {
+    changes.push(points[i].pnlPct - points[i - 1].pnlPct);
+  }
+  return changes;
+}
+
+/**
+ * Volatilite annualisee : ecart-type echantillon des variations
+ * hebdomadaires de pnlPct x racine(52). null si moins de 2 variations
+ * disponibles (ecart-type non calculable).
+ */
+function computePortfolioVolatility(curve) {
+  const changes = computePeriodicChanges(resampleCurveWeekly(curve));
+  if (changes.length < 2) return null;
+  const mean = changes.reduce((s, c) => s + c, 0) / changes.length;
+  const variance = changes.reduce((s, c) => s + (c - mean) ** 2, 0) / (changes.length - 1);
+  return Math.sqrt(variance) * Math.sqrt(52);
+}
+
+/**
+ * Sharpe ratio annualise = (moyenne des variations hebdo x 52 - taux
+ * sans risque) / volatilite annualisee. riskFreeRatePct en % (ex. 3.68
+ * pour 3.68%), meme convention que pnlPct. null si la volatilite n'est
+ * pas calculable (moins de 2 variations) ou nulle (division impossible).
+ */
+function computeSharpeRatio(curve, riskFreeRatePct) {
+  const changes = computePeriodicChanges(resampleCurveWeekly(curve));
+  if (changes.length < 2) return null;
+  const volatility = computePortfolioVolatility(curve);
+  if (!volatility) return null;
+  const mean = changes.reduce((s, c) => s + c, 0) / changes.length;
+  return (mean * 52 - riskFreeRatePct) / volatility;
+}
+
+/**
+ * Plus grande baisse pic-creux (en points de %) sur la courbe BRUTE (pas
+ * re-echantillonnee -- plus precis avec la granularite quotidienne des
+ * 30 derniers jours). Valeur negative ou nulle (0 = aucune baisse depuis
+ * le pic), null si la courbe est vide.
+ */
+function computeMaxDrawdown(curve) {
+  if (!curve.length) return null;
+  let peak = curve[0].pnlPct;
+  let maxDrawdown = 0;
+  curve.forEach(point => {
+    if (point.pnlPct > peak) peak = point.pnlPct;
+    const drawdown = point.pnlPct - peak;
+    if (drawdown < maxDrawdown) maxDrawdown = drawdown;
+  });
+  return maxDrawdown;
+}
+
+/**
+ * Regroupe les 3 metriques de risque pour une courbe donnee.
+ * riskFreeRatePct peut etre null/undefined (donnee indisponible cote
+ * serveur) -- sharpe vaut alors null plutot qu'un repli silencieux a 0%.
+ */
+function computePortfolioRiskMetrics(curve, riskFreeRatePct) {
+  return {
+    volatility: computePortfolioVolatility(curve),
+    sharpe: (riskFreeRatePct != null) ? computeSharpeRatio(curve, riskFreeRatePct) : null,
+    maxDrawdown: computeMaxDrawdown(curve),
+  };
+}
+
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
     PORTFOLIO_STORAGE_KEY, validatePositionInput, createPosition,
@@ -560,5 +655,7 @@ if (typeof module !== 'undefined' && module.exports) {
     computeBenchmarkPerformanceCurve,
     groupDividendHistoryByTicker, computeDividendsReceived, computeProjectedDividendIncome,
     computeYieldOnCost,
+    resampleCurveWeekly, computePeriodicChanges, computePortfolioVolatility,
+    computeMaxDrawdown, computeSharpeRatio, computePortfolioRiskMetrics,
   };
 }

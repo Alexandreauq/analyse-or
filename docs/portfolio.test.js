@@ -12,6 +12,8 @@ const {
   groupPriceHistoryByTicker, priceAtOrBefore, isPositionActiveOn, realValueForPosition,
   benchmarkValueForPosition, computePerformanceCurve, computePortfolioPerformanceCurves,
   computeBenchmarkPerformanceCurve,
+  groupDividendHistoryByTicker, computeDividendsReceived, computeProjectedDividendIncome,
+  computeYieldOnCost,
 } = require('./portfolio.js');
 
 // Mock localStorage minimal — Node n'a pas cet objet nativement.
@@ -417,6 +419,18 @@ function test_group_price_history_by_ticker_sorts_each_group_by_date() {
   assert.strictEqual(grouped['^FCHI'].length, 1);
 }
 
+function test_group_dividend_history_by_ticker_sorts_each_group_by_date() {
+  const history = [
+    { date: '2026-06-15', ticker: 'MC.PA', amount: 3.55 },
+    { date: '2025-06-15', ticker: 'MC.PA', amount: 3.40 },
+    { date: '2026-03-01', ticker: 'AAPL', amount: 0.25 },
+  ];
+  const grouped = groupDividendHistoryByTicker(history);
+  assert.deepStrictEqual(grouped['MC.PA'].map(e => e.date), ['2025-06-15', '2026-06-15']);
+  assert.strictEqual(grouped['AAPL'].length, 1);
+  console.log('OK: test_group_dividend_history_by_ticker_sorts_each_group_by_date');
+}
+
 function test_price_at_or_before_returns_the_latest_entry_not_after_the_date() {
   const grouped = { 'MC.PA': [{ date: '2026-09-10', price: 100 }, { date: '2026-09-15', price: 110 }] };
   assert.strictEqual(priceAtOrBefore(grouped, 'MC.PA', '2026-09-12'), 100);
@@ -514,6 +528,128 @@ function test_compute_benchmark_performance_curve_returns_null_value_when_index_
   assert.strictEqual(benchmarkCurve.length, 0); // position exclue de cette date faute de prix d'indice au buy_date
 }
 
+function test_compute_dividends_received_only_counts_payments_within_holding_period() {
+  const positions = [{ id: '1', ticker: 'MC.PA', buy_date: '2026-01-15', quantity: 10 }];
+  const dividendHistoryByTicker = {
+    'MC.PA': [
+      { date: '2025-12-01', ticker: 'MC.PA', amount: 3.0 },  // avant l'achat, exclu
+      { date: '2026-06-15', ticker: 'MC.PA', amount: 3.55 }, // apres l'achat, inclus
+    ],
+  };
+  const companiesByTicker = { 'MC.PA': { index: 'CAC40' } };
+  const currencyByIndex = { CAC40: 'EUR' };
+  const received = computeDividendsReceived(positions, dividendHistoryByTicker, companiesByTicker, currencyByIndex);
+  assert.ok(Math.abs(received.EUR - 35.5) < 0.001); // 3.55 * 10
+  assert.strictEqual(received.USD, 0);
+  console.log('OK: test_compute_dividends_received_only_counts_payments_within_holding_period');
+}
+
+function test_compute_dividends_received_excludes_payment_after_a_closed_position_was_sold() {
+  const closedPositions = [{ id: '1', ticker: 'MC.PA', buy_date: '2026-01-15', sell_date: '2026-03-01', quantity: 10 }];
+  const dividendHistoryByTicker = {
+    'MC.PA': [
+      { date: '2026-02-01', ticker: 'MC.PA', amount: 3.0 },  // pendant la detention, inclus
+      { date: '2026-06-15', ticker: 'MC.PA', amount: 3.55 }, // apres la vente, exclu
+    ],
+  };
+  const companiesByTicker = { 'MC.PA': { index: 'CAC40' } };
+  const currencyByIndex = { CAC40: 'EUR' };
+  const received = computeDividendsReceived(closedPositions, dividendHistoryByTicker, companiesByTicker, currencyByIndex);
+  assert.ok(Math.abs(received.EUR - 30.0) < 0.001); // 3.0 * 10
+  console.log('OK: test_compute_dividends_received_excludes_payment_after_a_closed_position_was_sold');
+}
+
+function test_compute_dividends_received_splits_by_currency() {
+  const positions = [
+    { id: '1', ticker: 'MC.PA', buy_date: '2026-01-01', quantity: 10 },
+    { id: '2', ticker: 'AAPL', buy_date: '2026-01-01', quantity: 5 },
+  ];
+  const dividendHistoryByTicker = {
+    'MC.PA': [{ date: '2026-06-15', ticker: 'MC.PA', amount: 3.0 }],
+    'AAPL': [{ date: '2026-06-15', ticker: 'AAPL', amount: 0.25 }],
+  };
+  const companiesByTicker = { 'MC.PA': { index: 'CAC40' }, 'AAPL': { index: 'NASDAQ' } };
+  const currencyByIndex = { CAC40: 'EUR', NASDAQ: 'USD' };
+  const received = computeDividendsReceived(positions, dividendHistoryByTicker, companiesByTicker, currencyByIndex);
+  assert.ok(Math.abs(received.EUR - 30.0) < 0.001);
+  assert.ok(Math.abs(received.USD - 1.25) < 0.001);
+  console.log('OK: test_compute_dividends_received_splits_by_currency');
+}
+
+function test_compute_dividends_received_skips_position_with_unknown_ticker() {
+  const positions = [{ id: '1', ticker: 'RETIRE.PA', buy_date: '2026-01-01', quantity: 10 }];
+  const dividendHistoryByTicker = { 'RETIRE.PA': [{ date: '2026-06-15', ticker: 'RETIRE.PA', amount: 3.0 }] };
+  const received = computeDividendsReceived(positions, dividendHistoryByTicker, {}, {});
+  assert.deepStrictEqual(received, { EUR: 0, USD: 0 });
+  console.log('OK: test_compute_dividends_received_skips_position_with_unknown_ticker');
+}
+
+function test_compute_projected_dividend_income_uses_a_365_day_ttm_window() {
+  const openPositions = [{ id: '1', ticker: 'MC.PA', buy_date: '2020-01-01', quantity: 10, buy_price: 90.0 }];
+  const dividendHistoryByTicker = {
+    'MC.PA': [
+      { date: '2025-01-01', ticker: 'MC.PA', amount: 3.0 },  // > 365 jours avant today, exclu
+      { date: '2026-06-15', ticker: 'MC.PA', amount: 3.55 }, // dans la fenetre, inclus
+    ],
+  };
+  const companiesByTicker = { 'MC.PA': { index: 'CAC40' } };
+  const currencyByIndex = { CAC40: 'EUR' };
+  const income = computeProjectedDividendIncome(
+    openPositions, dividendHistoryByTicker, companiesByTicker, currencyByIndex, '2026-09-21');
+  assert.ok(Math.abs(income.EUR.annual - 35.5) < 0.001); // 3.55 * 10
+  console.log('OK: test_compute_projected_dividend_income_uses_a_365_day_ttm_window');
+}
+
+function test_compute_projected_dividend_income_monthly_is_annual_over_twelve() {
+  const openPositions = [{ id: '1', ticker: 'MC.PA', buy_date: '2020-01-01', quantity: 10, buy_price: 90.0 }];
+  const dividendHistoryByTicker = { 'MC.PA': [{ date: '2026-06-15', ticker: 'MC.PA', amount: 12.0 }] };
+  const companiesByTicker = { 'MC.PA': { index: 'CAC40' } };
+  const currencyByIndex = { CAC40: 'EUR' };
+  const income = computeProjectedDividendIncome(
+    openPositions, dividendHistoryByTicker, companiesByTicker, currencyByIndex, '2026-09-21');
+  assert.ok(Math.abs(income.EUR.monthly - income.EUR.annual / 12) < 0.0001);
+  assert.ok(Math.abs(income.EUR.annual - 120.0) < 0.001); // 12.0 * 10
+  console.log('OK: test_compute_projected_dividend_income_monthly_is_annual_over_twelve');
+}
+
+function test_compute_projected_dividend_income_ignores_ticker_with_no_dividend_history() {
+  const openPositions = [{ id: '1', ticker: 'GROWTH.PA', buy_date: '2020-01-01', quantity: 10, buy_price: 50.0 }];
+  const companiesByTicker = { 'GROWTH.PA': { index: 'CAC40' } };
+  const currencyByIndex = { CAC40: 'EUR' };
+  const income = computeProjectedDividendIncome(openPositions, {}, companiesByTicker, currencyByIndex, '2026-09-21');
+  assert.deepStrictEqual(income, { EUR: { annual: 0, monthly: 0 }, USD: { annual: 0, monthly: 0 } });
+  console.log('OK: test_compute_projected_dividend_income_ignores_ticker_with_no_dividend_history');
+}
+
+function test_compute_yield_on_cost_computes_ttm_dividend_over_buy_price() {
+  const openPositions = [{ id: '1', ticker: 'MC.PA', buy_date: '2020-01-01', quantity: 10, buy_price: 100.0 }];
+  const dividendHistoryByTicker = { 'MC.PA': [{ date: '2026-06-15', ticker: 'MC.PA', amount: 5.0 }] };
+  const companiesByTicker = { 'MC.PA': { index: 'CAC40' } };
+  const result = computeYieldOnCost(openPositions, dividendHistoryByTicker, companiesByTicker, '2026-09-21');
+  assert.strictEqual(result.length, 1);
+  assert.strictEqual(result[0].ticker, 'MC.PA');
+  assert.ok(Math.abs(result[0].ttmPerShare - 5.0) < 0.001);
+  assert.ok(Math.abs(result[0].yieldOnCost - 5.0) < 0.001); // 5.0 / 100.0 * 100
+  assert.ok(Math.abs(result[0].projectedAnnual - 50.0) < 0.001); // 5.0 * 10
+  console.log('OK: test_compute_yield_on_cost_computes_ttm_dividend_over_buy_price');
+}
+
+function test_compute_yield_on_cost_excludes_positions_with_no_ttm_dividend() {
+  const openPositions = [{ id: '1', ticker: 'GROWTH.PA', buy_date: '2020-01-01', quantity: 10, buy_price: 50.0 }];
+  const companiesByTicker = { 'GROWTH.PA': { index: 'CAC40' } };
+  const result = computeYieldOnCost(openPositions, {}, companiesByTicker, '2026-09-21');
+  assert.deepStrictEqual(result, []);
+  console.log('OK: test_compute_yield_on_cost_excludes_positions_with_no_ttm_dividend');
+}
+
+function test_compute_yield_on_cost_skips_position_with_unknown_ticker() {
+  const openPositions = [{ id: '1', ticker: 'RETIRE.PA', buy_date: '2020-01-01', quantity: 10, buy_price: 50.0 }];
+  const dividendHistoryByTicker = { 'RETIRE.PA': [{ date: '2026-06-15', ticker: 'RETIRE.PA', amount: 5.0 }] };
+  const result = computeYieldOnCost(openPositions, dividendHistoryByTicker, {}, '2026-09-21');
+  assert.deepStrictEqual(result, []);
+  console.log('OK: test_compute_yield_on_cost_skips_position_with_unknown_ticker');
+}
+
 function main() {
   test_validatePositionInput_accepts_positive_numbers();
   test_validatePositionInput_rejects_non_positive_quantity();
@@ -557,6 +693,7 @@ function main() {
   test_computePortfolioAttribution_sorts_by_pnl_desc();
   test_computePortfolioAttribution_skips_position_without_price();
   test_group_price_history_by_ticker_sorts_each_group_by_date();
+  test_group_dividend_history_by_ticker_sorts_each_group_by_date();
   test_price_at_or_before_returns_the_latest_entry_not_after_the_date();
   test_price_at_or_before_never_looks_into_the_future();
   test_price_at_or_before_returns_null_for_an_unknown_ticker();
@@ -566,6 +703,16 @@ function main() {
   test_compute_portfolio_performance_curves_splits_by_currency_and_skips_empty_currency();
   test_compute_benchmark_performance_curve_scales_cost_by_index_ratio_since_buy_date();
   test_compute_benchmark_performance_curve_returns_null_value_when_index_price_at_buy_date_is_unknown();
+  test_compute_dividends_received_only_counts_payments_within_holding_period();
+  test_compute_dividends_received_excludes_payment_after_a_closed_position_was_sold();
+  test_compute_dividends_received_splits_by_currency();
+  test_compute_dividends_received_skips_position_with_unknown_ticker();
+  test_compute_projected_dividend_income_uses_a_365_day_ttm_window();
+  test_compute_projected_dividend_income_monthly_is_annual_over_twelve();
+  test_compute_projected_dividend_income_ignores_ticker_with_no_dividend_history();
+  test_compute_yield_on_cost_computes_ttm_dividend_over_buy_price();
+  test_compute_yield_on_cost_excludes_positions_with_no_ttm_dividend();
+  test_compute_yield_on_cost_skips_position_with_unknown_ticker();
   console.log('Tous les tests portfolio.test.js sont passés.');
 }
 

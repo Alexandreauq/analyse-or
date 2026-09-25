@@ -4463,6 +4463,60 @@ def test_main_payload_includes_index_metadata(monkeypatch, tmp_path):
     }
 
 
+def test_main_payload_exposes_risk_free_rate_by_currency(monkeypatch, tmp_path):
+    """Le taux sans risque par devise, deja calcule pour le WACC (voir
+    test_main_routes_risk_free_rate_by_currency), doit aussi etre publie
+    dans le payload -- le frontend en a besoin pour le Sharpe ratio
+    (metriques de risque du portefeuille) sans avoir a le recalculer."""
+    import json
+
+    def _fake_fetch_risk_free_rate(series_id):
+        return {
+            indices_score.FRED_RISK_FREE_SERIES: 3.68,
+            indices_score.FRED_RISK_FREE_SERIES_US: 4.20,
+            indices_score.FRED_RISK_FREE_SERIES_UK: 4.55,
+            indices_score.FRED_RISK_FREE_SERIES_CH: 0.31,
+            indices_score.FRED_RISK_FREE_SERIES_JP: 2.67,
+        }[series_id]
+
+    monkeypatch.setattr(indices_score, "fetch_risk_free_rate", _fake_fetch_risk_free_rate)
+    monkeypatch.setattr(indices_score, "fetch_fx_rate_to_usd", lambda currency: 1.0)
+    monkeypatch.setattr(indices_score, "load_previous_company_analyses", lambda: {})
+    monkeypatch.setattr(
+        indices_score, "build_company_entry",
+        lambda ticker, name, risk_free_rate, previous_analyses, index_key="CAC40", also_indices=None, fx_rate_to_usd=1.0: {
+            "ticker": ticker, "name": name, "index": index_key,
+            "score": 10.0, "interpretation": "Neutre",
+            "current_price": 50.0, "entry_price": 50.0,
+        },
+    )
+    monkeypatch.setattr(indices_score, "load_indices_history", lambda: [])
+    monkeypatch.setattr(indices_score, "append_indices_history", lambda entries: entries)
+    monkeypatch.setattr(indices_score, "update_signal_tracking", lambda companies, newly_triggered_entree: [])
+    monkeypatch.setattr(indices_score, "update_nikkei_hangseng_price_history", lambda companies: [])
+    monkeypatch.setattr(
+        indices_score, "fetch_index_prices",
+        lambda: {
+            "CAC40": None, "DAX": None, "NASDAQ": None, "DOW": None,
+            "FTSE": None, "SMI": None, "IBEX35": None, "FTSEMIB": None,
+            "NIKKEI225": None, "HANGSENG": None,
+        },
+    )
+    monkeypatch.setattr(indices_score, "update_price_history", lambda entries, **kwargs: entries)
+    monkeypatch.setattr(indices_score, "update_dividend_history", lambda entries, **kwargs: entries)
+    monkeypatch.setattr(indices_score, "fetch_index_price_history", lambda: [])
+    output_path = tmp_path / "indices.json"
+    monkeypatch.setattr(indices_score, "OUTPUT_JSON_PATH", str(output_path))
+
+    indices_score.main()
+
+    written = json.loads(output_path.read_text(encoding="utf-8"))
+    assert written["risk_free_rate_by_currency"] == {
+        "EUR": 3.68, "USD": 4.20, "GBP": 4.55, "CHF": 0.31, "JPY": 2.67,
+        "HKD": 4.20,  # pas de serie FRED dediee, repli sur le Treasury US (voir RISK_FREE_SERIES_BY_CURRENCY)
+    }
+
+
 def test_main_routes_risk_free_rate_by_currency(monkeypatch, tmp_path):
     """Ajouté avec le Nasdaq-100 : chaque entreprise doit recevoir le taux
     sans risque de SA devise (France pour CAC40/DAX, US pour NASDAQ), pas

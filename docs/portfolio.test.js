@@ -14,6 +14,8 @@ const {
   computeBenchmarkPerformanceCurve,
   groupDividendHistoryByTicker, computeDividendsReceived, computeProjectedDividendIncome,
   computeYieldOnCost,
+  resampleCurveWeekly, computePeriodicChanges, computePortfolioVolatility,
+  computeMaxDrawdown, computeSharpeRatio, computePortfolioRiskMetrics,
 } = require('./portfolio.js');
 
 // Mock localStorage minimal — Node n'a pas cet objet nativement.
@@ -728,6 +730,110 @@ function test_compute_yield_on_cost_skips_position_with_unknown_ticker() {
   console.log('OK: test_compute_yield_on_cost_skips_position_with_unknown_ticker');
 }
 
+function test_resample_curve_weekly_keeps_the_latest_point_per_week_bucket() {
+  const curve = [
+    { date: '2026-01-05', pnlPct: 1 },
+    { date: '2026-01-06', pnlPct: 2 }, // meme semaine que le 05, le plus recent doit etre garde
+    { date: '2026-01-12', pnlPct: 3 },
+  ];
+  const resampled = resampleCurveWeekly(curve);
+  assert.strictEqual(resampled.length, 2);
+  assert.strictEqual(resampled[0].pnlPct, 2);
+  assert.strictEqual(resampled[1].pnlPct, 3);
+  console.log('OK: test_resample_curve_weekly_keeps_the_latest_point_per_week_bucket');
+}
+
+function test_compute_periodic_changes_returns_consecutive_differences() {
+  const points = [{ pnlPct: 1 }, { pnlPct: 4 }, { pnlPct: 2 }];
+  const changes = computePeriodicChanges(points);
+  assert.deepStrictEqual(changes, [3, -2]);
+  console.log('OK: test_compute_periodic_changes_returns_consecutive_differences');
+}
+
+function test_compute_portfolio_volatility_returns_null_with_fewer_than_two_weekly_changes() {
+  const curve = [{ date: '2026-01-05', pnlPct: 0 }, { date: '2026-01-06', pnlPct: 1 }]; // meme semaine -> 1 seul point resample
+  assert.strictEqual(computePortfolioVolatility(curve), null);
+  console.log('OK: test_compute_portfolio_volatility_returns_null_with_fewer_than_two_weekly_changes');
+}
+
+function test_compute_portfolio_volatility_annualizes_weekly_stddev() {
+  const curve = [
+    { date: '2026-01-05', pnlPct: 0 },
+    { date: '2026-01-12', pnlPct: -2 },
+    { date: '2026-01-19', pnlPct: 0 },
+  ];
+  // changes = [-2, 2], ecart-type echantillon = sqrt(((-2-0)^2 + (2-0)^2) / (2-1)) = sqrt(8)
+  const expected = Math.sqrt(8) * Math.sqrt(52);
+  assert.ok(Math.abs(computePortfolioVolatility(curve) - expected) < 0.001);
+  console.log('OK: test_compute_portfolio_volatility_annualizes_weekly_stddev');
+}
+
+function test_compute_max_drawdown_finds_largest_peak_to_trough_decline() {
+  const curve = [
+    { date: '2026-01-01', pnlPct: 0 },
+    { date: '2026-01-05', pnlPct: 10 },  // pic
+    { date: '2026-01-10', pnlPct: 4 },   // creux (-6 depuis le pic)
+    { date: '2026-01-15', pnlPct: 8 },
+    { date: '2026-01-20', pnlPct: -2 },  // creux plus profond (-12 depuis le pic de 10)
+  ];
+  assert.ok(Math.abs(computeMaxDrawdown(curve) - (-12)) < 0.001);
+  console.log('OK: test_compute_max_drawdown_finds_largest_peak_to_trough_decline');
+}
+
+function test_compute_max_drawdown_returns_zero_for_a_monotonically_increasing_curve() {
+  const curve = [{ date: '2026-01-01', pnlPct: 0 }, { date: '2026-01-05', pnlPct: 5 }, { date: '2026-01-10', pnlPct: 10 }];
+  assert.strictEqual(computeMaxDrawdown(curve), 0);
+  console.log('OK: test_compute_max_drawdown_returns_zero_for_a_monotonically_increasing_curve');
+}
+
+function test_compute_max_drawdown_returns_null_for_empty_curve() {
+  assert.strictEqual(computeMaxDrawdown([]), null);
+  console.log('OK: test_compute_max_drawdown_returns_null_for_empty_curve');
+}
+
+function test_compute_sharpe_ratio_subtracts_risk_free_rate_from_annualized_return() {
+  const curve = [
+    { date: '2026-01-05', pnlPct: 0 },
+    { date: '2026-01-12', pnlPct: -2 },
+    { date: '2026-01-19', pnlPct: 0 },
+  ];
+  // changes = [-2, 2], moyenne = 0, rendement annualise = 0 * 52 = 0
+  const volatility = computePortfolioVolatility(curve);
+  const expected = (0 - 3.68) / volatility;
+  assert.ok(Math.abs(computeSharpeRatio(curve, 3.68) - expected) < 0.001);
+  console.log('OK: test_compute_sharpe_ratio_subtracts_risk_free_rate_from_annualized_return');
+}
+
+function test_compute_sharpe_ratio_returns_null_with_insufficient_data() {
+  const curve = [{ date: '2026-01-05', pnlPct: 0 }, { date: '2026-01-06', pnlPct: 1 }];
+  assert.strictEqual(computeSharpeRatio(curve, 3.68), null);
+  console.log('OK: test_compute_sharpe_ratio_returns_null_with_insufficient_data');
+}
+
+function test_compute_portfolio_risk_metrics_returns_null_sharpe_without_risk_free_rate() {
+  const curve = [
+    { date: '2026-01-05', pnlPct: 0 },
+    { date: '2026-01-12', pnlPct: -2 },
+    { date: '2026-01-19', pnlPct: 0 },
+  ];
+  const metrics = computePortfolioRiskMetrics(curve, null);
+  assert.strictEqual(metrics.sharpe, null);
+  assert.ok(metrics.volatility != null);
+  assert.ok(metrics.maxDrawdown != null);
+  console.log('OK: test_compute_portfolio_risk_metrics_returns_null_sharpe_without_risk_free_rate');
+}
+
+function test_compute_portfolio_risk_metrics_computes_sharpe_when_risk_free_rate_given() {
+  const curve = [
+    { date: '2026-01-05', pnlPct: 0 },
+    { date: '2026-01-12', pnlPct: -2 },
+    { date: '2026-01-19', pnlPct: 0 },
+  ];
+  const metrics = computePortfolioRiskMetrics(curve, 3.68);
+  assert.ok(metrics.sharpe != null);
+  console.log('OK: test_compute_portfolio_risk_metrics_computes_sharpe_when_risk_free_rate_given');
+}
+
 function main() {
   test_validatePositionInput_accepts_positive_numbers();
   test_validatePositionInput_rejects_non_positive_quantity();
@@ -798,6 +904,17 @@ function main() {
   test_compute_yield_on_cost_excludes_payment_exactly_on_the_ttm_cutoff_day();
   test_compute_yield_on_cost_excludes_positions_with_no_ttm_dividend();
   test_compute_yield_on_cost_skips_position_with_unknown_ticker();
+  test_resample_curve_weekly_keeps_the_latest_point_per_week_bucket();
+  test_compute_periodic_changes_returns_consecutive_differences();
+  test_compute_portfolio_volatility_returns_null_with_fewer_than_two_weekly_changes();
+  test_compute_portfolio_volatility_annualizes_weekly_stddev();
+  test_compute_max_drawdown_finds_largest_peak_to_trough_decline();
+  test_compute_max_drawdown_returns_zero_for_a_monotonically_increasing_curve();
+  test_compute_max_drawdown_returns_null_for_empty_curve();
+  test_compute_sharpe_ratio_subtracts_risk_free_rate_from_annualized_return();
+  test_compute_sharpe_ratio_returns_null_with_insufficient_data();
+  test_compute_portfolio_risk_metrics_returns_null_sharpe_without_risk_free_rate();
+  test_compute_portfolio_risk_metrics_computes_sharpe_when_risk_free_rate_given();
   console.log('Tous les tests portfolio.test.js sont passés.');
 }
 

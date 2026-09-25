@@ -1852,6 +1852,7 @@ def _fake_ratios():
         "is_financial": False,
         "is_trust": False,
         "_price_history_daily": [],
+        "_dividend_history": [],
     }
 
 
@@ -5492,6 +5493,7 @@ def _fake_financial_ratios():
         "is_financial": True,
         "is_trust": False,
         "_price_history_daily": [],
+        "_dividend_history": [],
     }
 
 
@@ -5659,6 +5661,30 @@ def test_build_company_entry_carries_the_price_history_through(monkeypatch):
     assert entry["_price_history_daily"]
     assert entry["_price_history_daily"] == fake_ratios["_price_history_daily"]
     # Les champs publics existants restent inchanges par ce cablage.
+    assert entry["ticker"] == "BNP.PA"
+    assert entry["index"] == "CAC40"
+
+
+def test_build_company_entry_carries_the_dividend_history_through(monkeypatch):
+    """Meme cablage que _price_history_daily (voir
+    test_build_company_entry_carries_the_price_history_through) applique a
+    _dividend_history : build_company_entry doit la faire remonter jusqu'a
+    son dict de sortie, pour que main() puisse ensuite la retirer (.pop)
+    avant d'ecrire docs/indices.json et la rediriger vers
+    update_dividend_history (docs/dividend_history.json)."""
+    fake_ratios = _fake_financial_ratios()
+    fake_ratios["_dividend_history"] = [
+        {"date": "2026-06-15", "ticker": "BNP.PA", "amount": 2.10},
+    ]
+    monkeypatch.setattr(indices_score, "fetch_company_financials", lambda ticker: fake_ratios)
+    monkeypatch.setattr(indices_score, "fetch_news", lambda name, prev=None: [])
+    monkeypatch.setattr(indices_score, "generate_financial_analysis", lambda *a, **k: "<p>Analyse.</p>")
+
+    entry = indices_score.build_company_entry(
+        "BNP.PA", "BNP Paribas", risk_free_rate=0.03, previous_analyses={}, index_key="CAC40")
+
+    assert "_dividend_history" in entry
+    assert entry["_dividend_history"] == fake_ratios["_dividend_history"]
     assert entry["ticker"] == "BNP.PA"
     assert entry["index"] == "CAC40"
 
@@ -7034,6 +7060,65 @@ def test_fetch_company_financials_exposes_the_full_price_history_for_persistence
     assert entries[-1]["price"] == pytest.approx(102.0)
 
 
+def test_fetch_company_financials_exposes_the_full_dividend_history_for_persistence(monkeypatch):
+    financials, balance_sheet, cashflow, _ = _make_fixture_statements()
+    financials.columns = pd.to_datetime(financials.columns)
+    balance_sheet.columns = pd.to_datetime(balance_sheet.columns)
+    cashflow.columns = pd.to_datetime(cashflow.columns)
+    quarterly = _fake_annual_df({"Diluted Average Shares": [100.0]}, [pd.Timestamp("2025-09-30")])
+    history_index = pd.date_range("2024-01-01", periods=3, freq="D")
+    history_close = pd.Series([100.0, 101.0, 102.0], index=history_index)
+    fake_dividends = pd.Series(
+        [3.40, 3.55],
+        index=pd.DatetimeIndex(["2025-06-15", "2026-06-15"]),
+    )
+
+    class _FakeTicker:
+        def __init__(self, ticker):
+            self._ticker = ticker
+
+        @property
+        def financials(self):
+            return financials
+
+        @property
+        def balance_sheet(self):
+            return balance_sheet
+
+        @property
+        def cashflow(self):
+            return cashflow
+
+        @property
+        def quarterly_financials(self):
+            return quarterly
+
+        @property
+        def info(self):
+            return {"sharesOutstanding": 1000.0, "beta": 0.9, "sector": "Basic Materials"}
+
+        @property
+        def dividends(self):
+            return fake_dividends
+
+        def history(self, period=None):
+            return pd.DataFrame({"Close": history_close})
+
+    monkeypatch.setattr(indices_score.yf, "Ticker", _FakeTicker)
+    monkeypatch.setattr(indices_score.time, "sleep", lambda s: None)
+
+    result = indices_score.fetch_company_financials("MC.PA")
+
+    assert "_dividend_history" in result
+    entries = result["_dividend_history"]
+    assert len(entries) == 2
+    assert all(e["ticker"] == "MC.PA" for e in entries)
+    assert all(set(e.keys()) == {"date", "ticker", "amount"} for e in entries)
+    assert entries == sorted(entries, key=lambda e: e["date"])
+    assert entries[0] == {"date": "2025-06-15", "ticker": "MC.PA", "amount": 3.40}
+    assert entries[1] == {"date": "2026-06-15", "ticker": "MC.PA", "amount": 3.55}
+
+
 def test_load_signal_tracking_returns_empty_list_when_file_absent(monkeypatch, tmp_path):
     monkeypatch.setattr(indices_score, "SIGNAL_TRACKING_PATH", str(tmp_path / "does_not_exist.json"))
     assert indices_score.load_signal_tracking() == []
@@ -7756,3 +7841,89 @@ def test_main_never_writes_the_internal_price_history_key_to_indices_json(monkey
         payload = json.load(fh)
     for company in payload["companies"]:
         assert "_price_history_daily" not in company
+
+
+def test_main_persists_dividend_history_from_companies(monkeypatch, tmp_path):
+    """Preuve que main() recupere _dividend_history (propage par
+    build_company_entry) et le transmet a update_dividend_history — sans
+    ca, docs/dividend_history.json ne serait jamais alimente en
+    production."""
+    monkeypatch.setattr(indices_score, "COMPANIES", [
+        {"ticker": "MC.PA", "name": "LVMH", "index": "CAC40"},
+    ])
+    monkeypatch.setattr(indices_score, "fetch_risk_free_rate", lambda series_id: 3.68)
+    monkeypatch.setattr(indices_score, "fetch_fx_rate_to_usd", lambda currency: 1.0)
+    monkeypatch.setattr(indices_score, "load_previous_company_analyses", lambda: {})
+    monkeypatch.setattr(
+        indices_score, "build_company_entry",
+        lambda ticker, name, risk_free_rate, previous_analyses, index_key="CAC40", also_indices=None, fx_rate_to_usd=1.0: {
+            "ticker": ticker, "name": name, "index": index_key,
+            "score": 10.0, "interpretation": "Neutre",
+            "current_price": 50.0, "entry_price": 50.0,
+            "_price_history_daily": [],
+            "_dividend_history": [
+                {"date": "2026-06-15", "ticker": ticker, "amount": 1.5},
+            ],
+        },
+    )
+    monkeypatch.setattr(indices_score, "load_indices_history", lambda: [])
+    monkeypatch.setattr(indices_score, "append_indices_history", lambda entries: entries)
+    monkeypatch.setattr(indices_score, "update_signal_tracking", lambda companies, newly_triggered_entree: [])
+    monkeypatch.setattr(indices_score, "update_nikkei_hangseng_price_history", lambda companies: [])
+    monkeypatch.setattr(indices_score, "fetch_index_prices", lambda: {"CAC40": None, "DAX": None, "NASDAQ": None, "DOW": None})
+    monkeypatch.setattr(indices_score, "update_price_history", lambda entries, **kwargs: entries)
+    monkeypatch.setattr(indices_score, "fetch_index_price_history", lambda: [])
+    output_path = tmp_path / "indices.json"
+    monkeypatch.setattr(indices_score, "OUTPUT_JSON_PATH", str(output_path))
+
+    captured = {}
+    def _fake_update_dividend_history(entries, **kwargs):
+        captured["entries"] = entries
+        return entries
+    monkeypatch.setattr(indices_score, "update_dividend_history", _fake_update_dividend_history)
+
+    indices_score.main()
+
+    assert captured["entries"] == [{"date": "2026-06-15", "ticker": "MC.PA", "amount": 1.5}]
+
+
+def test_main_never_writes_the_internal_dividend_history_key_to_indices_json(monkeypatch, tmp_path):
+    """La cle interne _dividend_history (voir build_company_entry) ne doit
+    jamais atteindre docs/indices.json publie — elle est retiree (.pop)
+    dans main() avant construction du payload public, redirigee
+    exclusivement vers update_dividend_history (docs/dividend_history.json)."""
+    monkeypatch.setattr(indices_score, "COMPANIES", [
+        {"ticker": "MC.PA", "name": "LVMH", "index": "CAC40"},
+    ])
+    monkeypatch.setattr(indices_score, "fetch_risk_free_rate", lambda series_id: 3.68)
+    monkeypatch.setattr(indices_score, "fetch_fx_rate_to_usd", lambda currency: 1.0)
+    monkeypatch.setattr(indices_score, "load_previous_company_analyses", lambda: {})
+    monkeypatch.setattr(
+        indices_score, "build_company_entry",
+        lambda ticker, name, risk_free_rate, previous_analyses, index_key="CAC40", also_indices=None, fx_rate_to_usd=1.0: {
+            "ticker": ticker, "name": name, "index": index_key,
+            "score": 10.0, "interpretation": "Neutre",
+            "current_price": 50.0, "entry_price": 50.0,
+            "_price_history_daily": [],
+            "_dividend_history": [
+                {"date": "2026-06-15", "ticker": ticker, "amount": 1.5},
+            ],
+        },
+    )
+    monkeypatch.setattr(indices_score, "load_indices_history", lambda: [])
+    monkeypatch.setattr(indices_score, "append_indices_history", lambda entries: entries)
+    monkeypatch.setattr(indices_score, "update_signal_tracking", lambda companies, newly_triggered_entree: [])
+    monkeypatch.setattr(indices_score, "update_nikkei_hangseng_price_history", lambda companies: [])
+    monkeypatch.setattr(indices_score, "fetch_index_prices", lambda: {"CAC40": None, "DAX": None, "NASDAQ": None, "DOW": None})
+    monkeypatch.setattr(indices_score, "update_price_history", lambda entries, **kwargs: entries)
+    monkeypatch.setattr(indices_score, "fetch_index_price_history", lambda: [])
+    monkeypatch.setattr(indices_score, "update_dividend_history", lambda entries, **kwargs: entries)
+    output_path = tmp_path / "indices.json"
+    monkeypatch.setattr(indices_score, "OUTPUT_JSON_PATH", str(output_path))
+
+    indices_score.main()
+
+    with open(indices_score.OUTPUT_JSON_PATH, encoding="utf-8") as fh:
+        payload = json.load(fh)
+    for company in payload["companies"]:
+        assert "_dividend_history" not in company

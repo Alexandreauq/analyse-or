@@ -2960,6 +2960,10 @@ def fetch_company_financials(ticker: str) -> dict:
         {"date": idx.strftime("%Y-%m-%d"), "ticker": ticker, "price": float(val)}
         for idx, val in history.items()
     ]
+    ratios["_dividend_history"] = [
+        {"date": idx.strftime("%Y-%m-%d"), "ticker": ticker, "amount": float(val)}
+        for idx, val in dividends.items()
+    ]
     return ratios
 
 
@@ -4919,6 +4923,7 @@ def build_company_entry(
         "financial_analysis_quarter": financial_analysis_quarter,
     }
     entry["_price_history_daily"] = data["_price_history_daily"]
+    entry["_dividend_history"] = data["_dividend_history"]
     return entry
 
 
@@ -5247,6 +5252,11 @@ def main():
         price_history_entries.extend(c.pop("_price_history_daily", []))
     price_history_entries.extend(fetch_index_price_history())
     update_price_history(price_history_entries)
+
+    dividend_history_entries = []
+    for c in companies:
+        dividend_history_entries.extend(c.pop("_dividend_history", []))
+    update_dividend_history(dividend_history_entries)
 
     recalibrate_scores_by_profile(companies)
 

@@ -187,11 +187,18 @@ function groupDividendHistoryByTicker(dividendHistory) {
  * Cumul de dividendes reellement encaisses, positions OUVERTES et
  * CLOTUREES (un paiement recu pendant la detention reste un
  * encaissement reel meme si la position est cloturee depuis). Un
- * paiement compte pour une position si isPositionActiveOn(position,
- * paiement.date). Agrege par devise ({ EUR: montant, USD: montant }),
- * jamais converti/melange (meme convention que computePortfolioTotals).
- * Une position dont le ticker n'est pas dans companiesByTicker (retiree
- * de l'indice suivi) est ignoree.
+ * paiement compte pour une position si elle etait detenue AVANT la date
+ * ex-dividende (buy_date strictement anterieure -- acheter LE jour
+ * ex-dividende n'ouvre pas droit au paiement, contrairement a
+ * isPositionActiveOn qui est inclusive sur buy_date et repond a une
+ * question differente : "la position etait-elle detenue CE jour-la ?",
+ * correcte pour la courbe de performance mais pas pour l'eligibilite a
+ * un dividende) et non cloturee avant cette meme date (sell_date >=
+ * date ex-dividende : vendre LE jour ex-dividende ouvre bien droit au
+ * paiement). Agrege par devise ({ EUR: montant, USD: montant }), jamais
+ * converti/melange (meme convention que computePortfolioTotals). Une
+ * position dont le ticker n'est pas dans companiesByTicker (retiree de
+ * l'indice suivi) est ignoree.
  */
 function computeDividendsReceived(positions, dividendHistoryByTicker, companiesByTicker, currencyByIndex) {
   const totals = { EUR: 0, USD: 0 };
@@ -201,7 +208,8 @@ function computeDividendsReceived(positions, dividendHistoryByTicker, companiesB
     const currency = currencyByIndex[company.index] === 'USD' ? 'USD' : 'EUR';
     const payments = dividendHistoryByTicker[position.ticker] || [];
     payments.forEach(payment => {
-      if (!isPositionActiveOn(position, payment.date)) return;
+      if (position.buy_date >= payment.date) return;
+      if (position.sell_date && position.sell_date < payment.date) return;
       totals[currency] += payment.amount * position.quantity;
     });
   });

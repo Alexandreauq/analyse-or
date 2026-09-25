@@ -584,6 +584,26 @@ function test_compute_dividends_received_skips_position_with_unknown_ticker() {
   console.log('OK: test_compute_dividends_received_skips_position_with_unknown_ticker');
 }
 
+function test_compute_dividends_received_includes_payment_exactly_on_the_buy_date() {
+  const positions = [{ id: '1', ticker: 'MC.PA', buy_date: '2026-01-15', quantity: 10 }];
+  const dividendHistoryByTicker = { 'MC.PA': [{ date: '2026-01-15', ticker: 'MC.PA', amount: 3.0 }] }; // exactement buy_date, inclus
+  const companiesByTicker = { 'MC.PA': { index: 'CAC40' } };
+  const currencyByIndex = { CAC40: 'EUR' };
+  const received = computeDividendsReceived(positions, dividendHistoryByTicker, companiesByTicker, currencyByIndex);
+  assert.ok(Math.abs(received.EUR - 30.0) < 0.001);
+  console.log('OK: test_compute_dividends_received_includes_payment_exactly_on_the_buy_date');
+}
+
+function test_compute_dividends_received_excludes_payment_the_day_before_the_buy_date() {
+  const positions = [{ id: '1', ticker: 'MC.PA', buy_date: '2026-01-15', quantity: 10 }];
+  const dividendHistoryByTicker = { 'MC.PA': [{ date: '2026-01-14', ticker: 'MC.PA', amount: 3.0 }] }; // veille de buy_date, exclu
+  const companiesByTicker = { 'MC.PA': { index: 'CAC40' } };
+  const currencyByIndex = { CAC40: 'EUR' };
+  const received = computeDividendsReceived(positions, dividendHistoryByTicker, companiesByTicker, currencyByIndex);
+  assert.strictEqual(received.EUR, 0);
+  console.log('OK: test_compute_dividends_received_excludes_payment_the_day_before_the_buy_date');
+}
+
 function test_compute_projected_dividend_income_uses_a_365_day_ttm_window() {
   const openPositions = [{ id: '1', ticker: 'MC.PA', buy_date: '2020-01-01', quantity: 10, buy_price: 90.0 }];
   const dividendHistoryByTicker = {
@@ -598,6 +618,28 @@ function test_compute_projected_dividend_income_uses_a_365_day_ttm_window() {
     openPositions, dividendHistoryByTicker, companiesByTicker, currencyByIndex, '2026-09-21');
   assert.ok(Math.abs(income.EUR.annual - 35.5) < 0.001); // 3.55 * 10
   console.log('OK: test_compute_projected_dividend_income_uses_a_365_day_ttm_window');
+}
+
+function test_compute_projected_dividend_income_excludes_payment_exactly_on_the_ttm_cutoff_day() {
+  const openPositions = [{ id: '1', ticker: 'MC.PA', buy_date: '2020-01-01', quantity: 10, buy_price: 90.0 }];
+  const dividendHistoryByTicker = { 'MC.PA': [{ date: '2025-09-21', ticker: 'MC.PA', amount: 5.0 }] }; // exactement 365 jours avant today, exclu
+  const companiesByTicker = { 'MC.PA': { index: 'CAC40' } };
+  const currencyByIndex = { CAC40: 'EUR' };
+  const income = computeProjectedDividendIncome(
+    openPositions, dividendHistoryByTicker, companiesByTicker, currencyByIndex, '2026-09-21');
+  assert.strictEqual(income.EUR.annual, 0);
+  console.log('OK: test_compute_projected_dividend_income_excludes_payment_exactly_on_the_ttm_cutoff_day');
+}
+
+function test_compute_projected_dividend_income_includes_payment_one_day_inside_the_ttm_window() {
+  const openPositions = [{ id: '1', ticker: 'MC.PA', buy_date: '2020-01-01', quantity: 10, buy_price: 90.0 }];
+  const dividendHistoryByTicker = { 'MC.PA': [{ date: '2025-09-22', ticker: 'MC.PA', amount: 5.0 }] }; // 364 jours avant today, inclus
+  const companiesByTicker = { 'MC.PA': { index: 'CAC40' } };
+  const currencyByIndex = { CAC40: 'EUR' };
+  const income = computeProjectedDividendIncome(
+    openPositions, dividendHistoryByTicker, companiesByTicker, currencyByIndex, '2026-09-21');
+  assert.ok(Math.abs(income.EUR.annual - 50.0) < 0.001);
+  console.log('OK: test_compute_projected_dividend_income_includes_payment_one_day_inside_the_ttm_window');
 }
 
 function test_compute_projected_dividend_income_monthly_is_annual_over_twelve() {
@@ -632,6 +674,15 @@ function test_compute_yield_on_cost_computes_ttm_dividend_over_buy_price() {
   assert.ok(Math.abs(result[0].yieldOnCost - 5.0) < 0.001); // 5.0 / 100.0 * 100
   assert.ok(Math.abs(result[0].projectedAnnual - 50.0) < 0.001); // 5.0 * 10
   console.log('OK: test_compute_yield_on_cost_computes_ttm_dividend_over_buy_price');
+}
+
+function test_compute_yield_on_cost_excludes_payment_exactly_on_the_ttm_cutoff_day() {
+  const openPositions = [{ id: '1', ticker: 'MC.PA', buy_date: '2020-01-01', quantity: 10, buy_price: 100.0 }];
+  const dividendHistoryByTicker = { 'MC.PA': [{ date: '2025-09-21', ticker: 'MC.PA', amount: 5.0 }] }; // exactement 365 jours avant, exclu
+  const companiesByTicker = { 'MC.PA': { index: 'CAC40' } };
+  const result = computeYieldOnCost(openPositions, dividendHistoryByTicker, companiesByTicker, '2026-09-21');
+  assert.deepStrictEqual(result, []); // ttmPerShare = 0, position exclue
+  console.log('OK: test_compute_yield_on_cost_excludes_payment_exactly_on_the_ttm_cutoff_day');
 }
 
 function test_compute_yield_on_cost_excludes_positions_with_no_ttm_dividend() {
@@ -707,10 +758,15 @@ function main() {
   test_compute_dividends_received_excludes_payment_after_a_closed_position_was_sold();
   test_compute_dividends_received_splits_by_currency();
   test_compute_dividends_received_skips_position_with_unknown_ticker();
+  test_compute_dividends_received_includes_payment_exactly_on_the_buy_date();
+  test_compute_dividends_received_excludes_payment_the_day_before_the_buy_date();
   test_compute_projected_dividend_income_uses_a_365_day_ttm_window();
+  test_compute_projected_dividend_income_excludes_payment_exactly_on_the_ttm_cutoff_day();
+  test_compute_projected_dividend_income_includes_payment_one_day_inside_the_ttm_window();
   test_compute_projected_dividend_income_monthly_is_annual_over_twelve();
   test_compute_projected_dividend_income_ignores_ticker_with_no_dividend_history();
   test_compute_yield_on_cost_computes_ttm_dividend_over_buy_price();
+  test_compute_yield_on_cost_excludes_payment_exactly_on_the_ttm_cutoff_day();
   test_compute_yield_on_cost_excludes_positions_with_no_ttm_dividend();
   test_compute_yield_on_cost_skips_position_with_unknown_ticker();
   console.log('Tous les tests portfolio.test.js sont passés.');

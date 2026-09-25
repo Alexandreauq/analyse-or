@@ -642,7 +642,16 @@
   }
   .company-row:hover { transform: translateX(2px); background: var(--bg-3); }
   .company-row:active { transform: translateX(2px) scale(.99); }
-  .company-row:last-child { border-bottom: none; }
+  /* .company-row a deux contextes : liste Opportunités du Portefeuille
+     (ligne directement enfant de la liste, :last-child fonctionne tel
+     quel) et liste Indices (ligne enveloppée dans .company-row-wrap
+     depuis l'ajout de la case à cocher du comparateur -- .company-row y
+     est TOUJOURS le dernier enfant de son propre wrapper, donc
+     :last-child matcherait chaque ligne sans l'exclusion ci-dessous).
+     Deux règles séparées, chacune scopée à son contexte, plutôt qu'une
+     seule qui se tromperait dans l'un des deux cas. */
+  :not(.company-row-wrap) > .company-row:last-child { border-bottom: none; }
+  .company-row-wrap:last-child .company-row { border-bottom: none; }
   /* min-width:0 : sans ça, un enfant flex refuse de rétrécir sous la
      largeur de son contenu (nom + ticker + badges non retournés à la
      ligne) et pousse .company-row plus large que son conteneur — c'est ce
@@ -652,6 +661,47 @@
   .company-name { font-weight: 500; font-size: var(--text-md); }
   .company-ticker { color: var(--muted); font-size: var(--text-xs); }
   .company-score { font-family: 'Newsreader', serif; font-weight: 600; font-size: var(--text-xl); flex-shrink: 0; margin-left: 12px; }
+
+  /* Case à cocher du comparateur (voir indicesCompareSelection) : en
+     dehors de .company-row (qui reste un <a>) pour ne jamais déclencher
+     sa navigation au clic sur la case. */
+  .company-row-wrap { display: flex; align-items: center; gap: 4px; }
+  .company-row-wrap .company-row { flex: 1 1 auto; min-width: 0; }
+  .company-row-checkbox { display: flex; align-items: center; padding: 8px 4px; cursor: pointer; }
+  .company-row-checkbox input { width: 18px; height: 18px; accent-color: var(--gold); cursor: pointer; }
+  .company-row-checkbox input:disabled { cursor: not-allowed; opacity: .35; }
+
+  /* Barre flottante du comparateur : ancrée à la fenêtre (pas au scroll
+     interne de #indices, voir .home/#indices { position: fixed }
+     plus haut), visible dès 2 entreprises sélectionnées. */
+  .indices-compare-bar {
+    display: none; position: fixed; left: 0; right: 0; bottom: 0; z-index: 15;
+    align-items: center; justify-content: space-between; gap: 12px;
+    padding: 12px max(16px, env(safe-area-inset-left)) max(12px, env(safe-area-inset-bottom));
+    background: var(--bg-translucent); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    border-top: 1px solid var(--border);
+  }
+  .indices-compare-bar.is-visible { display: flex; }
+  #indices.has-compare-bar { padding-bottom: 72px; }
+  .indices-compare-bar-chips { display: flex; gap: 8px; flex-wrap: wrap; flex: 1 1 auto; min-width: 0; }
+  .indices-compare-chip {
+    display: inline-flex; align-items: center; gap: 6px; background: var(--bg-2); border: 1px solid var(--border);
+    border-radius: var(--radius-pill); padding: 4px 6px 4px 12px; font-size: var(--text-xs); white-space: nowrap;
+  }
+  .indices-compare-chip button {
+    background: none; border: none; color: var(--muted); cursor: pointer; font-size: var(--text-sm);
+    line-height: 1; padding: 4px; border-radius: 50%;
+  }
+  .indices-compare-chip button:hover { color: var(--text); background: var(--bg-3); }
+  .indices-compare-go { flex: 0 0 auto; padding: 10px 18px; white-space: nowrap; }
+
+  /* Comparateur : une colonne par entreprise (2 ou 3), empilées sur
+     mobile via auto-fit -- pas de media query dédiée nécessaire. */
+  .company-compare-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px; margin-top: 16px; }
+  .company-compare-col { background: var(--bg-2); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 18px; }
+  .company-compare-head { margin-bottom: 8px; }
+  .company-compare-head .company-name { display: block; font-size: var(--text-lg); }
+  .company-compare-head .company-score { display: block; margin: 6px 0 0; }
 
   .portfolio-totals { display: flex; gap: 12px; margin: 4px 0 20px; flex-wrap: wrap; }
   .portfolio-total-card {
@@ -3289,7 +3339,7 @@ let portfolioOrSectionIndex = 0;
 let portfolioActionsSections = [];
 let portfolioOrSections = [];
 
-async function loadIndices(ticker, view) {
+async function loadIndices(ticker, view, tickers) {
   const content = document.getElementById('indicesContent');
   if (!indicesData) {
     try {
@@ -3312,6 +3362,9 @@ async function loadIndices(ticker, view) {
   if (view === 'suivi') {
     indicesListViewActive = false;
     loadSignalTracking();
+  } else if (view === 'compare') {
+    indicesListViewActive = false;
+    renderCompanyComparison(tickers || []);
   } else if (!ticker) {
     // indicesListViewActive repasse à true seulement une fois la liste
     // réaffichée ET l'indice/le défilement restaurés (voir fin de
@@ -3356,6 +3409,13 @@ let indicesListAlertKind = '';
 let indicesListScrollTop = 0;
 let indicesOpenIndexKey = null;
 let indicesListViewActive = false;
+// Sélection du comparateur (2-3 entreprises) : Set de tickers, jamais
+// remis à zéro par un changement de filtre/tri/indice déplié (même
+// convention que indicesListScrollTop/indicesOpenIndexKey ci-dessus) --
+// seulement par un clic explicite sur l'onglet Indices ou le bouton
+// "Vider" de la barre de comparaison.
+const INDICES_COMPARE_MAX = 3;
+let indicesCompareSelection = new Set();
 document.getElementById('indices').addEventListener('scroll', () => {
   if (indicesListViewActive) {
     indicesListScrollTop = document.getElementById('indices').scrollTop;
@@ -3618,15 +3678,80 @@ function renderIndicesRows(companies, rowsContainerId) {
   if (!panel) return;
   const visible = sortedFilteredCompanies(companies);
   panel.innerHTML = visible.length ? visible.map(c => `
-    <a class="company-row" href="#indices/${c.ticker}">
-      <div class="company-row-left">
-        <span class="company-name">${c.name}</span>
-        <span class="company-ticker">${c.ticker}${c.is_financial ? '<span class="financial-tag">Profil financier</span>' : ''}${hasMajorNewsAlert(c) ? '<span class="financial-tag majeure-tag">Actu majeure</span>' : ''}${alsoIndicesBadgesHtml(c)}</span>
-      </div>
-      <span class="company-score" style="color:${c.score >= 0 ? 'var(--green-500)' : 'var(--rust)'};">
-        ${c.score > 0 ? '+' : ''}${c.score}
-      </span>
-    </a>`).join('') : '<div class="list-empty">Aucun résultat pour cette recherche.</div>';
+    <div class="company-row-wrap">
+      <label class="company-row-checkbox">
+        <input type="checkbox" data-compare-ticker="${c.ticker}"
+          ${indicesCompareSelection.has(c.ticker) ? 'checked' : ''}
+          ${!indicesCompareSelection.has(c.ticker) && indicesCompareSelection.size >= INDICES_COMPARE_MAX ? 'disabled' : ''}>
+      </label>
+      <a class="company-row" href="#indices/${c.ticker}">
+        <div class="company-row-left">
+          <span class="company-name">${c.name}</span>
+          <span class="company-ticker">${c.ticker}${c.is_financial ? '<span class="financial-tag">Profil financier</span>' : ''}${hasMajorNewsAlert(c) ? '<span class="financial-tag majeure-tag">Actu majeure</span>' : ''}${alsoIndicesBadgesHtml(c)}</span>
+        </div>
+        <span class="company-score" style="color:${c.score >= 0 ? 'var(--green-500)' : 'var(--rust)'};">
+          ${c.score > 0 ? '+' : ''}${c.score}
+        </span>
+      </a>
+    </div>`).join('') : '<div class="list-empty">Aucun résultat pour cette recherche.</div>';
+  panel.querySelectorAll('input[data-compare-ticker]').forEach(input => {
+    input.addEventListener('change', () => {
+      const ticker = input.dataset.compareTicker;
+      if (input.checked) indicesCompareSelection.add(ticker);
+      else indicesCompareSelection.delete(ticker);
+      refreshIndicesCompareUi();
+    });
+  });
+}
+
+/**
+ * Réconcilie toutes les cases à cocher actuellement affichées (potentiellement
+ * réparties sur plusieurs panneaux d'indice ouverts) avec indicesCompareSelection
+ * après un changement de sélection, puis réaffiche la barre flottante.
+ */
+function refreshIndicesCompareUi() {
+  document.querySelectorAll('input[data-compare-ticker]').forEach(input => {
+    const ticker = input.dataset.compareTicker;
+    input.checked = indicesCompareSelection.has(ticker);
+    input.disabled = !indicesCompareSelection.has(ticker) && indicesCompareSelection.size >= INDICES_COMPARE_MAX;
+  });
+  renderIndicesCompareBar();
+}
+
+function indicesCompareChipHtml(ticker) {
+  const company = (indicesData.companies || []).find(c => c.ticker === ticker);
+  const label = company ? company.name : ticker;
+  return `<span class="indices-compare-chip">${label}<button type="button" data-remove-ticker="${ticker}" aria-label="Retirer ${label} de la comparaison">×</button></span>`;
+}
+
+/**
+ * Barre flottante en bas d'écran : visible dès 2 entreprises sélectionnées,
+ * masquée sinon. Reconstruite entièrement à chaque appel (peu coûteux, 2-3
+ * puces au maximum) plutôt que mise à jour incrémentalement.
+ */
+function renderIndicesCompareBar() {
+  const bar = document.getElementById('indicesCompareBar');
+  if (!bar) return;
+  const tickers = [...indicesCompareSelection];
+  bar.classList.toggle('is-visible', tickers.length >= 2);
+  // Réserve de la place en bas de la liste pour que la barre flottante ne
+  // recouvre pas les dernières lignes (même logique que env(safe-area-inset-bottom)
+  // pour l'encoche, mais pour notre propre barre superposée).
+  document.getElementById('indices').classList.toggle('has-compare-bar', tickers.length >= 2);
+  if (tickers.length < 2) { bar.innerHTML = ''; return; }
+  bar.innerHTML = `
+    <div class="indices-compare-bar-chips">${tickers.map(indicesCompareChipHtml).join('')}</div>
+    <button type="button" class="toggle-btn indices-compare-go" id="indicesCompareGoBtn">Comparer (${tickers.length}) →</button>
+  `;
+  bar.querySelectorAll('[data-remove-ticker]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      indicesCompareSelection.delete(btn.dataset.removeTicker);
+      refreshIndicesCompareUi();
+    });
+  });
+  document.getElementById('indicesCompareGoBtn').addEventListener('click', () => {
+    location.hash = '#indices/compare/' + tickers.map(encodeURIComponent).join(',');
+  });
 }
 
 function renderIndexBody(wrap, indexKey, companiesInGroup) {
@@ -3725,8 +3850,10 @@ function renderIndicesList(companies) {
       }, { sectors })}</aside>
       <div class="index-card-list">${cardsHtml}</div>
     </div>
+    <div class="indices-compare-bar" id="indicesCompareBar"></div>
   `;
   wireFilterAccordionToggles({ toggle: 'filterToggle', body: 'filterBody', advToggle: 'filterAdvToggle', advBody: 'filterAdvBody' });
+  renderIndicesCompareBar();
 
   // Le contenu de chaque panneau n'est construit qu'à sa première ouverture
   // (renderedKeys) — sur mobile au clic, sur desktop immédiatement (voir plus bas).
@@ -4100,6 +4227,42 @@ function renderGrahamCriteria(company) {
     ${rows}`;
 }
 
+/**
+ * Comparateur : 2-3 entreprises côte à côte (score + facteurs détaillés
+ * uniquement, voir la note de conception — pas les prix/dividendes/stage,
+ * pour rester lisible en colonnes sur mobile). tickers absents de
+ * indicesData.companies (indice retiré du suivi entre la sélection et la
+ * navigation) sont simplement ignorés plutôt que de faire planter la vue.
+ */
+function renderCompanyComparison(tickers) {
+  const content = document.getElementById('indicesContent');
+  const companies = tickers
+    .map(t => indicesData.companies.find(c => c.ticker === t))
+    .filter(Boolean);
+  if (companies.length < 2) {
+    content.innerHTML = `
+      <a href="#indices" class="back-link">← Indices</a>
+      <div class="empty">Choisis au moins 2 entreprises depuis la liste (cases à cocher) pour les comparer.</div>`;
+    return;
+  }
+  const columnsHtml = companies.map(c => `
+    <div class="company-compare-col">
+      <div class="company-compare-head">
+        <a class="company-name" href="#indices/${c.ticker}">${c.name}</a>
+        <span class="company-ticker">${c.ticker}${c.is_financial ? '<span class="financial-tag">Profil financier</span>' : ''}</span>
+        <span class="company-score" style="color:${c.score >= 0 ? 'var(--green-500)' : 'var(--rust)'};">${c.score > 0 ? '+' : ''}${c.score}</span>
+        <p class="hero-sub">${c.interpretation}</p>
+      </div>
+      ${renderFactorRows(c.factors)}
+    </div>`).join('');
+  content.innerHTML = `
+    <a href="#indices" class="back-link">← Indices</a>
+    <h2>Comparateur</h2>
+    <div class="company-compare-grid">${columnsHtml}</div>
+  `;
+  animateFactorBars();
+}
+
 function renderCompanyDetail(company) {
   // Résolu une seule fois ici (pas dans loadSideQuoteWidget) pour que le
   // template ci-dessous et l'appel de chargement du widget restent
@@ -4290,6 +4453,10 @@ function parseRoute() {
   if (hash === 'portefeuille') return { screen: 'portefeuille' };
   if (hash === 'indices') return { screen: 'indices', ticker: null };
   if (hash === 'indices/suivi') return { screen: 'indices', ticker: null, view: 'suivi' };
+  if (hash.startsWith('indices/compare/')) {
+    const tickers = hash.slice('indices/compare/'.length).split(',').map(decodeURIComponent).filter(Boolean);
+    return { screen: 'indices', ticker: null, view: 'compare', tickers };
+  }
   if (hash.startsWith('indices/')) {
     const rest = hash.slice('indices/'.length);
     if (rest.endsWith('/analyse')) {
@@ -4378,7 +4545,7 @@ function renderRoute(animate) {
     startScalpingPolling();
   }
   if (route.screen === 'indices') {
-    loadIndices(route.ticker, route.view);
+    loadIndices(route.ticker, route.view, route.tickers);
   }
   if (route.screen === 'portefeuille') {
     loadPortfolioScreen();
@@ -4400,6 +4567,7 @@ document.querySelectorAll('.nav-item[data-route]').forEach(tab => {
       indicesListAlertKind = '';
       indicesListScrollTop = 0;
       indicesOpenIndexKey = null;
+      indicesCompareSelection = new Set();
     }
     location.hash = '#' + tab.dataset.route;
   });

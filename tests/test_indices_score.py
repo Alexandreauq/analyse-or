@@ -7122,6 +7122,126 @@ def test_fetch_company_financials_exposes_the_full_dividend_history_for_persiste
     assert entries[1] == {"date": "2026-06-15", "ticker": "MC.PA", "amount": 3.55}
 
 
+def test_fetch_company_financials_converts_gbp_dividends_from_pence_to_pounds(monkeypatch):
+    financials, balance_sheet, cashflow, _ = _make_fixture_statements()
+    financials.columns = pd.to_datetime(financials.columns)
+    balance_sheet.columns = pd.to_datetime(balance_sheet.columns)
+    cashflow.columns = pd.to_datetime(cashflow.columns)
+    quarterly = _fake_annual_df({"Diluted Average Shares": [100.0]}, [pd.Timestamp("2025-09-30")])
+    history_index = pd.date_range("2024-01-01", periods=3, freq="D")
+    history_close = pd.Series([100.0, 101.0, 102.0], index=history_index)
+    fake_dividends = pd.Series(
+        [50.0],
+        index=pd.DatetimeIndex(["2026-06-15"]),
+    )
+
+    class _FakeTicker:
+        def __init__(self, ticker):
+            self._ticker = ticker
+
+        @property
+        def financials(self):
+            return financials
+
+        @property
+        def balance_sheet(self):
+            return balance_sheet
+
+        @property
+        def cashflow(self):
+            return cashflow
+
+        @property
+        def quarterly_financials(self):
+            return quarterly
+
+        @property
+        def info(self):
+            return {
+                "currency": "GBp",
+                "sharesOutstanding": 1000.0,
+                "beta": 0.9,
+                "sector": "Basic Materials",
+            }
+
+        @property
+        def dividends(self):
+            return fake_dividends
+
+        def history(self, period=None):
+            return pd.DataFrame({"Close": history_close})
+
+    monkeypatch.setattr(indices_score.yf, "Ticker", _FakeTicker)
+    monkeypatch.setattr(indices_score.time, "sleep", lambda s: None)
+
+    result = indices_score.fetch_company_financials("AAL.L")
+
+    entries = result["_dividend_history"]
+    assert len(entries) == 1
+    # 50 pence / 100 = 0.5 livre — même conversion que celle déjà appliquée
+    # au prix (`history`) pour les tickers londoniens cotés en pence.
+    assert entries[0]["amount"] == pytest.approx(0.5)
+
+
+def test_fetch_company_financials_drops_non_finite_dividend_amounts(monkeypatch):
+    financials, balance_sheet, cashflow, _ = _make_fixture_statements()
+    financials.columns = pd.to_datetime(financials.columns)
+    balance_sheet.columns = pd.to_datetime(balance_sheet.columns)
+    cashflow.columns = pd.to_datetime(cashflow.columns)
+    quarterly = _fake_annual_df({"Diluted Average Shares": [100.0]}, [pd.Timestamp("2025-09-30")])
+    history_index = pd.date_range("2024-01-01", periods=3, freq="D")
+    history_close = pd.Series([100.0, 101.0, 102.0], index=history_index)
+    fake_dividends = pd.Series(
+        [3.0, float("nan"), 3.55],
+        index=pd.DatetimeIndex(["2024-06-15", "2025-06-15", "2026-06-15"]),
+    )
+
+    class _FakeTicker:
+        def __init__(self, ticker):
+            self._ticker = ticker
+
+        @property
+        def financials(self):
+            return financials
+
+        @property
+        def balance_sheet(self):
+            return balance_sheet
+
+        @property
+        def cashflow(self):
+            return cashflow
+
+        @property
+        def quarterly_financials(self):
+            return quarterly
+
+        @property
+        def info(self):
+            return {"sharesOutstanding": 1000.0, "beta": 0.9, "sector": "Basic Materials"}
+
+        @property
+        def dividends(self):
+            return fake_dividends
+
+        def history(self, period=None):
+            return pd.DataFrame({"Close": history_close})
+
+    monkeypatch.setattr(indices_score.yf, "Ticker", _FakeTicker)
+    monkeypatch.setattr(indices_score.time, "sleep", lambda s: None)
+
+    result = indices_score.fetch_company_financials("MC.PA")
+
+    entries = result["_dividend_history"]
+    # L'entrée NaN (2025-06-15) est purgée — un yfinance persistant à
+    # renvoyer NaN pour ce ticker ne doit pas corrompre json.dump()
+    # (allow_nan=False dans update_dividend_history) à chaque exécution.
+    assert len(entries) == 2
+    assert not any(math.isnan(e["amount"]) for e in entries)
+    assert entries[0]["amount"] == pytest.approx(3.0)
+    assert entries[1]["amount"] == pytest.approx(3.55)
+
+
 def test_load_signal_tracking_returns_empty_list_when_file_absent(monkeypatch, tmp_path):
     monkeypatch.setattr(indices_score, "SIGNAL_TRACKING_PATH", str(tmp_path / "does_not_exist.json"))
     assert indices_score.load_signal_tracking() == []

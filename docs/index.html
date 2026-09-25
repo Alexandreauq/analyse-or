@@ -1592,6 +1592,14 @@ async function loadPortfolioScreen() {
       priceHistoryData = [];
     }
   }
+  if (!dividendHistoryData) {
+    try {
+      const res = await fetch('dividend_history.json?t=' + Date.now());
+      dividendHistoryData = res.ok ? await res.json() : [];
+    } catch (e) {
+      dividendHistoryData = [];
+    }
+  }
   if (!botStatusData) {
     await loadBotStatus();
   }
@@ -1818,7 +1826,7 @@ function wirePortfolioPerformanceBenchmarkSelectors(positions, closedPositions, 
   });
 }
 
-function portfolioAnalysisHtml(positions, companiesByTicker, currencyByIndex, priceHistoryByTicker) {
+function portfolioAnalysisHtml(positions, companiesByTicker, currencyByIndex, priceHistoryByTicker, dividendHistoryByTicker) {
   const closedPositions = loadClosedPortfolio();
   if (!positions.length && !closedPositions.length) {
     return '<div class="empty">Ajoute des positions pour voir apparaître une analyse ici.</div>';
@@ -1826,6 +1834,11 @@ function portfolioAnalysisHtml(positions, companiesByTicker, currencyByIndex, pr
   const concentration = computePortfolioConcentration(positions, companiesByTicker, currencyByIndex);
   const health = computePortfolioHealth(positions, companiesByTicker);
   const attribution = computePortfolioAttribution(positions, companiesByTicker);
+  const dividendsReceived = computeDividendsReceived(
+    [...positions, ...closedPositions], dividendHistoryByTicker, companiesByTicker, currencyByIndex);
+  const projectedIncome = computeProjectedDividendIncome(
+    positions, dividendHistoryByTicker, companiesByTicker, currencyByIndex);
+  const yieldOnCostRows = computeYieldOnCost(positions, dividendHistoryByTicker, companiesByTicker);
   const performanceCurves = computePortfolioPerformanceCurves(positions, closedPositions, companiesByTicker, currencyByIndex, priceHistoryByTicker);
   const indexNamesForBenchmark = { ...INDEX_DISPLAY_NAMES, ...(indicesData.index_names || {}) };
   const benchmarkSelectHtml = currency => `
@@ -1859,6 +1872,25 @@ function portfolioAnalysisHtml(positions, companiesByTicker, currencyByIndex, pr
       <span class="price-value ${pctClass(a.pnlAbs)}">${a.pnlAbs >= 0 ? '+' : ''}${a.pnlAbs.toLocaleString('fr-FR', {maximumFractionDigits:0})} ${CURRENCY_SYMBOL[currencyByIndex[a.index]] || ''} (${formatPct(a.pnlPct)})</span>
     </div>`).join('') : '<div class="list-empty">Aucune position avec un cours disponible.</div>';
 
+  const dividendCurrencies = ['EUR', 'USD'].filter(
+    currency => dividendsReceived[currency] > 0 || projectedIncome[currency].annual > 0);
+  const dividendSummaryHtml = dividendCurrencies.length ? dividendCurrencies.map(currency => `
+    <div class="signal-stats">
+      <div class="price-row"><span class="price-label">Cumul reçu (${currency})</span><span class="price-value">${dividendsReceived[currency].toLocaleString('fr-FR', {maximumFractionDigits:0})} ${CURRENCY_SYMBOL[currency] || currency}</span></div>
+      <div class="price-row"><span class="price-label">Revenu annuel projeté (${currency})</span><span class="price-value">${projectedIncome[currency].annual.toLocaleString('fr-FR', {maximumFractionDigits:0})} ${CURRENCY_SYMBOL[currency] || currency}</span></div>
+      <div class="price-row"><span class="price-label">Revenu mensuel moyen projeté (${currency})</span><span class="price-value">${projectedIncome[currency].monthly.toLocaleString('fr-FR', {maximumFractionDigits:0})} ${CURRENCY_SYMBOL[currency] || currency}</span></div>
+    </div>`).join('') : '<div class="list-empty">Aucun dividende encaissé ni position versant un dividende.</div>';
+  const dividendRowsHtml = yieldOnCostRows.length ? yieldOnCostRows.map(row => {
+    const company = companiesByTicker[row.ticker];
+    const currency = company ? (currencyByIndex[company.index] === 'USD' ? 'USD' : 'EUR') : 'EUR';
+    const symbol = CURRENCY_SYMBOL[currency] || currency;
+    return `
+    <div class="price-row">
+      <span class="price-label">${company ? company.name : row.ticker}</span>
+      <span class="price-value">${row.ttmPerShare.toLocaleString('fr-FR', {maximumFractionDigits:2})} ${symbol}/action — ${formatPct(row.yieldOnCost)} sur coût — ${row.projectedAnnual.toLocaleString('fr-FR', {maximumFractionDigits:0})} ${symbol}/an</span>
+    </div>`;
+  }).join('') : '<div class="list-empty">Aucune position ne verse actuellement de dividende.</div>';
+
   return `
     ${performanceHtml}
     ${diagnosis}
@@ -1876,6 +1908,9 @@ function portfolioAnalysisHtml(positions, companiesByTicker, currencyByIndex, pr
     <div class="signal-stats">${currencyHtml}</div>
     <h3 class="portfolio-analysis-title">Attribution de performance</h3>
     <div class="signal-stats">${attributionHtml}</div>
+    <h3 class="portfolio-analysis-title">Dividendes</h3>
+    ${dividendSummaryHtml}
+    <div class="signal-stats">${dividendRowsHtml}</div>
   `;
 }
 
@@ -1887,6 +1922,7 @@ function renderPortfolioActionsTab(companiesByTicker, currencyByIndex) {
   const totals = computePortfolioTotals(positions, companiesByTicker, currencyByIndex);
   const closedPositions = loadClosedPortfolio();
   const priceHistoryByTicker = groupPriceHistoryByTicker(priceHistoryData || []);
+  const dividendHistoryByTicker = groupDividendHistoryByTicker(dividendHistoryData || []);
 
   const heldTickers = new Set(positions.map(p => p.ticker));
   const opportunities = findOpportunities(indicesData.companies, heldTickers);
@@ -1911,7 +1947,7 @@ function renderPortfolioActionsTab(companiesByTicker, currencyByIndex) {
     {
       title: 'Analyse',
       desc: 'Concentration, santé du portefeuille selon le modèle et contribution de chaque ligne au P&L.',
-      html: portfolioAnalysisHtml(positions, companiesByTicker, currencyByIndex, priceHistoryByTicker),
+      html: portfolioAnalysisHtml(positions, companiesByTicker, currencyByIndex, priceHistoryByTicker, dividendHistoryByTicker),
       wire: () => wirePortfolioPerformanceBenchmarkSelectors(positions, closedPositions, companiesByTicker, currencyByIndex, priceHistoryByTicker),
     },
     {
@@ -3225,6 +3261,7 @@ let indicesLoaded = false;
 let indicesData = null;
 let realPortfolioData = null;
 let priceHistoryData = null;
+let dividendHistoryData = null;
 let botStatusData = null;
 const BOT_API_BASE_URL = 'https://goldbot.fr:8443';
 const IBKR_BOT_API_BASE_URL = 'https://goldbot.fr:8444';

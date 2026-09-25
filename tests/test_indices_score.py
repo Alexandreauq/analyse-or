@@ -4398,6 +4398,7 @@ def test_main_writes_alerts_key_for_every_company(monkeypatch, tmp_path):
     monkeypatch.setattr(indices_score, "update_nikkei_hangseng_price_history", lambda companies: [])
     monkeypatch.setattr(indices_score, "fetch_index_prices", lambda: {"CAC40": None, "DAX": None, "NASDAQ": None, "DOW": None})
     monkeypatch.setattr(indices_score, "update_price_history", lambda entries, **kwargs: entries)
+    monkeypatch.setattr(indices_score, "update_dividend_history", lambda entries, **kwargs: entries)
     monkeypatch.setattr(indices_score, "fetch_index_price_history", lambda: [])
     output_path = tmp_path / "indices.json"
     monkeypatch.setattr(indices_score, "OUTPUT_JSON_PATH", str(output_path))
@@ -4435,6 +4436,7 @@ def test_main_payload_includes_index_metadata(monkeypatch, tmp_path):
     fake_index_prices = {"CAC40": 7600.5, "DAX": 19000.2, "NASDAQ": 20123.4, "DOW": 41234.5}
     monkeypatch.setattr(indices_score, "fetch_index_prices", lambda: fake_index_prices)
     monkeypatch.setattr(indices_score, "update_price_history", lambda entries, **kwargs: entries)
+    monkeypatch.setattr(indices_score, "update_dividend_history", lambda entries, **kwargs: entries)
     monkeypatch.setattr(indices_score, "fetch_index_price_history", lambda: [])
     output_path = tmp_path / "indices.json"
     monkeypatch.setattr(indices_score, "OUTPUT_JSON_PATH", str(output_path))
@@ -4505,6 +4507,7 @@ def test_main_routes_risk_free_rate_by_currency(monkeypatch, tmp_path):
         },
     )
     monkeypatch.setattr(indices_score, "update_price_history", lambda entries, **kwargs: entries)
+    monkeypatch.setattr(indices_score, "update_dividend_history", lambda entries, **kwargs: entries)
     monkeypatch.setattr(indices_score, "fetch_index_price_history", lambda: [])
     output_path = tmp_path / "indices.json"
     monkeypatch.setattr(indices_score, "OUTPUT_JSON_PATH", str(output_path))
@@ -7633,6 +7636,7 @@ def test_main_calls_update_signal_tracking(monkeypatch, tmp_path):
     monkeypatch.setattr(indices_score, "update_nikkei_hangseng_price_history", lambda companies: [])
     monkeypatch.setattr(indices_score, "fetch_index_prices", lambda: {"CAC40": None, "DAX": None, "NASDAQ": None, "DOW": None})
     monkeypatch.setattr(indices_score, "update_price_history", lambda entries, **kwargs: entries)
+    monkeypatch.setattr(indices_score, "update_dividend_history", lambda entries, **kwargs: entries)
     monkeypatch.setattr(indices_score, "fetch_index_price_history", lambda: [])
 
     indices_score.main()
@@ -7668,6 +7672,7 @@ def test_main_writes_indices_json_before_email_and_signal_tracking(monkeypatch, 
         lambda: {"CAC40": None, "DAX": None, "NASDAQ": None, "DOW": None},
     )
     monkeypatch.setattr(indices_score, "update_price_history", lambda entries, **kwargs: entries)
+    monkeypatch.setattr(indices_score, "update_dividend_history", lambda entries, **kwargs: entries)
     monkeypatch.setattr(indices_score, "fetch_index_price_history", lambda: [])
 
     file_existed_at = {}
@@ -7736,6 +7741,7 @@ def test_main_recalibrates_scores_before_alerts_and_signal_tracking(monkeypatch,
     monkeypatch.setattr(indices_score, "update_nikkei_hangseng_price_history", lambda companies: [])
     monkeypatch.setattr(indices_score, "fetch_index_prices", lambda: {"CAC40": None, "DAX": None, "NASDAQ": None, "DOW": None})
     monkeypatch.setattr(indices_score, "update_price_history", lambda entries, **kwargs: entries)
+    monkeypatch.setattr(indices_score, "update_dividend_history", lambda entries, **kwargs: entries)
     monkeypatch.setattr(indices_score, "fetch_index_price_history", lambda: [])
 
     indices_score.main()
@@ -7792,6 +7798,7 @@ def test_main_persists_price_history_from_companies_and_indices(monkeypatch, tmp
         captured["entries"] = entries
         return entries
     monkeypatch.setattr(indices_score, "update_price_history", _fake_update_price_history)
+    monkeypatch.setattr(indices_score, "update_dividend_history", lambda entries, **kwargs: entries)
     monkeypatch.setattr(indices_score, "fetch_index_price_history", lambda: [
         {"date": "2026-09-21", "ticker": "^FCHI", "price": 7850.2}])
 
@@ -7833,6 +7840,7 @@ def test_main_never_writes_the_internal_price_history_key_to_indices_json(monkey
     monkeypatch.setattr(indices_score, "OUTPUT_JSON_PATH", str(output_path))
 
     monkeypatch.setattr(indices_score, "update_price_history", lambda entries, **kwargs: entries)
+    monkeypatch.setattr(indices_score, "update_dividend_history", lambda entries, **kwargs: entries)
     monkeypatch.setattr(indices_score, "fetch_index_price_history", lambda: [])
 
     indices_score.main()

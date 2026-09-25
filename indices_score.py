@@ -3261,6 +3261,46 @@ PRICE_HISTORY_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "d
 PRICE_HISTORY_RECENT_DAYS = 30  # entrees quotidiennes dans cette fenetre
 PRICE_HISTORY_RETENTION_DAYS = 2190  # 6 ans, au-dela l'entree la plus ancienne est supprimee
 
+DIVIDEND_HISTORY_PATH = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "docs", "dividend_history.json"
+)
+
+
+def load_dividend_history(path=DIVIDEND_HISTORY_PATH) -> list[dict]:
+    """Meme contrat que load_price_history : [] si le fichier est absent
+    ou corrompu, jamais d'exception."""
+    if not os.path.exists(path):
+        return []
+    try:
+        with open(path, encoding="utf-8") as fh:
+            return json.load(fh)
+    except json.JSONDecodeError:
+        return []
+
+
+def update_dividend_history(new_entries: list[dict], path=DIVIDEND_HISTORY_PATH) -> list[dict]:
+    """Ajoute `new_entries` ({date, ticker, amount}) a l'historique deja
+    accumule, deduplique par (ticker, date) -- en cas de doublon, la
+    derniere valeur de new_entries l'emporte (une re-recuperation yfinance
+    plus recente est preferee a l'ancienne, meme motif que le reste du
+    pipeline qui fait toujours confiance a la donnee la plus fraiche).
+    Pas de downsampling ni de fenetre de retention (voir spec §3.3).
+    Degrade toujours vers [] sur erreur, ne fait jamais echouer main()."""
+    try:
+        history = load_dividend_history(path)
+        by_key = {(e["ticker"], e["date"]): e for e in history}
+        for entry in new_entries:
+            by_key[(entry["ticker"], entry["date"])] = entry
+        merged = sorted(by_key.values(), key=lambda e: (e["ticker"], e["date"]))
+        rounded = [{**entry, "amount": round(entry["amount"], 4)} for entry in merged]
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, "w", encoding="utf-8") as fh:
+            json.dump(rounded, fh, ensure_ascii=False, allow_nan=False, separators=(",", ":"))
+        return rounded
+    except Exception as e:
+        print(f"Erreur historique de dividendes : {e}")
+        return []
+
 
 def _downsample_price_entries(entries: list[dict], today) -> list[dict]:
     """Regle de densite/retention pour docs/price_history.json (spec 3.3),

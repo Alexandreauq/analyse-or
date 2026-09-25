@@ -3553,6 +3553,88 @@ def test_update_price_history_rounds_prices_and_writes_compact_json(tmp_path):
     assert "620.1235" in content
 
 
+def test_load_dividend_history_returns_empty_list_when_file_is_absent(tmp_path):
+    assert indices_score.load_dividend_history(str(tmp_path / "absent.json")) == []
+
+
+def test_load_dividend_history_degrades_to_empty_list_on_corrupt_json(tmp_path):
+    path = tmp_path / "corrompu.json"
+    path.write_text("pas du json", encoding="utf-8")
+    assert indices_score.load_dividend_history(str(path)) == []
+
+
+def test_update_dividend_history_writes_new_entries_to_a_fresh_file(tmp_path):
+    path = str(tmp_path / "dividend_history.json")
+    entries = [{"date": "2026-06-15", "ticker": "MC.PA", "amount": 3.55}]
+    result = indices_score.update_dividend_history(entries, path=path)
+    assert result == entries
+    assert indices_score.load_dividend_history(path) == entries
+
+
+def test_update_dividend_history_accumulates_across_calls(tmp_path):
+    path = str(tmp_path / "dividend_history.json")
+    indices_score.update_dividend_history(
+        [{"date": "2023-06-15", "ticker": "MC.PA", "amount": 3.0}], path=path)
+    indices_score.update_dividend_history(
+        [{"date": "2026-06-15", "ticker": "MC.PA", "amount": 3.55}], path=path)
+    result = indices_score.load_dividend_history(path)
+    dates = [e["date"] for e in result]
+    assert "2023-06-15" in dates
+    assert "2026-06-15" in dates
+    assert len(result) == 2
+
+
+def test_update_dividend_history_deduplicates_by_ticker_and_date_keeping_the_latest_call(tmp_path):
+    path = str(tmp_path / "dividend_history.json")
+    indices_score.update_dividend_history(
+        [{"date": "2026-06-15", "ticker": "MC.PA", "amount": 3.40}], path=path)
+    result = indices_score.update_dividend_history(
+        [{"date": "2026-06-15", "ticker": "MC.PA", "amount": 3.55}], path=path)
+    assert len(result) == 1
+    assert result[0]["amount"] == 3.55
+
+
+def test_update_dividend_history_keeps_tickers_independent(tmp_path):
+    path = str(tmp_path / "dividend_history.json")
+    entries = [
+        {"date": "2026-06-15", "ticker": "MC.PA", "amount": 3.55},
+        {"date": "2026-05-10", "ticker": "SAP.DE", "amount": 2.10},
+    ]
+    result = indices_score.update_dividend_history(entries, path=path)
+    tickers = {e["ticker"] for e in result}
+    assert tickers == {"MC.PA", "SAP.DE"}
+
+
+def test_update_dividend_history_never_writes_nan(tmp_path):
+    path = str(tmp_path / "dividend_history.json")
+    entries = [{"date": "2026-06-15", "ticker": "MC.PA", "amount": float("nan")}]
+    result = indices_score.update_dividend_history(entries, path=path)
+    assert result == []
+    with open(path, encoding="utf-8") as fh:
+        content = fh.read()
+    assert "NaN" not in content
+
+
+def test_update_dividend_history_degrades_to_empty_list_on_unexpected_failure(tmp_path):
+    path = str(tmp_path / "sous_dossier_impossible" / "dividend_history.json")
+    fichier_bloquant = tmp_path / "sous_dossier_impossible"
+    fichier_bloquant.write_text("x", encoding="utf-8")
+    result = indices_score.update_dividend_history(
+        [{"date": "2026-06-15", "ticker": "MC.PA", "amount": 3.55}], path=path)
+    assert result == []
+
+
+def test_update_dividend_history_rounds_amounts_and_writes_compact_json(tmp_path):
+    path = str(tmp_path / "dividend_history.json")
+    entries = [{"date": "2026-06-15", "ticker": "MC.PA", "amount": 3.554321987}]
+    result = indices_score.update_dividend_history(entries, path=path)
+    assert result[0]["amount"] == 3.5543
+    with open(path, encoding="utf-8") as fh:
+        content = fh.read()
+    assert "\n  " not in content  # pas d'indentation
+    assert "3.5543" in content
+
+
 def test_last_confirmed_regime_returns_none_for_empty_history():
     assert indices_score._last_confirmed_regime([], 5.0) is None
 

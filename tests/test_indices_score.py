@@ -28,17 +28,17 @@ def test_sector_risk_profile_defaults_to_standard_when_unknown():
 
 
 def test_score_rentabilite_above_cost_of_capital_is_positive():
-    result = score_rentabilite(roce=13.0, roe=15.0, cost_of_capital=8.0)
+    result = score_rentabilite(roce=23.0, roe=15.0, cost_of_capital=8.0)
     assert result.name == "Rentabilité / création de valeur"
     assert result.weight == 0.24
-    assert result.score == 10.0  # spread of +5pp caps the score at +10
-    assert "13.0" in result.raw_value
+    assert result.score == 10.0  # spread of +15pp caps the score at +10 (audit Minor #6)
+    assert "23.0" in result.raw_value
     assert "8.0" in result.raw_value
 
 
 def test_score_rentabilite_below_cost_of_capital_is_negative():
-    result = score_rentabilite(roce=3.0, roe=2.0, cost_of_capital=8.0)
-    assert result.score == -10.0  # spread of -5pp floors the score at -10
+    result = score_rentabilite(roce=-7.0, roe=2.0, cost_of_capital=8.0)
+    assert result.score == -10.0  # spread of -15pp floors the score at -10 (audit Minor #6)
 
 
 def test_score_rentabilite_equal_to_cost_of_capital_is_neutral():
@@ -47,8 +47,8 @@ def test_score_rentabilite_equal_to_cost_of_capital_is_neutral():
 
 
 def test_score_rentabilite_partial_spread_scales_linearly():
-    result = score_rentabilite(roce=10.5, roe=11.0, cost_of_capital=8.0)
-    assert result.score == 5.0  # +2.5pp spread / 5.0pp scale * 10 = 5.0
+    result = score_rentabilite(roce=15.5, roe=11.0, cost_of_capital=8.0)
+    assert result.score == 5.0  # +7.5pp spread / 15.0pp scale * 10 = 5.0 (audit Minor #6)
 
 
 def test_score_rentabilite_neutral_when_data_unavailable():

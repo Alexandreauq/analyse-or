@@ -1229,7 +1229,18 @@ def _safe_value(series, col):
     return series[col] if col in series.index else float("nan")
 
 
-ROCE_SPREAD_SCALE = 5.0  # points d'écart ROCE - coût du capital pour un score plein
+ROCE_SPREAD_SCALE = 15.0  # points d'écart ROCE/ROE - coût du capital pour un
+                           # score plein (audit Minor #6) -- calibré sur la
+                           # distribution réelle des écarts observés en
+                           # production le 2026-09-24 (p90 ≈ 22 points) :
+                           # l'ancienne valeur (5.0) saturait à ±10 pour 52%
+                           # des sociétés standard et 51% des financières,
+                           # perdant toute capacité à différencier la
+                           # majorité des sociétés entre "un peu" et
+                           # "beaucoup" au-dessus/en-dessous de leur coût du
+                           # capital. Partagée entre score_rentabilite (ROCE,
+                           # profil standard) et score_rentabilite_financiere
+                           # (ROE, profils financier/trust).
 
 
 def score_rentabilite(

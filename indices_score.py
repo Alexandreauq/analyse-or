@@ -2142,9 +2142,15 @@ def extract_ratios(
         (ebit[latest] * (1 - tax_rate[latest]) / economic_assets_latest) * 100
         if roce_available else 0.0
     )
+    # equity_latest > 0, pas seulement "non manquant" (audit Minor #7) :
+    # des capitaux propres négatifs (rachats d'actions massifs, ex.
+    # McDonald's) inversent le signe du ROE en un chiffre économiquement
+    # absurde (ex. -478%) -- traité comme une donnée manquante, même
+    # repli 0.0 que le reste de cette fonction, plutôt que d'afficher un
+    # pourcentage trompeur.
     roe = (
         (net_income[latest] / equity_latest) * 100
-        if equity_latest and not _is_missing(equity_latest) else 0.0
+        if equity_latest and not _is_missing(equity_latest) and equity_latest > 0 else 0.0
     )
 
     # > 0, pas seulement "non-nul" (audit 2026-09-24, constat C4) : un
@@ -2429,9 +2435,15 @@ def extract_ratios_financial(
         if not _is_missing(total_debt_latest) and not _is_missing(cash_latest) else 0.0
     )
 
+    # equity_latest > 0 (audit Minor #7, même correctif que extract_ratios) :
+    # des capitaux propres négatifs inversent le signe du ROE -- traité
+    # comme une donnée manquante plutôt que de piloter le score financier/
+    # trust (score_rentabilite_financiere) avec un chiffre économiquement
+    # absurde.
     roe = (
         (net_income_latest / equity_latest) * 100
-        if equity_latest and not _is_missing(equity_latest) and not _is_missing(net_income_latest)
+        if equity_latest and not _is_missing(equity_latest) and equity_latest > 0
+        and not _is_missing(net_income_latest)
         else 0.0
     )
     leverage_ratio = (

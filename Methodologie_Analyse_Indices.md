@@ -1,11 +1,13 @@
-# Méthodologie : scoring fondamental CAC 40 (onglet "Indices")
+# Méthodologie : scoring fondamental (onglet "Indices")
 
 ## Objectif
 
-Produire un premier rating fondamental par entreprise, basé sur l'analyse
-des comptes publiés des 5 dernières années. Version pilote sur 5
-entreprises représentatives de profils sectoriels différents, avant
-extension aux 40 valeurs du CAC 40.
+Produire un rating fondamental par entreprise, basé sur l'analyse des
+comptes publiés des dernières années. Couvre aujourd'hui **710 sociétés
+réparties sur 10 indices** (CAC 40, DAX, Nasdaq 100, Dow Jones, FTSE
+100, SMI, IBEX 35, FTSE MIB, Nikkei 225, Hang Seng) — la phase pilote
+initiale (5 sociétés du CAC 40) a été étendue à l'ensemble de ces
+indices.
 
 Les concepts et seuils ci-dessous s'appuient sur la méthodologie de
 référence française en finance d'entreprise (Vernimmen — diagnostic
@@ -13,21 +15,19 @@ financier, analyse de la rentabilité comptable, analyse du financement,
 coût du capital, pratique de l'évaluation), synthétisée et adaptée ici
 pour un calcul automatisé.
 
-## Entreprises pilotes
+## Profils de notation
 
-| Ticker | Entreprise | Secteur (yfinance) | Profil de risque |
-|---|---|---|---|
-| `MC.PA` | LVMH | Consumer Cyclical | Cyclique |
-| `TTE.PA` | TotalEnergies | Energy | Cyclique |
-| `SU.PA` | Schneider Electric | Industrials | Standard |
-| `SAN.PA` | Sanofi | Healthcare | Défensif |
-| `BN.PA` | Danone | Consumer Defensive | Défensif |
+Trois grilles distinctes, selon le type de société :
 
-Note : les banques et sociétés financières (ex. BNP Paribas) sont
-volontairement exclues du pilote — leur bilan (pas d'EBITDA, ratios
-réglementaires type CET1) ne correspond pas à cette grille de ratios,
-conçue pour des entreprises non financières. Elles feront l'objet d'une
-grille dédiée dans une phase ultérieure.
+| Profil | Sociétés concernées | Facteurs "Rentabilité"/"Valorisation" |
+|---|---|---|
+| **Standard** | La grande majorité (non financière, non trust) | ROCE vs coût du capital ; EV/EBITDA et P/E |
+| **Financier** | Banques, assurances (`FINANCIAL_SECTOR_TICKERS`) — pas de notion d'EBITDA/EBIT exploitable chez yfinance pour ces sociétés | ROE vs coût des **capitaux propres** (pas le WACC — le ROE est un rendement pour les seuls actionnaires) ; P/E et P/B |
+| **Trust** | 9 trusts d'investissement cotés à Londres (`TRUST_TICKERS`) — même trou de données que les financières | Même grille que le profil financier ; valorisation par décote/prime sur P/B (proxy NAV) |
+
+Les trois profils partagent la même échelle -100/+100 et la même
+pondération par facteur, mais avec des indicateurs adaptés à ce que
+chaque type de société publie réellement.
 
 ## Profils de risque sectoriel
 
@@ -38,13 +38,13 @@ prévisibles ou dans un secteur cyclique. Trois profils, dérivés du champ
 
 | Profil | Secteurs yfinance | Logique |
 |---|---|---|
-| **Défensif** | Utilities, Consumer Defensive, Healthcare, Real Estate | Flux prévisibles (infrastructures, santé, biens de consommation courante) → tolérance d'endettement plus élevée |
+| **Défensif** | Utilities, Consumer Defensive, Healthcare, Real Estate | Flux prévisibles → tolérance d'endettement plus élevée |
 | **Standard** | Industrials, Communication Services | Profil intermédiaire → seuils Vernimmen de base |
 | **Cyclique** | Energy, Basic Materials, Consumer Cyclical, Technology | Flux sensibles à la conjoncture → tolérance d'endettement plus faible |
 
 Les seuils de la section "Structure financière / solvabilité"
 ci-dessous sont exprimés pour le profil **Standard** et ajustés
-(multiplicateur) pour les deux autres profils.
+(multiplicateur ×1,3 Défensif, ×0,7 Cyclique) pour les deux autres.
 
 ## Grille de scoring
 
@@ -53,180 +53,187 @@ l'or), chaque facteur noté **-10/+10**.
 
 ### 1. Rentabilité / création de valeur — poids 24%
 
-- **ROCE** (rentabilité économique, *Re*) = Résultat d'exploitation ×
-  (1 − taux d'IS apparent) / Actif économique, décomposé en **marge
-  d'exploitation** (Résultat d'exploitation / CA) **× rotation de
-  l'actif économique** (CA / Actif économique).
-- **ROE** (rentabilité des capitaux propres, *RCP*) = Résultat net /
-  Capitaux propres.
-- **Effet de levier** : RCP = Re + (Re − i) × D/CP (i = coût de la
-  dette nette après impôt, D = dette nette, CP = capitaux propres).
-  Sert à vérifier que la rentabilité des capitaux propres provient
-  d'une vraie performance opérationnelle (ROCE) et non uniquement de
-  l'endettement.
-- Score favorable si le ROCE dépasse durablement le coût du capital de
-  l'entreprise (WACC calculé — voir ci-dessous), et si la tendance sur 5
-  ans est stable ou croissante.
+- **Profil standard : ROCE** (rentabilité économique) = Résultat
+  d'exploitation × (1 − taux d'IS apparent) / Actif économique, comparé
+  au **WACC** de l'entreprise.
+- **Profils financier/trust : ROE** (résultat net / capitaux propres),
+  comparé au **coût des capitaux propres** (Ke), pas au WACC — le ROE
+  mesure un rendement pour les seuls actionnaires, le comparer au WACC
+  (qui mélange dette et capitaux propres, structurellement plus bas)
+  surestimerait la création de valeur.
+- Score = écart (spread) à l'échelle du coût du capital, plafonné à
+  ±10 pour un écart de ±15 points ou plus (`ROCE_SPREAD_SCALE`),
+  calibré sur la distribution réelle observée en production.
 
-> **Coût du capital réel par entreprise (WACC).** `Re = Rf_France + β ×
+> **Coût du capital réel par entreprise (WACC).** `Re = Rf_devise + β ×
 > prime_marché + prime_taille(capitalisation)` (CAPM), `WACC =
 > capitalisation/(capitalisation+dette) × Re + dette/(capitalisation+dette)
-> × Rd_après_IS`. `Rf_France` = dernier taux OAT 10 ans publié (FRED,
-> série `IRLTLT01FRM156N`, mensuelle) — pas le taux américain, une
-> entreprise du CAC 40 valorisée en euros s'actualise avec un taux sans
-> risque en euros. `β` = bêta yfinance brut (endetté) — pas un bêta
-> désendetté puis réendetté à la structure financière de l'entreprise
-> comme le recommanderait une analyse plus poussée, faute d'échantillon
-> de comparables disponible ici. Prime de risque marché fixe à 5,0%.
-> Prime de taille par bandes de capitalisation (de +0% au-delà de 50 Md€
-> à +3,0 pts en dessous de 2 Md€). `Rd` reprend le même taux proxy que
-> l'ICR (3,0%, charges financières non fiablement isolées chez ces
-> entreprises). Si une donnée manque pour une entreprise (bêta absent,
-> taux sans risque non récupéré...), repli sur un coût du capital fixe de
-> 8% pour cette entreprise seulement.
+> × Rd_après_IS`. `Rf_devise` = dernier taux long terme publié (FRED)
+> **dans la devise de cotation de l'entreprise** — OAT 10 ans pour
+> l'EUR, Treasury 10 ans pour l'USD (Nasdaq/Dow, et par extension le
+> HKD via le peg HKD/USD, Hong Kong n'ayant pas de série FRED propre),
+> Gilt 10 ans pour le GBP, emprunt confédéral pour le CHF, JGB pour le
+> JPY. `β` = bêta yfinance brut (endetté). Prime de risque marché fixe
+> à 5,0%. Prime de taille par bandes de capitalisation (convertie en
+> USD avant comparaison aux seuils). `Rd` = coût de la dette **propre à
+> chaque entreprise** quand disponible (`|Interest Expense| / Total
+> Debt`, borné entre 1,5% et 12% pour éviter les distorsions de
+> financement captif type constructeur auto ou les données ponctuelles
+> aberrantes), sinon repli sur un proxy fixe de 3,0%. Repli sur un coût
+> du capital fixe de 8% pour l'entreprise entière si une donnée
+> essentielle manque (bêta, taux sans risque...).
 
-> **Simplification v1 (implémentation).** `score_rentabilite` /
-> `extract_ratios` ne calculent le ROCE et le ROE que sur le dernier
-> exercice publié ; il n'y a pas de vérification de tendance ROCE sur 5
-> ans. Une entreprise avec un ROCE ponctuel élevé mais une tendance
-> dégradée sur 5 ans obtient donc le même score qu'une entreprise
-> réellement stable ou croissante. C'est une simplification acceptée
-> pour la phase pilote (5 entreprises), à revoir si le périmètre
-> s'étend au-delà.
+> **Fenêtre de calcul.** Le ROCE/ROE ne porte que sur le dernier
+> exercice publié, sans vérification de tendance sur plusieurs années.
 
 ### 2. Structure financière / solvabilité — poids 20%
 
 Seuils de base (profil Standard), ajustés par profil sectoriel :
 
-| Ratio | Confortable | Lourd | Risqué |
-|---|---|---|---|
-| Dette nette / EBITDA | < 3 | 3 à 5-6 | > 5-6 |
-| Couverture des intérêts (EBIT / frais financiers nets) | > 3 | proche de 3 | < 3 |
+| Ratio | Confortable | Risqué |
+|---|---|---|
+| Dette nette / EBITDA | < 3 | > 5,5 |
+| Couverture des intérêts (EBIT / frais financiers) | > 3 | < 3 |
 
-Ajustement par profil : profil Défensif = seuils × 1,3 (plus tolérant),
-profil Cyclique = seuils × 0,7 (plus strict). Ex. pour un profil
-Défensif, le seuil "confortable" de dette nette/EBITDA passe de 3 à
-~4 ; pour un profil Cyclique, il descend à ~2.
-
-- **Levier financier (gearing)** = Dette nette / Capitaux propres —
-  facteur secondaire de lecture, non seuillé au v1.
+La couverture des intérêts utilise le même coût de la dette implicite
+que le WACC (repli sur le proxy 3% si non calculable).
 
 ### 3. Croissance — poids 16%
 
-- CAGR chiffre d'affaires sur 5 ans
-- CAGR EBITDA sur 5 ans
-- Score favorable si croissance positive et cohérente entre CA et
-  EBITDA (une croissance du CA sans croissance de l'EBITDA signale une
-  dégradation de la rentabilité).
-
-> **Lissage v1 (implémentation).** yfinance ne fournit en pratique que 4
-> exercices annuels (pas 5) pour la plupart des postes. Un CAGR point à
-> point (exercice le plus ancien dispo vs le plus récent) est très sensible
-> à une année isolée atypique — ex : le pic des prix de l'énergie en 2022
-> a fait apparaître une "décroissance" chez les pétrolières alors que leur
-> activité sous-jacente n'a pas reculé sur le fond. `extract_ratios`
-> calcule donc le CAGR entre la moyenne des 2 exercices les plus récents et
-> la moyenne des 2 plus anciens (repli sur un calcul point à point si moins
-> de 4 exercices sont disponibles), plutôt qu'un simple point à point. Ce
-> lissage reste limité par la profondeur réelle des données (4 ans) : une
-> année exceptionnelle proche d'une des deux bornes garde un poids
-> important dans la moyenne à 2 ans qui la contient.
+- CAGR chiffre d'affaires et CAGR EBITDA (profil standard) ou résultat
+  net (profils financier/trust), **lissés** : moyenne des 2 exercices
+  les plus récents vs moyenne des 2 plus anciens (repli sur un calcul
+  point à point si moins de 4 exercices disponibles), pour réduire la
+  sensibilité à une année isolée atypique. La fenêtre effective varie
+  selon le nombre d'exercices réellement publiés par yfinance — pas un
+  nombre d'années fixe.
+- Score favorable si croissance positive et cohérente entre les deux
+  indicateurs (une croissance du CA sans croissance de l'EBITDA signale
+  une dégradation de la rentabilité).
 
 ### 4. Génération de cash — poids 12%
 
-- **Flux de trésorerie disponible (FCF)** = EBITDA − IS théorique sur
-  le résultat d'exploitation − variation du BFR − investissements
-  nets des désinvestissements.
-
-> **Simplification v1 (implémentation).** `extract_ratios` calcule le
-> FCF comme Flux de trésorerie opérationnel (yfinance) − |Capex|,
-> plutôt que la formule ci-dessus. Ce proxy embarque déjà l'IS
-> effectivement payé et la variation du BFR via la ligne de flux
-> opérationnel yfinance, et s'est révélé plus robuste que de
-> reconstruire un ΔBFR propre sur 5 entreprises aux données
-> hétérogènes. Voir le commentaire au-dessus de `fcf = ...` dans
-> `indices_score.py`.
-
-- **Conversion FCF/EBITDA** : plus ce ratio est élevé, plus la
-  rentabilité comptable se traduit réellement en cash (une rentabilité
-  élevée mais un FCF durablement négatif ou faible est un signal
-  d'alerte : BFR ou capex qui consomment tout le cash généré).
+- **FCF** = Flux de trésorerie opérationnel (yfinance) − |Capex|.
+- **Conversion FCF/EBITDA** (ou OCF/résultat net pour les profils
+  financier/trust) : plus ce ratio est élevé, plus la rentabilité
+  comptable se traduit réellement en cash.
 
 ### 5. Valorisation relative — poids 8%
 
-- Multiples **EV/EBITDA** et **P/E (PER)** actuels comparés à la
-  moyenne des 5 dernières années de l'entreprise elle-même (pas de
-  comparaison à des pairs sectoriels au v1).
+- Multiples **EV/EBITDA** et **P/E** (P/B pour les trusts) comparés à
+  la moyenne des exercices disponibles de l'entreprise elle-même (pas
+  de comparaison à des pairs sectoriels). Le multiple "actuel" utilise
+  le **cours du jour**, pas le cours de clôture de l'exercice fiscal le
+  plus récent (qui peut dater de plusieurs mois) — seule la moyenne
+  historique reste sur les cours de chaque exercice passé.
 - Lecture prudente : un multiple élevé par rapport à l'historique de
-  l'entreprise reflète le plus souvent des perspectives de croissance
-  jugées meilleures par le marché ou un risque perçu plus faible — ce
-  n'est pas systématiquement un signal négatif de "cherté". Le score
-  ne pénalise donc un multiple élevé que modérément, et seulement en
-  combinaison avec un ralentissement de la croissance (facteur 3) qui
-  rendrait ce multiple difficile à justifier.
+  l'entreprise n'est pénalisé que modérément, et seulement en
+  combinaison avec un ralentissement de la croissance.
 
 ### 6. Dynamique récente — poids 10%
 
 - **Tendance du cours** : écart entre le cours actuel et sa moyenne
-  mobile 200 jours (%), même logique déjà utilisée pour l'or dans
-  gold_score.py — un cours durablement au-dessus de sa MM200 signale une
-  tendance de marché haussière, en dessous une tendance baissière.
+  mobile 200 jours (%).
 - **Accélération des résultats** : croissance du chiffre d'affaires du
-  dernier trimestre publié par rapport au même trimestre l'an dernier,
-  comparée au CAGR 5 ans déjà calculé (facteur Croissance) — un trimestre
-  qui croît plus vite que la tendance de fond signale une accélération,
-  plus lentement une décélération.
+  dernier trimestre publié vs le même trimestre l'an dernier, comparée
+  au CAGR déjà calculé (facteur Croissance).
 - Les deux sous-signaux sont mis à l'échelle indépendamment puis
-  moyennés (unités différentes : un écart de cours en %, un écart de
-  croissance en points). Si l'un des deux est indisponible (ex : moins
-  de 5 trimestres publiés chez yfinance), le score ne porte que sur le
-  sous-signal disponible ; si aucun n'est disponible, le facteur est
-  neutre.
+  moyennés ; si l'un est indisponible, le score ne porte que sur
+  l'autre ; si aucun n'est disponible, le facteur est neutre.
 
 ### 7. Actualité récente — poids 10%
 
-- Moyenne du sentiment (favorable/neutre/défavorable pour l'entreprise)
-  des actualités publiées dans les 14 derniers jours, tel que classé par
-  Claude au moment de la génération du résumé de chaque actu (sous-projet
-  "actus enrichies") — pas d'appel IA supplémentaire.
-- Neutre par défaut si aucune actualité récente n'est disponible ou
-  exploitable, plutôt qu'un biais optimiste ou pessimiste implicite.
+- Moyenne pondérée du sentiment des actualités des 14 derniers jours
+  (poids par importance : une actu classée "majeure" pèse jusqu'à 4x
+  plus qu'une actu "mineure"), tel que classé par Claude au moment de
+  la génération du résumé de chaque actu.
+- Neutre (0,0) si aucune actualité récente exploitable — délibéré,
+  jamais de biais optimiste/pessimiste par défaut sur une donnée
+  absente.
 
-> **Limite héritée (sous-projet actus enrichies).** Le sentiment est
-> classé à partir du titre de l'actu (et du résumé "titre seul" déjà
-> généré dans la majorité des cas) plutôt que du contenu réel de
-> l'article — le scraping réel des liens Google News a été tenté puis
-> abandonné (écran de consentement RGPD suivi d'une résolution d'URL
-> côté JavaScript, cf. `specs/2026-09-05-actus-resume-ia-design.md`). La
-> précision du signal de sentiment hérite donc de cette même limite,
-> déjà actée.
+## Juste valeur et repères d'entrée/sortie
 
-## Interprétation du score composite
+Combine trois méthodes (DCF, valeur patrimoniale, multiples), pondérées
+par profil sectoriel, puis bornées entre **0,15x et 6x le cours
+actuel** — filet de sécurité empirique contre une valeur terminale de
+DCF dégénérée (WACC très bas) ou une moyenne de multiples faussée par
+un exercice aberrant. La croissance terminale du DCF (2% par défaut)
+est elle-même plafonnée au taux sans risque de la devise de
+l'entreprise quand celui-ci est plus bas (JPY, CHF notamment). La
+valeur patrimoniale (capitaux propres / actions, pondérée par
+ROE/coût du capital) peut dépasser la valeur comptable brute (jusqu'à
+3x) pour les profils financier/trust, où c'est la seule méthode
+disponible (DCF et multiples EV/EBITDA n'ont pas de sens pour une
+banque). Repères d'entrée/sortie = juste valeur ± marge ajustée par le
+bêta, moyennée avec un repère technique (MM200) sauf en phase
+Weinstein "Déclin" (voir ci-dessous).
 
-Mêmes bornes que pour l'or, pour la cohérence de lecture dans l'app :
+## Score affiché : rang percentile, pas la somme brute des facteurs
 
-- **> +50** : profil fondamental très solide
-- **+15 à +50** : solide
-- **-15 à +15** : neutre
-- **< -15** : fragile
+Le score affiché (-100/+100) est le **rang percentile** de la société
+au sein de son propre pool (standard / financier / trust), recalculé
+chaque jour — pas directement la somme pondérée des facteurs. Un score
+de +40 signifie "mieux noté que ~70% des sociétés du même profil", pas
+une note absolue. Le score brut (somme pondérée des facteurs) est
+conservé séparément (`score_raw`) mais pas affiché — voir
+`docs/superpowers/specs/2026-09-24-score-recalibration-design.md` pour
+le détail complet du mécanisme. Un profil dont le pool est trop petit
+pour qu'un classement percentile ait un sens (aujourd'hui : le profil
+trust, 9 sociétés) garde son score brut tel quel, faute d'alternative.
+
+- **> +60** : profil fondamental très solide (~top 20%)
+- **+20 à +60** : solide
+- **-20 à +20** : neutre, autour de la médiane
+- **-60 à -20** : fragile
+- **< -60** : très fragile
+
+## Phases de marché (Weinstein) et badge qualité (Graham)
+
+Deux enrichissements indépendants du score composite, ajoutés depuis la
+version pilote :
+
+- **Phase de marché** (méthode Stan Weinstein) : base / avancée / distribution
+  / déclin, dérivée de la pente de la moyenne mobile 30 semaines et du
+  volume. En phase "Déclin", le repère technique est exclu du calcul
+  d'entrée/sortie, et l'alerte "entree" (voir ci-dessous) ne se
+  déclenche jamais. Voir
+  `docs/superpowers/specs/2026-09-23-weinstein-stage-analysis-design.md`.
+- **Badge défensif Graham** : 6 critères (5 pour les profils
+  financier/trust) inspirés de *L'investisseur intelligent* — structure
+  financière, stabilité des bénéfices, dividendes, croissance,
+  valorisation. Affiché sur la fiche société quand tous les critères
+  applicables sont remplis. Voir
+  `docs/superpowers/specs/2026-09-23-graham-defensive-investor-design.md`.
 
 ## Historique de score & alertes
 
-Chaque entreprise conserve un historique quotidien de son score composite
-(`indices_history.json`, ~2 ans de profondeur, indépendant par ticker),
-utilisé pour dériver 3 types d'alertes affichées sur sa page détail :
+Chaque entreprise conserve un historique quotidien de son score
+composite **brut** (`indices_history.json`, ~2 ans de profondeur par
+date calendaire, tickers retirés d'un indice purgés automatiquement),
+utilisé pour dériver 3 types d'alertes affichées sur sa page détail —
+toutes basées sur le score **brut**, pas le rang percentile (qui
+bouge même quand les fondamentaux propres d'une société n'ont pas
+changé, puisqu'il dépend aussi des autres sociétés du pool) :
 
-- **Veille** — le score vient de franchir +15 à la hausse.
-- **Risque, chute rapide** — chute de 20 points ou plus en moins de 5
-  jours (mêmes seuils que le volet Or).
-- **Entrée, conditions réunies** — score > +15 et cours actuel à moins de
-  5% du repère d'entrée (seuil propre à Indices : le repère d'entrée est
-  déjà une moyenne valorisation/technique avec ±30% de marge, contrairement
-  à la MM200 de l'Or qui est un niveau technique dur).
+- **Veille** — le score brut vient de franchir un seuil neutre autour
+  de 0, avec hystérésis (bande morte de ±5 points) pour éviter qu'un
+  score qui oscille près de zéro ne redéclenche l'alerte à chaque
+  petit mouvement.
+- **Risque, chute rapide** — chute de 20 points ou plus (score brut) en
+  moins de 5 jours (mêmes seuils que le volet Or).
+- **Entrée, conditions réunies** — score brut favorable et cours actuel
+  **au niveau ou en dessous** du repère d'entrée, à moins de 5% d'écart
+  (pas au-dessus, même de peu) — sauf en phase Weinstein "Déclin", où
+  cette alerte ne se déclenche jamais.
 
-Sans déclencheur, une alerte neutre ("Pas de signal actif") est affichée.
-Pas d'email pour ces alertes (affichage web uniquement), contrairement au
-volet Or.
+Sans déclencheur, une alerte neutre ("Pas de signal actif") est
+affichée. **Un email quotidien récapitulatif est envoyé** (signaux
+"entree" nouvellement déclenchés + actualités classées "majeure") —
+voir `[[project_indices_alerts]]`. Chaque signal "entree" nouvellement
+déclenché ouvre aussi une position de suivi de performance en
+paper-trading (`docs/signal_tracking.json`), clôturée automatiquement
+sur stop-loss, objectif atteint, délai maximal, ou retrait de la
+société de son indice.
 
 ## Analyse financière complète (Vernimmen)
 
@@ -237,26 +244,30 @@ financière et solvabilité, rentabilité économique et financière,
 analyse de la trésorerie et du free cash-flow, dynamique récente
 (dernier trimestre vs tendance), synthèse.
 
-Générée par Claude Opus 5 à partir des comptes annuels (jusqu'à ~4 ans)
-et des derniers trimestres publiés, ainsi que des ratios déjà calculés
-par ailleurs (ROCE, ROE, dette nette/EBITDA, ICR, CAGR, conversion FCF,
-coût du capital) — le modèle interprète, il ne recalcule pas ces
-chiffres.
+Générée par Claude à partir des comptes annuels et des derniers
+trimestres publiés, ainsi que des ratios déjà calculés par ailleurs —
+le modèle interprète, il ne recalcule pas ces chiffres.
 
 **Régénérée uniquement quand un nouveau trimestre est publié** (pas
 quotidiennement) : le run compare la date du dernier trimestre connu à
 celle stockée la veille et ne régénère que si elle a changé, sinon
-recopie l'analyse existante. Ce choix est délibéré : les comptes ne
-changent que quelques fois par an, contrairement au score composite qui
-réagit chaque jour au cours et aux actus — régénérer quotidiennement
-coûterait ~90x plus cher pour un résultat identique la plupart du
-temps.
+recopie l'analyse existante.
 
-## Hors périmètre (v1)
+## Réconciliation de devise
 
-- Extension aux 40 valeurs du CAC 40 et aux valeurs financières
-  (grille dédiée à construire séparément)
+Les comptes d'une société peuvent être publiés dans une devise
+différente de sa devise de cotation (ex. AIA Group, 1299.HK, comptes en
+USD, cotée en HKD). `financialCurrency` (yfinance) est comparé à la
+devise de cotation ; en cas d'écart, les postes monétaires des états
+financiers sont convertis au taux du jour avant tout calcul de ratio.
+Voir `docs/superpowers/specs/2026-09-24-financial-currency-reconciliation-design.md`.
+
+## Hors périmètre
+
 - Bêta désendetté puis réendetté à la structure financière de chaque
   entreprise (nécessiterait un échantillon de comparables) — le WACC
-  utilise le bêta yfinance brut
+  utilise le bêta yfinance brut.
 - Comparaison à un échantillon de pairs sectoriels pour la valorisation
+  (comparaison uniquement à l'historique propre de chaque société).
+- Tendance du ROCE/ROE sur plusieurs années (calcul sur le seul dernier
+  exercice publié).

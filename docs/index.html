@@ -885,6 +885,7 @@
   .signal-tracking-link:active { transform: scale(.97); }
 
   .signal-stats { display: flex; flex-direction: column; gap: 2px; margin: 0 0 20px; }
+  .signal-stats-group + .signal-stats-group { margin-top: 8px; }
   .portfolio-perf-chart { width: 100%; height: auto; margin-top: 8px; }
   .portfolio-perf-legend { display: flex; gap: 16px; font-size: var(--text-sm); color: var(--muted); margin-top: 4px; }
   .portfolio-perf-block { margin-bottom: 16px; }
@@ -3857,17 +3858,27 @@ function positionCurrentPrice(p, companiesByTicker) {
   return company ? company.current_price : null;
 }
 
-function renderSignalTracking(positions) {
-  const companiesByTicker = {};
-  indicesData.companies.forEach(c => { companiesByTicker[c.ticker] = c; });
+// Indices exclus du passage au réel du bot Actions (voir
+// ibkr_bot/signals.py::INDICES_IN_SCOPE — JPY/HKD + session asiatique
+// hors de la fenêtre du batch, décision v1 documentée). Les positions
+// papier sur ces indices continuent d'être suivies (voir
+// indices_score.py) mais ne représentent jamais une décision que le bot
+// réel aurait pu prendre — à garder en phase avec INDICES_IN_SCOPE si
+// son périmètre change côté Python (audit 2026-09-21, point 4).
+const SIGNAL_TRACKING_OUT_OF_SCOPE_INDICES = new Set(['NIKKEI225', 'HANGSENG']);
 
+// Bloc de statistiques (positions clôturées/en cours, taux de réussite,
+// rendement moyen, alpha moyen) pour un sous-ensemble de positions —
+// factorisé pour être appelé une fois par périmètre (audit 2026-09-21,
+// point 4) plutôt que dupliqué.
+function buildSignalStatsHtml(positions, companiesByTicker, title, subtitle) {
   const closed = positions.filter(p => p.status === 'closed');
   const open = positions.filter(p => p.status === 'open');
   const avg = arr => arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : null;
 
-  // Statistiques calculées sur TOUTES les positions — réel pour les
-  // clôturées, valorisé au cours du jour pour les ouvertes — pour que la
-  // performance affichée reflète l'état actuel du suivi plutôt que de
+  // Statistiques calculées sur TOUTES les positions du groupe — réel pour
+  // les clôturées, valorisé au cours du jour pour les ouvertes — pour que
+  // la performance affichée reflète l'état actuel du suivi plutôt que de
   // rester vide tant qu'aucune position n'a encore clôturé.
   const returns = positions
     .map(p => positionCurrentReturnPct(p, companiesByTicker))
@@ -3886,15 +3897,41 @@ function renderSignalTracking(positions) {
     .filter(a => a != null);
   const avgAlpha = avg(alphas);
 
-  const statsHtml = `
-    <div class="signal-stats">
-      <div class="price-row"><span class="price-label">Positions clôturées</span><span class="price-value">${closed.length}</span></div>
-      <div class="price-row"><span class="price-label">Positions en cours</span><span class="price-value">${open.length}</span></div>
-      <div class="price-row"><span class="price-label">Taux de réussite</span><span class="price-value">${returns.length ? formatPct(winCount / returns.length * 100) : '—'}</span></div>
-      <div class="price-row"><span class="price-label">Rendement moyen</span><span class="price-value ${pctClass(avgReturn)}">${formatPct(avgReturn)}</span></div>
-      <div class="price-row"><span class="price-label">Vs indice (alpha moyen)</span><span class="price-value ${pctClass(avgAlpha)}">${formatPct(avgAlpha)}</span></div>
-    </div>
-    <p class="hero-sub signal-live-note">Positions en cours valorisées au cours du jour<span class="signal-live-mark">*</span> (pas un flux intrajournalier).</p>`;
+  return `
+    <div class="signal-stats-group">
+      <h2>${title}</h2>
+      ${subtitle ? `<p class="hero-sub" style="margin:0 0 10px;">${subtitle}</p>` : ''}
+      <div class="signal-stats">
+        <div class="price-row"><span class="price-label">Positions clôturées</span><span class="price-value">${closed.length}</span></div>
+        <div class="price-row"><span class="price-label">Positions en cours</span><span class="price-value">${open.length}</span></div>
+        <div class="price-row"><span class="price-label">Taux de réussite</span><span class="price-value">${returns.length ? formatPct(winCount / returns.length * 100) : '—'}</span></div>
+        <div class="price-row"><span class="price-label">Rendement moyen</span><span class="price-value ${pctClass(avgReturn)}">${formatPct(avgReturn)}</span></div>
+        <div class="price-row"><span class="price-label">Vs indice (alpha moyen)</span><span class="price-value ${pctClass(avgAlpha)}">${formatPct(avgAlpha)}</span></div>
+      </div>
+    </div>`;
+}
+
+function renderSignalTracking(positions) {
+  const companiesByTicker = {};
+  indicesData.companies.forEach(c => { companiesByTicker[c.ticker] = c; });
+
+  // Séparé par périmètre du bot réel (audit 2026-09-21, point 4) : avant
+  // ce correctif, une seule statistique agrégée mélangeait les positions
+  // que le bot Actions peut réellement prendre et celles qu'il ne prendra
+  // jamais (Nikkei/Hang Seng, ~52% des positions papier) — brouillant la
+  // performance réellement représentative du bot.
+  const botScopePositions = positions.filter(p => !SIGNAL_TRACKING_OUT_OF_SCOPE_INDICES.has(p.index));
+  const outOfScopePositions = positions.filter(p => SIGNAL_TRACKING_OUT_OF_SCOPE_INDICES.has(p.index));
+
+  const statsHtml = buildSignalStatsHtml(
+    botScopePositions, companiesByTicker,
+    'Dans le périmètre du bot',
+    'CAC 40, DAX, Nasdaq 100, Dow Jones, FTSE 100, SMI, IBEX 35, FTSE MIB — indices sur lesquels le bot Actions peut réellement passer un ordre.',
+  ) + buildSignalStatsHtml(
+    outOfScopePositions, companiesByTicker,
+    'Hors périmètre (suivi seul)',
+    'Nikkei 225 et Hang Seng — signaux suivis en paper-trading mais jamais exécutés par le bot réel (v1).',
+  ) + `<p class="hero-sub signal-live-note">Positions en cours valorisées au cours du jour<span class="signal-live-mark">*</span> (pas un flux intrajournalier).</p>`;
 
   const rowsHtml = positions.length ? positions.map(p => {
     const curReturn = positionCurrentReturnPct(p, companiesByTicker);

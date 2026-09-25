@@ -1874,22 +1874,30 @@ function portfolioAnalysisHtml(positions, companiesByTicker, currencyByIndex, pr
 
   const dividendCurrencies = ['EUR', 'USD'].filter(
     currency => dividendsReceived[currency] > 0 || projectedIncome[currency].annual > 0);
+  // Deux listes vides indépendantes (résumé par devise, positions
+  // actuellement payeuses) empilaient chacune leur propre message "vide"
+  // quand aucune n'avait de contenu — redondant. hasAnyDividendData
+  // regroupe les deux en un seul message dans ce cas-là ; dès que l'une
+  // des deux a un contenu réel, l'autre garde son propre message "vide"
+  // (ex: dividendes déjà perçus historiquement mais aucune position
+  // actuelle ne verse — combinaison significative, pas du bruit).
+  const hasAnyDividendData = dividendCurrencies.length > 0 || yieldOnCostRows.length > 0;
   const dividendSummaryHtml = dividendCurrencies.length ? dividendCurrencies.map(currency => `
     <div class="signal-stats">
       <div class="price-row"><span class="price-label">Cumul reçu (${currency})</span><span class="price-value">${dividendsReceived[currency].toLocaleString('fr-FR', {maximumFractionDigits:0})} ${CURRENCY_SYMBOL[currency] || currency}</span></div>
       <div class="price-row"><span class="price-label">Revenu annuel projeté (${currency})</span><span class="price-value">${projectedIncome[currency].annual.toLocaleString('fr-FR', {maximumFractionDigits:0})} ${CURRENCY_SYMBOL[currency] || currency}</span></div>
       <div class="price-row"><span class="price-label">Revenu mensuel moyen projeté (${currency})</span><span class="price-value">${projectedIncome[currency].monthly.toLocaleString('fr-FR', {maximumFractionDigits:0})} ${CURRENCY_SYMBOL[currency] || currency}</span></div>
-    </div>`).join('') : '<div class="list-empty">Aucun dividende encaissé ni position versant un dividende.</div>';
+    </div>`).join('') : (hasAnyDividendData ? '' : '<div class="list-empty">Aucun dividende encaissé ni position versant un dividende.</div>');
   const dividendRowsHtml = yieldOnCostRows.length ? yieldOnCostRows.map(row => {
     const company = companiesByTicker[row.ticker];
-    const currency = company ? (currencyByIndex[company.index] === 'USD' ? 'USD' : 'EUR') : 'EUR';
+    const currency = company ? (currencyByIndex[company.index] || 'EUR') : 'EUR';
     const symbol = CURRENCY_SYMBOL[currency] || currency;
     return `
     <div class="price-row">
       <span class="price-label">${company ? company.name : row.ticker}</span>
       <span class="price-value">${row.ttmPerShare.toLocaleString('fr-FR', {maximumFractionDigits:2})} ${symbol}/action — ${formatPct(row.yieldOnCost)} sur coût — ${row.projectedAnnual.toLocaleString('fr-FR', {maximumFractionDigits:0})} ${symbol}/an</span>
     </div>`;
-  }).join('') : '<div class="list-empty">Aucune position ne verse actuellement de dividende.</div>';
+  }).join('') : (hasAnyDividendData ? '<div class="list-empty">Aucune position ne verse actuellement de dividende.</div>' : '');
 
   return `
     ${performanceHtml}
@@ -1946,7 +1954,7 @@ function renderPortfolioActionsTab(companiesByTicker, currencyByIndex) {
     },
     {
       title: 'Analyse',
-      desc: 'Concentration, santé du portefeuille selon le modèle et contribution de chaque ligne au P&L.',
+      desc: 'Concentration, santé du portefeuille selon le modèle, contribution de chaque ligne au P&L et revenu de dividendes.',
       html: portfolioAnalysisHtml(positions, companiesByTicker, currencyByIndex, priceHistoryByTicker, dividendHistoryByTicker),
       wire: () => wirePortfolioPerformanceBenchmarkSelectors(positions, closedPositions, companiesByTicker, currencyByIndex, priceHistoryByTicker),
     },

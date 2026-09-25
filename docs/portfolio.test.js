@@ -584,14 +584,28 @@ function test_compute_dividends_received_skips_position_with_unknown_ticker() {
   console.log('OK: test_compute_dividends_received_skips_position_with_unknown_ticker');
 }
 
-function test_compute_dividends_received_includes_payment_exactly_on_the_buy_date() {
+function test_compute_dividends_received_excludes_payment_exactly_on_the_buy_date() {
+  // La Series yfinance est indexee par date EX-DIVIDENDE : il faut avoir
+  // detenu la position AVANT cette date (achat strictement anterieur),
+  // pas seulement CE jour-la, pour avoir droit au paiement -- acheter le
+  // jour ex-dividende n'ouvre pas droit au dividende.
   const positions = [{ id: '1', ticker: 'MC.PA', buy_date: '2026-01-15', quantity: 10 }];
-  const dividendHistoryByTicker = { 'MC.PA': [{ date: '2026-01-15', ticker: 'MC.PA', amount: 3.0 }] }; // exactement buy_date, inclus
+  const dividendHistoryByTicker = { 'MC.PA': [{ date: '2026-01-15', ticker: 'MC.PA', amount: 3.0 }] }; // exactement buy_date, exclu
+  const companiesByTicker = { 'MC.PA': { index: 'CAC40' } };
+  const currencyByIndex = { CAC40: 'EUR' };
+  const received = computeDividendsReceived(positions, dividendHistoryByTicker, companiesByTicker, currencyByIndex);
+  assert.strictEqual(received.EUR, 0);
+  console.log('OK: test_compute_dividends_received_excludes_payment_exactly_on_the_buy_date');
+}
+
+function test_compute_dividends_received_includes_payment_the_day_after_the_buy_date() {
+  const positions = [{ id: '1', ticker: 'MC.PA', buy_date: '2026-01-15', quantity: 10 }];
+  const dividendHistoryByTicker = { 'MC.PA': [{ date: '2026-01-16', ticker: 'MC.PA', amount: 3.0 }] }; // lendemain de buy_date, inclus
   const companiesByTicker = { 'MC.PA': { index: 'CAC40' } };
   const currencyByIndex = { CAC40: 'EUR' };
   const received = computeDividendsReceived(positions, dividendHistoryByTicker, companiesByTicker, currencyByIndex);
   assert.ok(Math.abs(received.EUR - 30.0) < 0.001);
-  console.log('OK: test_compute_dividends_received_includes_payment_exactly_on_the_buy_date');
+  console.log('OK: test_compute_dividends_received_includes_payment_the_day_after_the_buy_date');
 }
 
 function test_compute_dividends_received_excludes_payment_the_day_before_the_buy_date() {
@@ -602,6 +616,19 @@ function test_compute_dividends_received_excludes_payment_the_day_before_the_buy
   const received = computeDividendsReceived(positions, dividendHistoryByTicker, companiesByTicker, currencyByIndex);
   assert.strictEqual(received.EUR, 0);
   console.log('OK: test_compute_dividends_received_excludes_payment_the_day_before_the_buy_date');
+}
+
+function test_compute_dividends_received_includes_payment_exactly_on_the_sell_date() {
+  // Cote vente, la convention reste isPositionActiveOn (>=) : vendre LE
+  // jour ex-dividende ouvre bien droit au paiement, contrairement au cote
+  // achat.
+  const closedPositions = [{ id: '1', ticker: 'MC.PA', buy_date: '2026-01-15', sell_date: '2026-03-01', quantity: 10 }];
+  const dividendHistoryByTicker = { 'MC.PA': [{ date: '2026-03-01', ticker: 'MC.PA', amount: 3.0 }] }; // exactement sell_date, inclus
+  const companiesByTicker = { 'MC.PA': { index: 'CAC40' } };
+  const currencyByIndex = { CAC40: 'EUR' };
+  const received = computeDividendsReceived(closedPositions, dividendHistoryByTicker, companiesByTicker, currencyByIndex);
+  assert.ok(Math.abs(received.EUR - 30.0) < 0.001);
+  console.log('OK: test_compute_dividends_received_includes_payment_exactly_on_the_sell_date');
 }
 
 function test_compute_projected_dividend_income_uses_a_365_day_ttm_window() {
@@ -758,8 +785,10 @@ function main() {
   test_compute_dividends_received_excludes_payment_after_a_closed_position_was_sold();
   test_compute_dividends_received_splits_by_currency();
   test_compute_dividends_received_skips_position_with_unknown_ticker();
-  test_compute_dividends_received_includes_payment_exactly_on_the_buy_date();
+  test_compute_dividends_received_excludes_payment_exactly_on_the_buy_date();
+  test_compute_dividends_received_includes_payment_the_day_after_the_buy_date();
   test_compute_dividends_received_excludes_payment_the_day_before_the_buy_date();
+  test_compute_dividends_received_includes_payment_exactly_on_the_sell_date();
   test_compute_projected_dividend_income_uses_a_365_day_ttm_window();
   test_compute_projected_dividend_income_excludes_payment_exactly_on_the_ttm_cutoff_day();
   test_compute_projected_dividend_income_includes_payment_one_day_inside_the_ttm_window();

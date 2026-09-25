@@ -142,6 +142,7 @@ def build_position_record(signal: dict, plan: dict, contrat: dict, quantite: int
         "ticker": signal["ticker"],
         "name": signal.get("name", ""),
         "index": signal.get("index", ""),
+        "sector": signal.get("sector", ""),
         "conid": contrat["conid"],
         "devise": plan["devise_compte"],
         "quantite": quantite,

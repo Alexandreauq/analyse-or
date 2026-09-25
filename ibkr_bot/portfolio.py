@@ -8,6 +8,7 @@
 import json
 import math
 import os
+from collections import Counter
 from datetime import datetime
 
 from dateutil.relativedelta import relativedelta
@@ -15,6 +16,16 @@ from dateutil.relativedelta import relativedelta
 from ibkr_bot.sizing import BUDGET_EUR
 
 MAX_POSITIONS = 10  # positions ouvertes PAR LE BOT, pas sur le compte (spec 3.4 / 9.5)
+
+# Plafonds de diversification (audit Or/Actions 2026-09-21, point 3 --
+# aucune contrainte n'existait : le bot pouvait finir avec 5-6 banques si
+# le classement par score les favorisait toutes). Sur MAX_POSITIONS=10 :
+# évite qu'un secteur ou un pays domine le portefeuille sans être
+# arbitrairement restrictif. Un signal qui échoue ce plafond ne consomme
+# ni place ni budget (même philosophie que "plafond_atteint" ci-dessous)
+# -- la place reste disponible pour le signal suivant du classement.
+MAX_POSITIONS_PER_SECTOR = 3
+MAX_POSITIONS_PER_INDEX = 4
 
 # Regles de sortie : valeurs IDENTIQUES a celles du paper-trading
 # (indices_score.SIGNAL_STOP_LOSS_PCT / SIGNAL_SHADOW_DELAY_MONTHS). Un
@@ -80,14 +91,24 @@ def select_entries(
 
     ORDRE DES FILTRES, qui est lui-meme une regle de la spec :
     deja detenu -> contrat non resolu -> plan absent -> quantite nulle ->
-    plafond -> solde. Le cas 0 action passe AVANT le plafond parce que
-    "la place ainsi liberee reste disponible pour le signal suivant du
-    classement" (spec 3.3) : inverser les deux perdrait un signal
-    financable au profit d'un signal inachetable. Le contrat non resolu
-    est verifie tot, avec les autres cas "ce signal ne peut fondamentale-
-    ment pas etre achete", pour la meme raison : Plan B ne pourra jamais
-    passer l'ordre sans conid, ce rejet ne doit donc jamais consommer une
-    place ni du budget.
+    plafond -> plafond secteur -> plafond indice -> solde. Le cas 0 action
+    passe AVANT le plafond parce que "la place ainsi liberee reste
+    disponible pour le signal suivant du classement" (spec 3.3) : inverser
+    les deux perdrait un signal financable au profit d'un signal
+    inachetable. Le contrat non resolu est verifie tot, avec les autres cas
+    "ce signal ne peut fondamentalement pas etre achete", pour la meme
+    raison : Plan B ne pourra jamais passer l'ordre sans conid, ce rejet ne
+    doit donc jamais consommer une place ni du budget. Les plafonds de
+    diversification (MAX_POSITIONS_PER_SECTOR/MAX_POSITIONS_PER_INDEX,
+    audit 2026-09-21 point 3) suivent la meme logique : un signal qui les
+    depasse ne consomme ni place ni budget, la place reste disponible pour
+    le signal suivant. Compte les positions deja ouvertes PLUS celles deja
+    retenues plus haut dans ce meme classement (pas seulement
+    open_positions), sinon deux signaux du meme secteur pourraient passer
+    le meme jour avant que le plafond ne soit jamais vu comme atteint. Un
+    signal sans secteur/indice connu (ne devrait pas arriver en pratique)
+    n'est jamais bloque par ce plafond plutot que de rejeter une donnee de
+    diversification manquante.
 
     GARDE-FOU DE SOLDE (spec 9.9, revu) : IBKR convertit automatiquement
     le budget EUR vers la devise locale au moment de l'achat (mecanisme
@@ -106,6 +127,8 @@ def select_entries(
     tickers_detenus = {p["ticker"] for p in open_positions}
     places = free_slots(open_positions)
     engage = 0.0
+    sector_counts = Counter(p["sector"] for p in open_positions if p.get("sector"))
+    index_counts = Counter(p["index"] for p in open_positions if p.get("index"))
 
     retenus: list[dict] = []
     rejets: list[dict] = []
@@ -135,6 +158,16 @@ def select_entries(
             rejets.append({**base, "raison": "signal_ignore_plafond_atteint"})
             continue
 
+        secteur = signal.get("sector") or ""
+        if secteur and sector_counts[secteur] >= MAX_POSITIONS_PER_SECTOR:
+            rejets.append({**base, "raison": "plafond_secteur_atteint"})
+            continue
+
+        indice = signal.get("index") or ""
+        if indice and index_counts[indice] >= MAX_POSITIONS_PER_INDEX:
+            rejets.append({**base, "raison": "plafond_indice_atteint"})
+            continue
+
         if base_cash - engage < BUDGET_EUR:
             rejets.append({**base, "raison": "solde_insuffisant"})
             continue
@@ -142,6 +175,10 @@ def select_entries(
         engage += BUDGET_EUR
         places -= 1
         tickers_detenus.add(ticker)
+        if secteur:
+            sector_counts[secteur] += 1
+        if indice:
+            index_counts[indice] += 1
         retenus.append({"signal": signal, "plan": plan, "rang": rang})
 
     return retenus, rejets

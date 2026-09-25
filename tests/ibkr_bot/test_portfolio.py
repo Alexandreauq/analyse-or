@@ -134,7 +134,9 @@ def test_select_entries_fills_free_slots_in_rank_order():
 def test_select_entries_drops_surplus_signals_when_the_cap_is_reached():
     """Sursouscription (spec 3.5) : les signaux qui ne rentrent pas sont
     perdus, pas mis en file d'attente, et journalises avec leur rang."""
-    ouvertes = [_bot_position(f"OPEN{i}.PA") for i in range(9)]
+    # index cycle sur 3 valeurs (3 par indice, sous MAX_POSITIONS_PER_INDEX=4)
+    # pour ne pas declencher le plafond de diversification, hors sujet ici.
+    ouvertes = [_bot_position(f"OPEN{i}.PA", index=["CAC40", "DAX", "NASDAQ"][i % 3]) for i in range(9)]
     signaux = [_signal("A.PA", 10.0), _signal("B.PA", 48.8), _signal("C.PA", 26.9)]
     plans = {t: _plan(t) for t in ("A.PA", "B.PA", "C.PA")}
     contrats = _contrats(["A.PA", "B.PA", "C.PA"])
@@ -167,7 +169,7 @@ def test_select_entries_zero_share_signal_does_not_consume_a_slot():
     """Spec 3.3 : la place liberee par un signal a 0 action reste
     disponible pour le signal suivant du classement. Ce test echoue si
     le filtre plafond est applique AVANT le filtre 0 action."""
-    ouvertes = [_bot_position(f"OPEN{i}.PA") for i in range(9)]
+    ouvertes = [_bot_position(f"OPEN{i}.PA", index=["CAC40", "DAX", "NASDAQ"][i % 3]) for i in range(9)]
     signaux = [_signal("CHER.PA", 90.0), _signal("B.PA", 48.8)]
     plans = {
         "CHER.PA": _plan("CHER.PA", quantite=0, cout=0.0,
@@ -257,7 +259,7 @@ def test_select_entries_missing_contract_does_not_consume_a_cap_slot():
     """Comme le filtre 0 action, un contrat non resolu ne doit pas
     consommer de place : le signal suivant du classement doit toujours
     pouvoir la prendre."""
-    ouvertes = [_bot_position(f"OPEN{i}.PA") for i in range(9)]
+    ouvertes = [_bot_position(f"OPEN{i}.PA", index=["CAC40", "DAX", "NASDAQ"][i % 3]) for i in range(9)]
     signaux = [_signal("A.PA", 48.8), _signal("B.PA", 10.0)]
     plans = {t: _plan(t) for t in ("A.PA", "B.PA")}
     contrats = {"B.PA": _contrat("B.PA")}
@@ -268,6 +270,120 @@ def test_select_entries_missing_contract_does_not_consume_a_cap_slot():
     assert [r["signal"]["ticker"] for r in retenus] == ["B.PA"]
     assert rejets == [{"ticker": "A.PA", "rang": 1, "score": 48.8,
                        "raison": "contrat_non_resolu"}]
+
+
+def test_select_entries_rejects_signal_when_sector_cap_reached():
+    """audit Or/Actions 2026-09-21, point 3 : aucune contrainte de
+    diversification n'existait -- MAX_POSITIONS_PER_SECTOR=3 doit
+    bloquer un 4e signal du meme secteur, meme mieux note."""
+    ouvertes = [
+        _bot_position(f"OPEN{i}.PA", sector="Financial Services") for i in range(3)
+    ]
+    signaux = [_signal("D.PA", 90.0, sector="Financial Services")]
+    plans = {"D.PA": _plan("D.PA")}
+    contrats = _contrats(["D.PA"])
+
+    retenus, rejets = portfolio.select_entries(
+        signaux, ouvertes, plans, contrats, _CASH_ILLIMITE)
+
+    assert retenus == []
+    assert rejets == [{"ticker": "D.PA", "rang": 1, "score": 90.0,
+                       "raison": "plafond_secteur_atteint"}]
+
+
+def test_select_entries_rejects_signal_when_index_cap_reached():
+    """MAX_POSITIONS_PER_INDEX=4 doit bloquer un 5e signal du meme
+    indice."""
+    ouvertes = [_bot_position(f"OPEN{i}.PA", index="CAC40") for i in range(4)]
+    signaux = [_signal("D.PA", 90.0, index="CAC40")]
+    plans = {"D.PA": _plan("D.PA")}
+    contrats = _contrats(["D.PA"])
+
+    retenus, rejets = portfolio.select_entries(
+        signaux, ouvertes, plans, contrats, _CASH_ILLIMITE)
+
+    assert retenus == []
+    assert rejets == [{"ticker": "D.PA", "rang": 1, "score": 90.0,
+                       "raison": "plafond_indice_atteint"}]
+
+
+def test_select_entries_sector_cap_does_not_block_other_sectors():
+    """Le plafond est par secteur, pas global -- un signal d'un autre
+    secteur doit toujours passer."""
+    ouvertes = [
+        _bot_position(f"OPEN{i}.PA", sector="Financial Services") for i in range(3)
+    ]
+    signaux = [_signal("D.PA", 90.0, sector="Technology")]
+    plans = {"D.PA": _plan("D.PA")}
+    contrats = _contrats(["D.PA"])
+
+    retenus, rejets = portfolio.select_entries(
+        signaux, ouvertes, plans, contrats, _CASH_ILLIMITE)
+
+    assert [r["signal"]["ticker"] for r in retenus] == ["D.PA"]
+    assert rejets == []
+
+
+def test_select_entries_sector_cap_counts_signals_retained_earlier_in_same_batch():
+    """Le plafond doit aussi compter les signaux deja retenus PLUS HAUT
+    dans le MEME classement, pas seulement les positions deja ouvertes --
+    sinon deux signaux du meme secteur pourraient passer le meme jour."""
+    signaux = [
+        _signal("A.PA", 90.0, sector="Financial Services"),
+        _signal("B.PA", 80.0, sector="Financial Services"),
+        _signal("C.PA", 70.0, sector="Financial Services"),
+        _signal("D.PA", 60.0, sector="Financial Services"),
+    ]
+    plans = {t: _plan(t) for t in ("A.PA", "B.PA", "C.PA", "D.PA")}
+    contrats = _contrats(["A.PA", "B.PA", "C.PA", "D.PA"])
+
+    retenus, rejets = portfolio.select_entries(
+        signaux, [], plans, contrats, _CASH_ILLIMITE)
+
+    assert [r["signal"]["ticker"] for r in retenus] == ["A.PA", "B.PA", "C.PA"]
+    assert rejets == [{"ticker": "D.PA", "rang": 4, "score": 60.0,
+                       "raison": "plafond_secteur_atteint"}]
+
+
+def test_select_entries_diversification_rejection_does_not_consume_a_slot():
+    """Meme principe que le filtre 0 action/contrat non resolu : un
+    signal rejete pour diversification ne doit pas consommer de place ni
+    de budget -- le signal suivant du classement doit toujours pouvoir
+    la prendre."""
+    ouvertes = [
+        _bot_position(f"OPEN{i}.PA", sector="Financial Services") for i in range(3)
+    ]
+    signaux = [
+        _signal("CAP.PA", 90.0, sector="Financial Services"),
+        _signal("B.PA", 48.8, sector="Technology"),
+    ]
+    plans = {"CAP.PA": _plan("CAP.PA"), "B.PA": _plan("B.PA")}
+    contrats = _contrats(["CAP.PA", "B.PA"])
+
+    retenus, rejets = portfolio.select_entries(
+        signaux, ouvertes, plans, contrats, _CASH_ILLIMITE)
+
+    assert [r["signal"]["ticker"] for r in retenus] == ["B.PA"]
+    assert rejets == [{"ticker": "CAP.PA", "rang": 1, "score": 90.0,
+                       "raison": "plafond_secteur_atteint"}]
+
+
+def test_select_entries_signal_without_sector_is_never_capped():
+    """Un signal sans secteur connu (ne devrait pas arriver en pratique)
+    ne doit jamais etre bloque par le plafond de diversification --
+    echec ouvert sur une donnee manquante, pas un rejet a tort."""
+    ouvertes = [
+        _bot_position(f"OPEN{i}.PA", sector="Financial Services") for i in range(3)
+    ]
+    signaux = [_signal("D.PA", 90.0, sector="")]
+    plans = {"D.PA": _plan("D.PA")}
+    contrats = _contrats(["D.PA"])
+
+    retenus, rejets = portfolio.select_entries(
+        signaux, ouvertes, plans, contrats, _CASH_ILLIMITE)
+
+    assert [r["signal"]["ticker"] for r in retenus] == ["D.PA"]
+    assert rejets == []
 
 
 def test_select_entries_missing_contract_does_not_consume_budget():

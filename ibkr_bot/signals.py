@@ -99,6 +99,7 @@ def collect_new_signals(
             "name": position.get("name", ""),
             "index": position["index"],
             "currency": currencies.get(position["index"], ""),
+            "sector": company.get("sector", ""),
             "entry_date": position["entry_date"],
             "paper_entry_price": position["entry_price"],
             "target_exit_price": position["target_exit_price"],

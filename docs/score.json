@@ -1,6 +1,6 @@
 {
   "date": "2026-09-25",
-  "composite_score": -1.3,
+  "composite_score": -0.5,
   "interpretation": "Neutre — pas d'action",
   "factors": [
     {
@@ -11,9 +11,9 @@
     },
     {
       "name": "Dollar (DXY)",
-      "score": 2.5600051879882812,
+      "score": 2.6300048828125,
       "weight": 0.15,
-      "raw_value": "101.00 (il y a 2 mois : 101.51)"
+      "raw_value": "100.98 (il y a 2 mois : 101.51)"
     },
     {
       "name": "Anticipations d'inflation",
@@ -35,9 +35,9 @@
     },
     {
       "name": "Positionnement CFTC",
-      "score": -2.307692307692308,
+      "score": -1.6666666666666672,
       "weight": 0.1,
-      "raw_value": "62e percentile (3 ans) — position nette 230,338 contrats"
+      "raw_value": "58e percentile (3 ans) — position nette 225,853 contrats"
     },
     {
       "name": "Achats banques centrales",
@@ -47,9 +47,9 @@
     }
   ],
   "technical": {
-    "note": "Cours en-dessous de la MM200 (-5.2%) — tendance baissière",
-    "spot": 4319.0,
-    "ma200": 4556.0445007324215
+    "note": "Cours en-dessous de la MM200 (-5.1%) — tendance baissière",
+    "spot": 4324.0,
+    "ma200": 4556.069500732422
   },
   "calendar": [
     {

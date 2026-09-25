@@ -170,6 +170,116 @@ function closePosition(id, sellPrice, sellDate, storage) {
 }
 
 /**
+ * Regroupe docs/dividend_history.json ({date, ticker, amount}) par
+ * ticker, trie chaque groupe par date croissante. Meme forme que
+ * groupPriceHistoryByTicker.
+ */
+function groupDividendHistoryByTicker(dividendHistory) {
+  const byTicker = {};
+  dividendHistory.forEach(entry => {
+    (byTicker[entry.ticker] = byTicker[entry.ticker] || []).push(entry);
+  });
+  Object.values(byTicker).forEach(entries => entries.sort((a, b) => (a.date < b.date ? -1 : 1)));
+  return byTicker;
+}
+
+/**
+ * Cumul de dividendes reellement encaisses, positions OUVERTES et
+ * CLOTUREES (un paiement recu pendant la detention reste un
+ * encaissement reel meme si la position est cloturee depuis). Un
+ * paiement compte pour une position si isPositionActiveOn(position,
+ * paiement.date). Agrege par devise ({ EUR: montant, USD: montant }),
+ * jamais converti/melange (meme convention que computePortfolioTotals).
+ * Une position dont le ticker n'est pas dans companiesByTicker (retiree
+ * de l'indice suivi) est ignoree.
+ */
+function computeDividendsReceived(positions, dividendHistoryByTicker, companiesByTicker, currencyByIndex) {
+  const totals = { EUR: 0, USD: 0 };
+  positions.forEach(position => {
+    const company = companiesByTicker[position.ticker];
+    if (!company) return;
+    const currency = currencyByIndex[company.index] === 'USD' ? 'USD' : 'EUR';
+    const payments = dividendHistoryByTicker[position.ticker] || [];
+    payments.forEach(payment => {
+      if (!isPositionActiveOn(position, payment.date)) return;
+      totals[currency] += payment.amount * position.quantity;
+    });
+  });
+  return totals;
+}
+
+/**
+ * `dateStr` ('YYYY-MM-DD') moins `days` jours, au format 'YYYY-MM-DD'.
+ * Utilise Date en UTC pour eviter tout decalage de fuseau horaire.
+ */
+function _dateMinusDays(dateStr, days) {
+  const d = new Date(dateStr + 'T00:00:00Z');
+  d.setUTCDate(d.getUTCDate() - days);
+  return d.toISOString().slice(0, 10);
+}
+
+/**
+ * Revenu projete : pour chaque position OUVERTE, somme des paiements par
+ * action des 365 derniers jours (TTM, trailing twelve months, fenetre
+ * ]today - 365 jours, today]) x quantite detenue. Agrege par devise.
+ * `today` est injectable (tests), 'YYYY-MM-DD', vaut la date du jour par
+ * defaut. Retourne { EUR: { annual, monthly }, USD: { annual, monthly } }
+ * -- monthly = annual / 12 (moyenne, pas un calendrier reel).
+ */
+function computeProjectedDividendIncome(openPositions, dividendHistoryByTicker, companiesByTicker, currencyByIndex, today) {
+  today = today || new Date().toISOString().slice(0, 10);
+  const cutoff = _dateMinusDays(today, 365);
+  const annual = { EUR: 0, USD: 0 };
+  openPositions.forEach(position => {
+    const company = companiesByTicker[position.ticker];
+    if (!company) return;
+    const currency = currencyByIndex[company.index] === 'USD' ? 'USD' : 'EUR';
+    const payments = dividendHistoryByTicker[position.ticker] || [];
+    const ttmPerShare = payments
+      .filter(p => p.date > cutoff && p.date <= today)
+      .reduce((sum, p) => sum + p.amount, 0);
+    annual[currency] += ttmPerShare * position.quantity;
+  });
+  return {
+    EUR: { annual: annual.EUR, monthly: annual.EUR / 12 },
+    USD: { annual: annual.USD, monthly: annual.USD / 12 },
+  };
+}
+
+/**
+ * Rendement sur cout par position OUVERTE : dividende TTM par action /
+ * buy_price * 100. Ne retourne que les positions dont le TTM > 0 (les
+ * non-payeuses sont exclues, pas affichees a 0% -- evite le bruit dans
+ * la liste). `today` injectable (tests), meme fenetre TTM que
+ * computeProjectedDividendIncome. Une position dont le ticker n'est pas
+ * dans companiesByTicker (retiree de l'indice suivi) est ignoree, meme
+ * convention que les autres fonctions de ce fichier. Tableau
+ * [{ ticker, ttmPerShare, yieldOnCost, projectedAnnual }, ...],
+ * projectedAnnual = ttmPerShare * quantity (revenu annuel projete de
+ * cette ligne).
+ */
+function computeYieldOnCost(openPositions, dividendHistoryByTicker, companiesByTicker, today) {
+  today = today || new Date().toISOString().slice(0, 10);
+  const cutoff = _dateMinusDays(today, 365);
+  const results = [];
+  openPositions.forEach(position => {
+    if (!companiesByTicker[position.ticker]) return;
+    const payments = dividendHistoryByTicker[position.ticker] || [];
+    const ttmPerShare = payments
+      .filter(p => p.date > cutoff && p.date <= today)
+      .reduce((sum, p) => sum + p.amount, 0);
+    if (ttmPerShare <= 0) return;
+    results.push({
+      ticker: position.ticker,
+      ttmPerShare,
+      yieldOnCost: (ttmPerShare / position.buy_price) * 100,
+      projectedAnnual: ttmPerShare * position.quantity,
+    });
+  });
+  return results;
+}
+
+/**
  * Regroupe docs/price_history.json (liste plate {date, ticker, price})
  * par ticker, trie chaque groupe par date croissante.
  */
@@ -440,5 +550,7 @@ if (typeof module !== 'undefined' && module.exports) {
     groupPriceHistoryByTicker, priceAtOrBefore, isPositionActiveOn, realValueForPosition,
     benchmarkValueForPosition, computePerformanceCurve, computePortfolioPerformanceCurves,
     computeBenchmarkPerformanceCurve,
+    groupDividendHistoryByTicker, computeDividendsReceived, computeProjectedDividendIncome,
+    computeYieldOnCost,
   };
 }

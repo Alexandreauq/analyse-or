@@ -909,6 +909,20 @@ def test_extract_ratios_icr_uses_implied_cost_of_debt_when_available():
     assert ratios["icr"] != pytest.approx(150.0 / (300.0 * 0.03))
 
 
+def test_extract_ratios_roe_treated_as_missing_when_equity_negative():
+    """audit Minor #7 : des capitaux propres négatifs (ex. McDonald's,
+    rachats d'actions massifs) inversent le signe du ROE en un chiffre
+    économiquement absurde -- traité comme une donnée manquante (repli
+    0.0), pas calculé tel quel."""
+    financials, balance_sheet, cashflow, closes_by_year = _make_fixture_statements()
+    years = list(financials.columns)
+    balance_sheet.loc["Stockholders Equity", years[0]] = -100.0
+    ratios = extract_ratios(
+        financials, balance_sheet, cashflow, closes_by_year, shares_outstanding=10.0
+    )
+    assert ratios["roe"] == 0.0
+
+
 def test_extract_ratios_computes_current_pb():
     financials, balance_sheet, cashflow, closes_by_year = _make_fixture_statements()
     ratios = extract_ratios(
@@ -5195,6 +5209,20 @@ def test_extract_ratios_financial_computes_expected_keys():
     # récent (500.0 - 200.0), sûr pour le DCF (déjà désactivé par fcf=0.0
     # avant que net_debt ne soit utilisé).
     assert ratios["net_debt"] == pytest.approx(300.0)
+
+
+def test_extract_ratios_financial_roe_treated_as_missing_when_equity_negative():
+    """Même correctif que le profil standard, côté extract_ratios_financial
+    (audit Minor #7) -- ici, roe pilote directement score_rentabilite_financiere
+    (pas seulement un affichage), donc un signe inversé aurait un impact
+    réel sur le score, pas seulement sur le texte."""
+    financials, balance_sheet, cashflow, closes_by_year = _make_financial_fixture_statements()
+    years = list(financials.columns)
+    balance_sheet.loc["Stockholders Equity", years[0]] = -500.0
+    ratios = indices_score.extract_ratios_financial(
+        financials, balance_sheet, cashflow, closes_by_year, shares_outstanding=100.0
+    )
+    assert ratios["roe"] == 0.0
 
 
 def test_extract_ratios_financial_exposes_no_loss_years():

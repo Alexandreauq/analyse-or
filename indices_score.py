@@ -2907,6 +2907,21 @@ def fetch_company_financials(ticker: str) -> dict:
         weinstein = {"stage": None, "stage_label": "Neutre", "volume_confirme": False}
 
     dividends = fetch_dividend_history(t)
+    if info.get("currency") == "GBp":
+        # Même conversion pence -> livres que pour `history` ci-dessus (voir
+        # le commentaire détaillé plus haut) : yfinance reporte aussi les
+        # dividendes des tickers londoniens concernés (HSBC, Barclays, Anglo
+        # American...) en pence, pas en livres. Sans cette division, chaque
+        # montant de dividende affiché en aval (rendement sur coût, cumul
+        # perçu, revenu projeté) est ~100x trop élevé.
+        dividends = dividends / 100.0
+    # Purge les valeurs non finies (même précaution que `history.dropna()`
+    # plus haut, même motif : un seul NaN écrit par json.dump() (appelé avec
+    # allow_nan=False dans update_dividend_history) fait échouer l'écriture
+    # en cours de route et corrompt le fichier, qui dégrade alors vers `[]`
+    # — de façon PERMANENTE si yfinance renvoie ce NaN systématiquement pour
+    # le même ticker, pas seulement lors d'un accroc ponctuel.
+    dividends = dividends.dropna()
     dividend_streak_years = compute_dividend_streak_years(dividends)
 
     if ticker in SHARES_OUTSTANDING_FROM_MARKET_CAP_TICKERS and not currency_mismatch_unresolved:

@@ -5281,6 +5281,11 @@ def main():
         "updated": datetime.today().strftime("%Y-%m-%d"),
         "index_names": INDEX_NAMES,
         "index_currency": INDEX_CURRENCY,
+        # Déjà calculé plus haut pour le WACC (une requête FRED par devise
+        # pour tout le run) -- publié tel quel pour que le frontend puisse
+        # calculer un Sharpe ratio sans le redemander (métriques de risque
+        # du portefeuille).
+        "risk_free_rate_by_currency": risk_free_rate_by_currency,
         # Niveau du jour de chaque indice (voir fetch_index_prices) — sert
         # de repli côté frontend quand le widget TradingView n'est pas
         # disponible pour un indice (licence de données bloquée en widget

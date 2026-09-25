@@ -389,6 +389,23 @@ def test_compute_signal_neutre_when_achat_bollinger_not_touched(monkeypatch):
     assert result["take_profit"] is None
 
 
+def test_compute_signal_achat_when_price_within_bollinger_tolerance(monkeypatch):
+    """Backtest réel sur 60 jours (2026-09-25) : exiger un toucher strict
+    de la bande a fait tomber le nombre de trades de 12 à 0 sur la même
+    fenêtre -- trop restrictif. Tolérance de SCALP_LEVEL_PROXIMITY (même
+    marge que la proximité support/résistance) : le prix n'a pas besoin
+    de toucher/dépasser littéralement la bande, juste d'en être proche."""
+    candles = _build_bearish_then_hammer_candles()
+    price = candles[-1]["close"]
+
+    def bande_proche_mais_non_touchee(closes, period, mult):
+        return {"middle": price + 10, "upper": price + 20, "lower": price - 0.3}
+
+    monkeypatch.setattr(confluence, "compute_bollinger", bande_proche_mais_non_touchee)
+    result = confluence.compute_signal(candles)
+    assert result["status"] == "achat"
+
+
 def test_compute_signal_neutre_when_achat_ratio_insufficient(monkeypatch):
     """Reprend le scenario d'achat complet (structure + confirmation
     reunies) mais force une resistance a peine au-dessus du prix : le
@@ -506,6 +523,19 @@ def test_compute_signal_neutre_when_vente_bollinger_not_touched(monkeypatch):
     assert result["status"] == "neutre"
     assert result["stop_loss"] is None
     assert result["take_profit"] is None
+
+
+def test_compute_signal_vente_when_price_within_bollinger_tolerance(monkeypatch):
+    """Symétrique de test_compute_signal_achat_when_price_within_bollinger_tolerance."""
+    candles = _build_bullish_then_shooting_star_candles()
+    price = candles[-1]["close"]
+
+    def bande_proche_mais_non_touchee(closes, period, mult):
+        return {"middle": price - 10, "upper": price + 0.3, "lower": price - 20}
+
+    monkeypatch.setattr(confluence, "compute_bollinger", bande_proche_mais_non_touchee)
+    result = confluence.compute_signal(candles)
+    assert result["status"] == "vente"
 
 
 def test_compute_signal_neutre_when_vente_ratio_insufficient(monkeypatch):

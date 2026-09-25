@@ -359,20 +359,27 @@ def compute_signal(candles: list[dict]) -> dict:
 
     # Confirmation structurelle supplémentaire (audit Or 2026-09-21, point
     # mineur "Bollinger calculées mais jamais utilisées") : le prix doit
-    # aussi toucher/dépasser la bande Bollinger correspondante, en plus de
+    # aussi être proche de la bande Bollinger correspondante, en plus de
     # la proximité support/résistance déjà en place — pas une alternative
     # (OU), une exigence en plus (ET), pour rester sélectif sur un edge
     # déjà mince au backtest (41,7% de trades gagnants sur l'échantillon
-    # du 21/09). SCALP_BOLLINGER_PERIOD/MULT existaient déjà (utilisés
-    # pour SCALP_MIN_CANDLES) mais n'avaient jamais servi au calcul du
-    # signal lui-même, gardés pour parité avec docs/scalping.js.
+    # du 21/09). Tolérance de SCALP_LEVEL_PROXIMITY (même marge que la
+    # proximité support/résistance, pas une nouvelle constante) plutôt
+    # qu'un toucher/dépassement strict : un backtest réel sur 60 jours a
+    # montré qu'exiger un toucher strict de la bande EN MÊME TEMPS qu'une
+    # proximité support/résistance ne s'est jamais produit sur cette
+    # fenêtre (0 trade contre 12 avant ce correctif) — un peu trop
+    # restrictif pour rester utile. SCALP_BOLLINGER_PERIOD/MULT existaient
+    # déjà (utilisés pour SCALP_MIN_CANDLES) mais n'avaient jamais servi
+    # au calcul du signal lui-même, gardés pour parité avec
+    # docs/scalping.js.
     structurel_achat = (
         trend == "baissier" and (near_support or broke_resistance)
-        and price <= bollinger["lower"]
+        and price <= bollinger["lower"] + SCALP_LEVEL_PROXIMITY
     )
     structurel_vente = (
         trend == "haussier" and (near_resistance or broke_support)
-        and price >= bollinger["upper"]
+        and price >= bollinger["upper"] - SCALP_LEVEL_PROXIMITY
     )
 
     confirmation_achat = rsi < 70 and macd["macd"] > macd["signal"] and pattern is not None and pattern["direction"] == "haussier"

@@ -319,6 +319,41 @@ def test_simulate_trades_force_closes_open_position_during_news_blackout():
     assert trades[0]["close_price"] == 101  # close de la bougie de black-out
 
 
+def test_simulate_trades_skips_opening_trade_during_market_closed_candle():
+    # Bougie de samedi (marché fermé), horodatage frais malgré tout --
+    # reproduit l'incident réel du 12-13/09/2026 (voir
+    # confluence.is_market_closed) : Twelve Data peut renvoyer une bougie
+    # à l'air normal même marché fermé, elle ne doit jamais servir à
+    # ouvrir un trade.
+    candles = _warmup_candles(confluence.SCALP_MIN_CANDLES - 1)
+    saturday = datetime(2026, 9, 12, 12, 0, tzinfo=timezone.utc)
+    candles.append(_candle(saturday.strftime("%Y-%m-%d %H:%M:%S"), 100, 102, 98, 101))
+
+    trades = backtest.simulate_trades(
+        candles, signal_fn=_fire_once_then_neutral("achat", 100.0, 90.0, 200.0))
+
+    assert trades == []
+
+
+def test_simulate_trades_does_not_manage_open_position_during_market_closed_candle():
+    # Ouverture à la dernière bougie de warmup (jour de semaine). La
+    # bougie de samedi ajoutée ensuite toucherait le stop (low=80 <= 90)
+    # si elle était gérée -- elle doit être entièrement ignorée (ni SL/TP,
+    # ni black-out news, ni réévaluation du signal pour un renversement).
+    candles = _warmup_candles(confluence.SCALP_MIN_CANDLES)
+    saturday = datetime(2026, 9, 12, 12, 0, tzinfo=timezone.utc)
+    candles.append(_candle(saturday.strftime("%Y-%m-%d %H:%M:%S"), 100, 101, 80, 85))
+
+    trades = backtest.simulate_trades(
+        candles, signal_fn=_fire_once_then_neutral("achat", 100.0, 90.0, 200.0))
+
+    # Le stop n'a pas pu être touché pendant la bougie de samedi (ignorée)
+    # -> la position reste ouverte jusqu'à la fin des données.
+    assert len(trades) == 1
+    assert trades[0]["close_reason"] == "fin_backtest"
+    assert trades[0]["close_price"] == candles[-1]["close"]
+
+
 def test_simulate_trades_uses_a_rolling_window_not_the_full_history():
     n = confluence.SCALP_MIN_CANDLES + 20
     candles = _warmup_candles(n)

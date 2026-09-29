@@ -165,6 +165,37 @@ def is_news_blackout(date: datetime) -> bool:
     return False
 
 
+def is_market_closed(date: datetime) -> bool:
+    """XAU/USD (comme le forex) est fermé du vendredi ~22h UTC au
+    dimanche ~22h UTC — bornes volontairement prudentes (les brokers
+    varient de quelques dizaines de minutes selon le fournisseur de
+    liquidité), mieux vaut rater un peu de marché réel aux bords que
+    trader du bruit sur un marché fermé. Indépendant de la fraîcheur
+    annoncée par l'API (voir STALE_CANDLE_THRESHOLD_SECONDS dans
+    gold_bot.loop.run_cycle) : Twelve Data peut renvoyer une bougie à
+    l'horodatage à jour même marché fermé — trouvé en production le
+    week-end du 12-13/09/2026 côté paper-trading (29 fausses positions
+    ouvertes sur du bruit d'API), d'où ce garde basé uniquement sur
+    l'horloge murale, jamais sur les données reçues. Déplacé de
+    gold_bot.loop vers ici le 2026-09-29 : gold_bot.backtest en avait
+    besoin lui aussi et ne l'avait jamais eu — environ 25% des bougies
+    5min de l'historique Twelve Data tombent dans cette fenêtre, avec un
+    vrai mouvement de prix (pas plates), et ces bougies non filtrées
+    avaient à elles seules expliqué la quasi-totalité de la perte
+    annuelle d'un backtest (20 trades sur 816, taux de réussite 5% contre
+    16% sur le reste de l'année). Portage fidèle de isMarketClosed
+    (scalping_tracker.js). `date` doit être en UTC."""
+    day = date.weekday()  # lundi = 0 ... dimanche = 6
+    hour = date.hour
+    if day == 5:  # samedi : fermé toute la journée
+        return True
+    if day == 4 and hour >= 22:  # vendredi à partir de 22h UTC
+        return True
+    if day == 6 and hour < 22:  # dimanche avant 22h UTC
+        return True
+    return False
+
+
 def meets_minimum_risk_reward(entry_price: float, stop_loss: float, take_profit: float, direction: str) -> bool:
     """Garde-fou ratio risque/rendement : refuse un trade dont l'objectif
     potentiel (souvent plafonne par le niveau de support/resistance

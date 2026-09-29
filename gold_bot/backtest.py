@@ -55,7 +55,13 @@ def fetch_gold_candles_range(api_key: str, start: datetime, end: datetime) -> li
             "timezone": "UTC",
             "apikey": api_key,
         }
-        response = requests.get(TWELVE_DATA_URL, params=params, timeout=30)
+        try:
+            response = requests.get(TWELVE_DATA_URL, params=params, timeout=30)
+        except requests.exceptions.RequestException as e:
+            # type(e).__name__, jamais str(e) : voir le même correctif
+            # dans confluence.fetch_gold_candles (audit pré-lancement du
+            # 2026-09-29) -- str(e) embarquerait apikey en clair.
+            raise RuntimeError(f"Impossible de contacter Twelve Data : {type(e).__name__}")
         if not response.ok:
             raise RuntimeError(f"Twelve Data a répondu {response.status_code}")
         data = response.json()

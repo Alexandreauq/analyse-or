@@ -105,6 +105,28 @@ def test_fetch_gold_candles_range_rejects_on_http_error(monkeypatch):
         )
 
 
+def test_fetch_gold_candles_range_network_error_never_leaks_the_api_key(monkeypatch):
+    """Même correctif que confluence.fetch_gold_candles (audit
+    pré-lancement du 2026-09-29) : requests/urllib3 embarquent l'URL
+    complète (donc apikey en clair) dans str(exception) pour une coupure
+    réseau -- cette fonction n'avait même aucun try/except autour de
+    requests.get, l'exception brute remontait telle quelle."""
+    def fake_get(*a, **k):
+        raise backtest.requests.exceptions.ConnectTimeout(
+            "Max retries exceeded with url: /time_series?apikey=SECRET-KEY-123 "
+            "(Caused by ConnectTimeoutError(...))"
+        )
+    monkeypatch.setattr(backtest.requests, "get", fake_get)
+    with pytest.raises(RuntimeError) as exc_info:
+        backtest.fetch_gold_candles_range(
+            "SECRET-KEY-123",
+            datetime(2026, 1, 1, tzinfo=timezone.utc),
+            datetime(2026, 1, 2, tzinfo=timezone.utc),
+        )
+    assert "SECRET-KEY-123" not in str(exc_info.value)
+    assert "ConnectTimeout" in str(exc_info.value)
+
+
 def test_fetch_gold_candles_range_rejects_start_after_end():
     with pytest.raises(ValueError):
         backtest.fetch_gold_candles_range(

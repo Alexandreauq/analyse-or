@@ -57,6 +57,24 @@ def test_fetch_gold_candles_rejects_on_http_error(monkeypatch):
         confluence.fetch_gold_candles("fake-key")
 
 
+def test_fetch_gold_candles_network_error_never_leaks_the_api_key(monkeypatch):
+    """requests/urllib3 embarquent l'URL complète (avec la query string,
+    donc apikey en clair) dans str(exception) pour une coupure réseau --
+    ce message finit sinon tel quel dans decisions_log.jsonl puis le
+    résumé quotidien envoyé par email. Trouvé lors de l'audit
+    pré-lancement du 2026-09-29."""
+    def fake_get(*a, **k):
+        raise confluence.requests.exceptions.ConnectTimeout(
+            "Max retries exceeded with url: /time_series?apikey=SECRET-KEY-123 "
+            "(Caused by ConnectTimeoutError(...))"
+        )
+    monkeypatch.setattr(confluence.requests, "get", fake_get)
+    with pytest.raises(RuntimeError) as exc_info:
+        confluence.fetch_gold_candles("SECRET-KEY-123")
+    assert "SECRET-KEY-123" not in str(exc_info.value)
+    assert "ConnectTimeout" in str(exc_info.value)
+
+
 def test_detect_pivots_finds_high_and_low_with_k1():
     candles = [
         {"high": 10, "low": 8},

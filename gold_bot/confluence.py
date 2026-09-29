@@ -10,6 +10,8 @@ from datetime import datetime, timezone
 
 import requests
 
+import gold_bot.chart_patterns as chart_patterns
+
 TWELVE_DATA_URL = "https://api.twelvedata.com/time_series"
 
 
@@ -104,154 +106,9 @@ def classify_trend(pivots: list[dict]) -> str:
     return "neutre"
 
 
-def current_levels(pivots: list[dict], current_price: float) -> dict:
-    """Support = dernier pivot bas confirmé sous current_price ;
-    résistance = dernier pivot haut confirmé au-dessus. None si aucun
-    pivot de ce côté."""
-    below_lows = [p for p in pivots if p["type"] == "low" and p["price"] < current_price]
-    above_highs = [p for p in pivots if p["type"] == "high" and p["price"] > current_price]
-    return {
-        "support": below_lows[-1]["price"] if below_lows else None,
-        "resistance": above_highs[-1]["price"] if above_highs else None,
-    }
-
-
-def compute_rsi(closes: list[float], period: int) -> float:
-    """RSI classique : compare la moyenne des hausses à la moyenne des
-    baisses sur les `period` dernières variations. 100 si aucune baisse
-    (évite une division par zéro)."""
-    changes = [closes[i] - closes[i - 1] for i in range(len(closes) - period, len(closes))]
-    gains = [c for c in changes if c > 0]
-    losses = [-c for c in changes if c < 0]
-    avg_gain = sum(gains) / period
-    avg_loss = sum(losses) / period
-    if avg_loss == 0:
-        return 100.0
-    rs = avg_gain / avg_loss
-    return 100 - 100 / (1 + rs)
-
-
-def _ema_last(values: list[float], period: int) -> float:
-    """EMA seedée par une SMA des `period` premières valeurs. Dernière
-    valeur uniquement."""
-    k = 2 / (period + 1)
-    ema = sum(values[:period]) / period
-    for v in values[period:]:
-        ema = v * k + ema * (1 - k)
-    return ema
-
-
-def _ema_series(values: list[float], period: int) -> list[float]:
-    """Série complète des EMA (une valeur par index à partir de
-    period-1) — nécessaire pour la ligne signal du MACD."""
-    k = 2 / (period + 1)
-    out = []
-    ema = sum(values[:period]) / period
-    out.append(ema)
-    for v in values[period:]:
-        ema = v * k + ema * (1 - k)
-        out.append(ema)
-    return out
-
-
-def compute_macd(closes: list[float], fast_period: int, slow_period: int, signal_period: int) -> dict:
-    """MACD(fast, slow, signal). Renvoie uniquement le dernier point."""
-    fast_series = _ema_series(closes, fast_period)
-    slow_series = _ema_series(closes, slow_period)
-    offset = len(fast_series) - len(slow_series)
-    macd_series = [fast_series[offset + i] - slow_series[i] for i in range(len(slow_series))]
-    signal = _ema_last(macd_series, signal_period)
-    macd = macd_series[-1]
-    return {"macd": macd, "signal": signal, "histogram": macd - signal}
-
-
-def compute_bollinger(closes: list[float], period: int, mult: float) -> dict:
-    """Bandes de Bollinger : MM `period` ± mult × écart-type population.
-    Dernier point uniquement. Utilisé par compute_signal comme
-    confirmation structurelle supplémentaire depuis l'audit Or du
-    2026-09-21 (point mineur, resté non câblé jusque-là malgré
-    SCALP_BOLLINGER_PERIOD/MULT déjà définis)."""
-    window = closes[-period:]
-    mean = sum(window) / period
-    variance = sum((c - mean) ** 2 for c in window) / period
-    stdev = variance ** 0.5
-    return {"middle": mean, "upper": mean + mult * stdev, "lower": mean - mult * stdev}
-
-
-def _body_size(c):
-    return abs(c["close"] - c["open"])
-
-
-def _is_bullish(c):
-    return c["close"] > c["open"]
-
-
-def _upper_wick(c):
-    return c["high"] - max(c["open"], c["close"])
-
-
-def _lower_wick(c):
-    return min(c["open"], c["close"]) - c["low"]
-
-
-def match_candlestick_pattern(candles: list[dict], trend: str) -> dict | None:
-    """Reconnaît un sous-ensemble de 8 figures de chandeliers sur les 1 à
-    3 dernières bougies. `trend` est la tendance courte au moment de
-    l'examen — plusieurs figures n'ont de sens qu'en contexte. Renvoie la
-    première figure trouvée (3 bougies avant 2 avant 1) ou None."""
-    n = len(candles)
-    if n < 1:
-        return None
-    last = candles[-1]
-
-    if n >= 3:
-        c1, c2, c3 = candles[-3:]
-        if trend == "baissier" and not _is_bullish(c1) and _body_size(c2) < _body_size(c1) * 0.5 \
-                and _is_bullish(c3) and c3["close"] > (c1["open"] + c1["close"]) / 2:
-            return {"name": "Étoile du Matin", "direction": "haussier"}
-        if trend == "haussier" and _is_bullish(c1) and _body_size(c2) < _body_size(c1) * 0.5 \
-                and not _is_bullish(c3) and c3["close"] < (c1["open"] + c1["close"]) / 2:
-            return {"name": "Étoile du Soir", "direction": "baissier"}
-
-    if n >= 2:
-        prev, cur = candles[-2:]
-        if trend == "baissier" and not _is_bullish(prev) and _is_bullish(cur) \
-                and cur["open"] <= prev["close"] and cur["close"] >= prev["open"]:
-            return {"name": "Englobante haussière", "direction": "haussier"}
-        if trend == "haussier" and _is_bullish(prev) and not _is_bullish(cur) \
-                and cur["open"] >= prev["close"] and cur["close"] <= prev["open"]:
-            return {"name": "Englobante baissière", "direction": "baissier"}
-        if trend == "baissier" and not _is_bullish(prev) and _is_bullish(cur) \
-                and cur["open"] < prev["close"] and cur["close"] > (prev["open"] + prev["close"]) / 2 \
-                and cur["close"] < prev["open"]:
-            return {"name": "Pénétrante", "direction": "haussier"}
-        if trend == "haussier" and _is_bullish(prev) and not _is_bullish(cur) \
-                and cur["open"] > prev["close"] and cur["close"] < (prev["open"] + prev["close"]) / 2 \
-                and cur["close"] > prev["open"]:
-            return {"name": "Nuage noir", "direction": "baissier"}
-
-    body = _body_size(last)
-    upper_wick = _upper_wick(last)
-    lower_wick = _lower_wick(last)
-    if trend == "baissier" and lower_wick >= body * 2 and upper_wick < body * 0.3:
-        return {"name": "Marteau", "direction": "haussier"}
-    if trend == "haussier" and upper_wick >= body * 2 and lower_wick < body * 0.3:
-        return {"name": "Étoile filante", "direction": "baissier"}
-
-    return None
-
-
-SCALP_PIVOT_K = 3
-SCALP_RSI_PERIOD = 14
-SCALP_MACD_FAST = 12
-SCALP_MACD_SLOW = 26
-SCALP_MACD_SIGNAL = 9
-SCALP_BOLLINGER_PERIOD = 20
-SCALP_BOLLINGER_MULT = 2
-SCALP_TAKEPROFIT_RISK_MULTIPLE = 1.5
-SCALP_LEVEL_PROXIMITY = 0.5
-SCALP_MIN_CANDLES = max(SCALP_BOLLINGER_PERIOD, SCALP_MACD_SLOW + SCALP_MACD_SIGNAL) + 1
-SCALP_STOP_BUFFER = SCALP_LEVEL_PROXIMITY * 3
+SCALP_TAKEPROFIT_RISK_MULTIPLE = 1.5  # INCHANGÉ : seuil minimum du filtre R:R (meets_minimum_risk_reward)
+CHARTPATTERN_STOP_BUFFER = chart_patterns.CHARTPATTERN_HEIGHT_TOLERANCE  # réutilise l'échelle existante ($1), pas un nouveau nombre magique
+SCALP_MIN_CANDLES = 2 * chart_patterns.CHARTPATTERN_PIVOT_K + 1  # plancher minimal pour qu'un seul pivot soit détectable ; le vrai filtrage (assez de pivots pour une figure complète) est géré par detect_chart_patterns elle-même
 
 # Fenêtre de black-out autour des publications macro à très fort impact
 # (CPI/Emploi US/FOMC, décision BCE, décision Bank of England) — portage
@@ -329,11 +186,15 @@ def meets_minimum_risk_reward(entry_price: float, stop_loss: float, take_profit:
 
 
 def compute_signal(candles: list[dict]) -> dict:
-    """Moteur de confluence : combine tendance + S/R + indicateurs +
-    chandeliers en un signal achat/vente/neutre, avec entry/stop_loss/
-    take_profit si un signal est émis. Ne lève jamais d'exception —
-    `candles` trop court renvoie neutre avec tous les prix à None, de
-    même qu'en pleine fenêtre de black-out macro (voir is_news_blackout)."""
+    """Moteur de suivi de tendance par figures chartistes (portage de
+    docs/chart_patterns.js::detectChartPatterns, voir gold_bot/chart_patterns.py)
+    — remplace le moteur contre-tendance sur chandelier utilisé jusqu'au
+    2026-09-29, retiré de ce fichier (confirmé trop passif en production
+    réelle : aucun signal en ~36h avec dry_run désactivé, cohérent avec
+    le backtest du 27/09 : ~4 trades/90 jours). Ne lève jamais
+    d'exception -- `candles` trop court ou aucune figure détectée renvoie
+    neutre avec tous les prix à None, de même qu'en pleine fenêtre de
+    black-out macro (voir is_news_blackout)."""
     price = candles[-1]["close"] if candles else None
     if not price or len(candles) < SCALP_MIN_CANDLES:
         return {"status": "neutre", "price": price, "entry": None, "stop_loss": None,
@@ -343,67 +204,26 @@ def compute_signal(candles: list[dict]) -> dict:
         return {"status": "neutre", "price": price, "entry": None, "stop_loss": None,
                 "take_profit": None, "trend": "neutre", "pattern": None}
 
-    pivots = detect_pivots(candles, SCALP_PIVOT_K)
+    pivots = detect_pivots(candles, chart_patterns.CHARTPATTERN_PIVOT_K)
     trend = classify_trend(pivots)
-    levels = current_levels(pivots, price)
-    closes = [c["close"] for c in candles]
-    rsi = compute_rsi(closes, SCALP_RSI_PERIOD)
-    macd = compute_macd(closes, SCALP_MACD_FAST, SCALP_MACD_SLOW, SCALP_MACD_SIGNAL)
-    bollinger = compute_bollinger(closes, SCALP_BOLLINGER_PERIOD, SCALP_BOLLINGER_MULT)
-    pattern = match_candlestick_pattern(candles, trend)
+    pattern = chart_patterns.detect_chart_patterns(pivots, trend, price)
+    if pattern is None:
+        return {"status": "neutre", "price": price, "entry": None, "stop_loss": None,
+                "take_profit": None, "trend": trend, "pattern": None}
 
-    near_support = levels["support"] is not None and abs(price - levels["support"]) <= SCALP_LEVEL_PROXIMITY
-    near_resistance = levels["resistance"] is not None and abs(price - levels["resistance"]) <= SCALP_LEVEL_PROXIMITY
-    broke_resistance = levels["resistance"] is not None and price > levels["resistance"]
-    broke_support = levels["support"] is not None and price < levels["support"]
+    direction = "achat" if pattern["direction"] == "haussier" else "vente"
+    breakout = pattern["breakoutPrice"]
+    height = pattern["patternHeight"]
+    if direction == "achat":
+        stop_loss = breakout - CHARTPATTERN_STOP_BUFFER
+        take_profit = breakout + height
+    else:
+        stop_loss = breakout + CHARTPATTERN_STOP_BUFFER
+        take_profit = breakout - height
 
-    # Confirmation structurelle supplémentaire (audit Or 2026-09-21, point
-    # mineur "Bollinger calculées mais jamais utilisées") : le prix doit
-    # aussi être proche de la bande Bollinger correspondante, en plus de
-    # la proximité support/résistance déjà en place — pas une alternative
-    # (OU), une exigence en plus (ET), pour rester sélectif sur un edge
-    # déjà mince au backtest (41,7% de trades gagnants sur l'échantillon
-    # du 21/09). Tolérance de SCALP_LEVEL_PROXIMITY (même marge que la
-    # proximité support/résistance, pas une nouvelle constante) plutôt
-    # qu'un toucher/dépassement strict : un backtest réel sur 60 jours a
-    # montré qu'exiger un toucher strict de la bande EN MÊME TEMPS qu'une
-    # proximité support/résistance ne s'est jamais produit sur cette
-    # fenêtre (0 trade contre 12 avant ce correctif) — un peu trop
-    # restrictif pour rester utile. SCALP_BOLLINGER_PERIOD/MULT existaient
-    # déjà (utilisés pour SCALP_MIN_CANDLES) mais n'avaient jamais servi
-    # au calcul du signal lui-même, gardés pour parité avec
-    # docs/scalping.js.
-    structurel_achat = (
-        trend == "baissier" and (near_support or broke_resistance)
-        and price <= bollinger["lower"] + SCALP_LEVEL_PROXIMITY
-    )
-    structurel_vente = (
-        trend == "haussier" and (near_resistance or broke_support)
-        and price >= bollinger["upper"] - SCALP_LEVEL_PROXIMITY
-    )
+    if not meets_minimum_risk_reward(price, stop_loss, take_profit, direction):
+        return {"status": "neutre", "price": price, "entry": None, "stop_loss": None,
+                "take_profit": None, "trend": trend, "pattern": None}
 
-    confirmation_achat = rsi < 70 and macd["macd"] > macd["signal"] and pattern is not None and pattern["direction"] == "haussier"
-    confirmation_vente = rsi > 30 and macd["macd"] < macd["signal"] and pattern is not None and pattern["direction"] == "baissier"
-
-    if structurel_achat and confirmation_achat:
-        stop_loss = levels["support"] - SCALP_STOP_BUFFER if levels["support"] is not None else price - price * 0.001
-        risk = price - stop_loss
-        take_profit = levels["resistance"] if (levels["resistance"] is not None and levels["resistance"] > price) \
-            else price + risk * SCALP_TAKEPROFIT_RISK_MULTIPLE
-        if not meets_minimum_risk_reward(price, stop_loss, take_profit, "achat"):
-            return {"status": "neutre", "price": price, "entry": None, "stop_loss": None,
-                    "take_profit": None, "trend": trend, "pattern": None}
-        return {"status": "achat", "price": price, "entry": price, "stop_loss": stop_loss,
-                "take_profit": take_profit, "trend": trend, "pattern": pattern}
-    if structurel_vente and confirmation_vente:
-        stop_loss = levels["resistance"] + SCALP_STOP_BUFFER if levels["resistance"] is not None else price + price * 0.001
-        risk = stop_loss - price
-        take_profit = levels["support"] if (levels["support"] is not None and levels["support"] < price) \
-            else price - risk * SCALP_TAKEPROFIT_RISK_MULTIPLE
-        if not meets_minimum_risk_reward(price, stop_loss, take_profit, "vente"):
-            return {"status": "neutre", "price": price, "entry": None, "stop_loss": None,
-                    "take_profit": None, "trend": trend, "pattern": None}
-        return {"status": "vente", "price": price, "entry": price, "stop_loss": stop_loss,
-                "take_profit": take_profit, "trend": trend, "pattern": pattern}
-    return {"status": "neutre", "price": price, "entry": None, "stop_loss": None,
-            "take_profit": None, "trend": trend, "pattern": None}
+    return {"status": direction, "price": price, "entry": price, "stop_loss": stop_loss,
+            "take_profit": take_profit, "trend": trend, "pattern": pattern}

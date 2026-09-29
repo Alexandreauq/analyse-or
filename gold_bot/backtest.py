@@ -11,13 +11,11 @@ import json
 import os
 from datetime import datetime, timedelta, timezone
 
-import requests
-
+import gold_bot.broker as broker
 import gold_bot.confluence as confluence
 
-TWELVE_DATA_URL = "https://api.twelvedata.com/time_series"
-# Plafond de l'API Twelve Data pour un seul appel time_series.
-MAX_OUTPUT_SIZE = 5000
+# Plafond de l'API MetaApi données de marché pour un seul appel.
+MAX_OUTPUT_SIZE = 1000
 # Aligné sur l'appel réel de confluence.fetch_gold_candles (outputsize=90) :
 # la fenêtre glissante soumise à compute_signal doit avoir la même taille
 # que ce que le bot voit réellement en production, jamais tout l'historique
@@ -27,62 +25,47 @@ DEFAULT_BACKTEST_DAYS = 60
 RESULTS_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "backtest_results.json")
 
 
-def fetch_gold_candles_range(api_key: str, start: datetime, end: datetime) -> list[dict]:
-    """Récupère tout l'historique XAU/USD 1min entre `start` et `end`
-    (bornes incluses, UTC), en paginant par blocs de MAX_OUTPUT_SIZE via le
-    paramètre `end_date` de Twelve Data (chaque appel renvoie au plus
-    MAX_OUTPUT_SIZE bougies se terminant à `end_date`, les plus récentes en
-    premier). Résultat trié chronologiquement, sans doublon. Lève
-    RuntimeError au premier échec réseau/API — mêmes contrats d'erreur que
-    confluence.fetch_gold_candles."""
+def fetch_gold_candles_range(token: str, account_id: str, start: datetime, end: datetime,
+                              region: str = broker.DEFAULT_MT5_REGION) -> list[dict]:
+    """Récupère tout l'historique XAU/USD 5min entre `start` et `end`
+    (bornes incluses, UTC) via l'API de données de marché MetaApi, en
+    paginant par blocs de MAX_OUTPUT_SIZE via le paramètre `start_time`
+    (chaque appel renvoie au plus MAX_OUTPUT_SIZE bougies se terminant à
+    `start_time`, les plus récentes en premier). Résultat trié
+    chronologiquement, sans doublon, uniquement des bougies closes
+    (state == "complete"). Bascule du 2026-09-29 (voir docs/superpowers/
+    specs/2026-09-29-gold-bot-session-breakout-volume-design.md) :
+    remplace Twelve Data, donne accès à tick_volume/spread."""
     if start >= end:
         raise ValueError("start doit être strictement antérieur à end")
 
     all_candles: dict[str, dict] = {}
-    cursor = end
+    cursor = end.strftime("%Y-%m-%d %H:%M:%S.000")
     # Marge généreuse : même avec des pages plus petites que MAX_OUTPUT_SIZE
     # (marché fermé, trous de données), ce plafond laisse largement de quoi
     # couvrir la plage demandée sans boucler indéfiniment en cas de réponse
     # inattendue de l'API.
-    max_iterations = max(10, int((end - start).total_seconds() / 60 / MAX_OUTPUT_SIZE) + 10)
+    max_iterations = max(10, int((end - start).total_seconds() / 60 / 5 / MAX_OUTPUT_SIZE) + 10)
 
     for _ in range(max_iterations):
-        params = {
-            "symbol": "XAU/USD",
-            "interval": "1min",
-            "outputsize": str(MAX_OUTPUT_SIZE),
-            "end_date": cursor.strftime("%Y-%m-%d %H:%M:%S"),
-            "timezone": "UTC",
-            "apikey": api_key,
-        }
-        try:
-            response = requests.get(TWELVE_DATA_URL, params=params, timeout=30)
-        except requests.exceptions.RequestException as e:
-            # type(e).__name__, jamais str(e) : voir le même correctif
-            # dans confluence.fetch_gold_candles (audit pré-lancement du
-            # 2026-09-29) -- str(e) embarquerait apikey en clair.
-            raise RuntimeError(f"Impossible de contacter Twelve Data : {type(e).__name__}")
-        if not response.ok:
-            raise RuntimeError(f"Twelve Data a répondu {response.status_code}")
-        data = response.json()
-        if data.get("status") == "error" or not isinstance(data.get("values"), list):
-            raise RuntimeError(f"Réponse Twelve Data invalide : {data.get('message', 'pas de données')}")
-        values = data["values"]
-        if not values:
+        raw = broker.get_historical_candles(token, account_id, "XAUUSD", "5m",
+                                             start_time=cursor, limit=MAX_OUTPUT_SIZE, region=region)
+        if not raw:
             break
-        for v in values:
-            t = v["datetime"]
-            all_candles[t] = {
-                "time": t,
-                "open": confluence._parse_float(v["open"]),
-                "high": confluence._parse_float(v["high"]),
-                "low": confluence._parse_float(v["low"]),
-                "close": confluence._parse_float(v["close"]),
+        for c in raw:
+            if c["state"] != "complete":
+                continue
+            time_str = datetime.fromisoformat(c["time"].replace("Z", "+00:00")).strftime("%Y-%m-%d %H:%M:%S")
+            all_candles[time_str] = {
+                "time": time_str, "open": c["open"], "high": c["high"], "low": c["low"], "close": c["close"],
+                "tick_volume": c["tickVolume"], "spread": c["spread"],
             }
-        oldest = datetime.fromisoformat(values[-1]["datetime"].replace(" ", "T")).replace(tzinfo=timezone.utc)
+        oldest = min(
+            datetime.fromisoformat(c["time"].replace("Z", "+00:00")) for c in raw
+        )
         if oldest <= start:
             break
-        cursor = oldest - timedelta(minutes=1)
+        cursor = oldest.strftime("%Y-%m-%d %H:%M:%S.000")
 
     result = [
         c for c in all_candles.values()
@@ -253,13 +236,14 @@ def summarize_trades(trades: list[dict]) -> dict:
     }
 
 
-def run_backtest(api_key: str, days: int = DEFAULT_BACKTEST_DAYS, end: datetime | None = None) -> dict:
+def run_backtest(token: str, account_id: str, days: int = DEFAULT_BACKTEST_DAYS,
+                  end: datetime | None = None, region: str = broker.DEFAULT_MT5_REGION) -> dict:
     """Un backtest complet : récupère `days` jours d'historique se terminant
     à `end` (défaut : maintenant), rejoue le moteur réel, résume. `end` est
     injectable pour les tests, même convention que loop.run_cycle(now=...)."""
     end = end or datetime.now(timezone.utc)
     start = end - timedelta(days=days)
-    candles = fetch_gold_candles_range(api_key, start, end)
+    candles = fetch_gold_candles_range(token, account_id, start, end, region=region)
     trades = simulate_trades(candles)
     summary = summarize_trades(trades)
     return {
@@ -274,14 +258,15 @@ def run_backtest(api_key: str, days: int = DEFAULT_BACKTEST_DAYS, end: datetime 
 def main():
     import argparse
     parser = argparse.ArgumentParser(
-        description="Backtest du moteur de confluence Or réel (gold_bot.confluence) sur données historiques Twelve Data.")
+        description="Backtest du moteur de confluence Or réel (gold_bot.confluence) sur données historiques MetaApi.")
     parser.add_argument("--days", type=int, default=DEFAULT_BACKTEST_DAYS,
                          help=f"Nombre de jours d'historique à couvrir (défaut : {DEFAULT_BACKTEST_DAYS}).")
     parser.add_argument("--output", default=RESULTS_PATH, help="Chemin du fichier JSON de résultats.")
     args = parser.parse_args()
 
-    api_key = os.environ["TWELVE_DATA_API_KEY"]
-    result = run_backtest(api_key, days=args.days)
+    token = os.environ["METAAPI_TRADE_TOKEN"]
+    account_id = os.environ["METAAPI_TRADE_ACCOUNT_ID"]
+    result = run_backtest(token, account_id, days=args.days)
 
     with open(args.output, "w", encoding="utf-8") as fh:
         json.dump(result, fh, ensure_ascii=False, indent=2)

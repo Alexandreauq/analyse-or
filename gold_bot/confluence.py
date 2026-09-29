@@ -12,16 +12,6 @@ import gold_bot.broker as broker
 import gold_bot.chart_patterns as chart_patterns
 
 
-def _parse_float(raw):
-    """Comme parseFloat en JS : une valeur non numérique donne NaN plutôt
-    que de lever, pour que le contrôle de validité en aval (math.isfinite)
-    l'attrape au bon endroit plutôt qu'un crash prématuré."""
-    try:
-        return float(raw)
-    except (TypeError, ValueError):
-        return float("nan")
-
-
 def validate_candles(candles: list[dict]) -> None:
     """Lève RuntimeError si une bougie a un prix non fini (NaN/infini) ou
     incohérent (high strictement inférieur à low/open/close, ou low

@@ -20,6 +20,19 @@ MIN_ASIAN_SESSION_CANDLES = 48
 VOLUME_CONFIRMATION_MULTIPLE = 1.5
 VOLUME_CONFIRMATION_LOOKBACK = 20
 
+# Nombre minimal de bougies 5min a fournir a compute_signal pour couvrir
+# une session asiatique complete (00h-08h) ET toute la fenetre de trading
+# (08h-16h) jusqu'a la derniere bougie -- 16h de bougies 5min = 192, +1
+# pour la bougie courante elle-meme. A utiliser comme window_size lors
+# d'un appel backtest.simulate_trades(candles,
+# signal_fn=compute_signal, window_size=...) -- le defaut de
+# backtest.SIGNAL_WINDOW_SIZE (90, dimensionne pour l'ancien moteur) est
+# BEAUCOUP TROP PETIT pour ce moteur et produirait des resultats
+# silencieusement invalides (range asiatique tronque ou introuvable des
+# le milieu de matinee). Trouve lors de la revue finale de la Task 6
+# (2026-09-29).
+MIN_WINDOW_SIZE_FOR_BACKTEST = (TRADING_WINDOW_END_HOUR - ASIAN_SESSION_START_HOUR) * 12 + 1
+
 
 def _candle_dt(candle: dict) -> datetime:
     return datetime.fromisoformat(candle["time"].replace(" ", "T")).replace(tzinfo=timezone.utc)
@@ -82,7 +95,8 @@ def compute_signal(candles: list[dict]) -> dict:
     d'exception : candles vide, hors fenêtre de trading, range invalide,
     cassure non fraîche, volume insuffisant, ratio risque/rendement
     insuffisant, ou black-out news renvoient tous neutre avec les prix à
-    None."""
+    None. Voir MIN_WINDOW_SIZE_FOR_BACKTEST pour le window_size a passer
+    a backtest.simulate_trades(candles, signal_fn=compute_signal, ...)."""
     price = candles[-1]["close"] if candles else None
     if not price:
         return {"status": "neutre", "price": price, "entry": None, "stop_loss": None,

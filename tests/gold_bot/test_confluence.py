@@ -3,76 +3,61 @@ import pytest
 import gold_bot.confluence as confluence
 
 
-class _FakeTDResponse:
-    def __init__(self, json_data, ok=True, status_code=200):
-        self._json_data = json_data
-        self.ok = ok
-        self.status_code = status_code
+def test_fetch_gold_candles_returns_only_complete_candles_in_chronological_order(monkeypatch):
+    raw = [
+        {"time": "2026-09-29T15:55:00.000Z", "open": 4155.6, "high": 4158.9, "low": 4154.6, "close": 4158.2,
+         "tickVolume": 2267, "spread": 21, "state": "complete"},
+        {"time": "2026-09-29T15:50:00.000Z", "open": 4159.2, "high": 4159.7, "low": 4153.7, "close": 4155.6,
+         "tickVolume": 2534, "spread": 21, "state": "complete"},
+        {"time": "2026-09-29T16:00:00.000Z", "open": 4158.2, "high": 4158.9, "low": 4152.9, "close": 4153.2,
+         "tickVolume": 900, "spread": 22, "state": "intermediate"},
+    ]
+    monkeypatch.setattr(confluence.broker, "get_historical_candles", lambda *a, **k: raw)
 
-    def json(self):
-        return self._json_data
+    candles = confluence.fetch_gold_candles("tok", "acc123", region="london")
+
+    assert [c["time"] for c in candles] == ["2026-09-29 15:50:00", "2026-09-29 15:55:00"]
+    assert candles[0]["open"] == 4159.2
+    assert candles[0]["tick_volume"] == 2534
+    assert candles[0]["spread"] == 21
 
 
-def test_fetch_gold_candles_parses_and_reverses_to_chronological_order(monkeypatch):
-    fake_data = {
-        "status": "ok",
-        "values": [
-            {"datetime": "2026-09-09 10:02:00", "open": "2051.0", "high": "2051.5", "low": "2050.5", "close": "2051.2"},
-            {"datetime": "2026-09-09 10:01:00", "open": "2050.0", "high": "2050.8", "low": "2049.5", "close": "2050.5"},
-        ],
-    }
+def test_fetch_gold_candles_passes_token_account_symbol_timeframe_region(monkeypatch):
     captured = {}
 
-    def fake_get(url, params=None, timeout=None):
-        captured["params"] = params
-        return _FakeTDResponse(fake_data)
+    def fake_get_historical(token, account_id, symbol, timeframe, limit=None, region=None):
+        captured.update(token=token, account_id=account_id, symbol=symbol, timeframe=timeframe,
+                         limit=limit, region=region)
+        return [{"time": "2026-09-29T15:50:00.000Z", "open": 1, "high": 1, "low": 1, "close": 1,
+                  "tickVolume": 1, "spread": 1, "state": "complete"}]
 
-    monkeypatch.setattr(confluence.requests, "get", fake_get)
-    candles = confluence.fetch_gold_candles("fake-key")
+    monkeypatch.setattr(confluence.broker, "get_historical_candles", fake_get_historical)
+    confluence.fetch_gold_candles("tok", "acc123", region="new-york")
 
-    assert captured["params"]["symbol"] == "XAU/USD"
-    assert captured["params"]["interval"] == "1min"
-    assert captured["params"]["timezone"] == "UTC"
-    assert len(candles) == 2
-    assert candles[0]["time"] == "2026-09-09 10:01:00"
-    assert candles[0]["close"] == 2050.5
-    assert candles[1]["time"] == "2026-09-09 10:02:00"
-
-
-def test_fetch_gold_candles_rejects_on_error_status(monkeypatch):
-    monkeypatch.setattr(
-        confluence.requests, "get",
-        lambda *a, **k: _FakeTDResponse({"status": "error", "message": "quota dépassé"}),
-    )
-    with pytest.raises(RuntimeError, match="quota dépassé"):
-        confluence.fetch_gold_candles("fake-key")
+    assert captured["token"] == "tok"
+    assert captured["account_id"] == "acc123"
+    assert captured["symbol"] == "XAUUSD"
+    assert captured["timeframe"] == "5m"
+    assert captured["region"] == "new-york"
+    assert captured["limit"] == 100
 
 
-def test_fetch_gold_candles_rejects_on_http_error(monkeypatch):
-    monkeypatch.setattr(
-        confluence.requests, "get",
-        lambda *a, **k: _FakeTDResponse({}, ok=False, status_code=429),
-    )
-    with pytest.raises(RuntimeError, match="429"):
-        confluence.fetch_gold_candles("fake-key")
+def test_fetch_gold_candles_raises_when_no_complete_candles(monkeypatch):
+    raw = [{"time": "2026-09-29T16:00:00.000Z", "open": 1, "high": 1, "low": 1, "close": 1,
+             "tickVolume": 1, "spread": 1, "state": "intermediate"}]
+    monkeypatch.setattr(confluence.broker, "get_historical_candles", lambda *a, **k: raw)
+
+    with pytest.raises(RuntimeError, match="aucune bougie complète"):
+        confluence.fetch_gold_candles("tok", "acc123")
 
 
-def test_fetch_gold_candles_network_error_never_leaks_the_api_key(monkeypatch):
-    """requests/urllib3 embarquent l'URL complète (avec la query string,
-    donc apikey en clair) dans str(exception) pour une coupure réseau --
-    ce message finit sinon tel quel dans decisions_log.jsonl puis le
-    résumé quotidien envoyé par email. Trouvé lors de l'audit
-    pré-lancement du 2026-09-29."""
-    def fake_get(*a, **k):
-        raise confluence.requests.exceptions.ConnectTimeout(
-            "Max retries exceeded with url: /time_series?apikey=SECRET-KEY-123 "
-            "(Caused by ConnectTimeoutError(...))"
-        )
-    monkeypatch.setattr(confluence.requests, "get", fake_get)
-    with pytest.raises(RuntimeError) as exc_info:
-        confluence.fetch_gold_candles("SECRET-KEY-123")
-    assert "SECRET-KEY-123" not in str(exc_info.value)
-    assert "ConnectTimeout" in str(exc_info.value)
+def test_fetch_gold_candles_validates_candles(monkeypatch):
+    raw = [{"time": "2026-09-29T16:00:00.000Z", "open": 100, "high": 95, "low": 99, "close": 100.5,
+             "tickVolume": 1, "spread": 1, "state": "complete"}]
+    monkeypatch.setattr(confluence.broker, "get_historical_candles", lambda *a, **k: raw)
+
+    with pytest.raises(RuntimeError, match="incohérente"):
+        confluence.fetch_gold_candles("tok", "acc123")
 
 
 def test_validate_candles_accepts_a_consistent_candle():
@@ -106,18 +91,6 @@ def test_validate_candles_rejects_high_below_close():
 def test_validate_candles_rejects_low_above_open():
     with pytest.raises(RuntimeError, match="incohérente"):
         confluence.validate_candles([{"open": 95, "high": 101, "low": 99, "close": 100.5}])
-
-
-def test_fetch_gold_candles_rejects_inconsistent_ohlc_from_twelve_data(monkeypatch):
-    fake_data = {
-        "status": "ok",
-        "values": [
-            {"datetime": "2026-09-09 10:00:00", "open": "2050.0", "high": "2050.5", "low": "2049.5", "close": "2060.0"},
-        ],
-    }
-    monkeypatch.setattr(confluence.requests, "get", lambda *a, **k: _FakeTDResponse(fake_data))
-    with pytest.raises(RuntimeError, match="incohérente"):
-        confluence.fetch_gold_candles("fake-key")
 
 
 def test_detect_pivots_finds_high_and_low_with_k1():

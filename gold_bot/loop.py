@@ -153,7 +153,7 @@ def _with_retry(fn, *, attempts: int = NETWORK_RETRY_ATTEMPTS, delay_s: float = 
     raise last_error
 
 
-def run_cycle(token: str, account_id: str, twelve_data_api_key: str,
+def run_cycle(token: str, account_id: str,
               circuit_breaker: "risk.CircuitBreaker", region: str = broker.DEFAULT_MT5_REGION,
               symbol: str = SYMBOL, now: datetime | None = None) -> dict:
     """Un cycle complet : interrupteur d'urgence -> bougies -> garde
@@ -183,7 +183,7 @@ def run_cycle(token: str, account_id: str, twelve_data_api_key: str,
     circuit_breaker.threshold_pct = profile_params["threshold_pct"]
 
     try:
-        candles = _with_retry(lambda: confluence.fetch_gold_candles(twelve_data_api_key))
+        candles = _with_retry(lambda: confluence.fetch_gold_candles(token, account_id, region))
         _save_cache({"candles": candles, "fetched_at": _now_iso()}, LATEST_CANDLES_PATH)
 
         market_closed = confluence.is_market_closed(now_dt)
@@ -244,7 +244,7 @@ def run_cycle(token: str, account_id: str, twelve_data_api_key: str,
     steps = decision["steps"]
     if any(step["type"] == "ouverture_simulee" for step in steps):
         try:
-            fresh_candles = _with_retry(lambda: confluence.fetch_gold_candles(twelve_data_api_key))
+            fresh_candles = _with_retry(lambda: confluence.fetch_gold_candles(token, account_id, region))
             fresh_price = fresh_candles[-1]["close"]
         except Exception:
             fresh_price = None
@@ -276,12 +276,11 @@ def run_cycle(token: str, account_id: str, twelve_data_api_key: str,
 def main():
     token = os.environ["METAAPI_TRADE_TOKEN"]
     account_id = os.environ["METAAPI_TRADE_ACCOUNT_ID"]
-    twelve_data_api_key = os.environ["TWELVE_DATA_API_KEY"]
     circuit_breaker = risk.CircuitBreaker(persist_path=CIRCUIT_BREAKER_STATE_PATH)
 
     while True:
         try:
-            run_cycle(token, account_id, twelve_data_api_key, circuit_breaker)
+            run_cycle(token, account_id, circuit_breaker)
         except Exception as e:
             # Filet de sécurité ultime — run_cycle ne devrait jamais
             # lever (elle capture déjà ses propres erreurs), mais un

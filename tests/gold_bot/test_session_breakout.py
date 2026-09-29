@@ -44,6 +44,17 @@ def test_compute_asian_range_none_when_too_few_candles():
     assert session_breakout.compute_asian_range(candles, TRADING_START) is None
 
 
+def test_compute_asian_range_none_when_window_does_not_reach_session_start():
+    # 48+ bougies, toutes dans la fenêtre 00h-08h, mais la plus ancienne
+    # commence à 02h -- la fenêtre fournie ne remonte pas jusqu'au début
+    # réel de la session (00h). Avant le correctif, le nombre de bougies
+    # suffisait à produire un range tronqué et à le faire passer pour le
+    # vrai range asiatique complet.
+    late_session_start = DAY + timedelta(hours=2)
+    candles = _asian_session_candles(late_session_start, high=2010.0, low=2000.0, count=48)
+    assert session_breakout.compute_asian_range(candles, TRADING_START) is None
+
+
 def test_compute_asian_range_ignores_candles_outside_asian_window():
     candles = _asian_session_candles(DAY, high=2010.0, low=2000.0, count=48)
     # Bougie de la fenêtre de trading (08h) avec un extrême bien plus large --

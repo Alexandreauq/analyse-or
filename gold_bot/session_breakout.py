@@ -42,8 +42,14 @@ def compute_asian_range(candles: list[dict], as_of: datetime) -> dict | None:
     """Plus haut/plus bas de la session asiatique (00h-08h UTC) du jour
     UTC de `as_of`. None si moins de MIN_ASIAN_SESSION_CANDLES bougies
     complètes sont disponibles pour cette fenêtre (trou de données ou
-    fenêtre pas encore écoulée) -- neutre plutôt que deviner sur un
-    échantillon non représentatif."""
+    fenêtre pas encore écoulée), OU si la bougie la plus ancienne de la
+    fenêtre ne remonte pas jusqu'au début de la session (00h) -- sinon
+    une liste de bougies qui ne remonte simplement pas assez loin dans le
+    temps (ex. fenêtre commençant à 02h) pourrait quand même compter
+    MIN_ASIAN_SESSION_CANDLES bougies et produire un range tronqué,
+    silencieusement pris pour le vrai range complet. Neutre plutôt que
+    deviner sur un échantillon non représentatif ou incomplet. Trouvé
+    lors de la revue finale du 2026-09-29."""
     today = as_of.date()
     session_candles = [
         c for c in candles
@@ -51,6 +57,9 @@ def compute_asian_range(candles: list[dict], as_of: datetime) -> dict | None:
         and ASIAN_SESSION_START_HOUR <= _candle_dt(c).hour < ASIAN_SESSION_END_HOUR
     ]
     if len(session_candles) < MIN_ASIAN_SESSION_CANDLES:
+        return None
+    session_start = as_of.replace(hour=ASIAN_SESSION_START_HOUR, minute=0, second=0, microsecond=0)
+    if min(_candle_dt(c) for c in session_candles) > session_start:
         return None
     return {
         "high": max(c["high"] for c in session_candles),

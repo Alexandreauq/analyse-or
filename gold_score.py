@@ -818,6 +818,7 @@ def main():
         "date": datetime.today().strftime("%Y-%m-%d"),
         "composite_score": composite,
         "interpretation": interpret(composite),
+        "cftc_percentile": cftc_percentile,
         "factors": [
             {"name": f.name, "score": f.score, "weight": f.weight, "raw_value": f.raw_value}
             for f in factors

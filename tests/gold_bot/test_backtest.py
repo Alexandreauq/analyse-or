@@ -6,136 +6,72 @@ import gold_bot.backtest as backtest
 import gold_bot.confluence as confluence
 
 
-class _FakeTDResponse:
-    def __init__(self, json_data, ok=True, status_code=200):
-        self._json_data = json_data
-        self.ok = ok
-        self.status_code = status_code
-
-    def json(self):
-        return self._json_data
-
-
 def _candle(time_str, open_=10.0, high=11.0, low=9.0, close=10.5):
     return {"time": time_str, "open": open_, "high": high, "low": low, "close": close}
 
 
 # --- fetch_gold_candles_range ------------------------------------------------
 
-def test_fetch_gold_candles_range_single_page(monkeypatch):
-    captured = {}
-
-    def fake_get(url, params=None, timeout=None):
-        captured["params"] = params
-        values = [
-            {"datetime": "2026-01-01 00:04:00", "open": "10", "high": "11", "low": "9", "close": "10.5"},
-            {"datetime": "2026-01-01 00:03:00", "open": "10", "high": "11", "low": "9", "close": "10.4"},
-            {"datetime": "2026-01-01 00:02:00", "open": "10", "high": "11", "low": "9", "close": "10.3"},
-            {"datetime": "2026-01-01 00:01:00", "open": "10", "high": "11", "low": "9", "close": "10.2"},
-            {"datetime": "2026-01-01 00:00:00", "open": "10", "high": "11", "low": "9", "close": "10.1"},
-        ]
-        return _FakeTDResponse({"status": "ok", "values": values})
-
-    monkeypatch.setattr(backtest.requests, "get", fake_get)
-    start = datetime(2026, 1, 1, 0, 0, tzinfo=timezone.utc)
-    end = datetime(2026, 1, 1, 0, 4, tzinfo=timezone.utc)
-
-    result = backtest.fetch_gold_candles_range("fake-key", start, end)
-
-    assert captured["params"]["symbol"] == "XAU/USD"
-    assert captured["params"]["interval"] == "1min"
-    assert [c["time"] for c in result] == [
-        "2026-01-01 00:00:00", "2026-01-01 00:01:00", "2026-01-01 00:02:00",
-        "2026-01-01 00:03:00", "2026-01-01 00:04:00",
-    ]
-    assert result[0]["close"] == 10.1
-
-
-def test_fetch_gold_candles_range_paginates_when_more_than_one_page_needed(monkeypatch):
-    monkeypatch.setattr(backtest, "MAX_OUTPUT_SIZE", 3)
+def test_fetch_gold_candles_range_paginates_backward_until_start_reached(monkeypatch):
     calls = []
 
-    def fake_get(url, params=None, timeout=None):
-        calls.append(params["end_date"])
-        end_date = datetime.strptime(params["end_date"], "%Y-%m-%d %H:%M:%S")
-        values = [
-            {"datetime": (end_date - timedelta(minutes=i)).strftime("%Y-%m-%d %H:%M:%S"),
-             "open": "10", "high": "11", "low": "9", "close": "10.5"}
-            for i in range(3)
+    def fake_get_historical(token, account_id, symbol, timeframe, start_time=None, limit=None, region=None):
+        calls.append(start_time)
+        if len(calls) == 1:
+            return [
+                {"time": "2026-01-01T00:10:00.000Z", "open": 10, "high": 11, "low": 9, "close": 10.5,
+                 "tickVolume": 5, "spread": 2, "state": "complete"},
+                {"time": "2026-01-01T00:05:00.000Z", "open": 10, "high": 11, "low": 9, "close": 10.2,
+                 "tickVolume": 5, "spread": 2, "state": "complete"},
+            ]
+        return [
+            {"time": "2026-01-01T00:00:00.000Z", "open": 10, "high": 11, "low": 9, "close": 10.1,
+             "tickVolume": 5, "spread": 2, "state": "complete"},
         ]
-        return _FakeTDResponse({"status": "ok", "values": values})
 
-    monkeypatch.setattr(backtest.requests, "get", fake_get)
+    monkeypatch.setattr(backtest.broker, "get_historical_candles", fake_get_historical)
     start = datetime(2026, 1, 1, 0, 0, tzinfo=timezone.utc)
-    end = datetime(2026, 1, 1, 0, 6, tzinfo=timezone.utc)
+    end = datetime(2026, 1, 1, 0, 10, tzinfo=timezone.utc)
 
-    result = backtest.fetch_gold_candles_range("fake-key", start, end)
+    result = backtest.fetch_gold_candles_range("tok", "acc123", start, end)
 
-    assert len(calls) >= 3
+    assert len(calls) >= 2
     times = [c["time"] for c in result]
     assert times == sorted(times)
-    assert len(times) == len(set(times))
     assert times[0] == "2026-01-01 00:00:00"
-    assert times[-1] == "2026-01-01 00:06:00"
+    assert times[-1] == "2026-01-01 00:10:00"
+    assert result[0]["tick_volume"] == 5
+    assert result[0]["spread"] == 2
 
 
-def test_fetch_gold_candles_range_rejects_on_error_status(monkeypatch):
-    monkeypatch.setattr(
-        backtest.requests, "get",
-        lambda *a, **k: _FakeTDResponse({"status": "error", "message": "quota dépassé"}),
+def test_fetch_gold_candles_range_excludes_intermediate_state_candles(monkeypatch):
+    raw = [
+        {"time": "2026-01-01T00:05:00.000Z", "open": 10, "high": 11, "low": 9, "close": 10.5,
+         "tickVolume": 5, "spread": 2, "state": "complete"},
+        {"time": "2026-01-01T00:10:00.000Z", "open": 10, "high": 11, "low": 9, "close": 10.6,
+         "tickVolume": 5, "spread": 2, "state": "intermediate"},
+    ]
+    monkeypatch.setattr(backtest.broker, "get_historical_candles", lambda *a, **k: raw)
+
+    result = backtest.fetch_gold_candles_range(
+        "tok", "acc123",
+        datetime(2026, 1, 1, 0, 0, tzinfo=timezone.utc),
+        datetime(2026, 1, 1, 0, 15, tzinfo=timezone.utc),
     )
-    with pytest.raises(RuntimeError, match="quota dépassé"):
-        backtest.fetch_gold_candles_range(
-            "fake-key",
-            datetime(2026, 1, 1, tzinfo=timezone.utc),
-            datetime(2026, 1, 2, tzinfo=timezone.utc),
-        )
 
-
-def test_fetch_gold_candles_range_rejects_on_http_error(monkeypatch):
-    monkeypatch.setattr(
-        backtest.requests, "get",
-        lambda *a, **k: _FakeTDResponse({}, ok=False, status_code=429),
-    )
-    with pytest.raises(RuntimeError, match="429"):
-        backtest.fetch_gold_candles_range(
-            "fake-key",
-            datetime(2026, 1, 1, tzinfo=timezone.utc),
-            datetime(2026, 1, 2, tzinfo=timezone.utc),
-        )
-
-
-def test_fetch_gold_candles_range_network_error_never_leaks_the_api_key(monkeypatch):
-    """Même correctif que confluence.fetch_gold_candles (audit
-    pré-lancement du 2026-09-29) : requests/urllib3 embarquent l'URL
-    complète (donc apikey en clair) dans str(exception) pour une coupure
-    réseau -- cette fonction n'avait même aucun try/except autour de
-    requests.get, l'exception brute remontait telle quelle."""
-    def fake_get(*a, **k):
-        raise backtest.requests.exceptions.ConnectTimeout(
-            "Max retries exceeded with url: /time_series?apikey=SECRET-KEY-123 "
-            "(Caused by ConnectTimeoutError(...))"
-        )
-    monkeypatch.setattr(backtest.requests, "get", fake_get)
-    with pytest.raises(RuntimeError) as exc_info:
-        backtest.fetch_gold_candles_range(
-            "SECRET-KEY-123",
-            datetime(2026, 1, 1, tzinfo=timezone.utc),
-            datetime(2026, 1, 2, tzinfo=timezone.utc),
-        )
-    assert "SECRET-KEY-123" not in str(exc_info.value)
-    assert "ConnectTimeout" in str(exc_info.value)
+    assert len(result) == 1
+    assert result[0]["time"] == "2026-01-01 00:05:00"
 
 
 def test_fetch_gold_candles_range_rejects_inconsistent_ohlc(monkeypatch):
-    def fake_get(url, params=None, timeout=None):
-        values = [{"datetime": "2026-01-01 00:00:00", "open": "10", "high": "10.5", "low": "9.5", "close": "15"}]
-        return _FakeTDResponse({"status": "ok", "values": values})
+    def fake_get_historical(token, account_id, symbol, timeframe, start_time=None, limit=None, region=None):
+        return [{"time": "2026-01-01T00:00:00.000Z", "open": 10, "high": 10.5, "low": 9.5, "close": 15,
+                  "tickVolume": 5, "spread": 2, "state": "complete"}]
 
-    monkeypatch.setattr(backtest.requests, "get", fake_get)
+    monkeypatch.setattr(backtest.broker, "get_historical_candles", fake_get_historical)
     with pytest.raises(RuntimeError, match="incohérente"):
         backtest.fetch_gold_candles_range(
-            "fake-key",
+            "tok", "acc123",
             datetime(2026, 1, 1, 0, 0, tzinfo=timezone.utc),
             datetime(2026, 1, 1, 0, 5, tzinfo=timezone.utc),
         )
@@ -144,7 +80,7 @@ def test_fetch_gold_candles_range_rejects_inconsistent_ohlc(monkeypatch):
 def test_fetch_gold_candles_range_rejects_start_after_end():
     with pytest.raises(ValueError):
         backtest.fetch_gold_candles_range(
-            "fake-key",
+            "tok", "acc123",
             datetime(2026, 1, 2, tzinfo=timezone.utc),
             datetime(2026, 1, 1, tzinfo=timezone.utc),
         )
@@ -443,8 +379,9 @@ def test_run_backtest_wires_fetch_and_simulation_together(monkeypatch):
     fake_candles = _warmup_candles(confluence.SCALP_MIN_CANDLES)
     captured = {}
 
-    def fake_fetch(api_key, start, end):
-        captured["api_key"] = api_key
+    def fake_fetch(token, account_id, start, end, region=None):
+        captured["token"] = token
+        captured["account_id"] = account_id
         captured["start"] = start
         captured["end"] = end
         return fake_candles
@@ -453,9 +390,10 @@ def test_run_backtest_wires_fetch_and_simulation_together(monkeypatch):
     monkeypatch.setattr(backtest, "simulate_trades", lambda candles, **k: [])
 
     end = datetime(2026, 2, 1, tzinfo=timezone.utc)
-    result = backtest.run_backtest("fake-key", days=7, end=end)
+    result = backtest.run_backtest("fake-token", "acc123", days=7, end=end)
 
-    assert captured["api_key"] == "fake-key"
+    assert captured["token"] == "fake-token"
+    assert captured["account_id"] == "acc123"
     assert captured["start"] == end - timedelta(days=7)
     assert captured["end"] == end
     assert result["candle_count"] == len(fake_candles)

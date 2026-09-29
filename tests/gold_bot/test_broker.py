@@ -17,6 +17,62 @@ class _FakeMT5Response:
         return self._json_data
 
 
+def test_get_historical_candles_calls_correct_url_and_headers(monkeypatch):
+    captured = {}
+
+    def fake_get(url, headers=None, params=None, timeout=None):
+        captured["url"] = url
+        captured["headers"] = headers
+        captured["params"] = params
+        captured["timeout"] = timeout
+        return _FakeMT5Response([{"time": "2026-09-29T15:50:00.000Z", "state": "complete"}])
+
+    monkeypatch.setattr(broker.requests, "get", fake_get)
+    result = broker.get_historical_candles("tok", "acc123", "XAUUSD", "5m", region="london")
+
+    assert captured["url"] == (
+        "https://mt-market-data-client-api-v1.london.agiliumtrade.ai"
+        "/users/current/accounts/acc123/historical-market-data/symbols/XAUUSD/timeframes/5m/candles"
+    )
+    assert captured["headers"] == {"auth-token": "tok"}
+    assert captured["params"] == {"limit": 1000}
+    assert result == [{"time": "2026-09-29T15:50:00.000Z", "state": "complete"}]
+
+
+def test_get_historical_candles_passes_start_time_when_given(monkeypatch):
+    captured = {}
+
+    def fake_get(url, headers=None, params=None, timeout=None):
+        captured["params"] = params
+        return _FakeMT5Response([])
+
+    monkeypatch.setattr(broker.requests, "get", fake_get)
+    broker.get_historical_candles("tok", "acc123", "XAUUSD", "5m", start_time="2021-09-30 00:00:00.000", limit=500)
+
+    assert captured["params"] == {"limit": 500, "startTime": "2021-09-30 00:00:00.000"}
+
+
+def test_get_historical_candles_raises_on_http_error(monkeypatch):
+    monkeypatch.setattr(broker.requests, "get", lambda *a, **k: _FakeMT5Response([], status_code=401))
+    with pytest.raises(broker.requests.exceptions.HTTPError):
+        broker.get_historical_candles("bad-tok", "acc123", "XAUUSD", "5m")
+
+
+def test_get_historical_candles_default_region_and_limit(monkeypatch):
+    captured = {}
+
+    def fake_get(url, headers=None, params=None, timeout=None):
+        captured["url"] = url
+        captured["params"] = params
+        return _FakeMT5Response([])
+
+    monkeypatch.setattr(broker.requests, "get", fake_get)
+    broker.get_historical_candles("tok", "acc123", "XAUUSD", "5m")
+
+    assert captured["url"].startswith("https://mt-market-data-client-api-v1.london.agiliumtrade.ai")
+    assert captured["params"] == {"limit": 1000}
+
+
 def test_get_account_balance_returns_balance(monkeypatch):
     captured = {}
 

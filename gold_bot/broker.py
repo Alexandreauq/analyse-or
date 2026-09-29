@@ -12,6 +12,36 @@ def _base_url(region: str) -> str:
     return f"https://mt-client-api-v1.{region}.agiliumtrade.ai"
 
 
+def _market_data_base_url(region: str) -> str:
+    """Hôte dédié aux données de marché historiques -- différent de
+    _base_url (API de trading). Voir docs/superpowers/specs/2026-09-29-
+    gold-bot-session-breakout-volume-design.md."""
+    return f"https://mt-market-data-client-api-v1.{region}.agiliumtrade.ai"
+
+
+def get_historical_candles(token: str, account_id: str, symbol: str, timeframe: str,
+                            start_time: str | None = None, limit: int = 1000,
+                            region: str = DEFAULT_MT5_REGION) -> list[dict]:
+    """Bougies historiques brutes (liste JSON telle que renvoyée par
+    MetaApi, non transformée) -- inclut tickVolume/spread, absents de
+    l'API de trading. `start_time` (optionnel, "YYYY-MM-DD HH:MM:SS.mmm")
+    charge en arrière depuis ce point ; `limit` plafonné à 1000 par
+    MetaApi. La dernière bougie peut avoir `state == "intermediate"`
+    (encore en formation) -- au consommateur de la filtrer."""
+    params: dict = {"limit": limit}
+    if start_time is not None:
+        params["startTime"] = start_time
+    resp = requests.get(
+        f"{_market_data_base_url(region)}/users/current/accounts/{account_id}"
+        f"/historical-market-data/symbols/{symbol}/timeframes/{timeframe}/candles",
+        headers={"auth-token": token},
+        params=params,
+        timeout=30,
+    )
+    resp.raise_for_status()
+    return resp.json()
+
+
 def get_account_information(token: str, account_id: str, region: str = DEFAULT_MT5_REGION) -> dict:
     """`balance` (capital réalisé) ET `equity` (balance + P&L flottant des
     positions ouvertes) en un seul appel MetaApi — le coupe-circuit a

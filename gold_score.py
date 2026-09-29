@@ -349,7 +349,14 @@ def build_macro_calendar(api_key: str):
 HISTORY_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "score_history.json")
 CFTC_EXTREME_PERCENTILE = 90       # au-delà : positionnement jugé extrême
 CFTC_CAUTION_PERCENTILE = 85       # au-delà : bloque un signal d'entrée
-NEAR_SUPPORT_PCT = 1.0             # écart max (%) à la MM200 pour "proche d'un support"
+NEAR_SUPPORT_PCT = 2.0             # écart max (%) à la MM200 pour "proche d'un support"
+# Recalibré de 1.0 à 2.0 le 2026-09-29 après un backtest sur 8.5 ans
+# (2018-2026, XAU/USD MetaApi) : 1% ne laissait passer que 10% des jours
+# (le filtre le plus restrictif des 3 conditions d'entrée, loin devant le
+# composite ou le CFTC), pour un nombre de trades trop faible pour juger.
+# 2.0% reste la config avec le meilleur ratio trades/robustesse dans la
+# grille testée (composite>15 non modifié -- l'assouplir dégradait le
+# résultat dans les 16 combinaisons testées).
 RAPID_DROP_POINTS = 20             # chute du score composite jugée rapide
 RAPID_DROP_DAYS = 5
 FED_BLACKOUT_HOURS = 48            # pas d'entrée si événement Fed dans ce délai

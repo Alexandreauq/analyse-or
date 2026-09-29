@@ -40,7 +40,13 @@ def fetch_gold_candles(api_key: str) -> list[dict]:
     try:
         response = requests.get(TWELVE_DATA_URL, params=params, timeout=15)
     except requests.exceptions.RequestException as e:
-        raise RuntimeError(f"Impossible de contacter Twelve Data : {e}")
+        # type(e).__name__ (ex: "ConnectTimeout"), jamais str(e) : les
+        # exceptions requests/urllib3 embarquent l'URL complète avec la
+        # query string, donc apikey en clair -- str(e) finit tel quel
+        # dans decisions_log.jsonl puis le résumé quotidien envoyé par
+        # email (voir gold_bot.notify) à chaque coupure réseau. Trouvé
+        # lors de l'audit pré-lancement du 2026-09-29.
+        raise RuntimeError(f"Impossible de contacter Twelve Data : {type(e).__name__}")
     if not response.ok:
         raise RuntimeError(f"Twelve Data a répondu {response.status_code}")
     data = response.json()

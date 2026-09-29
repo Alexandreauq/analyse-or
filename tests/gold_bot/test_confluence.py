@@ -114,6 +114,27 @@ def _candle(open_, high, low, close):
     return {"time": "2026-01-05 12:00:00", "open": open_, "high": high, "low": low, "close": close}
 
 
+def _zigzag_candles(vertices):
+    """Bougies synthétiques (open=high=low=close, un seul prix par bougie)
+    à partir d'une liste de sommets `[prix_départ, (n, prix), (n, prix), ...]`,
+    reliés par des rampes strictement monotones de `n` bougies chacune.
+    Une rampe strictement monotone entre deux sommets ne crée par
+    construction aucun pivot intermédiaire (ni haut ni bas) : seul le sommet
+    lui-même peut devenir un pivot, à condition d'avoir assez de bougies
+    strictement plus basses (pour un haut) ou plus hautes (pour un bas) de
+    part et d'autre. Utilisé pour construire des fixtures de figures
+    chartistes dont les pivots K=3 (tendance) et K=5 (figure) ont été
+    vérifiés empiriquement avant d'être committés ici (voir
+    final-review-fix-report.md pour le détail des exécutions de
+    vérification)."""
+    prices = [vertices[0]]
+    for n, target in vertices[1:]:
+        start = prices[-1]
+        step = (target - start) / n
+        prices.extend(start + step * i for i in range(1, n + 1))
+    return [_candle(p, p, p, p) for p in prices]
+
+
 def test_compute_signal_achat_from_bullish_pattern(monkeypatch):
     candles = [_candle(100, 101, 99, 100.5) for _ in range(confluence.SCALP_MIN_CANDLES)]
     fake_pattern = {
@@ -163,6 +184,88 @@ def test_compute_signal_neutre_when_ratio_insufficient(monkeypatch):
     result = confluence.compute_signal(candles)
     assert result["status"] == "neutre"
     assert result["entry"] is None
+
+
+def test_compute_signal_neutre_when_ratio_insufficient_vente(monkeypatch):
+    # Miroir vente de test_compute_signal_neutre_when_ratio_insufficient
+    # ci-dessus (même construction, valeurs symétriques autour de l'entrée
+    # 100.5 : breakout 0.5 au-dessus au lieu de 0.5 en-dessous -> reward nul
+    # des deux côtés).
+    candles = [_candle(100, 101, 99, 100.5) for _ in range(confluence.SCALP_MIN_CANDLES)]
+    fake_pattern = {
+        "name": "Triangle descendant", "direction": "baissier", "kind": "continuation",
+        "breakoutPrice": 101.0, "extremityPrice": 101.5, "patternHeight": 0.5,
+    }
+    monkeypatch.setattr(confluence.chart_patterns, "detect_chart_patterns", lambda pivots, trend, price: fake_pattern)
+    result = confluence.compute_signal(candles)
+    assert result["status"] == "neutre"
+    assert result["entry"] is None
+    assert result["stop_loss"] is None
+    assert result["take_profit"] is None
+
+
+def test_compute_signal_triangle_ascendant_end_to_end_real_pivots():
+    """Sans monkeypatch : exerce la vraie chaîne detect_pivots ->
+    classify_trend -> detect_chart_patterns. Triangle ascendant, une figure
+    déjà atteignable AVANT le correctif de séparation des pivots K=3/K=5
+    (Finding 1 de la revue finale du 29/09) — sert de témoin de non-
+    régression pour le chemin réel, que les 4 tests monkeypatchés
+    ci-dessus ne pouvaient pas exercer. Fixture vérifiée empiriquement
+    (compute_signal exécuté pour de vrai) avant d'être committée ici ;
+    voir final-review-fix-report.md pour le détail des exécutions."""
+    candles = _zigzag_candles([
+        90,
+        (6, 100),     # 1er sommet (résistance)
+        (6, 95),      # 1er creux
+        (6, 100.4),   # 2e sommet, ~= au 1er (résistance quasi plate)
+        (5, 97),      # léger repli : garde le 2e sommet comme vrai pivot local
+        (10, 101.0),  # cassure au-dessus de la résistance (R:R volontairement modeste)
+    ])
+    result = confluence.compute_signal(candles)
+    assert result["trend"] == "haussier"
+    assert result["pattern"]["name"] == "Triangle ascendant"
+    assert result["status"] == "achat"
+    assert result["entry"] == pytest.approx(101.0)
+    assert result["stop_loss"] == pytest.approx(99.4)
+    assert result["take_profit"] == pytest.approx(105.8)
+
+
+def test_compute_signal_tete_epaule_end_to_end_real_pivots_previously_unreachable():
+    """Sans monkeypatch, chaîne réelle comme le test ci-dessus. Tête-Épaule
+    était mathématiquement IMPOSSIBLE à déclencher avant le correctif de
+    Finding 1 : quand tendance et figure partageaient les mêmes pivots
+    K=5, les 2 derniers hauts de ce jeu de pivots étaient forcément (tête,
+    épaule 2) avec épaule 2 < tête, donc jamais "haussier" — condition
+    pourtant exigée par detect_chart_patterns pour cette figure. Ici, la
+    tendance est calculée séparément sur des pivots K=3 qui incluent un
+    sommet supplémentaire après l'épaule 2 (hors de la fenêtre K=5, donc
+    invisible à la figure), ce qui permet à la tendance K=3 de lire
+    "haussier" pendant que la figure K=5 voit bien l'épaule-tête-épaule et
+    la cassure sous la ligne de cou. C'est exactement l'interaction que
+    Finding 1 corrige. Fixture vérifiée empiriquement avant d'être
+    committée ici ; voir final-review-fix-report.md pour le détail des
+    exécutions."""
+    candles = _zigzag_candles([
+        88,
+        (6, 100),    # épaule 1
+        (6, 95),     # creux 1
+        (6, 108),    # tête (plus haute que les deux épaules)
+        (6, 97),     # creux 2 -- devient la ligne de cou ; > creux 1 (montant, pour la tendance K=3)
+        (6, 100.5),  # épaule 2, ~= épaule 1
+        (10, 98),    # repli après l'épaule 2 (> creux 2 : montant, pour la tendance K=3)
+        (3, 101),    # sommet K=3 supplémentaire après l'épaule 2 (> épaule 2 : montant) ;
+                     # placé à moins de 5 bougies de la fin -> jamais candidat pivot K=5,
+                     # donc invisible à detect_chart_patterns
+        (4, 95),     # clôture finale bien sous la ligne de cou (97) -> cassure confirmée
+    ])
+    result = confluence.compute_signal(candles)
+    assert result["trend"] == "haussier"
+    assert result["pattern"]["name"] == "Tête-Épaule"
+    assert result["pattern"]["direction"] == "baissier"
+    assert result["status"] == "vente"
+    assert result["entry"] == pytest.approx(95.0)
+    assert result["stop_loss"] == pytest.approx(98.0)
+    assert result["take_profit"] == pytest.approx(86.0)
 
 
 def test_meets_minimum_risk_reward_accepts_a_ratio_at_or_above_the_multiple():

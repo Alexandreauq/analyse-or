@@ -153,3 +153,12 @@ def test_compute_signal_neutre_during_news_blackout():
 
 def test_compute_signal_neutre_when_no_candles():
     assert session_breakout.compute_signal([])["status"] == "neutre"
+
+
+def test_min_window_size_for_backtest_covers_full_asian_and_trading_window():
+    # 16h de bougies 5min (00h-16h UTC) + 1 pour la bougie courante --
+    # sinon backtest.simulate_trades(..., signal_fn=compute_signal) avec
+    # son window_size par defaut (SIGNAL_WINDOW_SIZE=90, dimensionne pour
+    # l'ancien moteur) tronque ou perd silencieusement le range asiatique
+    # des le milieu de matinee.
+    assert session_breakout.MIN_WINDOW_SIZE_FOR_BACKTEST == 193

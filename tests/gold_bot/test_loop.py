@@ -726,16 +726,41 @@ def test_run_cycle_ignores_when_market_closed(monkeypatch, tmp_path):
 def test_run_cycle_ignores_when_candle_data_is_stale(monkeypatch, tmp_path):
     monkeypatch.setattr(loop.state, "load_state", lambda *a, **k: {"kill_switch": False, "dry_run": True})
     monkeypatch.setattr(loop, "DECISIONS_LOG_PATH", str(tmp_path / "decisions_log.jsonl"))
-    # Dernière bougie à 16:40, "now" injecté à 16:46 -> 6 minutes de
-    # décalage, au-delà du seuil de 5 minutes.
+    # Dernière bougie ouverte à 16:30 (donc close à 16:35, voir
+    # confluence.CANDLE_INTERVAL_MINUTES), "now" injecté à 16:46 -> 11
+    # minutes de décalage depuis la clôture, au-delà du seuil de 5
+    # minutes.
+    stale_candle = {"time": "2026-09-11 16:30:00", "close": 2100}
     stale_now = datetime(2026, 9, 11, 16, 46, tzinfo=timezone.utc)
-    monkeypatch.setattr(loop.confluence, "fetch_gold_candles", lambda *a, **k: [_FRESH_CANDLE])
+    monkeypatch.setattr(loop.confluence, "fetch_gold_candles", lambda *a, **k: [stale_candle])
     monkeypatch.setattr(loop.broker, "get_account_information",
                          lambda *a, **k: (_ for _ in ()).throw(AssertionError("ne doit pas être appelé")))
 
     result = loop.run_cycle("tok", "acc", loop.risk.CircuitBreaker(), now=stale_now)
 
     assert result == {"action": "ignore", "reason": "données périmées"}
+
+
+def test_run_cycle_treats_just_completed_candle_as_fresh(monkeypatch, tmp_path):
+    """Une bougie ouverte à 16:40 clôture à 16:45 (durée de 5 minutes,
+    voir confluence.CANDLE_INTERVAL_MINUTES) -- vérifiée à 16:46, elle n'a
+    qu'1 minute de retard sur sa clôture, largement sous le seuil de 5
+    minutes, même si son horodatage d'OUVERTURE a 6 minutes de retard."""
+    monkeypatch.setattr(loop.state, "load_state", lambda *a, **k: {"kill_switch": False, "dry_run": True})
+    monkeypatch.setattr(loop, "DECISIONS_LOG_PATH", str(tmp_path / "decisions_log.jsonl"))
+    monkeypatch.setattr(loop, "LATEST_CANDLES_PATH", str(tmp_path / "latest_candles.json"))
+    monkeypatch.setattr(loop, "LATEST_BALANCE_PATH", str(tmp_path / "latest_balance.json"))
+    monkeypatch.setattr(loop, "LATEST_POSITIONS_PATH", str(tmp_path / "latest_positions.json"))
+    just_completed_now = datetime(2026, 9, 11, 16, 46, tzinfo=timezone.utc)
+    monkeypatch.setattr(loop.confluence, "fetch_gold_candles", lambda *a, **k: [_FRESH_CANDLE])
+    monkeypatch.setattr(loop.broker, "get_account_information", lambda *a, **k: {"balance": 10000.0, "equity": 10000.0})
+    monkeypatch.setattr(loop.bot, "reconcile_positions", lambda *a, **k: [])
+    monkeypatch.setattr(loop.broker, "get_symbol_specification", lambda *a, **k: {"contractSize": 100, "volumeStep": 0.01, "minVolume": 0.01, "maxVolume": 500})
+    monkeypatch.setattr(loop.bot, "decide_and_act", lambda *a, **k: {"action": "aucune", "reason": "signal neutre"})
+
+    result = loop.run_cycle("tok", "acc", loop.risk.CircuitBreaker(), now=just_completed_now)
+
+    assert result == {"action": "aucune", "reason": "signal neutre"}
 
 
 def test_run_cycle_still_caches_candles_when_market_closed(monkeypatch, tmp_path):

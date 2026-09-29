@@ -8,7 +8,7 @@ import json
 import os
 import time
 import traceback
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 import gold_bot.bot as bot
 import gold_bot.broker as broker
@@ -188,7 +188,15 @@ def run_cycle(token: str, account_id: str,
 
         market_closed = confluence.is_market_closed(now_dt)
         last_candle_time = datetime.fromisoformat(candles[-1]["time"].replace(" ", "T")).replace(tzinfo=timezone.utc)
-        data_stale = (now_dt - last_candle_time).total_seconds() > STALE_CANDLE_THRESHOLD_SECONDS
+        # Une bougie MetaApi est horodatée à son OUVERTURE, pas à sa
+        # clôture (voir confluence.CANDLE_INTERVAL_MINUTES) -- la fraîcheur
+        # se mesure donc depuis l'heure de clôture (ouverture + durée de
+        # la bougie), sans quoi la dernière bougie COMPLETE, qui a par
+        # construction au moins CANDLE_INTERVAL_MINUTES de retard sur son
+        # ouverture, serait quasi systématiquement jugée périmée. Trouvé
+        # lors de la revue finale du 2026-09-29.
+        last_candle_close_time = last_candle_time + timedelta(minutes=confluence.CANDLE_INTERVAL_MINUTES)
+        data_stale = (now_dt - last_candle_close_time).total_seconds() > STALE_CANDLE_THRESHOLD_SECONDS
         if market_closed or data_stale:
             # Ni ouverture ni gestion de position ce cycle : les bougies
             # reçues ne sont pas des données de marché fiables, même si

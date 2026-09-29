@@ -111,6 +111,18 @@ SCALP_PIVOT_K = 3  # tendance générale — pivots SÉPARÉS de ceux des figure
 CHARTPATTERN_STOP_BUFFER = chart_patterns.CHARTPATTERN_HEIGHT_TOLERANCE  # réutilise l'échelle existante ($1), pas un nouveau nombre magique
 SCALP_MIN_CANDLES = 2 * chart_patterns.CHARTPATTERN_PIVOT_K + 1  # plancher minimal pour qu'un seul pivot soit détectable ; le vrai filtrage (assez de pivots pour une figure complète) est géré par detect_chart_patterns elle-même
 
+# Taille des bougies recuperees par fetch_gold_candles/fetch_gold_candles_range
+# (MetaApi "5m") -- reutilisee par gold_bot.loop pour calculer la fraicheur
+# des donnees a partir de l'heure de CLOTURE de la bougie, pas de son
+# ouverture (une bougie MetaApi est horodatee a son ouverture, donc la
+# derniere bougie COMPLETE a toujours au moins CANDLE_INTERVAL_MINUTES
+# de retard par construction). DOIT rester synchronisee avec le "5m"
+# passe a broker.get_historical_candles dans fetch_gold_candles/
+# fetch_gold_candles_range -- trouve lors de la revue finale du
+# 2026-09-29 (voir docs/superpowers/specs/2026-09-29-gold-bot-session-
+# breakout-volume-design.md).
+CANDLE_INTERVAL_MINUTES = 5
+
 # Fenêtre de black-out autour des publications macro à très fort impact
 # (CPI/Emploi US/FOMC, décision BCE, décision Bank of England) — portage
 # fidèle de la même constante côté docs/scalping.js (voir son commentaire

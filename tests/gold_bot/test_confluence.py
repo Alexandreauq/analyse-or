@@ -75,6 +75,51 @@ def test_fetch_gold_candles_network_error_never_leaks_the_api_key(monkeypatch):
     assert "ConnectTimeout" in str(exc_info.value)
 
 
+def test_validate_candles_accepts_a_consistent_candle():
+    confluence.validate_candles([{"open": 100, "high": 101, "low": 99, "close": 100.5}])  # ne doit pas lever
+
+
+def test_validate_candles_rejects_nan_price():
+    with pytest.raises(RuntimeError, match="invalides"):
+        confluence.validate_candles([{"open": 100, "high": 101, "low": 99, "close": float("nan")}])
+
+
+def test_validate_candles_rejects_infinite_price():
+    with pytest.raises(RuntimeError, match="invalides"):
+        confluence.validate_candles([{"open": 100, "high": float("inf"), "low": 99, "close": 100.5}])
+
+
+def test_validate_candles_rejects_high_below_low():
+    with pytest.raises(RuntimeError, match="incohérente"):
+        confluence.validate_candles([{"open": 100, "high": 95, "low": 99, "close": 100.5}])
+
+
+def test_validate_candles_rejects_high_below_close():
+    """Trouvé lors de l'audit pré-lancement du 2026-09-29 : une bougie
+    glitchée mais finie (ex: high mal renvoyé par Twelve Data) pouvait
+    devenir un pivot fantôme et gonfler patternHeight sans que
+    meets_minimum_risk_reward (qui ne vérifie qu'un ratio) ne l'attrape."""
+    with pytest.raises(RuntimeError, match="incohérente"):
+        confluence.validate_candles([{"open": 100, "high": 101, "low": 99, "close": 105}])
+
+
+def test_validate_candles_rejects_low_above_open():
+    with pytest.raises(RuntimeError, match="incohérente"):
+        confluence.validate_candles([{"open": 95, "high": 101, "low": 99, "close": 100.5}])
+
+
+def test_fetch_gold_candles_rejects_inconsistent_ohlc_from_twelve_data(monkeypatch):
+    fake_data = {
+        "status": "ok",
+        "values": [
+            {"datetime": "2026-09-09 10:00:00", "open": "2050.0", "high": "2050.5", "low": "2049.5", "close": "2060.0"},
+        ],
+    }
+    monkeypatch.setattr(confluence.requests, "get", lambda *a, **k: _FakeTDResponse(fake_data))
+    with pytest.raises(RuntimeError, match="incohérente"):
+        confluence.fetch_gold_candles("fake-key")
+
+
 def test_detect_pivots_finds_high_and_low_with_k1():
     candles = [
         {"high": 10, "low": 8},

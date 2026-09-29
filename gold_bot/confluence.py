@@ -8,11 +8,8 @@
 import math
 from datetime import datetime, timezone
 
-import requests
-
+import gold_bot.broker as broker
 import gold_bot.chart_patterns as chart_patterns
-
-TWELVE_DATA_URL = "https://api.twelvedata.com/time_series"
 
 
 def _parse_float(raw):
@@ -48,46 +45,31 @@ def validate_candles(candles: list[dict]) -> None:
         raise RuntimeError("Twelve Data a renvoyé une bougie incohérente (high/low/open/close)")
 
 
-def fetch_gold_candles(api_key: str) -> list[dict]:
-    """Récupère les dernières bougies 1min XAU/USD via Twelve Data.
-    Renvoie un tableau chronologique (plus ancien en premier), jamais
-    vide en cas de succès. Lève RuntimeError au message clair en cas
-    d'échec réseau, de quota dépassé, ou de réponse invalide."""
-    params = {
-        "symbol": "XAU/USD",
-        "interval": "1min",
-        "outputsize": "90",
-        "timezone": "UTC",
-        "apikey": api_key,
-    }
-    try:
-        response = requests.get(TWELVE_DATA_URL, params=params, timeout=15)
-    except requests.exceptions.RequestException as e:
-        # type(e).__name__ (ex: "ConnectTimeout"), jamais str(e) : les
-        # exceptions requests/urllib3 embarquent l'URL complète avec la
-        # query string, donc apikey en clair -- str(e) finit tel quel
-        # dans decisions_log.jsonl puis le résumé quotidien envoyé par
-        # email (voir gold_bot.notify) à chaque coupure réseau. Trouvé
-        # lors de l'audit pré-lancement du 2026-09-29.
-        raise RuntimeError(f"Impossible de contacter Twelve Data : {type(e).__name__}")
-    if not response.ok:
-        raise RuntimeError(f"Twelve Data a répondu {response.status_code}")
-    data = response.json()
-    if data.get("status") == "error" or not isinstance(data.get("values"), list):
-        raise RuntimeError(f"Réponse Twelve Data invalide : {data.get('message', 'pas de données')}")
+def fetch_gold_candles(token: str, account_id: str, region: str = broker.DEFAULT_MT5_REGION) -> list[dict]:
+    """Récupère les dernières bougies 5min XAU/USD via l'API de données de
+    marché MetaApi (broker.get_historical_candles) -- hôte dédié, différent
+    de l'API de trading. Renvoie un tableau chronologique (plus ancien en
+    premier), jamais vide en cas de succès, uniquement des bougies closes
+    (state == "complete", jamais la bougie en formation). Bascule du
+    2026-09-29 (voir docs/superpowers/specs/2026-09-29-gold-bot-session-
+    breakout-volume-design.md) : remplace Twelve Data, donne accès à
+    tick_volume/spread (absents de Twelve Data pour XAU/USD). `limit=100`
+    reste une large marge au-dessus de SCALP_MIN_CANDLES (11) en un seul
+    appel -- pas besoin de pagination multi-pages pour cette taille de
+    fenêtre (contrairement à fetch_gold_candles_range, qui couvre des
+    mois/années, voir gold_bot.backtest)."""
+    raw = broker.get_historical_candles(token, account_id, "XAUUSD", "5m", limit=100, region=region)
     candles = [
         {
-            "time": v["datetime"],
-            "open": _parse_float(v["open"]),
-            "high": _parse_float(v["high"]),
-            "low": _parse_float(v["low"]),
-            "close": _parse_float(v["close"]),
+            "time": datetime.fromisoformat(c["time"].replace("Z", "+00:00")).strftime("%Y-%m-%d %H:%M:%S"),
+            "open": c["open"], "high": c["high"], "low": c["low"], "close": c["close"],
+            "tick_volume": c["tickVolume"], "spread": c["spread"],
         }
-        for v in data["values"]
+        for c in raw if c["state"] == "complete"
     ]
-    candles.reverse()
+    candles.sort(key=lambda c: c["time"])
     if not candles:
-        raise RuntimeError("Twelve Data a renvoyé une liste de bougies vide")
+        raise RuntimeError("MetaApi n'a renvoyé aucune bougie complète pour XAUUSD")
     validate_candles(candles)
     return candles
 

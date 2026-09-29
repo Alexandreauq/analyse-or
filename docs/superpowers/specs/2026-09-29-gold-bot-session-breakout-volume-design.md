@@ -82,7 +82,7 @@ Valeurs de départ (à calibrer empiriquement, voir Validation) : `VOLUME_CONFIR
 
 ### Stop-loss / take-profit
 
-- **Stop-loss** : bord opposé du range asiatique (`range_low` pour un achat, `range_high` pour une vente) — si le prix y revient, la thèse de cassure est invalidée. Pas de nouveau buffer inventé.
+- **Stop-loss** : juste de l'autre côté du niveau cassé, pas du bord opposé du range — `range_high - CHARTPATTERN_STOP_BUFFER` pour un achat, `range_low + CHARTPATTERN_STOP_BUFFER` pour une vente (réutilise le buffer existant de `chart_patterns.py`, pas de nouveau nombre magique). **Correction du 2026-09-29, avant l'écriture du plan** : la version initiale de cette section utilisait le bord opposé du range comme stop, ce qui rend le ratio risque/rendement structurellement toujours < 1 (le risque, de l'ordre de la hauteur du range, dépasse alors systématiquement la récompense, qui est cette même hauteur de range) — `meets_minimum_risk_reward` (seuil 1.5) aurait rejeté quasiment tous les signaux. Avec un stop juste sous le niveau cassé, le risque devient de l'ordre du buffer (petit), et le ratio range_height/buffer dépasse confortablement 1.5 pour un range de taille normale, tout en rejetant naturellement les ranges trop étroits (dégénérés).
 - **Take-profit** : objectif mesuré, même principe que `patternHeight` dans `chart_patterns.py` — `close[-1] + (range_high - range_low)` pour un achat, `close[-1] - (range_high - range_low)` pour une vente.
 - Filtré par `confluence.meets_minimum_risk_reward` (inchangée), même seuil `SCALP_TAKEPROFIT_RISK_MULTIPLE` que le moteur actuel sauf recalibrage justifié empiriquement.
 

@@ -8,6 +8,7 @@ from datetime import datetime, timezone
 
 import gold_bot.broker as broker
 import gold_bot.confluence as confluence
+import gold_bot.macro_signal as macro_signal
 import gold_bot.risk as risk
 
 
@@ -126,6 +127,70 @@ def decide_and_act(candles: list[dict], *, contract_size: float, balance: float,
         "take_profit": signal["take_profit"],
     })
     return {"action": "simulation", "steps": steps}
+
+
+def decide_and_act_swing(macro_payload: dict, candles: list[dict], *, contract_size: float,
+                          balance: float, equity: float, volume_step: float, min_volume: float,
+                          max_volume: float, open_positions: list[dict],
+                          circuit_breaker: "risk.CircuitBreaker", symbol: str = "XAUUSD",
+                          risk_pct: float = 0.05, now: datetime | None = None) -> dict:
+    """Contrepartie swing (position tenue plusieurs jours, longue
+    uniquement) de decide_and_act() -- voir
+    docs/superpowers/specs/2026-09-29-gold-bot-swing-macro-design.md.
+    Déclenchée par le signal macro de gold_score.py (`macro_payload`,
+    voir gold_bot.macro_signal), pas par confluence.compute_signal.
+
+    Différences volontaires par rapport à decide_and_act (scalping) :
+    pas de garde news_blackout (une position swing est conçue pour
+    traverser la volatilité court terme d'une publication macro -- la
+    condition d'entrée de gold_score.py exclut déjà l'ouverture d'une
+    nouvelle position dans les heures précédant un FOMC, mais rien
+    n'impose de clôturer une position déjà ouverte à chaque
+    CPI/NFP/FOMC) ; pas de retournement long/court (signal long
+    uniquement) ; sortie pilotée par macro_signal.should_exit
+    (dégradation du signal macro), pas par un signal neutre/opposé."""
+    now = now or datetime.now(timezone.utc)
+    circuit_breaker.check(equity)
+
+    matching = [p for p in open_positions if p.get("symbol") == symbol]
+
+    if len(matching) > 1:
+        return {"action": "aucune", "reason": "plusieurs positions ouvertes sur ce symbole, aucune action par prudence"}
+
+    if matching:
+        position = matching[0]
+        if position.get("type") != "POSITION_TYPE_BUY":
+            return {"action": "aucune", "reason": "position de type inattendu (pas un achat), aucune action par prudence"}
+        exit_now, reason = macro_signal.should_exit(macro_payload, position.get("time"), now)
+        if exit_now:
+            return {"action": "simulation", "steps": [
+                {"type": "clôture_simulee", "position_id": position.get("id"), "symbol": symbol}
+            ]}
+        return {"action": "aucune", "reason": f"position swing ouverte, aucune condition de sortie ({reason or 'rien à signaler'})"}
+
+    if not macro_signal.has_entry_alert(macro_payload):
+        return {"action": "aucune", "reason": "pas de signal d'entrée macro"}
+
+    if not circuit_breaker.can_open_position(equity):
+        return {"action": "aucune", "reason": "coupe-circuit journalier déclenché"}
+
+    if not candles:
+        return {"action": "aucune", "reason": "aucune bougie disponible pour le prix courant"}
+    current_price = candles[-1]["close"]
+
+    levels = macro_signal.compute_entry_levels(macro_payload, current_price)
+    if levels is None:
+        return {"action": "aucune", "reason": "niveaux d'entrée indisponibles (MM200 absente ou stop invalide)"}
+
+    raw_size = risk.compute_position_size(balance, levels["entry"], levels["stop_loss"], contract_size, risk_pct=risk_pct)
+    size = risk.round_to_volume_step(raw_size, volume_step, min_volume, max_volume)
+    if size is None:
+        return {"action": "aucune", "reason": "compte trop petit pour ce stop (volume sous le minimum du broker)"}
+
+    return {"action": "simulation", "steps": [{
+        "type": "ouverture_simulee", "symbol": symbol, "direction": "achat", "volume": size,
+        "entry": levels["entry"], "stop_loss": levels["stop_loss"], "take_profit": levels["take_profit"],
+    }]}
 
 
 def reconcile_positions(token: str, account_id: str, region: str = broker.DEFAULT_MT5_REGION) -> list[dict]:

@@ -330,3 +330,154 @@ def test_reconcile_positions_calls_broker(monkeypatch):
 
     assert result == [{"id": "1", "symbol": "XAUUSD"}]
     assert captured["args"] == ("tok", "acc123", bot.broker.DEFAULT_MT5_REGION)
+
+
+def _macro_payload(composite_score=20.0, cftc_percentile=50.0, ma200=4000.0, has_entry=True):
+    alerts = [{"kind": "entree"}] if has_entry else []
+    return {
+        "composite_score": composite_score,
+        "cftc_percentile": cftc_percentile,
+        "technical": {"ma200": ma200, "spot": ma200},
+        "alerts": alerts,
+    }
+
+
+def test_decide_and_act_swing_opens_when_entry_alert_and_no_position():
+    payload = _macro_payload(has_entry=True, ma200=4000.0)
+    candles = [{"time": "2026-09-29 10:00:00", "close": 4010.0}]
+    result = bot.decide_and_act_swing(
+        payload, candles, contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
+        balance=10000, equity=10000, open_positions=[], circuit_breaker=_open_circuit_breaker(),
+    )
+    assert result["action"] == "simulation"
+    assert len(result["steps"]) == 1
+    step = result["steps"][0]
+    assert step["type"] == "ouverture_simulee"
+    assert step["direction"] == "achat"
+    assert step["entry"] == 4010.0
+    assert step["stop_loss"] == pytest.approx(4000.0 * 0.97)
+
+
+def test_decide_and_act_swing_no_action_when_no_entry_alert():
+    payload = _macro_payload(has_entry=False)
+    result = bot.decide_and_act_swing(
+        payload, [{"time": "2026-09-29 10:00:00", "close": 4010.0}], contract_size=100, volume_step=0.01,
+        min_volume=0.01, max_volume=500, balance=10000, equity=10000, open_positions=[],
+        circuit_breaker=_open_circuit_breaker(),
+    )
+    assert result == {"action": "aucune", "reason": "pas de signal d'entrée macro"}
+
+
+def test_decide_and_act_swing_no_action_when_no_candles():
+    payload = _macro_payload(has_entry=True)
+    result = bot.decide_and_act_swing(
+        payload, [], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
+        balance=10000, equity=10000, open_positions=[], circuit_breaker=_open_circuit_breaker(),
+    )
+    assert result == {"action": "aucune", "reason": "aucune bougie disponible pour le prix courant"}
+
+
+def test_decide_and_act_swing_no_action_when_levels_unavailable():
+    payload = _macro_payload(has_entry=True, ma200=None)
+    result = bot.decide_and_act_swing(
+        payload, [{"time": "2026-09-29 10:00:00", "close": 4010.0}], contract_size=100, volume_step=0.01,
+        min_volume=0.01, max_volume=500, balance=10000, equity=10000, open_positions=[],
+        circuit_breaker=_open_circuit_breaker(),
+    )
+    assert result == {"action": "aucune", "reason": "niveaux d'entrée indisponibles (MM200 absente ou stop invalide)"}
+
+
+def test_decide_and_act_swing_holds_open_position_when_no_exit_condition():
+    from datetime import datetime, timezone
+    payload = _macro_payload(composite_score=20.0, cftc_percentile=50.0)
+    existing = [{"id": "1", "symbol": "XAUUSD", "type": "POSITION_TYPE_BUY", "time": "2026-09-20T00:00:00.000Z"}]
+    result = bot.decide_and_act_swing(
+        payload, [{"time": "2026-09-29 10:00:00", "close": 4010.0}], contract_size=100, volume_step=0.01,
+        min_volume=0.01, max_volume=500, balance=10000, equity=10000, open_positions=existing,
+        circuit_breaker=_open_circuit_breaker(), now=datetime(2026, 9, 29, tzinfo=timezone.utc),
+    )
+    assert result["action"] == "aucune"
+
+
+def test_decide_and_act_swing_closes_when_composite_degrades():
+    from datetime import datetime, timezone
+    payload = _macro_payload(composite_score=0.0, cftc_percentile=50.0)
+    existing = [{"id": "1", "symbol": "XAUUSD", "type": "POSITION_TYPE_BUY", "time": "2026-09-20T00:00:00.000Z"}]
+    result = bot.decide_and_act_swing(
+        payload, [{"time": "2026-09-29 10:00:00", "close": 4010.0}], contract_size=100, volume_step=0.01,
+        min_volume=0.01, max_volume=500, balance=10000, equity=10000, open_positions=existing,
+        circuit_breaker=_open_circuit_breaker(), now=datetime(2026, 9, 29, tzinfo=timezone.utc),
+    )
+    assert result == {"action": "simulation", "steps": [{"type": "clôture_simulee", "position_id": "1", "symbol": "XAUUSD"}]}
+
+
+def test_decide_and_act_swing_closes_when_cftc_extreme():
+    from datetime import datetime, timezone
+    payload = _macro_payload(composite_score=20.0, cftc_percentile=90.0)
+    existing = [{"id": "1", "symbol": "XAUUSD", "type": "POSITION_TYPE_BUY", "time": "2026-09-20T00:00:00.000Z"}]
+    result = bot.decide_and_act_swing(
+        payload, [{"time": "2026-09-29 10:00:00", "close": 4010.0}], contract_size=100, volume_step=0.01,
+        min_volume=0.01, max_volume=500, balance=10000, equity=10000, open_positions=existing,
+        circuit_breaker=_open_circuit_breaker(), now=datetime(2026, 9, 29, tzinfo=timezone.utc),
+    )
+    assert result == {"action": "simulation", "steps": [{"type": "clôture_simulee", "position_id": "1", "symbol": "XAUUSD"}]}
+
+
+def test_decide_and_act_swing_closes_when_max_holding_days_exceeded():
+    from datetime import datetime, timezone
+    payload = _macro_payload(composite_score=20.0, cftc_percentile=50.0)
+    existing = [{"id": "1", "symbol": "XAUUSD", "type": "POSITION_TYPE_BUY", "time": "2026-08-01T00:00:00.000Z"}]
+    result = bot.decide_and_act_swing(
+        payload, [{"time": "2026-09-29 10:00:00", "close": 4010.0}], contract_size=100, volume_step=0.01,
+        min_volume=0.01, max_volume=500, balance=10000, equity=10000, open_positions=existing,
+        circuit_breaker=_open_circuit_breaker(), now=datetime(2026, 9, 29, tzinfo=timezone.utc),
+    )
+    assert result == {"action": "simulation", "steps": [{"type": "clôture_simulee", "position_id": "1", "symbol": "XAUUSD"}]}
+
+
+def test_decide_and_act_swing_refuses_on_unexpected_position_type():
+    payload = _macro_payload(composite_score=20.0, cftc_percentile=50.0)
+    existing = [{"id": "1", "symbol": "XAUUSD", "type": "POSITION_TYPE_SELL", "time": "2026-09-20T00:00:00.000Z"}]
+    result = bot.decide_and_act_swing(
+        payload, [{"time": "2026-09-29 10:00:00", "close": 4010.0}], contract_size=100, volume_step=0.01,
+        min_volume=0.01, max_volume=500, balance=10000, equity=10000, open_positions=existing,
+        circuit_breaker=_open_circuit_breaker(),
+    )
+    assert result == {"action": "aucune", "reason": "position de type inattendu (pas un achat), aucune action par prudence"}
+
+
+def test_decide_and_act_swing_refuses_when_multiple_positions_open():
+    payload = _macro_payload(composite_score=20.0, cftc_percentile=50.0)
+    existing = [
+        {"id": "1", "symbol": "XAUUSD", "type": "POSITION_TYPE_BUY", "time": "2026-09-20T00:00:00.000Z"},
+        {"id": "2", "symbol": "XAUUSD", "type": "POSITION_TYPE_BUY", "time": "2026-09-21T00:00:00.000Z"},
+    ]
+    result = bot.decide_and_act_swing(
+        payload, [{"time": "2026-09-29 10:00:00", "close": 4010.0}], contract_size=100, volume_step=0.01,
+        min_volume=0.01, max_volume=500, balance=10000, equity=10000, open_positions=existing,
+        circuit_breaker=_open_circuit_breaker(),
+    )
+    assert result == {"action": "aucune", "reason": "plusieurs positions ouvertes sur ce symbole, aucune action par prudence"}
+
+
+def test_decide_and_act_swing_blocked_by_circuit_breaker():
+    from datetime import datetime, timezone
+    cb = risk.CircuitBreaker(threshold_pct=0.10, now_fn=lambda: datetime(2026, 9, 10, tzinfo=timezone.utc))
+    cb.check(10000)  # référence de départ du jour (equity=10000)
+    payload = _macro_payload(has_entry=True, ma200=4000.0)
+    # equity à -11% depuis 10000 -> coupe-circuit déclenché.
+    result = bot.decide_and_act_swing(
+        payload, [{"time": "2026-09-29 10:00:00", "close": 4010.0}], contract_size=100, volume_step=0.01,
+        min_volume=0.01, max_volume=500, balance=10000, equity=8900, open_positions=[], circuit_breaker=cb,
+    )
+    assert result == {"action": "aucune", "reason": "coupe-circuit journalier déclenché"}
+
+
+def test_decide_and_act_swing_no_action_when_size_below_minimum():
+    payload = _macro_payload(has_entry=True, ma200=4000.0)
+    result = bot.decide_and_act_swing(
+        payload, [{"time": "2026-09-29 10:00:00", "close": 4010.0}], contract_size=100, volume_step=0.01,
+        min_volume=1000.0, max_volume=5000.0, balance=10000, equity=10000, open_positions=[],
+        circuit_breaker=_open_circuit_breaker(),
+    )
+    assert result == {"action": "aucune", "reason": "compte trop petit pour ce stop (volume sous le minimum du broker)"}

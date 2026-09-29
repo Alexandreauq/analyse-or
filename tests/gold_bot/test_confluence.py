@@ -290,6 +290,37 @@ def test_meets_minimum_risk_reward_rejects_zero_or_negative_risk():
     assert confluence.meets_minimum_risk_reward(100, 100, 95, "vente") is False
 
 
+def test_is_market_closed_true_on_saturday():
+    from datetime import datetime, timezone
+    assert confluence.is_market_closed(datetime(2026, 9, 12, 12, 0, tzinfo=timezone.utc)) is True
+
+
+def test_is_market_closed_true_friday_after_22h_utc():
+    from datetime import datetime, timezone
+    assert confluence.is_market_closed(datetime(2026, 9, 11, 22, 0, tzinfo=timezone.utc)) is True
+
+
+def test_is_market_closed_false_friday_before_22h_utc():
+    from datetime import datetime, timezone
+    assert confluence.is_market_closed(datetime(2026, 9, 11, 21, 59, tzinfo=timezone.utc)) is False
+
+
+def test_is_market_closed_true_sunday_before_22h_utc():
+    from datetime import datetime, timezone
+    assert confluence.is_market_closed(datetime(2026, 9, 13, 21, 59, tzinfo=timezone.utc)) is True
+
+
+def test_is_market_closed_false_sunday_after_22h_utc():
+    from datetime import datetime, timezone
+    assert confluence.is_market_closed(datetime(2026, 9, 13, 22, 0, tzinfo=timezone.utc)) is False
+
+
+def test_is_market_closed_false_on_a_weekday():
+    from datetime import datetime, timezone
+    # Lundi ordinaire, loin de tout bord de week-end.
+    assert confluence.is_market_closed(datetime(2026, 9, 14, 12, 0, tzinfo=timezone.utc)) is False
+
+
 def test_compute_signal_neutre_when_too_few_candles():
     candles = [_candle(100, 101, 99, 100.5) for _ in range(5)]
     result = confluence.compute_signal(candles)

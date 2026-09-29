@@ -550,30 +550,6 @@ def test_run_cycle_picks_up_risk_profile_change_via_api_between_cycles(monkeypat
     assert cb.threshold_pct == 0.175
 
 
-def test_is_market_closed_true_on_saturday():
-    assert loop.is_market_closed(datetime(2026, 9, 12, 12, 0, tzinfo=timezone.utc)) is True
-
-
-def test_is_market_closed_true_friday_after_22h_utc():
-    assert loop.is_market_closed(datetime(2026, 9, 11, 22, 0, tzinfo=timezone.utc)) is True
-
-
-def test_is_market_closed_false_friday_before_22h_utc():
-    assert loop.is_market_closed(datetime(2026, 9, 11, 21, 59, tzinfo=timezone.utc)) is False
-
-
-def test_is_market_closed_true_sunday_before_22h_utc():
-    assert loop.is_market_closed(datetime(2026, 9, 13, 21, 59, tzinfo=timezone.utc)) is True
-
-
-def test_is_market_closed_false_sunday_after_22h_utc():
-    assert loop.is_market_closed(datetime(2026, 9, 13, 22, 0, tzinfo=timezone.utc)) is False
-
-
-def test_is_market_closed_false_on_a_weekday():
-    assert loop.is_market_closed(_FRESH_NOW) is False
-
-
 def test_run_cycle_ignores_when_market_closed(monkeypatch, tmp_path):
     monkeypatch.setattr(loop.state, "load_state", lambda *a, **k: {"kill_switch": False, "dry_run": True})
     monkeypatch.setattr(loop, "DECISIONS_LOG_PATH", str(tmp_path / "decisions_log.jsonl"))

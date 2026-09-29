@@ -125,10 +125,26 @@ def simulate_trades(candles: list[dict], window_size: int = SIGNAL_WINDOW_SIZE,
     réellement en production : toujours les 90 dernières bougies, jamais
     plus).
 
-    Une position ouverte peut se clôturer de 3 façons, dans cet ordre de
-    priorité — même hiérarchie que gold_bot.bot.decide_and_act : (1) SL/TP
-    touché (SL gagnant en cas de toucher simultané sur la même bougie,
-    même désambiguïsation prudente que decidePositionOutcome,
+    Priorité maximale, avant toute autre logique : si la bougie courante
+    tombe dans une fenêtre de marché fermé (confluence.is_market_closed),
+    le cycle est entièrement ignoré — ni ouverture, ni gestion d'une
+    position déjà ouverte (SL/TP non vérifiés, aucun appel à `signal_fn`)
+    — même hiérarchie que loop.run_cycle, qui retourne avant toute
+    décision dès que market_closed est vrai. Ajouté le 2026-09-29 :
+    absent jusque-là, alors qu'environ 25% des bougies 5min renvoyées par
+    Twelve Data sur un an d'historique tombent dans cette fenêtre avec un
+    vrai mouvement de prix (pas plates) — non filtrées, elles avaient à
+    elles seules expliqué la quasi-totalité de la perte annuelle d'un
+    backtest (20 trades sur 816, taux de réussite 5% contre 16% sur le
+    reste de l'année), sur du bruit que le bot réel ne trade jamais. Ne
+    porte volontairement pas STALE_CANDLE_THRESHOLD_SECONDS (loop.py) :
+    cette garde concerne la fraîcheur de l'API au moment de l'appel réel,
+    sans équivalent pour un historique rejoué.
+
+    Une position ouverte peut ensuite se clôturer de 3 façons, dans cet
+    ordre de priorité — même hiérarchie que gold_bot.bot.decide_and_act :
+    (1) SL/TP touché (SL gagnant en cas de toucher simultané sur la même
+    bougie, même désambiguïsation prudente que decidePositionOutcome,
     scalping_tracker.js) ; (2) clôture forcée si la bougie courante tombe
     dans une fenêtre de black-out macro (confluence.is_news_blackout),
     même sans signal de retournement — reproduit le comportement réel de
@@ -149,6 +165,9 @@ def simulate_trades(candles: list[dict], window_size: int = SIGNAL_WINDOW_SIZE,
 
     for i in range(min_needed, len(candles) + 1):
         current = candles[i - 1]
+        current_dt = datetime.fromisoformat(current["time"].replace(" ", "T")).replace(tzinfo=timezone.utc)
+        if confluence.is_market_closed(current_dt):
+            continue
         window = candles[max(0, i - window_size):i]
 
         if open_trade is not None:
@@ -168,7 +187,6 @@ def simulate_trades(candles: list[dict], window_size: int = SIGNAL_WINDOW_SIZE,
                 open_trade = None
                 continue
 
-            current_dt = datetime.fromisoformat(current["time"].replace(" ", "T")).replace(tzinfo=timezone.utc)
             if confluence.is_news_blackout(current_dt):
                 _close_trade(open_trade, current["close"], "news_blackout", current["time"])
                 trades.append(open_trade)

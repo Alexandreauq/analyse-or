@@ -37,30 +37,6 @@ LATEST_BALANCE_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "
 LATEST_POSITIONS_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "latest_positions.json")
 
 
-def is_market_closed(date: datetime) -> bool:
-    """XAU/USD (comme le forex) est fermé du vendredi ~22h UTC au
-    dimanche ~22h UTC — bornes volontairement prudentes (les brokers
-    varient de quelques dizaines de minutes selon le fournisseur de
-    liquidité), mieux vaut rater un peu de marché réel aux bords que
-    trader du bruit sur un marché fermé. Indépendant de la fraîcheur
-    annoncée par l'API (voir STALE_CANDLE_THRESHOLD_SECONDS dans
-    run_cycle) : Twelve Data peut renvoyer une bougie à l'horodatage à
-    jour même marché fermé — trouvé en production le week-end du
-    12-13/09/2026 côté paper-trading (29 fausses positions ouvertes sur
-    du bruit d'API), d'où ce garde basé uniquement sur l'horloge murale,
-    jamais sur les données reçues. Portage fidèle de isMarketClosed
-    (scalping_tracker.js). `date` doit être en UTC."""
-    day = date.weekday()  # lundi = 0 ... dimanche = 6
-    hour = date.hour
-    if day == 5:  # samedi : fermé toute la journée
-        return True
-    if day == 4 and hour >= 22:  # vendredi à partir de 22h UTC
-        return True
-    if day == 6 and hour < 22:  # dimanche avant 22h UTC
-        return True
-    return False
-
-
 def execute_steps(token: str, account_id: str, steps: list[dict],
                    region: str = broker.DEFAULT_MT5_REGION) -> list[dict]:
     """Exécute réellement les étapes renvoyées par bot.decide_and_act.
@@ -186,7 +162,7 @@ def run_cycle(token: str, account_id: str, twelve_data_api_key: str,
         candles = _with_retry(lambda: confluence.fetch_gold_candles(twelve_data_api_key))
         _save_cache({"candles": candles, "fetched_at": _now_iso()}, LATEST_CANDLES_PATH)
 
-        market_closed = is_market_closed(now_dt)
+        market_closed = confluence.is_market_closed(now_dt)
         last_candle_time = datetime.fromisoformat(candles[-1]["time"].replace(" ", "T")).replace(tzinfo=timezone.utc)
         data_stale = (now_dt - last_candle_time).total_seconds() > STALE_CANDLE_THRESHOLD_SECONDS
         if market_closed or data_stale:

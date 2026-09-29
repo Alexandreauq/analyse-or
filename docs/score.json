@@ -1,25 +1,26 @@
 {
   "date": "2026-09-29",
-  "composite_score": -13.1,
-  "interpretation": "Neutre — pas d'action",
+  "composite_score": -16.2,
+  "interpretation": "Défavorable — pas d'entrée même sur signal technique",
+  "cftc_percentile": 58.333333333333336,
   "factors": [
     {
       "name": "Taux réels US 10 ans",
-      "score": -7.8000000000000025,
+      "score": -9.2,
       "weight": 0.3,
-      "raw_value": "2.83% (il y a ~45j : 2.44%)"
+      "raw_value": "2.90% (il y a ~45j : 2.44%)"
     },
     {
       "name": "Dollar (DXY)",
-      "score": -3.3649826049804688,
+      "score": -2.9249954223632812,
       "weight": 0.15,
-      "raw_value": "101.47 (il y a 2 mois : 100.80)"
+      "raw_value": "101.39 (il y a 2 mois : 100.80)"
     },
     {
       "name": "Anticipations d'inflation",
-      "score": 2.0000000000000018,
+      "score": 2.333333333333343,
       "weight": 0.15,
-      "raw_value": "2.34% (il y a ~45j : 2.28%)"
+      "raw_value": "2.35% (il y a ~45j : 2.28%)"
     },
     {
       "name": "Ton de la Fed",
@@ -47,9 +48,9 @@
     }
   ],
   "technical": {
-    "note": "Cours en-dessous de la MM200 (-8.1%) — tendance baissière",
-    "spot": 4185.7001953125,
-    "ma200": 4555.521500244141
+    "note": "Cours en-dessous de la MM200 (-7.5%) — tendance baissière",
+    "spot": 4215.0,
+    "ma200": 4555.667999267578
   },
   "calendar": [
     {
@@ -95,9 +96,9 @@
   ],
   "alerts": [
     {
-      "kind": "info",
-      "title": "Pas de signal actif",
-      "detail": "Aucune des conditions de veille, d'entrée ou de risque n'est réunie aujourd'hui.",
+      "kind": "risque",
+      "title": "Chute rapide du score composite",
+      "detail": "Repricing de -22.1 points en moins de 5 jours.",
       "date": "29/09/2026"
     }
   ]

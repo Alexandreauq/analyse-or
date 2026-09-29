@@ -25,6 +25,29 @@ def _parse_float(raw):
         return float("nan")
 
 
+def validate_candles(candles: list[dict]) -> None:
+    """Lève RuntimeError si une bougie a un prix non fini (NaN/infini) ou
+    incohérent (high strictement inférieur à low/open/close, ou low
+    strictement supérieur à open/close). Une seule bougie glitchée mais
+    finie de Twelve Data peut sinon devenir un pivot fantôme, gonflant
+    artificiellement patternHeight (voir gold_bot.chart_patterns) et
+    produisant un take_profit sans rapport avec un niveau de marché réel
+    -- meets_minimum_risk_reward ne peut pas l'attraper puisqu'elle ne
+    vérifie qu'un ratio, jamais une plausibilité du prix lui-même.
+    Utilisée par fetch_gold_candles ET
+    gold_bot.backtest.fetch_gold_candles_range, pour que les deux chemins
+    (production et backtest) ne divergent jamais sur ce point. Trouvé
+    lors de l'audit pré-lancement du 2026-09-29."""
+    if any(not all(math.isfinite(c[k]) for k in ("open", "high", "low", "close")) for c in candles):
+        raise RuntimeError("Twelve Data a renvoyé des valeurs de prix invalides")
+    if any(
+        c["high"] < c["low"] or c["high"] < c["open"] or c["high"] < c["close"]
+        or c["low"] > c["open"] or c["low"] > c["close"]
+        for c in candles
+    ):
+        raise RuntimeError("Twelve Data a renvoyé une bougie incohérente (high/low/open/close)")
+
+
 def fetch_gold_candles(api_key: str) -> list[dict]:
     """Récupère les dernières bougies 1min XAU/USD via Twelve Data.
     Renvoie un tableau chronologique (plus ancien en premier), jamais
@@ -65,8 +88,7 @@ def fetch_gold_candles(api_key: str) -> list[dict]:
     candles.reverse()
     if not candles:
         raise RuntimeError("Twelve Data a renvoyé une liste de bougies vide")
-    if any(not math.isfinite(c["close"]) for c in candles):
-        raise RuntimeError("Twelve Data a renvoyé des valeurs de prix invalides")
+    validate_candles(candles)
     return candles
 
 

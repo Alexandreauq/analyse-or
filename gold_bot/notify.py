@@ -12,6 +12,10 @@ from email.mime.text import MIMEText
 
 SMTP_HOST = "smtp.gmail.com"
 SMTP_PORT = 587
+# Bien au-dessus de POLL_INTERVAL_SECONDS (60s, gold_bot.loop) -- ne doit
+# jamais se déclencher sur un cycle normal ou une retentative réseau,
+# seulement sur un arrêt réel du service. Voir build_summary_email_html.
+STALE_CYCLE_THRESHOLD_MINUTES = 30
 
 # Calculé indépendamment de gold_bot.loop plutôt qu'importé de là —
 # les deux modules résolvent au même chemin car tous deux basés sur
@@ -44,14 +48,45 @@ def read_todays_decisions(path: str = DECISIONS_LOG_PATH, today: str | None = No
     return decisions
 
 
-def build_summary_email_html(decisions: list[dict], day: str) -> str:
+def _stale_cycle_warning_html(last_timestamp: str, now: datetime) -> str:
+    """Avertissement visible si le dernier cycle journalisé remonte à
+    plus de STALE_CYCLE_THRESHOLD_MINUTES -- distingue "le marché était
+    calme" de "le service s'est arrêté en cours de journée" (ex : boucle
+    de redémarrage systemd épuisée), deux situations qui produisaient
+    jusque-là le même résumé silencieux/rassurant. Trouvé lors de
+    l'audit pré-lancement du 2026-09-29. Un horodatage illisible est
+    traité comme suspect (avertissement affiché), jamais comme une
+    exception."""
+    try:
+        last_dt = datetime.strptime(last_timestamp, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
+        gap_minutes = (now - last_dt).total_seconds() / 60
+        if gap_minutes <= STALE_CYCLE_THRESHOLD_MINUTES:
+            return ""
+        detail = f"il y a {gap_minutes:.0f} min"
+    except ValueError:
+        detail = "horodatage illisible"
+    return (
+        '<p style="color:#a35540;font-size:13px;font-weight:bold;margin:0 0 16px;">'
+        f'⚠ Dernier cycle journalisé {detail} — le bot est peut-être arrêté '
+        '(vérifier systemctl status gold-bot-loop).</p>'
+    )
+
+
+def build_summary_email_html(decisions: list[dict], day: str, now: datetime | None = None) -> str:
+    now = now or datetime.now(timezone.utc)
     if not decisions:
-        body_html = '<p style="color:#8a90a3;font-size:13px;">Aucun cycle journalisé aujourd\'hui.</p>'
+        body_html = (
+            '<p style="color:#a35540;font-size:13px;font-weight:bold;margin:0 0 16px;">'
+            '⚠ Aucun cycle journalisé aujourd\'hui — le bot est peut-être arrêté '
+            '(vérifier systemctl status gold-bot-loop).</p>'
+        )
     else:
+        last_timestamp = max((d.get("timestamp") for d in decisions if d.get("timestamp")), default=None)
         executed = [d for d in decisions if d.get("action") == "exécuté"]
         errors = [d for d in decisions if d.get("action") == "erreur"]
         body_html = (
-            f'<p style="color:#edeef3;font-size:14px;margin:0 0 16px;">'
+            (_stale_cycle_warning_html(last_timestamp, now) if last_timestamp else "")
+            + f'<p style="color:#edeef3;font-size:14px;margin:0 0 16px;">'
             f'{len(decisions)} cycle(s) évalué(s), {len(executed)} ordre(s) exécuté(s), '
             f'{len(errors)} erreur(s).</p>'
         )

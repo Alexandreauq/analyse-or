@@ -127,6 +127,20 @@ def test_fetch_gold_candles_range_network_error_never_leaks_the_api_key(monkeypa
     assert "ConnectTimeout" in str(exc_info.value)
 
 
+def test_fetch_gold_candles_range_rejects_inconsistent_ohlc(monkeypatch):
+    def fake_get(url, params=None, timeout=None):
+        values = [{"datetime": "2026-01-01 00:00:00", "open": "10", "high": "10.5", "low": "9.5", "close": "15"}]
+        return _FakeTDResponse({"status": "ok", "values": values})
+
+    monkeypatch.setattr(backtest.requests, "get", fake_get)
+    with pytest.raises(RuntimeError, match="incohérente"):
+        backtest.fetch_gold_candles_range(
+            "fake-key",
+            datetime(2026, 1, 1, 0, 0, tzinfo=timezone.utc),
+            datetime(2026, 1, 1, 0, 5, tzinfo=timezone.utc),
+        )
+
+
 def test_fetch_gold_candles_range_rejects_start_after_end():
     with pytest.raises(ValueError):
         backtest.fetch_gold_candles_range(

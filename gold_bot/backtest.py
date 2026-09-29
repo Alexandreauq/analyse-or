@@ -89,6 +89,8 @@ def fetch_gold_candles_range(api_key: str, start: datetime, end: datetime) -> li
         if start <= datetime.fromisoformat(c["time"].replace(" ", "T")).replace(tzinfo=timezone.utc) <= end
     ]
     result.sort(key=lambda c: c["time"])
+    if result:
+        confluence.validate_candles(result)
     return result
 
 

@@ -1,4 +1,5 @@
 import json
+from datetime import datetime, timezone
 
 import gold_bot.loop as loop
 import gold_bot.notify as notify
@@ -51,6 +52,41 @@ def test_build_summary_email_html_surfaces_partial_execution_errors():
     html = notify.build_summary_email_html(decisions, "2026-09-10")
     assert "échec MetaApi" in html
     assert "XAUUSD" in html
+
+
+def test_build_summary_email_html_warns_when_no_decisions_at_all():
+    """Trouvé lors de l'audit pré-lancement du 2026-09-29 : un service
+    arrêté toute la journée (ex : boucle de redémarrage systemd épuisée)
+    produisait le même résumé neutre qu'un jour de marché calme."""
+    html = notify.build_summary_email_html([], "2026-09-10")
+    assert "peut-être arrêté" in html
+
+
+def test_build_summary_email_html_no_stale_warning_when_last_cycle_is_recent():
+    now = datetime(2026, 9, 10, 23, 55, tzinfo=timezone.utc)
+    decisions = [{"action": "aucune", "reason": "signal neutre", "timestamp": "2026-09-10T23:54:00Z"}]
+    html = notify.build_summary_email_html(decisions, "2026-09-10", now=now)
+    assert "peut-être arrêté" not in html
+
+
+def test_build_summary_email_html_stale_warning_when_last_cycle_is_old():
+    now = datetime(2026, 9, 10, 23, 55, tzinfo=timezone.utc)
+    # Dernier cycle à 14h00, plus de 30 min avant "now" (23h55) -> le
+    # service s'est probablement arrêté en cours de journée.
+    decisions = [{"action": "aucune", "reason": "signal neutre", "timestamp": "2026-09-10T14:00:00Z"}]
+    html = notify.build_summary_email_html(decisions, "2026-09-10", now=now)
+    assert "peut-être arrêté" in html
+    assert "595 min" in html  # 23h55 - 14h00 = 9h55 = 595 min
+
+
+def test_build_summary_email_html_uses_the_most_recent_timestamp_among_decisions():
+    now = datetime(2026, 9, 10, 12, 0, tzinfo=timezone.utc)
+    decisions = [
+        {"action": "aucune", "reason": "signal neutre", "timestamp": "2026-09-10T08:00:00Z"},
+        {"action": "aucune", "reason": "signal neutre", "timestamp": "2026-09-10T11:50:00Z"},
+    ]
+    html = notify.build_summary_email_html(decisions, "2026-09-10", now=now)
+    assert "peut-être arrêté" not in html  # le plus récent (11h50) est à 10 min de "now", sous le seuil
 
 
 def test_send_daily_summary_skipped_when_smtp_not_configured(monkeypatch):

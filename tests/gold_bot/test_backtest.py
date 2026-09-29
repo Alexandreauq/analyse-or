@@ -343,6 +343,43 @@ def test_simulate_trades_uses_a_rolling_window_not_the_full_history():
     assert max(captured_windows) == 10
 
 
+def test_compute_return_subtracts_spread_cost_for_achat():
+    return_usd, return_pct = backtest._compute_return("achat", 100.0, 110.0, entry_spread_points=20)
+    # spread 20 points * XAUUSD_POINT_SIZE (0.01) = 0.20 $ retranché
+    assert return_usd == pytest.approx(10.0 - 0.20)
+
+
+def test_compute_return_subtracts_spread_cost_for_vente():
+    return_usd, return_pct = backtest._compute_return("vente", 100.0, 90.0, entry_spread_points=20)
+    assert return_usd == pytest.approx(10.0 - 0.20)
+
+
+def test_compute_return_defaults_to_zero_spread_cost():
+    return_usd, _ = backtest._compute_return("achat", 100.0, 110.0)
+    assert return_usd == pytest.approx(10.0)
+
+
+def test_simulate_trades_captures_entry_spread_from_the_opening_candle():
+    candles = _warmup_candles(confluence.SCALP_MIN_CANDLES)
+    for c in candles:
+        c["spread"] = 15
+    entry_price = 100.0
+    stop_loss = 95.0
+    take_profit = 110.0
+    entry_time = datetime.strptime(candles[-1]["time"], "%Y-%m-%d %H:%M:%S")
+    next_time = entry_time + timedelta(minutes=1)
+    next_candle = _candle(next_time.strftime("%Y-%m-%d %H:%M:%S"), 100, 101, 94, 96)
+    next_candle["spread"] = 15
+    candles.append(next_candle)
+
+    trades = backtest.simulate_trades(
+        candles, signal_fn=_fire_once_then_neutral("achat", entry_price, stop_loss, take_profit))
+
+    assert len(trades) == 1
+    # SL touche a 95.0, spread de 15 points = 0.15$ retranche du (95-100)=-5.0
+    assert trades[0]["return_usd"] == pytest.approx(-5.0 - 0.15)
+
+
 # --- summarize_trades ----------------------------------------------------------
 
 def test_summarize_trades_computes_aggregate_stats():

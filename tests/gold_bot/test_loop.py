@@ -208,6 +208,160 @@ def test_run_cycle_executes_when_not_dry_run(monkeypatch, tmp_path):
     assert result["action"] == "exécuté"
 
 
+def test_entry_price_has_drifted_false_within_tolerance():
+    step = {"entry": 2100, "stop_loss": 2095}  # risque prévu = 5, seuil = 1.25
+    assert loop._entry_price_has_drifted(step, 2101) is False
+
+
+def test_entry_price_has_drifted_true_beyond_tolerance():
+    step = {"entry": 2100, "stop_loss": 2095}  # risque prévu = 5, seuil = 1.25
+    assert loop._entry_price_has_drifted(step, 2102) is True
+
+
+def test_entry_price_has_drifted_exactly_at_tolerance_boundary():
+    step = {"entry": 2100, "stop_loss": 2095}  # risque prévu = 5, seuil = 0.25*5 = 1.25
+    assert loop._entry_price_has_drifted(step, 2101.25) is False
+    assert loop._entry_price_has_drifted(step, 2101.26) is True
+
+
+def test_entry_price_has_drifted_true_when_intended_risk_is_zero():
+    step = {"entry": 2100, "stop_loss": 2100}
+    assert loop._entry_price_has_drifted(step, 2100) is True
+
+
+def test_run_cycle_skips_opening_when_price_has_drifted_too_much(monkeypatch, tmp_path):
+    monkeypatch.setattr(loop.state, "load_state", lambda *a, **k: {"kill_switch": False, "dry_run": False})
+    monkeypatch.setattr(loop, "DECISIONS_LOG_PATH", str(tmp_path / "decisions_log.jsonl"))
+    monkeypatch.setattr(loop, "LATEST_CANDLES_PATH", str(tmp_path / "latest_candles.json"))
+    monkeypatch.setattr(loop, "LATEST_BALANCE_PATH", str(tmp_path / "latest_balance.json"))
+    monkeypatch.setattr(loop, "LATEST_POSITIONS_PATH", str(tmp_path / "latest_positions.json"))
+    monkeypatch.setattr(loop.broker, "get_account_information", lambda *a, **k: {"balance": 10000, "equity": 10000})
+    monkeypatch.setattr(loop.bot, "reconcile_positions", lambda *a, **k: [])
+    monkeypatch.setattr(loop.broker, "get_symbol_specification",
+                         lambda *a, **k: {"contractSize": 100, "volumeStep": 0.01, "minVolume": 0.01, "maxVolume": 500})
+    fake_steps = [{"type": "ouverture_simulee", "symbol": "XAUUSD", "direction": "achat",
+                    "volume": 1.0, "entry": 2100, "stop_loss": 2095, "take_profit": 2115}]
+    monkeypatch.setattr(loop.bot, "decide_and_act", lambda *a, **k: {"action": "simulation", "steps": fake_steps})
+    # 1er appel (candles pour decide_and_act) renvoie 2100 ; le re-contrôle
+    # anti-slippage juste avant l'exécution renvoie 2110 -- écart de 10,
+    # bien au-delà du seuil de 1.25 (25% du risque prévu de 5).
+    calls = {"n": 0}
+
+    def fake_fetch(api_key):
+        calls["n"] += 1
+        return [{"time": "2026-09-11 16:40:00", "close": 2100 if calls["n"] == 1 else 2110}]
+
+    monkeypatch.setattr(loop.confluence, "fetch_gold_candles", fake_fetch)
+    monkeypatch.setattr(loop.broker, "place_market_order",
+                         lambda *a, **k: (_ for _ in ()).throw(AssertionError("ne doit pas être appelé : prix trop éloigné")))
+
+    result = loop.run_cycle("tok", "acc", "td-key", loop.risk.CircuitBreaker(), now=_FRESH_NOW)
+
+    assert result["action"] == "ignore"
+    assert calls["n"] == 2
+
+
+def test_run_cycle_executes_opening_when_price_has_not_drifted(monkeypatch, tmp_path):
+    monkeypatch.setattr(loop.state, "load_state", lambda *a, **k: {"kill_switch": False, "dry_run": False})
+    monkeypatch.setattr(loop, "DECISIONS_LOG_PATH", str(tmp_path / "decisions_log.jsonl"))
+    monkeypatch.setattr(loop, "LATEST_CANDLES_PATH", str(tmp_path / "latest_candles.json"))
+    monkeypatch.setattr(loop, "LATEST_BALANCE_PATH", str(tmp_path / "latest_balance.json"))
+    monkeypatch.setattr(loop, "LATEST_POSITIONS_PATH", str(tmp_path / "latest_positions.json"))
+    monkeypatch.setattr(loop.broker, "get_account_information", lambda *a, **k: {"balance": 10000, "equity": 10000})
+    monkeypatch.setattr(loop.bot, "reconcile_positions", lambda *a, **k: [])
+    monkeypatch.setattr(loop.broker, "get_symbol_specification",
+                         lambda *a, **k: {"contractSize": 100, "volumeStep": 0.01, "minVolume": 0.01, "maxVolume": 500})
+    fake_steps = [{"type": "ouverture_simulee", "symbol": "XAUUSD", "direction": "achat",
+                    "volume": 1.0, "entry": 2100, "stop_loss": 2095, "take_profit": 2115}]
+    monkeypatch.setattr(loop.bot, "decide_and_act", lambda *a, **k: {"action": "simulation", "steps": fake_steps})
+    # Écart de 1 sur un risque prévu de 5 -> ratio 0.2, sous le seuil de 0.25.
+    calls = {"n": 0}
+
+    def fake_fetch(api_key):
+        calls["n"] += 1
+        return [{"time": "2026-09-11 16:40:00", "close": 2100 if calls["n"] == 1 else 2101}]
+
+    monkeypatch.setattr(loop.confluence, "fetch_gold_candles", fake_fetch)
+    placed = {}
+    monkeypatch.setattr(loop.broker, "place_market_order", lambda *a, **k: placed.__setitem__("called", True) or {"orderId": "3"})
+
+    result = loop.run_cycle("tok", "acc", "td-key", loop.risk.CircuitBreaker(), now=_FRESH_NOW)
+
+    assert placed.get("called") is True
+    assert result["action"] == "exécuté"
+
+
+def test_run_cycle_skips_opening_when_slippage_recheck_fetch_fails(monkeypatch, tmp_path):
+    monkeypatch.setattr(loop.state, "load_state", lambda *a, **k: {"kill_switch": False, "dry_run": False})
+    monkeypatch.setattr(loop, "DECISIONS_LOG_PATH", str(tmp_path / "decisions_log.jsonl"))
+    monkeypatch.setattr(loop, "LATEST_CANDLES_PATH", str(tmp_path / "latest_candles.json"))
+    monkeypatch.setattr(loop, "LATEST_BALANCE_PATH", str(tmp_path / "latest_balance.json"))
+    monkeypatch.setattr(loop, "LATEST_POSITIONS_PATH", str(tmp_path / "latest_positions.json"))
+    monkeypatch.setattr(loop.time, "sleep", lambda s: None)  # épuise les tentatives de _with_retry sans attendre
+    monkeypatch.setattr(loop.broker, "get_account_information", lambda *a, **k: {"balance": 10000, "equity": 10000})
+    monkeypatch.setattr(loop.bot, "reconcile_positions", lambda *a, **k: [])
+    monkeypatch.setattr(loop.broker, "get_symbol_specification",
+                         lambda *a, **k: {"contractSize": 100, "volumeStep": 0.01, "minVolume": 0.01, "maxVolume": 500})
+    fake_steps = [{"type": "ouverture_simulee", "symbol": "XAUUSD", "direction": "achat",
+                    "volume": 1.0, "entry": 2100, "stop_loss": 2095, "take_profit": 2115}]
+    monkeypatch.setattr(loop.bot, "decide_and_act", lambda *a, **k: {"action": "simulation", "steps": fake_steps})
+    calls = {"n": 0}
+
+    def fake_fetch(api_key):
+        calls["n"] += 1
+        if calls["n"] == 1:
+            return [_FRESH_CANDLE]
+        raise RuntimeError("Twelve Data indisponible")
+
+    monkeypatch.setattr(loop.confluence, "fetch_gold_candles", fake_fetch)
+    monkeypatch.setattr(loop.broker, "place_market_order",
+                         lambda *a, **k: (_ for _ in ()).throw(AssertionError("ne doit pas être appelé : re-contrôle raté")))
+
+    result = loop.run_cycle("tok", "acc", "td-key", loop.risk.CircuitBreaker(), now=_FRESH_NOW)
+
+    assert result["action"] == "ignore"
+
+
+def test_run_cycle_still_closes_position_when_reopening_leg_has_drifted(monkeypatch, tmp_path):
+    """Renversement : la clôture de l'ancienne position doit toujours
+    partir même si la ré-ouverture dans le nouveau sens est écartée par
+    le contrôle anti-slippage -- mieux vaut rester plat que d'ouvrir avec
+    un risque mal dimensionné."""
+    monkeypatch.setattr(loop.state, "load_state", lambda *a, **k: {"kill_switch": False, "dry_run": False})
+    monkeypatch.setattr(loop, "DECISIONS_LOG_PATH", str(tmp_path / "decisions_log.jsonl"))
+    monkeypatch.setattr(loop, "LATEST_CANDLES_PATH", str(tmp_path / "latest_candles.json"))
+    monkeypatch.setattr(loop, "LATEST_BALANCE_PATH", str(tmp_path / "latest_balance.json"))
+    monkeypatch.setattr(loop, "LATEST_POSITIONS_PATH", str(tmp_path / "latest_positions.json"))
+    monkeypatch.setattr(loop.broker, "get_account_information", lambda *a, **k: {"balance": 10000, "equity": 10000})
+    monkeypatch.setattr(loop.bot, "reconcile_positions", lambda *a, **k: [])
+    monkeypatch.setattr(loop.broker, "get_symbol_specification",
+                         lambda *a, **k: {"contractSize": 100, "volumeStep": 0.01, "minVolume": 0.01, "maxVolume": 500})
+    fake_steps = [
+        {"type": "clôture_simulee", "position_id": "42", "symbol": "XAUUSD"},
+        {"type": "ouverture_simulee", "symbol": "XAUUSD", "direction": "vente",
+         "volume": 1.0, "entry": 2100, "stop_loss": 2105, "take_profit": 2085},
+    ]
+    monkeypatch.setattr(loop.bot, "decide_and_act", lambda *a, **k: {"action": "simulation", "steps": fake_steps})
+    calls = {"n": 0}
+
+    def fake_fetch(api_key):
+        calls["n"] += 1
+        return [{"time": "2026-09-11 16:40:00", "close": 2100 if calls["n"] == 1 else 2110}]
+
+    monkeypatch.setattr(loop.confluence, "fetch_gold_candles", fake_fetch)
+    closed = {}
+    monkeypatch.setattr(loop.broker, "close_position", lambda *a, **k: closed.__setitem__("called", True) or {"orderId": "1"})
+    monkeypatch.setattr(loop.broker, "place_market_order",
+                         lambda *a, **k: (_ for _ in ()).throw(AssertionError("ne doit pas être appelé : prix trop éloigné")))
+
+    result = loop.run_cycle("tok", "acc", "td-key", loop.risk.CircuitBreaker(), now=_FRESH_NOW)
+
+    assert closed.get("called") is True
+    assert result["action"] == "exécuté"
+    assert len(result["steps"]) == 1
+    assert result["steps"][0]["type"] == "clôture_simulee"
+
+
 def test_run_cycle_re_checks_kill_switch_before_executing(monkeypatch, tmp_path):
     """L'interrupteur d'urgence peut être activé pendant la collecte des
     données (avant decide_and_act) : run_cycle doit relire l'état juste

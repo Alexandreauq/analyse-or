@@ -149,10 +149,26 @@ class CircuitBreaker:
 
     def check(self, current_balance: float) -> None:
         """À appeler avant toute décision — fixe le solde de référence
-        du jour s'il n'existe pas encore ou si on a changé de jour UTC,
-        et réinitialise le flag de déclenchement pour le nouveau jour."""
+        du jour s'il n'existe pas encore, si on a changé de jour UTC, OU
+        si le solde de référence actuellement retenu n'est pas positif
+        alors que le solde courant l'est. Ce dernier cas corrige un bug
+        trouvé le 2026-09-29 (état réel constaté sur le VPS : compte pas
+        encore financé au premier cycle du jour, solde de référence figé
+        à 0) : sans lui, un compte financé EN COURS de journée UTC après
+        un premier contrôle à solde nul gardait indéfiniment un solde de
+        référence de 0 jusqu'au rollover du lendemain — can_open_position
+        calcule alors `loss = 0 - current_balance`, toujours négatif donc
+        toujours sous le seuil, désactivant silencieusement le
+        coupe-circuit pour le reste de la journée quelle que soit
+        l'ampleur réelle d'une perte. Réinitialise aussi le flag de
+        déclenchement dans les deux cas (nouveau jour ou nouveau solde de
+        référence) : un déclenchement figé sur un ancien solde de
+        référence non pertinent ne doit pas survivre au rebaselining."""
         today = self._now_fn().date()
-        if self._day != today:
+        needs_new_baseline = self._day != today or (
+            self._starting_balance is not None and self._starting_balance <= 0 and current_balance > 0
+        )
+        if needs_new_baseline:
             self._day = today
             self._starting_balance = current_balance
             self._tripped_today = False

@@ -162,6 +162,58 @@ def test_circuit_breaker_resets_on_new_day():
     assert cb.can_open_position(8900) is True
 
 
+def test_circuit_breaker_rebaselines_when_account_gets_funded_mid_day():
+    """Reproduit le bug trouvé lors de l'audit pré-lancement du
+    2026-09-29 (état réel constaté sur le VPS : circuit_breaker_state.json
+    y montrait starting_balance=0) : premier contrôle du jour à solde nul
+    (compte pas encore financé), puis financement en cours de journée
+    UTC. Sans rebaselining, starting_balance restait à 0 jusqu'au
+    lendemain et can_open_position ne se déclenchait plus jamais
+    (loss = 0 - balance, toujours négatif donc toujours sous le seuil)."""
+    clock = {"now": datetime(2026, 9, 29, 8, 0, tzinfo=timezone.utc)}
+    cb = risk.CircuitBreaker(threshold_pct=0.10, now_fn=lambda: clock["now"])
+    cb.check(0)  # premier cycle du jour, compte pas encore financé
+    clock["now"] = datetime(2026, 9, 29, 14, 0, tzinfo=timezone.utc)  # financement, même jour UTC
+    cb.check(5000)
+    assert cb._starting_balance == 5000
+    # Perte de 16% par rapport au NOUVEAU solde de référence -> doit se déclencher.
+    assert cb.can_open_position(4200) is False
+
+
+def test_circuit_breaker_allows_after_mid_day_funding_rebaseline_when_under_threshold():
+    clock = {"now": datetime(2026, 9, 29, 8, 0, tzinfo=timezone.utc)}
+    cb = risk.CircuitBreaker(threshold_pct=0.10, now_fn=lambda: clock["now"])
+    cb.check(0)
+    clock["now"] = datetime(2026, 9, 29, 14, 0, tzinfo=timezone.utc)
+    cb.check(5000)
+    assert cb.can_open_position(4800) is True  # -4%, sous le seuil de 10%
+
+
+def test_circuit_breaker_clears_premature_zero_balance_trip_on_mid_day_funding():
+    """Contrepartie mineure du même bug : un signal évalué avant tout
+    financement (solde encore à 0) déclenche immédiatement le
+    coupe-circuit (loss=0-0=0 >= seuil*0=0). Ce déclenchement prématuré
+    ne doit pas survivre au financement du compte le même jour."""
+    clock = {"now": datetime(2026, 9, 29, 8, 0, tzinfo=timezone.utc)}
+    cb = risk.CircuitBreaker(threshold_pct=0.10, now_fn=lambda: clock["now"])
+    assert cb.can_open_position(0) is False
+    clock["now"] = datetime(2026, 9, 29, 14, 0, tzinfo=timezone.utc)
+    cb.check(5000)  # financement, même jour UTC
+    assert cb.can_open_position(4800) is True
+
+
+def test_circuit_breaker_does_not_rebaseline_on_ordinary_drawdown_of_a_funded_account():
+    """Le rebaselining ne doit se déclencher QUE quand le solde de
+    référence lui-même n'est pas positif -- un compte déjà correctement
+    financé qui subit une grosse perte (mais reste positif) ne doit
+    jamais voir son solde de référence du jour recalé sur la perte."""
+    cb = risk.CircuitBreaker(threshold_pct=0.10, now_fn=lambda: datetime(2026, 9, 10, tzinfo=timezone.utc))
+    cb.check(10000)
+    cb.check(500)  # perte sévère mais solde de référence déjà positif
+    assert cb._starting_balance == 10000
+    assert cb.can_open_position(500) is False  # -95%, bien au-dessus du seuil de 10%
+
+
 def test_circuit_breaker_ignores_corrupt_persisted_day(tmp_path):
     path = str(tmp_path / "state.json")
     state.save_state({"circuit_breaker_day": "not-a-date", "circuit_breaker_starting_balance": 10000}, path)

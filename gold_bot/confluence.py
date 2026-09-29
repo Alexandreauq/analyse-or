@@ -1,10 +1,10 @@
 # gold_bot/confluence.py
 # Portage fidèle du moteur de confluence de docs/scalping.js (voir
-# docs/superpowers/specs/2026-09-10-bot-trading-or-design.md). Le
-# comportement du JS fait foi, y compris la condition de tendance
-# volontairement inversée dans compute_signal (achat exige un contexte
-# de tendance "baissier" près d'un support — stratégie de renversement
-# sur structure, pas de suivi de tendance).
+# docs/superpowers/specs/2026-09-10-bot-trading-or-design.md). Depuis le
+# 2026-09-29, compute_signal utilise le moteur de suivi de tendance par
+# figures chartistes (voir gold_bot/chart_patterns.py) et non plus
+# l'ancien moteur contre-tendance sur chandelier qu'il utilisait avant
+# cette date.
 import math
 from datetime import datetime, timezone
 
@@ -107,6 +107,7 @@ def classify_trend(pivots: list[dict]) -> str:
 
 
 SCALP_TAKEPROFIT_RISK_MULTIPLE = 1.5  # INCHANGÉ : seuil minimum du filtre R:R (meets_minimum_risk_reward)
+SCALP_PIVOT_K = 3  # tendance générale — pivots SÉPARÉS de ceux des figures chartistes (voir CHARTPATTERN_PIVOT_K plus bas). Réintroduit après la revue finale du 29/09 : docs/scalping.js:399-407 calcule la tendance sur des pivots K=3 distincts des pivots K=5 des figures elles-mêmes ; les fusionner en un seul K=5 rendait Tête-Épaule/Tête-Épaule inversée/Triangle symétrique mathématiquement impossibles à déclencher (la condition de tendance et la condition de la figure portaient sur exactement les mêmes pivots).
 CHARTPATTERN_STOP_BUFFER = chart_patterns.CHARTPATTERN_HEIGHT_TOLERANCE  # réutilise l'échelle existante ($1), pas un nouveau nombre magique
 SCALP_MIN_CANDLES = 2 * chart_patterns.CHARTPATTERN_PIVOT_K + 1  # plancher minimal pour qu'un seul pivot soit détectable ; le vrai filtrage (assez de pivots pour une figure complète) est géré par detect_chart_patterns elle-même
 
@@ -204,9 +205,10 @@ def compute_signal(candles: list[dict]) -> dict:
         return {"status": "neutre", "price": price, "entry": None, "stop_loss": None,
                 "take_profit": None, "trend": "neutre", "pattern": None}
 
-    pivots = detect_pivots(candles, chart_patterns.CHARTPATTERN_PIVOT_K)
-    trend = classify_trend(pivots)
-    pattern = chart_patterns.detect_chart_patterns(pivots, trend, price)
+    trend_pivots = detect_pivots(candles, SCALP_PIVOT_K)
+    trend = classify_trend(trend_pivots)
+    chart_pivots = detect_pivots(candles, chart_patterns.CHARTPATTERN_PIVOT_K)
+    pattern = chart_patterns.detect_chart_patterns(chart_pivots, trend, price)
     if pattern is None:
         return {"status": "neutre", "price": price, "entry": None, "stop_loss": None,
                 "take_profit": None, "trend": trend, "pattern": None}

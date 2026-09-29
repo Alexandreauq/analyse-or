@@ -25,6 +25,11 @@ POLL_INTERVAL_SECONDS = 60
 # délai entre "now" et l'horodatage de la dernière bougie reçue, les
 # données ne sont plus considérées fiables pour une décision.
 STALE_CANDLE_THRESHOLD_SECONDS = 5 * 60
+# Tolérance de dérive de prix entre le calcul du signal et l'exécution
+# réelle, en fraction de la distance de risque prévue (|entry-stop_loss|)
+# plutôt qu'en dollars fixes, pour s'adapter à n'importe quelle largeur
+# de stop. Voir _entry_price_has_drifted ci-dessous.
+MAX_ENTRY_SLIPPAGE_RATIO = 0.25
 SYMBOL = "XAUUSD"
 DECISIONS_LOG_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "decisions_log.jsonl")
 # Fichier séparé de state.STATE_PATH (qui porte kill_switch/dry_run,
@@ -70,6 +75,25 @@ def execute_steps(token: str, account_id: str, steps: list[dict],
         except Exception as e:
             results.append({"step": step, "result": None, "error": str(e)})
     return results
+
+
+def _entry_price_has_drifted(step: dict, fresh_price: float) -> bool:
+    """Le marché a-t-il trop bougé entre le calcul du signal et l'instant
+    juste avant l'envoi réel de l'ordre ? `stop_loss`/`take_profit` sont
+    envoyés au broker comme des prix absolus, jamais recalés sur le prix
+    réel de remplissage -- calculés à partir de `entry`, qui peut être
+    périmé de plusieurs secondes à ~1 minute (le temps des 3 appels
+    réseau -- solde/positions/spécification -- faits entre le calcul du
+    signal et ce point, voir run_cycle). Un trop grand écart signifie que
+    le risque réellement pris (distance entre le remplissage réel et le
+    stop) diverge de ce que risk.compute_position_size visait. Trouvé
+    lors de l'audit pré-lancement du 2026-09-29."""
+    entry = step["entry"]
+    stop_loss = step["stop_loss"]
+    intended_risk = abs(entry - stop_loss)
+    if intended_risk <= 0:
+        return True  # ne devrait jamais arriver (meets_minimum_risk_reward l'exclut déjà) -- prudence si ça arrive quand même
+    return abs(fresh_price - entry) > MAX_ENTRY_SLIPPAGE_RATIO * intended_risk
 
 
 def _log_decision(entry: dict, path: str = DECISIONS_LOG_PATH) -> None:
@@ -211,9 +235,40 @@ def run_cycle(token: str, account_id: str, twelve_data_api_key: str,
         _log_decision(result, path=DECISIONS_LOG_PATH)
         return result
 
-    results = execute_steps(token, account_id, decision["steps"], region)
+    # Garde anti-slippage : ne re-vérifie le prix (un appel réseau de
+    # plus, uniquement quand une ouverture est réellement sur le point de
+    # partir) que pour les étapes d'ouverture -- une clôture n'a pas de
+    # prix figé à protéger. Un échec du re-contrôle est traité comme une
+    # dérive (prudence : on ne sait pas si le prix a bougé, donc on
+    # n'exécute pas plutôt que de risquer un stop mal dimensionné).
+    steps = decision["steps"]
+    if any(step["type"] == "ouverture_simulee" for step in steps):
+        try:
+            fresh_candles = _with_retry(lambda: confluence.fetch_gold_candles(twelve_data_api_key))
+            fresh_price = fresh_candles[-1]["close"]
+        except Exception:
+            fresh_price = None
+        filtered_steps = []
+        for step in steps:
+            if (step["type"] == "ouverture_simulee"
+                    and (fresh_price is None or _entry_price_has_drifted(step, fresh_price))):
+                _log_decision(
+                    {"action": "ignore", "reason": "prix de marché trop éloigné du signal au moment de l'exécution "
+                                                     "(protection anti-slippage)", "step": step},
+                    path=DECISIONS_LOG_PATH,
+                )
+                continue
+            filtered_steps.append(step)
+        steps = filtered_steps
+
+    if not steps:
+        result = {"action": "ignore", "reason": "aucune étape restante après le contrôle anti-slippage"}
+        _log_decision(result, path=DECISIONS_LOG_PATH)
+        return result
+
+    results = execute_steps(token, account_id, steps, region)
     had_error = any(r["error"] for r in results) or not results
-    result = {"action": "erreur" if had_error else "exécuté", "steps": decision["steps"], "results": results}
+    result = {"action": "erreur" if had_error else "exécuté", "steps": steps, "results": results}
     _log_decision(result, path=DECISIONS_LOG_PATH)
     return result
 

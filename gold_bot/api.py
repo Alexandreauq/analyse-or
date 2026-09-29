@@ -201,18 +201,14 @@ def dashboard(x_bot_token: str | None = Header(default=None)):
 @app.post("/kill")
 def kill(x_bot_token: str | None = Header(default=None)):
     _check_token(x_bot_token)
-    current = state.load_state(state.STATE_PATH)
-    current["kill_switch"] = True
-    state.save_state(current, state.STATE_PATH)
+    state.update_state({"kill_switch": True}, state.STATE_PATH)
     return {"kill_switch": True}
 
 
 @app.post("/resume")
 def resume(x_bot_token: str | None = Header(default=None)):
     _check_token(x_bot_token)
-    current = state.load_state(state.STATE_PATH)
-    current["kill_switch"] = False
-    state.save_state(current, state.STATE_PATH)
+    state.update_state({"kill_switch": False}, state.STATE_PATH)
     return {"kill_switch": False}
 
 
@@ -222,7 +218,5 @@ def set_profile(payload: dict, x_bot_token: str | None = Header(default=None)):
     profile = payload.get("profile")
     if isinstance(profile, bool) or not isinstance(profile, int) or profile not in risk.RISK_PROFILE_PARAMS:
         raise HTTPException(status_code=422, detail="profile doit être un entier entre 1 et 5")
-    current = state.load_state(state.STATE_PATH)
-    current["risk_profile"] = profile
-    state.save_state(current, state.STATE_PATH)
+    state.update_state({"risk_profile": profile}, state.STATE_PATH)
     return {"risk_profile": profile}

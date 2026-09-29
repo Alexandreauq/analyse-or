@@ -16,6 +16,13 @@ import gold_bot.confluence as confluence
 
 # Plafond de l'API MetaApi données de marché pour un seul appel.
 MAX_OUTPUT_SIZE = 1000
+# Hypothèse documentée : XAUUSD coté à 2 décimales chez ce courtier, donc
+# 1 point = 0.01 $ -- à vérifier via broker.get_symbol_specification (champ
+# "digits") si jamais exposé, non vérifié lors de la conception de ce
+# module. Utilisé uniquement pour modéliser un coût de transaction
+# réaliste en backtest -- n'affecte jamais l'exécution réelle (voir
+# gold_bot.broker.place_market_order, qui ne connaît pas cette constante).
+XAUUSD_POINT_SIZE = 0.01
 # Aligné sur l'appel réel de confluence.fetch_gold_candles (outputsize=90) :
 # la fenêtre glissante soumise à compute_signal doit avoir la même taille
 # que ce que le bot voit réellement en production, jamais tout l'historique
@@ -77,16 +84,22 @@ def fetch_gold_candles_range(token: str, account_id: str, start: datetime, end: 
     return result
 
 
-def _compute_return(direction: str, entry_price: float, close_price: float) -> tuple[float, float]:
+def _compute_return(direction: str, entry_price: float, close_price: float,
+                     entry_spread_points: float = 0.0) -> tuple[float, float]:
     """Achat : gagnant si le prix monte. Vente : gagnant si le prix baisse.
-    Même convention que computeReturn (scalping_tracker.js)."""
+    Même convention que computeReturn (scalping_tracker.js). Le coût du
+    spread (en points, capturé à l'entrée, converti en $ via
+    XAUUSD_POINT_SIZE) est retranché une fois par trade complet
+    (aller-retour) -- backtest uniquement, voir XAUUSD_POINT_SIZE."""
     return_usd = close_price - entry_price if direction == "achat" else entry_price - close_price
+    return_usd -= entry_spread_points * XAUUSD_POINT_SIZE
     return_pct = (return_usd / entry_price) * 100
     return return_usd, return_pct
 
 
 def _close_trade(trade: dict, close_price: float, reason: str, close_time: str) -> None:
-    return_usd, return_pct = _compute_return(trade["direction"], trade["entry_price"], close_price)
+    return_usd, return_pct = _compute_return(
+        trade["direction"], trade["entry_price"], close_price, trade.get("entry_spread", 0.0))
     trade["close_time"] = close_time
     trade["close_price"] = close_price
     trade["close_reason"] = reason
@@ -94,7 +107,7 @@ def _close_trade(trade: dict, close_price: float, reason: str, close_time: str) 
     trade["return_pct"] = return_pct
 
 
-def _open_trade_from_signal(signal: dict, entry_time: str) -> dict:
+def _open_trade_from_signal(signal: dict, entry_time: str, entry_spread: float = 0.0) -> dict:
     return {
         "direction": signal["status"],
         "entry_time": entry_time,
@@ -103,6 +116,7 @@ def _open_trade_from_signal(signal: dict, entry_time: str) -> dict:
         "take_profit": signal["take_profit"],
         "trend_at_entry": signal["trend"],
         "pattern_at_entry": signal["pattern"]["name"] if signal["pattern"] else None,
+        "entry_spread": entry_spread,
     }
 
 
@@ -188,12 +202,12 @@ def simulate_trades(candles: list[dict], window_size: int = SIGNAL_WINDOW_SIZE,
             if signal["status"] in ("achat", "vente") and signal["status"] != open_trade["direction"]:
                 _close_trade(open_trade, current["close"], "renversement", current["time"])
                 trades.append(open_trade)
-                open_trade = _open_trade_from_signal(signal, current["time"])
+                open_trade = _open_trade_from_signal(signal, current["time"], current.get("spread", 0.0))
             continue
 
         signal = signal_fn(window)
         if signal["status"] in ("achat", "vente"):
-            open_trade = _open_trade_from_signal(signal, current["time"])
+            open_trade = _open_trade_from_signal(signal, current["time"], current.get("spread", 0.0))
 
     if open_trade is not None:
         last = candles[-1]

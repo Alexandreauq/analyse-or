@@ -38,6 +38,13 @@ STALE_CANDLE_THRESHOLD_SECONDS = 5 * 60
 # de stop. Voir _entry_price_has_drifted ci-dessous.
 MAX_ENTRY_SLIPPAGE_RATIO = 0.25
 SYMBOL = "XAUUSD"
+# Argent (XAGUSD) ajouté le 2026-09-30 après une recalibration
+# walk-forward complète et séparée (voir
+# gold_bot.vwap_reversion.get_symbol_params) -- chaque symbole tourne
+# son propre cycle complet (bougies/décision/exécution), le
+# coupe-circuit est partagé entre les deux (même compte, même budget
+# de perte journalière).
+SYMBOLS = ["XAUUSD", "XAGUSD"]
 DECISIONS_LOG_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "decisions_log.jsonl")
 # Fichier séparé de state.STATE_PATH (qui porte kill_switch/dry_run,
 # écrit aussi par l'API du Task 3) — évite qu'une écriture concurrente
@@ -47,6 +54,17 @@ CIRCUIT_BREAKER_STATE_PATH = os.path.join(os.path.dirname(os.path.abspath(__file
 LATEST_CANDLES_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "latest_candles.json")
 LATEST_BALANCE_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "latest_balance.json")
 LATEST_POSITIONS_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "latest_positions.json")
+
+
+def _candles_cache_path(symbol: str) -> str:
+    """LATEST_CANDLES_PATH reste réservé à XAUUSD (symbole par défaut,
+    déjà lu par gold_bot.api::dashboard pour le graphique du site) --
+    un autre symbole écrirait sinon par-dessus au cycle suivant et
+    ferait flapper le graphique entre deux instruments. Chemin dédié
+    (additif, rien ne le lit encore) pour tout autre symbole."""
+    if symbol == SYMBOL:
+        return LATEST_CANDLES_PATH
+    return os.path.join(os.path.dirname(os.path.abspath(__file__)), f"latest_candles_{symbol.lower()}.json")
 
 
 def execute_steps(token: str, account_id: str, steps: list[dict],
@@ -179,7 +197,7 @@ def run_cycle(token: str, account_id: str,
     now_dt = now or datetime.now(timezone.utc)
     current_state = state.load_state(state.STATE_PATH)
     if current_state["kill_switch"]:
-        decision = {"action": "ignore", "reason": "interrupteur d'urgence activé"}
+        decision = {"action": "ignore", "reason": "interrupteur d'urgence activé", "symbol": symbol}
         _log_decision(decision, path=DECISIONS_LOG_PATH)
         return decision
 
@@ -194,8 +212,9 @@ def run_cycle(token: str, account_id: str,
     circuit_breaker.threshold_pct = profile_params["threshold_pct"]
 
     try:
-        candles = _with_retry(lambda: confluence.fetch_gold_candles(token, account_id, region, limit=CANDLES_FETCH_LIMIT))
-        _save_cache({"candles": candles, "fetched_at": _now_iso()}, LATEST_CANDLES_PATH)
+        candles = _with_retry(lambda: confluence.fetch_gold_candles(
+            token, account_id, region, limit=CANDLES_FETCH_LIMIT, symbol=symbol))
+        _save_cache({"candles": candles, "fetched_at": _now_iso()}, _candles_cache_path(symbol))
 
         market_closed = confluence.is_market_closed(now_dt)
         last_candle_time = datetime.fromisoformat(candles[-1]["time"].replace(" ", "T")).replace(tzinfo=timezone.utc)
@@ -214,8 +233,8 @@ def run_cycle(token: str, account_id: str,
             # leur horodatage paraît frais (voir is_market_closed). Évite
             # aussi les 3 appels broker suivants (solde/positions/spec),
             # inutiles puisqu'aucune décision n'en dépendra.
-            reason = "marché XAU/USD fermé (week-end)" if market_closed else "données périmées"
-            decision = {"action": "ignore", "reason": reason}
+            reason = f"marché {symbol} fermé (week-end)" if market_closed else "données périmées"
+            decision = {"action": "ignore", "reason": reason, "symbol": symbol}
             _log_decision(decision, path=DECISIONS_LOG_PATH)
             return decision
 
@@ -233,8 +252,9 @@ def run_cycle(token: str, account_id: str,
             open_positions=open_positions, circuit_breaker=circuit_breaker, symbol=symbol,
             risk_pct=profile_params["risk_pct"],
         )
+        decision = {**decision, "symbol": symbol}
     except Exception as e:
-        decision = {"action": "erreur", "reason": f"Erreur pendant la décision : {e}"}
+        decision = {"action": "erreur", "reason": f"Erreur pendant la décision : {e}", "symbol": symbol}
         _log_decision(decision, path=DECISIONS_LOG_PATH)
         print(f"Erreur pendant la décision : {e}")
         traceback.print_exc()
@@ -263,7 +283,11 @@ def run_cycle(token: str, account_id: str,
     steps = decision["steps"]
     if any(step["type"] == "ouverture_simulee" for step in steps):
         try:
-            fresh_candles = _with_retry(lambda: confluence.fetch_gold_candles(token, account_id, region))
+            # Symbole explicite : un cycle argent ne doit jamais se fier
+            # au prix de l'or (ou l'inverse) pour son contrôle
+            # anti-slippage -- avant ce correctif, cet appel ignorait
+            # toujours `symbol` et retombait sur XAUUSD par défaut.
+            fresh_candles = _with_retry(lambda: confluence.fetch_gold_candles(token, account_id, region, symbol=symbol))
             fresh_price = fresh_candles[-1]["close"]
         except Exception:
             fresh_price = None
@@ -273,7 +297,7 @@ def run_cycle(token: str, account_id: str,
                     and (fresh_price is None or _entry_price_has_drifted(step, fresh_price))):
                 _log_decision(
                     {"action": "ignore", "reason": "prix de marché trop éloigné du signal au moment de l'exécution "
-                                                     "(protection anti-slippage)", "step": step},
+                                                     "(protection anti-slippage)", "step": step, "symbol": symbol},
                     path=DECISIONS_LOG_PATH,
                 )
                 continue
@@ -281,13 +305,13 @@ def run_cycle(token: str, account_id: str,
         steps = filtered_steps
 
     if not steps:
-        result = {"action": "ignore", "reason": "aucune étape restante après le contrôle anti-slippage"}
+        result = {"action": "ignore", "reason": "aucune étape restante après le contrôle anti-slippage", "symbol": symbol}
         _log_decision(result, path=DECISIONS_LOG_PATH)
         return result
 
     results = execute_steps(token, account_id, steps, region)
     had_error = any(r["error"] for r in results) or not results
-    result = {"action": "erreur" if had_error else "exécuté", "steps": steps, "results": results}
+    result = {"action": "erreur" if had_error else "exécuté", "steps": steps, "results": results, "symbol": symbol}
     _log_decision(result, path=DECISIONS_LOG_PATH)
     return result
 
@@ -298,14 +322,17 @@ def main():
     circuit_breaker = risk.CircuitBreaker(persist_path=CIRCUIT_BREAKER_STATE_PATH)
 
     while True:
-        try:
-            run_cycle(token, account_id, circuit_breaker)
-        except Exception as e:
-            # Filet de sécurité ultime — run_cycle ne devrait jamais
-            # lever (elle capture déjà ses propres erreurs), mais un
-            # vrai crash de la boucle serait pire qu'un cycle manqué.
-            print(f"Erreur inattendue pendant le cycle : {e}")
-            traceback.print_exc()
+        for symbol in SYMBOLS:
+            try:
+                run_cycle(token, account_id, circuit_breaker, symbol=symbol)
+            except Exception as e:
+                # Filet de sécurité ultime — run_cycle ne devrait jamais
+                # lever (elle capture déjà ses propres erreurs), mais un
+                # vrai crash de la boucle serait pire qu'un cycle manqué
+                # -- et ne doit surtout pas empêcher le symbole suivant
+                # de tourner.
+                print(f"Erreur inattendue pendant le cycle ({symbol}) : {e}")
+                traceback.print_exc()
         # Dort jusqu'à la prochaine limite de minute plutôt qu'un délai
         # fixe après le cycle — sinon la durée du cycle lui-même (jusqu'à
         # ~60s cumulés sur les 4 appels réseau) s'additionne au délai et

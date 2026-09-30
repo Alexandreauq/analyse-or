@@ -2248,6 +2248,28 @@
       "shadow_resolved": false,
       "shadow_price": null,
       "shadow_return_pct": null
+    },
+    {
+      "id": "3099.T-2026-09-30",
+      "ticker": "3099.T",
+      "name": "Isetan Mitsukoshi Holdings",
+      "index": "NIKKEI225",
+      "status": "open",
+      "entry_date": "2026-09-30",
+      "entry_price": 1630.5,
+      "target_exit_price": 2112.252493427204,
+      "index_price_at_entry": 66753.71875,
+      "methodology_version": "e1fb97220d868a675146d4491d44044828aac1df",
+      "close_date": null,
+      "close_price": null,
+      "close_reason": null,
+      "return_pct": null,
+      "index_price_at_close": null,
+      "index_return_pct": null,
+      "shadow_close_date": "2027-03-30",
+      "shadow_resolved": false,
+      "shadow_price": null,
+      "shadow_return_pct": null
     }
   ]
 }

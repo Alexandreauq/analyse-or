@@ -10,6 +10,7 @@ import gold_bot.broker as broker
 import gold_bot.confluence as confluence
 import gold_bot.macro_signal as macro_signal
 import gold_bot.risk as risk
+import gold_bot.vwap_reversion as vwap_reversion
 
 
 def decide_and_act(candles: list[dict], *, contract_size: float, balance: float, equity: float,
@@ -190,6 +191,88 @@ def decide_and_act_swing(macro_payload: dict, candles: list[dict], *, contract_s
     return {"action": "simulation", "steps": [{
         "type": "ouverture_simulee", "symbol": symbol, "direction": "achat", "volume": size,
         "entry": levels["entry"], "stop_loss": levels["stop_loss"], "take_profit": levels["take_profit"],
+    }]}
+
+
+def decide_and_act_vwap(candles: list[dict], *, contract_size: float, balance: float, equity: float,
+                         volume_step: float, min_volume: float, max_volume: float,
+                         open_positions: list[dict], circuit_breaker: "risk.CircuitBreaker",
+                         symbol: str = "XAUUSD", risk_pct: float = 0.05) -> dict:
+    """Moteur scalping retour-à-la-VWAP + filtre EMA200 + stop suiveur
+    EMA50 -- voir docs/superpowers/specs/2026-09-30-gold-bot-vwap-
+    reversion-design.md. Bidirectionnel (achat et vente), contrairement
+    au mode swing (long uniquement). Pas de take-profit fixe : la
+    position n'est fermée que par le stop initial (posé côté broker à
+    l'ouverture) ou par le bot lui-même, sur croisement de l'EMA50 dans
+    le mauvais sens ou en fin de session (22h UTC)."""
+    circuit_breaker.check(equity)
+
+    state = vwap_reversion.latest_state(candles)
+    if state is None:
+        return {"action": "aucune", "reason": "historique insuffisant pour l'EMA200"}
+
+    matching = [p for p in open_positions if p.get("symbol") == symbol]
+
+    if len(matching) > 1:
+        return {"action": "aucune", "reason": "plusieurs positions ouvertes sur ce symbole, aucune action par prudence"}
+
+    if matching:
+        position = matching[0]
+        raw_type = position.get("type")
+        if raw_type == "POSITION_TYPE_BUY":
+            direction = "achat"
+        elif raw_type == "POSITION_TYPE_SELL":
+            direction = "vente"
+        else:
+            return {"action": "aucune", "reason": "position de type inattendu, aucune action par prudence"}
+
+        exit_now = state["hour_utc"] >= vwap_reversion.SESSION_END_HOUR_UTC
+        if direction == "achat" and state["close"] < state["ema50"]:
+            exit_now = True
+        elif direction == "vente" and state["close"] > state["ema50"]:
+            exit_now = True
+
+        if exit_now:
+            return {"action": "simulation", "steps": [
+                {"type": "clôture_simulee", "position_id": position.get("id"), "symbol": symbol}
+            ]}
+        return {"action": "aucune", "reason": "position ouverte, aucune condition de sortie (EMA50/fin de session)"}
+
+    if state["bars_into_session"] < vwap_reversion.MIN_BARS_INTO_SESSION:
+        return {"action": "aucune", "reason": "debut de session, VWAP pas encore stabilisee"}
+    if state["hour_utc"] >= vwap_reversion.SESSION_END_HOUR_UTC:
+        return {"action": "aucune", "reason": "trop tard dans la session pour ouvrir"}
+    if state["vwap_std"] <= 0:
+        return {"action": "aucune", "reason": "ecart-type VWAP indisponible"}
+
+    direction = None
+    stop_loss = None
+    if state["close"] > state["ema200"] and state["close"] <= state["vwap"] - vwap_reversion.ENTRY_SIGMA * state["vwap_std"]:
+        direction = "achat"
+        stop_loss = state["vwap"] - vwap_reversion.STOP_SIGMA * state["vwap_std"]
+    elif state["close"] < state["ema200"] and state["close"] >= state["vwap"] + vwap_reversion.ENTRY_SIGMA * state["vwap_std"]:
+        direction = "vente"
+        stop_loss = state["vwap"] + vwap_reversion.STOP_SIGMA * state["vwap_std"]
+
+    if direction is None:
+        return {"action": "aucune", "reason": "pas de signal d'entree"}
+
+    entry_price = state["close"]
+    distance = abs(entry_price - stop_loss)
+    if distance < entry_price * vwap_reversion.MIN_DISTANCE_PCT:
+        return {"action": "aucune", "reason": "distance entree-stop trop faible (ecart-type degenere)"}
+
+    if not circuit_breaker.can_open_position(equity):
+        return {"action": "aucune", "reason": "coupe-circuit journalier déclenché"}
+
+    raw_size = risk.compute_position_size(balance, entry_price, stop_loss, contract_size, risk_pct=risk_pct)
+    size = risk.round_to_volume_step(raw_size, volume_step, min_volume, max_volume)
+    if size is None:
+        return {"action": "aucune", "reason": "compte trop petit pour ce stop (volume sous le minimum du broker)"}
+
+    return {"action": "simulation", "steps": [{
+        "type": "ouverture_simulee", "symbol": symbol, "direction": direction, "volume": size,
+        "entry": entry_price, "stop_loss": stop_loss, "take_profit": None,
     }]}
 
 

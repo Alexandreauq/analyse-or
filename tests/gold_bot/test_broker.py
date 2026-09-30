@@ -190,6 +190,25 @@ def test_place_market_order_sends_correct_body_for_vente(monkeypatch):
     assert captured["json"]["actionType"] == "ORDER_TYPE_SELL"
 
 
+def test_place_market_order_omits_take_profit_key_when_none(monkeypatch):
+    captured = {}
+
+    def fake_post(url, headers=None, json=None, timeout=None):
+        captured["json"] = json
+        return _FakeMT5Response({"orderId": "996"})
+
+    monkeypatch.setattr(broker.requests, "post", fake_post)
+    broker.place_market_order("tok", "acc123", "XAUUSD", "achat", 1.0, 2095)
+
+    assert captured["json"] == {
+        "actionType": "ORDER_TYPE_BUY",
+        "symbol": "XAUUSD",
+        "volume": 1.0,
+        "stopLoss": 2095,
+    }
+    assert "takeProfit" not in captured["json"]
+
+
 def test_close_position_sends_correct_body(monkeypatch):
     captured = {}
 

@@ -200,11 +200,13 @@ def decide_and_act_vwap(candles: list[dict], *, contract_size: float, balance: f
                          symbol: str = "XAUUSD", risk_pct: float = 0.05) -> dict:
     """Moteur scalping retour-à-la-VWAP + filtre EMA200 + stop suiveur
     EMA50 -- voir docs/superpowers/specs/2026-09-30-gold-bot-vwap-
-    reversion-design.md. Bidirectionnel (achat et vente), contrairement
-    au mode swing (long uniquement). Pas de take-profit fixe : la
-    position n'est fermée que par le stop initial (posé côté broker à
-    l'ouverture) ou par le bot lui-même, sur croisement de l'EMA50 dans
-    le mauvais sens ou en fin de session (22h UTC)."""
+    reversion-design.md et son addendum (stop suiveur + recalibrage
+    entrée/stop, validé par découpage train 2018-2023/test 2024-2026).
+    Bidirectionnel (achat et vente), contrairement au mode swing (long
+    uniquement). Pas de take-profit fixe : la position n'est fermée que
+    par le stop (initial, ou déplacé par le suiveur une fois le seuil de
+    rentabilité atteint -- voir vwap_reversion.compute_trailing_stop) ou
+    en fin de session (22h UTC)."""
     circuit_breaker.check(equity)
 
     state = vwap_reversion.latest_state(candles)
@@ -226,17 +228,25 @@ def decide_and_act_vwap(candles: list[dict], *, contract_size: float, balance: f
         else:
             return {"action": "aucune", "reason": "position de type inattendu, aucune action par prudence"}
 
-        exit_now = state["hour_utc"] >= vwap_reversion.SESSION_END_HOUR_UTC
-        if direction == "achat" and state["close"] < state["ema50"]:
-            exit_now = True
-        elif direction == "vente" and state["close"] > state["ema50"]:
-            exit_now = True
-
-        if exit_now:
+        if state["hour_utc"] >= vwap_reversion.SESSION_END_HOUR_UTC:
             return {"action": "simulation", "steps": [
                 {"type": "clôture_simulee", "position_id": position.get("id"), "symbol": symbol}
             ]}
-        return {"action": "aucune", "reason": "position ouverte, aucune condition de sortie (EMA50/fin de session)"}
+
+        entry_price = position.get("openPrice")
+        current_stop_loss = position.get("stopLoss")
+        entry_time_iso = position.get("time")
+        if entry_price is None or current_stop_loss is None or entry_time_iso is None:
+            return {"action": "aucune", "reason": "champs de position manquants, aucune action par prudence"}
+
+        new_stop = vwap_reversion.compute_trailing_stop(candles, direction, entry_time_iso, entry_price, current_stop_loss)
+        if new_stop is None:
+            return {"action": "aucune", "reason": "position ouverte, pas de mise a jour du stop suiveur"}
+
+        return {"action": "simulation", "steps": [{
+            "type": "modification_simulee", "position_id": position.get("id"), "symbol": symbol,
+            "new_stop_loss": new_stop,
+        }]}
 
     if state["bars_into_session"] < vwap_reversion.MIN_BARS_INTO_SESSION:
         return {"action": "aucune", "reason": "debut de session, VWAP pas encore stabilisee"}

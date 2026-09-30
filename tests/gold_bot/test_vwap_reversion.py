@@ -108,3 +108,90 @@ def test_latest_state_vwap_std_is_zero_or_positive():
                                          c["open"], c["high"], c["low"], c["close"]))
     state = vwap_reversion.latest_state(candles_5min)
     assert state["vwap_std"] >= 0
+
+
+def _to_5min(candles_15min):
+    """Reconstruit des bougies 5min equivalentes (3 par bougie 15min) pour
+    passer par le vrai chemin resample_15min + compute_indicators."""
+    out = []
+    for c in candles_15min:
+        base_t = datetime.fromisoformat(c["time"])
+        for j in range(3):
+            out.append(_candle((base_t + timedelta(minutes=5 * j)).strftime("%Y-%m-%d %H:%M:%S"),
+                                c["open"], c["high"], c["low"], c["close"], c["tick_volume"]))
+    return out
+
+
+def test_compute_trailing_stop_none_when_entry_time_before_all_candles():
+    candles_15min = _build_15min_series(vwap_reversion.EMA200_PERIOD + 20)
+    result = vwap_reversion.compute_trailing_stop(
+        _to_5min(candles_15min), "achat", "2020-01-01T00:00:00+00:00", 2000.0, 1990.0,
+    )
+    assert result is None
+
+
+def test_compute_trailing_stop_none_when_breakeven_not_reached_achat():
+    candles_15min = _build_15min_series(vwap_reversion.EMA200_PERIOD + 20)
+    entry_idx = vwap_reversion.EMA200_PERIOD + 5
+    entry_price = candles_15min[entry_idx]["close"]
+    entry_time_iso = candles_15min[entry_idx]["time"]
+    # aucune excursion favorable apres l'entree -- prix strictement plat.
+    for c in candles_15min[entry_idx + 1:]:
+        c["open"] = c["high"] = c["low"] = c["close"] = entry_price
+
+    result = vwap_reversion.compute_trailing_stop(
+        _to_5min(candles_15min), "achat", entry_time_iso, entry_price, entry_price - 5.0,
+    )
+    assert result is None
+
+
+def test_compute_trailing_stop_moves_stop_up_when_breakeven_reached_achat():
+    candles_15min = _build_15min_series(vwap_reversion.EMA200_PERIOD + 20)
+    entry_idx = vwap_reversion.EMA200_PERIOD + 5
+    entry_price = candles_15min[entry_idx]["close"]
+    entry_time_iso = candles_15min[entry_idx]["time"]
+    # grosse excursion favorable, tres au-dela de R (distance minime sur
+    # cette serie quasi plate) -- declenche a coup sur le seuil.
+    favorable_idx = entry_idx + 2
+    candles_15min[favorable_idx]["high"] = entry_price + 10.0
+
+    current_stop_loss = entry_price - 5.0  # nettement moins protecteur que ce que l'EMA50 suggererait
+    result = vwap_reversion.compute_trailing_stop(
+        _to_5min(candles_15min), "achat", entry_time_iso, entry_price, current_stop_loss,
+    )
+    assert result is not None
+    assert result > current_stop_loss
+
+
+def test_compute_trailing_stop_none_when_candidate_would_loosen_the_stop():
+    candles_15min = _build_15min_series(vwap_reversion.EMA200_PERIOD + 20)
+    entry_idx = vwap_reversion.EMA200_PERIOD + 5
+    entry_price = candles_15min[entry_idx]["close"]
+    entry_time_iso = candles_15min[entry_idx]["time"]
+    favorable_idx = entry_idx + 2
+    candles_15min[favorable_idx]["high"] = entry_price + 10.0
+
+    # stop deja bien au-dessus de ce que le suiveur calculerait (candidat
+    # toujours <= ema50 + une petite marge, proche de entry_price sur
+    # cette serie quasi plate) -- ne doit jamais reculer.
+    current_stop_loss = entry_price + 50.0
+    result = vwap_reversion.compute_trailing_stop(
+        _to_5min(candles_15min), "achat", entry_time_iso, entry_price, current_stop_loss,
+    )
+    assert result is None
+
+
+def test_compute_trailing_stop_moves_stop_down_when_breakeven_reached_vente():
+    candles_15min = _build_15min_series(vwap_reversion.EMA200_PERIOD + 20)
+    entry_idx = vwap_reversion.EMA200_PERIOD + 5
+    entry_price = candles_15min[entry_idx]["close"]
+    entry_time_iso = candles_15min[entry_idx]["time"]
+    favorable_idx = entry_idx + 2
+    candles_15min[favorable_idx]["low"] = entry_price - 10.0
+
+    current_stop_loss = entry_price + 5.0
+    result = vwap_reversion.compute_trailing_stop(
+        _to_5min(candles_15min), "vente", entry_time_iso, entry_price, current_stop_loss,
+    )
+    assert result is not None
+    assert result < current_stop_loss

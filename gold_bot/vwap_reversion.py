@@ -1,16 +1,24 @@
 # gold_bot/vwap_reversion.py
 # Signal scalping retour-a-la-VWAP filtre par regime (EMA200), sortie par
 # stop suiveur EMA50 -- voir docs/superpowers/specs/2026-09-30-gold-bot-
-# vwap-reversion-design.md. Reproduit a l'identique le moteur valide
-# empiriquement la nuit du 2026-09-29 sur 8.5 ans de donnees XAU/USD
-# reelles (reserve statistique documentee dans le spec : le resultat
-# global est porte par 3 trades extremes sur 165).
+# vwap-reversion-design.md et son addendum (2026-09-30, stop suiveur +
+# recalibrage entree/stop). Reproduit a l'identique le moteur valide par
+# decoupage train (2018-2023) / test (2024-2026, jamais vu pendant
+# l'optimisation) : positif sur les 3 annees individuelles du test,
+# reste positif sans son meilleur trade -- reserve qui persiste : les 10
+# plus gros trades sur 212 pesent 224% du gain net (le trade "moyen"
+# reste legerement perdant).
 from datetime import datetime, timezone
 
 EMA200_PERIOD = 200
 EMA50_PERIOD = 50
-ENTRY_SIGMA = 2.0
-STOP_SIGMA = 3.0
+ENTRY_SIGMA = 1.5
+STOP_SIGMA = 2.5
+# Marge de securite entre l'EMA50 et le stop suiveur, en multiples de
+# l'ecart-type VWAP au moment de l'entree -- identique au parametre
+# valide dans le backtest (evite un stop colle exactement sur l'EMA50,
+# qui se ferait toucher au moindre bruit).
+TRAIL_BUFFER_SIGMA = 0.5
 SESSION_END_HOUR_UTC = 22
 MIN_BARS_INTO_SESSION = 12
 MIN_DISTANCE_PCT = 0.002
@@ -85,6 +93,78 @@ def compute_indicators(candles_15min: list[dict]) -> list[dict]:
         c["hour_utc"] = t.hour
         c["bars_into_session"] = bars_into_session
     return candles_15min
+
+
+def compute_trailing_stop(candles_5min: list[dict], direction: str, entry_time_iso: str,
+                           entry_price: float, current_stop_loss: float) -> float | None:
+    """Stop suiveur sans état côté bot -- tout est recalculé à chaque
+    appel depuis les bougies réelles fournies (mêmes convention que
+    latest_state). Retrouve la bougie 15min d'ouverture dans
+    `candles_5min` (les positions de ce moteur se ferment toujours dans
+    la même session UTC, donc l'entrée est toujours dans la fenêtre
+    récupérée par le bot), recalcule R (distance entrée→stop initial, en
+    utilisant le VWAP/écart-type de CETTE bougie -- identique à la
+    formule d'entrée), vérifie si le plus haut (achat)/plus bas (vente)
+    atteint depuis l'entrée dépasse R, et si oui calcule le stop
+    suiveur (EMA50 de la dernière bougie ∓ TRAIL_BUFFER_SIGMA × l'écart-
+    type AU MOMENT DE L'ENTRÉE). Ne renvoie une valeur que si elle
+    resserre réellement le stop en faveur du trade (jamais de recul) --
+    None sinon (rien à modifier), y compris si le seuil de rentabilité
+    n'est pas encore atteint ou si l'historique fourni ne couvre pas la
+    bougie d'entrée (position ouverte avant le début de la fenêtre
+    récupérée)."""
+    candles_15min = resample_15min(candles_5min)
+    if len(candles_15min) < EMA200_PERIOD:
+        return None
+    compute_indicators(candles_15min)
+
+    entry_dt = datetime.fromisoformat(entry_time_iso.replace("Z", "+00:00"))
+    entry_idx = None
+    for i, c in enumerate(candles_15min):
+        bucket_dt = datetime.fromisoformat(c["time"])
+        if bucket_dt <= entry_dt:
+            entry_idx = i
+        else:
+            break
+    if entry_idx is None:
+        return None
+
+    entry_candle = candles_15min[entry_idx]
+    entry_std = entry_candle["vwap_std"]
+    if entry_std <= 0:
+        return None
+    if direction == "achat":
+        initial_stop = entry_candle["vwap"] - STOP_SIGMA * entry_std
+    else:
+        initial_stop = entry_candle["vwap"] + STOP_SIGMA * entry_std
+    r = abs(entry_price - initial_stop)
+    if r <= 0:
+        return None
+
+    # Strictement APRES la bougie d'entree : son propre high/low s'est
+    # produit avant (ou pendant) la decision d'entree elle-meme, jamais
+    # "depuis" l'entree -- trouve lors de l'ecriture des tests.
+    since_entry = candles_15min[entry_idx + 1:]
+    if not since_entry:
+        return None
+    if direction == "achat":
+        best_excursion = max(c["high"] for c in since_entry) - entry_price
+    else:
+        best_excursion = entry_price - min(c["low"] for c in since_entry)
+    if best_excursion < r:
+        return None
+
+    ema50 = candles_15min[-1]["ema50"]
+    if direction == "achat":
+        candidate = max(entry_price, ema50 - TRAIL_BUFFER_SIGMA * entry_std)
+        new_stop = max(current_stop_loss, candidate)
+    else:
+        candidate = min(entry_price, ema50 + TRAIL_BUFFER_SIGMA * entry_std)
+        new_stop = min(current_stop_loss, candidate)
+
+    if new_stop == current_stop_loss:
+        return None
+    return new_stop
 
 
 def latest_state(candles_5min: list[dict]) -> dict | None:

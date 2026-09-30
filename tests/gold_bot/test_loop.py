@@ -127,7 +127,7 @@ def test_run_cycle_no_action_when_kill_switch_engaged(monkeypatch, tmp_path):
 
     result = loop.run_cycle("tok", "acc", loop.risk.CircuitBreaker())
 
-    assert result == {"action": "ignore", "reason": "interrupteur d'urgence activé"}
+    assert result == {"action": "ignore", "reason": "interrupteur d'urgence activé", "symbol": "XAUUSD"}
 
 
 def test_run_cycle_logs_dry_run_without_executing(monkeypatch, tmp_path):
@@ -734,7 +734,7 @@ def test_run_cycle_ignores_when_market_closed(monkeypatch, tmp_path):
 
     result = loop.run_cycle("tok", "acc", loop.risk.CircuitBreaker(), now=saturday_noon)
 
-    assert result == {"action": "ignore", "reason": "marché XAU/USD fermé (week-end)"}
+    assert result == {"action": "ignore", "reason": "marché XAUUSD fermé (week-end)", "symbol": "XAUUSD"}
 
 
 def test_run_cycle_ignores_when_candle_data_is_stale(monkeypatch, tmp_path):
@@ -752,7 +752,7 @@ def test_run_cycle_ignores_when_candle_data_is_stale(monkeypatch, tmp_path):
 
     result = loop.run_cycle("tok", "acc", loop.risk.CircuitBreaker(), now=stale_now)
 
-    assert result == {"action": "ignore", "reason": "données périmées"}
+    assert result == {"action": "ignore", "reason": "données périmées", "symbol": "XAUUSD"}
 
 
 def test_run_cycle_treats_just_completed_candle_as_fresh(monkeypatch, tmp_path):
@@ -774,7 +774,7 @@ def test_run_cycle_treats_just_completed_candle_as_fresh(monkeypatch, tmp_path):
 
     result = loop.run_cycle("tok", "acc", loop.risk.CircuitBreaker(), now=just_completed_now)
 
-    assert result == {"action": "aucune", "reason": "signal neutre"}
+    assert result == {"action": "aucune", "reason": "signal neutre", "symbol": "XAUUSD"}
 
 
 def test_run_cycle_still_caches_candles_when_market_closed(monkeypatch, tmp_path):
@@ -808,7 +808,7 @@ def test_run_cycle_continues_when_market_open_and_data_fresh(monkeypatch, tmp_pa
 
     result = loop.run_cycle("tok", "acc", loop.risk.CircuitBreaker(), now=_FRESH_NOW)
 
-    assert result == {"action": "aucune", "reason": "signal neutre"}
+    assert result == {"action": "aucune", "reason": "signal neutre", "symbol": "XAUUSD"}
 
 
 def test_run_cycle_continues_when_a_dashboard_cache_write_fails(monkeypatch, tmp_path):
@@ -833,7 +833,7 @@ def test_run_cycle_continues_when_a_dashboard_cache_write_fails(monkeypatch, tmp
 
     result = loop.run_cycle("tok", "acc", loop.risk.CircuitBreaker(), now=_FRESH_NOW)
 
-    assert result == {"action": "aucune", "reason": "signal neutre"}
+    assert result == {"action": "aucune", "reason": "signal neutre", "symbol": "XAUUSD"}
     logged = json.loads((tmp_path / "decisions_log.jsonl").read_text(encoding="utf-8").strip())
     assert logged["action"] == "aucune"
 
@@ -850,7 +850,7 @@ def test_run_cycle_fetches_candles_with_extended_limit_for_vwap_engine(monkeypat
     monkeypatch.setattr(loop, "LATEST_POSITIONS_PATH", str(tmp_path / "latest_positions.json"))
     captured = {}
 
-    def fake_fetch(token, account_id, region, limit=None):
+    def fake_fetch(token, account_id, region, limit=None, symbol=None):
         captured["limit"] = limit
         return [_FRESH_CANDLE]
 
@@ -887,3 +887,108 @@ def test_run_cycle_passes_candles_to_decide_and_act_vwap(monkeypatch, tmp_path):
     loop.run_cycle("tok", "acc", loop.risk.CircuitBreaker(), now=_FRESH_NOW)
 
     assert captured["candles"] == fake_candles
+
+
+def test_symbols_includes_gold_and_silver():
+    assert loop.SYMBOLS == ["XAUUSD", "XAGUSD"]
+
+
+def test_candles_cache_path_default_symbol_uses_shared_path():
+    assert loop._candles_cache_path("XAUUSD") == loop.LATEST_CANDLES_PATH
+
+
+def test_candles_cache_path_other_symbol_uses_dedicated_path():
+    path = loop._candles_cache_path("XAGUSD")
+    assert path != loop.LATEST_CANDLES_PATH
+    assert "xagusd" in path.lower()
+
+
+def test_run_cycle_fetches_candles_for_the_given_symbol(monkeypatch, tmp_path):
+    monkeypatch.setattr(loop.state, "load_state", lambda *a, **k: {"kill_switch": False, "dry_run": True})
+    monkeypatch.setattr(loop, "DECISIONS_LOG_PATH", str(tmp_path / "decisions_log.jsonl"))
+    monkeypatch.setattr(loop, "LATEST_BALANCE_PATH", str(tmp_path / "latest_balance.json"))
+    monkeypatch.setattr(loop, "LATEST_POSITIONS_PATH", str(tmp_path / "latest_positions.json"))
+    monkeypatch.setattr(loop, "_candles_cache_path", lambda symbol: str(tmp_path / "latest_candles_xagusd.json"))
+    captured = {}
+
+    def fake_fetch(token, account_id, region, limit=None, symbol=None):
+        captured["symbol"] = symbol
+        return [_FRESH_CANDLE]
+
+    monkeypatch.setattr(loop.confluence, "fetch_gold_candles", fake_fetch)
+    monkeypatch.setattr(loop.broker, "get_account_information", lambda *a, **k: {"balance": 10000.0, "equity": 10000.0})
+    monkeypatch.setattr(loop.bot, "reconcile_positions", lambda *a, **k: [])
+    monkeypatch.setattr(loop.broker, "get_symbol_specification", lambda *a, **k: {"contractSize": 5000, "volumeStep": 0.01, "minVolume": 0.01, "maxVolume": 20})
+    monkeypatch.setattr(loop.bot, "decide_and_act_vwap", lambda *a, **k: {"action": "aucune", "reason": "pas de signal d'entree"})
+
+    loop.run_cycle("tok", "acc", loop.risk.CircuitBreaker(), symbol="XAGUSD", now=_FRESH_NOW)
+
+    assert captured["symbol"] == "XAGUSD"
+
+
+def test_run_cycle_caches_candles_for_non_default_symbol_at_dedicated_path(monkeypatch, tmp_path):
+    monkeypatch.setattr(loop.state, "load_state", lambda *a, **k: {"kill_switch": False, "dry_run": True})
+    monkeypatch.setattr(loop, "DECISIONS_LOG_PATH", str(tmp_path / "decisions_log.jsonl"))
+    monkeypatch.setattr(loop, "LATEST_BALANCE_PATH", str(tmp_path / "latest_balance.json"))
+    monkeypatch.setattr(loop, "LATEST_POSITIONS_PATH", str(tmp_path / "latest_positions.json"))
+    silver_cache_path = tmp_path / "latest_candles_xagusd.json"
+    monkeypatch.setattr(loop, "_candles_cache_path", lambda symbol: str(silver_cache_path))
+    fake_candles = [_FRESH_CANDLE]
+    monkeypatch.setattr(loop.confluence, "fetch_gold_candles", lambda *a, **k: fake_candles)
+    monkeypatch.setattr(loop.broker, "get_account_information", lambda *a, **k: {"balance": 10000.0, "equity": 10000.0})
+    monkeypatch.setattr(loop.bot, "reconcile_positions", lambda *a, **k: [])
+    monkeypatch.setattr(loop.broker, "get_symbol_specification", lambda *a, **k: {"contractSize": 5000, "volumeStep": 0.01, "minVolume": 0.01, "maxVolume": 20})
+    monkeypatch.setattr(loop.bot, "decide_and_act_vwap", lambda *a, **k: {"action": "aucune", "reason": "pas de signal d'entree"})
+
+    loop.run_cycle("tok", "acc", loop.risk.CircuitBreaker(), symbol="XAGUSD", now=_FRESH_NOW)
+
+    cached = json.loads(silver_cache_path.read_text(encoding="utf-8"))
+    assert cached["candles"] == fake_candles
+
+
+def test_run_cycle_tags_decisions_with_the_given_symbol(monkeypatch, tmp_path):
+    monkeypatch.setattr(loop.state, "load_state", lambda *a, **k: {"kill_switch": False, "dry_run": True})
+    monkeypatch.setattr(loop, "DECISIONS_LOG_PATH", str(tmp_path / "decisions_log.jsonl"))
+    monkeypatch.setattr(loop, "LATEST_BALANCE_PATH", str(tmp_path / "latest_balance.json"))
+    monkeypatch.setattr(loop, "LATEST_POSITIONS_PATH", str(tmp_path / "latest_positions.json"))
+    monkeypatch.setattr(loop, "_candles_cache_path", lambda symbol: str(tmp_path / "latest_candles_xagusd.json"))
+    monkeypatch.setattr(loop.confluence, "fetch_gold_candles", lambda *a, **k: [_FRESH_CANDLE])
+    monkeypatch.setattr(loop.broker, "get_account_information", lambda *a, **k: {"balance": 10000.0, "equity": 10000.0})
+    monkeypatch.setattr(loop.bot, "reconcile_positions", lambda *a, **k: [])
+    monkeypatch.setattr(loop.broker, "get_symbol_specification", lambda *a, **k: {"contractSize": 5000, "volumeStep": 0.01, "minVolume": 0.01, "maxVolume": 20})
+    monkeypatch.setattr(loop.bot, "decide_and_act_vwap", lambda *a, **k: {"action": "aucune", "reason": "pas de signal d'entree"})
+
+    result = loop.run_cycle("tok", "acc", loop.risk.CircuitBreaker(), symbol="XAGUSD", now=_FRESH_NOW)
+
+    assert result["symbol"] == "XAGUSD"
+
+
+def test_run_cycle_anti_slippage_recheck_uses_the_given_symbol(monkeypatch, tmp_path):
+    monkeypatch.setattr(loop.state, "load_state", lambda *a, **k: {"kill_switch": False, "dry_run": False})
+    monkeypatch.setattr(loop, "DECISIONS_LOG_PATH", str(tmp_path / "decisions_log.jsonl"))
+    monkeypatch.setattr(loop, "LATEST_BALANCE_PATH", str(tmp_path / "latest_balance.json"))
+    monkeypatch.setattr(loop, "LATEST_POSITIONS_PATH", str(tmp_path / "latest_positions.json"))
+    monkeypatch.setattr(loop, "_candles_cache_path", lambda symbol: str(tmp_path / "latest_candles_xagusd.json"))
+    monkeypatch.setattr(loop.broker, "get_account_information", lambda *a, **k: {"balance": 10000, "equity": 10000})
+    monkeypatch.setattr(loop.bot, "reconcile_positions", lambda *a, **k: [])
+    monkeypatch.setattr(loop.broker, "get_symbol_specification",
+                         lambda *a, **k: {"contractSize": 5000, "volumeStep": 0.01, "minVolume": 0.01, "maxVolume": 20})
+    fake_steps = [{"type": "ouverture_simulee", "symbol": "XAGUSD", "direction": "achat",
+                    "volume": 1.0, "entry": 60, "stop_loss": 59, "take_profit": 62}]
+    monkeypatch.setattr(loop.bot, "decide_and_act_vwap", lambda *a, **k: {"action": "simulation", "steps": fake_steps})
+    captured_symbols = []
+
+    def fake_fetch(*a, symbol=None, **k):
+        captured_symbols.append(symbol)
+        return [{"time": "2026-09-11 16:40:00", "close": 60}]
+
+    monkeypatch.setattr(loop.confluence, "fetch_gold_candles", fake_fetch)
+    monkeypatch.setattr(loop.broker, "place_market_order", lambda *a, **k: {"orderId": "9"})
+
+    loop.run_cycle("tok", "acc", loop.risk.CircuitBreaker(), symbol="XAGUSD", now=_FRESH_NOW)
+
+    # Un appel pour les bougies de decide_and_act_vwap, un pour le
+    # re-controle anti-slippage -- les deux doivent porter sur XAGUSD,
+    # jamais retomber implicitement sur XAUUSD (bug trouve et corrige
+    # le 2026-09-30 : l'appel de re-controle ignorait `symbol`).
+    assert captured_symbols == ["XAGUSD", "XAGUSD"]

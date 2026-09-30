@@ -1,26 +1,26 @@
 {
   "date": "2026-09-30",
-  "composite_score": -22.6,
+  "composite_score": -22.7,
   "interpretation": "Défavorable — pas d'entrée même sur signal technique",
   "cftc_percentile": 58.333333333333336,
   "factors": [
     {
       "name": "Taux réels US 10 ans",
-      "score": -9.2,
+      "score": -9.400000000000004,
       "weight": 0.3,
-      "raw_value": "2.90% (il y a ~45j : 2.44%)"
+      "raw_value": "2.91% (il y a ~45j : 2.44%)"
     },
     {
       "name": "Dollar (DXY)",
-      "score": -7.199974060058594,
+      "score": -7.254981994628906,
       "weight": 0.15,
-      "raw_value": "101.45 (il y a 2 mois : 100.01)"
+      "raw_value": "101.46 (il y a 2 mois : 100.01)"
     },
     {
       "name": "Anticipations d'inflation",
-      "score": 2.333333333333343,
+      "score": 2.6666666666666696,
       "weight": 0.15,
-      "raw_value": "2.35% (il y a ~45j : 2.28%)"
+      "raw_value": "2.36% (il y a ~45j : 2.28%)"
     },
     {
       "name": "Ton de la Fed",
@@ -49,8 +49,8 @@
   ],
   "technical": {
     "note": "Cours en-dessous de la MM200 (-8.1%) — tendance baissière",
-    "spot": 4185.7001953125,
-    "ma200": 4554.855001220703
+    "spot": 4186.0,
+    "ma200": 4554.856500244141
   },
   "calendar": [
     {
@@ -98,7 +98,7 @@
     {
       "kind": "risque",
       "title": "Chute rapide du score composite",
-      "detail": "Repricing de -20.9 points en moins de 5 jours.",
+      "detail": "Repricing de -21.0 points en moins de 5 jours.",
       "date": "30/09/2026"
     }
   ]

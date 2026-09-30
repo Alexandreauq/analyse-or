@@ -76,6 +76,10 @@ def execute_steps(token: str, account_id: str, steps: list[dict],
                     token, account_id, step["symbol"], step["direction"], step["volume"],
                     step["stop_loss"], step["take_profit"], region,
                 )
+            elif step["type"] == "modification_simulee":
+                result = broker.modify_position_stop_loss(
+                    token, account_id, step["position_id"], step["new_stop_loss"], region,
+                )
             else:
                 continue
             results.append({"step": step, "result": result, "error": None})

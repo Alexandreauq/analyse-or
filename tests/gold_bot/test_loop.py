@@ -50,6 +50,20 @@ def test_execute_steps_calls_place_order_for_opening_step(monkeypatch):
     assert results == [{"step": steps[0], "result": {"orderId": "2"}, "error": None}]
 
 
+def test_execute_steps_calls_modify_for_modification_step(monkeypatch):
+    monkeypatch.setattr(loop.state, "load_state", lambda *a, **k: _permissive_state())
+    captured = {}
+    monkeypatch.setattr(
+        loop.broker, "modify_position_stop_loss",
+        lambda token, account_id, position_id, stop_loss, region:
+            captured.__setitem__("modify", (token, account_id, position_id, stop_loss, region)) or {"orderId": "3"},
+    )
+    steps = [{"type": "modification_simulee", "position_id": "42", "symbol": "XAUUSD", "new_stop_loss": 2098.5}]
+    results = loop.execute_steps("tok", "acc", steps, region="london")
+    assert captured["modify"] == ("tok", "acc", "42", 2098.5, "london")
+    assert results == [{"step": steps[0], "result": {"orderId": "3"}, "error": None}]
+
+
 def test_execute_steps_skips_unknown_step_type(monkeypatch):
     monkeypatch.setattr(loop.state, "load_state", lambda *a, **k: _permissive_state())
     monkeypatch.setattr(loop.broker, "close_position", lambda *a, **k: (_ for _ in ()).throw(AssertionError("ne doit pas être appelé")))

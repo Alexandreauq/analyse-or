@@ -113,6 +113,25 @@ def place_market_order(token: str, account_id: str, symbol: str, direction: str,
     return resp.json()
 
 
+def modify_position_stop_loss(token: str, account_id: str, position_id: str, stop_loss: float,
+                               region: str = DEFAULT_MT5_REGION) -> dict:
+    """Déplace le stop-loss d'une position déjà ouverte (stop suiveur) --
+    actionType vérifié via la documentation officielle MetaApi le
+    2026-09-30 (POSITION_MODIFY, positionId + stopLoss/takeProfit
+    optionnels). N'envoie jamais takeProfit : gold_bot.vwap_reversion
+    n'utilise pas de cible fixe pour ce moteur, et modifier un stop ne
+    doit jamais avoir d'effet de bord sur un take-profit existant (il n'y
+    en a de toute façon jamais)."""
+    resp = requests.post(
+        f"{_base_url(region)}/users/current/accounts/{account_id}/trade",
+        headers={"auth-token": token},
+        json={"actionType": "POSITION_MODIFY", "positionId": position_id, "stopLoss": stop_loss},
+        timeout=15,
+    )
+    resp.raise_for_status()
+    return resp.json()
+
+
 def close_position(token: str, account_id: str, position_id: str,
                     region: str = DEFAULT_MT5_REGION) -> dict:
     resp = requests.post(

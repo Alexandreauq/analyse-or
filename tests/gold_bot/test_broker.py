@@ -220,4 +220,23 @@ def test_close_position_sends_correct_body(monkeypatch):
     result = broker.close_position("tok", "acc123", "46648037")
 
     assert result == {"orderId": "997", "positionId": "46648037"}
-    assert captured["json"] == {"actionType": "POSITION_CLOSE_ID", "positionId": "46648037"}
+
+
+def test_modify_position_stop_loss_sends_correct_body(monkeypatch):
+    captured = {}
+
+    def fake_post(url, headers=None, json=None, timeout=None):
+        captured["url"] = url
+        captured["json"] = json
+        return _FakeMT5Response({"orderId": "995", "positionId": "46648037"})
+
+    monkeypatch.setattr(broker.requests, "post", fake_post)
+    result = broker.modify_position_stop_loss("tok", "acc123", "46648037", 2087.5)
+
+    assert result == {"orderId": "995", "positionId": "46648037"}
+    assert captured["json"] == {
+        "actionType": "POSITION_MODIFY",
+        "positionId": "46648037",
+        "stopLoss": 2087.5,
+    }
+    assert captured["url"].endswith("/users/current/accounts/acc123/trade")

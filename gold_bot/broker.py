@@ -83,20 +83,30 @@ def get_symbol_specification(token: str, account_id: str, symbol: str,
 
 
 def place_market_order(token: str, account_id: str, symbol: str, direction: str, volume: float,
-                        stop_loss: float, take_profit: float, region: str = DEFAULT_MT5_REGION) -> dict:
+                        stop_loss: float, take_profit: float | None = None,
+                        region: str = DEFAULT_MT5_REGION) -> dict:
     """direction : "achat" ou "vente" (convention interne du projet) —
-    traduit en ORDER_TYPE_BUY/ORDER_TYPE_SELL attendu par MetaApi."""
+    traduit en ORDER_TYPE_BUY/ORDER_TYPE_SELL attendu par MetaApi.
+    `take_profit` est optionnel (None par défaut) -- certaines
+    stratégies (ex. gold_bot.vwap_reversion) n'ont pas de cible fixe, la
+    position n'étant fermée que par le stop ou une condition de sortie
+    dynamique gérée par le bot. La clé "takeProfit" n'est envoyée à
+    MetaApi que si une valeur est fournie, plutôt qu'un None qui serait
+    interprété différemment selon le comportement (non documenté) du
+    broker sur un champ optionnel explicitement nul."""
     action_type = "ORDER_TYPE_BUY" if direction == "achat" else "ORDER_TYPE_SELL"
+    body = {
+        "actionType": action_type,
+        "symbol": symbol,
+        "volume": volume,
+        "stopLoss": stop_loss,
+    }
+    if take_profit is not None:
+        body["takeProfit"] = take_profit
     resp = requests.post(
         f"{_base_url(region)}/users/current/accounts/{account_id}/trade",
         headers={"auth-token": token},
-        json={
-            "actionType": action_type,
-            "symbol": symbol,
-            "volume": volume,
-            "stopLoss": stop_loss,
-            "takeProfit": take_profit,
-        },
+        json=body,
         timeout=15,
     )
     resp.raise_for_status()

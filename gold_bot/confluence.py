@@ -35,7 +35,8 @@ def validate_candles(candles: list[dict]) -> None:
         raise RuntimeError("Twelve Data a renvoyé une bougie incohérente (high/low/open/close)")
 
 
-def fetch_gold_candles(token: str, account_id: str, region: str = broker.DEFAULT_MT5_REGION) -> list[dict]:
+def fetch_gold_candles(token: str, account_id: str, region: str = broker.DEFAULT_MT5_REGION,
+                        limit: int = 100) -> list[dict]:
     """Récupère les dernières bougies 5min XAU/USD via l'API de données de
     marché MetaApi (broker.get_historical_candles) -- hôte dédié, différent
     de l'API de trading. Renvoie un tableau chronologique (plus ancien en
@@ -44,11 +45,14 @@ def fetch_gold_candles(token: str, account_id: str, region: str = broker.DEFAULT
     2026-09-29 (voir docs/superpowers/specs/2026-09-29-gold-bot-session-
     breakout-volume-design.md) : remplace Twelve Data, donne accès à
     tick_volume/spread (absents de Twelve Data pour XAU/USD). `limit=100`
-    reste une large marge au-dessus de SCALP_MIN_CANDLES (11) en un seul
-    appel -- pas besoin de pagination multi-pages pour cette taille de
-    fenêtre (contrairement à fetch_gold_candles_range, qui couvre des
-    mois/années, voir gold_bot.backtest)."""
-    raw = broker.get_historical_candles(token, account_id, "XAUUSD", "5m", limit=100, region=region)
+    (défaut) reste une large marge au-dessus de SCALP_MIN_CANDLES (11) en
+    un seul appel -- pas besoin de pagination multi-pages pour cette
+    taille de fenêtre (contrairement à fetch_gold_candles_range, qui
+    couvre des mois/années, voir gold_bot.backtest). `limit` est
+    paramétrable : gold_bot.vwap_reversion a besoin de bien plus
+    d'historique par cycle (EMA200 sur des bougies 15min rééchantillonnées
+    ⇒ au moins 600 bougies 5min)."""
+    raw = broker.get_historical_candles(token, account_id, "XAUUSD", "5m", limit=limit, region=region)
     candles = [
         {
             "time": datetime.fromisoformat(c["time"].replace("Z", "+00:00")).strftime("%Y-%m-%d %H:%M:%S"),

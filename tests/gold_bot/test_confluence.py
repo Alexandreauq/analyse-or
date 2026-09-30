@@ -42,6 +42,20 @@ def test_fetch_gold_candles_passes_token_account_symbol_timeframe_region(monkeyp
     assert captured["limit"] == 100
 
 
+def test_fetch_gold_candles_passes_explicit_limit(monkeypatch):
+    captured = {}
+
+    def fake_get_historical(token, account_id, symbol, timeframe, limit=None, region=None):
+        captured["limit"] = limit
+        return [{"time": "2026-09-29T15:50:00.000Z", "open": 1, "high": 1, "low": 1, "close": 1,
+                  "tickVolume": 1, "spread": 1, "state": "complete"}]
+
+    monkeypatch.setattr(confluence.broker, "get_historical_candles", fake_get_historical)
+    confluence.fetch_gold_candles("tok", "acc123", region="london", limit=1000)
+
+    assert captured["limit"] == 1000
+
+
 def test_fetch_gold_candles_raises_when_no_complete_candles(monkeypatch):
     raw = [{"time": "2026-09-29T16:00:00.000Z", "open": 1, "high": 1, "low": 1, "close": 1,
              "tickVolume": 1, "spread": 1, "state": "intermediate"}]

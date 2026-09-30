@@ -13,9 +13,15 @@ from datetime import datetime, timedelta, timezone
 import gold_bot.bot as bot
 import gold_bot.broker as broker
 import gold_bot.confluence as confluence
-import gold_bot.macro_signal as macro_signal
 import gold_bot.risk as risk
 import gold_bot.state as state
+
+# gold_bot.vwap_reversion a besoin de bien plus d'historique par cycle
+# que l'ancien moteur (EMA200 sur des bougies 15min rééchantillonnées ⇒
+# au moins 600 bougies 5min) -- 1000 est le plafond MetaApi par appel
+# (~3.5 jours de bougies 5min, large marge y compris pour absorber un
+# week-end de marché fermé).
+CANDLES_FETCH_LIMIT = 1000
 
 # Remis à 60s (2026-09-12) : le compte Twelve Data est passé au plan
 # Grow (29$/mois, 55 crédits/min, sans plafond journalier) — le
@@ -184,7 +190,7 @@ def run_cycle(token: str, account_id: str,
     circuit_breaker.threshold_pct = profile_params["threshold_pct"]
 
     try:
-        candles = _with_retry(lambda: confluence.fetch_gold_candles(token, account_id, region))
+        candles = _with_retry(lambda: confluence.fetch_gold_candles(token, account_id, region, limit=CANDLES_FETCH_LIMIT))
         _save_cache({"candles": candles, "fetched_at": _now_iso()}, LATEST_CANDLES_PATH)
 
         market_closed = confluence.is_market_closed(now_dt)
@@ -209,8 +215,6 @@ def run_cycle(token: str, account_id: str,
             _log_decision(decision, path=DECISIONS_LOG_PATH)
             return decision
 
-        macro_payload = _with_retry(lambda: macro_signal.fetch_macro_payload())
-
         account_info = _with_retry(lambda: broker.get_account_information(token, account_id, region))
         balance = account_info["balance"]
         equity = account_info["equity"]
@@ -219,11 +223,11 @@ def run_cycle(token: str, account_id: str,
         _save_cache({"positions": open_positions, "fetched_at": _now_iso()}, LATEST_POSITIONS_PATH)
         spec = _with_retry(lambda: broker.get_symbol_specification(token, account_id, symbol, region))
         contract_size = spec["contractSize"]
-        decision = bot.decide_and_act_swing(
-            macro_payload, candles, contract_size=contract_size, balance=balance, equity=equity,
+        decision = bot.decide_and_act_vwap(
+            candles, contract_size=contract_size, balance=balance, equity=equity,
             volume_step=spec["volumeStep"], min_volume=spec["minVolume"], max_volume=spec["maxVolume"],
             open_positions=open_positions, circuit_breaker=circuit_breaker, symbol=symbol,
-            risk_pct=profile_params["risk_pct"], now=now_dt,
+            risk_pct=profile_params["risk_pct"],
         )
     except Exception as e:
         decision = {"action": "erreur", "reason": f"Erreur pendant la décision : {e}"}

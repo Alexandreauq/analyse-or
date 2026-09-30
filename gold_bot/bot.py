@@ -214,12 +214,26 @@ def decide_and_act_vwap(candles: list[dict], *, contract_size: float, balance: f
         return {"action": "aucune", "reason": "historique insuffisant pour l'EMA200"}
 
     matching = [p for p in open_positions if p.get("symbol") == symbol]
+    # Prise de profit partielle (voir docs/superpowers/specs/2026-09-30-
+    # gold-bot-vwap-partial-tp-addendum.md) : une entree peut ouvrir DEUX
+    # positions broker distinctes -- la jambe partielle (takeProfit posé,
+    # se ferme seule côté broker) et la jambe "runner" (jamais de
+    # takeProfit, seule gérée par le stop suiveur ci-dessous).
+    runner_matching = [p for p in matching if not p.get("takeProfit")]
+    partial_matching = [p for p in matching if p.get("takeProfit")]
 
-    if len(matching) > 1:
+    if len(runner_matching) > 1 or len(partial_matching) > 1:
         return {"action": "aucune", "reason": "plusieurs positions ouvertes sur ce symbole, aucune action par prudence"}
 
     if matching:
-        position = matching[0]
+        if state["hour_utc"] >= vwap_reversion.SESSION_END_HOUR_UTC:
+            steps = [{"type": "clôture_simulee", "position_id": p.get("id"), "symbol": symbol} for p in matching]
+            return {"action": "simulation", "steps": steps}
+
+        if not runner_matching:
+            return {"action": "aucune", "reason": "jambe partielle seule ouverte, rien a gerer"}
+
+        position = runner_matching[0]
         raw_type = position.get("type")
         if raw_type == "POSITION_TYPE_BUY":
             direction = "achat"
@@ -227,11 +241,6 @@ def decide_and_act_vwap(candles: list[dict], *, contract_size: float, balance: f
             direction = "vente"
         else:
             return {"action": "aucune", "reason": "position de type inattendu, aucune action par prudence"}
-
-        if state["hour_utc"] >= vwap_reversion.SESSION_END_HOUR_UTC:
-            return {"action": "simulation", "steps": [
-                {"type": "clôture_simulee", "position_id": position.get("id"), "symbol": symbol}
-            ]}
 
         entry_price = position.get("openPrice")
         current_stop_loss = position.get("stopLoss")
@@ -276,14 +285,37 @@ def decide_and_act_vwap(candles: list[dict], *, contract_size: float, balance: f
         return {"action": "aucune", "reason": "coupe-circuit journalier déclenché"}
 
     raw_size = risk.compute_position_size(balance, entry_price, stop_loss, contract_size, risk_pct=risk_pct)
-    size = risk.round_to_volume_step(raw_size, volume_step, min_volume, max_volume)
-    if size is None:
+    total_size = risk.round_to_volume_step(raw_size, volume_step, min_volume, max_volume)
+    if total_size is None:
         return {"action": "aucune", "reason": "compte trop petit pour ce stop (volume sous le minimum du broker)"}
 
-    return {"action": "simulation", "steps": [{
-        "type": "ouverture_simulee", "symbol": symbol, "direction": direction, "volume": size,
-        "entry": entry_price, "stop_loss": stop_loss, "take_profit": None,
-    }]}
+    partial_volume = None
+    if vwap_reversion.PARTIAL_TP_PCT > 0:
+        partial_volume = risk.round_to_volume_step(
+            total_size * vwap_reversion.PARTIAL_TP_PCT, volume_step, min_volume, max_volume)
+
+    if partial_volume is None:
+        # Compte trop petit pour scinder en deux jambes -- tout le volume
+        # part en jambe runner (comportement d'avant cet ajout).
+        return {"action": "simulation", "steps": [{
+            "type": "ouverture_simulee", "symbol": symbol, "direction": direction, "volume": total_size,
+            "entry": entry_price, "stop_loss": stop_loss, "take_profit": None,
+        }]}
+
+    runner_volume = round(total_size - partial_volume, 2)
+    partial_target = (entry_price + vwap_reversion.PARTIAL_TP_R * distance if direction == "achat"
+                       else entry_price - vwap_reversion.PARTIAL_TP_R * distance)
+
+    steps = [{
+        "type": "ouverture_simulee", "symbol": symbol, "direction": direction, "volume": partial_volume,
+        "entry": entry_price, "stop_loss": stop_loss, "take_profit": partial_target,
+    }]
+    if runner_volume >= volume_step:
+        steps.append({
+            "type": "ouverture_simulee", "symbol": symbol, "direction": direction, "volume": runner_volume,
+            "entry": entry_price, "stop_loss": stop_loss, "take_profit": None,
+        })
+    return {"action": "simulation", "steps": steps}
 
 
 def reconcile_positions(token: str, account_id: str, region: str = broker.DEFAULT_MT5_REGION) -> list[dict]:

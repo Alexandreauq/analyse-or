@@ -498,7 +498,7 @@ def test_decide_and_act_vwap_no_action_when_insufficient_history(monkeypatch):
     assert result == {"action": "aucune", "reason": "historique insuffisant pour l'EMA200"}
 
 
-def test_decide_and_act_vwap_opens_achat_on_bullish_regime_extension(monkeypatch):
+def test_decide_and_act_vwap_opens_achat_with_partial_and_runner_legs(monkeypatch):
     # regime haussier (close > ema200) et close <= vwap - 1.5*std (2010 - 1.5*20 = 1980)
     state = _vwap_state(close=1975.0, vwap=2010.0, vwap_std=20.0, ema200=1900.0)
     monkeypatch.setattr(bot.vwap_reversion, "latest_state", lambda candles: state)
@@ -507,15 +507,26 @@ def test_decide_and_act_vwap_opens_achat_on_bullish_regime_extension(monkeypatch
         balance=10000, equity=10000, open_positions=[], circuit_breaker=_open_circuit_breaker(),
     )
     assert result["action"] == "simulation"
-    step = result["steps"][0]
-    assert step["type"] == "ouverture_simulee"
-    assert step["direction"] == "achat"
-    assert step["entry"] == 1975.0
-    assert step["stop_loss"] == pytest.approx(2010.0 - 2.5 * 20.0)
-    assert step["take_profit"] is None
+    assert len(result["steps"]) == 2
+    partial, runner = result["steps"]
+    stop_loss = 2010.0 - 2.5 * 20.0  # 1960.0
+    distance = 1975.0 - stop_loss  # 15.0
+
+    assert partial["type"] == "ouverture_simulee"
+    assert partial["direction"] == "achat"
+    assert partial["entry"] == 1975.0
+    assert partial["stop_loss"] == pytest.approx(stop_loss)
+    assert partial["take_profit"] == pytest.approx(1975.0 + 2.0 * distance)
+    assert partial["volume"] == pytest.approx(0.23)  # floor(0.33 * 0.7, pas 0.01)
+
+    assert runner["type"] == "ouverture_simulee"
+    assert runner["direction"] == "achat"
+    assert runner["stop_loss"] == pytest.approx(stop_loss)
+    assert runner["take_profit"] is None
+    assert runner["volume"] == pytest.approx(0.10)  # 0.33 - 0.23
 
 
-def test_decide_and_act_vwap_opens_vente_on_bearish_regime_extension(monkeypatch):
+def test_decide_and_act_vwap_opens_vente_with_partial_and_runner_legs(monkeypatch):
     # regime baissier (close < ema200) et close >= vwap + 1.5*std (2010 + 1.5*20 = 2040)
     state = _vwap_state(close=2045.0, vwap=2010.0, vwap_std=20.0, ema200=2100.0)
     monkeypatch.setattr(bot.vwap_reversion, "latest_state", lambda candles: state)
@@ -524,9 +535,32 @@ def test_decide_and_act_vwap_opens_vente_on_bearish_regime_extension(monkeypatch
         balance=10000, equity=10000, open_positions=[], circuit_breaker=_open_circuit_breaker(),
     )
     assert result["action"] == "simulation"
+    assert len(result["steps"]) == 2
+    partial, runner = result["steps"]
+    stop_loss = 2010.0 + 2.5 * 20.0  # 2060.0
+    distance = stop_loss - 2045.0  # 15.0
+
+    assert partial["direction"] == "vente"
+    assert partial["stop_loss"] == pytest.approx(stop_loss)
+    assert partial["take_profit"] == pytest.approx(2045.0 - 2.0 * distance)
+    assert runner["direction"] == "vente"
+    assert runner["take_profit"] is None
+
+
+def test_decide_and_act_vwap_opens_single_leg_when_partial_too_small(monkeypatch):
+    # min_volume eleve -> la jambe partielle (0.7 x le volume total) tombe
+    # sous le minimum broker, repli sur une seule jambe runner sans TP.
+    state = _vwap_state(close=1975.0, vwap=2010.0, vwap_std=20.0, ema200=1900.0)
+    monkeypatch.setattr(bot.vwap_reversion, "latest_state", lambda candles: state)
+    result = bot.decide_and_act_vwap(
+        [{"dummy": True}], contract_size=100, volume_step=0.01, min_volume=0.3, max_volume=500,
+        balance=10000, equity=10000, open_positions=[], circuit_breaker=_open_circuit_breaker(),
+    )
+    assert result["action"] == "simulation"
+    assert len(result["steps"]) == 1
     step = result["steps"][0]
-    assert step["direction"] == "vente"
-    assert step["stop_loss"] == pytest.approx(2010.0 + 2.5 * 20.0)
+    assert step["take_profit"] is None
+    assert step["volume"] == pytest.approx(0.33)
 
 
 def test_decide_and_act_vwap_no_action_when_no_entry_signal(monkeypatch):

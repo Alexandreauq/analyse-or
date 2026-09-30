@@ -26,6 +26,16 @@ TRAIL_BUFFER_SIGMA = 0.25
 SESSION_END_HOUR_UTC = 22
 MIN_BARS_INTO_SESSION = 12
 MIN_DISTANCE_PCT = 0.002
+# Prise de profit partielle -- ajoutee le 2026-09-30 apres validation
+# walk-forward (6 fenetres roulantes) : fermer PARTIAL_TP_PCT de la
+# position a PARTIAL_TP_R x la distance entree-stop, laisser le reste
+# ("jambe runner") courir sans plafond via le stop suiveur -- a
+# transforme 2 des 6 fenetres de test (2021, 2023) de legerement
+# negatives en positives, et a nettement reduit le drawdown sur 5 des 6
+# fenetres. PARTIAL_TP_PCT = 0.0 desactiverait la prise partielle
+# (tout le volume part en jambe runner, comportement d'avant cet ajout).
+PARTIAL_TP_PCT = 0.7
+PARTIAL_TP_R = 2.0
 
 
 def resample_15min(candles_5min: list[dict]) -> list[dict]:

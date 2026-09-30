@@ -18,10 +18,6 @@ def _permissive_state(**overrides):
 # dépendre de la date réelle d'exécution des tests.
 _FRESH_NOW = datetime(2026, 9, 11, 16, 41, tzinfo=timezone.utc)
 _FRESH_CANDLE = {"time": "2026-09-11 16:40:00", "close": 2100}
-_NEUTRAL_MACRO_PAYLOAD = {
-    "composite_score": 0.0, "cftc_percentile": 50.0,
-    "technical": {"ma200": 4000.0, "spot": 4000.0}, "alerts": [],
-}
 
 
 def test_execute_steps_calls_close_for_closing_step(monkeypatch):
@@ -127,13 +123,12 @@ def test_run_cycle_logs_dry_run_without_executing(monkeypatch, tmp_path):
     monkeypatch.setattr(loop, "LATEST_BALANCE_PATH", str(tmp_path / "latest_balance.json"))
     monkeypatch.setattr(loop, "LATEST_POSITIONS_PATH", str(tmp_path / "latest_positions.json"))
     monkeypatch.setattr(loop.confluence, "fetch_gold_candles", lambda *a, **k: [_FRESH_CANDLE])
-    monkeypatch.setattr(loop.macro_signal, "fetch_macro_payload", lambda *a, **k: _NEUTRAL_MACRO_PAYLOAD)
     monkeypatch.setattr(loop.broker, "get_account_information", lambda *a, **k: {"balance": 10000, "equity": 10000})
     monkeypatch.setattr(loop.bot, "reconcile_positions", lambda *a, **k: [])
     monkeypatch.setattr(loop.broker, "get_symbol_specification", lambda *a, **k: {"contractSize": 100, "volumeStep": 0.01, "minVolume": 0.01, "maxVolume": 500})
     fake_steps = [{"type": "ouverture_simulee", "symbol": "XAUUSD", "direction": "achat",
                     "volume": 1.0, "entry": 2100, "stop_loss": 2095, "take_profit": 2115}]
-    monkeypatch.setattr(loop.bot, "decide_and_act_swing", lambda *a, **k: {"action": "simulation", "steps": fake_steps})
+    monkeypatch.setattr(loop.bot, "decide_and_act_vwap", lambda *a, **k: {"action": "simulation", "steps": fake_steps})
     monkeypatch.setattr(loop.broker, "place_market_order", lambda *a, **k: (_ for _ in ()).throw(AssertionError("ne doit jamais être appelé en dry-run")))
 
     result = loop.run_cycle("tok", "acc", loop.risk.CircuitBreaker(), now=_FRESH_NOW)
@@ -148,7 +143,6 @@ def test_run_cycle_applies_active_risk_profile_to_sizing_and_circuit_breaker(mon
     monkeypatch.setattr(loop, "LATEST_BALANCE_PATH", str(tmp_path / "latest_balance.json"))
     monkeypatch.setattr(loop, "LATEST_POSITIONS_PATH", str(tmp_path / "latest_positions.json"))
     monkeypatch.setattr(loop.confluence, "fetch_gold_candles", lambda *a, **k: [_FRESH_CANDLE])
-    monkeypatch.setattr(loop.macro_signal, "fetch_macro_payload", lambda *a, **k: _NEUTRAL_MACRO_PAYLOAD)
     monkeypatch.setattr(loop.broker, "get_account_information", lambda *a, **k: {"balance": 10000, "equity": 10000})
     monkeypatch.setattr(loop.bot, "reconcile_positions", lambda *a, **k: [])
     monkeypatch.setattr(loop.broker, "get_symbol_specification", lambda *a, **k: {"contractSize": 100, "volumeStep": 0.01, "minVolume": 0.01, "maxVolume": 500})
@@ -158,7 +152,7 @@ def test_run_cycle_applies_active_risk_profile_to_sizing_and_circuit_breaker(mon
         captured["risk_pct"] = kwargs.get("risk_pct")
         return {"action": "aucune", "reason": "signal neutre"}
 
-    monkeypatch.setattr(loop.bot, "decide_and_act_swing", fake_decide_and_act)
+    monkeypatch.setattr(loop.bot, "decide_and_act_vwap", fake_decide_and_act)
 
     cb = loop.risk.CircuitBreaker()
     loop.run_cycle("tok", "acc", cb, now=_FRESH_NOW)
@@ -174,7 +168,6 @@ def test_run_cycle_defaults_to_profile_3_when_risk_profile_absent_from_state(mon
     monkeypatch.setattr(loop, "LATEST_BALANCE_PATH", str(tmp_path / "latest_balance.json"))
     monkeypatch.setattr(loop, "LATEST_POSITIONS_PATH", str(tmp_path / "latest_positions.json"))
     monkeypatch.setattr(loop.confluence, "fetch_gold_candles", lambda *a, **k: [_FRESH_CANDLE])
-    monkeypatch.setattr(loop.macro_signal, "fetch_macro_payload", lambda *a, **k: _NEUTRAL_MACRO_PAYLOAD)
     monkeypatch.setattr(loop.broker, "get_account_information", lambda *a, **k: {"balance": 10000, "equity": 10000})
     monkeypatch.setattr(loop.bot, "reconcile_positions", lambda *a, **k: [])
     monkeypatch.setattr(loop.broker, "get_symbol_specification", lambda *a, **k: {"contractSize": 100, "volumeStep": 0.01, "minVolume": 0.01, "maxVolume": 500})
@@ -184,7 +177,7 @@ def test_run_cycle_defaults_to_profile_3_when_risk_profile_absent_from_state(mon
         captured["risk_pct"] = kwargs.get("risk_pct")
         return {"action": "aucune", "reason": "signal neutre"}
 
-    monkeypatch.setattr(loop.bot, "decide_and_act_swing", fake_decide_and_act)
+    monkeypatch.setattr(loop.bot, "decide_and_act_vwap", fake_decide_and_act)
 
     cb = loop.risk.CircuitBreaker()
     loop.run_cycle("tok", "acc", cb, now=_FRESH_NOW)
@@ -200,13 +193,12 @@ def test_run_cycle_executes_when_not_dry_run(monkeypatch, tmp_path):
     monkeypatch.setattr(loop, "LATEST_BALANCE_PATH", str(tmp_path / "latest_balance.json"))
     monkeypatch.setattr(loop, "LATEST_POSITIONS_PATH", str(tmp_path / "latest_positions.json"))
     monkeypatch.setattr(loop.confluence, "fetch_gold_candles", lambda *a, **k: [_FRESH_CANDLE])
-    monkeypatch.setattr(loop.macro_signal, "fetch_macro_payload", lambda *a, **k: _NEUTRAL_MACRO_PAYLOAD)
     monkeypatch.setattr(loop.broker, "get_account_information", lambda *a, **k: {"balance": 10000, "equity": 10000})
     monkeypatch.setattr(loop.bot, "reconcile_positions", lambda *a, **k: [])
     monkeypatch.setattr(loop.broker, "get_symbol_specification", lambda *a, **k: {"contractSize": 100, "volumeStep": 0.01, "minVolume": 0.01, "maxVolume": 500})
     fake_steps = [{"type": "ouverture_simulee", "symbol": "XAUUSD", "direction": "achat",
                     "volume": 1.0, "entry": 2100, "stop_loss": 2095, "take_profit": 2115}]
-    monkeypatch.setattr(loop.bot, "decide_and_act_swing", lambda *a, **k: {"action": "simulation", "steps": fake_steps})
+    monkeypatch.setattr(loop.bot, "decide_and_act_vwap", lambda *a, **k: {"action": "simulation", "steps": fake_steps})
     placed = {}
     monkeypatch.setattr(loop.broker, "place_market_order", lambda *a, **k: placed.__setitem__("called", True) or {"orderId": "3"})
 
@@ -249,7 +241,7 @@ def test_run_cycle_skips_opening_when_price_has_drifted_too_much(monkeypatch, tm
                          lambda *a, **k: {"contractSize": 100, "volumeStep": 0.01, "minVolume": 0.01, "maxVolume": 500})
     fake_steps = [{"type": "ouverture_simulee", "symbol": "XAUUSD", "direction": "achat",
                     "volume": 1.0, "entry": 2100, "stop_loss": 2095, "take_profit": 2115}]
-    monkeypatch.setattr(loop.bot, "decide_and_act_swing", lambda *a, **k: {"action": "simulation", "steps": fake_steps})
+    monkeypatch.setattr(loop.bot, "decide_and_act_vwap", lambda *a, **k: {"action": "simulation", "steps": fake_steps})
     # 1er appel (candles pour decide_and_act) renvoie 2100 ; le re-contrôle
     # anti-slippage juste avant l'exécution renvoie 2110 -- écart de 10,
     # bien au-delà du seuil de 1.25 (25% du risque prévu de 5).
@@ -260,7 +252,6 @@ def test_run_cycle_skips_opening_when_price_has_drifted_too_much(monkeypatch, tm
         return [{"time": "2026-09-11 16:40:00", "close": 2100 if calls["n"] == 1 else 2110}]
 
     monkeypatch.setattr(loop.confluence, "fetch_gold_candles", fake_fetch)
-    monkeypatch.setattr(loop.macro_signal, "fetch_macro_payload", lambda *a, **k: _NEUTRAL_MACRO_PAYLOAD)
     monkeypatch.setattr(loop.broker, "place_market_order",
                          lambda *a, **k: (_ for _ in ()).throw(AssertionError("ne doit pas être appelé : prix trop éloigné")))
 
@@ -282,7 +273,7 @@ def test_run_cycle_executes_opening_when_price_has_not_drifted(monkeypatch, tmp_
                          lambda *a, **k: {"contractSize": 100, "volumeStep": 0.01, "minVolume": 0.01, "maxVolume": 500})
     fake_steps = [{"type": "ouverture_simulee", "symbol": "XAUUSD", "direction": "achat",
                     "volume": 1.0, "entry": 2100, "stop_loss": 2095, "take_profit": 2115}]
-    monkeypatch.setattr(loop.bot, "decide_and_act_swing", lambda *a, **k: {"action": "simulation", "steps": fake_steps})
+    monkeypatch.setattr(loop.bot, "decide_and_act_vwap", lambda *a, **k: {"action": "simulation", "steps": fake_steps})
     # Écart de 1 sur un risque prévu de 5 -> ratio 0.2, sous le seuil de 0.25.
     calls = {"n": 0}
 
@@ -291,7 +282,6 @@ def test_run_cycle_executes_opening_when_price_has_not_drifted(monkeypatch, tmp_
         return [{"time": "2026-09-11 16:40:00", "close": 2100 if calls["n"] == 1 else 2101}]
 
     monkeypatch.setattr(loop.confluence, "fetch_gold_candles", fake_fetch)
-    monkeypatch.setattr(loop.macro_signal, "fetch_macro_payload", lambda *a, **k: _NEUTRAL_MACRO_PAYLOAD)
     placed = {}
     monkeypatch.setattr(loop.broker, "place_market_order", lambda *a, **k: placed.__setitem__("called", True) or {"orderId": "3"})
 
@@ -314,7 +304,7 @@ def test_run_cycle_skips_opening_when_slippage_recheck_fetch_fails(monkeypatch, 
                          lambda *a, **k: {"contractSize": 100, "volumeStep": 0.01, "minVolume": 0.01, "maxVolume": 500})
     fake_steps = [{"type": "ouverture_simulee", "symbol": "XAUUSD", "direction": "achat",
                     "volume": 1.0, "entry": 2100, "stop_loss": 2095, "take_profit": 2115}]
-    monkeypatch.setattr(loop.bot, "decide_and_act_swing", lambda *a, **k: {"action": "simulation", "steps": fake_steps})
+    monkeypatch.setattr(loop.bot, "decide_and_act_vwap", lambda *a, **k: {"action": "simulation", "steps": fake_steps})
     calls = {"n": 0}
 
     def fake_fetch(*a, **k):
@@ -324,7 +314,6 @@ def test_run_cycle_skips_opening_when_slippage_recheck_fetch_fails(monkeypatch, 
         raise RuntimeError("Twelve Data indisponible")
 
     monkeypatch.setattr(loop.confluence, "fetch_gold_candles", fake_fetch)
-    monkeypatch.setattr(loop.macro_signal, "fetch_macro_payload", lambda *a, **k: _NEUTRAL_MACRO_PAYLOAD)
     monkeypatch.setattr(loop.broker, "place_market_order",
                          lambda *a, **k: (_ for _ in ()).throw(AssertionError("ne doit pas être appelé : re-contrôle raté")))
 
@@ -352,7 +341,7 @@ def test_run_cycle_still_closes_position_when_reopening_leg_has_drifted(monkeypa
         {"type": "ouverture_simulee", "symbol": "XAUUSD", "direction": "vente",
          "volume": 1.0, "entry": 2100, "stop_loss": 2105, "take_profit": 2085},
     ]
-    monkeypatch.setattr(loop.bot, "decide_and_act_swing", lambda *a, **k: {"action": "simulation", "steps": fake_steps})
+    monkeypatch.setattr(loop.bot, "decide_and_act_vwap", lambda *a, **k: {"action": "simulation", "steps": fake_steps})
     calls = {"n": 0}
 
     def fake_fetch(*a, **k):
@@ -360,7 +349,6 @@ def test_run_cycle_still_closes_position_when_reopening_leg_has_drifted(monkeypa
         return [{"time": "2026-09-11 16:40:00", "close": 2100 if calls["n"] == 1 else 2110}]
 
     monkeypatch.setattr(loop.confluence, "fetch_gold_candles", fake_fetch)
-    monkeypatch.setattr(loop.macro_signal, "fetch_macro_payload", lambda *a, **k: _NEUTRAL_MACRO_PAYLOAD)
     closed = {}
     monkeypatch.setattr(loop.broker, "close_position", lambda *a, **k: closed.__setitem__("called", True) or {"orderId": "1"})
     monkeypatch.setattr(loop.broker, "place_market_order",
@@ -383,13 +371,12 @@ def test_run_cycle_re_checks_kill_switch_before_executing(monkeypatch, tmp_path)
     monkeypatch.setattr(loop, "LATEST_BALANCE_PATH", str(tmp_path / "latest_balance.json"))
     monkeypatch.setattr(loop, "LATEST_POSITIONS_PATH", str(tmp_path / "latest_positions.json"))
     monkeypatch.setattr(loop.confluence, "fetch_gold_candles", lambda *a, **k: [_FRESH_CANDLE])
-    monkeypatch.setattr(loop.macro_signal, "fetch_macro_payload", lambda *a, **k: _NEUTRAL_MACRO_PAYLOAD)
     monkeypatch.setattr(loop.broker, "get_account_information", lambda *a, **k: {"balance": 10000, "equity": 10000})
     monkeypatch.setattr(loop.bot, "reconcile_positions", lambda *a, **k: [])
     monkeypatch.setattr(loop.broker, "get_symbol_specification", lambda *a, **k: {"contractSize": 100, "volumeStep": 0.01, "minVolume": 0.01, "maxVolume": 500})
     fake_steps = [{"type": "ouverture_simulee", "symbol": "XAUUSD", "direction": "achat",
                     "volume": 1.0, "entry": 2100, "stop_loss": 2095, "take_profit": 2115}]
-    monkeypatch.setattr(loop.bot, "decide_and_act_swing", lambda *a, **k: {"action": "simulation", "steps": fake_steps})
+    monkeypatch.setattr(loop.bot, "decide_and_act_vwap", lambda *a, **k: {"action": "simulation", "steps": fake_steps})
     monkeypatch.setattr(loop.broker, "place_market_order", lambda *a, **k: (_ for _ in ()).throw(AssertionError("ne doit jamais être appelé")))
 
     calls = {"n": 0}
@@ -495,11 +482,10 @@ def test_run_cycle_recovers_from_a_single_transient_network_blip(monkeypatch, tm
         return [_FRESH_CANDLE]
 
     monkeypatch.setattr(loop.confluence, "fetch_gold_candles", flaky_fetch_gold_candles)
-    monkeypatch.setattr(loop.macro_signal, "fetch_macro_payload", lambda *a, **k: _NEUTRAL_MACRO_PAYLOAD)
     monkeypatch.setattr(loop.broker, "get_account_information", lambda *a, **k: {"balance": 10000.0, "equity": 10000.0})
     monkeypatch.setattr(loop.bot, "reconcile_positions", lambda *a, **k: [])
     monkeypatch.setattr(loop.broker, "get_symbol_specification", lambda *a, **k: {"contractSize": 100, "volumeStep": 0.01, "minVolume": 0.01, "maxVolume": 500})
-    monkeypatch.setattr(loop.bot, "decide_and_act_swing", lambda *a, **k: {"action": "aucune", "reason": "signal neutre"})
+    monkeypatch.setattr(loop.bot, "decide_and_act_vwap", lambda *a, **k: {"action": "aucune", "reason": "signal neutre"})
 
     result = loop.run_cycle("tok", "acc", loop.risk.CircuitBreaker(), now=_FRESH_NOW)
 
@@ -517,12 +503,11 @@ def test_run_cycle_logs_error_when_decide_and_act_raises(monkeypatch, tmp_path):
     monkeypatch.setattr(loop, "LATEST_BALANCE_PATH", str(tmp_path / "latest_balance.json"))
     monkeypatch.setattr(loop, "LATEST_POSITIONS_PATH", str(tmp_path / "latest_positions.json"))
     monkeypatch.setattr(loop.confluence, "fetch_gold_candles", lambda *a, **k: [_FRESH_CANDLE])
-    monkeypatch.setattr(loop.macro_signal, "fetch_macro_payload", lambda *a, **k: _NEUTRAL_MACRO_PAYLOAD)
     monkeypatch.setattr(loop.broker, "get_account_information", lambda *a, **k: {"balance": 10000, "equity": 10000})
     monkeypatch.setattr(loop.bot, "reconcile_positions", lambda *a, **k: [])
     monkeypatch.setattr(loop.broker, "get_symbol_specification", lambda *a, **k: {"contractSize": 100, "volumeStep": 0.01, "minVolume": 0.01, "maxVolume": 500})
     monkeypatch.setattr(
-        loop.bot, "decide_and_act_swing",
+        loop.bot, "decide_and_act_vwap",
         lambda *a, **k: (_ for _ in ()).throw(ValueError("solde invalide")),
     )
 
@@ -549,11 +534,10 @@ def test_run_cycle_caches_candles_after_successful_fetch(monkeypatch, tmp_path):
     monkeypatch.setattr(loop, "LATEST_POSITIONS_PATH", str(tmp_path / "latest_positions.json"))
     fake_candles = [{"time": "2026-09-11 16:40:00", "close": 3651.5}]
     monkeypatch.setattr(loop.confluence, "fetch_gold_candles", lambda *a, **k: fake_candles)
-    monkeypatch.setattr(loop.macro_signal, "fetch_macro_payload", lambda *a, **k: _NEUTRAL_MACRO_PAYLOAD)
     monkeypatch.setattr(loop.broker, "get_account_information", lambda *a, **k: {"balance": 10000.0, "equity": 10000.0})
     monkeypatch.setattr(loop.bot, "reconcile_positions", lambda *a, **k: [])
     monkeypatch.setattr(loop.broker, "get_symbol_specification", lambda *a, **k: {"contractSize": 100, "volumeStep": 0.01, "minVolume": 0.01, "maxVolume": 500})
-    monkeypatch.setattr(loop.bot, "decide_and_act_swing", lambda *a, **k: {"action": "aucune", "reason": "signal neutre"})
+    monkeypatch.setattr(loop.bot, "decide_and_act_vwap", lambda *a, **k: {"action": "aucune", "reason": "signal neutre"})
 
     loop.run_cycle("tok", "acc", loop.risk.CircuitBreaker(), now=_FRESH_NOW)
 
@@ -569,11 +553,10 @@ def test_run_cycle_caches_balance_after_successful_fetch(monkeypatch, tmp_path):
     monkeypatch.setattr(loop, "LATEST_BALANCE_PATH", str(tmp_path / "latest_balance.json"))
     monkeypatch.setattr(loop, "LATEST_POSITIONS_PATH", str(tmp_path / "latest_positions.json"))
     monkeypatch.setattr(loop.confluence, "fetch_gold_candles", lambda *a, **k: [_FRESH_CANDLE])
-    monkeypatch.setattr(loop.macro_signal, "fetch_macro_payload", lambda *a, **k: _NEUTRAL_MACRO_PAYLOAD)
     monkeypatch.setattr(loop.broker, "get_account_information", lambda *a, **k: {"balance": 9140.10, "equity": 9140.10})
     monkeypatch.setattr(loop.bot, "reconcile_positions", lambda *a, **k: [])
     monkeypatch.setattr(loop.broker, "get_symbol_specification", lambda *a, **k: {"contractSize": 100, "volumeStep": 0.01, "minVolume": 0.01, "maxVolume": 500})
-    monkeypatch.setattr(loop.bot, "decide_and_act_swing", lambda *a, **k: {"action": "aucune", "reason": "signal neutre"})
+    monkeypatch.setattr(loop.bot, "decide_and_act_vwap", lambda *a, **k: {"action": "aucune", "reason": "signal neutre"})
 
     loop.run_cycle("tok", "acc", loop.risk.CircuitBreaker(), now=_FRESH_NOW)
 
@@ -591,11 +574,10 @@ def test_run_cycle_caches_positions_after_successful_fetch(monkeypatch, tmp_path
     fake_positions = [{"symbol": "XAUUSD", "type": "POSITION_TYPE_SELL", "volume": 2.0,
                         "openPrice": 4316.28, "currentPrice": 4316.49, "profit": -36.18}]
     monkeypatch.setattr(loop.confluence, "fetch_gold_candles", lambda *a, **k: [_FRESH_CANDLE])
-    monkeypatch.setattr(loop.macro_signal, "fetch_macro_payload", lambda *a, **k: _NEUTRAL_MACRO_PAYLOAD)
     monkeypatch.setattr(loop.broker, "get_account_information", lambda *a, **k: {"balance": 10000.0, "equity": 10000.0})
     monkeypatch.setattr(loop.bot, "reconcile_positions", lambda *a, **k: fake_positions)
     monkeypatch.setattr(loop.broker, "get_symbol_specification", lambda *a, **k: {"contractSize": 100, "volumeStep": 0.01, "minVolume": 0.01, "maxVolume": 500})
-    monkeypatch.setattr(loop.bot, "decide_and_act_swing", lambda *a, **k: {"action": "aucune", "reason": "signal neutre"})
+    monkeypatch.setattr(loop.bot, "decide_and_act_vwap", lambda *a, **k: {"action": "aucune", "reason": "signal neutre"})
 
     loop.run_cycle("tok", "acc", loop.risk.CircuitBreaker(), now=_FRESH_NOW)
 
@@ -615,7 +597,6 @@ def test_run_cycle_leaves_earlier_caches_intact_when_a_later_call_fails(monkeypa
     monkeypatch.setattr(loop, "LATEST_POSITIONS_PATH", str(tmp_path / "latest_positions.json"))
     monkeypatch.setattr(loop.time, "sleep", lambda s: None)  # échec persistant -> _with_retry épuise ses tentatives
     monkeypatch.setattr(loop.confluence, "fetch_gold_candles", lambda *a, **k: [_FRESH_CANDLE])
-    monkeypatch.setattr(loop.macro_signal, "fetch_macro_payload", lambda *a, **k: _NEUTRAL_MACRO_PAYLOAD)
     monkeypatch.setattr(loop.broker, "get_account_information", lambda *a, **k: {"balance": 10000.0, "equity": 10000.0})
     monkeypatch.setattr(loop.bot, "reconcile_positions", lambda *a, **k: [])
     monkeypatch.setattr(
@@ -667,11 +648,10 @@ def test_run_cycle_picks_up_risk_profile_change_between_cycles(monkeypatch, tmp_
     monkeypatch.setattr(loop, "LATEST_BALANCE_PATH", str(tmp_path / "latest_balance.json"))
     monkeypatch.setattr(loop, "LATEST_POSITIONS_PATH", str(tmp_path / "latest_positions.json"))
     monkeypatch.setattr(loop.confluence, "fetch_gold_candles", lambda *a, **k: [_FRESH_CANDLE])
-    monkeypatch.setattr(loop.macro_signal, "fetch_macro_payload", lambda *a, **k: _NEUTRAL_MACRO_PAYLOAD)
     monkeypatch.setattr(loop.broker, "get_account_information", lambda *a, **k: {"balance": 10000.0, "equity": 10000.0})
     monkeypatch.setattr(loop.bot, "reconcile_positions", lambda *a, **k: [])
     monkeypatch.setattr(loop.broker, "get_symbol_specification", lambda *a, **k: {"contractSize": 100, "volumeStep": 0.01, "minVolume": 0.01, "maxVolume": 500})
-    monkeypatch.setattr(loop.bot, "decide_and_act_swing", lambda *a, **k: {"action": "aucune", "reason": "signal neutre"})
+    monkeypatch.setattr(loop.bot, "decide_and_act_vwap", lambda *a, **k: {"action": "aucune", "reason": "signal neutre"})
 
     loop.state.save_state({"kill_switch": False, "dry_run": True, "risk_profile": 3}, state_path)
     cb = loop.risk.CircuitBreaker()
@@ -704,11 +684,10 @@ def test_run_cycle_picks_up_risk_profile_change_via_api_between_cycles(monkeypat
     monkeypatch.setattr(loop, "LATEST_BALANCE_PATH", str(tmp_path / "latest_balance.json"))
     monkeypatch.setattr(loop, "LATEST_POSITIONS_PATH", str(tmp_path / "latest_positions.json"))
     monkeypatch.setattr(loop.confluence, "fetch_gold_candles", lambda *a, **k: [_FRESH_CANDLE])
-    monkeypatch.setattr(loop.macro_signal, "fetch_macro_payload", lambda *a, **k: _NEUTRAL_MACRO_PAYLOAD)
     monkeypatch.setattr(loop.broker, "get_account_information", lambda *a, **k: {"balance": 10000.0, "equity": 10000.0})
     monkeypatch.setattr(loop.bot, "reconcile_positions", lambda *a, **k: [])
     monkeypatch.setattr(loop.broker, "get_symbol_specification", lambda *a, **k: {"contractSize": 100, "volumeStep": 0.01, "minVolume": 0.01, "maxVolume": 500})
-    monkeypatch.setattr(loop.bot, "decide_and_act_swing", lambda *a, **k: {"action": "aucune", "reason": "signal neutre"})
+    monkeypatch.setattr(loop.bot, "decide_and_act_vwap", lambda *a, **k: {"action": "aucune", "reason": "signal neutre"})
     monkeypatch.setenv("BOT_API_TOKEN", "secret-token")
 
     loop.state.save_state({"kill_switch": False, "dry_run": True, "risk_profile": 3}, state_path)
@@ -774,11 +753,10 @@ def test_run_cycle_treats_just_completed_candle_as_fresh(monkeypatch, tmp_path):
     monkeypatch.setattr(loop, "LATEST_POSITIONS_PATH", str(tmp_path / "latest_positions.json"))
     just_completed_now = datetime(2026, 9, 11, 16, 46, tzinfo=timezone.utc)
     monkeypatch.setattr(loop.confluence, "fetch_gold_candles", lambda *a, **k: [_FRESH_CANDLE])
-    monkeypatch.setattr(loop.macro_signal, "fetch_macro_payload", lambda *a, **k: _NEUTRAL_MACRO_PAYLOAD)
     monkeypatch.setattr(loop.broker, "get_account_information", lambda *a, **k: {"balance": 10000.0, "equity": 10000.0})
     monkeypatch.setattr(loop.bot, "reconcile_positions", lambda *a, **k: [])
     monkeypatch.setattr(loop.broker, "get_symbol_specification", lambda *a, **k: {"contractSize": 100, "volumeStep": 0.01, "minVolume": 0.01, "maxVolume": 500})
-    monkeypatch.setattr(loop.bot, "decide_and_act_swing", lambda *a, **k: {"action": "aucune", "reason": "signal neutre"})
+    monkeypatch.setattr(loop.bot, "decide_and_act_vwap", lambda *a, **k: {"action": "aucune", "reason": "signal neutre"})
 
     result = loop.run_cycle("tok", "acc", loop.risk.CircuitBreaker(), now=just_completed_now)
 
@@ -809,11 +787,10 @@ def test_run_cycle_continues_when_market_open_and_data_fresh(monkeypatch, tmp_pa
     monkeypatch.setattr(loop, "LATEST_BALANCE_PATH", str(tmp_path / "latest_balance.json"))
     monkeypatch.setattr(loop, "LATEST_POSITIONS_PATH", str(tmp_path / "latest_positions.json"))
     monkeypatch.setattr(loop.confluence, "fetch_gold_candles", lambda *a, **k: [_FRESH_CANDLE])
-    monkeypatch.setattr(loop.macro_signal, "fetch_macro_payload", lambda *a, **k: _NEUTRAL_MACRO_PAYLOAD)
     monkeypatch.setattr(loop.broker, "get_account_information", lambda *a, **k: {"balance": 10000.0, "equity": 10000.0})
     monkeypatch.setattr(loop.bot, "reconcile_positions", lambda *a, **k: [])
     monkeypatch.setattr(loop.broker, "get_symbol_specification", lambda *a, **k: {"contractSize": 100, "volumeStep": 0.01, "minVolume": 0.01, "maxVolume": 500})
-    monkeypatch.setattr(loop.bot, "decide_and_act_swing", lambda *a, **k: {"action": "aucune", "reason": "signal neutre"})
+    monkeypatch.setattr(loop.bot, "decide_and_act_vwap", lambda *a, **k: {"action": "aucune", "reason": "signal neutre"})
 
     result = loop.run_cycle("tok", "acc", loop.risk.CircuitBreaker(), now=_FRESH_NOW)
 
@@ -831,11 +808,10 @@ def test_run_cycle_continues_when_a_dashboard_cache_write_fails(monkeypatch, tmp
     monkeypatch.setattr(loop, "LATEST_BALANCE_PATH", str(tmp_path / "latest_balance.json"))
     monkeypatch.setattr(loop, "LATEST_POSITIONS_PATH", str(tmp_path / "latest_positions.json"))
     monkeypatch.setattr(loop.confluence, "fetch_gold_candles", lambda *a, **k: [_FRESH_CANDLE])
-    monkeypatch.setattr(loop.macro_signal, "fetch_macro_payload", lambda *a, **k: _NEUTRAL_MACRO_PAYLOAD)
     monkeypatch.setattr(loop.broker, "get_account_information", lambda *a, **k: {"balance": 10000.0, "equity": 10000.0})
     monkeypatch.setattr(loop.bot, "reconcile_positions", lambda *a, **k: [])
     monkeypatch.setattr(loop.broker, "get_symbol_specification", lambda *a, **k: {"contractSize": 100, "volumeStep": 0.01, "minVolume": 0.01, "maxVolume": 500})
-    monkeypatch.setattr(loop.bot, "decide_and_act_swing", lambda *a, **k: {"action": "aucune", "reason": "signal neutre"})
+    monkeypatch.setattr(loop.bot, "decide_and_act_vwap", lambda *a, **k: {"action": "aucune", "reason": "signal neutre"})
     monkeypatch.setattr(
         loop.state, "save_state",
         lambda *a, **k: (_ for _ in ()).throw(OSError("disque plein")),
@@ -848,43 +824,52 @@ def test_run_cycle_continues_when_a_dashboard_cache_write_fails(monkeypatch, tmp
     assert logged["action"] == "aucune"
 
 
-def test_run_cycle_logs_error_when_macro_payload_fetch_fails(monkeypatch, tmp_path):
-    monkeypatch.setattr(loop.state, "load_state", lambda *a, **k: {"kill_switch": False, "dry_run": True})
-    monkeypatch.setattr(loop, "DECISIONS_LOG_PATH", str(tmp_path / "decisions_log.jsonl"))
-    monkeypatch.setattr(loop, "LATEST_CANDLES_PATH", str(tmp_path / "latest_candles.json"))
-    monkeypatch.setattr(loop.time, "sleep", lambda s: None)  # échec persistant -> _with_retry épuise ses tentatives
-    monkeypatch.setattr(loop.confluence, "fetch_gold_candles", lambda *a, **k: [_FRESH_CANDLE])
-    monkeypatch.setattr(
-        loop.macro_signal, "fetch_macro_payload",
-        lambda *a, **k: (_ for _ in ()).throw(RuntimeError("score.json indisponible")),
-    )
-
-    result = loop.run_cycle("tok", "acc", loop.risk.CircuitBreaker(), now=_FRESH_NOW)
-
-    assert result["action"] == "erreur"
-    assert "score.json indisponible" in result["reason"]
-
-
-def test_run_cycle_passes_macro_payload_to_decide_and_act_swing(monkeypatch, tmp_path):
+def test_run_cycle_fetches_candles_with_extended_limit_for_vwap_engine(monkeypatch, tmp_path):
+    """gold_bot.vwap_reversion a besoin de bien plus d'historique par
+    cycle que l'ancien moteur (EMA200 sur des bougies 15min) -- run_cycle
+    doit demander CANDLES_FETCH_LIMIT bougies, pas la valeur par défaut
+    de fetch_gold_candles."""
     monkeypatch.setattr(loop.state, "load_state", lambda *a, **k: {"kill_switch": False, "dry_run": True})
     monkeypatch.setattr(loop, "DECISIONS_LOG_PATH", str(tmp_path / "decisions_log.jsonl"))
     monkeypatch.setattr(loop, "LATEST_CANDLES_PATH", str(tmp_path / "latest_candles.json"))
     monkeypatch.setattr(loop, "LATEST_BALANCE_PATH", str(tmp_path / "latest_balance.json"))
     monkeypatch.setattr(loop, "LATEST_POSITIONS_PATH", str(tmp_path / "latest_positions.json"))
-    monkeypatch.setattr(loop.confluence, "fetch_gold_candles", lambda *a, **k: [_FRESH_CANDLE])
+    captured = {}
+
+    def fake_fetch(token, account_id, region, limit=None):
+        captured["limit"] = limit
+        return [_FRESH_CANDLE]
+
+    monkeypatch.setattr(loop.confluence, "fetch_gold_candles", fake_fetch)
     monkeypatch.setattr(loop.broker, "get_account_information", lambda *a, **k: {"balance": 10000.0, "equity": 10000.0})
     monkeypatch.setattr(loop.bot, "reconcile_positions", lambda *a, **k: [])
     monkeypatch.setattr(loop.broker, "get_symbol_specification", lambda *a, **k: {"contractSize": 100, "volumeStep": 0.01, "minVolume": 0.01, "maxVolume": 500})
-    fake_payload = {"composite_score": 20.0, "cftc_percentile": 40.0, "technical": {"ma200": 4000.0, "spot": 4010.0}, "alerts": [{"kind": "entree"}]}
-    monkeypatch.setattr(loop.macro_signal, "fetch_macro_payload", lambda *a, **k: fake_payload)
-    captured = {}
-
-    def fake_decide_and_act_swing(macro_payload, candles, **kwargs):
-        captured["macro_payload"] = macro_payload
-        return {"action": "aucune", "reason": "pas de signal d'entrée macro"}
-
-    monkeypatch.setattr(loop.bot, "decide_and_act_swing", fake_decide_and_act_swing)
+    monkeypatch.setattr(loop.bot, "decide_and_act_vwap", lambda *a, **k: {"action": "aucune", "reason": "pas de signal d'entree"})
 
     loop.run_cycle("tok", "acc", loop.risk.CircuitBreaker(), now=_FRESH_NOW)
 
-    assert captured["macro_payload"] == fake_payload
+    assert captured["limit"] == loop.CANDLES_FETCH_LIMIT
+
+
+def test_run_cycle_passes_candles_to_decide_and_act_vwap(monkeypatch, tmp_path):
+    monkeypatch.setattr(loop.state, "load_state", lambda *a, **k: {"kill_switch": False, "dry_run": True})
+    monkeypatch.setattr(loop, "DECISIONS_LOG_PATH", str(tmp_path / "decisions_log.jsonl"))
+    monkeypatch.setattr(loop, "LATEST_CANDLES_PATH", str(tmp_path / "latest_candles.json"))
+    monkeypatch.setattr(loop, "LATEST_BALANCE_PATH", str(tmp_path / "latest_balance.json"))
+    monkeypatch.setattr(loop, "LATEST_POSITIONS_PATH", str(tmp_path / "latest_positions.json"))
+    fake_candles = [_FRESH_CANDLE]
+    monkeypatch.setattr(loop.confluence, "fetch_gold_candles", lambda *a, **k: fake_candles)
+    monkeypatch.setattr(loop.broker, "get_account_information", lambda *a, **k: {"balance": 10000.0, "equity": 10000.0})
+    monkeypatch.setattr(loop.bot, "reconcile_positions", lambda *a, **k: [])
+    monkeypatch.setattr(loop.broker, "get_symbol_specification", lambda *a, **k: {"contractSize": 100, "volumeStep": 0.01, "minVolume": 0.01, "maxVolume": 500})
+    captured = {}
+
+    def fake_decide_and_act_vwap(candles, **kwargs):
+        captured["candles"] = candles
+        return {"action": "aucune", "reason": "pas de signal d'entree"}
+
+    monkeypatch.setattr(loop.bot, "decide_and_act_vwap", fake_decide_and_act_vwap)
+
+    loop.run_cycle("tok", "acc", loop.risk.CircuitBreaker(), now=_FRESH_NOW)
+
+    assert captured["candles"] == fake_candles

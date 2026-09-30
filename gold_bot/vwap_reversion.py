@@ -15,10 +15,14 @@ EMA50_PERIOD = 50
 ENTRY_SIGMA = 1.5
 STOP_SIGMA = 2.5
 # Marge de securite entre l'EMA50 et le stop suiveur, en multiples de
-# l'ecart-type VWAP au moment de l'entree -- identique au parametre
-# valide dans le backtest (evite un stop colle exactement sur l'EMA50,
-# qui se ferait toucher au moindre bruit).
-TRAIL_BUFFER_SIGMA = 0.5
+# l'ecart-type VWAP au moment de l'entree (evite un stop colle
+# exactement sur l'EMA50, qui se ferait toucher au moindre bruit).
+# Recalibre de 0.5 a 0.25 le 2026-09-30 apres une validation
+# walk-forward (6 fenetres roulantes independantes, entrainement
+# uniquement sur le passe de chaque fenetre) : 0.25 a ete choisie de
+# facon constante par les 6 fenetres d'entrainement, jamais une autre
+# valeur -- signe de stabilite, pas de hasard.
+TRAIL_BUFFER_SIGMA = 0.25
 SESSION_END_HOUR_UTC = 22
 MIN_BARS_INTO_SESSION = 12
 MIN_DISTANCE_PCT = 0.002

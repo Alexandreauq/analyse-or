@@ -195,3 +195,57 @@ def test_compute_trailing_stop_moves_stop_down_when_breakeven_reached_vente():
     )
     assert result is not None
     assert result < current_stop_loss
+
+
+def test_get_symbol_params_xauusd_reads_live_module_constants(monkeypatch):
+    # Pas une copie figee a l'import : doit refleter tout monkeypatch
+    # direct des constantes du module, comme avant l'introduction de
+    # get_symbol_params (voir test_bot.py, qui monkeypatche
+    # vwap_reversion.PARTIAL_TP_PCT directement).
+    monkeypatch.setattr(vwap_reversion, "ENTRY_SIGMA", 9.9)
+    params = vwap_reversion.get_symbol_params("XAUUSD")
+    assert params == {
+        "entry_sigma": 9.9, "stop_sigma": vwap_reversion.STOP_SIGMA,
+        "trail_buffer_sigma": vwap_reversion.TRAIL_BUFFER_SIGMA,
+        "partial_tp_pct": vwap_reversion.PARTIAL_TP_PCT, "partial_tp_r": vwap_reversion.PARTIAL_TP_R,
+    }
+
+
+def test_get_symbol_params_xagusd_returns_dedicated_values():
+    params = vwap_reversion.get_symbol_params("XAGUSD")
+    assert params == {
+        "entry_sigma": vwap_reversion.XAGUSD_ENTRY_SIGMA, "stop_sigma": vwap_reversion.XAGUSD_STOP_SIGMA,
+        "trail_buffer_sigma": vwap_reversion.XAGUSD_TRAIL_BUFFER_SIGMA,
+        "partial_tp_pct": vwap_reversion.XAGUSD_PARTIAL_TP_PCT, "partial_tp_r": vwap_reversion.XAGUSD_PARTIAL_TP_R,
+    }
+    # Config distincte de l'or, pas un doublon accidentel.
+    assert params["stop_sigma"] != vwap_reversion.STOP_SIGMA
+
+
+def test_get_symbol_params_unknown_symbol_falls_back_to_xauusd():
+    assert vwap_reversion.get_symbol_params("EURUSD") == vwap_reversion.get_symbol_params("XAUUSD")
+
+
+def test_compute_trailing_stop_uses_xagusd_params_when_symbol_given():
+    # Meme scenario que le test achat ci-dessus, mais compare le stop
+    # suiveur calcule pour XAUUSD (defaut) contre XAGUSD (explicite) --
+    # TRAIL_BUFFER_SIGMA differe (0.25 vs 0.15), donc les deux resultats
+    # doivent diverger sur la meme serie de bougies.
+    candles_15min = _build_15min_series(vwap_reversion.EMA200_PERIOD + 20)
+    entry_idx = vwap_reversion.EMA200_PERIOD + 5
+    entry_price = candles_15min[entry_idx]["close"]
+    entry_time_iso = candles_15min[entry_idx]["time"]
+    favorable_idx = entry_idx + 2
+    candles_15min[favorable_idx]["high"] = entry_price + 10.0
+
+    current_stop_loss = entry_price - 5.0
+    candles_5min = _to_5min(candles_15min)
+    result_gold = vwap_reversion.compute_trailing_stop(
+        candles_5min, "achat", entry_time_iso, entry_price, current_stop_loss, symbol="XAUUSD",
+    )
+    result_silver = vwap_reversion.compute_trailing_stop(
+        candles_5min, "achat", entry_time_iso, entry_price, current_stop_loss, symbol="XAGUSD",
+    )
+    assert result_gold is not None
+    assert result_silver is not None
+    assert result_gold != result_silver

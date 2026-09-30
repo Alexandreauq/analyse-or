@@ -37,6 +37,46 @@ MIN_DISTANCE_PCT = 0.002
 PARTIAL_TP_PCT = 0.7
 PARTIAL_TP_R = 2.0
 
+# Parametres XAGUSD -- ajoutes le 2026-09-30 apres une recalibration
+# walk-forward COMPLETE et separee (jamais une simple reutilisation des
+# valeurs de l'or, qui avaient produit un artefact catastrophique : DD
+# 95-99%, rendements a 5 chiffres non credibles -- l'argent a un profil
+# de risque/geometrie different, notamment un taux de reussite plus
+# proche du hasard). Config stable : choisie IDENTIQUEMENT par les 6
+# fenetres d'entrainement independantes (meme signe de stabilite que
+# l'or), 6/6 fenetres de test nettes positives a risk_pct=0.10 (le
+# niveau reellement deploye). STOP_SIGMA plus proche d'ENTRY_SIGMA que
+# pour l'or (2.0 vs 2.5) et TRAIL_BUFFER plus serre (0.15 vs 0.25) --
+# coherent avec la volatilite intrasession plus elevee de l'argent.
+XAGUSD_ENTRY_SIGMA = 1.5
+XAGUSD_STOP_SIGMA = 2.0
+XAGUSD_TRAIL_BUFFER_SIGMA = 0.15
+XAGUSD_PARTIAL_TP_PCT = 0.7
+XAGUSD_PARTIAL_TP_R = 2.0
+
+
+def get_symbol_params(symbol: str) -> dict:
+    """Résout un symbole vers ses paramètres entrée/stop/suiveur/prise
+    partielle -- lit les constantes globales du MODULE à chaque appel
+    (jamais une copie figée à l'import) pour que XAUUSD continue de
+    refléter tout monkeypatch direct de ENTRY_SIGMA/STOP_SIGMA/etc, comme
+    avant l'introduction de cette fonction (voir tests/gold_bot/
+    test_vwap_reversion.py et test_bot.py, qui monkeypatchent ces
+    attributs directement). Tout symbole non reconnu retombe sur les
+    paramètres de l'or, jamais deviné -- seul XAUUSD et XAGUSD ont été
+    validés par un walk-forward complet à ce jour."""
+    if symbol == "XAGUSD":
+        return {
+            "entry_sigma": XAGUSD_ENTRY_SIGMA, "stop_sigma": XAGUSD_STOP_SIGMA,
+            "trail_buffer_sigma": XAGUSD_TRAIL_BUFFER_SIGMA,
+            "partial_tp_pct": XAGUSD_PARTIAL_TP_PCT, "partial_tp_r": XAGUSD_PARTIAL_TP_R,
+        }
+    return {
+        "entry_sigma": ENTRY_SIGMA, "stop_sigma": STOP_SIGMA,
+        "trail_buffer_sigma": TRAIL_BUFFER_SIGMA,
+        "partial_tp_pct": PARTIAL_TP_PCT, "partial_tp_r": PARTIAL_TP_R,
+    }
+
 
 def resample_15min(candles_5min: list[dict]) -> list[dict]:
     """Regroupe des bougies 5min (format gold_bot.confluence :
@@ -110,7 +150,8 @@ def compute_indicators(candles_15min: list[dict]) -> list[dict]:
 
 
 def compute_trailing_stop(candles_5min: list[dict], direction: str, entry_time_iso: str,
-                           entry_price: float, current_stop_loss: float) -> float | None:
+                           entry_price: float, current_stop_loss: float,
+                           symbol: str = "XAUUSD") -> float | None:
     """Stop suiveur sans état côté bot -- tout est recalculé à chaque
     appel depuis les bougies réelles fournies (mêmes convention que
     latest_state). Retrouve la bougie 15min d'ouverture dans
@@ -126,7 +167,13 @@ def compute_trailing_stop(candles_5min: list[dict], direction: str, entry_time_i
     None sinon (rien à modifier), y compris si le seuil de rentabilité
     n'est pas encore atteint ou si l'historique fourni ne couvre pas la
     bougie d'entrée (position ouverte avant le début de la fenêtre
-    récupérée)."""
+    récupérée). `symbol` sélectionne les seuils STOP_SIGMA/
+    TRAIL_BUFFER_SIGMA propres à l'instrument (voir get_symbol_params) --
+    XAUUSD par défaut, pour ne rien changer au comportement existant."""
+    params = get_symbol_params(symbol)
+    stop_sigma = params["stop_sigma"]
+    trail_buffer_sigma = params["trail_buffer_sigma"]
+
     candles_15min = resample_15min(candles_5min)
     if len(candles_15min) < EMA200_PERIOD:
         return None
@@ -148,9 +195,9 @@ def compute_trailing_stop(candles_5min: list[dict], direction: str, entry_time_i
     if entry_std <= 0:
         return None
     if direction == "achat":
-        initial_stop = entry_candle["vwap"] - STOP_SIGMA * entry_std
+        initial_stop = entry_candle["vwap"] - stop_sigma * entry_std
     else:
-        initial_stop = entry_candle["vwap"] + STOP_SIGMA * entry_std
+        initial_stop = entry_candle["vwap"] + stop_sigma * entry_std
     r = abs(entry_price - initial_stop)
     if r <= 0:
         return None
@@ -170,10 +217,10 @@ def compute_trailing_stop(candles_5min: list[dict], direction: str, entry_time_i
 
     ema50 = candles_15min[-1]["ema50"]
     if direction == "achat":
-        candidate = max(entry_price, ema50 - TRAIL_BUFFER_SIGMA * entry_std)
+        candidate = max(entry_price, ema50 - trail_buffer_sigma * entry_std)
         new_stop = max(current_stop_loss, candidate)
     else:
-        candidate = min(entry_price, ema50 + TRAIL_BUFFER_SIGMA * entry_std)
+        candidate = min(entry_price, ema50 + trail_buffer_sigma * entry_std)
         new_stop = min(current_stop_loss, candidate)
 
     if new_stop == current_stop_loss:

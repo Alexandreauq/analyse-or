@@ -203,10 +203,14 @@ def decide_and_act_vwap(candles: list[dict], *, contract_size: float, balance: f
     reversion-design.md et son addendum (stop suiveur + recalibrage
     entrée/stop, validé par découpage train 2018-2023/test 2024-2026).
     Bidirectionnel (achat et vente), contrairement au mode swing (long
-    uniquement). Pas de take-profit fixe : la position n'est fermée que
-    par le stop (initial, ou déplacé par le suiveur une fois le seuil de
-    rentabilité atteint -- voir vwap_reversion.compute_trailing_stop) ou
-    en fin de session (22h UTC)."""
+    uniquement). Pas de take-profit fixe sur la jambe runner : elle
+    n'est fermée que par le stop (initial, ou déplacé par le suiveur une
+    fois le seuil de rentabilité atteint -- voir
+    vwap_reversion.compute_trailing_stop) ou en fin de session (22h UTC).
+    `symbol` sélectionne les seuils entrée/stop/suiveur/prise partielle
+    propres à l'instrument (voir vwap_reversion.get_symbol_params) --
+    XAUUSD par défaut, pour ne rien changer au comportement existant."""
+    params = vwap_reversion.get_symbol_params(symbol)
     circuit_breaker.check(equity)
 
     state = vwap_reversion.latest_state(candles)
@@ -248,7 +252,8 @@ def decide_and_act_vwap(candles: list[dict], *, contract_size: float, balance: f
         if entry_price is None or current_stop_loss is None or entry_time_iso is None:
             return {"action": "aucune", "reason": "champs de position manquants, aucune action par prudence"}
 
-        new_stop = vwap_reversion.compute_trailing_stop(candles, direction, entry_time_iso, entry_price, current_stop_loss)
+        new_stop = vwap_reversion.compute_trailing_stop(
+            candles, direction, entry_time_iso, entry_price, current_stop_loss, symbol=symbol)
         if new_stop is None:
             return {"action": "aucune", "reason": "position ouverte, pas de mise a jour du stop suiveur"}
 
@@ -266,12 +271,12 @@ def decide_and_act_vwap(candles: list[dict], *, contract_size: float, balance: f
 
     direction = None
     stop_loss = None
-    if state["close"] > state["ema200"] and state["close"] <= state["vwap"] - vwap_reversion.ENTRY_SIGMA * state["vwap_std"]:
+    if state["close"] > state["ema200"] and state["close"] <= state["vwap"] - params["entry_sigma"] * state["vwap_std"]:
         direction = "achat"
-        stop_loss = state["vwap"] - vwap_reversion.STOP_SIGMA * state["vwap_std"]
-    elif state["close"] < state["ema200"] and state["close"] >= state["vwap"] + vwap_reversion.ENTRY_SIGMA * state["vwap_std"]:
+        stop_loss = state["vwap"] - params["stop_sigma"] * state["vwap_std"]
+    elif state["close"] < state["ema200"] and state["close"] >= state["vwap"] + params["entry_sigma"] * state["vwap_std"]:
         direction = "vente"
-        stop_loss = state["vwap"] + vwap_reversion.STOP_SIGMA * state["vwap_std"]
+        stop_loss = state["vwap"] + params["stop_sigma"] * state["vwap_std"]
 
     if direction is None:
         return {"action": "aucune", "reason": "pas de signal d'entree"}
@@ -290,9 +295,9 @@ def decide_and_act_vwap(candles: list[dict], *, contract_size: float, balance: f
         return {"action": "aucune", "reason": "compte trop petit pour ce stop (volume sous le minimum du broker)"}
 
     partial_volume = None
-    if vwap_reversion.PARTIAL_TP_PCT > 0:
+    if params["partial_tp_pct"] > 0:
         partial_volume = risk.round_to_volume_step(
-            total_size * vwap_reversion.PARTIAL_TP_PCT, volume_step, min_volume, max_volume)
+            total_size * params["partial_tp_pct"], volume_step, min_volume, max_volume)
 
     if partial_volume is None:
         # Compte trop petit pour scinder en deux jambes -- tout le volume
@@ -303,8 +308,8 @@ def decide_and_act_vwap(candles: list[dict], *, contract_size: float, balance: f
         }]}
 
     runner_volume = round(total_size - partial_volume, 2)
-    partial_target = (entry_price + vwap_reversion.PARTIAL_TP_R * distance if direction == "achat"
-                       else entry_price - vwap_reversion.PARTIAL_TP_R * distance)
+    partial_target = (entry_price + params["partial_tp_r"] * distance if direction == "achat"
+                       else entry_price - params["partial_tp_r"] * distance)
 
     steps = [{
         "type": "ouverture_simulee", "symbol": symbol, "direction": direction, "volume": partial_volume,

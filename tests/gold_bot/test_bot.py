@@ -526,6 +526,33 @@ def test_decide_and_act_vwap_opens_achat_with_partial_and_runner_legs(monkeypatc
     assert runner["volume"] == pytest.approx(0.10)  # 0.33 - 0.23
 
 
+def test_decide_and_act_vwap_uses_xagusd_params_when_symbol_is_xagusd(monkeypatch):
+    # Meme etat que le test or ci-dessus (ENTRY_SIGMA=1.5 identique pour
+    # les deux symboles, donc meme condition d'entree declenchee) mais
+    # symbol="XAGUSD" -- STOP_SIGMA differe (2.0 au lieu de 2.5), le
+    # stop-loss calcule doit donc differer de celui de l'or sur les
+    # memes donnees, preuve que le bon jeu de parametres est utilise.
+    state = _vwap_state(close=1975.0, vwap=2010.0, vwap_std=20.0, ema200=1900.0)
+    monkeypatch.setattr(bot.vwap_reversion, "latest_state", lambda candles: state)
+    result = bot.decide_and_act_vwap(
+        [{"dummy": True}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
+        balance=10000, equity=10000, open_positions=[], circuit_breaker=_open_circuit_breaker(),
+        symbol="XAGUSD",
+    )
+    assert result["action"] == "simulation"
+    assert len(result["steps"]) == 2
+    partial, runner = result["steps"]
+    stop_loss = 2010.0 - 2.0 * 20.0  # 1970.0 -- different du stop or (1960.0)
+    distance = 1975.0 - stop_loss  # 5.0
+
+    assert partial["stop_loss"] == pytest.approx(stop_loss)
+    assert partial["take_profit"] == pytest.approx(1975.0 + 2.0 * distance)
+    assert partial["volume"] == pytest.approx(0.7)
+    assert runner["stop_loss"] == pytest.approx(stop_loss)
+    assert runner["take_profit"] is None
+    assert runner["volume"] == pytest.approx(0.3)
+
+
 def test_decide_and_act_vwap_opens_vente_with_partial_and_runner_legs(monkeypatch):
     # regime baissier (close < ema200) et close >= vwap + 1.5*std (2010 + 1.5*20 = 2040)
     state = _vwap_state(close=2045.0, vwap=2010.0, vwap_std=20.0, ema200=2100.0)
@@ -635,9 +662,9 @@ def test_decide_and_act_vwap_modifies_stop_when_trailing_stop_updates_achat(monk
     monkeypatch.setattr(bot.vwap_reversion, "latest_state", lambda candles: state)
     captured = {}
 
-    def fake_trailing_stop(candles, direction, entry_time_iso, entry_price, current_stop_loss):
+    def fake_trailing_stop(candles, direction, entry_time_iso, entry_price, current_stop_loss, symbol="XAUUSD"):
         captured.update(direction=direction, entry_time_iso=entry_time_iso, entry_price=entry_price,
-                         current_stop_loss=current_stop_loss)
+                         current_stop_loss=current_stop_loss, symbol=symbol)
         return 1998.5
 
     monkeypatch.setattr(bot.vwap_reversion, "compute_trailing_stop", fake_trailing_stop)
@@ -648,7 +675,7 @@ def test_decide_and_act_vwap_modifies_stop_when_trailing_stop_updates_achat(monk
         balance=10000, equity=10000, open_positions=existing, circuit_breaker=_open_circuit_breaker(),
     )
     assert captured == {"direction": "achat", "entry_time_iso": "2026-09-29T10:00:00.000Z",
-                         "entry_price": 2000.0, "current_stop_loss": 1990.0}
+                         "entry_price": 2000.0, "current_stop_loss": 1990.0, "symbol": "XAUUSD"}
     assert result == {"action": "simulation", "steps": [
         {"type": "modification_simulee", "position_id": "1", "symbol": "XAUUSD", "new_stop_loss": 1998.5}
     ]}
@@ -659,7 +686,7 @@ def test_decide_and_act_vwap_modifies_stop_when_trailing_stop_updates_vente(monk
     monkeypatch.setattr(bot.vwap_reversion, "latest_state", lambda candles: state)
     captured = {}
 
-    def fake_trailing_stop(candles, direction, entry_time_iso, entry_price, current_stop_loss):
+    def fake_trailing_stop(candles, direction, entry_time_iso, entry_price, current_stop_loss, symbol="XAUUSD"):
         captured["direction"] = direction
         return 2011.5
 

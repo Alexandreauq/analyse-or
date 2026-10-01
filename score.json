@@ -1,6 +1,6 @@
 {
-  "date": "2026-09-30",
-  "composite_score": -22.7,
+  "date": "2026-10-01",
+  "composite_score": -23.0,
   "interpretation": "Défavorable — pas d'entrée même sur signal technique",
   "cftc_percentile": 58.333333333333336,
   "factors": [
@@ -12,9 +12,9 @@
     },
     {
       "name": "Dollar (DXY)",
-      "score": -7.254981994628906,
+      "score": -7.389984130859375,
       "weight": 0.15,
-      "raw_value": "101.46 (il y a 2 mois : 100.01)"
+      "raw_value": "101.49 (il y a 2 mois : 100.01)"
     },
     {
       "name": "Anticipations d'inflation",
@@ -48,21 +48,11 @@
     }
   ],
   "technical": {
-    "note": "Cours en-dessous de la MM200 (-8.1%) — tendance baissière",
-    "spot": 4186.0,
-    "ma200": 4554.856500244141
+    "note": "Cours en-dessous de la MM200 (-8.0%) — tendance baissière",
+    "spot": 4191.89990234375,
+    "ma200": 4554.885999755859
   },
   "calendar": [
-    {
-      "date": "30/09/2026",
-      "label": "PCE (dépenses de consommation des ménages)",
-      "kind": "Donnée"
-    },
-    {
-      "date": "30/09/2026",
-      "label": "PIB (GDP)",
-      "kind": "Donnée"
-    },
     {
       "date": "01/10/2026",
       "label": "Inscriptions chômage (hebdo)",
@@ -92,14 +82,24 @@
       "date": "27/10–28/10/2026",
       "label": "Réunion FOMC",
       "kind": "Fed"
+    },
+    {
+      "date": "29/10/2026",
+      "label": "PCE (dépenses de consommation des ménages)",
+      "kind": "Donnée"
+    },
+    {
+      "date": "29/10/2026",
+      "label": "PIB (GDP)",
+      "kind": "Donnée"
     }
   ],
   "alerts": [
     {
-      "kind": "risque",
-      "title": "Chute rapide du score composite",
-      "detail": "Repricing de -21.0 points en moins de 5 jours.",
-      "date": "30/09/2026"
+      "kind": "info",
+      "title": "Pas de signal actif",
+      "detail": "Aucune des conditions de veille, d'entrée ou de risque n'est réunie aujourd'hui.",
+      "date": "01/10/2026"
     }
   ]
 }

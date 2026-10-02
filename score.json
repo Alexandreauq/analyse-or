@@ -1,26 +1,26 @@
 {
-  "date": "2026-09-30",
-  "composite_score": -20.3,
+  "date": "2026-10-02",
+  "composite_score": -29.2,
   "interpretation": "Défavorable — pas d'entrée même sur signal technique",
   "cftc_percentile": 58.333333333333336,
   "factors": [
     {
       "name": "Taux réels US 10 ans",
-      "score": -9.2,
+      "score": -10,
       "weight": 0.3,
-      "raw_value": "2.90% (il y a ~45j : 2.44%)"
+      "raw_value": "2.93% (il y a ~45j : 2.41%)"
     },
     {
       "name": "Dollar (DXY)",
-      "score": -5.69000244140625,
+      "score": -9.690017700195312,
       "weight": 0.15,
-      "raw_value": "101.15 (il y a 2 mois : 100.01)"
+      "raw_value": "101.90 (il y a 2 mois : 99.96)"
     },
     {
       "name": "Anticipations d'inflation",
-      "score": 2.333333333333343,
+      "score": 2.0000000000000018,
       "weight": 0.15,
-      "raw_value": "2.35% (il y a ~45j : 2.28%)"
+      "raw_value": "2.36% (il y a ~45j : 2.30%)"
     },
     {
       "name": "Ton de la Fed",
@@ -48,29 +48,19 @@
     }
   ],
   "technical": {
-    "note": "Cours en-dessous de la MM200 (-6.8%) — tendance baissière",
-    "spot": 4246.2998046875,
-    "ma200": 4555.157999267578
+    "note": "Cours en-dessous de la MM200 (-7.4%) — tendance baissière",
+    "spot": 4218.5,
+    "ma200": 4553.646500244141
   },
   "calendar": [
     {
-      "date": "30/09/2026",
-      "label": "PCE (dépenses de consommation des ménages)",
-      "kind": "Donnée"
-    },
-    {
-      "date": "30/09/2026",
-      "label": "PIB (GDP)",
-      "kind": "Donnée"
-    },
-    {
-      "date": "01/10/2026",
-      "label": "Inscriptions chômage (hebdo)",
-      "kind": "Donnée"
-    },
-    {
       "date": "02/10/2026",
       "label": "Emploi US (NFP + chômage)",
+      "kind": "Donnée"
+    },
+    {
+      "date": "08/10/2026",
+      "label": "Inscriptions chômage (hebdo)",
       "kind": "Donnée"
     },
     {
@@ -92,14 +82,24 @@
       "date": "27/10–28/10/2026",
       "label": "Réunion FOMC",
       "kind": "Fed"
+    },
+    {
+      "date": "29/10/2026",
+      "label": "PCE (dépenses de consommation des ménages)",
+      "kind": "Donnée"
+    },
+    {
+      "date": "29/10/2026",
+      "label": "PIB (GDP)",
+      "kind": "Donnée"
     }
   ],
   "alerts": [
     {
-      "kind": "info",
-      "title": "Pas de signal actif",
-      "detail": "Aucune des conditions de veille, d'entrée ou de risque n'est réunie aujourd'hui.",
-      "date": "30/09/2026"
+      "kind": "risque",
+      "title": "Chute rapide du score composite",
+      "detail": "Repricing de -23.0 points en moins de 5 jours.",
+      "date": "02/10/2026"
     }
   ]
 }

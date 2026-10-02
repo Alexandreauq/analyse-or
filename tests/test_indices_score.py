@@ -4446,6 +4446,10 @@ def test_main_writes_alerts_key_for_every_company(monkeypatch, tmp_path):
     monkeypatch.setattr(indices_score, "fetch_index_price_history", lambda: [])
     output_path = tmp_path / "indices.json"
     monkeypatch.setattr(indices_score, "OUTPUT_JSON_PATH", str(output_path))
+    # Stub cache functions to avoid polluting the production cache file
+    _cache = {}
+    monkeypatch.setattr(indices_score, "load_risk_free_rate_cache", lambda path=None: _cache)
+    monkeypatch.setattr(indices_score, "save_risk_free_rate_cache", lambda rates, path=None: _cache.update(rates))
 
     indices_score.main()
 
@@ -4484,6 +4488,10 @@ def test_main_payload_includes_index_metadata(monkeypatch, tmp_path):
     monkeypatch.setattr(indices_score, "fetch_index_price_history", lambda: [])
     output_path = tmp_path / "indices.json"
     monkeypatch.setattr(indices_score, "OUTPUT_JSON_PATH", str(output_path))
+    # Stub cache functions to avoid polluting the production cache file
+    _cache = {}
+    monkeypatch.setattr(indices_score, "load_risk_free_rate_cache", lambda path=None: _cache)
+    monkeypatch.setattr(indices_score, "save_risk_free_rate_cache", lambda rates, path=None: _cache.update(rates))
 
     indices_score.main()
 
@@ -4551,6 +4559,10 @@ def test_main_payload_exposes_risk_free_rate_by_currency(monkeypatch, tmp_path):
     monkeypatch.setattr(indices_score, "fetch_index_price_history", lambda: [])
     output_path = tmp_path / "indices.json"
     monkeypatch.setattr(indices_score, "OUTPUT_JSON_PATH", str(output_path))
+    # Stub cache functions to avoid polluting the production cache file
+    _cache = {}
+    monkeypatch.setattr(indices_score, "load_risk_free_rate_cache", lambda path=None: _cache)
+    monkeypatch.setattr(indices_score, "save_risk_free_rate_cache", lambda rates, path=None: _cache.update(rates))
 
     indices_score.main()
 
@@ -4609,6 +4621,10 @@ def test_main_routes_risk_free_rate_by_currency(monkeypatch, tmp_path):
     monkeypatch.setattr(indices_score, "fetch_index_price_history", lambda: [])
     output_path = tmp_path / "indices.json"
     monkeypatch.setattr(indices_score, "OUTPUT_JSON_PATH", str(output_path))
+    # Stub cache functions to avoid polluting the production cache file
+    _cache = {}
+    monkeypatch.setattr(indices_score, "load_risk_free_rate_cache", lambda path=None: _cache)
+    monkeypatch.setattr(indices_score, "save_risk_free_rate_cache", lambda rates, path=None: _cache.update(rates))
 
     indices_score.main()
 
@@ -7856,6 +7872,10 @@ def test_main_calls_update_signal_tracking(monkeypatch, tmp_path):
     monkeypatch.setattr(indices_score, "update_price_history", lambda entries, **kwargs: entries)
     monkeypatch.setattr(indices_score, "update_dividend_history", lambda entries, **kwargs: entries)
     monkeypatch.setattr(indices_score, "fetch_index_price_history", lambda: [])
+    # Stub cache functions to avoid polluting the production cache file
+    _cache = {}
+    monkeypatch.setattr(indices_score, "load_risk_free_rate_cache", lambda path=None: _cache)
+    monkeypatch.setattr(indices_score, "save_risk_free_rate_cache", lambda rates, path=None: _cache.update(rates))
 
     indices_score.main()
 
@@ -7905,6 +7925,10 @@ def test_main_writes_indices_json_before_email_and_signal_tracking(monkeypatch, 
 
     monkeypatch.setattr(indices_score, "send_daily_digest_email", _fake_send_daily_digest_email)
     monkeypatch.setattr(indices_score, "update_signal_tracking", _fake_update_signal_tracking)
+    # Stub cache functions to avoid polluting the production cache file
+    _cache = {}
+    monkeypatch.setattr(indices_score, "load_risk_free_rate_cache", lambda path=None: _cache)
+    monkeypatch.setattr(indices_score, "save_risk_free_rate_cache", lambda rates, path=None: _cache.update(rates))
 
     indices_score.main()
 
@@ -7961,6 +7985,10 @@ def test_main_recalibrates_scores_before_alerts_and_signal_tracking(monkeypatch,
     monkeypatch.setattr(indices_score, "update_price_history", lambda entries, **kwargs: entries)
     monkeypatch.setattr(indices_score, "update_dividend_history", lambda entries, **kwargs: entries)
     monkeypatch.setattr(indices_score, "fetch_index_price_history", lambda: [])
+    # Stub cache functions to avoid polluting the production cache file
+    _cache = {}
+    monkeypatch.setattr(indices_score, "load_risk_free_rate_cache", lambda path=None: _cache)
+    monkeypatch.setattr(indices_score, "save_risk_free_rate_cache", lambda rates, path=None: _cache.update(rates))
 
     indices_score.main()
 
@@ -8019,6 +8047,10 @@ def test_main_persists_price_history_from_companies_and_indices(monkeypatch, tmp
     monkeypatch.setattr(indices_score, "update_dividend_history", lambda entries, **kwargs: entries)
     monkeypatch.setattr(indices_score, "fetch_index_price_history", lambda: [
         {"date": "2026-09-21", "ticker": "^FCHI", "price": 7850.2}])
+    # Stub cache functions to avoid polluting the production cache file
+    _cache = {}
+    monkeypatch.setattr(indices_score, "load_risk_free_rate_cache", lambda path=None: _cache)
+    monkeypatch.setattr(indices_score, "save_risk_free_rate_cache", lambda rates, path=None: _cache.update(rates))
 
     indices_score.main()
 
@@ -8060,6 +8092,10 @@ def test_main_never_writes_the_internal_price_history_key_to_indices_json(monkey
     monkeypatch.setattr(indices_score, "update_price_history", lambda entries, **kwargs: entries)
     monkeypatch.setattr(indices_score, "update_dividend_history", lambda entries, **kwargs: entries)
     monkeypatch.setattr(indices_score, "fetch_index_price_history", lambda: [])
+    # Stub cache functions to avoid polluting the production cache file
+    _cache = {}
+    monkeypatch.setattr(indices_score, "load_risk_free_rate_cache", lambda path=None: _cache)
+    monkeypatch.setattr(indices_score, "save_risk_free_rate_cache", lambda rates, path=None: _cache.update(rates))
 
     indices_score.main()
 
@@ -8107,6 +8143,10 @@ def test_main_persists_dividend_history_from_companies(monkeypatch, tmp_path):
         captured["entries"] = entries
         return entries
     monkeypatch.setattr(indices_score, "update_dividend_history", _fake_update_dividend_history)
+    # Stub cache functions to avoid polluting the production cache file
+    _cache = {}
+    monkeypatch.setattr(indices_score, "load_risk_free_rate_cache", lambda path=None: _cache)
+    monkeypatch.setattr(indices_score, "save_risk_free_rate_cache", lambda rates, path=None: _cache.update(rates))
 
     indices_score.main()
 
@@ -8146,6 +8186,10 @@ def test_main_never_writes_the_internal_dividend_history_key_to_indices_json(mon
     monkeypatch.setattr(indices_score, "update_dividend_history", lambda entries, **kwargs: entries)
     output_path = tmp_path / "indices.json"
     monkeypatch.setattr(indices_score, "OUTPUT_JSON_PATH", str(output_path))
+    # Stub cache functions to avoid polluting the production cache file
+    _cache = {}
+    monkeypatch.setattr(indices_score, "load_risk_free_rate_cache", lambda path=None: _cache)
+    monkeypatch.setattr(indices_score, "save_risk_free_rate_cache", lambda rates, path=None: _cache.update(rates))
 
     indices_score.main()
 

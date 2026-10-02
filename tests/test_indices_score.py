@@ -3952,6 +3952,50 @@ def test_compute_company_alerts_no_actu_majeure_without_link():
     assert "actu_majeure" not in [a["kind"] for a in alerts]
 
 
+def test_compute_company_alerts_no_entree_when_percentile_score_below_floor():
+    """Audit 2026-10-02, critique n°1 : un profil recalibre (percentile)
+    dont le score reste sous la mediane (0) ne doit jamais declencher
+    "entree", meme si le score BRUT depasse le seuil d'hysteresis --
+    c'etait le bug reel (GLE.PA, score affiche -75, alerte active)."""
+    alerts = indices_score.compute_company_alerts(
+        "GLE.PA", composite_raw=42.0, current_price=25.0, entry_price=25.5,
+        previous_history=[], score_recalibrated=True, score=-75.0,
+    )
+    assert not any(a["kind"] == "entree" for a in alerts)
+
+
+def test_compute_company_alerts_entree_when_percentile_score_at_or_above_floor():
+    """Meme scenario brut, mais score percentile a la mediane ou au-dessus
+    -- l'alerte doit toujours se declencher (non-regression)."""
+    alerts = indices_score.compute_company_alerts(
+        "OR.PA", composite_raw=42.0, current_price=25.0, entry_price=25.5,
+        previous_history=[], score_recalibrated=True, score=0.0,
+    )
+    assert any(a["kind"] == "entree" for a in alerts)
+
+
+def test_compute_company_alerts_entree_ignores_percentile_floor_when_score_raw_profile():
+    """Un profil reste sur le score brut (score_recalibrated=False, ex.
+    trust) n'a pas de score percentile comparable -- le plancher ne doit
+    pas s'appliquer, meme si `score` n'est pas fourni (None)."""
+    alerts = indices_score.compute_company_alerts(
+        "TRUST.L", composite_raw=42.0, current_price=25.0, entry_price=25.5,
+        previous_history=[], score_recalibrated=False, score=None,
+    )
+    assert any(a["kind"] == "entree" for a in alerts)
+
+
+def test_compute_company_alerts_entree_default_score_none_preserves_old_behavior():
+    """Un appelant qui ne fournit pas `score` (comportement d'avant ce
+    correctif) ne doit jamais etre bloque par le nouveau plancher, meme
+    si score_recalibrated=True -- retrocompatibilite stricte."""
+    alerts = indices_score.compute_company_alerts(
+        "XX.PA", composite_raw=42.0, current_price=25.0, entry_price=25.5,
+        previous_history=[], score_recalibrated=True,
+    )
+    assert any(a["kind"] == "entree" for a in alerts)
+
+
 def test_attach_alerts_and_update_history_sets_alerts_key(monkeypatch):
     companies = [
         {"ticker": "BN.PA", "score": 20.0, "score_raw": 20.0, "current_price": 102.0, "entry_price": 100.0},

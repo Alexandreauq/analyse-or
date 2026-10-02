@@ -3757,6 +3757,16 @@ RAPID_DROP_POINTS = 20   # même seuil que le volet Or -- valeur d'origine, jama
 RAPID_DROP_DAYS = 5      # même fenêtre que le volet Or
 NEAR_ENTRY_PCT = 5.0     # écart max (%) au repère d'entrée pour "conditions réunies"
 HYSTERESIS_BAND = 5.0    # bande morte (points, échelle du score BRUT) pour watch/entree (audit I2) : reprend la tolérance de NEAR_ENTRY_PCT
+# Plancher percentile sur l'alerte "entree" (audit 2026-10-02, critique
+# n°1) : le seuil d'hysterese ci-dessus porte sur le score BRUT, qui
+# filtre si peu (73-89% de chaque profil le depasse) que le score
+# percentile (normalise entre profils, -100/+100, 0 = mediane) n'avait
+# AUCUN role dans la decision d'ouvrir une position -- des alertes
+# "entree" etaient actives sur des societes affichees "Tres fragile"
+# (ex. GLE.PA, score -75). 0.0 = au moins la mediane de son profil, pas
+# un seuil arbitraire plus strict -- coherent avec "entree" qui doit
+# rester un signal frequent, pas reserve au dernier decile.
+ENTRY_SCORE_PERCENTILE_FLOOR = 0.0
 
 
 def _last_confirmed_regime(previous_history: list[dict], band: float) -> float | None:
@@ -3790,7 +3800,7 @@ def compute_company_alerts(
     ticker: str, composite_raw: float, current_price: float | None,
     entry_price: float | None, previous_history: list[dict],
     news_items: list[dict] | None = None, stage_label: str | None = None,
-    score_recalibrated: bool = True,
+    score_recalibrated: bool = True, score: float | None = None,
 ) -> list[dict]:
     """Alertes de franchissement de seuil pour une entreprise, à partir de
     son propre sous-historique (déjà filtré par ticker par l'appelant).
@@ -3814,6 +3824,16 @@ def compute_company_alerts(
     percentile ; pour un profil resté sur le score brut (trust, pool
     structurellement trop petit), 0 est un seuil neutre absolu, pas une
     médiane relative au pool (audit Minor #3).
+    `score` (optionnel, audit 2026-10-02 critique n°1) : le score
+    PERCENTILE recalibré de la société (company["score"], -100/+100, 0 =
+    médiane du profil) -- quand `score_recalibrated` est True, l'alerte
+    "entree" exige maintenant AUSSI `score >= ENTRY_SCORE_PERCENTILE_FLOOR`
+    (0.0), en plus des conditions déjà existantes. `None` (défaut,
+    rétrocompatible) désactive ce plancher, même comportement qu'avant ce
+    correctif -- un appelant qui ne fournit pas `score` doit explicitement
+    le faire pour bénéficier du garde-fou. Quand `score_recalibrated` est
+    False (profil resté sur le score brut, ex. trust), ce plancher ne
+    s'applique jamais : il n'y a pas de score percentile comparable.
     Ne lève jamais d'exception ; renvoie toujours au moins une alerte
     (`info` neutre si rien ne se déclenche — calculé après l'alerte
     "actu_majeure" ci-dessous, pas avant, pour ne jamais afficher "pas de
@@ -3892,7 +3912,14 @@ def compute_company_alerts(
         composite_raw > HYSTERESIS_BAND if abs(composite_raw) > HYSTERESIS_BAND
         else (last_regime is not None and last_regime > HYSTERESIS_BAND)
     )
-    if score_favorable and near_entry and stage_label != "Déclin":
+    # Plancher percentile (audit 2026-10-02, critique n°1) : ne s'applique
+    # que si le profil est recalibré ET qu'un score percentile a été
+    # fourni -- voir le docstring du paramètre `score` ci-dessus pour le
+    # choix de rétrocompatibilité.
+    percentile_favorable = (
+        not score_recalibrated or score is None or score >= ENTRY_SCORE_PERCENTILE_FLOOR
+    )
+    if score_favorable and percentile_favorable and near_entry and stage_label != "Déclin":
         alerts.append({
             "kind": "entree",
             "title": "Conditions d'entrée réunies",
@@ -4971,6 +4998,7 @@ def _attach_alerts_and_update_history(companies: list[dict]) -> tuple[list[dict]
                 company["entry_price"], ticker_history,
                 news_items=company.get("news", []), stage_label=company.get("stage_label"),
                 score_recalibrated=company.get("score_recalibrated", True),
+                score=company.get("score"),
             )
             today_kinds = {a["kind"] for a in company["alerts"]}
             if "entree" in today_kinds and "entree" not in previous_alert_kinds.get(company["ticker"], set()):

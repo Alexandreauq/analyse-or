@@ -287,6 +287,23 @@ def _place_order(gw, base_url: str, account_id: str, *, ticker: str, conid,
         jamais une position inconnue du journal, spec 9.5).
     """
     etat = state.load_state(state_path)
+    # Audit 2026-10-02 : direction inverse du cas annule_interruption
+    # ci-dessous. Un ordre planifie quand le batch croyait etre en
+    # dry_run (mode_attendu="dry_run") mais dont l'etat disque est
+    # maintenant reel (bascule operateur PENDANT le batch) ne doit
+    # jamais partir reellement -- la position correspondante n'a jamais
+    # existe que simulee (jamais ouverte chez IBKR), un ordre reel pour
+    # elle (en particulier une vente) serait une position a decouvert
+    # non couverte sur un compte sur marge.
+    if mode_attendu == "dry_run" and not (etat["kill_switch"] or etat["dry_run"]):
+        return {"statut": "annule_derive", "order_id": None,
+                "prix_execution_cotation": None, "prix_execution_estime": False,
+                "commission": None,
+                "detail": (
+                    "execution annulee : ce batch avait planifie cet ordre en "
+                    "dry_run mais l'etat sur disque est passe en reel entre-temps "
+                    "-- aucun ordre envoye, position laissee INTACTE dans "
+                    "positions.json pour verification manuelle")}
     if etat["kill_switch"] or etat["dry_run"]:
         if mode_attendu == "reel":
             return {"statut": "annule_interruption", "order_id": None,

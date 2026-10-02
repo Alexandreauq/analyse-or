@@ -107,6 +107,28 @@ def test_public_position_defaults_eur_pnl_fields_to_none_when_not_yet_valued():
     assert public["pnl_eur"] is None
 
 
+def test_public_position_sanitizes_non_finite_pnl_fields():
+    """Les champs EUR (prix_actuel, valeur_actuelle_eur, pnl_eur,
+    pnl_eur_pct) doivent convertir NaN/Inf en None pour eviter ValueError
+    lors de json.dump(..., allow_nan=False) dans write_status_file. Reuse
+    le meme pattern que api.py pour /dashboard."""
+    position = {
+        "ticker": "III.L", "name": "3i Group", "index": "FTSE", "quantite": 20,
+        "prix_execution_reference": 29.5, "date_entree": "2026-09-15",
+        "prix_actuel": float("nan"),
+        "valeur_actuelle_eur": float("inf"),
+        "pnl_eur": float("-inf"),
+        "pnl_eur_pct": float("nan"),
+    }
+
+    public = status_publish._public_position(position)
+
+    assert public["prix_actuel"] is None
+    assert public["valeur_actuelle_eur"] is None
+    assert public["pnl_eur"] is None
+    assert public["pnl_eur_pct"] is None
+
+
 def test_build_public_status_omits_positions_when_mode_is_reel():
     """La bascule vers argent reel doit automatiquement arreter de publier
     les tickers/positions, sans intervention manuelle — meme si une liste

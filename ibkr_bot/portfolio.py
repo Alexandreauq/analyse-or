@@ -40,7 +40,7 @@ INDEX_ZONE = {
     "FTSE": "royaume_uni",
     "SMI": "suisse",
 }
-MAX_POSITIONS_PER_ZONE = 4
+MAX_POSITIONS_PER_ZONE = 5
 
 # Regles de sortie : valeurs IDENTIQUES a celles du paper-trading
 # (indices_score.SIGNAL_STOP_LOSS_PCT / SIGNAL_SHADOW_DELAY_MONTHS). Un

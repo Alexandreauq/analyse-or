@@ -351,14 +351,15 @@ def test_select_entries_zone_cap_counts_signals_retained_earlier_in_same_batch()
         _signal("C.MC", 70.0, index="IBEX35", sector="S3"),
         _signal("D.MI", 60.0, index="FTSEMIB", sector="S4"),
         _signal("E.PA", 50.0, index="CAC40", sector="S5"),
-    ]  # 5 signaux zone_euro, plafond zone = 5 -> le 5e doit etre rejete
-    plans = {t: _plan(t) for t in ("A.PA", "B.DE", "C.MC", "D.MI", "E.PA")}
-    contrats = _contrats(["A.PA", "B.DE", "C.MC", "D.MI", "E.PA"])
+        _signal("F.MI", 40.0, index="FTSEMIB", sector="S6"),
+    ]  # 6 signaux zone_euro, plafond zone = 5 -> le 6e doit etre rejete
+    plans = {t: _plan(t) for t in ("A.PA", "B.DE", "C.MC", "D.MI", "E.PA", "F.MI")}
+    contrats = _contrats(["A.PA", "B.DE", "C.MC", "D.MI", "E.PA", "F.MI"])
 
     retenus, rejets = portfolio.select_entries(
         signaux, [], plans, contrats, _CASH_ILLIMITE)
 
-    assert [r["signal"]["ticker"] for r in retenus] == ["A.PA", "B.DE", "C.MC", "D.MI"]
+    assert [r["signal"]["ticker"] for r in retenus] == ["A.PA", "B.DE", "C.MC", "D.MI", "E.PA"]
     assert [r["raison"] for r in rejets] == ["plafond_zone_atteint"]
 
 
@@ -381,16 +382,17 @@ def test_select_entries_zone_cap_rejection_does_not_consume_a_slot():
     """Meme philosophie que le plafond secteur/indice : un signal rejete
     par le plafond de zone ne consomme ni place ni budget -- la place
     reste disponible pour le signal suivant du classement."""
+    # 3 NASDAQ + 2 DOW = 5 amerique_nord (zone cap atteint), chacun < 4 (index cap pas atteint)
     positions_ouvertes = [
         _bot_position("N1", index="NASDAQ"), _bot_position("N2", index="NASDAQ"), _bot_position("N3", index="NASDAQ"),
         _bot_position("D1", index="DOW"), _bot_position("D2", index="DOW"),
-    ]  # 3 NASDAQ + 2 DOW = 5 amerique_nord, zone cap = 4
+    ]
     signaux = [
-        _signal("N4.US", 90.0, index="NASDAQ", sector="Techno"),  # bloque par la zone
+        _signal("N6.US", 90.0, index="NASDAQ", sector="Techno"),  # bloque par la zone
         _signal("A.PA", 50.0, index="CAC40", sector="Industrie"),  # doit quand meme passer
     ]
-    plans = {t: _plan(t) for t in ("N4.US", "A.PA")}
-    contrats = _contrats(["N4.US", "A.PA"])
+    plans = {t: _plan(t) for t in ("N6.US", "A.PA")}
+    contrats = _contrats(["N6.US", "A.PA"])
 
     retenus, rejets = portfolio.select_entries(
         signaux, positions_ouvertes, plans, contrats, _CASH_ILLIMITE)

@@ -1,6 +1,6 @@
 {
   "date": "2026-10-02",
-  "composite_score": -28.9,
+  "composite_score": -29.5,
   "interpretation": "Défavorable — pas d'entrée même sur signal technique",
   "cftc_percentile": 58.333333333333336,
   "factors": [
@@ -12,9 +12,9 @@
     },
     {
       "name": "Dollar (DXY)",
-      "score": -9.510002136230469,
+      "score": -9.89501953125,
       "weight": 0.15,
-      "raw_value": "101.86 (il y a 2 mois : 99.96)"
+      "raw_value": "101.94 (il y a 2 mois : 99.96)"
     },
     {
       "name": "Anticipations d'inflation",
@@ -48,9 +48,9 @@
     }
   ],
   "technical": {
-    "note": "Cours en-dessous de la MM200 (-7.0%) — tendance baissière",
-    "spot": 4234.89990234375,
-    "ma200": 4553.728499755859
+    "note": "Cours en-dessous de la MM200 (-8.4%) — tendance baissière",
+    "spot": 4169.39990234375,
+    "ma200": 4553.40099975586
   },
   "calendar": [
     {
@@ -98,7 +98,7 @@
     {
       "kind": "risque",
       "title": "Chute rapide du score composite",
-      "detail": "Repricing de -22.7 points en moins de 5 jours.",
+      "detail": "Repricing de -23.3 points en moins de 5 jours.",
       "date": "02/10/2026"
     }
   ]

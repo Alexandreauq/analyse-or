@@ -3952,6 +3952,50 @@ def test_compute_company_alerts_no_actu_majeure_without_link():
     assert "actu_majeure" not in [a["kind"] for a in alerts]
 
 
+def test_compute_company_alerts_no_entree_when_percentile_score_below_floor():
+    """Audit 2026-10-02, critique n°1 : un profil recalibre (percentile)
+    dont le score reste sous la mediane (0) ne doit jamais declencher
+    "entree", meme si le score BRUT depasse le seuil d'hysteresis --
+    c'etait le bug reel (GLE.PA, score affiche -75, alerte active)."""
+    alerts = indices_score.compute_company_alerts(
+        "GLE.PA", composite_raw=42.0, current_price=25.0, entry_price=25.5,
+        previous_history=[], score_recalibrated=True, score=-75.0,
+    )
+    assert not any(a["kind"] == "entree" for a in alerts)
+
+
+def test_compute_company_alerts_entree_when_percentile_score_at_or_above_floor():
+    """Meme scenario brut, mais score percentile a la mediane ou au-dessus
+    -- l'alerte doit toujours se declencher (non-regression)."""
+    alerts = indices_score.compute_company_alerts(
+        "OR.PA", composite_raw=42.0, current_price=25.0, entry_price=25.5,
+        previous_history=[], score_recalibrated=True, score=0.0,
+    )
+    assert any(a["kind"] == "entree" for a in alerts)
+
+
+def test_compute_company_alerts_entree_ignores_percentile_floor_when_score_raw_profile():
+    """Un profil reste sur le score brut (score_recalibrated=False, ex.
+    trust) n'a pas de score percentile comparable -- le plancher ne doit
+    pas s'appliquer, meme si `score` n'est pas fourni (None)."""
+    alerts = indices_score.compute_company_alerts(
+        "TRUST.L", composite_raw=42.0, current_price=25.0, entry_price=25.5,
+        previous_history=[], score_recalibrated=False, score=None,
+    )
+    assert any(a["kind"] == "entree" for a in alerts)
+
+
+def test_compute_company_alerts_entree_default_score_none_preserves_old_behavior():
+    """Un appelant qui ne fournit pas `score` (comportement d'avant ce
+    correctif) ne doit jamais etre bloque par le nouveau plancher, meme
+    si score_recalibrated=True -- retrocompatibilite stricte."""
+    alerts = indices_score.compute_company_alerts(
+        "XX.PA", composite_raw=42.0, current_price=25.0, entry_price=25.5,
+        previous_history=[], score_recalibrated=True,
+    )
+    assert any(a["kind"] == "entree" for a in alerts)
+
+
 def test_attach_alerts_and_update_history_sets_alerts_key(monkeypatch):
     companies = [
         {"ticker": "BN.PA", "score": 20.0, "score_raw": 20.0, "current_price": 102.0, "entry_price": 100.0},
@@ -4402,6 +4446,10 @@ def test_main_writes_alerts_key_for_every_company(monkeypatch, tmp_path):
     monkeypatch.setattr(indices_score, "fetch_index_price_history", lambda: [])
     output_path = tmp_path / "indices.json"
     monkeypatch.setattr(indices_score, "OUTPUT_JSON_PATH", str(output_path))
+    # Stub cache functions to avoid polluting the production cache file
+    _cache = {}
+    monkeypatch.setattr(indices_score, "load_risk_free_rate_cache", lambda path=None: _cache)
+    monkeypatch.setattr(indices_score, "save_risk_free_rate_cache", lambda rates, path=None: _cache.update(rates))
 
     indices_score.main()
 
@@ -4440,6 +4488,10 @@ def test_main_payload_includes_index_metadata(monkeypatch, tmp_path):
     monkeypatch.setattr(indices_score, "fetch_index_price_history", lambda: [])
     output_path = tmp_path / "indices.json"
     monkeypatch.setattr(indices_score, "OUTPUT_JSON_PATH", str(output_path))
+    # Stub cache functions to avoid polluting the production cache file
+    _cache = {}
+    monkeypatch.setattr(indices_score, "load_risk_free_rate_cache", lambda path=None: _cache)
+    monkeypatch.setattr(indices_score, "save_risk_free_rate_cache", lambda rates, path=None: _cache.update(rates))
 
     indices_score.main()
 
@@ -4461,6 +4513,49 @@ def test_main_payload_includes_index_metadata(monkeypatch, tmp_path):
         "CAC40", "DAX", "NASDAQ", "DOW", "FTSE", "SMI", "IBEX35", "FTSEMIB",
         "NIKKEI225", "HANGSENG",
     }
+
+
+def test_main_payload_includes_full_static_roster(monkeypatch, tmp_path):
+    """Le payload doit publier "roster" : la liste STATIQUE triee de tous
+    les tickers de COMPANIES, independamment du succes du run du jour pour
+    chacun -- distincte de "companies" (audit final 2026-10-02, critique
+    n°1). ibkr_bot/daily.py s'appuie sur ce champ pour ne jamais confondre
+    "absent aujourd'hui (panne transitoire)" avec "retire de l'indice"."""
+    import json
+
+    monkeypatch.setattr(indices_score, "fetch_risk_free_rate", lambda series_id: 3.68)
+    monkeypatch.setattr(indices_score, "fetch_fx_rate_to_usd", lambda currency: 1.0)
+    monkeypatch.setattr(indices_score, "load_previous_company_analyses", lambda: {})
+    monkeypatch.setattr(
+        indices_score, "build_company_entry",
+        lambda ticker, name, risk_free_rate, previous_analyses, index_key="CAC40", also_indices=None, fx_rate_to_usd=1.0: {
+            "ticker": ticker, "name": name, "index": index_key,
+            "score": 10.0, "interpretation": "Neutre",
+            "current_price": 50.0, "entry_price": 50.0,
+        },
+    )
+    monkeypatch.setattr(indices_score, "load_indices_history", lambda: [])
+    monkeypatch.setattr(indices_score, "append_indices_history", lambda entries: entries)
+    monkeypatch.setattr(indices_score, "update_signal_tracking", lambda companies, newly_triggered_entree: [])
+    monkeypatch.setattr(indices_score, "update_nikkei_hangseng_price_history", lambda companies: [])
+    monkeypatch.setattr(indices_score, "fetch_index_prices", lambda: {})
+    monkeypatch.setattr(indices_score, "update_price_history", lambda entries, **kwargs: entries)
+    monkeypatch.setattr(indices_score, "update_dividend_history", lambda entries, **kwargs: entries)
+    monkeypatch.setattr(indices_score, "fetch_index_price_history", lambda: [])
+    output_path = tmp_path / "indices.json"
+    monkeypatch.setattr(indices_score, "OUTPUT_JSON_PATH", str(output_path))
+    _cache = {}
+    monkeypatch.setattr(indices_score, "load_risk_free_rate_cache", lambda path=None: _cache)
+    monkeypatch.setattr(indices_score, "save_risk_free_rate_cache", lambda rates, path=None: _cache.update(rates))
+
+    indices_score.main()
+
+    written = json.loads(output_path.read_text(encoding="utf-8"))
+    expected_roster = sorted(c["ticker"] for c in indices_score.COMPANIES)
+    assert written["roster"] == expected_roster
+    assert written["roster"] == sorted(written["roster"])
+    for ticker in (c["ticker"] for c in indices_score.COMPANIES):
+        assert ticker in written["roster"]
 
 
 def test_main_payload_exposes_risk_free_rate_by_currency(monkeypatch, tmp_path):
@@ -4507,6 +4602,10 @@ def test_main_payload_exposes_risk_free_rate_by_currency(monkeypatch, tmp_path):
     monkeypatch.setattr(indices_score, "fetch_index_price_history", lambda: [])
     output_path = tmp_path / "indices.json"
     monkeypatch.setattr(indices_score, "OUTPUT_JSON_PATH", str(output_path))
+    # Stub cache functions to avoid polluting the production cache file
+    _cache = {}
+    monkeypatch.setattr(indices_score, "load_risk_free_rate_cache", lambda path=None: _cache)
+    monkeypatch.setattr(indices_score, "save_risk_free_rate_cache", lambda rates, path=None: _cache.update(rates))
 
     indices_score.main()
 
@@ -4565,6 +4664,10 @@ def test_main_routes_risk_free_rate_by_currency(monkeypatch, tmp_path):
     monkeypatch.setattr(indices_score, "fetch_index_price_history", lambda: [])
     output_path = tmp_path / "indices.json"
     monkeypatch.setattr(indices_score, "OUTPUT_JSON_PATH", str(output_path))
+    # Stub cache functions to avoid polluting the production cache file
+    _cache = {}
+    monkeypatch.setattr(indices_score, "load_risk_free_rate_cache", lambda path=None: _cache)
+    monkeypatch.setattr(indices_score, "save_risk_free_rate_cache", lambda rates, path=None: _cache.update(rates))
 
     indices_score.main()
 
@@ -7812,6 +7915,10 @@ def test_main_calls_update_signal_tracking(monkeypatch, tmp_path):
     monkeypatch.setattr(indices_score, "update_price_history", lambda entries, **kwargs: entries)
     monkeypatch.setattr(indices_score, "update_dividend_history", lambda entries, **kwargs: entries)
     monkeypatch.setattr(indices_score, "fetch_index_price_history", lambda: [])
+    # Stub cache functions to avoid polluting the production cache file
+    _cache = {}
+    monkeypatch.setattr(indices_score, "load_risk_free_rate_cache", lambda path=None: _cache)
+    monkeypatch.setattr(indices_score, "save_risk_free_rate_cache", lambda rates, path=None: _cache.update(rates))
 
     indices_score.main()
 
@@ -7861,6 +7968,10 @@ def test_main_writes_indices_json_before_email_and_signal_tracking(monkeypatch, 
 
     monkeypatch.setattr(indices_score, "send_daily_digest_email", _fake_send_daily_digest_email)
     monkeypatch.setattr(indices_score, "update_signal_tracking", _fake_update_signal_tracking)
+    # Stub cache functions to avoid polluting the production cache file
+    _cache = {}
+    monkeypatch.setattr(indices_score, "load_risk_free_rate_cache", lambda path=None: _cache)
+    monkeypatch.setattr(indices_score, "save_risk_free_rate_cache", lambda rates, path=None: _cache.update(rates))
 
     indices_score.main()
 
@@ -7917,6 +8028,10 @@ def test_main_recalibrates_scores_before_alerts_and_signal_tracking(monkeypatch,
     monkeypatch.setattr(indices_score, "update_price_history", lambda entries, **kwargs: entries)
     monkeypatch.setattr(indices_score, "update_dividend_history", lambda entries, **kwargs: entries)
     monkeypatch.setattr(indices_score, "fetch_index_price_history", lambda: [])
+    # Stub cache functions to avoid polluting the production cache file
+    _cache = {}
+    monkeypatch.setattr(indices_score, "load_risk_free_rate_cache", lambda path=None: _cache)
+    monkeypatch.setattr(indices_score, "save_risk_free_rate_cache", lambda rates, path=None: _cache.update(rates))
 
     indices_score.main()
 
@@ -7975,6 +8090,10 @@ def test_main_persists_price_history_from_companies_and_indices(monkeypatch, tmp
     monkeypatch.setattr(indices_score, "update_dividend_history", lambda entries, **kwargs: entries)
     monkeypatch.setattr(indices_score, "fetch_index_price_history", lambda: [
         {"date": "2026-09-21", "ticker": "^FCHI", "price": 7850.2}])
+    # Stub cache functions to avoid polluting the production cache file
+    _cache = {}
+    monkeypatch.setattr(indices_score, "load_risk_free_rate_cache", lambda path=None: _cache)
+    monkeypatch.setattr(indices_score, "save_risk_free_rate_cache", lambda rates, path=None: _cache.update(rates))
 
     indices_score.main()
 
@@ -8016,6 +8135,10 @@ def test_main_never_writes_the_internal_price_history_key_to_indices_json(monkey
     monkeypatch.setattr(indices_score, "update_price_history", lambda entries, **kwargs: entries)
     monkeypatch.setattr(indices_score, "update_dividend_history", lambda entries, **kwargs: entries)
     monkeypatch.setattr(indices_score, "fetch_index_price_history", lambda: [])
+    # Stub cache functions to avoid polluting the production cache file
+    _cache = {}
+    monkeypatch.setattr(indices_score, "load_risk_free_rate_cache", lambda path=None: _cache)
+    monkeypatch.setattr(indices_score, "save_risk_free_rate_cache", lambda rates, path=None: _cache.update(rates))
 
     indices_score.main()
 
@@ -8063,6 +8186,10 @@ def test_main_persists_dividend_history_from_companies(monkeypatch, tmp_path):
         captured["entries"] = entries
         return entries
     monkeypatch.setattr(indices_score, "update_dividend_history", _fake_update_dividend_history)
+    # Stub cache functions to avoid polluting the production cache file
+    _cache = {}
+    monkeypatch.setattr(indices_score, "load_risk_free_rate_cache", lambda path=None: _cache)
+    monkeypatch.setattr(indices_score, "save_risk_free_rate_cache", lambda rates, path=None: _cache.update(rates))
 
     indices_score.main()
 
@@ -8102,6 +8229,10 @@ def test_main_never_writes_the_internal_dividend_history_key_to_indices_json(mon
     monkeypatch.setattr(indices_score, "update_dividend_history", lambda entries, **kwargs: entries)
     output_path = tmp_path / "indices.json"
     monkeypatch.setattr(indices_score, "OUTPUT_JSON_PATH", str(output_path))
+    # Stub cache functions to avoid polluting the production cache file
+    _cache = {}
+    monkeypatch.setattr(indices_score, "load_risk_free_rate_cache", lambda path=None: _cache)
+    monkeypatch.setattr(indices_score, "save_risk_free_rate_cache", lambda rates, path=None: _cache.update(rates))
 
     indices_score.main()
 
@@ -8109,3 +8240,56 @@ def test_main_never_writes_the_internal_dividend_history_key_to_indices_json(mon
         payload = json.load(fh)
     for company in payload["companies"]:
         assert "_dividend_history" not in company
+
+
+def test_load_risk_free_rate_cache_empty_when_file_absent(tmp_path):
+    import indices_score
+    path = tmp_path / "risk_free_rate_cache.json"
+    assert indices_score.load_risk_free_rate_cache(path=str(path)) == {}
+
+
+def test_load_risk_free_rate_cache_empty_when_file_corrupt(tmp_path):
+    import indices_score
+    path = tmp_path / "risk_free_rate_cache.json"
+    path.write_text("{not valid json", encoding="utf-8")
+    assert indices_score.load_risk_free_rate_cache(path=str(path)) == {}
+
+
+def test_save_then_load_risk_free_rate_cache_round_trips(tmp_path):
+    import indices_score
+    path = tmp_path / "risk_free_rate_cache.json"
+    indices_score.save_risk_free_rate_cache({"EUR": 4.0, "USD": 4.5}, path=str(path))
+    assert indices_score.load_risk_free_rate_cache(path=str(path)) == {"EUR": 4.0, "USD": 4.5}
+
+
+def test_save_risk_free_rate_cache_never_raises_on_bad_path(tmp_path):
+    """Degrade silencieusement (meme contrat que update_dividend_history) :
+    un chemin illisible ne doit jamais faire echouer main()."""
+    import indices_score
+    bad_path = str(tmp_path / "no_such_dir" / "sub" / "cache.json")
+    # Le dossier parent n'existe pas et n'est volontairement pas créable
+    # (chemin sous un fichier, pas un dossier) pour forcer l'échec.
+    (tmp_path / "no_such_dir").write_text("fichier, pas un dossier", encoding="utf-8")
+    indices_score.save_risk_free_rate_cache({"EUR": 4.0}, path=bad_path)  # ne doit pas lever
+
+
+def test_risk_free_rate_with_cache_fallback_uses_cache_on_fetch_failure(monkeypatch, tmp_path):
+    """Reproduit exactement la boucle de main() (Step 6 ci-dessous) : une
+    devise dont le fetch echoue (None) doit retomber sur le cache, pas
+    rester None."""
+    import indices_score
+    cache_path = tmp_path / "risk_free_rate_cache.json"
+    indices_score.save_risk_free_rate_cache({"EUR": 4.0}, path=str(cache_path))
+
+    def fake_fetch(series_id):
+        return None  # simule la panne FRED
+
+    monkeypatch.setattr(indices_score, "fetch_risk_free_rate", fake_fetch)
+
+    cache = indices_score.load_risk_free_rate_cache(path=str(cache_path))
+    rates = {}
+    for currency, series_id in indices_score.RISK_FREE_SERIES_BY_CURRENCY.items():
+        fetched = indices_score.fetch_risk_free_rate(series_id)
+        rates[currency] = fetched if fetched is not None else cache.get(currency)
+
+    assert rates["EUR"] == 4.0  # repli sur le cache, pas None

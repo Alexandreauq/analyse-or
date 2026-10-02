@@ -206,6 +206,37 @@ def test_load_signal_tracking_reads_positions_key(tmp_path):
     assert [p["ticker"] for p in result] == ["GLE.PA"]
 
 
+def test_collect_new_signals_rejects_a_company_in_weinstein_decline_phase():
+    """Audit 2026-10-02 : garde-fou redondant -- meme si indices_score
+    n'avait pas deja bloque l'alerte "entree" en amont (bug hypothetique
+    de ce cote-la), le bot ne doit jamais ouvrir une position sur une
+    societe en phase Weinstein "Declin"."""
+    positions = [_paper_position(ticker="A.PA", id="A.PA-2026-10-02", entry_date="2026-10-02")]
+    indices = _indices(updated="2026-10-02", companies=[
+        {"ticker": "A.PA", "index": "CAC40", "score": 10.0, "current_price": 100.0,
+         "sector": "Industrie", "stage_label": "Déclin"},
+    ])
+    signaux, rejets = signals.collect_new_signals(indices, positions, today="2026-10-02")
+
+    assert signaux == []
+    assert rejets == [{"ticker": "A.PA", "raison": "phase_weinstein_declin"}]
+
+
+def test_collect_new_signals_accepts_a_company_without_decline_phase():
+    """Non-regression : une societe sans phase Declin (ou sans
+    stage_label du tout) continue d'etre acceptee comme avant."""
+    positions = [_paper_position(ticker="A.PA", id="A.PA-2026-10-02", entry_date="2026-10-02")]
+    indices = _indices(updated="2026-10-02", companies=[
+        {"ticker": "A.PA", "index": "CAC40", "score": 10.0, "current_price": 100.0,
+         "sector": "Industrie", "stage_label": "Achat"},
+    ])
+    signaux, rejets = signals.collect_new_signals(indices, positions, today="2026-10-02")
+
+    assert len(signaux) == 1
+    assert signaux[0]["ticker"] == "A.PA"
+    assert rejets == []
+
+
 def test_is_missing_covers_none_and_nan():
     assert signals._is_missing(None) is True
     assert signals._is_missing(float("nan")) is True

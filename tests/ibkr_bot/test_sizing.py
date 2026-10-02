@@ -28,6 +28,17 @@ def test_to_quotation_price_multiplies_by_100_only_for_london():
     assert sizing.to_quotation_price(50.0, "ADBE") == 50.0
 
 
+def test_to_quotation_price_passes_none_through_even_for_london():
+    """Audit final 2026-10-02, critique n°2 : une sortie
+    ticker_retire_indice n'a jamais de current_price (la societe a
+    quitte l'indice). Avant ce correctif, None * PENCE_PER_POUND levait
+    un TypeError pour tout ticker `.L`, empechant indefiniment la
+    cloture de la position. None doit passer tel quel, comme il le fait
+    deja pour les tickers non-pence."""
+    assert sizing.to_quotation_price(None, "III.L") is None
+    assert sizing.to_quotation_price(None, "MC.PA") is None
+
+
 def test_from_quotation_price_is_the_exact_inverse():
     assert sizing.from_quotation_price(245.0, "III.L") == pytest.approx(2.45)
     assert sizing.from_quotation_price(415.0, "MC.PA") == 415.0

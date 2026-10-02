@@ -3757,6 +3757,16 @@ RAPID_DROP_POINTS = 20   # même seuil que le volet Or -- valeur d'origine, jama
 RAPID_DROP_DAYS = 5      # même fenêtre que le volet Or
 NEAR_ENTRY_PCT = 5.0     # écart max (%) au repère d'entrée pour "conditions réunies"
 HYSTERESIS_BAND = 5.0    # bande morte (points, échelle du score BRUT) pour watch/entree (audit I2) : reprend la tolérance de NEAR_ENTRY_PCT
+# Plancher percentile sur l'alerte "entree" (audit 2026-10-02, critique
+# n°1) : le seuil d'hysterese ci-dessus porte sur le score BRUT, qui
+# filtre si peu (73-89% de chaque profil le depasse) que le score
+# percentile (normalise entre profils, -100/+100, 0 = mediane) n'avait
+# AUCUN role dans la decision d'ouvrir une position -- des alertes
+# "entree" etaient actives sur des societes affichees "Tres fragile"
+# (ex. GLE.PA, score -75). 0.0 = au moins la mediane de son profil, pas
+# un seuil arbitraire plus strict -- coherent avec "entree" qui doit
+# rester un signal frequent, pas reserve au dernier decile.
+ENTRY_SCORE_PERCENTILE_FLOOR = 0.0
 
 
 def _last_confirmed_regime(previous_history: list[dict], band: float) -> float | None:
@@ -3790,7 +3800,7 @@ def compute_company_alerts(
     ticker: str, composite_raw: float, current_price: float | None,
     entry_price: float | None, previous_history: list[dict],
     news_items: list[dict] | None = None, stage_label: str | None = None,
-    score_recalibrated: bool = True,
+    score_recalibrated: bool = True, score: float | None = None,
 ) -> list[dict]:
     """Alertes de franchissement de seuil pour une entreprise, à partir de
     son propre sous-historique (déjà filtré par ticker par l'appelant).
@@ -3814,6 +3824,16 @@ def compute_company_alerts(
     percentile ; pour un profil resté sur le score brut (trust, pool
     structurellement trop petit), 0 est un seuil neutre absolu, pas une
     médiane relative au pool (audit Minor #3).
+    `score` (optionnel, audit 2026-10-02 critique n°1) : le score
+    PERCENTILE recalibré de la société (company["score"], -100/+100, 0 =
+    médiane du profil) -- quand `score_recalibrated` est True, l'alerte
+    "entree" exige maintenant AUSSI `score >= ENTRY_SCORE_PERCENTILE_FLOOR`
+    (0.0), en plus des conditions déjà existantes. `None` (défaut,
+    rétrocompatible) désactive ce plancher, même comportement qu'avant ce
+    correctif -- un appelant qui ne fournit pas `score` doit explicitement
+    le faire pour bénéficier du garde-fou. Quand `score_recalibrated` est
+    False (profil resté sur le score brut, ex. trust), ce plancher ne
+    s'applique jamais : il n'y a pas de score percentile comparable.
     Ne lève jamais d'exception ; renvoie toujours au moins une alerte
     (`info` neutre si rien ne se déclenche — calculé après l'alerte
     "actu_majeure" ci-dessous, pas avant, pour ne jamais afficher "pas de
@@ -3892,7 +3912,14 @@ def compute_company_alerts(
         composite_raw > HYSTERESIS_BAND if abs(composite_raw) > HYSTERESIS_BAND
         else (last_regime is not None and last_regime > HYSTERESIS_BAND)
     )
-    if score_favorable and near_entry and stage_label != "Déclin":
+    # Plancher percentile (audit 2026-10-02, critique n°1) : ne s'applique
+    # que si le profil est recalibré ET qu'un score percentile a été
+    # fourni -- voir le docstring du paramètre `score` ci-dessus pour le
+    # choix de rétrocompatibilité.
+    percentile_favorable = (
+        not score_recalibrated or score is None or score >= ENTRY_SCORE_PERCENTILE_FLOOR
+    )
+    if score_favorable and percentile_favorable and near_entry and stage_label != "Déclin":
         alerts.append({
             "kind": "entree",
             "title": "Conditions d'entrée réunies",
@@ -4326,6 +4353,42 @@ RISK_FREE_SERIES_BY_CURRENCY = {
     "JPY": FRED_RISK_FREE_SERIES_JP,
     "HKD": FRED_RISK_FREE_SERIES_US,
 }
+
+RISK_FREE_RATE_CACHE_PATH = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "docs", "risk_free_rate_cache.json"
+)
+
+
+def load_risk_free_rate_cache(path: str = RISK_FREE_RATE_CACHE_PATH) -> dict:
+    """{devise: taux} du dernier run où fetch_risk_free_rate a réussi pour
+    cette devise. {} si le fichier est absent ou corrompu, jamais
+    d'exception -- même contrat que load_dividend_history. Sert de repli
+    quand une panne FRED transitoire renvoie None (audit 2026-10-02,
+    critique n°2) : le dernier taux réellement observé est une bien
+    meilleure estimation que COST_OF_CAPITAL_PROXY (8%, une constante
+    générique sans rapport avec le marché réel ce jour-là)."""
+    if not os.path.exists(path):
+        return {}
+    try:
+        with open(path, encoding="utf-8") as fh:
+            data = json.load(fh)
+    except json.JSONDecodeError:
+        return {}
+    return data if isinstance(data, dict) else {}
+
+
+def save_risk_free_rate_cache(rates: dict, path: str = RISK_FREE_RATE_CACHE_PATH) -> None:
+    """Persiste `rates` (devise -> taux) tel quel -- c'est à l'appelant de
+    ne passer que les devises réellement récupérées ce run (jamais un
+    repli ne doit écraser un taux précédemment observé avec succès).
+    Dégrade silencieusement sur erreur d'écriture, ne doit jamais faire
+    échouer main() (même contrat que update_dividend_history)."""
+    try:
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, "w", encoding="utf-8") as fh:
+            json.dump(rates, fh, ensure_ascii=False, allow_nan=False, separators=(",", ":"))
+    except Exception as e:
+        print(f"Erreur cache taux sans risque : {e}")
 
 
 def fetch_risk_free_rate(series_id: str = FRED_RISK_FREE_SERIES) -> float | None:
@@ -4971,6 +5034,7 @@ def _attach_alerts_and_update_history(companies: list[dict]) -> tuple[list[dict]
                 company["entry_price"], ticker_history,
                 news_items=company.get("news", []), stage_label=company.get("stage_label"),
                 score_recalibrated=company.get("score_recalibrated", True),
+                score=company.get("score"),
             )
             today_kinds = {a["kind"] for a in company["alerts"]}
             if "entree" in today_kinds and "entree" not in previous_alert_kinds.get(company["ticker"], set()):
@@ -5226,10 +5290,22 @@ def _compute_health_summary(companies: list[dict]) -> dict:
 def main():
     # Un taux sans risque par devise (voir RISK_FREE_SERIES_BY_CURRENCY) —
     # un seul appel FRED par devise pour tout le run, pas par entreprise.
-    risk_free_rate_by_currency = {
-        currency: fetch_risk_free_rate(series_id)
-        for currency, series_id in RISK_FREE_SERIES_BY_CURRENCY.items()
-    }
+    # Repli sur le dernier taux connu en cas d'echec (audit 2026-10-02,
+    # critique n°2) : une panne FRED transitoire ne doit plus faire
+    # retomber TOUTES les societes d'une devise sur COST_OF_CAPITAL_PROXY
+    # (8%, une valeur generique) au lieu du dernier taux reellement
+    # observe -- voir load_risk_free_rate_cache pour le detail.
+    _risk_free_rate_cache = load_risk_free_rate_cache()
+    risk_free_rate_by_currency = {}
+    for currency, series_id in RISK_FREE_SERIES_BY_CURRENCY.items():
+        fetched = fetch_risk_free_rate(series_id)
+        risk_free_rate_by_currency[currency] = (
+            fetched if fetched is not None else _risk_free_rate_cache.get(currency)
+        )
+    save_risk_free_rate_cache({
+        currency: rate for currency, rate in risk_free_rate_by_currency.items()
+        if rate is not None
+    })
     # Un taux de change vers USD par devise (voir FX_TICKER_TO_USD) — un
     # seul appel par devise pour tout le run, même schéma que le taux sans
     # risque. Sert uniquement à la prime de taille du WACC (voir
@@ -5293,6 +5369,16 @@ def main():
         "index_prices": fetch_index_prices(),
         "companies": companies,
         "health": _compute_health_summary(companies),
+        # Liste STATIQUE complete de tous les tickers que main() a vocation
+        # a suivre (COMPANIES), independamment du succes/echec du run du
+        # jour pour chacun -- distincte de "companies" qui ne contient que
+        # les tickers dont le traitement a reussi aujourd'hui (voir le
+        # bloc try/except ci-dessus). Sert a ibkr_bot/daily.py pour ne
+        # jamais confondre "absent aujourd'hui (panne transitoire)" avec
+        # "retire de l'indice" (audit final 2026-10-02, critique n°1) :
+        # sans ce champ, une panne de donnees sur un titre detenu
+        # declencherait une vraie vente marche a tort.
+        "roster": sorted(c["ticker"] for c in COMPANIES),
     }
 
     # allow_nan=False : derniere ligne de defense (voir le commentaire de

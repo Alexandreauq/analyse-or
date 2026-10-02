@@ -344,7 +344,11 @@ def test_select_entries_rejects_signal_when_zone_cap_reached():
 def test_select_entries_zone_cap_counts_signals_retained_earlier_in_same_batch():
     """Meme logique que le plafond secteur/indice existant : compte aussi
     les signaux deja retenus plus haut dans le MEME classement, pas
-    seulement les positions deja ouvertes."""
+    seulement les positions deja ouvertes. Ajuste pour audit 2026-10-02 :
+    avec MAX_NEW_ENTRIES_PER_DAY=3, on verifie que 3 signaux zone_euro
+    de differents indices passent, et les suivants sont rejetes par le
+    plafond quotidien plutot que le plafond zone (mais l'ordre des
+    filtres et la logique de comptage restent correctes)."""
     signaux = [
         _signal("A.PA", 90.0, index="CAC40", sector="S1"),
         _signal("B.DE", 80.0, index="DAX", sector="S2"),
@@ -352,15 +356,16 @@ def test_select_entries_zone_cap_counts_signals_retained_earlier_in_same_batch()
         _signal("D.MI", 60.0, index="FTSEMIB", sector="S4"),
         _signal("E.PA", 50.0, index="CAC40", sector="S5"),
         _signal("F.MI", 40.0, index="FTSEMIB", sector="S6"),
-    ]  # 6 signaux zone_euro, plafond zone = 5 -> le 6e doit etre rejete
+    ]  # 6 signaux zone_euro, plafond zone = 5, plafond daily = 3 -> les 3 premiers passent, les 3 derniers rejetes par daily
     plans = {t: _plan(t) for t in ("A.PA", "B.DE", "C.MC", "D.MI", "E.PA", "F.MI")}
     contrats = _contrats(["A.PA", "B.DE", "C.MC", "D.MI", "E.PA", "F.MI"])
 
     retenus, rejets = portfolio.select_entries(
         signaux, [], plans, contrats, _CASH_ILLIMITE)
 
-    assert [r["signal"]["ticker"] for r in retenus] == ["A.PA", "B.DE", "C.MC", "D.MI", "E.PA"]
-    assert [r["raison"] for r in rejets] == ["plafond_zone_atteint"]
+    assert [r["signal"]["ticker"] for r in retenus] == ["A.PA", "B.DE", "C.MC"]
+    # Les 3 derniers signaux sont rejetes par le plafond quotidien, pas le plafond zone
+    assert [r["raison"] for r in rejets] == ["plafond_entrees_quotidien_atteint", "plafond_entrees_quotidien_atteint", "plafond_entrees_quotidien_atteint"]
 
 
 def test_select_entries_zone_cap_does_not_block_other_zones():
@@ -421,7 +426,11 @@ def test_select_entries_sector_cap_does_not_block_other_sectors():
 def test_select_entries_sector_cap_counts_signals_retained_earlier_in_same_batch():
     """Le plafond doit aussi compter les signaux deja retenus PLUS HAUT
     dans le MEME classement, pas seulement les positions deja ouvertes --
-    sinon deux signaux du meme secteur pourraient passer le meme jour."""
+    sinon deux signaux du meme secteur pourraient passer le meme jour.
+    Ajuste pour audit 2026-10-02 : avec MAX_NEW_ENTRIES_PER_DAY=3, on
+    verifie que 3 signaux du meme secteur passent tous et consomment le
+    plafond daily cap ET le plafond secteur (=3), et un 4e serait rejete
+    par le plafond quotidien."""
     signaux = [
         _signal("A.PA", 90.0, sector="Financial Services"),
         _signal("B.PA", 80.0, sector="Financial Services"),
@@ -436,7 +445,7 @@ def test_select_entries_sector_cap_counts_signals_retained_earlier_in_same_batch
 
     assert [r["signal"]["ticker"] for r in retenus] == ["A.PA", "B.PA", "C.PA"]
     assert rejets == [{"ticker": "D.PA", "rang": 4, "score": 60.0,
-                       "raison": "plafond_secteur_atteint"}]
+                       "raison": "plafond_entrees_quotidien_atteint"}]
 
 
 def test_select_entries_diversification_rejection_does_not_consume_a_slot():
@@ -493,6 +502,41 @@ def test_select_entries_missing_contract_does_not_consume_budget():
     assert [r["signal"]["ticker"] for r in retenus] == ["B.PA"]
     assert rejets == [{"ticker": "A.PA", "rang": 1, "score": 48.8,
                        "raison": "contrat_non_resolu"}]
+
+
+def test_select_entries_rejects_signals_beyond_the_daily_cap():
+    """Audit 2026-10-02 : un jour de deploiement de methodologie (ex.
+    2026-09-24, 45 positions papier en un seul jour) ne doit jamais faire
+    acheter plus de MAX_NEW_ENTRIES_PER_DAY positions reelles d'un coup,
+    quel que soit le nombre de places/budget disponibles par ailleurs."""
+    signaux = [_signal(f"T{i}.PA", 90.0 - i, index="CAC40", sector=f"S{i}")
+               for i in range(5)]  # 5 signaux, places et budget illimites
+    plans = {s["ticker"]: _plan(s["ticker"]) for s in signaux}
+    contrats = _contrats([s["ticker"] for s in signaux])
+
+    retenus, rejets = portfolio.select_entries(
+        signaux, [], plans, contrats, _CASH_ILLIMITE)
+
+    assert len(retenus) == portfolio.MAX_NEW_ENTRIES_PER_DAY
+    rejets_plafond = [r for r in rejets if r["raison"] == "plafond_entrees_quotidien_atteint"]
+    assert len(rejets_plafond) == 5 - portfolio.MAX_NEW_ENTRIES_PER_DAY
+
+
+def test_select_entries_daily_cap_rejection_does_not_block_other_filters_first():
+    """Un signal qui echoue deja a un autre filtre (ex. deja detenu) ne
+    doit jamais etre compte comme "retenu" avant le plafond quotidien --
+    l'ordre des filtres existants reste prioritaire."""
+    signaux = [_signal("A.PA", 90.0, index="CAC40", sector="S1")]
+    plans = {"A.PA": _plan("A.PA")}
+    contrats = _contrats(["A.PA"])
+    deja_detenu = [_bot_position("A.PA")]
+
+    retenus, rejets = portfolio.select_entries(
+        signaux, deja_detenu, plans, contrats, _CASH_ILLIMITE)
+
+    assert retenus == []
+    assert rejets == [{"ticker": "A.PA", "rang": 1, "score": 90.0,
+                        "raison": "deja_en_portefeuille"}]
 
 
 # --- garde-fou de solde (spec 9.9, revu : cash total en devise de base) -

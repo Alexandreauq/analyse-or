@@ -27,6 +27,21 @@ MAX_POSITIONS = 10  # positions ouvertes PAR LE BOT, pas sur le compte (spec 3.4
 MAX_POSITIONS_PER_SECTOR = 3
 MAX_POSITIONS_PER_INDEX = 4
 
+# Zones geographiques reelles (audit 2026-10-02) : MAX_POSITIONS_PER_INDEX
+# ne plafonne qu'un indice precis, pas une zone -- NASDAQ et DOW sont
+# tous deux americains (jusqu'a 8/10 positions US possibles avant ce
+# correctif), CAC40/DAX/IBEX35/FTSEMIB sont tous en zone euro (jusqu'a
+# 10/10 possibles). Ce plafond s'AJOUTE au plafond par indice, ne le
+# remplace pas -- memes 8 indices que signals.INDICES_IN_SCOPE.
+INDEX_ZONE = {
+    "CAC40": "zone_euro", "DAX": "zone_euro",
+    "IBEX35": "zone_euro", "FTSEMIB": "zone_euro",
+    "NASDAQ": "amerique_nord", "DOW": "amerique_nord",
+    "FTSE": "royaume_uni",
+    "SMI": "suisse",
+}
+MAX_POSITIONS_PER_ZONE = 4
+
 # Regles de sortie : valeurs IDENTIQUES a celles du paper-trading
 # (indices_score.SIGNAL_STOP_LOSS_PCT / SIGNAL_SHADOW_DELAY_MONTHS). Un
 # test de non-regression verifie l'egalite des deux jeux de constantes ET
@@ -91,7 +106,7 @@ def select_entries(
 
     ORDRE DES FILTRES, qui est lui-meme une regle de la spec :
     deja detenu -> contrat non resolu -> plan absent -> quantite nulle ->
-    plafond -> plafond secteur -> plafond indice -> solde. Le cas 0 action
+    plafond -> plafond secteur -> plafond indice -> plafond zone -> solde. Le cas 0 action
     passe AVANT le plafond parce que "la place ainsi liberee reste
     disponible pour le signal suivant du classement" (spec 3.3) : inverser
     les deux perdrait un signal financable au profit d'un signal
@@ -129,6 +144,10 @@ def select_entries(
     engage = 0.0
     sector_counts = Counter(p["sector"] for p in open_positions if p.get("sector"))
     index_counts = Counter(p["index"] for p in open_positions if p.get("index"))
+    zone_counts = Counter(
+        INDEX_ZONE[p["index"]] for p in open_positions
+        if p.get("index") in INDEX_ZONE
+    )
 
     retenus: list[dict] = []
     rejets: list[dict] = []
@@ -168,6 +187,11 @@ def select_entries(
             rejets.append({**base, "raison": "plafond_indice_atteint"})
             continue
 
+        zone = INDEX_ZONE.get(indice, "")
+        if zone and zone_counts[zone] >= MAX_POSITIONS_PER_ZONE:
+            rejets.append({**base, "raison": "plafond_zone_atteint"})
+            continue
+
         if base_cash - engage < BUDGET_EUR:
             rejets.append({**base, "raison": "solde_insuffisant"})
             continue
@@ -179,6 +203,8 @@ def select_entries(
             sector_counts[secteur] += 1
         if indice:
             index_counts[indice] += 1
+            if indice in INDEX_ZONE:
+                zone_counts[INDEX_ZONE[indice]] += 1
         retenus.append({"signal": signal, "plan": plan, "rang": rang})
 
     return retenus, rejets

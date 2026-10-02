@@ -73,9 +73,38 @@ def test_build_public_status_includes_sanitized_positions_in_dry_run():
     assert status["positions"] == [{
         "ticker": "AAPL", "name": "Apple Inc.", "index": "NASDAQ",
         "quantite": 5, "prix_entree": 200.0, "date_entree": "2026-09-15",
+        "prix_actuel": None, "valeur_actuelle_eur": None, "pnl_eur": None, "pnl_eur_pct": None,
     }]
     assert "conid" not in json.dumps(status)
     assert "265598" not in json.dumps(status)
+
+
+def test_public_position_includes_eur_pnl_fields_when_present():
+    position = {
+        "ticker": "III.L", "name": "3i Group", "index": "FTSE", "quantite": 20,
+        "prix_execution_reference": 29.5, "date_entree": "2026-09-15",
+        "prix_actuel": 31.0, "valeur_actuelle_eur": 720.93,
+        "pnl_eur": -16.57, "pnl_eur_pct": -2.25,
+    }
+
+    public = status_publish._public_position(position)
+
+    assert public["prix_actuel"] == 31.0
+    assert public["valeur_actuelle_eur"] == 720.93
+    assert public["pnl_eur"] == -16.57
+    assert public["pnl_eur_pct"] == -2.25
+
+
+def test_public_position_defaults_eur_pnl_fields_to_none_when_not_yet_valued():
+    position = {
+        "ticker": "MC.PA", "name": "LVMH", "index": "CAC40", "quantite": 5,
+        "prix_execution_reference": 90.5, "date_entree": "2026-09-15",
+    }
+
+    public = status_publish._public_position(position)
+
+    assert public["prix_actuel"] is None
+    assert public["pnl_eur"] is None
 
 
 def test_build_public_status_omits_positions_when_mode_is_reel():
@@ -272,6 +301,7 @@ def test_publish_status_loads_and_includes_positions_in_dry_run(tmp_path, monkey
     assert written["positions"] == [{
         "ticker": "AAPL", "name": "Apple Inc.", "index": "NASDAQ",
         "quantite": 5, "prix_entree": 200.0, "date_entree": "2026-09-15",
+        "prix_actuel": None, "valeur_actuelle_eur": None, "pnl_eur": None, "pnl_eur_pct": None,
     }]
 
 

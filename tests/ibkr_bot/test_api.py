@@ -94,11 +94,66 @@ def test_dashboard_returns_full_body_when_all_sources_present(client, monkeypatc
     assert body["positions"] == [{
         "ticker": "MC.PA", "name": "LVMH", "index": "CAC40", "quantite": 5,
         "prix_entree": 90.5, "date_entree": "2026-09-15", "target_exit_price": 120.0,
+        "prix_actuel": None, "valeur_actuelle_eur": None, "pnl_eur": None, "pnl_eur_pct": None,
     }]
     assert body["actions"] == [{
         "ticker": "MC.PA", "sens": "BUY", "quantite": 5, "prix_execution": 90.5,
         "statut": "execute", "date": "2026-09-18",
     }]
+
+
+def test_dashboard_includes_eur_pnl_fields(client, monkeypatch, tmp_path):
+    _seed(
+        monkeypatch, tmp_path,
+        positions=[{
+            "id": "III.L-2026-09-15", "ticker": "III.L", "name": "3i Group",
+            "index": "FTSE", "conid": 98765, "quantite": 20,
+            "prix_execution_reference": 29.5, "date_entree": "2026-09-15",
+            "target_exit_price": 35.0,
+            "prix_actuel": 31.0, "taux_de_change_actuel": 0.86,
+            "valeur_actuelle_eur": 720.93, "cout_entree_eur": 737.5,
+            "pnl_eur": -16.57, "pnl_eur_pct": -2.25,
+        }],
+    )
+
+    response = client.get("/dashboard", headers={"X-Bot-Token": "secret-token"})
+
+    position = response.json()["positions"][0]
+    assert position["prix_actuel"] == 31.0
+    assert position["valeur_actuelle_eur"] == 720.93
+    assert position["pnl_eur"] == -16.57
+    assert position["pnl_eur_pct"] == -2.25
+
+
+def test_dashboard_sanitizes_non_finite_pnl_fields(client, monkeypatch, tmp_path):
+    _seed(monkeypatch, tmp_path, positions=[{
+        "ticker": "III.L", "name": "3i Group", "index": "FTSE", "quantite": 20,
+        "prix_execution_reference": 29.5, "date_entree": "2026-09-15",
+        "pnl_eur": float("nan"), "valeur_actuelle_eur": float("inf"),
+    }])
+
+    response = client.get("/dashboard", headers={"X-Bot-Token": "secret-token"})
+
+    position = response.json()["positions"][0]
+    assert position["pnl_eur"] is None
+    assert position["valeur_actuelle_eur"] is None
+
+
+def test_dashboard_omits_pnl_fields_as_null_for_a_position_never_valued(client, monkeypatch, tmp_path):
+    """Une position du jour-meme (ouverte par ce batch) n'a pas encore ete
+    valorisee (Task 1 : la valorisation tourne AVANT les entrees du jour,
+    donc une position fraichement ouverte attend le batch suivant) —
+    /dashboard doit renvoyer null plutot que lever une KeyError."""
+    _seed(monkeypatch, tmp_path, positions=[{
+        "ticker": "MC.PA", "name": "LVMH", "index": "CAC40", "quantite": 5,
+        "prix_execution_reference": 90.5, "date_entree": "2026-09-15",
+    }])
+
+    response = client.get("/dashboard", headers={"X-Bot-Token": "secret-token"})
+
+    position = response.json()["positions"][0]
+    assert position["prix_actuel"] is None
+    assert position["pnl_eur"] is None
 
 
 def test_dashboard_degrades_gracefully_when_all_source_files_are_absent(client, monkeypatch, tmp_path):

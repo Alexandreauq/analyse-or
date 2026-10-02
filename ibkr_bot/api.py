@@ -81,6 +81,10 @@ def dashboard(x_bot_token: str | None = Header(default=None)):
             "prix_entree": _sanitize_number(p.get("prix_execution_reference")),
             "date_entree": p.get("date_entree"),
             "target_exit_price": _sanitize_number(p.get("target_exit_price")),
+            "prix_actuel": _sanitize_number(p.get("prix_actuel")),
+            "valeur_actuelle_eur": _sanitize_number(p.get("valeur_actuelle_eur")),
+            "pnl_eur": _sanitize_number(p.get("pnl_eur")),
+            "pnl_eur_pct": _sanitize_number(p.get("pnl_eur_pct")),
         }
         for p in raw_positions
         if isinstance(p, dict)

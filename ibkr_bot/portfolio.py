@@ -27,6 +27,34 @@ MAX_POSITIONS = 10  # positions ouvertes PAR LE BOT, pas sur le compte (spec 3.4
 MAX_POSITIONS_PER_SECTOR = 3
 MAX_POSITIONS_PER_INDEX = 4
 
+# Zones geographiques reelles (audit 2026-10-02) : MAX_POSITIONS_PER_INDEX
+# ne plafonne qu'un indice precis, pas une zone -- NASDAQ et DOW sont
+# tous deux americains (jusqu'a 8/10 positions US possibles avant ce
+# correctif), CAC40/DAX/IBEX35/FTSEMIB sont tous en zone euro (jusqu'a
+# 10/10 possibles). Ce plafond s'AJOUTE au plafond par indice, ne le
+# remplace pas -- memes 8 indices que signals.INDICES_IN_SCOPE.
+INDEX_ZONE = {
+    "CAC40": "zone_euro", "DAX": "zone_euro",
+    "IBEX35": "zone_euro", "FTSEMIB": "zone_euro",
+    "NASDAQ": "amerique_nord", "DOW": "amerique_nord",
+    "FTSE": "royaume_uni",
+    "SMI": "suisse",
+}
+MAX_POSITIONS_PER_ZONE = 5
+
+# Plafond quotidien d'entrees (audit 2026-10-02) : un jour de deploiement
+# de methodologie de scoring peut faire apparaitre beaucoup de nouveaux
+# signaux d'un coup (45 positions papier le 2026-09-24, 13 correctifs
+# deployes le meme jour) -- sans ce plafond, le bot les achetterait TOUS
+# le meme jour, un achat pilote par un changement de methodologie plutot
+# que par un vrai mouvement de marche. Les signaux au-dela de ce plafond
+# sont perdus, comme la sursouscription (spec 3.5) : signals.
+# collect_new_signals ne lit que les positions ouvertes AUJOURD'HUI, donc
+# un signal rejete ici ne reapparaitra PAS automatiquement les jours
+# suivants (limite connue, voir le point I-C de l'audit, hors scope de
+# ce plan).
+MAX_NEW_ENTRIES_PER_DAY = 3
+
 # Regles de sortie : valeurs IDENTIQUES a celles du paper-trading
 # (indices_score.SIGNAL_STOP_LOSS_PCT / SIGNAL_SHADOW_DELAY_MONTHS). Un
 # test de non-regression verifie l'egalite des deux jeux de constantes ET
@@ -86,29 +114,41 @@ def free_slots(open_positions: list[dict]) -> int:
 def select_entries(
     signals: list[dict], open_positions: list[dict],
     plans: dict[str, dict], contrats: dict[str, dict], base_cash: float,
+    entrees_deja_ouvertes_aujourdhui: int = 0,
 ) -> tuple[list[dict], list[dict]]:
     """Signaux du jour effectivement retenus a l'achat, et rejets motives.
 
     ORDRE DES FILTRES, qui est lui-meme une regle de la spec :
     deja detenu -> contrat non resolu -> plan absent -> quantite nulle ->
-    plafond -> plafond secteur -> plafond indice -> solde. Le cas 0 action
-    passe AVANT le plafond parce que "la place ainsi liberee reste
-    disponible pour le signal suivant du classement" (spec 3.3) : inverser
-    les deux perdrait un signal financable au profit d'un signal
-    inachetable. Le contrat non resolu est verifie tot, avec les autres cas
+    plafond -> plafond entrees quotidien -> plafond secteur -> plafond indice ->
+    plafond zone -> solde. Le cas 0 action passe AVANT le plafond parce que
+    "la place ainsi liberee reste disponible pour le signal suivant du classement"
+    (spec 3.3) : inverser les deux perdrait un signal financable au profit d'un
+    signal inachetable. Le contrat non resolu est verifie tot, avec les autres cas
     "ce signal ne peut fondamentalement pas etre achete", pour la meme
     raison : Plan B ne pourra jamais passer l'ordre sans conid, ce rejet ne
     doit donc jamais consommer une place ni du budget. Les plafonds de
     diversification (MAX_POSITIONS_PER_SECTOR/MAX_POSITIONS_PER_INDEX,
-    audit 2026-09-21 point 3) suivent la meme logique : un signal qui les
-    depasse ne consomme ni place ni budget, la place reste disponible pour
-    le signal suivant. Compte les positions deja ouvertes PLUS celles deja
-    retenues plus haut dans ce meme classement (pas seulement
-    open_positions), sinon deux signaux du meme secteur pourraient passer
-    le meme jour avant que le plafond ne soit jamais vu comme atteint. Un
-    signal sans secteur/indice connu (ne devrait pas arriver en pratique)
-    n'est jamais bloque par ce plafond plutot que de rejeter une donnee de
-    diversification manquante.
+    audit 2026-09-21 point 3) et le plafond quotidien (MAX_NEW_ENTRIES_PER_DAY,
+    audit 2026-10-02) suivent la meme logique : un signal qui les depasse ne
+    consomme ni place ni budget, la place reste disponible pour le signal suivant.
+    Compte les positions deja ouvertes PLUS celles deja retenues plus haut dans
+    ce meme classement (pas seulement open_positions), sinon deux signaux du meme
+    secteur pourraient passer le meme jour avant que le plafond ne soit jamais vu
+    comme atteint. Un signal sans secteur/indice connu (ne devrait pas arriver en
+    pratique) n'est jamais bloque par ce plafond plutot que de rejeter une donnee
+    de diversification manquante.
+
+    `entrees_deja_ouvertes_aujourdhui` (audit final 2026-10-02, important
+    n°1, defaut 0 -- retrocompatible) : nombre de positions DEJA ouvertes
+    AUJOURD'HUI (position.get("date_entree") == aujourd'hui), ouvertes par
+    un appel precedent de cette meme fonction PLUS TOT dans la journee --
+    typiquement apres un crash + redemarrage du batch, positions.json
+    etant sauvegarde apres chaque ordre precisement pour survivre a ce
+    scenario (voir daily.py). Sans ce parametre, le plafond quotidien
+    repart de 0 a chaque appel et autoriserait jusqu'a
+    MAX_NEW_ENTRIES_PER_DAY entrees SUPPLEMENTAIRES en plus de celles
+    deja ouvertes plus tot le meme jour.
 
     GARDE-FOU DE SOLDE (spec 9.9, revu) : IBKR convertit automatiquement
     le budget EUR vers la devise locale au moment de l'achat (mecanisme
@@ -129,6 +169,10 @@ def select_entries(
     engage = 0.0
     sector_counts = Counter(p["sector"] for p in open_positions if p.get("sector"))
     index_counts = Counter(p["index"] for p in open_positions if p.get("index"))
+    zone_counts = Counter(
+        INDEX_ZONE[p["index"]] for p in open_positions
+        if p.get("index") in INDEX_ZONE
+    )
 
     retenus: list[dict] = []
     rejets: list[dict] = []
@@ -158,6 +202,10 @@ def select_entries(
             rejets.append({**base, "raison": "signal_ignore_plafond_atteint"})
             continue
 
+        if len(retenus) + entrees_deja_ouvertes_aujourdhui >= MAX_NEW_ENTRIES_PER_DAY:
+            rejets.append({**base, "raison": "plafond_entrees_quotidien_atteint"})
+            continue
+
         secteur = signal.get("sector") or ""
         if secteur and sector_counts[secteur] >= MAX_POSITIONS_PER_SECTOR:
             rejets.append({**base, "raison": "plafond_secteur_atteint"})
@@ -166,6 +214,11 @@ def select_entries(
         indice = signal.get("index") or ""
         if indice and index_counts[indice] >= MAX_POSITIONS_PER_INDEX:
             rejets.append({**base, "raison": "plafond_indice_atteint"})
+            continue
+
+        zone = INDEX_ZONE.get(indice, "")
+        if zone and zone_counts[zone] >= MAX_POSITIONS_PER_ZONE:
+            rejets.append({**base, "raison": "plafond_zone_atteint"})
             continue
 
         if base_cash - engage < BUDGET_EUR:
@@ -179,6 +232,8 @@ def select_entries(
             sector_counts[secteur] += 1
         if indice:
             index_counts[indice] += 1
+            if indice in INDEX_ZONE:
+                zone_counts[INDEX_ZONE[indice]] += 1
         retenus.append({"signal": signal, "plan": plan, "rang": rang})
 
     return retenus, rejets
@@ -210,18 +265,32 @@ def deadline_date(entry_date: str) -> str:
     return limite.strftime("%Y-%m-%d")
 
 
-def exit_reason(position: dict, company: dict | None, today: str) -> str | None:
+def exit_reason(position: dict, company: dict | None, today: str,
+                roster_tickers: set[str] | None = None) -> str | None:
     """Motif de cloture de `position` aujourd'hui, ou None si aucune
     condition n'est remplie.
 
     ORDRE DE PRIORITE STRICT, premiere condition remplie gagne (spec
-    3.6) : stop_loss -> objectif_atteint -> delai_max.
+    3.6) : ticker_retire_indice -> stop_loss -> objectif_atteint ->
+    delai_max.
 
     Une position dont le ticker a disparu des donnees du jour, ou dont
     le prix courant manque, est laissee INTACTE et reevaluee demain :
-    jamais de vente declenchee par une donnee absente.
+    jamais de vente declenchee par une donnee absente -- SAUF si
+    `roster_tickers` est fourni et que le ticker n'y figure plus : dans
+    ce cas, la societe n'a pas juste une donnee manquante ce run, elle a
+    ete RETIREE DE L'INDICE (audit 2026-10-02) -- meme traitement que
+    ticker_retire_indice cote paper-trading (indices_score.py), pour ne
+    jamais laisser une position bloquee indefiniment sans stop-loss ni
+    sortie possible apres une revision d'indice. `roster_tickers=None`
+    (defaut) desactive ce comportement, retrocompatible avec les
+    appelants existants qui ne le fournissent pas.
     """
-    if company is None or _is_missing(company.get("current_price")):
+    if company is None:
+        if roster_tickers is not None and position["ticker"] not in roster_tickers:
+            return "ticker_retire_indice"
+        return None
+    if _is_missing(company.get("current_price")):
         return None
     prix_reference = position.get("prix_execution_reference")
     if _is_missing(prix_reference):
@@ -244,20 +313,21 @@ def exit_reason(position: dict, company: dict | None, today: str) -> str | None:
 
 
 def positions_to_close(open_positions: list[dict], companies_by_ticker: dict,
-                       today: str) -> list[dict]:
+                       today: str, roster_tickers: set[str] | None = None) -> list[dict]:
     """Positions du bot dont une condition de sortie est remplie
     aujourd'hui, avec leur motif et le prix courant ayant declenche la
-    decision. Ne mute rien."""
+    decision. Ne mute rien. `roster_tickers` (optionnel, audit 2026-10-02)
+    est transmis tel quel a exit_reason -- voir son docstring."""
     a_cloturer = []
     for position in open_positions:
         company = companies_by_ticker.get(position["ticker"])
-        raison = exit_reason(position, company, today)
+        raison = exit_reason(position, company, today, roster_tickers=roster_tickers)
         if raison is None:
             continue
         a_cloturer.append({
             "position": position,
             "close_reason": raison,
-            "current_price": company["current_price"],
+            "current_price": company["current_price"] if company is not None else None,
         })
     return a_cloturer
 
@@ -330,14 +400,27 @@ def reconcile(local_positions: list[dict], ibkr_positions: list[dict]) -> dict:
             cloturees.append(position)
             continue
         active = dict(position)
-        if quantite_ibkr != position.get("quantite"):
-            anomalies.append({
+        quantite_locale = position.get("quantite")
+        if quantite_ibkr != quantite_locale:
+            anomalie = {
                 "ticker": position["ticker"],
                 "conid": conid,
-                "quantite_locale": position.get("quantite"),
+                "quantite_locale": quantite_locale,
                 "quantite_ibkr": quantite_ibkr,
-            })
-            active["quantite"] = quantite_ibkr
+            }
+            if quantite_ibkr > (quantite_locale or 0):
+                # Audit 2026-10-02 : une quantite IBKR SUPERIEURE a la
+                # quantite locale peut signifier un conid partage avec
+                # une position personnelle de l'utilisateur sur ce meme
+                # compte -- ne jamais l'adopter, pour ne jamais risquer
+                # de vendre plus que ce que le bot a lui-meme ouvert. La
+                # quantite locale est gardee telle quelle (active deja
+                # une copie de `position`, donc `active["quantite"]` vaut
+                # deja quantite_locale sans rien faire de plus).
+                anomalie["quantite_ibkr_superieure"] = True
+            else:
+                active["quantite"] = quantite_ibkr
+            anomalies.append(anomalie)
         actives.append(active)
 
     ignorees = [b for conid, b in par_conid.items() if conid not in conids_du_bot]

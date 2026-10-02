@@ -134,9 +134,13 @@ def test_select_entries_fills_free_slots_in_rank_order():
 def test_select_entries_drops_surplus_signals_when_the_cap_is_reached():
     """Sursouscription (spec 3.5) : les signaux qui ne rentrent pas sont
     perdus, pas mis en file d'attente, et journalises avec leur rang."""
-    # index cycle sur 3 valeurs (3 par indice, sous MAX_POSITIONS_PER_INDEX=4)
-    # pour ne pas declencher le plafond de diversification, hors sujet ici.
-    ouvertes = [_bot_position(f"OPEN{i}.PA", index=["CAC40", "DAX", "NASDAQ"][i % 3]) for i in range(9)]
+    # indices distribues pour ne pas declencher le plafond de zone
+    # (max 4 par zone) : 3 CAC40 (zone_euro) + 3 NASDAQ (amerique_nord) + 3 SMI (suisse)
+    ouvertes = [_bot_position("OPEN0.PA", index="CAC40"), _bot_position("OPEN1.PA", index="CAC40"),
+                 _bot_position("OPEN2.PA", index="CAC40"), _bot_position("OPEN3.PA", index="NASDAQ"),
+                 _bot_position("OPEN4.PA", index="NASDAQ"), _bot_position("OPEN5.PA", index="NASDAQ"),
+                 _bot_position("OPEN6.PA", index="SMI"), _bot_position("OPEN7.PA", index="SMI"),
+                 _bot_position("OPEN8.PA", index="SMI")]
     signaux = [_signal("A.PA", 10.0), _signal("B.PA", 48.8), _signal("C.PA", 26.9)]
     plans = {t: _plan(t) for t in ("A.PA", "B.PA", "C.PA")}
     contrats = _contrats(["A.PA", "B.PA", "C.PA"])
@@ -169,7 +173,11 @@ def test_select_entries_zero_share_signal_does_not_consume_a_slot():
     """Spec 3.3 : la place liberee par un signal a 0 action reste
     disponible pour le signal suivant du classement. Ce test echoue si
     le filtre plafond est applique AVANT le filtre 0 action."""
-    ouvertes = [_bot_position(f"OPEN{i}.PA", index=["CAC40", "DAX", "NASDAQ"][i % 3]) for i in range(9)]
+    ouvertes = [_bot_position("OPEN0.PA", index="CAC40"), _bot_position("OPEN1.PA", index="CAC40"),
+                 _bot_position("OPEN2.PA", index="CAC40"), _bot_position("OPEN3.PA", index="NASDAQ"),
+                 _bot_position("OPEN4.PA", index="NASDAQ"), _bot_position("OPEN5.PA", index="NASDAQ"),
+                 _bot_position("OPEN6.PA", index="SMI"), _bot_position("OPEN7.PA", index="SMI"),
+                 _bot_position("OPEN8.PA", index="SMI")]
     signaux = [_signal("CHER.PA", 90.0), _signal("B.PA", 48.8)]
     plans = {
         "CHER.PA": _plan("CHER.PA", quantite=0, cout=0.0,
@@ -259,7 +267,11 @@ def test_select_entries_missing_contract_does_not_consume_a_cap_slot():
     """Comme le filtre 0 action, un contrat non resolu ne doit pas
     consommer de place : le signal suivant du classement doit toujours
     pouvoir la prendre."""
-    ouvertes = [_bot_position(f"OPEN{i}.PA", index=["CAC40", "DAX", "NASDAQ"][i % 3]) for i in range(9)]
+    ouvertes = [_bot_position("OPEN0.PA", index="CAC40"), _bot_position("OPEN1.PA", index="CAC40"),
+                 _bot_position("OPEN2.PA", index="CAC40"), _bot_position("OPEN3.PA", index="NASDAQ"),
+                 _bot_position("OPEN4.PA", index="NASDAQ"), _bot_position("OPEN5.PA", index="NASDAQ"),
+                 _bot_position("OPEN6.PA", index="SMI"), _bot_position("OPEN7.PA", index="SMI"),
+                 _bot_position("OPEN8.PA", index="SMI")]
     signaux = [_signal("A.PA", 48.8), _signal("B.PA", 10.0)]
     plans = {t: _plan(t) for t in ("A.PA", "B.PA")}
     contrats = {"B.PA": _contrat("B.PA")}
@@ -307,6 +319,108 @@ def test_select_entries_rejects_signal_when_index_cap_reached():
                        "raison": "plafond_indice_atteint"}]
 
 
+def test_select_entries_rejects_signal_when_zone_cap_reached():
+    """Audit 2026-10-02 : NASDAQ et DOW sont tous deux en zone
+    amerique_nord -- le plafond par zone doit se declencher avant
+    d'atteindre le plafond par indice (4) sur un seul des deux, en
+    cumulant les deux indices de la meme zone."""
+    positions_ouvertes = [
+        _bot_position("N1", index="NASDAQ"), _bot_position("N2", index="NASDAQ"),
+        _bot_position("D1", index="DOW"), _bot_position("D2", index="DOW"),
+        _bot_position("D3", index="DOW"),
+    ]  # 5 positions US (zone amerique_nord), plafond zone = 5
+    signaux = [_signal("N3.US", 50.0, index="NASDAQ", sector="Techno")]
+    plans = {"N3.US": _plan("N3.US")}
+    contrats = _contrats(["N3.US"])
+
+    retenus, rejets = portfolio.select_entries(
+        signaux, positions_ouvertes, plans, contrats, _CASH_ILLIMITE)
+
+    assert retenus == []
+    assert rejets == [{"ticker": "N3.US", "rang": 1, "score": 50.0,
+                        "raison": "plafond_zone_atteint"}]
+
+
+def test_select_entries_zone_cap_counts_signals_retained_earlier_in_same_batch():
+    """Meme logique que le plafond secteur/indice existant : compte aussi
+    les signaux deja retenus plus haut dans le MEME classement, pas
+    seulement les positions deja ouvertes. Ajuste pour audit 2026-10-02 :
+    seed 4 open positions de zone_euro pour consommer 4/5 du plafond zone,
+    puis offrir 5 signaux (2 zone_euro, 3 autres zones). Le 2e signal
+    zone_euro (rang 3) est rejete par plafond zone (4 open + 1 retenu >= 5)
+    avant le daily cap."""
+    # 4 positions ouvertes de zone_euro (indices varies) consomment 4/5 du plafond zone
+    ouvertes = [
+        _bot_position("OPEN1.PA", index="CAC40"),
+        _bot_position("OPEN2.DE", index="DAX"),
+        _bot_position("OPEN3.MC", index="IBEX35"),
+        _bot_position("OPEN4.MI", index="FTSEMIB"),
+    ]
+    # 5 signaux : 2 autres de zone_euro, 3 d'autres zones
+    # Le 2e signal zone_euro (rang 3) sera rejete par plafond zone
+    signaux = [
+        _signal("A.PA", 90.0, index="CAC40", sector="S1"),   # zone_euro, retenu
+        _signal("B.US", 80.0, index="NASDAQ", sector="S2"),  # amerique_nord, retenu
+        _signal("C.DE", 70.0, index="DAX", sector="S3"),     # zone_euro, REJETE zone cap
+        _signal("D.CH", 60.0, index="SMI", sector="S4"),     # suisse, retenu (daily=3)
+        _signal("E.UK", 50.0, index="FTSE", sector="S5"),    # royaume_uni, REJETE daily cap
+    ]
+    plans = {t: _plan(t) for t in ("A.PA", "B.US", "C.DE", "D.CH", "E.UK")}
+    contrats = _contrats(["A.PA", "B.US", "C.DE", "D.CH", "E.UK"])
+
+    retenus, rejets = portfolio.select_entries(
+        signaux, ouvertes, plans, contrats, _CASH_ILLIMITE)
+
+    # A (CAC40, zone_euro, 90): zone=4<5 -> retenu, zone devient 5
+    # B (NASDAQ, amerique_nord, 80): -> retenu
+    # C (DAX, zone_euro, 70): zone=5>=5 (compte A retenu + 4 open) -> REJETE par plafond zone, daily=2
+    # D (SMI, suisse, 60): -> retenu, daily=3 atteint
+    # E (FTSE, royaume_uni, 50): daily=3>=3 -> rejete par daily cap
+    assert [r["signal"]["ticker"] for r in retenus] == ["A.PA", "B.US", "D.CH"]
+    assert len(rejets) == 2
+    rejets_by_ticker = {r["ticker"]: r["raison"] for r in rejets}
+    assert rejets_by_ticker["C.DE"] == "plafond_zone_atteint"
+    assert rejets_by_ticker["E.UK"] == "plafond_entrees_quotidien_atteint"
+
+
+def test_select_entries_zone_cap_does_not_block_other_zones():
+    """Non-regression : un signal hors de la zone saturee n'est jamais
+    bloque par le plafond de zone."""
+    positions_ouvertes = [_bot_position(f"N{i}", index="NASDAQ") for i in range(5)]
+    signaux = [_signal("X.L", 50.0, index="FTSE", sector="Techno")]
+    plans = {"X.L": _plan("X.L")}
+    contrats = _contrats(["X.L"])
+
+    retenus, rejets = portfolio.select_entries(
+        signaux, positions_ouvertes, plans, contrats, _CASH_ILLIMITE)
+
+    assert [r["signal"]["ticker"] for r in retenus] == ["X.L"]
+    assert rejets == []
+
+
+def test_select_entries_zone_cap_rejection_does_not_consume_a_slot():
+    """Meme philosophie que le plafond secteur/indice : un signal rejete
+    par le plafond de zone ne consomme ni place ni budget -- la place
+    reste disponible pour le signal suivant du classement."""
+    # 3 NASDAQ + 2 DOW = 5 amerique_nord (zone cap atteint), chacun < 4 (index cap pas atteint)
+    positions_ouvertes = [
+        _bot_position("N1", index="NASDAQ"), _bot_position("N2", index="NASDAQ"), _bot_position("N3", index="NASDAQ"),
+        _bot_position("D1", index="DOW"), _bot_position("D2", index="DOW"),
+    ]
+    signaux = [
+        _signal("N6.US", 90.0, index="NASDAQ", sector="Techno"),  # bloque par la zone
+        _signal("A.PA", 50.0, index="CAC40", sector="Industrie"),  # doit quand meme passer
+    ]
+    plans = {t: _plan(t) for t in ("N6.US", "A.PA")}
+    contrats = _contrats(["N6.US", "A.PA"])
+
+    retenus, rejets = portfolio.select_entries(
+        signaux, positions_ouvertes, plans, contrats, _CASH_ILLIMITE)
+
+    assert [r["signal"]["ticker"] for r in retenus] == ["A.PA"]
+    assert [r["raison"] for r in rejets] == ["plafond_zone_atteint"]
+
+
 def test_select_entries_sector_cap_does_not_block_other_sectors():
     """Le plafond est par secteur, pas global -- un signal d'un autre
     secteur doit toujours passer."""
@@ -327,22 +441,41 @@ def test_select_entries_sector_cap_does_not_block_other_sectors():
 def test_select_entries_sector_cap_counts_signals_retained_earlier_in_same_batch():
     """Le plafond doit aussi compter les signaux deja retenus PLUS HAUT
     dans le MEME classement, pas seulement les positions deja ouvertes --
-    sinon deux signaux du meme secteur pourraient passer le meme jour."""
-    signaux = [
-        _signal("A.PA", 90.0, sector="Financial Services"),
-        _signal("B.PA", 80.0, sector="Financial Services"),
-        _signal("C.PA", 70.0, sector="Financial Services"),
-        _signal("D.PA", 60.0, sector="Financial Services"),
+    sinon deux signaux du meme secteur pourraient passer le meme jour.
+    Ajuste pour audit 2026-10-02 : seed 2 open positions du secteur
+    "Financial Services" pour consommer 2/3 du plafond secteur, puis offrir
+    5 signaux avec indices differents (pour eviter l'interference du cap indice).
+    Le 2e signal FS (rang 3) est rejete par plafond secteur (2 open + 1 retenu >= 3)."""
+    # 2 positions ouvertes du secteur "Financial Services" (indices DOW et NASDAQ)
+    ouvertes = [
+        _bot_position("OPEN1.PA", index="DOW", sector="Financial Services"),
+        _bot_position("OPEN2.PA", index="NASDAQ", sector="Financial Services"),
     ]
-    plans = {t: _plan(t) for t in ("A.PA", "B.PA", "C.PA", "D.PA")}
-    contrats = _contrats(["A.PA", "B.PA", "C.PA", "D.PA"])
+    # 5 signaux avec indices differents : 2 du secteur FS, 3 d'autres secteurs
+    # Le 2e signal FS (rang 3) sera rejete par plafond secteur (2 open + 1 retenu >= 3)
+    signaux = [
+        _signal("A.PA", 90.0, index="CAC40", sector="Financial Services"),
+        _signal("B.PA", 80.0, index="DAX", sector="Technology"),
+        _signal("C.PA", 70.0, index="IBEX35", sector="Financial Services"),
+        _signal("D.PA", 60.0, index="SMI", sector="Healthcare"),
+        _signal("E.PA", 50.0, index="FTSE", sector="Energy"),
+    ]
+    plans = {t: _plan(t) for t in ("A.PA", "B.PA", "C.PA", "D.PA", "E.PA")}
+    contrats = _contrats(["A.PA", "B.PA", "C.PA", "D.PA", "E.PA"])
 
     retenus, rejets = portfolio.select_entries(
-        signaux, [], plans, contrats, _CASH_ILLIMITE)
+        signaux, ouvertes, plans, contrats, _CASH_ILLIMITE)
 
-    assert [r["signal"]["ticker"] for r in retenus] == ["A.PA", "B.PA", "C.PA"]
-    assert rejets == [{"ticker": "D.PA", "rang": 4, "score": 60.0,
-                       "raison": "plafond_secteur_atteint"}]
+    # A (FS, CAC40, 90): sector=2<3 -> retenu, sector["FS"] devient 3
+    # B (Tech, DAX, 80): -> retenu
+    # C (FS, IBEX35, 70): sector["FS"]=3>=3 (compte A retenu + 2 open) -> REJETE par plafond secteur
+    # D (HC, SMI, 60): -> retenu, daily=3 atteint
+    # E (Energy, FTSE, 50): daily=3>=3 -> rejete par daily cap
+    assert [r["signal"]["ticker"] for r in retenus] == ["A.PA", "B.PA", "D.PA"]
+    assert len(rejets) == 2
+    rejets_by_ticker = {r["ticker"]: r["raison"] for r in rejets}
+    assert rejets_by_ticker["C.PA"] == "plafond_secteur_atteint"
+    assert rejets_by_ticker["E.PA"] == "plafond_entrees_quotidien_atteint"
 
 
 def test_select_entries_diversification_rejection_does_not_consume_a_slot():
@@ -399,6 +532,82 @@ def test_select_entries_missing_contract_does_not_consume_budget():
     assert [r["signal"]["ticker"] for r in retenus] == ["B.PA"]
     assert rejets == [{"ticker": "A.PA", "rang": 1, "score": 48.8,
                        "raison": "contrat_non_resolu"}]
+
+
+def test_select_entries_rejects_signals_beyond_the_daily_cap():
+    """Audit 2026-10-02 : un jour de deploiement de methodologie (ex.
+    2026-09-24, 45 positions papier en un seul jour) ne doit jamais faire
+    acheter plus de MAX_NEW_ENTRIES_PER_DAY positions reelles d'un coup,
+    quel que soit le nombre de places/budget disponibles par ailleurs."""
+    signaux = [_signal(f"T{i}.PA", 90.0 - i, index="CAC40", sector=f"S{i}")
+               for i in range(5)]  # 5 signaux, places et budget illimites
+    plans = {s["ticker"]: _plan(s["ticker"]) for s in signaux}
+    contrats = _contrats([s["ticker"] for s in signaux])
+
+    retenus, rejets = portfolio.select_entries(
+        signaux, [], plans, contrats, _CASH_ILLIMITE)
+
+    assert len(retenus) == portfolio.MAX_NEW_ENTRIES_PER_DAY
+    rejets_plafond = [r for r in rejets if r["raison"] == "plafond_entrees_quotidien_atteint"]
+    assert len(rejets_plafond) == 5 - portfolio.MAX_NEW_ENTRIES_PER_DAY
+
+
+def test_select_entries_daily_cap_counts_same_day_positions_opened_before_a_restart():
+    """Audit final 2026-10-02, important n°1 : un crash + redemarrage DU
+    MEME JOUR peut avoir deja ouvert des positions avant l'interruption
+    (positions.json est sauvegarde apres chaque ordre pour survivre
+    exactement a ce cas, voir daily.py). 2 positions ont deja ete
+    ouvertes aujourd'hui avant le redemarrage -- avec
+    entrees_deja_ouvertes_aujourdhui=2, seules
+    MAX_NEW_ENTRIES_PER_DAY - 2 nouvelles entrees doivent etre retenues
+    sur ce nouvel appel, pas le plafond complet."""
+    ouvertes_aujourdhui = [
+        _bot_position(f"OPEN{i}.PA", date_entree="2026-09-14") for i in range(2)
+    ]
+    signaux = [_signal(f"T{i}.PA", 90.0 - i, index="CAC40", sector=f"S{i}")
+               for i in range(5)]
+    plans = {s["ticker"]: _plan(s["ticker"]) for s in signaux}
+    contrats = _contrats([s["ticker"] for s in signaux])
+
+    retenus, rejets = portfolio.select_entries(
+        signaux, ouvertes_aujourdhui, plans, contrats, _CASH_ILLIMITE,
+        entrees_deja_ouvertes_aujourdhui=2)
+
+    assert len(retenus) == portfolio.MAX_NEW_ENTRIES_PER_DAY - 2
+    rejets_plafond = [r for r in rejets if r["raison"] == "plafond_entrees_quotidien_atteint"]
+    assert len(rejets_plafond) == 5 - (portfolio.MAX_NEW_ENTRIES_PER_DAY - 2)
+
+
+def test_select_entries_daily_cap_defaults_to_backward_compatible_zero():
+    """Retrocompatibilite stricte (audit final 2026-10-02, important n°1) :
+    les appelants existants qui n'ont jamais entendu parler du parametre
+    doivent retrouver EXACTEMENT le comportement d'avant ce correctif."""
+    signaux = [_signal(f"T{i}.PA", 90.0 - i, index="CAC40", sector=f"S{i}")
+               for i in range(5)]
+    plans = {s["ticker"]: _plan(s["ticker"]) for s in signaux}
+    contrats = _contrats([s["ticker"] for s in signaux])
+
+    retenus, rejets = portfolio.select_entries(
+        signaux, [], plans, contrats, _CASH_ILLIMITE)
+
+    assert len(retenus) == portfolio.MAX_NEW_ENTRIES_PER_DAY
+
+
+def test_select_entries_daily_cap_rejection_does_not_block_other_filters_first():
+    """Un signal qui echoue deja a un autre filtre (ex. deja detenu) ne
+    doit jamais etre compte comme "retenu" avant le plafond quotidien --
+    l'ordre des filtres existants reste prioritaire."""
+    signaux = [_signal("A.PA", 90.0, index="CAC40", sector="S1")]
+    plans = {"A.PA": _plan("A.PA")}
+    contrats = _contrats(["A.PA"])
+    deja_detenu = [_bot_position("A.PA")]
+
+    retenus, rejets = portfolio.select_entries(
+        signaux, deja_detenu, plans, contrats, _CASH_ILLIMITE)
+
+    assert retenus == []
+    assert rejets == [{"ticker": "A.PA", "rang": 1, "score": 90.0,
+                        "raison": "deja_en_portefeuille"}]
 
 
 # --- garde-fou de solde (spec 9.9, revu : cash total en devise de base) -
@@ -604,6 +813,34 @@ def test_exit_reason_none_when_the_ticker_disappeared_from_the_data():
     assert portfolio.exit_reason(position, None, "2026-09-14") is None
 
 
+def test_exit_reason_ticker_retired_from_roster_when_removed_and_roster_given():
+    """Audit 2026-10-02 : une societe retiree DEFINITIVEMENT de l'indice
+    (absente des donnees du jour ET absente du roster complet fourni)
+    doit se clore, pas rester bloquee indefiniment -- meme traitement
+    que ticker_retire_indice cote paper-trading."""
+    position = _bot_position("A.PA", prix_execution_reference=100.0)
+    assert portfolio.exit_reason(
+        position, None, "2026-09-14", roster_tickers={"B.PA", "C.PA"},
+    ) == "ticker_retire_indice"
+
+
+def test_exit_reason_none_when_company_missing_but_still_in_roster():
+    """Donnee manquante CE RUN mais le ticker reste dans le roster complet
+    (panne temporaire d'une source, pas une vraie radiation d'indice) --
+    reste intacte, meme comportement qu'avant ce correctif."""
+    position = _bot_position("A.PA", prix_execution_reference=100.0)
+    assert portfolio.exit_reason(
+        position, None, "2026-09-14", roster_tickers={"A.PA", "B.PA"},
+    ) is None
+
+
+def test_exit_reason_none_when_roster_not_provided_preserves_old_behavior():
+    """Retrocompatibilite stricte : roster_tickers omis (defaut None) ->
+    comportement identique a avant ce correctif, meme ticker disparu."""
+    position = _bot_position("A.PA", prix_execution_reference=100.0)
+    assert portfolio.exit_reason(position, None, "2026-09-14") is None
+
+
 @pytest.mark.parametrize("prix", [None, float("nan")])
 def test_exit_reason_none_when_the_current_price_is_missing(prix):
     """Jamais de vente declenchee par une donnee absente (spec 3.6)."""
@@ -648,6 +885,17 @@ def test_positions_to_close_leaves_untouched_what_has_no_data():
     companies = {"A.PA": {"current_price": None}}
 
     assert portfolio.positions_to_close(positions, companies, "2026-09-14") == []
+
+
+def test_positions_to_close_closes_a_position_whose_ticker_left_the_roster():
+    positions = [_bot_position("A.PA", prix_execution_reference=100.0)]
+    companies = {}  # A.PA absent des donnees du jour
+
+    result = portfolio.positions_to_close(
+        positions, companies, "2026-09-14", roster_tickers={"B.PA"})
+
+    assert len(result) == 1
+    assert result[0]["close_reason"] == "ticker_retire_indice"
 
 
 def test_positions_to_close_does_not_mutate_the_positions():
@@ -825,6 +1073,40 @@ def test_reconcile_lets_the_ibkr_quantity_win_and_logs_the_anomaly():
     assert result["actives"][0]["quantite"] == 3
     assert result["anomalies_quantite"] == [
         {"ticker": "A.PA", "conid": 4901, "quantite_locale": 5, "quantite_ibkr": 3}]
+
+
+def test_reconcile_never_adopts_an_ibkr_quantity_larger_than_local():
+    """Audit 2026-10-02 : une quantite IBKR SUPERIEURE a la quantite
+    locale du bot peut signifier qu'un conid partage avec une position
+    personnelle de l'utilisateur a ete adopte -- ne jamais gonfler la
+    quantite geree par le bot au-dela de ce qu'il a lui-meme ouvert, pour
+    ne jamais risquer de vendre plus que sa propre position."""
+    locales = [_bot_position("A.PA", conid=4901, quantite=5)]
+    chez_ibkr = [{"conid": 4901, "position": 12.0, "currency": "EUR"}]
+
+    result = portfolio.reconcile(locales, chez_ibkr)
+
+    assert result["actives"][0]["quantite"] == 5  # pas 12 : la quantite locale est gardee
+    assert result["anomalies_quantite"] == [{
+        "ticker": "A.PA", "conid": 4901, "quantite_locale": 5, "quantite_ibkr": 12,
+        "quantite_ibkr_superieure": True,
+    }]
+
+
+def test_reconcile_still_adopts_a_smaller_ibkr_quantity():
+    """Non-regression : la quantite IBKR plus PETITE que la locale (vente
+    partielle hors bot, par ex.) continue d'etre adoptee comme avant --
+    seule la direction "superieure" change de comportement."""
+    locales = [_bot_position("A.PA", conid=4901, quantite=5)]
+    chez_ibkr = [{"conid": 4901, "position": 3.0, "currency": "EUR"}]
+
+    result = portfolio.reconcile(locales, chez_ibkr)
+
+    assert result["actives"][0]["quantite"] == 3
+    assert result["anomalies_quantite"] == [{
+        "ticker": "A.PA", "conid": 4901, "quantite_locale": 5, "quantite_ibkr": 3,
+    }]
+    assert "quantite_ibkr_superieure" not in result["anomalies_quantite"][0]
 
 
 def test_reconcile_does_not_mutate_the_local_positions():

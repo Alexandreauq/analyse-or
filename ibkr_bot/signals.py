@@ -88,6 +88,15 @@ def collect_new_signals(
         if company is None or _is_missing(company.get("score")):
             rejets.append({"ticker": ticker, "raison": "score_indisponible"})
             continue
+        # Garde-fou redondant (audit 2026-10-02) : indices_score bloque deja
+        # l'alerte "entree" en phase Weinstein "Declin" en amont, mais
+        # collect_new_signals ne relisait jamais stage_label lui-meme --
+        # un seul point de defaillance en cas de bug/regression cote
+        # scoring. Ne bloque QUE "Declin" explicite, jamais une phase
+        # absente/None (qui reste acceptee, meme comportement qu'avant).
+        if company.get("stage_label") == "Déclin":
+            rejets.append({"ticker": ticker, "raison": "phase_weinstein_declin"})
+            continue
         if (_is_missing(company.get("current_price"))
                 or _is_missing(position.get("target_exit_price"))
                 or _is_missing(position.get("entry_price"))):

@@ -285,8 +285,35 @@ def _place_order(gw, base_url: str, account_id: str, *, ticker: str, conid,
         retirer de positions.json comme un simple "simule" l'orphelinerait
         silencieusement pour toujours (portfolio.reconcile n'adopte
         jamais une position inconnue du journal, spec 9.5).
+      - (audit final 2026-10-02, important n°3) un batch qui se croyait en
+        dry_run (mode_attendu == "dry_run") mais dont l'etat sur disque
+        est passe en reel ENTRE-TEMPS (statut "annule_derive", direction
+        inverse du cas precedent, voir le garde juste en dessous) : la
+        position, elle, n'a JAMAIS existe que simulee. Un ordre reel pour
+        elle serait une position a decouvert non couverte sur un compte
+        sur marge -- aucun ordre n'est envoye, et la position est laissee
+        INTACTE dans positions.json pour verification manuelle, exactement
+        comme annule_interruption (voir run_batch, qui route les deux
+        statuts identiquement vers run["erreurs"]).
     """
     etat = state.load_state(state_path)
+    # Audit 2026-10-02 : direction inverse du cas annule_interruption
+    # ci-dessous. Un ordre planifie quand le batch croyait etre en
+    # dry_run (mode_attendu="dry_run") mais dont l'etat disque est
+    # maintenant reel (bascule operateur PENDANT le batch) ne doit
+    # jamais partir reellement -- la position correspondante n'a jamais
+    # existe que simulee (jamais ouverte chez IBKR), un ordre reel pour
+    # elle (en particulier une vente) serait une position a decouvert
+    # non couverte sur un compte sur marge.
+    if mode_attendu == "dry_run" and not (etat["kill_switch"] or etat["dry_run"]):
+        return {"statut": "annule_derive", "order_id": None,
+                "prix_execution_cotation": None, "prix_execution_estime": False,
+                "commission": None,
+                "detail": (
+                    "execution annulee : ce batch avait planifie cet ordre en "
+                    "dry_run mais l'etat sur disque est passe en reel entre-temps "
+                    "-- aucun ordre envoye, position laissee INTACTE dans "
+                    "positions.json pour verification manuelle")}
     if etat["kill_switch"] or etat["dry_run"]:
         if mode_attendu == "reel":
             return {"statut": "annule_interruption", "order_id": None,
@@ -672,6 +699,26 @@ def run_batch(today: str | None = None, *, gw=gateway, sleep_fn=time.sleep,
     # sont disponibles pour les signaux du jour.
     companies = {c["ticker"]: c for c in indices.get("companies", [])
                  if isinstance(c, dict) and c.get("ticker")}
+    # Roster STATIQUE complet (audit final 2026-10-02, critique n°1) : un
+    # ticker absent de `companies` ET absent de ce roster n'a pas qu'une
+    # donnee manquante ce run, il a ete RETIRE DE L'INDICE -- transmis a
+    # positions_to_close() pour que exit_reason() puisse distinguer les
+    # deux cas et clore une position sinon bloquee indefiniment sans
+    # stop-loss ni sortie possible (voir portfolio.exit_reason).
+    #
+    # ATTENTION : `set(companies.keys())` serait FAUX ici -- `companies`
+    # ne contient que les tickers dont le traitement a reussi AUJOURD'HUI
+    # (indices_score.py::main() saute silencieusement un ticker en
+    # exception). Utiliser `companies.keys()` comme roster confondrait
+    # "absent aujourd'hui (panne transitoire)" avec "retire de l'indice" et
+    # declencherait une VRAIE vente marche sur une panne de donnees
+    # transitoire. On lit donc le champ "roster" (liste statique de
+    # COMPANIES, publiee par indices_score.py::main()) ; s'il est absent ou
+    # vide (ancien docs/indices.json d'avant ce correctif, ou fichier
+    # malforme), on retombe sur None, que positions_to_close()/exit_reason()
+    # traitent deja comme "detection de retrait desactivee, ne jamais
+    # clore pour ce motif" -- le comportement sur d'avant la critique n°1.
+    roster_tickers = set(indices.get("roster", [])) or None
     # portfolio.positions_to_close() est appelee UNE POSITION A LA FOIS
     # (plutot qu'une seule fois sur toute la liste) pour isoler une ligne
     # corrompue de positions.json : c'est une fonction pure, sans etat
@@ -687,7 +734,8 @@ def run_batch(today: str | None = None, *, gw=gateway, sleep_fn=time.sleep,
     for position in positions_ouvertes:
         try:
             sorties_a_traiter.extend(
-                portfolio.positions_to_close([position], companies, today))
+                portfolio.positions_to_close(
+                    [position], companies, today, roster_tickers=roster_tickers))
         except Exception as e:
             run["erreurs"].append({
                 "etape": "positions_to_close",
@@ -715,16 +763,24 @@ def run_batch(today: str | None = None, *, gw=gateway, sleep_fn=time.sleep,
             })
             continue
         run["sorties"].append(record)
-        if record["statut"] == "annule_interruption":
-            # Critical #2 (revue finale de branche) : ne JAMAIS traiter ce
-            # cas comme un simple "simule" — la position est reelle chez
-            # IBKR et reste dans positions.json intacte (le bloc
-            # ci-dessous, qui retire une position de positions_ouvertes,
-            # est volontairement SAUTE ici). On le remonte aussi dans
-            # run["erreurs"] : sans ca, l'evenement resterait noye au
-            # milieu des cartes de vente ordinaires de l'email au lieu
-            # d'alerter clairement l'operateur qu'une position reelle
-            # attend une verification manuelle.
+        if record["statut"] in ("annule_interruption", "annule_derive"):
+            # Critical #2 puis audit final 2026-10-02, important n°3
+            # (revue finale de branche) : ne JAMAIS traiter ces deux cas
+            # comme un simple "simule", dans les deux sens de derive
+            # mid-batch de l'etat kill_switch/dry_run (annule_interruption :
+            # batch engage en reel interrompu par une bascule vers
+            # dry_run/kill_switch, la position EST reelle chez IBKR ;
+            # annule_derive : batch qui se croyait en dry_run mais dont
+            # l'etat est passe en reel entre-temps, la position n'a elle
+            # JAMAIS existe que simulee — voir _place_order ci-dessus pour
+            # le detail de chaque sens). Dans les deux cas, la decision
+            # sure est identique : ne pas deviner, laisser la position
+            # INTACTE dans positions.json (le bloc ci-dessous, qui la
+            # retire de positions_ouvertes, est volontairement SAUTE) et
+            # remonter l'evenement dans run["erreurs"] : sans ca, il
+            # resterait noye au milieu des cartes de vente ordinaires de
+            # l'email au lieu d'alerter clairement l'operateur qu'une
+            # verification manuelle est necessaire.
             run["erreurs"].append({
                 "etape": "execution_sortie_interrompue",
                 "detail": f"{position.get('ticker', '?')} : {record.get('detail')}",
@@ -853,8 +909,18 @@ def run_batch(today: str | None = None, *, gw=gateway, sleep_fn=time.sleep,
     # consommer une place sous le plafond, ni du budget (meme raisonnement
     # que l'ordre des filtres de select_entries, spec 3.3). Les rejets
     # ecartes ici portent donc `rang: None`.
+    # Audit final 2026-10-02, important n°1 : un crash + redemarrage DU
+    # MEME JOUR peut avoir deja ouvert des positions avant l'interruption
+    # (positions.json est sauvegarde apres chaque ordre pour survivre
+    # exactement a ce cas) -- elles sont deja dans positions_ouvertes mais
+    # le plafond quotidien de select_entries repartirait de 0 sans ce
+    # decompte, autorisant MAX_NEW_ENTRIES_PER_DAY entrees EN PLUS de
+    # celles deja ouvertes plus tot aujourd'hui.
+    entrees_deja_ouvertes_aujourdhui = sum(
+        1 for p in positions_ouvertes if p.get("date_entree") == today)
     retenus, rejets_selection = portfolio.select_entries(
-        signaux_financables, positions_ouvertes, plans, contrats, base_cash)
+        signaux_financables, positions_ouvertes, plans, contrats, base_cash,
+        entrees_deja_ouvertes_aujourdhui)
     for rejet in rejets_selection:
         run["signaux_rejetes"].append({"ticker": rejet["ticker"],
                                        "raison": rejet["raison"],
@@ -867,13 +933,18 @@ def run_batch(today: str | None = None, *, gw=gateway, sleep_fn=time.sleep,
         record = _executer_entree(gw, base_url, account_id, retenu, contrat, chemins,
                                   mode_attendu=run["mode"])
         run["entrees"].append(record)
-        if record["statut"] == "annule_interruption":
-            # Meme raisonnement que cote sorties : un achat interrompu par
-            # une bascule kill_switch/dry_run mid-batch n'a jamais ete
-            # envoye — rien a orpheliner ici puisqu'aucune position n'est
-            # ajoutee (le bloc ci-dessous est saute par le `continue`
-            # suivant) — mais l'evenement doit rester visible dans l'email,
-            # pas se fondre parmi les cartes d'achat ordinaires.
+        if record["statut"] in ("annule_interruption", "annule_derive"):
+            # Meme raisonnement que cote sorties (voir le commentaire
+            # jumeau plus haut), pour les deux sens de derive mid-batch de
+            # l'etat kill_switch/dry_run -- mais cote entrees, il n'y a
+            # rien a laisser "intact" dans positions_ouvertes : un achat
+            # annule, dans un sens comme dans l'autre, n'a jamais ete
+            # envoye, donc aucune position n'est ajoutee ici (le bloc
+            # ci-dessous est de toute facon saute par le `continue`
+            # suivant, puisque le statut n'est ni "execute" ni "simule").
+            # Seule la visibilite operateur compte : l'evenement doit
+            # rester visible dans l'email, pas se fondre parmi les cartes
+            # d'achat ordinaires.
             run["erreurs"].append({
                 "etape": "execution_entree_interrompue",
                 "detail": f"{signal.get('ticker', '?')} : {record.get('detail')}",

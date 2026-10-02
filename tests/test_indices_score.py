@@ -8153,3 +8153,56 @@ def test_main_never_writes_the_internal_dividend_history_key_to_indices_json(mon
         payload = json.load(fh)
     for company in payload["companies"]:
         assert "_dividend_history" not in company
+
+
+def test_load_risk_free_rate_cache_empty_when_file_absent(tmp_path):
+    import indices_score
+    path = tmp_path / "risk_free_rate_cache.json"
+    assert indices_score.load_risk_free_rate_cache(path=str(path)) == {}
+
+
+def test_load_risk_free_rate_cache_empty_when_file_corrupt(tmp_path):
+    import indices_score
+    path = tmp_path / "risk_free_rate_cache.json"
+    path.write_text("{not valid json", encoding="utf-8")
+    assert indices_score.load_risk_free_rate_cache(path=str(path)) == {}
+
+
+def test_save_then_load_risk_free_rate_cache_round_trips(tmp_path):
+    import indices_score
+    path = tmp_path / "risk_free_rate_cache.json"
+    indices_score.save_risk_free_rate_cache({"EUR": 4.0, "USD": 4.5}, path=str(path))
+    assert indices_score.load_risk_free_rate_cache(path=str(path)) == {"EUR": 4.0, "USD": 4.5}
+
+
+def test_save_risk_free_rate_cache_never_raises_on_bad_path(tmp_path):
+    """Degrade silencieusement (meme contrat que update_dividend_history) :
+    un chemin illisible ne doit jamais faire echouer main()."""
+    import indices_score
+    bad_path = str(tmp_path / "no_such_dir" / "sub" / "cache.json")
+    # Le dossier parent n'existe pas et n'est volontairement pas créable
+    # (chemin sous un fichier, pas un dossier) pour forcer l'échec.
+    (tmp_path / "no_such_dir").write_text("fichier, pas un dossier", encoding="utf-8")
+    indices_score.save_risk_free_rate_cache({"EUR": 4.0}, path=bad_path)  # ne doit pas lever
+
+
+def test_risk_free_rate_with_cache_fallback_uses_cache_on_fetch_failure(monkeypatch, tmp_path):
+    """Reproduit exactement la boucle de main() (Step 6 ci-dessous) : une
+    devise dont le fetch echoue (None) doit retomber sur le cache, pas
+    rester None."""
+    import indices_score
+    cache_path = tmp_path / "risk_free_rate_cache.json"
+    indices_score.save_risk_free_rate_cache({"EUR": 4.0}, path=str(cache_path))
+
+    def fake_fetch(series_id):
+        return None  # simule la panne FRED
+
+    monkeypatch.setattr(indices_score, "fetch_risk_free_rate", fake_fetch)
+
+    cache = indices_score.load_risk_free_rate_cache(path=str(cache_path))
+    rates = {}
+    for currency, series_id in indices_score.RISK_FREE_SERIES_BY_CURRENCY.items():
+        fetched = indices_score.fetch_risk_free_rate(series_id)
+        rates[currency] = fetched if fetched is not None else cache.get(currency)
+
+    assert rates["EUR"] == 4.0  # repli sur le cache, pas None

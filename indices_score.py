@@ -4354,6 +4354,42 @@ RISK_FREE_SERIES_BY_CURRENCY = {
     "HKD": FRED_RISK_FREE_SERIES_US,
 }
 
+RISK_FREE_RATE_CACHE_PATH = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "docs", "risk_free_rate_cache.json"
+)
+
+
+def load_risk_free_rate_cache(path: str = RISK_FREE_RATE_CACHE_PATH) -> dict:
+    """{devise: taux} du dernier run où fetch_risk_free_rate a réussi pour
+    cette devise. {} si le fichier est absent ou corrompu, jamais
+    d'exception -- même contrat que load_dividend_history. Sert de repli
+    quand une panne FRED transitoire renvoie None (audit 2026-10-02,
+    critique n°2) : le dernier taux réellement observé est une bien
+    meilleure estimation que COST_OF_CAPITAL_PROXY (8%, une constante
+    générique sans rapport avec le marché réel ce jour-là)."""
+    if not os.path.exists(path):
+        return {}
+    try:
+        with open(path, encoding="utf-8") as fh:
+            data = json.load(fh)
+    except json.JSONDecodeError:
+        return {}
+    return data if isinstance(data, dict) else {}
+
+
+def save_risk_free_rate_cache(rates: dict, path: str = RISK_FREE_RATE_CACHE_PATH) -> None:
+    """Persiste `rates` (devise -> taux) tel quel -- c'est à l'appelant de
+    ne passer que les devises réellement récupérées ce run (jamais un
+    repli ne doit écraser un taux précédemment observé avec succès).
+    Dégrade silencieusement sur erreur d'écriture, ne doit jamais faire
+    échouer main() (même contrat que update_dividend_history)."""
+    try:
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, "w", encoding="utf-8") as fh:
+            json.dump(rates, fh, ensure_ascii=False, allow_nan=False, separators=(",", ":"))
+    except Exception as e:
+        print(f"Erreur cache taux sans risque : {e}")
+
 
 def fetch_risk_free_rate(series_id: str = FRED_RISK_FREE_SERIES) -> float | None:
     """Dernier taux publié pour la série FRED donnée (par défaut, OAT 10
@@ -5254,10 +5290,22 @@ def _compute_health_summary(companies: list[dict]) -> dict:
 def main():
     # Un taux sans risque par devise (voir RISK_FREE_SERIES_BY_CURRENCY) —
     # un seul appel FRED par devise pour tout le run, pas par entreprise.
-    risk_free_rate_by_currency = {
-        currency: fetch_risk_free_rate(series_id)
-        for currency, series_id in RISK_FREE_SERIES_BY_CURRENCY.items()
-    }
+    # Repli sur le dernier taux connu en cas d'echec (audit 2026-10-02,
+    # critique n°2) : une panne FRED transitoire ne doit plus faire
+    # retomber TOUTES les societes d'une devise sur COST_OF_CAPITAL_PROXY
+    # (8%, une valeur generique) au lieu du dernier taux reellement
+    # observe -- voir load_risk_free_rate_cache pour le detail.
+    _risk_free_rate_cache = load_risk_free_rate_cache()
+    risk_free_rate_by_currency = {}
+    for currency, series_id in RISK_FREE_SERIES_BY_CURRENCY.items():
+        fetched = fetch_risk_free_rate(series_id)
+        risk_free_rate_by_currency[currency] = (
+            fetched if fetched is not None else _risk_free_rate_cache.get(currency)
+        )
+    save_risk_free_rate_cache({
+        currency: rate for currency, rate in risk_free_rate_by_currency.items()
+        if rate is not None
+    })
     # Un taux de change vers USD par devise (voir FX_TICKER_TO_USD) — un
     # seul appel par devise pour tout le run, même schéma que le taux sans
     # risque. Sert uniquement à la prime de taille du WACC (voir

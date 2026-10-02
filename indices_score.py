@@ -5369,6 +5369,16 @@ def main():
         "index_prices": fetch_index_prices(),
         "companies": companies,
         "health": _compute_health_summary(companies),
+        # Liste STATIQUE complete de tous les tickers que main() a vocation
+        # a suivre (COMPANIES), independamment du succes/echec du run du
+        # jour pour chacun -- distincte de "companies" qui ne contient que
+        # les tickers dont le traitement a reussi aujourd'hui (voir le
+        # bloc try/except ci-dessus). Sert a ibkr_bot/daily.py pour ne
+        # jamais confondre "absent aujourd'hui (panne transitoire)" avec
+        # "retire de l'indice" (audit final 2026-10-02, critique n°1) :
+        # sans ce champ, une panne de donnees sur un titre detenu
+        # declencherait une vraie vente marche a tort.
+        "roster": sorted(c["ticker"] for c in COMPANIES),
     }
 
     # allow_nan=False : derniere ligne de defense (voir le commentaire de

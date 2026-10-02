@@ -57,9 +57,19 @@ def quotation_currency(index_currency: str, ticker: str) -> str:
     return "GBp" if is_pence_quoted(ticker) else index_currency
 
 
-def to_quotation_price(price_indices: float, ticker: str) -> float:
+def to_quotation_price(price_indices: float | None, ticker: str) -> float | None:
     """Prix de docs/indices.json (livres pour le LSE) converti dans
-    l'unite de cotation IBKR (pence pour le LSE)."""
+    l'unite de cotation IBKR (pence pour le LSE).
+
+    `price_indices=None` passe tel quel (audit final 2026-10-02,
+    critique n°2) : c'est le cas d'une sortie `ticker_retire_indice`
+    (la societe a quitte l'indice, il n'y a plus de "current_price" du
+    tout -- voir positions_to_close). Sans ce garde-fou,
+    `None * PENCE_PER_POUND` leve un TypeError pour tout ticker `.L`,
+    et la position correspondante n'est alors jamais cloturee : elle
+    retente, et replante, indefiniment chaque jour."""
+    if price_indices is None:
+        return None
     if is_pence_quoted(ticker):
         return price_indices * PENCE_PER_POUND
     return price_indices

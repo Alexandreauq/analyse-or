@@ -552,6 +552,47 @@ def test_select_entries_rejects_signals_beyond_the_daily_cap():
     assert len(rejets_plafond) == 5 - portfolio.MAX_NEW_ENTRIES_PER_DAY
 
 
+def test_select_entries_daily_cap_counts_same_day_positions_opened_before_a_restart():
+    """Audit final 2026-10-02, important n°1 : un crash + redemarrage DU
+    MEME JOUR peut avoir deja ouvert des positions avant l'interruption
+    (positions.json est sauvegarde apres chaque ordre pour survivre
+    exactement a ce cas, voir daily.py). 2 positions ont deja ete
+    ouvertes aujourd'hui avant le redemarrage -- avec
+    entrees_deja_ouvertes_aujourdhui=2, seules
+    MAX_NEW_ENTRIES_PER_DAY - 2 nouvelles entrees doivent etre retenues
+    sur ce nouvel appel, pas le plafond complet."""
+    ouvertes_aujourdhui = [
+        _bot_position(f"OPEN{i}.PA", date_entree="2026-09-14") for i in range(2)
+    ]
+    signaux = [_signal(f"T{i}.PA", 90.0 - i, index="CAC40", sector=f"S{i}")
+               for i in range(5)]
+    plans = {s["ticker"]: _plan(s["ticker"]) for s in signaux}
+    contrats = _contrats([s["ticker"] for s in signaux])
+
+    retenus, rejets = portfolio.select_entries(
+        signaux, ouvertes_aujourdhui, plans, contrats, _CASH_ILLIMITE,
+        entrees_deja_ouvertes_aujourdhui=2)
+
+    assert len(retenus) == portfolio.MAX_NEW_ENTRIES_PER_DAY - 2
+    rejets_plafond = [r for r in rejets if r["raison"] == "plafond_entrees_quotidien_atteint"]
+    assert len(rejets_plafond) == 5 - (portfolio.MAX_NEW_ENTRIES_PER_DAY - 2)
+
+
+def test_select_entries_daily_cap_defaults_to_backward_compatible_zero():
+    """Retrocompatibilite stricte (audit final 2026-10-02, important n°1) :
+    les appelants existants qui n'ont jamais entendu parler du parametre
+    doivent retrouver EXACTEMENT le comportement d'avant ce correctif."""
+    signaux = [_signal(f"T{i}.PA", 90.0 - i, index="CAC40", sector=f"S{i}")
+               for i in range(5)]
+    plans = {s["ticker"]: _plan(s["ticker"]) for s in signaux}
+    contrats = _contrats([s["ticker"] for s in signaux])
+
+    retenus, rejets = portfolio.select_entries(
+        signaux, [], plans, contrats, _CASH_ILLIMITE)
+
+    assert len(retenus) == portfolio.MAX_NEW_ENTRIES_PER_DAY
+
+
 def test_select_entries_daily_cap_rejection_does_not_block_other_filters_first():
     """Un signal qui echoue deja a un autre filtre (ex. deja detenu) ne
     doit jamais etre compte comme "retenu" avant le plafond quotidien --

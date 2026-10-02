@@ -419,6 +419,50 @@ def _taux_de_change(gw, base_url: str, devise: str, cache: dict, run: dict) -> f
     return taux
 
 
+def _valoriser_positions(positions: list[dict], companies: dict, gw,
+                         base_url: str, taux_cache: dict, run: dict) -> None:
+    """Valorise en euros chaque position encore ouverte en fin de batch
+    (P&L latent, invisible jusqu'ici — seul le prix d'execution brut
+    etait suivi). Mute chaque dict de `positions` EN PLACE.
+
+    Une societe absente de `companies` (panne transitoire de donnees
+    indices.json) ou un taux de change indisponible aujourd'hui
+    (_taux_de_change renvoie 0.0 et journalise deja l'erreur) laisse la
+    position INCHANGEE — la derniere valorisation connue reste affichee
+    plutot que de disparaitre ou de retomber a zero, meme philosophie que
+    le reemploi de l'analyse financiere a trimestre inchange
+    (indices_score.build_company_entry)."""
+    for position in positions:
+        company = companies.get(position.get("ticker")) or {}
+        prix_actuel = company.get("current_price")
+        if not isinstance(prix_actuel, (int, float)) or isinstance(prix_actuel, bool):
+            continue
+        devise = position.get("devise")
+        if not devise:
+            continue
+        taux_actuel = _taux_de_change(gw, base_url, devise, taux_cache, run)
+        if not taux_actuel:
+            continue
+
+        quantite = position.get("quantite")
+        position["prix_actuel"] = prix_actuel
+        position["taux_de_change_actuel"] = taux_actuel
+        valeur_actuelle_eur = round(quantite * prix_actuel / taux_actuel, 2)
+        position["valeur_actuelle_eur"] = valeur_actuelle_eur
+
+        prix_entree = position.get("prix_execution_reference")
+        taux_entree = position.get("taux_de_change_entree")
+        if (isinstance(prix_entree, (int, float)) and not isinstance(prix_entree, bool)
+                and isinstance(taux_entree, (int, float)) and not isinstance(taux_entree, bool)
+                and taux_entree > 0):
+            cout_entree_eur = quantite * prix_entree / taux_entree
+            position["cout_entree_eur"] = round(cout_entree_eur, 2)
+            pnl_eur = valeur_actuelle_eur - cout_entree_eur
+            position["pnl_eur"] = round(pnl_eur, 2)
+            position["pnl_eur_pct"] = (
+                round(pnl_eur / cout_entree_eur * 100, 2) if cout_entree_eur else None)
+
+
 def _executer_sortie(gw, base_url, account_id, sortie: dict, chemins: dict,
                      *, mode_attendu: str | None = None) -> dict:
     """Vend une position dont une condition de sortie est remplie."""
@@ -799,6 +843,16 @@ def run_batch(today: str | None = None, *, gw=gateway, sleep_fn=time.sleep,
             # realite du compte.
             _sauver_positions()
 
+    # --- Valorisation EUR (P&L latent, plan FX P&L 2026-10-03) --------
+    # Apres les sorties (positions_ouvertes est deja purge des positions
+    # vendues aujourd'hui) et AVANT les entrees : le cache de taux cree
+    # ici est reutilise plus bas (section 7) sans second appel reseau
+    # pour une devise deja vue aujourd'hui.
+    taux_par_devise: dict[str, float] = {}
+    _valoriser_positions(positions_ouvertes, companies, gw, base_url,
+                         taux_par_devise, run)
+    _sauver_positions()
+
     # --- 7. Entrees ---------------------------------------------------
     paper_positions = signals.load_signal_tracking(chemins["tracking"])
     signaux, rejets = signals.collect_new_signals(indices, paper_positions, today)
@@ -818,7 +872,6 @@ def run_batch(today: str | None = None, *, gw=gateway, sleep_fn=time.sleep,
                                   chemins["account_snapshot"])
 
     cache_conid = contracts.load_cache(chemins["conid_cache"])
-    taux_par_devise: dict[str, float] = {}
     plans: dict[str, dict] = {}
     contrats: dict[str, dict] = {}
     for signal in signaux:

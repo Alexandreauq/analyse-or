@@ -32,8 +32,9 @@ def _public_position(position: dict) -> dict:
     """Un sous-ensemble d'une position ouverte (voir
     journal.build_position_record pour sa forme complete) — ticker/nom/
     indice pour pouvoir lier vers la fiche entreprise, quantite/prix
-    d'entree/date pour le contexte. Jamais `conid` (identifiant de
-    contrat IBKR interne, aucune valeur d'affichage)."""
+    d'entree/date pour le contexte, et prix/valeur/P&L actualises en euros.
+    Jamais `conid` (identifiant de contrat IBKR interne, aucune valeur
+    d'affichage)."""
     return {
         "ticker": position.get("ticker"),
         "name": position.get("name"),
@@ -41,6 +42,10 @@ def _public_position(position: dict) -> dict:
         "quantite": position.get("quantite"),
         "prix_entree": position.get("prix_execution_reference"),
         "date_entree": position.get("date_entree"),
+        "prix_actuel": position.get("prix_actuel"),
+        "valeur_actuelle_eur": position.get("valeur_actuelle_eur"),
+        "pnl_eur": position.get("pnl_eur"),
+        "pnl_eur_pct": position.get("pnl_eur_pct"),
     }
 
 

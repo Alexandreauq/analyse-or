@@ -827,6 +827,40 @@ def test_reconcile_lets_the_ibkr_quantity_win_and_logs_the_anomaly():
         {"ticker": "A.PA", "conid": 4901, "quantite_locale": 5, "quantite_ibkr": 3}]
 
 
+def test_reconcile_never_adopts_an_ibkr_quantity_larger_than_local():
+    """Audit 2026-10-02 : une quantite IBKR SUPERIEURE a la quantite
+    locale du bot peut signifier qu'un conid partage avec une position
+    personnelle de l'utilisateur a ete adopte -- ne jamais gonfler la
+    quantite geree par le bot au-dela de ce qu'il a lui-meme ouvert, pour
+    ne jamais risquer de vendre plus que sa propre position."""
+    locales = [_bot_position("A.PA", conid=4901, quantite=5)]
+    chez_ibkr = [{"conid": 4901, "position": 12.0, "currency": "EUR"}]
+
+    result = portfolio.reconcile(locales, chez_ibkr)
+
+    assert result["actives"][0]["quantite"] == 5  # pas 12 : la quantite locale est gardee
+    assert result["anomalies_quantite"] == [{
+        "ticker": "A.PA", "conid": 4901, "quantite_locale": 5, "quantite_ibkr": 12,
+        "quantite_ibkr_superieure": True,
+    }]
+
+
+def test_reconcile_still_adopts_a_smaller_ibkr_quantity():
+    """Non-regression : la quantite IBKR plus PETITE que la locale (vente
+    partielle hors bot, par ex.) continue d'etre adoptee comme avant --
+    seule la direction "superieure" change de comportement."""
+    locales = [_bot_position("A.PA", conid=4901, quantite=5)]
+    chez_ibkr = [{"conid": 4901, "position": 3.0, "currency": "EUR"}]
+
+    result = portfolio.reconcile(locales, chez_ibkr)
+
+    assert result["actives"][0]["quantite"] == 3
+    assert result["anomalies_quantite"] == [{
+        "ticker": "A.PA", "conid": 4901, "quantite_locale": 5, "quantite_ibkr": 3,
+    }]
+    assert "quantite_ibkr_superieure" not in result["anomalies_quantite"][0]
+
+
 def test_reconcile_does_not_mutate_the_local_positions():
     locales = [_bot_position("A.PA", conid=4901, quantite=5)]
     portfolio.reconcile(locales, [{"conid": 4901, "position": 3.0, "currency": "EUR"}])

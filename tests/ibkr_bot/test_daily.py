@@ -921,6 +921,27 @@ def _positions_locales(env, positions):
         _json.dump({"positions": positions}, fh)
 
 
+def _ajouter_societes_au_roster(env, tickers, current_price=10.0):
+    """Audit 2026-10-02 : depuis que positions_to_close() recoit
+    roster_tickers (= set(companies.keys())), un ticker de position
+    absent de docs/indices.json est desormais traite comme retire de
+    l'indice (ticker_retire_indice), pas juste "donnee manquante ce
+    run". Les tests ci-dessous utilisent des tickers synthetiques
+    (Xi.PA, ZZZ.PA) qui ne representent pas une vraie radiation
+    d'indice -- ils servent a occuper des places ou a simuler une
+    position dry_run -- donc on les ajoute au roster avec un prix qui
+    ne declenche aucune condition de sortie, pour preserver l'intention
+    originale de chaque test."""
+    with open(env["paths"]["indices"], encoding="utf-8") as fh:
+        indices = json.load(fh)
+    indices["companies"] = indices["companies"] + [
+        {"ticker": t, "index": "CAC40", "score": 0.0, "current_price": current_price}
+        for t in tickers
+    ]
+    with open(env["paths"]["indices"], "w", encoding="utf-8") as fh:
+        json.dump(indices, fh)
+
+
 POSITION_MC = {
     "id": "MC.PA-2026-03-02", "ticker": "MC.PA", "name": "LVMH", "index": "CAC40",
     "conid": 17275, "devise": "EUR", "quantite": 5,
@@ -1063,6 +1084,7 @@ def test_exits_run_before_entries_and_free_a_slot(env):
         for i in range(9)
     ]
     _positions_locales(env, occupees)
+    _ajouter_societes_au_roster(env, [f"X{i}.PA" for i in range(9)])
     gw = FakeGateway(positions_ibkr=[{"conid": p["conid"], "position": 5.0}
                                      for p in occupees])
 
@@ -1149,6 +1171,7 @@ def test_dry_run_keeps_simulated_positions_across_days(env):
                "target_exit_price": 999.0, "date_limite": "2027-01-01",
                "prix_execution_reference": 10.0}
     _positions_locales(env, [simulee])
+    _ajouter_societes_au_roster(env, ["ZZZ.PA"])
     gw = FakeGateway(positions_ibkr=[])
 
     daily.run_batch(TODAY, gw=gw, sleep_fn=lambda s: None,

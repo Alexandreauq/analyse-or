@@ -48,11 +48,11 @@ MAX_POSITIONS_PER_ZONE = 5
 # deployes le meme jour) -- sans ce plafond, le bot les achetterait TOUS
 # le meme jour, un achat pilote par un changement de methodologie plutot
 # que par un vrai mouvement de marche. Les signaux au-dela de ce plafond
-# ne sont pas perdus : ils restent visibles le jour suivant tant que la
-# position papier correspondante reste ouverte (signals.collect_new_signals
-# ne lit que les positions ouvertes AUJOURD'HUI -- un signal rejete ici
-# ne reapparaitra PAS automatiquement les jours suivants, limite connue,
-# voir le point I-C de l'audit, hors scope de ce plan).
+# sont perdus, comme la sursouscription (spec 3.5) : signals.
+# collect_new_signals ne lit que les positions ouvertes AUJOURD'HUI, donc
+# un signal rejete ici ne reapparaitra PAS automatiquement les jours
+# suivants (limite connue, voir le point I-C de l'audit, hors scope de
+# ce plan).
 MAX_NEW_ENTRIES_PER_DAY = 3
 
 # Regles de sortie : valeurs IDENTIQUES a celles du paper-trading
@@ -114,6 +114,7 @@ def free_slots(open_positions: list[dict]) -> int:
 def select_entries(
     signals: list[dict], open_positions: list[dict],
     plans: dict[str, dict], contrats: dict[str, dict], base_cash: float,
+    entrees_deja_ouvertes_aujourdhui: int = 0,
 ) -> tuple[list[dict], list[dict]]:
     """Signaux du jour effectivement retenus a l'achat, et rejets motives.
 
@@ -137,6 +138,17 @@ def select_entries(
     comme atteint. Un signal sans secteur/indice connu (ne devrait pas arriver en
     pratique) n'est jamais bloque par ce plafond plutot que de rejeter une donnee
     de diversification manquante.
+
+    `entrees_deja_ouvertes_aujourdhui` (audit final 2026-10-02, important
+    n°1, defaut 0 -- retrocompatible) : nombre de positions DEJA ouvertes
+    AUJOURD'HUI (position.get("date_entree") == aujourd'hui), ouvertes par
+    un appel precedent de cette meme fonction PLUS TOT dans la journee --
+    typiquement apres un crash + redemarrage du batch, positions.json
+    etant sauvegarde apres chaque ordre precisement pour survivre a ce
+    scenario (voir daily.py). Sans ce parametre, le plafond quotidien
+    repart de 0 a chaque appel et autoriserait jusqu'a
+    MAX_NEW_ENTRIES_PER_DAY entrees SUPPLEMENTAIRES en plus de celles
+    deja ouvertes plus tot le meme jour.
 
     GARDE-FOU DE SOLDE (spec 9.9, revu) : IBKR convertit automatiquement
     le budget EUR vers la devise locale au moment de l'achat (mecanisme
@@ -190,7 +202,7 @@ def select_entries(
             rejets.append({**base, "raison": "signal_ignore_plafond_atteint"})
             continue
 
-        if len(retenus) >= MAX_NEW_ENTRIES_PER_DAY:
+        if len(retenus) + entrees_deja_ouvertes_aujourdhui >= MAX_NEW_ENTRIES_PER_DAY:
             rejets.append({**base, "raison": "plafond_entrees_quotidien_atteint"})
             continue
 

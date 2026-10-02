@@ -106,6 +106,10 @@ INDICES = {
         {"ticker": "SAP.DE", "index": "DAX", "score": 10.0, "current_price": 100.0},
         {"ticker": "III.L", "index": "FTSE", "score": 30.0, "current_price": 2.95},
     ],
+    # Roster statique (audit final 2026-10-02, critique n°1) : par defaut
+    # identique aux tickers de "companies" pour preserver le comportement
+    # des tests existants ecrits avant ce champ.
+    "roster": ["MC.PA", "ADBE", "SAP.DE", "III.L"],
 }
 
 TRACKING = {"positions": [
@@ -923,21 +927,23 @@ def _positions_locales(env, positions):
 
 def _ajouter_societes_au_roster(env, tickers, current_price=10.0):
     """Audit 2026-10-02 : depuis que positions_to_close() recoit
-    roster_tickers (= set(companies.keys())), un ticker de position
-    absent de docs/indices.json est desormais traite comme retire de
-    l'indice (ticker_retire_indice), pas juste "donnee manquante ce
+    roster_tickers (le champ statique "roster" de docs/indices.json,
+    critique n°1 de la revue finale), un ticker de position absent a la
+    fois de "companies" ET de "roster" est desormais traite comme retire
+    de l'indice (ticker_retire_indice), pas juste "donnee manquante ce
     run". Les tests ci-dessous utilisent des tickers synthetiques
     (Xi.PA, ZZZ.PA) qui ne representent pas une vraie radiation
     d'indice -- ils servent a occuper des places ou a simuler une
-    position dry_run -- donc on les ajoute au roster avec un prix qui
-    ne declenche aucune condition de sortie, pour preserver l'intention
-    originale de chaque test."""
+    position dry_run -- donc on les ajoute a "companies" ET a "roster"
+    avec un prix qui ne declenche aucune condition de sortie, pour
+    preserver l'intention originale de chaque test."""
     with open(env["paths"]["indices"], encoding="utf-8") as fh:
         indices = json.load(fh)
     indices["companies"] = indices["companies"] + [
         {"ticker": t, "index": "CAC40", "score": 0.0, "current_price": current_price}
         for t in tickers
     ]
+    indices["roster"] = indices.get("roster", []) + list(tickers)
     with open(env["paths"]["indices"], "w", encoding="utf-8") as fh:
         json.dump(indices, fh)
 
@@ -949,6 +955,112 @@ POSITION_MC = {
     "date_entree": "2026-03-02", "target_exit_price": 300.0,
     "date_limite": "2026-09-02",
 }
+
+
+# --- roster statique vs "companies" du jour (audit final 2026-10-02,
+# critique n°1) -----------------------------------------------------
+
+def test_ticker_missing_today_but_still_in_roster_is_left_open(env):
+    """Coeur de la regression evitee par la critique n°1 : une societe
+    absente de "companies" AUJOURD'HUI (ex. panne transitoire sur ce
+    seul ticker dans indices_score.py::main()) mais toujours presente
+    dans le roster STATIQUE ne doit jamais etre traitee comme retiree
+    de l'indice -- sinon une simple panne de donnees declencherait une
+    VRAIE vente marche."""
+    ecrire_etat(env, dry_run=False)
+    position = {**POSITION_MC, "ticker": "ZZZ.PA", "conid": 555,
+                "target_exit_price": 999.0, "date_limite": "2027-01-01"}
+    _positions_locales(env, [position])
+    with open(env["paths"]["indices"], encoding="utf-8") as fh:
+        indices = json.load(fh)
+    # ZZZ.PA : present dans le roster statique, ABSENT de "companies"
+    # (simule la panne transitoire -- pas une radiation d'indice).
+    assert "ZZZ.PA" not in {c["ticker"] for c in indices["companies"]}
+    indices["roster"] = indices["roster"] + ["ZZZ.PA"]
+    with open(env["paths"]["indices"], "w", encoding="utf-8") as fh:
+        json.dump(indices, fh)
+    gw = FakeGateway(positions_ibkr=[{"conid": 555, "position": 5.0}])
+
+    run = daily.run_batch(TODAY, gw=gw, sleep_fn=lambda s: None,
+                          account_id="U1", paths=env["paths"])
+
+    assert [o for o in gw.ordres if o["side"] == "SELL"] == []
+    assert run["sorties"] == []
+    import ibkr_bot.portfolio as portfolio
+    assert "ZZZ.PA" in {p["ticker"] for p in
+                        portfolio.load_positions(env["paths"]["positions"])}
+
+
+def test_missing_roster_field_disables_removal_detection_instead_of_crashing(env):
+    """Un docs/indices.json d'avant ce correctif (ou malforme) n'a pas de
+    champ "roster" du tout. daily.py doit alors desactiver entierement
+    la detection de retrait d'indice (roster_tickers=None) plutot que de
+    retomber sur set(companies.keys()) -- qui reintroduirait exactement
+    le bug de la critique n°1 -- et sans jamais planter."""
+    ecrire_etat(env, dry_run=False)
+    position = {**POSITION_MC, "ticker": "ZZZ.PA", "conid": 555,
+                "target_exit_price": 999.0, "date_limite": "2027-01-01"}
+    _positions_locales(env, [position])
+    with open(env["paths"]["indices"], encoding="utf-8") as fh:
+        indices = json.load(fh)
+    assert "ZZZ.PA" not in {c["ticker"] for c in indices["companies"]}
+    del indices["roster"]
+    with open(env["paths"]["indices"], "w", encoding="utf-8") as fh:
+        json.dump(indices, fh)
+    gw = FakeGateway(positions_ibkr=[{"conid": 555, "position": 5.0}])
+
+    run = daily.run_batch(TODAY, gw=gw, sleep_fn=lambda s: None,
+                          account_id="U1", paths=env["paths"])
+
+    assert [o for o in gw.ordres if o["side"] == "SELL"] == []
+    assert run["sorties"] == []
+    import ibkr_bot.portfolio as portfolio
+    assert "ZZZ.PA" in {p["ticker"] for p in
+                        portfolio.load_positions(env["paths"]["positions"])}
+
+
+# --- sortie ticker_retire_indice sur un ticker .L (audit final
+# 2026-10-02, critique n°2) ------------------------------------------
+
+def test_exiting_a_london_ticker_retired_from_its_index_does_not_crash(env):
+    """Une sortie ticker_retire_indice n'a jamais de current_price (la
+    societe a quitte l'indice). Pour un ticker `.L`, sizing.
+    to_quotation_price faisait auparavant `None * PENCE_PER_POUND`
+    (TypeError), rattrape par le garde-fou generique de run_batch et
+    journalise dans run["erreurs"] -- mais la position n'etait ALORS
+    JAMAIS fermee, et replantait identiquement chaque jour suivant.
+    Avec le correctif, la sortie doit reussir normalement."""
+    ecrire_etat(env, dry_run=True)
+    position_iii = {
+        "id": "III.L-2026-03-02", "ticker": "III.L", "name": "3i",
+        "index": "FTSE", "conid": 98765, "devise": "GBP", "quantite": 10,
+        "prix_execution_reference": 2.93, "paper_entry_price": 2.90,
+        "date_entree": "2026-03-02", "target_exit_price": 400.0,
+        "date_limite": "2027-01-01",
+    }
+    _positions_locales(env, [position_iii])
+    with open(env["paths"]["indices"], encoding="utf-8") as fh:
+        indices = json.load(fh)
+    # III.L retire a la fois de "companies" et du roster statique : une
+    # vraie radiation d'indice, pas une panne de donnees transitoire.
+    indices["companies"] = [c for c in indices["companies"]
+                            if c["ticker"] != "III.L"]
+    indices["roster"] = [t for t in indices["roster"] if t != "III.L"]
+    with open(env["paths"]["indices"], "w", encoding="utf-8") as fh:
+        json.dump(indices, fh)
+    gw = FakeGateway()
+
+    run = daily.run_batch(TODAY, gw=gw, sleep_fn=lambda s: None,
+                          account_id="U1", paths=env["paths"])
+
+    assert run["erreurs"] == []
+    assert len(run["sorties"]) == 1
+    sortie = run["sorties"][0]
+    assert sortie["close_reason"] == "ticker_retire_indice"
+    assert sortie["statut"] == "simule"
+    import ibkr_bot.portfolio as portfolio
+    assert "III.L" not in {p["ticker"] for p in
+                           portfolio.load_positions(env["paths"]["positions"])}
 
 
 def test_dry_run_places_no_order_but_journals_everything(env):
@@ -1520,6 +1632,79 @@ def test_a_genuine_dry_run_batch_is_completely_unaffected_by_the_mode_attendu_pl
     assert all(e["statut"] == "simule" for e in run["entrees"])
     assert not any(e["etape"] in ("execution_sortie_interrompue", "execution_entree_interrompue")
                   for e in run["erreurs"])
+
+
+# --- revue finale de branche, 2026-10-02 : important n°3 --------------
+# (annule_derive route maintenant vers run["erreurs"], comme
+# annule_interruption, cote sorties ET cote entrees).
+
+def test_annule_derive_on_exit_is_surfaced_in_erreurs_and_leaves_position_intact(env, monkeypatch):
+    """Direction inverse du test Critical #2 (kill_switch pulled mid-batch)
+    ci-dessus : le batch croit etre en dry_run (mode_attendu="dry_run")
+    mais l'etat disque est passe en reel au moment precis de l'envoi de
+    l'ordre de sortie -- _place_order renvoie "annule_derive". Avant ce
+    correctif, cet evenement restait noye parmi les cartes de vente
+    ordinaires au lieu d'alerter l'operateur."""
+    _positions_locales(env, [POSITION_MC])   # stop-loss : 90.0 <= 200*0.8
+    gw = FakeGateway(positions_ibkr=[{"conid": 17275, "position": 5.0}])
+
+    appels = {"n": 0}
+
+    def fake_load_state(path):
+        appels["n"] += 1
+        if appels["n"] <= 2:
+            # 1er appel : kill_switch au tout debut. 2e appel : relecture
+            # post-preflight qui fixe run["mode"] -- les deux disent dry_run.
+            return {"kill_switch": False, "dry_run": True}
+        # 3e appel et suivants : DANS _place_order, au moment de l'envoi --
+        # l'etat sur disque est maintenant passe en reel entre-temps.
+        return {"kill_switch": False, "dry_run": False}
+
+    monkeypatch.setattr(daily.state, "load_state", fake_load_state)
+
+    run = daily.run_batch(TODAY, gw=gw, sleep_fn=lambda s: None,
+                          account_id="U1", paths=env["paths"])
+
+    assert gw.ordres == []
+    assert run["sorties"][0]["statut"] == "annule_derive"
+    assert any(e["etape"] == "execution_sortie_interrompue" and "MC.PA" in e["detail"]
+              for e in run["erreurs"])
+    import ibkr_bot.portfolio as portfolio
+    positions_finales = portfolio.load_positions(env["paths"]["positions"])
+    assert [p["ticker"] for p in positions_finales] == ["MC.PA"]
+
+
+def test_annule_derive_on_entry_is_surfaced_in_erreurs_and_opens_no_position(env, monkeypatch):
+    """Meme scenario cote entrees : le batch croit etre en dry_run mais
+    l'etat disque est passe en reel au moment de l'achat -- "annule_derive".
+    Contrairement aux sorties, il n'y a rien a laisser "intact" (l'achat
+    n'a jamais ete envoye, aucune position n'existait avant), mais
+    l'evenement doit rester visible dans run["erreurs"]."""
+    gw = FakeGateway()
+
+    appels = {"n": 0}
+
+    def fake_load_state(path):
+        appels["n"] += 1
+        if appels["n"] <= 2:
+            return {"kill_switch": False, "dry_run": True}
+        return {"kill_switch": False, "dry_run": False}
+
+    monkeypatch.setattr(daily.state, "load_state", fake_load_state)
+
+    run = daily.run_batch(TODAY, gw=gw, sleep_fn=lambda s: None,
+                          account_id="U1", paths=env["paths"])
+
+    assert gw.ordres == []
+    assert len(run["entrees"]) >= 1
+    assert all(e["statut"] == "annule_derive" for e in run["entrees"])
+    tickers_en_erreur = {
+        e["detail"].split(" :")[0] for e in run["erreurs"]
+        if e["etape"] == "execution_entree_interrompue"
+    }
+    assert tickers_en_erreur == {e["ticker"] for e in run["entrees"]}
+    import ibkr_bot.portfolio as portfolio
+    assert portfolio.load_positions(env["paths"]["positions"]) == []
 
 
 # --- revue finale de branche : Important #1 ---------------------------

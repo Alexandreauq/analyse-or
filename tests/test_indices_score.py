@@ -4515,6 +4515,49 @@ def test_main_payload_includes_index_metadata(monkeypatch, tmp_path):
     }
 
 
+def test_main_payload_includes_full_static_roster(monkeypatch, tmp_path):
+    """Le payload doit publier "roster" : la liste STATIQUE triee de tous
+    les tickers de COMPANIES, independamment du succes du run du jour pour
+    chacun -- distincte de "companies" (audit final 2026-10-02, critique
+    n°1). ibkr_bot/daily.py s'appuie sur ce champ pour ne jamais confondre
+    "absent aujourd'hui (panne transitoire)" avec "retire de l'indice"."""
+    import json
+
+    monkeypatch.setattr(indices_score, "fetch_risk_free_rate", lambda series_id: 3.68)
+    monkeypatch.setattr(indices_score, "fetch_fx_rate_to_usd", lambda currency: 1.0)
+    monkeypatch.setattr(indices_score, "load_previous_company_analyses", lambda: {})
+    monkeypatch.setattr(
+        indices_score, "build_company_entry",
+        lambda ticker, name, risk_free_rate, previous_analyses, index_key="CAC40", also_indices=None, fx_rate_to_usd=1.0: {
+            "ticker": ticker, "name": name, "index": index_key,
+            "score": 10.0, "interpretation": "Neutre",
+            "current_price": 50.0, "entry_price": 50.0,
+        },
+    )
+    monkeypatch.setattr(indices_score, "load_indices_history", lambda: [])
+    monkeypatch.setattr(indices_score, "append_indices_history", lambda entries: entries)
+    monkeypatch.setattr(indices_score, "update_signal_tracking", lambda companies, newly_triggered_entree: [])
+    monkeypatch.setattr(indices_score, "update_nikkei_hangseng_price_history", lambda companies: [])
+    monkeypatch.setattr(indices_score, "fetch_index_prices", lambda: {})
+    monkeypatch.setattr(indices_score, "update_price_history", lambda entries, **kwargs: entries)
+    monkeypatch.setattr(indices_score, "update_dividend_history", lambda entries, **kwargs: entries)
+    monkeypatch.setattr(indices_score, "fetch_index_price_history", lambda: [])
+    output_path = tmp_path / "indices.json"
+    monkeypatch.setattr(indices_score, "OUTPUT_JSON_PATH", str(output_path))
+    _cache = {}
+    monkeypatch.setattr(indices_score, "load_risk_free_rate_cache", lambda path=None: _cache)
+    monkeypatch.setattr(indices_score, "save_risk_free_rate_cache", lambda rates, path=None: _cache.update(rates))
+
+    indices_score.main()
+
+    written = json.loads(output_path.read_text(encoding="utf-8"))
+    expected_roster = sorted(c["ticker"] for c in indices_score.COMPANIES)
+    assert written["roster"] == expected_roster
+    assert written["roster"] == sorted(written["roster"])
+    for ticker in (c["ticker"] for c in indices_score.COMPANIES):
+        assert ticker in written["roster"]
+
+
 def test_main_payload_exposes_risk_free_rate_by_currency(monkeypatch, tmp_path):
     """Le taux sans risque par devise, deja calcule pour le WACC (voir
     test_main_routes_risk_free_rate_by_currency), doit aussi etre publie

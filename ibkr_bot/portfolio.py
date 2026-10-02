@@ -42,6 +42,19 @@ INDEX_ZONE = {
 }
 MAX_POSITIONS_PER_ZONE = 5
 
+# Plafond quotidien d'entrees (audit 2026-10-02) : un jour de deploiement
+# de methodologie de scoring peut faire apparaitre beaucoup de nouveaux
+# signaux d'un coup (45 positions papier le 2026-09-24, 13 correctifs
+# deployes le meme jour) -- sans ce plafond, le bot les achetterait TOUS
+# le meme jour, un achat pilote par un changement de methodologie plutot
+# que par un vrai mouvement de marche. Les signaux au-dela de ce plafond
+# ne sont pas perdus : ils restent visibles le jour suivant tant que la
+# position papier correspondante reste ouverte (signals.collect_new_signals
+# ne lit que les positions ouvertes AUJOURD'HUI -- un signal rejete ici
+# ne reapparaitra PAS automatiquement les jours suivants, limite connue,
+# voir le point I-C de l'audit, hors scope de ce plan).
+MAX_NEW_ENTRIES_PER_DAY = 3
+
 # Regles de sortie : valeurs IDENTIQUES a celles du paper-trading
 # (indices_score.SIGNAL_STOP_LOSS_PCT / SIGNAL_SHADOW_DELAY_MONTHS). Un
 # test de non-regression verifie l'egalite des deux jeux de constantes ET
@@ -106,24 +119,24 @@ def select_entries(
 
     ORDRE DES FILTRES, qui est lui-meme une regle de la spec :
     deja detenu -> contrat non resolu -> plan absent -> quantite nulle ->
-    plafond -> plafond secteur -> plafond indice -> plafond zone -> solde. Le cas 0 action
-    passe AVANT le plafond parce que "la place ainsi liberee reste
-    disponible pour le signal suivant du classement" (spec 3.3) : inverser
-    les deux perdrait un signal financable au profit d'un signal
-    inachetable. Le contrat non resolu est verifie tot, avec les autres cas
+    plafond -> plafond entrees quotidien -> plafond secteur -> plafond indice ->
+    plafond zone -> solde. Le cas 0 action passe AVANT le plafond parce que
+    "la place ainsi liberee reste disponible pour le signal suivant du classement"
+    (spec 3.3) : inverser les deux perdrait un signal financable au profit d'un
+    signal inachetable. Le contrat non resolu est verifie tot, avec les autres cas
     "ce signal ne peut fondamentalement pas etre achete", pour la meme
     raison : Plan B ne pourra jamais passer l'ordre sans conid, ce rejet ne
     doit donc jamais consommer une place ni du budget. Les plafonds de
     diversification (MAX_POSITIONS_PER_SECTOR/MAX_POSITIONS_PER_INDEX,
-    audit 2026-09-21 point 3) suivent la meme logique : un signal qui les
-    depasse ne consomme ni place ni budget, la place reste disponible pour
-    le signal suivant. Compte les positions deja ouvertes PLUS celles deja
-    retenues plus haut dans ce meme classement (pas seulement
-    open_positions), sinon deux signaux du meme secteur pourraient passer
-    le meme jour avant que le plafond ne soit jamais vu comme atteint. Un
-    signal sans secteur/indice connu (ne devrait pas arriver en pratique)
-    n'est jamais bloque par ce plafond plutot que de rejeter une donnee de
-    diversification manquante.
+    audit 2026-09-21 point 3) et le plafond quotidien (MAX_NEW_ENTRIES_PER_DAY,
+    audit 2026-10-02) suivent la meme logique : un signal qui les depasse ne
+    consomme ni place ni budget, la place reste disponible pour le signal suivant.
+    Compte les positions deja ouvertes PLUS celles deja retenues plus haut dans
+    ce meme classement (pas seulement open_positions), sinon deux signaux du meme
+    secteur pourraient passer le meme jour avant que le plafond ne soit jamais vu
+    comme atteint. Un signal sans secteur/indice connu (ne devrait pas arriver en
+    pratique) n'est jamais bloque par ce plafond plutot que de rejeter une donnee
+    de diversification manquante.
 
     GARDE-FOU DE SOLDE (spec 9.9, revu) : IBKR convertit automatiquement
     le budget EUR vers la devise locale au moment de l'achat (mecanisme
@@ -175,6 +188,10 @@ def select_entries(
 
         if places < 1:
             rejets.append({**base, "raison": "signal_ignore_plafond_atteint"})
+            continue
+
+        if len(retenus) >= MAX_NEW_ENTRIES_PER_DAY:
+            rejets.append({**base, "raison": "plafond_entrees_quotidien_atteint"})
             continue
 
         secteur = signal.get("sector") or ""

@@ -330,14 +330,27 @@ def reconcile(local_positions: list[dict], ibkr_positions: list[dict]) -> dict:
             cloturees.append(position)
             continue
         active = dict(position)
-        if quantite_ibkr != position.get("quantite"):
-            anomalies.append({
+        quantite_locale = position.get("quantite")
+        if quantite_ibkr != quantite_locale:
+            anomalie = {
                 "ticker": position["ticker"],
                 "conid": conid,
-                "quantite_locale": position.get("quantite"),
+                "quantite_locale": quantite_locale,
                 "quantite_ibkr": quantite_ibkr,
-            })
-            active["quantite"] = quantite_ibkr
+            }
+            if quantite_ibkr > (quantite_locale or 0):
+                # Audit 2026-10-02 : une quantite IBKR SUPERIEURE a la
+                # quantite locale peut signifier un conid partage avec
+                # une position personnelle de l'utilisateur sur ce meme
+                # compte -- ne jamais l'adopter, pour ne jamais risquer
+                # de vendre plus que ce que le bot a lui-meme ouvert. La
+                # quantite locale est gardee telle quelle (active deja
+                # une copie de `position`, donc `active["quantite"]` vaut
+                # deja quantite_locale sans rien faire de plus).
+                anomalie["quantite_ibkr_superieure"] = True
+            else:
+                active["quantite"] = quantite_ibkr
+            anomalies.append(anomalie)
         actives.append(active)
 
     ignorees = [b for conid, b in par_conid.items() if conid not in conids_du_bot]

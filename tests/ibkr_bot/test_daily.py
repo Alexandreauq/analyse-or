@@ -1464,6 +1464,25 @@ def test_kill_switch_pulled_mid_batch_blocks_the_order_and_does_not_orphan_the_p
               for e in run["erreurs"])
 
 
+def test_place_order_refuses_a_real_send_when_mode_attendu_was_dry_run_but_state_is_now_live(tmp_path):
+    """Audit 2026-10-02 : direction inverse du cas annule_interruption deja
+    teste -- un ordre planifie en dry_run (mode_attendu="dry_run") dont
+    l'etat disque est maintenant reel (bascule operateur mid-batch) ne
+    doit JAMAIS partir reellement : la position pour laquelle cet ordre
+    est envoye n'a jamais existe que simulee."""
+    gw = FakeGateway()
+    resultat = daily._place_order(
+        gw, "https://127.0.0.1:5000", "U1", ticker="A.PA", conid=4901,
+        side="SELL", quantity=5, prix_reference_cotation=100.0,
+        state_path=_etat(tmp_path, dry_run=False),  # etat disque : reel
+        mode_attendu="dry_run",  # mais le batch l'a planifie en dry_run
+    )
+
+    assert resultat["statut"] == "annule_derive"
+    assert resultat["order_id"] is None
+    assert gw.ordres == []
+
+
 def test_a_genuine_dry_run_batch_is_completely_unaffected_by_the_mode_attendu_plumbing(env):
     """Garde-fou de non-regression pour Critical #2 : mode_attendu ne doit
     RIEN changer au comportement dry_run d'origine (statut "simule",

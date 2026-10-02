@@ -2383,14 +2383,19 @@ function ibkrBotCountersHtml(s) {
     </div>`).join('');
 }
 
-// Positions OUVERTES par le bot, mêmes noms de champs que
-// status_publish._public_position côté ibkr_bot (ticker, name, index,
-// quantite, prix_entree, date_entree — jamais conid). Publié
-// UNIQUEMENT tant que le bot est en simulation (voir le commentaire de
-// module dans ibkr_bot/status_publish.py) : s.positions est absent en
-// mode réel, donc cette section disparaît automatiquement, sans logique
-// supplémentaire à écrire ici. Chaque ligne renvoie vers la fiche
-// entreprise, même pattern que portfolioPositionsHtml ("Tes positions").
+// Positions OUVERTES par le bot, memes noms de champs que
+// status_publish._public_position cote ibkr_bot (ticker, name, index,
+// quantite, prix_entree, date_entree, et depuis le plan FX P&L du
+// 2026-10-03 : prix_actuel, valeur_actuelle_eur, pnl_eur, pnl_eur_pct —
+// jamais conid). Utilisee pour DEUX sources distinctes : le statut
+// public (docs/ibkr_bot_status.json, positions presentes seulement en
+// dry_run) et le tableau de bord protege par jeton (/dashboard, positions
+// toujours presentes, voir ibkr_bot/api.py — le jeton change le modele
+// de menace, voir la spec API §4.3). Chaque ligne renvoie vers la fiche
+// entreprise, meme pattern que portfolioPositionsHtml ("Tes positions").
+// Les champs de P&L peuvent etre null (position du jour meme, pas encore
+// valorisee par un batch — voir daily._valoriser_positions) : la ligne
+// retombe alors sur le seul prix d'entree, sans P&L affiche.
 function ibkrBotPositionsHtml(positions) {
   if (!positions || positions.length === 0) {
     return `<div class="empty">Aucune position ouverte.</div>`;
@@ -2402,7 +2407,8 @@ function ibkrBotPositionsHtml(positions) {
         <span class="hero-sub">${escHtml(p.ticker)}${p.quantite != null ? ` · ${p.quantite} titre${p.quantite > 1 ? 's' : ''}` : ''}${p.date_entree ? ` · entrée ${p.date_entree}` : ''}</span>
       </div>
       <div class="portfolio-position-pnl">
-        <span class="price-value">${p.prix_entree != null ? formatPriceForIndex(p.prix_entree, p.index) : '—'}</span>
+        <span class="price-value">${p.valeur_actuelle_eur != null ? formatPrice(p.valeur_actuelle_eur) : (p.prix_entree != null ? formatPriceForIndex(p.prix_entree, p.index) : '—')}</span>
+        ${p.pnl_eur != null ? `<span style="color:${p.pnl_eur >= 0 ? 'var(--gold)' : 'var(--rust)'}">${p.pnl_eur >= 0 ? '+' : ''}${formatPrice(p.pnl_eur)} (${formatPct(p.pnl_eur_pct)})</span>` : ''}
       </div>
     </div>`).join('');
 }

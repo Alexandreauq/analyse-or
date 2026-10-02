@@ -210,18 +210,32 @@ def deadline_date(entry_date: str) -> str:
     return limite.strftime("%Y-%m-%d")
 
 
-def exit_reason(position: dict, company: dict | None, today: str) -> str | None:
+def exit_reason(position: dict, company: dict | None, today: str,
+                roster_tickers: set[str] | None = None) -> str | None:
     """Motif de cloture de `position` aujourd'hui, ou None si aucune
     condition n'est remplie.
 
     ORDRE DE PRIORITE STRICT, premiere condition remplie gagne (spec
-    3.6) : stop_loss -> objectif_atteint -> delai_max.
+    3.6) : ticker_retire_indice -> stop_loss -> objectif_atteint ->
+    delai_max.
 
     Une position dont le ticker a disparu des donnees du jour, ou dont
     le prix courant manque, est laissee INTACTE et reevaluee demain :
-    jamais de vente declenchee par une donnee absente.
+    jamais de vente declenchee par une donnee absente -- SAUF si
+    `roster_tickers` est fourni et que le ticker n'y figure plus : dans
+    ce cas, la societe n'a pas juste une donnee manquante ce run, elle a
+    ete RETIREE DE L'INDICE (audit 2026-10-02) -- meme traitement que
+    ticker_retire_indice cote paper-trading (indices_score.py), pour ne
+    jamais laisser une position bloquee indefiniment sans stop-loss ni
+    sortie possible apres une revision d'indice. `roster_tickers=None`
+    (defaut) desactive ce comportement, retrocompatible avec les
+    appelants existants qui ne le fournissent pas.
     """
-    if company is None or _is_missing(company.get("current_price")):
+    if company is None:
+        if roster_tickers is not None and position["ticker"] not in roster_tickers:
+            return "ticker_retire_indice"
+        return None
+    if _is_missing(company.get("current_price")):
         return None
     prix_reference = position.get("prix_execution_reference")
     if _is_missing(prix_reference):
@@ -244,20 +258,21 @@ def exit_reason(position: dict, company: dict | None, today: str) -> str | None:
 
 
 def positions_to_close(open_positions: list[dict], companies_by_ticker: dict,
-                       today: str) -> list[dict]:
+                       today: str, roster_tickers: set[str] | None = None) -> list[dict]:
     """Positions du bot dont une condition de sortie est remplie
     aujourd'hui, avec leur motif et le prix courant ayant declenche la
-    decision. Ne mute rien."""
+    decision. Ne mute rien. `roster_tickers` (optionnel, audit 2026-10-02)
+    est transmis tel quel a exit_reason -- voir son docstring."""
     a_cloturer = []
     for position in open_positions:
         company = companies_by_ticker.get(position["ticker"])
-        raison = exit_reason(position, company, today)
+        raison = exit_reason(position, company, today, roster_tickers=roster_tickers)
         if raison is None:
             continue
         a_cloturer.append({
             "position": position,
             "close_reason": raison,
-            "current_price": company["current_price"],
+            "current_price": company["current_price"] if company is not None else None,
         })
     return a_cloturer
 

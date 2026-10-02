@@ -604,6 +604,34 @@ def test_exit_reason_none_when_the_ticker_disappeared_from_the_data():
     assert portfolio.exit_reason(position, None, "2026-09-14") is None
 
 
+def test_exit_reason_ticker_retired_from_roster_when_removed_and_roster_given():
+    """Audit 2026-10-02 : une societe retiree DEFINITIVEMENT de l'indice
+    (absente des donnees du jour ET absente du roster complet fourni)
+    doit se clore, pas rester bloquee indefiniment -- meme traitement
+    que ticker_retire_indice cote paper-trading."""
+    position = _bot_position("A.PA", prix_execution_reference=100.0)
+    assert portfolio.exit_reason(
+        position, None, "2026-09-14", roster_tickers={"B.PA", "C.PA"},
+    ) == "ticker_retire_indice"
+
+
+def test_exit_reason_none_when_company_missing_but_still_in_roster():
+    """Donnee manquante CE RUN mais le ticker reste dans le roster complet
+    (panne temporaire d'une source, pas une vraie radiation d'indice) --
+    reste intacte, meme comportement qu'avant ce correctif."""
+    position = _bot_position("A.PA", prix_execution_reference=100.0)
+    assert portfolio.exit_reason(
+        position, None, "2026-09-14", roster_tickers={"A.PA", "B.PA"},
+    ) is None
+
+
+def test_exit_reason_none_when_roster_not_provided_preserves_old_behavior():
+    """Retrocompatibilite stricte : roster_tickers omis (defaut None) ->
+    comportement identique a avant ce correctif, meme ticker disparu."""
+    position = _bot_position("A.PA", prix_execution_reference=100.0)
+    assert portfolio.exit_reason(position, None, "2026-09-14") is None
+
+
 @pytest.mark.parametrize("prix", [None, float("nan")])
 def test_exit_reason_none_when_the_current_price_is_missing(prix):
     """Jamais de vente declenchee par une donnee absente (spec 3.6)."""
@@ -648,6 +676,17 @@ def test_positions_to_close_leaves_untouched_what_has_no_data():
     companies = {"A.PA": {"current_price": None}}
 
     assert portfolio.positions_to_close(positions, companies, "2026-09-14") == []
+
+
+def test_positions_to_close_closes_a_position_whose_ticker_left_the_roster():
+    positions = [_bot_position("A.PA", prix_execution_reference=100.0)]
+    companies = {}  # A.PA absent des donnees du jour
+
+    result = portfolio.positions_to_close(
+        positions, companies, "2026-09-14", roster_tickers={"B.PA"})
+
+    assert len(result) == 1
+    assert result[0]["close_reason"] == "ticker_retire_indice"
 
 
 def test_positions_to_close_does_not_mutate_the_positions():

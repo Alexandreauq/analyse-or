@@ -689,6 +689,13 @@ def run_batch(today: str | None = None, *, gw=gateway, sleep_fn=time.sleep,
     # sont disponibles pour les signaux du jour.
     companies = {c["ticker"]: c for c in indices.get("companies", [])
                  if isinstance(c, dict) and c.get("ticker")}
+    # Roster complet du jour (audit 2026-10-02) : un ticker absent de
+    # `companies` ET absent de ce roster n'a pas qu'une donnee manquante
+    # ce run, il a ete RETIRE DE L'INDICE -- transmis a
+    # positions_to_close() pour que exit_reason() puisse distinguer les
+    # deux cas et clore une position sinon bloquee indefiniment sans
+    # stop-loss ni sortie possible (voir portfolio.exit_reason).
+    roster_tickers = set(companies.keys())
     # portfolio.positions_to_close() est appelee UNE POSITION A LA FOIS
     # (plutot qu'une seule fois sur toute la liste) pour isoler une ligne
     # corrompue de positions.json : c'est une fonction pure, sans etat
@@ -704,7 +711,8 @@ def run_batch(today: str | None = None, *, gw=gateway, sleep_fn=time.sleep,
     for position in positions_ouvertes:
         try:
             sorties_a_traiter.extend(
-                portfolio.positions_to_close([position], companies, today))
+                portfolio.positions_to_close(
+                    [position], companies, today, roster_tickers=roster_tickers))
         except Exception as e:
             run["erreurs"].append({
                 "etape": "positions_to_close",

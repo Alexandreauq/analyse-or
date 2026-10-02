@@ -345,27 +345,42 @@ def test_select_entries_zone_cap_counts_signals_retained_earlier_in_same_batch()
     """Meme logique que le plafond secteur/indice existant : compte aussi
     les signaux deja retenus plus haut dans le MEME classement, pas
     seulement les positions deja ouvertes. Ajuste pour audit 2026-10-02 :
-    avec MAX_NEW_ENTRIES_PER_DAY=3, on verifie que 3 signaux zone_euro
-    de differents indices passent, et les suivants sont rejetes par le
-    plafond quotidien plutot que le plafond zone (mais l'ordre des
-    filtres et la logique de comptage restent correctes)."""
+    seed 4 open positions de zone_euro pour consommer 4/5 du plafond zone,
+    puis offrir 5 signaux (2 zone_euro, 3 autres zones). Le 2e signal
+    zone_euro (rang 3) est rejete par plafond zone (4 open + 1 retenu >= 5)
+    avant le daily cap."""
+    # 4 positions ouvertes de zone_euro (indices varies) consomment 4/5 du plafond zone
+    ouvertes = [
+        _bot_position("OPEN1.PA", index="CAC40"),
+        _bot_position("OPEN2.DE", index="DAX"),
+        _bot_position("OPEN3.MC", index="IBEX35"),
+        _bot_position("OPEN4.MI", index="FTSEMIB"),
+    ]
+    # 5 signaux : 2 autres de zone_euro, 3 d'autres zones
+    # Le 2e signal zone_euro (rang 3) sera rejete par plafond zone
     signaux = [
-        _signal("A.PA", 90.0, index="CAC40", sector="S1"),
-        _signal("B.DE", 80.0, index="DAX", sector="S2"),
-        _signal("C.MC", 70.0, index="IBEX35", sector="S3"),
-        _signal("D.MI", 60.0, index="FTSEMIB", sector="S4"),
-        _signal("E.PA", 50.0, index="CAC40", sector="S5"),
-        _signal("F.MI", 40.0, index="FTSEMIB", sector="S6"),
-    ]  # 6 signaux zone_euro, plafond zone = 5, plafond daily = 3 -> les 3 premiers passent, les 3 derniers rejetes par daily
-    plans = {t: _plan(t) for t in ("A.PA", "B.DE", "C.MC", "D.MI", "E.PA", "F.MI")}
-    contrats = _contrats(["A.PA", "B.DE", "C.MC", "D.MI", "E.PA", "F.MI"])
+        _signal("A.PA", 90.0, index="CAC40", sector="S1"),   # zone_euro, retenu
+        _signal("B.US", 80.0, index="NASDAQ", sector="S2"),  # amerique_nord, retenu
+        _signal("C.DE", 70.0, index="DAX", sector="S3"),     # zone_euro, REJETE zone cap
+        _signal("D.CH", 60.0, index="SMI", sector="S4"),     # suisse, retenu (daily=3)
+        _signal("E.UK", 50.0, index="FTSE", sector="S5"),    # royaume_uni, REJETE daily cap
+    ]
+    plans = {t: _plan(t) for t in ("A.PA", "B.US", "C.DE", "D.CH", "E.UK")}
+    contrats = _contrats(["A.PA", "B.US", "C.DE", "D.CH", "E.UK"])
 
     retenus, rejets = portfolio.select_entries(
-        signaux, [], plans, contrats, _CASH_ILLIMITE)
+        signaux, ouvertes, plans, contrats, _CASH_ILLIMITE)
 
-    assert [r["signal"]["ticker"] for r in retenus] == ["A.PA", "B.DE", "C.MC"]
-    # Les 3 derniers signaux sont rejetes par le plafond quotidien, pas le plafond zone
-    assert [r["raison"] for r in rejets] == ["plafond_entrees_quotidien_atteint", "plafond_entrees_quotidien_atteint", "plafond_entrees_quotidien_atteint"]
+    # A (CAC40, zone_euro, 90): zone=4<5 -> retenu, zone devient 5
+    # B (NASDAQ, amerique_nord, 80): -> retenu
+    # C (DAX, zone_euro, 70): zone=5>=5 (compte A retenu + 4 open) -> REJETE par plafond zone, daily=2
+    # D (SMI, suisse, 60): -> retenu, daily=3 atteint
+    # E (FTSE, royaume_uni, 50): daily=3>=3 -> rejete par daily cap
+    assert [r["signal"]["ticker"] for r in retenus] == ["A.PA", "B.US", "D.CH"]
+    assert len(rejets) == 2
+    rejets_by_ticker = {r["ticker"]: r["raison"] for r in rejets}
+    assert rejets_by_ticker["C.DE"] == "plafond_zone_atteint"
+    assert rejets_by_ticker["E.UK"] == "plafond_entrees_quotidien_atteint"
 
 
 def test_select_entries_zone_cap_does_not_block_other_zones():
@@ -427,25 +442,40 @@ def test_select_entries_sector_cap_counts_signals_retained_earlier_in_same_batch
     """Le plafond doit aussi compter les signaux deja retenus PLUS HAUT
     dans le MEME classement, pas seulement les positions deja ouvertes --
     sinon deux signaux du meme secteur pourraient passer le meme jour.
-    Ajuste pour audit 2026-10-02 : avec MAX_NEW_ENTRIES_PER_DAY=3, on
-    verifie que 3 signaux du meme secteur passent tous et consomment le
-    plafond daily cap ET le plafond secteur (=3), et un 4e serait rejete
-    par le plafond quotidien."""
-    signaux = [
-        _signal("A.PA", 90.0, sector="Financial Services"),
-        _signal("B.PA", 80.0, sector="Financial Services"),
-        _signal("C.PA", 70.0, sector="Financial Services"),
-        _signal("D.PA", 60.0, sector="Financial Services"),
+    Ajuste pour audit 2026-10-02 : seed 2 open positions du secteur
+    "Financial Services" pour consommer 2/3 du plafond secteur, puis offrir
+    5 signaux avec indices differents (pour eviter l'interference du cap indice).
+    Le 2e signal FS (rang 3) est rejete par plafond secteur (2 open + 1 retenu >= 3)."""
+    # 2 positions ouvertes du secteur "Financial Services" (indices DOW et NASDAQ)
+    ouvertes = [
+        _bot_position("OPEN1.PA", index="DOW", sector="Financial Services"),
+        _bot_position("OPEN2.PA", index="NASDAQ", sector="Financial Services"),
     ]
-    plans = {t: _plan(t) for t in ("A.PA", "B.PA", "C.PA", "D.PA")}
-    contrats = _contrats(["A.PA", "B.PA", "C.PA", "D.PA"])
+    # 5 signaux avec indices differents : 2 du secteur FS, 3 d'autres secteurs
+    # Le 2e signal FS (rang 3) sera rejete par plafond secteur (2 open + 1 retenu >= 3)
+    signaux = [
+        _signal("A.PA", 90.0, index="CAC40", sector="Financial Services"),
+        _signal("B.PA", 80.0, index="DAX", sector="Technology"),
+        _signal("C.PA", 70.0, index="IBEX35", sector="Financial Services"),
+        _signal("D.PA", 60.0, index="SMI", sector="Healthcare"),
+        _signal("E.PA", 50.0, index="FTSE", sector="Energy"),
+    ]
+    plans = {t: _plan(t) for t in ("A.PA", "B.PA", "C.PA", "D.PA", "E.PA")}
+    contrats = _contrats(["A.PA", "B.PA", "C.PA", "D.PA", "E.PA"])
 
     retenus, rejets = portfolio.select_entries(
-        signaux, [], plans, contrats, _CASH_ILLIMITE)
+        signaux, ouvertes, plans, contrats, _CASH_ILLIMITE)
 
-    assert [r["signal"]["ticker"] for r in retenus] == ["A.PA", "B.PA", "C.PA"]
-    assert rejets == [{"ticker": "D.PA", "rang": 4, "score": 60.0,
-                       "raison": "plafond_entrees_quotidien_atteint"}]
+    # A (FS, CAC40, 90): sector=2<3 -> retenu, sector["FS"] devient 3
+    # B (Tech, DAX, 80): -> retenu
+    # C (FS, IBEX35, 70): sector["FS"]=3>=3 (compte A retenu + 2 open) -> REJETE par plafond secteur
+    # D (HC, SMI, 60): -> retenu, daily=3 atteint
+    # E (Energy, FTSE, 50): daily=3>=3 -> rejete par daily cap
+    assert [r["signal"]["ticker"] for r in retenus] == ["A.PA", "B.PA", "D.PA"]
+    assert len(rejets) == 2
+    rejets_by_ticker = {r["ticker"]: r["raison"] for r in rejets}
+    assert rejets_by_ticker["C.PA"] == "plafond_secteur_atteint"
+    assert rejets_by_ticker["E.PA"] == "plafond_entrees_quotidien_atteint"
 
 
 def test_select_entries_diversification_rejection_does_not_consume_a_slot():

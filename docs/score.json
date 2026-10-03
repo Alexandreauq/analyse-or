@@ -1,20 +1,20 @@
 {
-  "date": "2026-10-02",
-  "composite_score": -27.1,
+  "date": "2026-10-03",
+  "composite_score": -28.9,
   "interpretation": "Défavorable — pas d'entrée même sur signal technique",
   "cftc_percentile": 55.769230769230774,
   "factors": [
     {
       "name": "Taux réels US 10 ans",
-      "score": -9.399999999999995,
+      "score": -10,
       "weight": 0.3,
-      "raw_value": "2.88% (il y a ~45j : 2.41%)"
+      "raw_value": "2.88% (il y a ~45j : 2.35%)"
     },
     {
       "name": "Dollar (DXY)",
-      "score": -9.820022583007812,
+      "score": -9.850006103515625,
       "weight": 0.15,
-      "raw_value": "101.92 (il y a 2 mois : 99.96)"
+      "raw_value": "101.93 (il y a 2 mois : 99.96)"
     },
     {
       "name": "Anticipations d'inflation",
@@ -48,16 +48,11 @@
     }
   ],
   "technical": {
-    "note": "Cours en-dessous de la MM200 (-8.4%) — tendance baissière",
-    "spot": 4172.10009765625,
-    "ma200": 4553.414500732422
+    "note": "Cours en-dessous de la MM200 (-8.6%) — tendance baissière",
+    "spot": 4162.2998046875,
+    "ma200": 4553.365499267578
   },
   "calendar": [
-    {
-      "date": "02/10/2026",
-      "label": "Emploi US (NFP + chômage)",
-      "kind": "Donnée"
-    },
     {
       "date": "08/10/2026",
       "label": "Inscriptions chômage (hebdo)",
@@ -92,14 +87,19 @@
       "date": "29/10/2026",
       "label": "PIB (GDP)",
       "kind": "Donnée"
+    },
+    {
+      "date": "06/11/2026",
+      "label": "Emploi US (NFP + chômage)",
+      "kind": "Donnée"
     }
   ],
   "alerts": [
     {
       "kind": "risque",
       "title": "Chute rapide du score composite",
-      "detail": "Repricing de -20.9 points en moins de 5 jours.",
-      "date": "02/10/2026"
+      "detail": "Repricing de -20.2 points en moins de 5 jours.",
+      "date": "03/10/2026"
     }
   ]
 }

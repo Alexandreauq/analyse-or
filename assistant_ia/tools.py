@@ -43,9 +43,25 @@ TOOL_DEFINITIONS = [
         "input_schema": {
             "type": "object",
             "properties": {
-                "indice": {"type": "string", "description": "Ex. CAC40, NASDAQ"},
-                "secteur": {"type": "string"},
-                "n": {"type": "integer", "description": "Nombre de resultats, defaut 10"},
+                "indice": {
+                    "type": "string",
+                    "description": "Valeur exacte de l'indice, ex. CAC40, NASDAQ",
+                    "enum": [
+                        "CAC40", "DAX", "DOW", "FTSE", "FTSEMIB",
+                        "HANGSENG", "IBEX35", "NASDAQ", "NIKKEI225", "SMI",
+                    ],
+                },
+                "secteur": {
+                    "type": "string",
+                    "description": (
+                        "Secteur exact en anglais tel qu'utilise par le site, ex. "
+                        "Consumer Cyclical, Consumer Defensive, Healthcare, "
+                        "Financial Services, Technology, Industrials, Energy, "
+                        "Basic Materials, Communication Services, Utilities, "
+                        "Real Estate."
+                    ),
+                },
+                "n": {"type": "integer", "description": "Nombre de resultats, defaut 10, maximum 25"},
             },
         },
     },
@@ -69,16 +85,15 @@ TOOL_DEFINITIONS = [
     },
     {
         "name": "resume_portefeuille",
-        "description": "Combine les positions manuelles de l'utilisateur avec les positions des deux bots pour une vue d'ensemble du portefeuille.",
+        "description": (
+            "Combine les positions manuelles de l'utilisateur avec les "
+            "positions des deux bots pour une vue d'ensemble du "
+            "portefeuille. Les positions manuelles sont injectees "
+            "automatiquement par le serveur — n'envoie aucun argument."
+        ),
         "input_schema": {
             "type": "object",
-            "properties": {
-                "positions_manuelles": {
-                    "type": "array",
-                    "description": "Positions manuelles telles qu'envoyees par le navigateur (peut etre vide)",
-                    "items": {"type": "object"},
-                },
-            },
+            "properties": {},
         },
     },
     {
@@ -132,6 +147,15 @@ def _suggestions_proches(ticker: str, companies: list[dict]) -> list[str]:
     return suggestions
 
 
+def _fiche_allegee(company: dict) -> dict:
+    """Renvoie la fiche d'une entreprise SANS les champs volumineux
+    (financial_analysis_html ~8.5Ko, news ~3.9Ko) — voir finding 2 de la
+    revue finale : sans cette coupe, un classement avec un n eleve ou
+    plusieurs fiche_entreprise/comparer_entreprises dans une meme
+    conversation peut couter plusieurs dollars en une seule question."""
+    return {k: v for k, v in company.items() if k not in ("financial_analysis_html", "news")}
+
+
 def fiche_entreprise(ticker: str, *, indices_source=data_sources.fetch_indices_data) -> dict:
     companies = indices_source().get("companies", [])
     company = _find_company(ticker, companies)
@@ -140,7 +164,7 @@ def fiche_entreprise(ticker: str, *, indices_source=data_sources.fetch_indices_d
             "erreur": f"ticker introuvable : {ticker!r}",
             "suggestions": _suggestions_proches(ticker, companies),
         }
-    return company
+    return _fiche_allegee(company)
 
 
 def comparer_entreprises(
@@ -156,13 +180,14 @@ def classement(
     indice: str | None = None, secteur: str | None = None, n: int = 10,
     *, indices_source=data_sources.fetch_indices_data,
 ) -> dict:
+    n = min(n, 25)
     companies = indices_source().get("companies", [])
     if indice:
         companies = [c for c in companies if c.get("index") == indice]
     if secteur:
         companies = [c for c in companies if c.get("sector") == secteur]
     trie = sorted(companies, key=lambda c: c.get("score") or 0, reverse=True)
-    return {"classement": trie[:n]}
+    return {"classement": [_fiche_allegee(c) for c in trie[:n]]}
 
 
 def statut_bot(nom: str, *, dashboard_source=data_sources.fetch_bot_dashboard) -> dict:
@@ -192,6 +217,8 @@ def resume_portefeuille(
 
 
 def proposer_lien(cible_type: str, cible_valeur: str, libelle: str) -> dict:
+    if cible_type not in ("ticker", "section"):
+        return {"erreur": f"cible_type invalide : {cible_type!r}"}
     return {"cible_type": cible_type, "cible_valeur": cible_valeur, "libelle": libelle}
 
 

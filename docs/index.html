@@ -293,6 +293,7 @@
   .home-search-bubble {
     background: var(--bg-2); border: 1px solid var(--border);
     border-radius: var(--radius-lg); padding: 12px 16px;
+    white-space: pre-wrap;
   }
   .home-search-links { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
 
@@ -3420,7 +3421,7 @@ let homeSearchHistory = [];
 function homeSearchBubbleHtml(texte, liens) {
   const liensHtml = (liens || []).map(l => `
     <button class="toggle-btn home-search-link" type="button"
-            data-cible-type="${l.cible_type}" data-cible-valeur="${escHtml(l.cible_valeur)}"
+            data-cible-type="${escHtml(l.cible_type)}" data-cible-valeur="${escHtml(l.cible_valeur)}"
             data-libelle="${escHtml(l.libelle)}">${escHtml(l.libelle)}</button>`).join('');
   return `
     <div class="home-search-bubble">
@@ -3466,6 +3467,17 @@ async function askAssistant(question) {
         question, history: homeSearchHistory, manual_positions: positionsManuelles,
       }),
     });
+    if (response.status === 401) {
+      localStorage.removeItem('aiAssistantToken');
+      panel.children[bubbleIndex].outerHTML = homeSearchBubbleHtml(
+        "Ton jeton d'acces est invalide. Recharge la page pour en saisir un nouveau.", []);
+      return;
+    }
+    if (response.status === 429) {
+      panel.children[bubbleIndex].outerHTML = homeSearchBubbleHtml(
+        "Le budget quotidien de l'assistant est atteint. Reessaie demain.", []);
+      return;
+    }
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
     const reader = response.body.getReader();

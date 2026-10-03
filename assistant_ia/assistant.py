@@ -30,7 +30,11 @@ plusieurs choix a proposer.
 
 Si une information manque ou qu'une question est ambigue entre plusieurs \
 entreprises, dis-le explicitement et propose les choix via proposer_lien \
-plutot que de deviner silencieusement."""
+plutot que de deviner silencieusement.
+
+Reponds en texte brut, sans formatage markdown (pas de **gras**, pas de \
+listes a tirets, pas de titres) — utilise des phrases completes et des \
+retours a la ligne simples."""
 
 
 def _construit_messages(question: str, history: list[dict]) -> list[dict]:
@@ -53,11 +57,6 @@ def run_assistant_loop(
         tool_dispatch = tools.dispatch_tool
 
     messages = _construit_messages(question, history)
-    if manual_positions is not None:
-        messages[-1] = {
-            "role": "user",
-            "content": f"{question}\n\n[positions_manuelles: {manual_positions}]",
-        }
 
     liens_collectes: list[dict] = []
 
@@ -100,7 +99,11 @@ def run_assistant_loop(
         for bloc in reponse.content:
             if bloc.type != "tool_use":
                 continue
-            resultat = tool_dispatch(bloc.name, bloc.input)
+            if bloc.name == "resume_portefeuille":
+                tool_input = {**bloc.input, "positions_manuelles": manual_positions or []}
+            else:
+                tool_input = bloc.input
+            resultat = tool_dispatch(bloc.name, tool_input)
             if bloc.name == "proposer_lien" and "erreur" not in resultat:
                 liens_collectes.append(resultat)
             resultats_outils.append({

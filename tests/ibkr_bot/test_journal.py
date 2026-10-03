@@ -206,6 +206,29 @@ def test_build_position_record_produces_exactly_what_portfolio_needs():
     assert reconciliation["anomalies_quantite"] == []
 
 
+def test_build_position_record_stores_the_entry_fx_rate():
+    """Le taux de change a l'entree doit desormais vivre SUR la position
+    elle-meme (positions.json), pas seulement dans la ligne de journal de
+    l'ordre (build_order_record) — Task 1 du plan FX P&L 2026-10-03."""
+    signal = {"id": "III.L-2026-09-15", "ticker": "III.L", "name": "3i Group",
+              "index": "FTSE", "currency": "GBP", "sector": "Financial Services",
+              "entry_date": "2026-09-15",
+              "paper_entry_price": 28.0, "target_exit_price": 35.0,
+              "score": 40.0, "current_price": 29.5}
+    plan = {"ticker": "III.L", "quantite": 20, "devise_cotation": "GBp",
+            "devise_compte": "GBP", "taux_de_change": 0.86, "budget_converti": 43000.0,
+            "prix_unitaire_cotation": 2950.0, "cout_estime_devise_compte": 590.0,
+            "motif": None}
+    contrat = {"ticker": "III.L", "conid": 98765, "exchange": "LSE",
+               "currency": "GBP", "motif": None, "detail": "resolu"}
+
+    position = journal.build_position_record(
+        signal, plan, contrat, quantite=20, prix_execution_reference=29.5,
+        today="2026-09-15")
+
+    assert position["taux_de_change_entree"] == 0.86
+
+
 def test_save_positions_safely_writes_a_file_portfolio_can_reload(tmp_path):
     path = str(tmp_path / "positions.json")
     positions = [{"id": "MC.PA-2026-09-15", "ticker": "MC.PA", "conid": 17275,

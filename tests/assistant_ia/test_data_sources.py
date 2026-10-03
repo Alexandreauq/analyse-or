@@ -103,3 +103,97 @@ def test_fetch_bot_dashboard_degrades_on_network_failure(monkeypatch):
 def test_fetch_bot_dashboard_rejects_an_unknown_bot_name():
     with pytest.raises(ValueError):
         data_sources.fetch_bot_dashboard("inconnu", http_get=lambda *a, **k: None)
+
+
+def test_fetch_marketaux_news_sends_the_token_in_the_query_string(monkeypatch):
+    monkeypatch.setenv("MARKETAUX_API_TOKEN", "secret-marketaux")
+    appels = []
+
+    def fake_get(url, params=None, timeout=None):
+        appels.append((url, params))
+        return _FakeResponse(json_data={"data": []})
+
+    data_sources.fetch_marketaux_news(
+        {"symbols": "MC.PA"}, 7200, "entreprise:MC.PA", http_get=fake_get, cache={})
+
+    url, params = appels[0]
+    assert url == "https://api.marketaux.com/v1/news/all"
+    assert params["api_token"] == "secret-marketaux"
+    assert params["symbols"] == "MC.PA"
+
+
+def test_fetch_marketaux_news_refuses_without_a_token(monkeypatch):
+    monkeypatch.delenv("MARKETAUX_API_TOKEN", raising=False)
+    appels = []
+
+    resultat = data_sources.fetch_marketaux_news(
+        {"symbols": "MC.PA"}, 7200, "k", http_get=lambda *a, **k: appels.append(1), cache={})
+
+    assert "erreur" in resultat
+    assert appels == []  # aucun appel réseau sans token
+
+
+def test_fetch_marketaux_news_reuses_a_fresh_cache_entry(monkeypatch):
+    monkeypatch.setenv("MARKETAUX_API_TOKEN", "t")
+    appels = []
+
+    def fake_get(url, params=None, timeout=None):
+        appels.append(1)
+        return _FakeResponse(json_data={"data": [{"title": "x"}]})
+
+    cache = {}
+    horloge = {"t": 1000.0}
+    data_sources.fetch_marketaux_news({"symbols": "MC.PA"}, 7200, "k",
+                                      http_get=fake_get, now_fn=lambda: horloge["t"], cache=cache)
+    horloge["t"] += 600.0
+    second = data_sources.fetch_marketaux_news({"symbols": "MC.PA"}, 7200, "k",
+                                               http_get=fake_get, now_fn=lambda: horloge["t"], cache=cache)
+
+    assert len(appels) == 1
+    assert second == {"data": [{"title": "x"}]}
+
+
+def test_fetch_marketaux_news_refetches_after_ttl(monkeypatch):
+    monkeypatch.setenv("MARKETAUX_API_TOKEN", "t")
+    appels = []
+
+    def fake_get(url, params=None, timeout=None):
+        appels.append(1)
+        return _FakeResponse(json_data={"data": []})
+
+    cache = {}
+    horloge = {"t": 1000.0}
+    data_sources.fetch_marketaux_news({"symbols": "MC.PA"}, 3600, "k",
+                                      http_get=fake_get, now_fn=lambda: horloge["t"], cache=cache)
+    horloge["t"] += 3700.0
+    data_sources.fetch_marketaux_news({"symbols": "MC.PA"}, 3600, "k",
+                                      http_get=fake_get, now_fn=lambda: horloge["t"], cache=cache)
+
+    assert len(appels) == 2
+
+
+def test_fetch_marketaux_news_never_caches_an_error(monkeypatch):
+    monkeypatch.setenv("MARKETAUX_API_TOKEN", "t")
+
+    def fake_get(url, params=None, timeout=None):
+        raise RuntimeError("quota")
+
+    cache = {}
+    resultat = data_sources.fetch_marketaux_news({"symbols": "MC.PA"}, 7200, "k",
+                                                 http_get=fake_get, cache=cache)
+
+    assert "erreur" in resultat
+    assert "k" not in cache
+
+
+def test_fetch_marketaux_news_error_never_leaks_the_token(monkeypatch):
+    monkeypatch.setenv("MARKETAUX_API_TOKEN", "secret-marketaux")
+
+    def fake_get(url, params=None, timeout=None):
+        raise RuntimeError(f"HTTP 429 pour https://api.marketaux.com/v1/news/all?api_token=secret-marketaux")
+
+    resultat = data_sources.fetch_marketaux_news({"symbols": "MC.PA"}, 7200, "k",
+                                                 http_get=fake_get, cache={})
+
+    assert "secret-marketaux" not in resultat["erreur"]
+    assert "RuntimeError" in resultat["erreur"]  # seul le nom de la classe est transmis

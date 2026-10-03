@@ -131,6 +131,19 @@ def test_normalise_survives_non_string_fields():
     assert resultat_description[0]["resume_court"] == ""
 
 
+def test_normalise_survives_non_list_entities():
+    payload = {"data": [
+        {"url": "https://a.test/bad", "title": "Entites invalides", "published_at": "2026-10-03T09:00:00Z",
+         "entities": 5},
+        _article("https://a.test/ok", "LVMH bondit", "2026-10-03T08:00:00Z",
+                 entities=[_entite("MC.PA", 9.0)]),
+    ]}
+
+    articles = news.normalise(payload, ticker="MC.PA")
+
+    assert [a["url"] for a in articles] == ["https://a.test/ok"]
+
+
 def test_normalise_degrades_to_empty_list_on_malformed_payload():
     assert news.normalise(None, ticker="MC.PA") == []
     assert news.normalise({"data": "pas une liste"}, ticker="MC.PA") == []

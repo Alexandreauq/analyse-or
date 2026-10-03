@@ -3348,6 +3348,49 @@ let portfolioOrSectionIndex = 0;
 let portfolioActionsSections = [];
 let portfolioOrSections = [];
 
+// Charge indicesData si ce n'est pas deja fait (meme fetch que
+// loadIndices/le chargement du Portefeuille, voir leurs commentaires) —
+// necessaire ici car l'ecran d'accueil peut etre la toute premiere
+// chose affichee, avant que l'utilisateur n'ait jamais ouvert Indices
+// ou Portefeuille.
+async function ensureIndicesData() {
+  if (indicesData) return;
+  try {
+    const res = await fetch('indices.json?t=' + Date.now());
+    if (!res.ok) throw new Error('indices.json introuvable');
+    indicesData = await res.json();
+  } catch (e) {
+    console.error('Impossible de charger indices.json pour la recherche', e);
+  }
+}
+
+// Sections connues du routeur (voir parseRoute) — mots-cles francais
+// courants qui doivent rediriger directement sans passer par l'IA.
+const INSTANT_NAV_SECTIONS = {
+  'or': '#or', 'bot or': '#or', 'scalping': '#or',
+  'portefeuille': '#portefeuille', 'portfolio': '#portefeuille',
+  'bot actions': '#portefeuille',
+  'indices': '#indices',
+};
+
+// Correspondance instantanee, sans IA : meme logique de filtrage que la
+// recherche existante dans la liste Indices (substring sur nom/ticker en
+// minuscules, voir sortedFilteredCompanies) — reutilisee ici pour rester
+// coherent avec ce que l'utilisateur voit deja ailleurs sur le site.
+// Renvoie un hash de redirection si UNE SEULE entreprise correspond
+// clairement, ou le hash d'une section connue — sinon null (la question
+// part alors vers l'assistant IA).
+function matchInstantNav(query) {
+  const q = query.trim().toLowerCase();
+  if (!q) return null;
+  if (INSTANT_NAV_SECTIONS[q]) return INSTANT_NAV_SECTIONS[q];
+  if (!indicesData || !Array.isArray(indicesData.companies)) return null;
+  const matches = indicesData.companies.filter(c =>
+    c.name.toLowerCase().includes(q) || c.ticker.toLowerCase().includes(q));
+  if (matches.length === 1) return `#indices/${encodeURIComponent(matches[0].ticker)}`;
+  return null;
+}
+
 async function loadIndices(ticker, view, tickers) {
   const content = document.getElementById('indicesContent');
   if (!indicesData) {

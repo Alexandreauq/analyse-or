@@ -66,3 +66,7 @@ def fetch_bot_dashboard(nom: str, http_get=requests.get) -> dict:
         return reponse.json()
     except Exception as e:
         return {"erreur": f"impossible de contacter le bot {nom} : {e}"}
+
+
+def fetch_marketaux_news(params, ttl_seconds, cache_key):
+    raise NotImplementedError("implémenté en Task 2")

@@ -140,3 +140,11 @@ def test_the_gateway_reminder_timer_fires_sunday_at_the_gateway_restart_time():
     assert "Persistent=false" in contenu
     assert "Unit=ibkr-gateway-reminder.service" in contenu
     assert "WantedBy=timers.target" in contenu
+
+
+def test_assistant_ia_api_service_file_targets_the_right_module_and_port():
+    contenu = _lire("assistant-ia-api.service")
+    assert "assistant_ia.api:app" in contenu
+    assert "--port 8445" in contenu
+    assert "/etc/letsencrypt/live/goldbot.fr/privkey.pem" in contenu
+    assert "/etc/letsencrypt/live/goldbot.fr/fullchain.pem" in contenu

@@ -163,12 +163,13 @@ def test_dispatch_tool_returns_an_error_dict_for_an_unknown_tool():
     assert "erreur" in resultat
 
 
-def test_tool_definitions_lists_all_seven_tools():
+def test_tool_definitions_lists_all_nine_tools():
     noms = {t["name"] for t in tools.TOOL_DEFINITIONS}
 
     assert noms == {
         "fiche_entreprise", "comparer_entreprises", "classement",
         "statut_bot", "positions_bot", "resume_portefeuille", "proposer_lien",
+        "actualites_entreprise", "actualites_marche",
     }
 
 
@@ -189,3 +190,39 @@ def test_classement_schema_lists_the_exact_index_values_as_an_enum():
         "CAC40", "DAX", "DOW", "FTSE", "FTSEMIB",
         "HANGSENG", "IBEX35", "NASDAQ", "NIKKEI225", "SMI",
     ]
+
+
+def test_dispatch_actualites_entreprise_calls_the_news_source_with_the_ticker(monkeypatch):
+    appels = []
+
+    def fake_news(params, ttl_seconds, cache_key):
+        appels.append((params["symbols"], cache_key))
+        return {"data": []}
+
+    resultat = tools.dispatch_tool(
+        "actualites_entreprise", {"ticker": "MC.PA"}, news_source=fake_news)
+
+    assert appels == [("MC.PA", "entreprise:MC.PA")]
+    assert resultat == {"ticker": "MC.PA", "articles": []}
+
+
+def test_dispatch_actualites_marche_needs_no_input(monkeypatch):
+    resultat = tools.dispatch_tool(
+        "actualites_marche", {}, news_source=lambda p, t, k: {"data": []})
+
+    assert resultat == {"articles": []}
+
+
+def test_dispatch_actualites_entreprise_returns_an_error_dict_on_source_failure():
+    resultat = tools.dispatch_tool(
+        "actualites_entreprise", {"ticker": "MC.PA"},
+        news_source=lambda p, t, k: {"erreur": "actualites indisponibles (RuntimeError)"})
+
+    assert "erreur" in resultat
+
+
+def test_actualites_tool_schemas_have_the_expected_inputs():
+    par_nom = {t["name"]: t for t in tools.TOOL_DEFINITIONS}
+
+    assert par_nom["actualites_entreprise"]["input_schema"]["required"] == ["ticker"]
+    assert "properties" in par_nom["actualites_marche"]["input_schema"]

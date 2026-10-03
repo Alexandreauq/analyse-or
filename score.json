@@ -1,14 +1,14 @@
 {
-  "date": "2026-10-02",
-  "composite_score": -27.1,
+  "date": "2026-10-03",
+  "composite_score": -28.9,
   "interpretation": "Défavorable — pas d'entrée même sur signal technique",
   "cftc_percentile": 55.769230769230774,
   "factors": [
     {
       "name": "Taux réels US 10 ans",
-      "score": -9.399999999999995,
+      "score": -10,
       "weight": 0.3,
-      "raw_value": "2.88% (il y a ~45j : 2.41%)"
+      "raw_value": "2.88% (il y a ~45j : 2.35%)"
     },
     {
       "name": "Dollar (DXY)",
@@ -54,11 +54,6 @@
   },
   "calendar": [
     {
-      "date": "02/10/2026",
-      "label": "Emploi US (NFP + chômage)",
-      "kind": "Donnée"
-    },
-    {
       "date": "08/10/2026",
       "label": "Inscriptions chômage (hebdo)",
       "kind": "Donnée"
@@ -92,14 +87,19 @@
       "date": "29/10/2026",
       "label": "PIB (GDP)",
       "kind": "Donnée"
+    },
+    {
+      "date": "06/11/2026",
+      "label": "Emploi US (NFP + chômage)",
+      "kind": "Donnée"
     }
   ],
   "alerts": [
     {
       "kind": "risque",
       "title": "Chute rapide du score composite",
-      "detail": "Repricing de -20.9 points en moins de 5 jours.",
-      "date": "02/10/2026"
+      "detail": "Repricing de -20.2 points en moins de 5 jours.",
+      "date": "03/10/2026"
     }
   ]
 }

@@ -247,6 +247,38 @@ def test_run_assistant_loop_collects_links_across_multiple_turns():
     assert valeurs == {"MC.PA", "OR.PA"}
 
 
+def test_run_assistant_loop_overrides_resume_portefeuille_input_with_the_real_manual_positions():
+    # Le modele peut appeler resume_portefeuille sans argument (ou avec un
+    # argument hallucine) — la boucle doit quand meme transmettre les VRAIES
+    # positions manuelles recues en parametre de run_assistant_loop, en les
+    # injectant cote serveur plutot que de faire confiance a ce que Claude
+    # a envoye (voir finding 1 de la revue finale).
+    appels_dispatch = []
+
+    def fake_dispatch(name, tool_input):
+        appels_dispatch.append((name, tool_input))
+        return {"positions": [], "nombre_total": 0}
+
+    tool_use_block = _FakeBlock(
+        "tool_use", id="tu_1", name="resume_portefeuille", input={})
+    first_final = _FakeMessage(content=[tool_use_block], stop_reason="tool_use", usage=_FakeUsage(10, 5))
+    second_final = _FakeMessage(
+        content=[_FakeBlock("text", text="Voici ton portefeuille.")],
+        stop_reason="end_turn", usage=_FakeUsage(10, 5))
+    client = _FakeClient([_FakeStream([], first_final), _FakeStream(["Voici ton portefeuille."], second_final)])
+
+    positions_reelles = [{"ticker": "MANUELLE.PA", "quantity": 5}]
+
+    list(assistant.run_assistant_loop(
+        "Resume mon portefeuille", [], manual_positions=positions_reelles,
+        client=client, tool_dispatch=fake_dispatch))
+
+    assert len(appels_dispatch) == 1
+    nom, tool_input = appels_dispatch[0]
+    assert nom == "resume_portefeuille"
+    assert tool_input["positions_manuelles"] == positions_reelles
+
+
 def test_run_assistant_loop_notes_truncation_on_max_tokens():
     final = _FakeMessage(
         content=[_FakeBlock("text", text="Reponse partielle...")],

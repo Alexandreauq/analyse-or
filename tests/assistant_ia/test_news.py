@@ -110,6 +110,27 @@ def test_normalise_market_mode_does_not_require_an_entity_match():
     assert len(articles) == 1
 
 
+def test_normalise_survives_non_string_fields():
+    payload = {"data": [
+        {"url": "https://a.example/1", "title": 123, "description": "x",
+         "published_at": "2026-10-03T10:00:00"},
+        {"url": "https://a.example/2", "title": "Titre valide",
+         "published_at": "2026-10-03T09:00:00"},
+    ]}
+
+    resultat = news.normalise(payload)
+
+    assert [a["titre"] for a in resultat] == ["Titre valide"]
+
+    payload_description = {"data": [
+        {"url": "https://a.example/3", "title": "Autre titre", "description": ["x"]},
+    ]}
+
+    resultat_description = news.normalise(payload_description)
+
+    assert resultat_description[0]["resume_court"] == ""
+
+
 def test_normalise_degrades_to_empty_list_on_malformed_payload():
     assert news.normalise(None, ticker="MC.PA") == []
     assert news.normalise({"data": "pas une liste"}, ticker="MC.PA") == []

@@ -49,7 +49,10 @@ def _url_ok(url) -> bool:
 
 def _score_entite(article: dict, ticker: str) -> float | None:
     meilleur = None
-    for entite in article.get("entities") or []:
+    entites = article.get("entities")
+    if not isinstance(entites, list):
+        return None
+    for entite in entites:
         if not isinstance(entite, dict) or entite.get("symbol") != ticker:
             continue
         score = entite.get("match_score")

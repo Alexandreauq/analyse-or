@@ -1140,6 +1140,19 @@
     transition: border-color .15s ease, color .15s ease;
   }
   .filter-reset-btn:hover { border-color: var(--rust); color: var(--rust); }
+  .saved-screeners-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .saved-screeners-chips:empty { display: none; }
+  .saved-screener-chip {
+    display: inline-flex; align-items: center; max-width: 100%;
+    border: 1px solid var(--gauge-mid); border-radius: var(--radius-pill);
+    color: var(--gauge-mid); font-size: var(--text-2xs);
+  }
+  .saved-screener-chip button {
+    background: none; border: none; color: inherit; font: inherit;
+    padding: 3px 8px; cursor: pointer; min-width: 0; overflow-wrap: anywhere;
+  }
+  .saved-screener-chip .saved-screener-del { padding: 3px 7px 3px 0; opacity: .7; }
+  .saved-screener-chip .saved-screener-del:hover { opacity: 1; color: var(--rust); }
 
   .index-card-list { display: flex; flex-direction: column; gap: 18px; margin: 4px 0 24px; }
   .index-card {
@@ -3758,6 +3771,40 @@ function sortedFilteredCompanies(companies, state) {
   return visible;
 }
 
+// Screeners sauvegardés (filtres nommés) — réservés à la page Indices :
+// stockés en localStorage sous une clé dédiée, JSON = tableau de
+// {name, state} avec state = {search, sort, financialOnly, scoreMin,
+// scoreMax, sector, sectorProfile, alertKind} (mêmes champs que les
+// globaux indicesList*). Toute lecture/écriture est protégée (navigation
+// privée, quota, données corrompues) : en cas d'échec, liste vide.
+const SAVED_SCREENERS_KEY = 'analyse-or-saved-screeners';
+function loadSavedScreeners() {
+  try {
+    const list = JSON.parse(localStorage.getItem(SAVED_SCREENERS_KEY) || '[]');
+    return Array.isArray(list) ? list.filter(s => s && typeof s.name === 'string') : [];
+  } catch (e) {
+    return [];
+  }
+}
+function storeSavedScreeners(list) {
+  try {
+    localStorage.setItem(SAVED_SCREENERS_KEY, JSON.stringify(list));
+  } catch (e) {
+    // Stockage indisponible : le filtre reste utilisable, sans persistance.
+  }
+}
+function savedScreenersChipsHtml() {
+  return loadSavedScreeners().map((s, i) => `
+    <span class="saved-screener-chip">
+      <button type="button" data-screener-apply="${i}">${escHtml(s.name)}</button>
+      <button type="button" class="saved-screener-del" data-screener-delete="${i}" aria-label="Supprimer le filtre ${escHtml(s.name)}">×</button>
+    </span>`).join('');
+}
+function refreshSavedScreenersRow() {
+  const row = document.getElementById('savedScreenersRow');
+  if (row) row.innerHTML = savedScreenersChipsHtml();
+}
+
 // Panneau "Filtrer" en accordéon (recherche/tri/case à cocher + sous-
 // accordéon "Filtres avancés") — partagé entre la page Indices et le
 // filtre Opportunités du Portefeuille (même design, même comportement).
@@ -3765,12 +3812,16 @@ function sortedFilteredCompanies(companies, state) {
 // conventions de nommage différentes selon l'appelant) ; `state` =
 // {search, sort, financialOnly, scoreMin, scoreMax, sector,
 // sectorProfile, alertKind} déjà résolu par l'appelant. `advancedOptions`
-// = {sectors: string[]} optionnel : seul l'appelant Indices le fournit
-// (liste des secteurs réellement présents) — sans lui, les filtres
-// avancés n'ont pas de sens (ex. l'opportunités Portefeuille ne liste
-// que des entreprises déjà en signal "entrée") et le panneau reste le
-// placeholder "Bientôt disponible".
+// = {sectors: string[], savedScreeners?: true} optionnel : fourni par
+// l'appelant Indices (liste des secteurs réellement présents). Le Portefeuille
+// le fournit aussi (avec sectors seulement) ; seul `savedScreeners: true`
+// (appelant Indices) ajoute le bouton "Sauvegarder ce filtre" et la rangée
+// de screeners sauvegardés. Sans advancedOptions, les filtres avancés
+// restent le placeholder "Bientôt disponible".
 function filterAccordionHtml(ids, state, advancedOptions) {
+  const savedHtml = advancedOptions && advancedOptions.savedScreeners ? `
+      <button class="filter-reset-btn" id="savedScreenerSave" type="button">Sauvegarder ce filtre</button>
+      <div class="saved-screeners-chips" id="savedScreenersRow">${savedScreenersChipsHtml()}</div>` : '';
   const advancedHtml = advancedOptions ? `
       <p class="adv-filter-label adv-filter-label-first">Score (-100 à +100)</p>
       <div class="adv-score-range">
@@ -3814,7 +3865,7 @@ function filterAccordionHtml(ids, state, advancedOptions) {
         <input type="checkbox" id="${ids.financialOnly}"${state.financialOnly ? ' checked' : ''}>
         Profil financier uniquement
       </label>
-      <button class="filter-reset-btn" id="${ids.reset}" type="button">Réinitialiser les filtres</button>
+      <button class="filter-reset-btn" id="${ids.reset}" type="button">Réinitialiser les filtres</button>${savedHtml}
       <button class="index-card-header indices-filters-advanced-toggle" id="${ids.advToggle}" type="button" aria-expanded="false">
         <span class="index-card-name">Filtres avancés</span>
         <span class="chevron">▾</span>
@@ -4040,7 +4091,7 @@ function renderIndicesList(companies) {
         search: indicesListSearch, sort: indicesListSort, financialOnly: indicesListFinancialOnly,
         scoreMin: indicesListScoreMin, scoreMax: indicesListScoreMax, sector: indicesListSector,
         sectorProfile: indicesListSectorProfile, alertKind: indicesListAlertKind,
-      }, { sectors })}</aside>
+      }, { sectors, savedScreeners: true })}</aside>
       <div class="index-card-list">${cardsHtml}</div>
     </div>
     <div class="indices-compare-bar" id="indicesCompareBar"></div>
@@ -4129,6 +4180,61 @@ function renderIndicesList(companies) {
   });
   document.getElementById('filterAlertKind').addEventListener('change', (e) => {
     indicesListAlertKind = e.target.value;
+    refreshAllVisibleGroups();
+  });
+  // Screeners sauvegardés : sauvegarde de l'état courant, application d'un
+  // screener (copie ses 8 valeurs dans les globaux, resynchronise les
+  // contrôles affichés, puis même rafraîchissement que les autres filtres)
+  // et suppression d'une entrée (délégation sur la rangée de chips).
+  document.getElementById('savedScreenerSave').addEventListener('click', () => {
+    const name = prompt('Nom du filtre à sauvegarder :');
+    if (!name || !name.trim()) return;
+    const list = loadSavedScreeners();
+    list.push({ name: name.trim(), state: {
+      search: indicesListSearch, sort: indicesListSort, financialOnly: indicesListFinancialOnly,
+      scoreMin: indicesListScoreMin, scoreMax: indicesListScoreMax, sector: indicesListSector,
+      sectorProfile: indicesListSectorProfile, alertKind: indicesListAlertKind,
+    } });
+    storeSavedScreeners(list);
+    refreshSavedScreenersRow();
+  });
+  document.getElementById('savedScreenersRow').addEventListener('click', (e) => {
+    const del = e.target.closest('[data-screener-delete]');
+    if (del) {
+      const list = loadSavedScreeners();
+      list.splice(Number(del.dataset.screenerDelete), 1);
+      storeSavedScreeners(list);
+      refreshSavedScreenersRow();
+      return;
+    }
+    const chip = e.target.closest('[data-screener-apply]');
+    if (!chip) return;
+    const saved = loadSavedScreeners()[Number(chip.dataset.screenerApply)];
+    if (!saved) return;
+    const st = saved.state || {};
+    indicesListSearch = st.search ?? '';
+    indicesListSort = st.sort || 'score_desc';
+    indicesListFinancialOnly = !!st.financialOnly;
+    indicesListScoreMin = st.scoreMin ?? null;
+    indicesListScoreMax = st.scoreMax ?? null;
+    indicesListSector = st.sector ?? '';
+    indicesListSectorProfile = st.sectorProfile ?? '';
+    indicesListAlertKind = st.alertKind ?? '';
+    // Resynchronise les contrôles affichés sur l'état appliqué ; pour les
+    // listes déroulantes, relit la valeur réellement retenue (une option
+    // absente des données retombe sur "Tous…" et doit alors être reflétée).
+    document.getElementById('filterSearch').value = indicesListSearch;
+    document.getElementById('filterSort').value = indicesListSort;
+    document.getElementById('filterFinancialOnly').checked = indicesListFinancialOnly;
+    document.getElementById('filterScoreMin').value = indicesListScoreMin ?? '';
+    document.getElementById('filterScoreMax').value = indicesListScoreMax ?? '';
+    document.getElementById('filterSector').value = indicesListSector;
+    document.getElementById('filterSectorProfile').value = indicesListSectorProfile;
+    document.getElementById('filterAlertKind').value = indicesListAlertKind;
+    indicesListSort = document.getElementById('filterSort').value;
+    indicesListSector = document.getElementById('filterSector').value;
+    indicesListSectorProfile = document.getElementById('filterSectorProfile').value;
+    indicesListAlertKind = document.getElementById('filterAlertKind').value;
     refreshAllVisibleGroups();
   });
   document.getElementById('filterReset').addEventListener('click', () => {

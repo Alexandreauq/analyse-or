@@ -978,6 +978,46 @@ def test_valoriser_positions_leaves_a_position_unchanged_when_the_ticker_has_no_
     assert run["erreurs"] == []
 
 
+def test_valoriser_positions_skips_a_nan_current_price():
+    """float('nan') passe isinstance(x, (int, float)) sans lever -- il
+    doit etre rejete explicitement, sinon il finirait ecrit dans
+    positions.json (meme garde que sizing.py::_is_positive_number)."""
+    positions = [{
+        "ticker": "III.L", "devise": "GBP", "quantite": 20,
+        "prix_execution_reference": 29.5, "taux_de_change_entree": 0.80,
+    }]
+    companies = {"III.L": {"current_price": float("nan")}}
+    run = {"erreurs": []}
+
+    daily._valoriser_positions(positions, companies, _GwTaux(), "url", {}, run)
+
+    assert "prix_actuel" not in positions[0]
+    assert "valeur_actuelle_eur" not in positions[0]
+    assert run["erreurs"] == []
+
+
+def test_valoriser_positions_isolates_a_position_with_corrupted_quantity():
+    """Une quantite corrompue sur UNE position ne doit jamais faire
+    planter la valorisation des AUTRES positions ni remonter d'exception
+    hors de la fonction — meme isolement que positions_to_close."""
+    positions = [
+        {"ticker": "III.L", "devise": "GBP", "quantite": None,
+         "prix_execution_reference": 29.5, "taux_de_change_entree": 0.80},
+        {"ticker": "MC.PA", "devise": "EUR", "quantite": 5,
+         "prix_execution_reference": 88.0, "taux_de_change_entree": 1.0},
+    ]
+    companies = {"III.L": {"current_price": 31.0}, "MC.PA": {"current_price": 90.0}}
+    run = {"erreurs": []}
+
+    daily._valoriser_positions(positions, companies, _GwTaux(), "url", {}, run)
+
+    assert "valeur_actuelle_eur" not in positions[0]  # position corrompue laissee intacte
+    assert positions[1]["valeur_actuelle_eur"] == pytest.approx(450.0, abs=0.01)  # l'autre position traitee normalement
+    # Le garde de type sur `quantite` rejette ce cas avant toute division :
+    # aucune exception ne remonte, donc run["erreurs"] reste vide ici.
+    assert run["erreurs"] == []
+
+
 # --- run_batch complet : sorties et entrees ---------------------------
 
 def _positions_locales(env, positions):

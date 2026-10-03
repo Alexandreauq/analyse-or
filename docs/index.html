@@ -2393,9 +2393,12 @@ function ibkrBotCountersHtml(s) {
 // toujours presentes, voir ibkr_bot/api.py — le jeton change le modele
 // de menace, voir la spec API §4.3). Chaque ligne renvoie vers la fiche
 // entreprise, meme pattern que portfolioPositionsHtml ("Tes positions").
-// Les champs de P&L peuvent etre null (position du jour meme, pas encore
-// valorisee par un batch — voir daily._valoriser_positions) : la ligne
-// retombe alors sur le seul prix d'entree, sans P&L affiche.
+// Les champs de P&L peuvent etre null dans deux cas : une position du
+// jour meme, pas encore valorisee par un batch (voir
+// daily._valoriser_positions), OU une position ouverte avant ce plan FX
+// P&L (avant le 2026-10-03) qui n'a jamais enregistre de taux d'entree —
+// dans ce cas le null est PERMANENT, pas juste "pas encore". Dans les
+// deux cas la ligne retombe sur le seul prix d'entree, sans P&L affiche.
 function ibkrBotPositionsHtml(positions) {
   if (!positions || positions.length === 0) {
     return `<div class="empty">Aucune position ouverte.</div>`;

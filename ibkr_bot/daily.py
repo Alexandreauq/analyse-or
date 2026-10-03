@@ -431,36 +431,55 @@ def _valoriser_positions(positions: list[dict], companies: dict, gw,
     position INCHANGEE — la derniere valorisation connue reste affichee
     plutot que de disparaitre ou de retomber a zero, meme philosophie que
     le reemploi de l'analyse financiere a trimestre inchange
-    (indices_score.build_company_entry)."""
+    (indices_score.build_company_entry).
+
+    Chaque position est traitee dans son propre try/except (revue finale
+    de branche 2026-10-03, constat important n°1) : meme isolement que la
+    boucle positions_to_close() de run_batch, quelques dizaines de lignes
+    plus bas. Un champ corrompu sur UNE position (quantite absente ou non
+    numerique, etc.) ne doit jamais faire remonter d'exception hors de
+    cette fonction et avorter tout le batch pour toutes les positions."""
     for position in positions:
-        company = companies.get(position.get("ticker")) or {}
-        prix_actuel = company.get("current_price")
-        if not isinstance(prix_actuel, (int, float)) or isinstance(prix_actuel, bool):
-            continue
-        devise = position.get("devise")
-        if not devise:
-            continue
-        taux_actuel = _taux_de_change(gw, base_url, devise, taux_cache, run)
-        if not taux_actuel:
-            continue
+        try:
+            company = companies.get(position.get("ticker")) or {}
+            prix_actuel = company.get("current_price")
+            if (not isinstance(prix_actuel, (int, float)) or isinstance(prix_actuel, bool)
+                    or not math.isfinite(prix_actuel)):
+                continue
+            devise = position.get("devise")
+            if not devise:
+                continue
+            taux_actuel = _taux_de_change(gw, base_url, devise, taux_cache, run)
+            if not taux_actuel:
+                continue
 
-        quantite = position.get("quantite")
-        position["prix_actuel"] = prix_actuel
-        position["taux_de_change_actuel"] = taux_actuel
-        valeur_actuelle_eur = round(quantite * prix_actuel / taux_actuel, 2)
-        position["valeur_actuelle_eur"] = valeur_actuelle_eur
+            quantite = position.get("quantite")
+            if (not isinstance(quantite, (int, float)) or isinstance(quantite, bool)
+                    or quantite <= 0):
+                continue
+            position["prix_actuel"] = prix_actuel
+            position["taux_de_change_actuel"] = taux_actuel
+            valeur_actuelle_eur = round(quantite * prix_actuel / taux_actuel, 2)
+            position["valeur_actuelle_eur"] = valeur_actuelle_eur
 
-        prix_entree = position.get("prix_execution_reference")
-        taux_entree = position.get("taux_de_change_entree")
-        if (isinstance(prix_entree, (int, float)) and not isinstance(prix_entree, bool)
-                and isinstance(taux_entree, (int, float)) and not isinstance(taux_entree, bool)
-                and taux_entree > 0):
-            cout_entree_eur = quantite * prix_entree / taux_entree
-            position["cout_entree_eur"] = round(cout_entree_eur, 2)
-            pnl_eur = valeur_actuelle_eur - cout_entree_eur
-            position["pnl_eur"] = round(pnl_eur, 2)
-            position["pnl_eur_pct"] = (
-                round(pnl_eur / cout_entree_eur * 100, 2) if cout_entree_eur else None)
+            prix_entree = position.get("prix_execution_reference")
+            taux_entree = position.get("taux_de_change_entree")
+            if (isinstance(prix_entree, (int, float)) and not isinstance(prix_entree, bool)
+                    and isinstance(taux_entree, (int, float)) and not isinstance(taux_entree, bool)
+                    and taux_entree > 0):
+                cout_entree_eur = quantite * prix_entree / taux_entree
+                position["cout_entree_eur"] = round(cout_entree_eur, 2)
+                pnl_eur = valeur_actuelle_eur - cout_entree_eur
+                position["pnl_eur"] = round(pnl_eur, 2)
+                position["pnl_eur_pct"] = (
+                    round(pnl_eur / cout_entree_eur * 100, 2) if cout_entree_eur else None)
+        except Exception as e:
+            # Defense en profondeur : le garde de type sur `quantite`
+            # ci-dessus protege CE champ precis, mais une exception
+            # inattendue ailleurs dans le calcul ne doit pas non plus
+            # faire perdre les autres positions.
+            run["erreurs"].append({"etape": "valoriser_positions",
+                                   "detail": f"{position.get('ticker', '?')} : {e}"})
 
 
 def _executer_sortie(gw, base_url, account_id, sortie: dict, chemins: dict,

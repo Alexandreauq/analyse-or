@@ -3429,8 +3429,8 @@ function homeSearchBubbleHtml(texte, liens) {
     </div>`;
 }
 
-function wireHomeSearchLinkButtons(panel) {
-  panel.querySelectorAll('.home-search-link').forEach(btn => {
+function wireHomeSearchLinkButtons(elementOrPanel) {
+  elementOrPanel.querySelectorAll('.home-search-link').forEach(btn => {
     btn.addEventListener('click', () => {
       const cibleType = btn.dataset.cibleType;
       const cibleValeur = btn.dataset.cibleValeur;
@@ -3454,6 +3454,7 @@ async function askAssistant(question) {
 
   let texteAccumule = '';
   let liensRecus = [];
+  let erreurRecue = false;
   const bubbleIndex = panel.children.length;
   panel.insertAdjacentHTML('beforeend', homeSearchBubbleHtml('…', []));
 
@@ -3481,12 +3482,18 @@ async function askAssistant(question) {
         const evenement = JSON.parse(ligne.slice(6));
         if (evenement.type === 'texte') texteAccumule += evenement.texte;
         if (evenement.type === 'liens') liensRecus = evenement.liens;
+        if (evenement.type === 'erreur') {
+          texteAccumule = `Une erreur est survenue : ${evenement.detail}`;
+          erreurRecue = true;
+        }
         panel.children[bubbleIndex].outerHTML = homeSearchBubbleHtml(texteAccumule || '…', liensRecus);
-        wireHomeSearchLinkButtons(panel);
+        wireHomeSearchLinkButtons(panel.children[bubbleIndex]);
       }
     }
-    homeSearchHistory.push({ role: 'user', content: question });
-    homeSearchHistory.push({ role: 'assistant', content: texteAccumule });
+    if (!erreurRecue) {
+      homeSearchHistory.push({ role: 'user', content: question });
+      homeSearchHistory.push({ role: 'assistant', content: texteAccumule });
+    }
   } catch (e) {
     panel.children[bubbleIndex].outerHTML = homeSearchBubbleHtml(
       "Je n'ai pas pu contacter l'assistant, reessaie dans un instant.", []);

@@ -5,6 +5,7 @@
 # les API protegees existantes de gold_bot/ibkr_bot pour leurs statuts/
 # positions (jamais une deuxieme lecture directe de leurs fichiers, pour
 # ne jamais faire diverger deux chemins de lecture de la meme donnee).
+import os
 import time
 
 import requests
@@ -68,5 +69,33 @@ def fetch_bot_dashboard(nom: str, http_get=requests.get) -> dict:
         return {"erreur": f"impossible de contacter le bot {nom} : {e}"}
 
 
-def fetch_marketaux_news(params, ttl_seconds, cache_key):
-    raise NotImplementedError("implémenté en Task 2")
+MARKETAUX_NEWS_URL = "https://api.marketaux.com/v1/news/all"
+_news_cache: dict = {}
+
+
+def fetch_marketaux_news(
+    params: dict, ttl_seconds: int, cache_key: str,
+    *, http_get=requests.get, now_fn=time.time, cache: dict | None = None,
+) -> dict:
+    """Réponse brute de Marketaux (`{"data": [...]}`) ou `{"erreur": str}`.
+    Ne lève jamais. L'erreur ne transmet que le nom de la classe d'exception :
+    le texte de l'exception contient l'URL avec le token en paramètre de
+    requête, qu'il ne faut jamais laisser remonter jusqu'à Claude."""
+    if cache is None:
+        cache = _news_cache
+    token = os.environ.get("MARKETAUX_API_TOKEN", "")
+    if not token:
+        return {"erreur": "MARKETAUX_API_TOKEN absent de l'environnement"}
+    maintenant = now_fn()
+    entree = cache.get(cache_key)
+    if entree is not None and (maintenant - entree[0]) < ttl_seconds:
+        return entree[1]
+    try:
+        reponse = http_get(MARKETAUX_NEWS_URL, params={**params, "api_token": token},
+                           timeout=REQUEST_TIMEOUT_SECONDS)
+        reponse.raise_for_status()
+        donnees = reponse.json()
+    except Exception as e:
+        return {"erreur": f"actualites indisponibles ({type(e).__name__})"}
+    cache[cache_key] = (maintenant, donnees)
+    return donnees

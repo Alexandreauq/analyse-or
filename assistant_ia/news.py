@@ -58,6 +58,11 @@ def _score_entite(article: dict, ticker: str) -> float | None:
     return meilleur
 
 
+def _champ_texte(article: dict, cle: str) -> str:
+    valeur = article.get(cle)
+    return valeur if isinstance(valeur, str) else ""
+
+
 def normalise(payload, ticker: str | None = None) -> list[dict]:
     if not isinstance(payload, dict) or not isinstance(payload.get("data"), list):
         return []
@@ -68,7 +73,7 @@ def normalise(payload, ticker: str | None = None) -> list[dict]:
         if not isinstance(article, dict):
             continue
         url = article.get("url")
-        titre = (article.get("title") or "").strip()
+        titre = _champ_texte(article, "title").strip()
         if not _url_ok(url) or not titre:
             continue
         if ticker is not None:
@@ -80,11 +85,11 @@ def normalise(payload, ticker: str | None = None) -> list[dict]:
             continue
         vus_urls.add(url)
         vus_titres.add(cle_titre)
-        resume = (article.get("description") or article.get("snippet") or "")[:RESUME_MAX_CHARS]
+        resume = (_champ_texte(article, "description") or _champ_texte(article, "snippet"))[:RESUME_MAX_CHARS]
         retenus.append({
             "titre": titre,
-            "source": article.get("source") or "",
-            "date": article.get("published_at") or "",
+            "source": _champ_texte(article, "source"),
+            "date": _champ_texte(article, "published_at"),
             "resume_court": resume,
             "url": url,
         })

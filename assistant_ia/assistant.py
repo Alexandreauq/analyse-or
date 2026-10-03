@@ -62,22 +62,34 @@ def run_assistant_loop(
     liens_collectes: list[dict] = []
 
     for iteration in range(MAX_TOOL_ITERATIONS):
-        with client.messages.stream(
-            model=MODEL,
-            max_tokens=4096,
-            system=[{"type": "text", "text": SYSTEM_PROMPT, "cache_control": {"type": "ephemeral"}}],
-            tools=tools.TOOL_DEFINITIONS,
-            output_config={"effort": "high"},
-            messages=messages,
-        ) as stream:
-            for bloc in stream:
-                if bloc.type == "text" and bloc.text:
-                    yield {"type": "texte", "texte": bloc.text}
-            reponse = stream.get_final_message()
+        try:
+            with client.messages.stream(
+                model=MODEL,
+                max_tokens=16000,
+                system=[{"type": "text", "text": SYSTEM_PROMPT, "cache_control": {"type": "ephemeral"}}],
+                tools=tools.TOOL_DEFINITIONS,
+                output_config={"effort": "high"},
+                messages=messages,
+            ) as stream:
+                for bloc in stream:
+                    if bloc.type == "text" and bloc.text:
+                        yield {"type": "texte", "texte": bloc.text}
+                reponse = stream.get_final_message()
+        except Exception as e:
+            yield {"type": "erreur", "detail": str(e)}
+            yield {"type": "fin"}
+            return
 
         usage.record_usage(reponse.usage.input_tokens, reponse.usage.output_tokens, model=MODEL)
 
+        if reponse.stop_reason == "refusal":
+            yield {"type": "texte", "texte": "Je ne peux pas repondre a cette question."}
+            yield {"type": "fin"}
+            return
+
         if reponse.stop_reason != "tool_use":
+            if reponse.stop_reason == "max_tokens":
+                yield {"type": "texte", "texte": "\n\n[reponse tronquee par la limite de longueur]"}
             if liens_collectes:
                 yield {"type": "liens", "liens": liens_collectes}
             yield {"type": "fin"}

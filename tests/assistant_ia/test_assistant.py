@@ -61,7 +61,12 @@ class _FakeMessagesEndpoint:
         self.appels = []
 
     def stream(self, **kwargs):
-        self.appels.append(kwargs)
+        # Snapshot la liste `messages` au moment de l'appel : l'implementation
+        # mute `messages` en place entre les iterations (append), donc sans
+        # cette copie superficielle toutes les entrees de self.appels
+        # finiraient par pointer vers le MEME objet liste, dans son etat
+        # final — masquant un bug ou rien n'est renvoye apres un tool_use.
+        self.appels.append({**kwargs, "messages": list(kwargs["messages"])})
         return self._scripted.pop(0)
 
 
@@ -83,7 +88,10 @@ def test_run_assistant_loop_yields_text_then_fin_when_no_tool_is_called():
     assert evenements[0]["texte"] == "LVMH est solide."
 
 
-def test_run_assistant_loop_dispatches_a_tool_call_and_loops():
+def test_run_assistant_loop_dispatches_a_tool_call_and_loops(monkeypatch):
+    enregistres = []
+    monkeypatch.setattr(assistant.usage, "record_usage", lambda i, o, model=None: enregistres.append((i, o)))
+
     tool_use_block = _FakeBlock("tool_use", id="tu_1", name="fiche_entreprise", input={"ticker": "MC.PA"})
     first_final = _FakeMessage(content=[tool_use_block], stop_reason="tool_use", usage=_FakeUsage(200, 20))
     second_final = _FakeMessage(
@@ -98,9 +106,19 @@ def test_run_assistant_loop_dispatches_a_tool_call_and_loops():
         "Note de LVMH ?", [], client=client,
         tool_dispatch=lambda name, inp: {"ticker": "MC.PA", "score": 72.0}))
 
-    assert client.messages.appels[1]["messages"][-1]["role"] == "user"
+    deuxieme_appel_messages = client.messages.appels[1]["messages"]
+    assert deuxieme_appel_messages[-1]["role"] == "user"
+    tool_results = deuxieme_appel_messages[-1]["content"]
+    assert len(tool_results) == 1
+    assert tool_results[0]["type"] == "tool_result"
+    assert tool_results[0]["tool_use_id"] == "tu_1"
+
     types = [e["type"] for e in evenements]
     assert "texte" in types and "fin" in types
+
+    # Une entree de usage.record_usage par appel API Anthropic (contrainte
+    # globale du plan), pas une seule par question.
+    assert enregistres == [(200, 20), (300, 40)]
 
 
 def test_run_assistant_loop_collects_proposer_lien_calls_separately():
@@ -126,17 +144,44 @@ def test_run_assistant_loop_collects_proposer_lien_calls_separately():
     assert liens_events[0]["liens"][0]["cible_valeur"] == "MC.PA"
 
 
-def test_run_assistant_loop_stops_at_the_iteration_cap():
-    tool_use_block = _FakeBlock("tool_use", id="tu_x", name="fiche_entreprise", input={"ticker": "X"})
-    boucle_infinie = _FakeMessage(content=[tool_use_block], stop_reason="tool_use", usage=_FakeUsage(10, 5))
-    client = _FakeClient([_FakeStream([], boucle_infinie) for _ in range(assistant.MAX_TOOL_ITERATIONS)])
+def test_run_assistant_loop_stops_at_the_iteration_cap(monkeypatch):
+    enregistres = []
+    monkeypatch.setattr(assistant.usage, "record_usage", lambda i, o, model=None: enregistres.append((i, o)))
+
+    # Le premier tour propose aussi un lien : ce lien doit etre collecte
+    # et renvoye meme si la boucle se termine via le plafond d'iterations
+    # (pas via un stop_reason != "tool_use" normal).
+    tool_use_fiche = _FakeBlock("tool_use", id="tu_x", name="fiche_entreprise", input={"ticker": "X"})
+    tool_use_lien = _FakeBlock(
+        "tool_use", id="tu_lien", name="proposer_lien",
+        input={"cible_type": "ticker", "cible_valeur": "X", "libelle": "Voir X"})
+    premier_tour = _FakeMessage(
+        content=[tool_use_fiche, tool_use_lien], stop_reason="tool_use", usage=_FakeUsage(10, 5))
+    tour_suivant = _FakeMessage(content=[tool_use_fiche], stop_reason="tool_use", usage=_FakeUsage(10, 5))
+    client = _FakeClient(
+        [_FakeStream([], premier_tour)]
+        + [_FakeStream([], tour_suivant) for _ in range(assistant.MAX_TOOL_ITERATIONS - 1)]
+    )
+
+    def fake_dispatch(name, tool_input):
+        if name == "proposer_lien":
+            return dict(tool_input)
+        return {"ok": True}
 
     evenements = list(assistant.run_assistant_loop(
-        "Q", [], client=client, tool_dispatch=lambda name, inp: {"ok": True}))
+        "Q", [], client=client, tool_dispatch=fake_dispatch))
 
     assert len(client.messages.appels) == assistant.MAX_TOOL_ITERATIONS
     assert evenements[-1]["type"] == "fin"
     assert any(e["type"] == "texte" and "n'ai pas pu" in e["texte"] for e in evenements)
+
+    liens_events = [e for e in evenements if e["type"] == "liens"]
+    assert len(liens_events) == 1
+    assert liens_events[0]["liens"][0]["cible_valeur"] == "X"
+
+    # Un appel a usage.record_usage par appel API effectue (une fois par
+    # iteration du plafond), pas davantage ni moins.
+    assert len(enregistres) == assistant.MAX_TOOL_ITERATIONS
 
 
 def test_run_assistant_loop_records_usage_for_every_api_call(monkeypatch):
@@ -148,3 +193,107 @@ def test_run_assistant_loop_records_usage_for_every_api_call(monkeypatch):
     list(assistant.run_assistant_loop("Q", [], client=client))
 
     assert enregistres == [(111, 22)]
+
+
+def test_run_assistant_loop_does_not_collect_a_proposer_lien_error():
+    tool_use_1 = _FakeBlock("tool_use", id="tu_1", name="fiche_entreprise", input={"ticker": "INCONNU"})
+    tool_use_2 = _FakeBlock(
+        "tool_use", id="tu_2", name="proposer_lien",
+        input={"cible_type": "ticker", "cible_valeur": "INCONNU", "libelle": "Voir ?"})
+    first_final = _FakeMessage(
+        content=[tool_use_1, tool_use_2], stop_reason="tool_use", usage=_FakeUsage(200, 20))
+    second_final = _FakeMessage(
+        content=[_FakeBlock("text", text="Je ne trouve pas cette entreprise.")],
+        stop_reason="end_turn", usage=_FakeUsage(100, 10))
+    client = _FakeClient([_FakeStream([], first_final), _FakeStream(["Je ne trouve pas."], second_final)])
+
+    def fake_dispatch(name, tool_input):
+        if name == "proposer_lien":
+            return {"erreur": "cible inconnue"}
+        return {"erreur": "ticker inconnu"}
+
+    evenements = list(assistant.run_assistant_loop("Q", [], client=client, tool_dispatch=fake_dispatch))
+
+    liens_events = [e for e in evenements if e["type"] == "liens"]
+    assert liens_events == []
+
+
+def test_run_assistant_loop_collects_links_across_multiple_turns():
+    tool_use_lien_1 = _FakeBlock(
+        "tool_use", id="tu_1", name="proposer_lien",
+        input={"cible_type": "ticker", "cible_valeur": "MC.PA", "libelle": "Voir LVMH"})
+    tool_use_lien_2 = _FakeBlock(
+        "tool_use", id="tu_2", name="proposer_lien",
+        input={"cible_type": "ticker", "cible_valeur": "OR.PA", "libelle": "Voir L'Oreal"})
+    first_final = _FakeMessage(content=[tool_use_lien_1], stop_reason="tool_use", usage=_FakeUsage(50, 5))
+    second_final = _FakeMessage(content=[tool_use_lien_2], stop_reason="tool_use", usage=_FakeUsage(50, 5))
+    third_final = _FakeMessage(
+        content=[_FakeBlock("text", text="Voici les deux.")],
+        stop_reason="end_turn", usage=_FakeUsage(100, 10))
+    client = _FakeClient([
+        _FakeStream([], first_final),
+        _FakeStream([], second_final),
+        _FakeStream(["Voici les deux."], third_final),
+    ])
+
+    def fake_dispatch(name, tool_input):
+        return dict(tool_input)
+
+    evenements = list(assistant.run_assistant_loop("Q", [], client=client, tool_dispatch=fake_dispatch))
+
+    liens_events = [e for e in evenements if e["type"] == "liens"]
+    assert len(liens_events) == 1
+    valeurs = {lien["cible_valeur"] for lien in liens_events[0]["liens"]}
+    assert valeurs == {"MC.PA", "OR.PA"}
+
+
+def test_run_assistant_loop_notes_truncation_on_max_tokens():
+    final = _FakeMessage(
+        content=[_FakeBlock("text", text="Reponse partielle...")],
+        stop_reason="max_tokens", usage=_FakeUsage(16000, 16000))
+    client = _FakeClient([_FakeStream(["Reponse partielle..."], final)])
+
+    evenements = list(assistant.run_assistant_loop("Q", [], client=client))
+
+    assert any(
+        e["type"] == "texte" and "tronquee" in e["texte"]
+        for e in evenements
+    )
+    assert evenements[-1]["type"] == "fin"
+
+
+def test_run_assistant_loop_notes_refusal_and_stops():
+    final = _FakeMessage(content=[], stop_reason="refusal", usage=_FakeUsage(50, 0))
+    client = _FakeClient([_FakeStream([], final)])
+
+    evenements = list(assistant.run_assistant_loop("Q", [], client=client))
+
+    assert any(
+        e["type"] == "texte" and "Je ne peux pas repondre" in e["texte"]
+        for e in evenements
+    )
+    assert evenements[-1]["type"] == "fin"
+
+
+def test_run_assistant_loop_yields_erreur_event_when_the_api_call_raises():
+    class _FailingMessagesEndpoint:
+        def __init__(self):
+            self.appels = []
+
+        def stream(self, **kwargs):
+            self.appels.append(kwargs)
+            raise RuntimeError("connexion refusee par l'API Anthropic")
+
+    class _FailingClient:
+        def __init__(self):
+            self.messages = _FailingMessagesEndpoint()
+
+    client = _FailingClient()
+
+    evenements = list(assistant.run_assistant_loop("Q", [], client=client))
+
+    assert evenements[0]["type"] == "erreur"
+    assert "connexion refusee" in evenements[0]["detail"]
+    assert evenements[-1]["type"] == "fin"
+    assert len(evenements) == 2
+    assert len(client.messages.appels) == 1

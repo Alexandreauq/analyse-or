@@ -1279,7 +1279,7 @@ git commit -m "feat(assistant_ia): endpoint POST /ask en streaming SSE, protege 
 
 **Files:**
 - Create: `deploy/assistant-ia-api.service`
-- Modify: `tests/test_deploy_files.py` (ajoute la vérification du nouveau fichier de service)
+- Modify: `tests/ibkr_bot/test_deploy_files.py` (ajoute la vérification du nouveau fichier de service)
 
 **Interfaces:**
 - Consomme : rien (fichier de déploiement statique).
@@ -1287,13 +1287,13 @@ git commit -m "feat(assistant_ia): endpoint POST /ask en streaming SSE, protege 
 
 - [ ] **Step 1: Regarder le test existant pour suivre le même format**
 
-Ouvrir `tests/test_deploy_files.py` et repérer le test qui vérifie déjà
+Ouvrir `tests/ibkr_bot/test_deploy_files.py` et repérer le test qui vérifie déjà
 `deploy/ibkr-bot-api.service` (même structure : `ExecStart`, port,
 certificat). Le nouveau test suit exactement le même moule.
 
 - [ ] **Step 2: Écrire le test qui échoue**
 
-Ajouter dans `tests/test_deploy_files.py` :
+Ajouter dans `tests/ibkr_bot/test_deploy_files.py` :
 
 ```python
 def test_assistant_ia_api_service_file_targets_the_right_module_and_port():
@@ -1308,7 +1308,7 @@ def test_assistant_ia_api_service_file_targets_the_right_module_and_port():
 
 - [ ] **Step 3: Lancer le test, vérifier qu'il échoue**
 
-Run: `python -m pytest tests/test_deploy_files.py -k assistant_ia -v`
+Run: `python -m pytest tests/ibkr_bot/test_deploy_files.py -k assistant_ia -v`
 Expected: FAIL (`FileNotFoundError`)
 
 - [ ] **Step 4: Créer `deploy/assistant-ia-api.service`**
@@ -1333,13 +1333,13 @@ WantedBy=multi-user.target
 
 - [ ] **Step 5: Lancer le test, vérifier qu'il passe**
 
-Run: `python -m pytest tests/test_deploy_files.py -v`
+Run: `python -m pytest tests/ibkr_bot/test_deploy_files.py -v`
 Expected: PASS (tous les tests du fichier, y compris les existants)
 
 - [ ] **Step 6: Commit**
 
 ```bash
-git add deploy/assistant-ia-api.service tests/test_deploy_files.py
+git add deploy/assistant-ia-api.service tests/ibkr_bot/test_deploy_files.py
 git commit -m "feat(deploy): service systemd pour l'assistant IA (port 8445)"
 ```
 

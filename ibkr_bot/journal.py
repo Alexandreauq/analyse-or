@@ -135,7 +135,9 @@ def build_position_record(signal: dict, plan: dict, contrat: dict, quantite: int
     reference du stop-loss, comparee par portfolio.exit_reason au
     current_price de docs/indices.json, qui est lui aussi en livres.
     `target_exit_price` est repris VERBATIM du paper-trading et jamais
-    recalcule (spec 3.6).
+    recalcule (spec 3.6). `taux_de_change_entree` (EUR -> devise de
+    compte, voir sizing.compute_quantity) est conserve pour calculer le
+    P&L en euros a chaque batch (voir daily._valoriser_positions).
     """
     return {
         "id": signal["id"],
@@ -145,6 +147,7 @@ def build_position_record(signal: dict, plan: dict, contrat: dict, quantite: int
         "sector": signal.get("sector", ""),
         "conid": contrat["conid"],
         "devise": plan["devise_compte"],
+        "taux_de_change_entree": plan.get("taux_de_change"),
         "quantite": quantite,
         "prix_execution_reference": prix_execution_reference,
         "paper_entry_price": signal.get("paper_entry_price"),

@@ -917,6 +917,107 @@ def test_place_order_treats_a_mixed_response_as_already_resolved(tmp_path):
     assert resultat["order_id"] == "5555"
 
 
+class _GwTaux:
+    def exchange_rate(self, base_url, source, target):
+        return 1.0 if source == target else {"USD": 1.08, "GBP": 0.86}[target]
+
+
+def test_valoriser_positions_computes_eur_pnl_for_a_foreign_position():
+    positions = [{
+        "ticker": "III.L", "devise": "GBP", "quantite": 20,
+        "prix_execution_reference": 29.5, "taux_de_change_entree": 0.80,
+    }]
+    companies = {"III.L": {"current_price": 31.0}}
+    run = {"erreurs": []}
+
+    daily._valoriser_positions(positions, companies, _GwTaux(), "url", {}, run)
+
+    position = positions[0]
+    assert position["prix_actuel"] == 31.0
+    assert position["taux_de_change_actuel"] == 0.86
+    # valeur actuelle = 20 * 31.0 / 0.86 = 720.930...
+    assert position["valeur_actuelle_eur"] == pytest.approx(720.93, abs=0.01)
+    # cout d'entree = 20 * 29.5 / 0.80 = 737.5
+    assert position["cout_entree_eur"] == pytest.approx(737.5, abs=0.01)
+    # pnl = 720.93 - 737.5 = -16.57
+    assert position["pnl_eur"] == pytest.approx(-16.57, abs=0.01)
+    assert position["pnl_eur_pct"] == pytest.approx(-2.25, abs=0.01)
+    assert run["erreurs"] == []
+
+
+def test_valoriser_positions_leaves_a_position_unchanged_when_the_fx_rate_fails():
+    class _GwEchec:
+        def exchange_rate(self, base_url, source, target):
+            raise RuntimeError("indisponible")
+
+    positions = [{
+        "ticker": "III.L", "devise": "GBP", "quantite": 20,
+        "prix_execution_reference": 29.5, "taux_de_change_entree": 0.80,
+        "valeur_actuelle_eur": 700.0,  # derniere valeur connue (hier)
+    }]
+    companies = {"III.L": {"current_price": 31.0}}
+    run = {"erreurs": []}
+
+    daily._valoriser_positions(positions, companies, _GwEchec(), "url", {}, run)
+
+    assert positions[0]["valeur_actuelle_eur"] == 700.0  # inchange
+    assert "prix_actuel" not in positions[0]
+    assert len(run["erreurs"]) == 1  # journalise par _taux_de_change lui-meme
+
+
+def test_valoriser_positions_leaves_a_position_unchanged_when_the_ticker_has_no_current_price():
+    positions = [{
+        "ticker": "DELISTED.PA", "devise": "EUR", "quantite": 5,
+        "prix_execution_reference": 100.0, "taux_de_change_entree": 1.0,
+    }]
+    run = {"erreurs": []}
+
+    daily._valoriser_positions(positions, {}, _GwTaux(), "url", {}, run)
+
+    assert "prix_actuel" not in positions[0]
+    assert run["erreurs"] == []
+
+
+def test_valoriser_positions_skips_a_nan_current_price():
+    """float('nan') passe isinstance(x, (int, float)) sans lever -- il
+    doit etre rejete explicitement, sinon il finirait ecrit dans
+    positions.json (meme garde que sizing.py::_is_positive_number)."""
+    positions = [{
+        "ticker": "III.L", "devise": "GBP", "quantite": 20,
+        "prix_execution_reference": 29.5, "taux_de_change_entree": 0.80,
+    }]
+    companies = {"III.L": {"current_price": float("nan")}}
+    run = {"erreurs": []}
+
+    daily._valoriser_positions(positions, companies, _GwTaux(), "url", {}, run)
+
+    assert "prix_actuel" not in positions[0]
+    assert "valeur_actuelle_eur" not in positions[0]
+    assert run["erreurs"] == []
+
+
+def test_valoriser_positions_isolates_a_position_with_corrupted_quantity():
+    """Une quantite corrompue sur UNE position ne doit jamais faire
+    planter la valorisation des AUTRES positions ni remonter d'exception
+    hors de la fonction — meme isolement que positions_to_close."""
+    positions = [
+        {"ticker": "III.L", "devise": "GBP", "quantite": None,
+         "prix_execution_reference": 29.5, "taux_de_change_entree": 0.80},
+        {"ticker": "MC.PA", "devise": "EUR", "quantite": 5,
+         "prix_execution_reference": 88.0, "taux_de_change_entree": 1.0},
+    ]
+    companies = {"III.L": {"current_price": 31.0}, "MC.PA": {"current_price": 90.0}}
+    run = {"erreurs": []}
+
+    daily._valoriser_positions(positions, companies, _GwTaux(), "url", {}, run)
+
+    assert "valeur_actuelle_eur" not in positions[0]  # position corrompue laissee intacte
+    assert positions[1]["valeur_actuelle_eur"] == pytest.approx(450.0, abs=0.01)  # l'autre position traitee normalement
+    # Le garde de type sur `quantite` rejette ce cas avant toute division :
+    # aucune exception ne remonte, donc run["erreurs"] reste vide ici.
+    assert run["erreurs"] == []
+
+
 # --- run_batch complet : sorties et entrees ---------------------------
 
 def _positions_locales(env, positions):
@@ -1425,9 +1526,11 @@ def test_positions_json_is_rewritten_after_each_order_not_just_at_the_end(env, m
     nb_entrees_executees = sum(1 for e in run["entrees"]
                                if e["statut"] in ("execute", "simule"))
     assert nb_sorties_executees == 1 and nb_entrees_executees == 1
-    # 1 sauvegarde juste apres reconciliation + 1 par ordre execute : la
-    # cadence, pas seulement le resultat final.
-    assert len(appels) == 1 + nb_sorties_executees + nb_entrees_executees
+    # 1 sauvegarde juste apres reconciliation + 1 par ordre execute + 1
+    # apres la valorisation EUR (plan FX P&L 2026-10-03, entre les
+    # sorties et les entrees) : la cadence, pas seulement le resultat
+    # final.
+    assert len(appels) == 1 + nb_sorties_executees + 1 + nb_entrees_executees
 
     # Instantane intermediaire (juste apres la vente de MC.PA, avant
     # l'achat d'ADBE) : deja sans MC.PA, pas encore avec ADBE.

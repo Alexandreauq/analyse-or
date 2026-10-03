@@ -14,3 +14,7 @@ ibkr_bot/latest_account.json
 
 # Worktrees de travail (superpowers:using-git-worktrees)
 .worktrees/
+
+# Scratch de travail subagent-driven-development / brainstorming
+# (superpowers) — jamais destine a etre commite
+.superpowers/

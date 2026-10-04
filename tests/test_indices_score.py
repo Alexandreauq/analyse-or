@@ -4499,11 +4499,12 @@ def test_main_payload_includes_index_metadata(monkeypatch, tmp_path):
     assert written["index_names"] == {
         "CAC40": "CAC 40", "DAX": "DAX", "NASDAQ": "Nasdaq 100", "DOW": "Dow Jones",
         "FTSE": "FTSE 100", "SMI": "SMI", "IBEX35": "IBEX 35", "FTSEMIB": "FTSE MIB",
-        "NIKKEI225": "Nikkei 225", "HANGSENG": "Hang Seng",
+        "NIKKEI225": "Nikkei 225", "HANGSENG": "Hang Seng", "EUROSTOXX50": "Euro Stoxx 50",
     }
     assert written["index_currency"] == {
         "CAC40": "EUR", "DAX": "EUR", "NASDAQ": "USD", "DOW": "USD", "FTSE": "GBP",
         "SMI": "CHF", "IBEX35": "EUR", "FTSEMIB": "EUR", "NIKKEI225": "JPY", "HANGSENG": "HKD",
+        "EUROSTOXX50": "EUR",
     }
     assert written["index_prices"] == fake_index_prices
     written_by_ticker = {c["ticker"]: c["index"] for c in written["companies"]}
@@ -4511,7 +4512,7 @@ def test_main_payload_includes_index_metadata(monkeypatch, tmp_path):
         assert written_by_ticker[company["ticker"]] == company["index"]
     assert {c["index"] for c in written["companies"]} == {
         "CAC40", "DAX", "NASDAQ", "DOW", "FTSE", "SMI", "IBEX35", "FTSEMIB",
-        "NIKKEI225", "HANGSENG",
+        "NIKKEI225", "HANGSENG", "EUROSTOXX50",
     }
 
 
@@ -4594,7 +4595,7 @@ def test_main_payload_exposes_risk_free_rate_by_currency(monkeypatch, tmp_path):
         lambda: {
             "CAC40": None, "DAX": None, "NASDAQ": None, "DOW": None,
             "FTSE": None, "SMI": None, "IBEX35": None, "FTSEMIB": None,
-            "NIKKEI225": None, "HANGSENG": None,
+            "NIKKEI225": None, "HANGSENG": None, "EUROSTOXX50": None,
         },
     )
     monkeypatch.setattr(indices_score, "update_price_history", lambda entries, **kwargs: entries)
@@ -4656,7 +4657,7 @@ def test_main_routes_risk_free_rate_by_currency(monkeypatch, tmp_path):
         lambda: {
             "CAC40": None, "DAX": None, "NASDAQ": None, "DOW": None,
             "FTSE": None, "SMI": None, "IBEX35": None, "FTSEMIB": None,
-            "NIKKEI225": None, "HANGSENG": None,
+            "NIKKEI225": None, "HANGSENG": None, "EUROSTOXX50": None,
         },
     )
     monkeypatch.setattr(indices_score, "update_price_history", lambda entries, **kwargs: entries)
@@ -5871,6 +5872,9 @@ def test_companies_combines_all_indices_with_correct_index_tag():
         + len(indices_score.FTSEMIB_COMPANIES)
         + len(indices_score.NIKKEI225_COMPANIES)
         + len(indices_score.HANGSENG_COMPANIES)
+        + sum(1 for c in indices_score.EUROSTOXX50_COMPANIES
+              if c["ticker"] not in {
+                  e["ticker"] for e in indices_score._COMPANIES_HORS_EUROSTOXX50})
     )
     by_ticker = {c["ticker"]: c["index"] for c in indices_score.COMPANIES}
     for c in indices_score.CAC40_COMPANIES:
@@ -5895,7 +5899,7 @@ def test_companies_combines_all_indices_with_correct_index_tag():
         assert by_ticker[c["ticker"]] == "HANGSENG"
     assert set(indices_score.INDEX_NAMES) >= {
         "CAC40", "DAX", "NASDAQ", "DOW", "FTSE", "SMI", "IBEX35", "FTSEMIB",
-        "NIKKEI225", "HANGSENG",
+        "NIKKEI225", "HANGSENG", "EUROSTOXX50",
     }
 
 
@@ -7456,7 +7460,7 @@ def test_fetch_index_prices_returns_latest_close_per_index(monkeypatch):
     assert result == {
         "CAC40": 7850.0, "DAX": 7850.0, "NASDAQ": 7850.0, "DOW": 7850.0,
         "FTSE": 7850.0, "SMI": 7850.0, "IBEX35": 7850.0, "FTSEMIB": 7850.0,
-        "NIKKEI225": 7850.0, "HANGSENG": 7850.0,
+        "NIKKEI225": 7850.0, "HANGSENG": 7850.0, "EUROSTOXX50": 7850.0,
     }
 
 
@@ -7484,6 +7488,7 @@ def test_fetch_index_prices_returns_all_none_when_yfinance_unavailable(monkeypat
     assert indices_score.fetch_index_prices() == {
         "CAC40": None, "DAX": None, "NASDAQ": None, "DOW": None, "FTSE": None,
         "SMI": None, "IBEX35": None, "FTSEMIB": None, "NIKKEI225": None, "HANGSENG": None,
+        "EUROSTOXX50": None,
     }
 
 

@@ -73,6 +73,8 @@ def fetch_bot_dashboard(nom: str, http_get=requests.get) -> dict:
 FINNHUB_COMPANY_NEWS_URL = "https://finnhub.io/api/v1/company-news"
 GDELT_DOC_URL = "https://api.gdeltproject.org/api/v2/doc/doc"
 FINNHUB_TTL_SECONDS = 2 * 3600
+# GDELT met souvent 10 a 15 s a repondre : le delai general (15 s) coupe trop tot.
+NEWS_TIMEOUT_SECONDS = 25
 _news_cache: dict = {}
 
 
@@ -88,7 +90,7 @@ def _appel_actualites(url, params, headers, ttl_seconds, cache_key, *, http_get,
     if entree is not None and (maintenant - entree[0]) < ttl_seconds:
         return entree[1]
     try:
-        reponse = http_get(url, params=params, headers=headers, timeout=REQUEST_TIMEOUT_SECONDS)
+        reponse = http_get(url, params=params, headers=headers, timeout=NEWS_TIMEOUT_SECONDS)
         reponse.raise_for_status()
         donnees = reponse.json()
     except Exception as e:

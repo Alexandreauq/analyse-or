@@ -325,14 +325,13 @@
   .home-level button:hover { color: var(--text); }
   .home-level button[aria-pressed="true"] { background: rgba(42,91,255,.18); color: var(--text); }
   .home-level button:focus-visible { outline: 2px solid rgba(42,91,255,.5); outline-offset: 1px; }
-  /* Téléphone : le sélecteur passe sous le texte, dans une barre un peu plus
-     haute, pour que le message de bienvenue reste entièrement lisible. */
+  /* Téléphone : barre à sa taille normale, sélecteur posé juste en dessous
+     (hors de la barre) pour que le message de bienvenue reste lisible. */
   @media (max-width: 600px) {
-    #homeSearchInput {
-      height: auto; padding: 18px 18px 64px; border-radius: 28px; font-size: 15px;
-    }
+    #homeSearchInput { height: 72px; padding: 0 22px; font-size: 16px; }
     .home-level {
-      right: auto; top: auto; bottom: 6px; left: 50%; transform: translateX(-50%);
+      right: auto; top: 100%; bottom: auto; left: 50%;
+      transform: translateX(-50%); margin-top: 12px;
     }
     .home-level button { font-size: 12px; padding: 6px 12px; }
   }

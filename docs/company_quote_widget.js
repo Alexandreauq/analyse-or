@@ -33,6 +33,15 @@ const NO_RELIABLE_COMPANY_TV_DATA = new Set(['HANGSENG', 'NIKKEI225']);
 // donc un seul préfixe suffit comme pour les 3 autres indices.
 const TV_EXCHANGE_PREFIX_BY_INDEX = { CAC40: 'EURONEXT:', DAX: 'XETR:', NASDAQ: 'NASDAQ:', DOW: 'NYSE:', FTSE: 'LSE:', SMI: 'SIX:', IBEX35: 'BME:', FTSEMIB: 'MIL:', NIKKEI225: 'TSE:', HANGSENG: 'HKEX:' };
 const TV_TICKER_SUFFIX_BY_INDEX = { CAC40: '.PA', DAX: '.DE', NASDAQ: '', DOW: '', FTSE: '.L', SMI: '.SW', IBEX35: '.MC', FTSEMIB: '.MI', NIKKEI225: '.T', HANGSENG: '.HK' };
+// Indices sans entrée ci-dessus (Euro Stoxx 50, SBF 120, AEX All-Share, et
+// tout futur indice) : le préfixe TradingView se déduit du suffixe Yahoo de
+// la valeur, car un même indice mélange souvent plusieurs places (AEX
+// All-Share : Amsterdam, Bruxelles, Paris, Milan). Tous les places Euronext
+// s'affichent sous le préfixe unique EURONEXT: sur TradingView.
+const TV_EXCHANGE_PREFIX_BY_SUFFIX = {
+  '.PA': 'EURONEXT:', '.AS': 'EURONEXT:', '.BR': 'EURONEXT:', '.MI': 'MIL:',
+  '.DE': 'XETR:', '.L': 'LSE:', '.MC': 'BME:', '.SW': 'SIX:', '.HE': 'OMXHEX:', '.T': 'TSE:', '.HK': 'HKEX:',
+};
 // LSE : certains codes EPIC "courts" portent un point terminal officiel
 // pour éviter toute collision (ex. Aviva = "AV.", pas "AV"), que Yahoo
 // absorbe dans son propre suffixe ".L" (ticker Yahoo "AV.L") — une fois ce
@@ -54,9 +63,15 @@ const TV_TICKER_OVERRIDE_BY_YAHOO_TICKER = {
  */
 function resolveCompanyTvSymbol(ticker, indexKey) {
   if (NO_RELIABLE_COMPANY_TV_DATA.has(indexKey)) return null;
-  const prefix = TV_EXCHANGE_PREFIX_BY_INDEX[indexKey];
-  if (!prefix) return null;
-  const suffix = TV_TICKER_SUFFIX_BY_INDEX[indexKey] || '';
+  let prefix = TV_EXCHANGE_PREFIX_BY_INDEX[indexKey];
+  let suffix = TV_TICKER_SUFFIX_BY_INDEX[indexKey] || '';
+  if (!prefix) {
+    // Indice hors table : on lit la place dans le suffixe Yahoo de la valeur.
+    const suffixeYahoo = Object.keys(TV_EXCHANGE_PREFIX_BY_SUFFIX).find((s) => ticker.endsWith(s));
+    if (!suffixeYahoo) return null;
+    prefix = TV_EXCHANGE_PREFIX_BY_SUFFIX[suffixeYahoo];
+    suffix = suffixeYahoo;
+  }
   let bareTicker = suffix && ticker.endsWith(suffix) ? ticker.slice(0, -suffix.length) : ticker;
   if (Object.prototype.hasOwnProperty.call(TV_TICKER_OVERRIDE_BY_YAHOO_TICKER, ticker)) {
     bareTicker = TV_TICKER_OVERRIDE_BY_YAHOO_TICKER[ticker];
@@ -66,7 +81,7 @@ function resolveCompanyTvSymbol(ticker, indexKey) {
 
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
-    NO_RELIABLE_COMPANY_TV_DATA, TV_EXCHANGE_PREFIX_BY_INDEX,
+    NO_RELIABLE_COMPANY_TV_DATA, TV_EXCHANGE_PREFIX_BY_INDEX, TV_EXCHANGE_PREFIX_BY_SUFFIX,
     TV_TICKER_SUFFIX_BY_INDEX, TV_TICKER_OVERRIDE_BY_YAHOO_TICKER,
     resolveCompanyTvSymbol,
   };

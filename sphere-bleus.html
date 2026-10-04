@@ -1,0 +1,103 @@
+<title>Sphère en six bleus</title>
+<style>
+  :root {
+    color-scheme: dark;
+    --bg: #0d1116;
+    --text: #e8ecf2;
+    --muted: #7a8494;
+    --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  body {
+    margin: 0; min-height: 100%; background: var(--bg); color: var(--text);
+    font-family: Inter, system-ui, sans-serif;
+  }
+  .page { padding: 40px 16px; display: flex; flex-direction: column; align-items: center; gap: 40px; box-sizing: border-box; }
+  h1 { font-size: 14px; letter-spacing: 0.3em; text-transform: uppercase; color: var(--muted); font-weight: 500; margin: 0; }
+  .grid { width: 100%; max-width: 1100px; display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 24px; }
+  .card {
+    background: rgba(255,255,255,0.025); border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 24px; padding: 28px 20px 22px;
+    display: flex; flex-direction: column; align-items: center; gap: 14px; min-width: 0;
+  }
+  .card h2 { font-size: 15px; font-weight: 600; margin: 0; }
+  .stage { height: 240px; width: 100%; display: flex; align-items: center; justify-content: center; }
+  .btn {
+    font-size: 13px; color: var(--text); background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.14); border-radius: 18px; padding: 8px 16px; cursor: pointer;
+  }
+  .btn:hover { background: rgba(255,255,255,0.12); }
+  .idle, .idle * { animation-play-state: paused !important; }
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; } }
+  @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-12px); } }
+  @keyframes breathe { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+  @keyframes shadowPulse { 0%, 100% { transform: scaleX(1); opacity: 0.55; } 50% { transform: scaleX(0.82); opacity: 0.3; } }
+
+  .sphere-wrap { display: flex; flex-direction: column; align-items: center; animation: float 4s ease-in-out infinite; }
+  .sphere {
+    width: 150px; height: 150px; border-radius: 50%;
+    background: radial-gradient(circle at 30% 25%, #ffffff 0%, var(--c1) 10%, var(--c2) 38%, var(--c3) 80%, var(--c4) 100%);
+    box-shadow:
+      inset -20px -24px 40px rgba(0,0,0,0.45),
+      inset 12px 14px 26px rgba(255,255,255,0.3),
+      0 0 60px var(--glow);
+    animation: breathe 3s ease-in-out infinite;
+  }
+  .shadow {
+    margin-top: 18px; width: 120px; height: 16px; border-radius: 50%;
+    background: radial-gradient(ellipse, var(--glow), transparent 70%);
+    filter: blur(4px); animation: shadowPulse 4s ease-in-out infinite;
+  }
+</style>
+
+<div class="page">
+  <h1>Sphère en six bleus</h1>
+  <div class="grid">
+
+    <div class="card" style="--c1:#9fd6ff; --c2:#3aa0ff; --c3:#0b3d7a; --c4:#06213f; --glow:rgba(58,160,255,0.45)">
+      <h2>Bleu lumineux</h2>
+      <div class="stage"><div class="sphere-wrap" id="s1"><div class="sphere"></div><div class="shadow"></div></div></div>
+      <button class="btn" data-target="s1">Pause</button>
+    </div>
+
+    <div class="card" style="--c1:#8fd8ff; --c2:#1f8fe8; --c3:#0a3a8f; --c4:#041a40; --glow:rgba(31,143,232,0.45)">
+      <h2>Cobalt</h2>
+      <div class="stage"><div class="sphere-wrap" id="s2"><div class="sphere"></div><div class="shadow"></div></div></div>
+      <button class="btn" data-target="s2">Pause</button>
+    </div>
+
+    <div class="card" style="--c1:#c4ecff; --c2:#5fc4ff; --c3:#1c6fa8; --c4:#0a2c46; --glow:rgba(95,196,255,0.4)">
+      <h2>Bleu ciel</h2>
+      <div class="stage"><div class="sphere-wrap" id="s3"><div class="sphere"></div><div class="shadow"></div></div></div>
+      <button class="btn" data-target="s3">Pause</button>
+    </div>
+
+    <div class="card" style="--c1:#7fb0ff; --c2:#2a5bff; --c3:#14246e; --c4:#070d33; --glow:rgba(42,91,255,0.5)">
+      <h2>Bleu roi</h2>
+      <div class="stage"><div class="sphere-wrap" id="s4"><div class="sphere"></div><div class="shadow"></div></div></div>
+      <button class="btn" data-target="s4">Pause</button>
+    </div>
+
+    <div class="card" style="--c1:#b9fff8; --c2:#22e0ff; --c3:#0a6f8a; --c4:#042f3d; --glow:rgba(34,224,255,0.45)">
+      <h2>Bleu électrique</h2>
+      <div class="stage"><div class="sphere-wrap" id="s5"><div class="sphere"></div><div class="shadow"></div></div></div>
+      <button class="btn" data-target="s5">Pause</button>
+    </div>
+
+    <div class="card" style="--c1:#dcefff; --c2:#7fb3d9; --c3:#2c4d6e; --c4:#101e2e; --glow:rgba(127,179,217,0.4)">
+      <h2>Bleu glacé</h2>
+      <div class="stage"><div class="sphere-wrap" id="s6"><div class="sphere"></div><div class="shadow"></div></div></div>
+      <button class="btn" data-target="s6">Pause</button>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  document.querySelectorAll('.btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const el = document.getElementById(btn.dataset.target);
+      el.classList.toggle('idle');
+      btn.textContent = el.classList.contains('idle') ? 'Reprendre' : 'Pause';
+    });
+  });
+</script>

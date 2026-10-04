@@ -267,17 +267,20 @@
     background: var(--bg-3); color: var(--gold); border-left-color: var(--gold);
   }
 
-  /* Écran d'accueil */
+  /* Écran d'accueil : plein écran. La barre de recherche est centrée au
+     repos ; pendant la réflexion (#home.thinking) elle s'efface en remontant
+     et un orbe en verre apparaît au centre ; après la réponse (#home.answered)
+     elle se place en bas et la réponse s'affiche au-dessus. Les positions
+     sont absolues (pas de flux) pour que rien ne déborde en largeur sur
+     téléphone : la marge de 16px vient du border mobile ci-dessus. */
   .home {
     z-index: 1;
-    display: flex; flex-direction: column;
-    align-items: center; justify-content: center; text-align: center;
-    padding: 40px 20px; gap: 48px;
+    overflow: hidden; text-align: center;
     background:
       radial-gradient(ellipse 600px 420px at 15% -5%, rgba(185,154,104,.14), transparent 60%),
       radial-gradient(ellipse 500px 420px at 105% 105%, rgba(163,95,69,.08), transparent 60%);
   }
-  .home-hero { display: flex; flex-direction: column; gap: 12px; align-items: center; }
+  .home-hero { position: absolute; top: 48px; left: 0; right: 0; display: flex; justify-content: center; }
   .home-wordmark {
     font-family: 'Newsreader', serif; font-weight: 400; font-size: clamp(2.5rem, 8.5vw, 3.5rem);
     letter-spacing: 0.03em; line-height: 1.05;
@@ -285,17 +288,84 @@
     -webkit-background-clip: text; background-clip: text; color: transparent;
   }
   .home-tagline { color: var(--muted); font-size: var(--text-base); max-width: 320px; line-height: var(--lh-relaxed); margin: 0; }
-  .home-search { margin: 16px 0; position: relative; }
-  .home-search-panel {
-    display: flex; flex-direction: column; gap: 10px; margin-top: 10px;
-    max-height: 50vh; overflow-y: auto;
+  .home-stage { position: absolute; inset: 0; }
+
+  /* Barre de recherche : verre translucide, pilule. Centrée au repos
+     (bottom: 50% + translate 50% = centre exact, sans top:auto pour que la
+     transition de bottom reste numérique). */
+  .home-search {
+    position: absolute; left: 50%; bottom: 50%; transform: translate(-50%, 50%);
+    width: min(920px, calc(100% - 32px));
+    transition: bottom .8s var(--ease), transform .8s var(--ease),
+                opacity .5s var(--ease), visibility .5s;
   }
-  .home-search-bubble {
-    background: var(--bg-2); border: 1px solid var(--border);
-    border-radius: var(--radius-lg); padding: 12px 16px;
+  #homeSearchInput {
+    width: 100%; height: 72px; box-sizing: border-box; padding: 0 28px;
+    border-radius: 36px; font-size: 18px;
+    background: var(--bg-translucent); border: 1px solid var(--border);
+    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    transition: border-color .4s var(--ease), box-shadow .4s var(--ease);
+  }
+  #homeSearchInput:focus {
+    border-color: rgba(42,91,255,.4);
+    box-shadow: 0 0 0 6px rgba(42,91,255,.1), 0 0 60px rgba(42,91,255,.2);
+  }
+  .home.thinking .home-search {
+    opacity: 0; transform: translate(-50%, -220%); pointer-events: none; visibility: hidden;
+  }
+  .home.answered .home-search { bottom: 40px; transform: translate(-50%, 0); }
+
+  /* Orbe en verre affiché pendant la réflexion : translucide, flou, lueur
+     bleue intérieure, respiration de la lumière et légère flottaison. Pas
+     d'anneaux en orbite. */
+  .home-orb {
+    position: absolute; left: 50%; top: 50%; width: 150px; height: 150px;
+    margin: -75px 0 0 -75px; border-radius: 50%; pointer-events: none;
+    transform: scale(.2); opacity: 0;
+    transition: transform .8s var(--ease), opacity .5s var(--ease);
+    background: rgba(120,160,255,.10);
+    backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(255,255,255,.22);
+    box-shadow:
+      inset 0 0 40px rgba(42,91,255,.55),
+      inset 0 -14px 28px rgba(7,13,51,.5),
+      0 24px 50px rgba(0,0,0,.5),
+      0 0 60px rgba(42,91,255,.35);
+    animation: home-orb-float 4s ease-in-out infinite;
+  }
+  .home.thinking .home-orb { transform: scale(1); opacity: 1; }
+  .home-orb-light {
+    position: absolute; left: 50%; top: 50%; width: 70px; height: 70px;
+    margin: -35px 0 0 -35px; border-radius: 50%;
+    background: radial-gradient(circle, #b8ccff, #2a5bff 55%, transparent 75%);
+    filter: blur(8px);
+    animation: home-orb-breathe 2.6s ease-in-out infinite;
+  }
+  .home-orb-shine {
+    position: absolute; top: 16px; left: 26px; width: 50px; height: 26px; border-radius: 50%;
+    background: radial-gradient(ellipse, rgba(255,255,255,.85), transparent 70%);
+    transform: rotate(-28deg);
+  }
+  @keyframes home-orb-float { 0%, 100% { translate: 0 0; } 50% { translate: 0 -8px; } }
+  @keyframes home-orb-breathe { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.12); } }
+  @media (prefers-reduced-motion: reduce) {
+    .home-orb, .home-orb-light { animation: none; }
+  }
+
+  /* Réponses : au-dessus du centre de l'écran, invisibles hors état answered. */
+  .home-search-panel {
+    position: absolute; left: 50%; top: 42%; transform: translate(-50%, -50%);
+    width: min(720px, calc(100% - 32px)); max-height: 46%; overflow-y: auto;
+    opacity: 0; pointer-events: none; transition: opacity .6s var(--ease);
+  }
+  .home.answered .home-search-panel { opacity: 1; pointer-events: auto; }
+  .home-search-bubble { padding-bottom: 8px; }
+  .home-search-bubble + .home-search-bubble { margin-top: 24px; }
+  .home-search-bubble p {
+    margin: 0 0 16px; font-size: 17px; line-height: 1.7; color: var(--text);
     white-space: pre-wrap;
   }
-  .home-search-links { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+  .home-search-links { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
 
   .home-modules { display: flex; flex-direction: column; gap: 14px; width: 100%; max-width: 420px; }
   .module-card {
@@ -337,7 +407,7 @@
   header { padding: 64px 20px 0; }
   @media (min-width: 1024px) {
     header { padding-top: calc(var(--topbar-h) + 36px); }
-    .home { padding-top: calc(var(--topbar-h) + 36px); }
+    .home-hero { top: calc(var(--topbar-h) + 36px); }
   }
   .back-link {
     display: inline-flex; align-items: center; gap: 6px;
@@ -1348,34 +1418,17 @@
 <div id="home" class="home">
   <div class="home-hero">
     <div class="home-wordmark">AI Investment</div>
-    <p class="home-tagline">Analyse macro-fondamentale automatisée, mise à jour en continu.</p>
+  </div>
+  <div class="home-stage">
+    <div class="home-orb" aria-hidden="true">
+      <div class="home-orb-light"></div>
+      <div class="home-orb-shine"></div>
+    </div>
     <div class="home-search">
       <input type="search" id="homeSearchInput" class="list-search"
              placeholder="Demande-moi n'importe quoi sur tes donnees…">
-      <div id="homeSearchPanel" class="home-search-panel" hidden></div>
     </div>
-  </div>
-  <div class="home-modules">
-    <a href="#or" class="module-card module-card-accent">
-      <svg class="module-card-icon"><use href="#icon-or"/></svg>
-      <span class="module-card-name">Or</span>
-      <span class="module-card-desc">Score macro-fondamental, cours temps réel, alertes.</span>
-    </a>
-    <span class="module-card module-card-disabled" aria-disabled="true">
-      <svg class="module-card-icon"><use href="#icon-minieres"/></svg>
-      <span class="module-card-name">Minières</span>
-      <span class="module-card-desc">Bientôt disponible.</span>
-    </span>
-    <a href="#indices" class="module-card">
-      <svg class="module-card-icon"><use href="#icon-indices"/></svg>
-      <span class="module-card-name">Indices</span>
-      <span class="module-card-desc">Scoring fondamental CAC 40 / DAX, analyses IA.</span>
-    </a>
-    <a href="#portefeuille" class="module-card">
-      <svg class="module-card-icon"><use href="#icon-portefeuille"/></svg>
-      <span class="module-card-name">Portefeuille</span>
-      <span class="module-card-desc">Suivi de tes positions, P&amp;L, opportunités.</span>
-    </a>
+    <div id="homeSearchPanel" class="home-search-panel" hidden></div>
   </div>
 </div>
 
@@ -3457,11 +3510,24 @@ function wireHomeSearchLinkButtons(elementOrPanel) {
   });
 }
 
+// Etats de l'accueil, portes par des classes sur #home (voir CSS .home.thinking
+// / .home.answered) : repos = barre centree (aucune classe), thinking = barre
+// effacee + orbe, answered = barre en bas + reponse au centre.
+function setHomeState(etat) {
+  const home = document.getElementById('home');
+  home.classList.toggle('thinking', etat === 'thinking');
+  home.classList.toggle('answered', etat === 'answered');
+  // Pendant la réflexion la barre est invisible : on retire le focus pour que
+  // le clavier mobile se ferme et qu'un Enter ne reparte pas en double.
+  if (etat === 'thinking') document.getElementById('homeSearchInput').blur();
+}
+
 async function askAssistant(question) {
   const panel = document.getElementById('homeSearchPanel');
-  panel.hidden = false;
   const token = getAiAssistantToken();
   if (!token) return;
+  panel.hidden = false;
+  setHomeState('thinking');
 
   const positionsManuelles = (typeof loadPortfolio === 'function')
     ? loadPortfolio(localStorage) : [];
@@ -3469,8 +3535,25 @@ async function askAssistant(question) {
   let texteAccumule = '';
   let liensRecus = [];
   let erreurRecue = false;
-  const bubbleIndex = panel.children.length;
-  panel.insertAdjacentHTML('beforeend', homeSearchBubbleHtml('…', []));
+  // La bulle de réponse n'existe qu'à partir du premier événement utile :
+  // pendant la réflexion, c'est l'orbe qui est affiché (plus de bulle '…').
+  let reponseAffichee = false;
+  let bubbleIndex = -1;
+
+  // Affiche (ou met à jour) la réponse et passe en état answered.
+  const afficherReponse = (texte, liens) => {
+    setHomeState('answered');
+    reponseAffichee = true;
+    const html = homeSearchBubbleHtml(texte, liens);
+    if (bubbleIndex === -1) {
+      bubbleIndex = panel.children.length;
+      panel.insertAdjacentHTML('beforeend', html);
+    } else {
+      panel.children[bubbleIndex].outerHTML = html;
+    }
+    wireHomeSearchLinkButtons(panel.children[bubbleIndex]);
+    panel.scrollTop = panel.scrollHeight;
+  };
 
   try {
     const response = await fetch('https://goldbot.fr:8445/ask', {
@@ -3482,12 +3565,12 @@ async function askAssistant(question) {
     });
     if (response.status === 401) {
       localStorage.removeItem('aiAssistantToken');
-      panel.children[bubbleIndex].outerHTML = homeSearchBubbleHtml(
+      afficherReponse(
         "Ton jeton d'acces est invalide. Recharge la page pour en saisir un nouveau.", []);
       return;
     }
     if (response.status === 429) {
-      panel.children[bubbleIndex].outerHTML = homeSearchBubbleHtml(
+      afficherReponse(
         "Le budget quotidien de l'assistant est atteint. Reessaie demain.", []);
       return;
     }
@@ -3505,22 +3588,33 @@ async function askAssistant(question) {
       for (const ligne of lignes) {
         if (!ligne.startsWith('data: ')) continue;
         const evenement = JSON.parse(ligne.slice(6));
-        if (evenement.type === 'texte') texteAccumule += evenement.texte;
-        if (evenement.type === 'liens') liensRecus = evenement.liens;
+        if (evenement.type === 'texte') {
+          texteAccumule += evenement.texte;
+          afficherReponse(texteAccumule, liensRecus);
+        }
+        if (evenement.type === 'liens') {
+          liensRecus = evenement.liens;
+          // Les liens seuls n'ouvrent pas la réponse : ils ne sont rendus
+          // qu'une fois le texte affiché (ou pour le rafraîchir).
+          if (reponseAffichee) afficherReponse(texteAccumule, liensRecus);
+        }
         if (evenement.type === 'erreur') {
           texteAccumule = `Une erreur est survenue : ${evenement.detail}`;
           erreurRecue = true;
+          afficherReponse(texteAccumule, liensRecus);
         }
-        panel.children[bubbleIndex].outerHTML = homeSearchBubbleHtml(texteAccumule || '…', liensRecus);
-        wireHomeSearchLinkButtons(panel.children[bubbleIndex]);
       }
+    }
+    // Flux terminé sans aucun texte : on sort quand même de la réflexion.
+    if (!reponseAffichee) {
+      afficherReponse("Je n'ai pas de réponse à te donner pour l'instant.", liensRecus);
     }
     if (!erreurRecue) {
       homeSearchHistory.push({ role: 'user', content: question });
       homeSearchHistory.push({ role: 'assistant', content: texteAccumule });
     }
   } catch (e) {
-    panel.children[bubbleIndex].outerHTML = homeSearchBubbleHtml(
+    afficherReponse(
       "Je n'ai pas pu contacter l'assistant, reessaie dans un instant.", []);
   }
 }
@@ -3530,6 +3624,9 @@ function wireHomeSearch() {
   if (!input) return;
   input.addEventListener('keydown', async (e) => {
     if (e.key !== 'Enter') return;
+    // Barre masquée pendant la réflexion : pas de nouvel envoi tant que la
+    // réponse précédente n'est pas arrivée.
+    if (document.getElementById('home').classList.contains('thinking')) return;
     const query = input.value;
     await ensureIndicesData();
     const navHash = matchInstantNav(query);

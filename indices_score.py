@@ -932,7 +932,64 @@ HANGSENG_COMPANIES = [
 # Sont exclues de FINANCIAL_SECTOR_TICKERS (méthodologie standard,
 # EBITDA/EBIT disponibles) — sauf Goldman Sachs et JPMorgan Chase,
 # établissements financiers, voir FINANCIAL_SECTOR_TICKERS plus bas.
-COMPANIES = (
+# Euro Stoxx 50 : composantes du PDF officiel STOXX (SX5GT, dernière revue
+# périodique). Tickers vérifiés (cours récents) depuis le VPS le 2026-10-04.
+# CRH et Flutter ne sont cotées qu'en dollars (NYSE) : leur cours est en USD,
+# la conversion en EUR reste à faire avant l'ajout au site (voir la branche).
+EUROSTOXX50_COMPANIES = [
+    {"ticker": "ASML.AS", "name": "ASML"},
+    {"ticker": "MC.PA", "name": "LVMH"},
+    {"ticker": "TTE.PA", "name": "TotalEnergies"},
+    {"ticker": "SAP.DE", "name": "SAP"},
+    {"ticker": "SIE.DE", "name": "Siemens"},
+    {"ticker": "SAN.PA", "name": "Sanofi"},
+    {"ticker": "OR.PA", "name": "L'Oréal"},
+    {"ticker": "SU.PA", "name": "Schneider Electric"},
+    {"ticker": "AI.PA", "name": "Air Liquide"},
+    {"ticker": "ALV.DE", "name": "Allianz"},
+    {"ticker": "AIR.PA", "name": "Airbus"},
+    {"ticker": "RMS.PA", "name": "Hermès International"},
+    {"ticker": "IBE.MC", "name": "Iberdrola"},
+    {"ticker": "DTE.DE", "name": "Deutsche Telekom"},
+    {"ticker": "DG.PA", "name": "Vinci"},
+    {"ticker": "BNP.PA", "name": "BNP Paribas"},
+    {"ticker": "MBG.DE", "name": "Mercedes-Benz Group"},
+    {"ticker": "SAN.MC", "name": "Banco Santander"},
+    {"ticker": "SAF.PA", "name": "Safran"},
+    {"ticker": "EL.PA", "name": "EssilorLuxottica"},
+    {"ticker": "CS.PA", "name": "AXA"},
+    {"ticker": "BAYN.DE", "name": "Bayer"},
+    {"ticker": "IFX.DE", "name": "Infineon Technologies"},
+    {"ticker": "PRX.AS", "name": "Prosus"},
+    {"ticker": "ABI.BR", "name": "Anheuser-Busch InBev"},
+    {"ticker": "ENEL.MI", "name": "Enel"},
+    {"ticker": "MUV2.DE", "name": "Münchener Rückversicherung"},
+    {"ticker": "INGA.AS", "name": "ING Groep"},
+    {"ticker": "ADYEN.AS", "name": "Adyen"},
+    {"ticker": "DHL.DE", "name": "Deutsche Post"},
+    {"ticker": "BBVA.MC", "name": "Banco Bilbao Vizcaya Argentaria"},
+    {"ticker": "BAS.DE", "name": "BASF"},
+    {"ticker": "RI.PA", "name": "Pernod Ricard"},
+    {"ticker": "ISP.MI", "name": "Intesa Sanpaolo"},
+    {"ticker": "ITX.MC", "name": "Industria de Diseño Textil"},
+    {"ticker": "KER.PA", "name": "Kering"},
+    {"ticker": "UCG.MI", "name": "UniCredit"},
+    {"ticker": "STLAM.MI", "name": "Stellantis"},
+    {"ticker": "CRH", "name": "CRH"},
+    {"ticker": "NDA-FI.HE", "name": "Nordea Bank"},
+    {"ticker": "BMW.DE", "name": "BMW"},
+    {"ticker": "BN.PA", "name": "Danone"},
+    {"ticker": "FLUT", "name": "Flutter Entertainment"},
+    {"ticker": "DB1.DE", "name": "Deutsche Börse"},
+    {"ticker": "ENI.MI", "name": "Eni"},
+    {"ticker": "AD.AS", "name": "Ahold Delhaize"},
+    {"ticker": "ADS.DE", "name": "Adidas"},
+    {"ticker": "VOW3.DE", "name": "Volkswagen (actions privilégiées)"},
+    {"ticker": "NOKIA.HE", "name": "Nokia"},
+    {"ticker": "VNA.DE", "name": "Vonovia"},
+]
+
+_COMPANIES_HORS_EUROSTOXX50 = (
     [{**c, "index": "CAC40"} for c in CAC40_COMPANIES]
     + [{**c, "index": "DAX"} for c in DAX_COMPANIES]
     + [{**c, "index": "NASDAQ"} for c in NASDAQ_COMPANIES]
@@ -944,10 +1001,30 @@ COMPANIES = (
     + [{**c, "index": "NIKKEI225"} for c in NIKKEI225_COMPANIES]
     + [{**c, "index": "HANGSENG"} for c in HANGSENG_COMPANIES]
 )
+
+
+def _ajoute_indice(entrees: list[dict], indice: str, composantes: list[dict]) -> list[dict]:
+    """Ajoute un indice à la liste des entreprises sans dupliquer les tickers
+    déjà présents : une entreprise qui appartient déjà à un autre indice
+    garde son entrée d'origine et reçoit `indice` dans `also_indices`. Même
+    convention qu'Alphabet (NASDAQ, also_indices=["DOW"]) et STMicro (FTSEMIB)."""
+    positions = {c["ticker"]: i for i, c in enumerate(entrees)}
+    sortie = list(entrees)
+    for c in composantes:
+        if c["ticker"] in positions:
+            i = positions[c["ticker"]]
+            deja = sortie[i].get("also_indices", [])
+            sortie[i] = {**sortie[i], "also_indices": sorted(set(deja) | {indice})}
+        else:
+            sortie.append({**c, "index": indice})
+    return sortie
+
+
+COMPANIES = _ajoute_indice(_COMPANIES_HORS_EUROSTOXX50, "EUROSTOXX50", EUROSTOXX50_COMPANIES)
 INDEX_NAMES = {
     "CAC40": "CAC 40", "DAX": "DAX", "NASDAQ": "Nasdaq 100", "DOW": "Dow Jones",
     "FTSE": "FTSE 100", "SMI": "SMI", "IBEX35": "IBEX 35", "FTSEMIB": "FTSE MIB",
-    "NIKKEI225": "Nikkei 225", "HANGSENG": "Hang Seng",
+    "NIKKEI225": "Nikkei 225", "HANGSENG": "Hang Seng", "EUROSTOXX50": "Euro Stoxx 50",
 }
 
 # Devise native de chaque indice — CAC40/DAX publient en euros, le
@@ -958,7 +1035,7 @@ INDEX_NAMES = {
 INDEX_CURRENCY = {
     "CAC40": "EUR", "DAX": "EUR", "NASDAQ": "USD", "DOW": "USD",
     "FTSE": "GBP", "SMI": "CHF", "IBEX35": "EUR", "FTSEMIB": "EUR",
-    "NIKKEI225": "JPY", "HANGSENG": "HKD",
+    "NIKKEI225": "JPY", "HANGSENG": "HKD", "EUROSTOXX50": "EUR",
 }
 
 # Même mapping que CURRENCY_SYMBOL côté frontend (docs/index.html) — pour
@@ -3398,7 +3475,7 @@ def update_price_history(new_entries: list[dict], path=PRICE_HISTORY_PATH, today
 INDEX_YFINANCE_TICKERS = {
     "CAC40": "^FCHI", "DAX": "^GDAXI", "NASDAQ": "^NDX", "DOW": "^DJI",
     "FTSE": "^FTSE", "SMI": "^SSMI", "IBEX35": "^IBEX", "FTSEMIB": "FTSEMIB.MI",
-    "NIKKEI225": "^N225", "HANGSENG": "^HSI",
+    "NIKKEI225": "^N225", "HANGSENG": "^HSI", "EUROSTOXX50": "^STOXX50E",
 }
 SIGNAL_STOP_LOSS_PCT = -20.0     # % perte déclenchant une clôture anticipée
 SIGNAL_SHADOW_DELAY_MONTHS = 6   # délai max avant clôture forcée du signal

@@ -192,31 +192,54 @@ def test_classement_schema_lists_the_exact_index_values_as_an_enum():
     ]
 
 
-def test_dispatch_actualites_entreprise_calls_the_news_source_with_the_ticker(monkeypatch):
-    appels = []
+def _indices_avec_safran():
+    return {"companies": [{"ticker": "MC.PA", "name": "LVMH"}]}
 
-    def fake_news(params, ttl_seconds, cache_key):
-        appels.append((params["symbols"], cache_key))
-        return {"data": []}
+
+def test_dispatch_actualites_entreprise_passes_the_company_name_to_both_sources():
+    appels_gdelt = []
+
+    def gdelt(requete, debut, ttl, cle):
+        appels_gdelt.append((requete, cle))
+        return {"articles": []}
 
     resultat = tools.dispatch_tool(
-        "actualites_entreprise", {"ticker": "MC.PA"}, news_source=fake_news)
+        "actualites_entreprise", {"ticker": "MC.PA"},
+        indices_source=_indices_avec_safran, finnhub_source=lambda *a: [],
+        gdelt_source=gdelt)
 
-    assert appels == [("MC.PA", "entreprise:MC.PA")]
+    assert appels_gdelt == [('"LVMH"', "entreprise:MC.PA")]
     assert resultat == {"ticker": "MC.PA", "articles": []}
 
 
-def test_dispatch_actualites_marche_needs_no_input(monkeypatch):
+def test_dispatch_actualites_entreprise_with_an_unknown_ticker_skips_gdelt():
+    appels_gdelt = []
+
+    def gdelt(*args):
+        appels_gdelt.append(args)
+        return {"articles": []}
+
+    tools.dispatch_tool(
+        "actualites_entreprise", {"ticker": "INCONNU.PA"},
+        indices_source=_indices_avec_safran, finnhub_source=lambda *a: [],
+        gdelt_source=gdelt)
+
+    assert appels_gdelt == []
+
+
+def test_dispatch_actualites_marche_needs_no_input():
     resultat = tools.dispatch_tool(
-        "actualites_marche", {}, news_source=lambda p, t, k: {"data": []})
+        "actualites_marche", {}, gdelt_source=lambda *a: {"articles": []})
 
     assert resultat == {"articles": []}
 
 
-def test_dispatch_actualites_entreprise_returns_an_error_dict_on_source_failure():
+def test_dispatch_actualites_entreprise_returns_an_error_dict_when_all_sources_fail():
+    erreur = {"erreur": "actualites indisponibles (RuntimeError)"}
     resultat = tools.dispatch_tool(
         "actualites_entreprise", {"ticker": "MC.PA"},
-        news_source=lambda p, t, k: {"erreur": "actualites indisponibles (RuntimeError)"})
+        indices_source=_indices_avec_safran, finnhub_source=lambda *a: erreur,
+        gdelt_source=lambda *a: erreur)
 
     assert "erreur" in resultat
 

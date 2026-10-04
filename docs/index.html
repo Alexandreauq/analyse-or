@@ -355,15 +355,36 @@
   /* Réponses : au-dessus du centre de l'écran, invisibles hors état answered. */
   .home-search-panel {
     position: absolute; left: 50%; top: 42%; transform: translate(-50%, -50%);
-    width: min(720px, calc(100% - 32px)); max-height: 46%; overflow-y: auto;
+    width: min(720px, calc(100% - 32px)); max-height: 50vh;
+    overflow-y: auto; overflow-x: hidden; padding-right: 14px;
     opacity: 0; pointer-events: none; transition: opacity .6s var(--ease);
+    /* Scrollbar : mêmes couleurs, largeur et thumb arrondi que le carrousel
+       Portefeuille (.portfolio-pager-content), voir plus haut. */
+    scrollbar-width: thin; scrollbar-color: var(--muted) transparent;
   }
+  .home-search-panel::-webkit-scrollbar { width: 12px; }
+  .home-search-panel::-webkit-scrollbar-track { background: transparent; }
+  .home-search-panel::-webkit-scrollbar-thumb {
+    background: var(--muted); border-radius: var(--radius-pill);
+    border: 3px solid transparent; background-clip: padding-box;
+  }
+  .home-search-panel::-webkit-scrollbar-thumb:hover { background: var(--accent); }
   .home.answered .home-search-panel { opacity: 1; pointer-events: auto; }
   .home-search-bubble { padding-bottom: 8px; }
   .home-search-bubble + .home-search-bubble { margin-top: 24px; }
   .home-search-bubble p {
     margin: 0 0 16px; font-size: 17px; line-height: 1.7; color: var(--text);
-    white-space: pre-wrap;
+    white-space: pre-wrap; overflow-wrap: anywhere;
+  }
+  /* Curseur de l'effet machine à écrire (voir createAnswerTyper). */
+  .answer-caret {
+    display: inline-block; width: 2px; height: 1.1em; margin-left: 2px;
+    vertical-align: -0.2em; background: var(--accent);
+    animation: answer-caret-blink 1s step-end infinite;
+  }
+  @keyframes answer-caret-blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+  @media (prefers-reduced-motion: reduce) {
+    .answer-caret { animation: none; }
   }
   .home-search-links { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
 
@@ -3484,16 +3505,144 @@ function matchInstantNav(query) {
 
 let homeSearchHistory = [];
 
-function homeSearchBubbleHtml(texte, liens) {
-  const liensHtml = (liens || []).map(l => `
+function homeSearchLinksHtml(liens) {
+  return (liens || []).map(l => `
     <button class="toggle-btn home-search-link" type="button"
             data-cible-type="${escHtml(l.cible_type)}" data-cible-valeur="${escHtml(l.cible_valeur)}"
             data-libelle="${escHtml(l.libelle)}">${escHtml(l.libelle)}</button>`).join('');
-  return `
+}
+
+// Effet machine à écrire pour une bulle de réponse. Le texte reçu (cible) est
+// révélé caractère par caractère (~15 ms par caractère, accéléré si le retard
+// dépasse ANSWER_TYPE_LAG ou une fois le flux terminé) avec un curseur qui
+// clignote pendant l'écriture. Les liens ne sont rendus qu'une fois le flux
+// terminé ET le texte entièrement révélé. Préférence reduced-motion : texte
+// affiché d'un coup, sans curseur. annuler() arrête tout proprement (utilisé
+// quand une nouvelle question démarre). Le texte passe toujours par escHtml.
+const ANSWER_TYPE_MS = 15;
+const ANSWER_TYPE_LAG = 120;
+let typerCourant = null;   // révélation en cours de la dernière réponse
+let answerGeneration = 0;  // incrémenté à chaque nouvelle question
+
+function createAnswerTyper(panel, reduceMotion) {
+  panel.insertAdjacentHTML('beforeend', `
     <div class="home-search-bubble">
-      <p>${escHtml(texte)}</p>
-      ${liensHtml ? `<div class="home-search-links">${liensHtml}</div>` : ''}
-    </div>`;
+      <p class="home-search-text"><span class="home-search-run"></span><span class="answer-caret" aria-hidden="true"></span></p>
+      <div class="home-search-links"></div>
+    </div>`);
+  const bubble = panel.lastElementChild;
+  const run = bubble.querySelector('.home-search-run');
+  const caret = bubble.querySelector('.answer-caret');
+  const linksEl = bubble.querySelector('.home-search-links');
+
+  let cible = '';          // texte complet reçu jusqu'ici
+  let affiche = 0;         // unités de code déjà révélées
+  let flux = true;         // le flux SSE n'est pas encore terminé
+  // Pas d'animation : préférence reduced-motion, réponse annulée ou fixée d'un coup.
+  let instantane = reduceMotion;
+  let liens = [];
+  let liensAffiches = false;
+  let timer = null;
+
+  const caretVisible = () =>
+    !reduceMotion && !instantane && (flux || affiche < cible.length);
+
+  const majLiens = () => {
+    const pret = !flux && affiche >= cible.length;
+    if (!pret) {
+      if (liensAffiches) { linksEl.innerHTML = ''; liensAffiches = false; }
+      return;
+    }
+    if (!liensAffiches) {
+      linksEl.innerHTML = homeSearchLinksHtml(liens);
+      wireHomeSearchLinkButtons(bubble);
+      liensAffiches = true;
+    }
+  };
+
+  const render = () => {
+    // Suit le bas de la réponse seulement si l'utilisateur n'a pas remonté.
+    const suitBas = panel.scrollHeight - panel.scrollTop - panel.clientHeight < 48;
+    run.innerHTML = escHtml(cible.slice(0, affiche));
+    caret.hidden = !caretVisible();
+    majLiens();
+    if (suitBas) panel.scrollTop = panel.scrollHeight;
+  };
+
+  const stopTimer = () => {
+    if (timer !== null) { clearTimeout(timer); timer = null; }
+  };
+
+  const tick = () => {
+    timer = null;
+    const reste = cible.length - affiche;
+    if (reste <= 0) { render(); return; }
+    let pas = 1;
+    if (!flux) pas = Math.ceil(reste / 10);              // flux fini : rattrapage rapide
+    else if (reste > ANSWER_TYPE_LAG) pas = Math.ceil(reste / 40); // trop en retard
+    let fin = Math.min(cible.length, affiche + pas);
+    // Ne jamais couper une paire de substitution (emoji) en deux.
+    const code = cible.charCodeAt(fin - 1);
+    if (fin < cible.length && code >= 0xd800 && code <= 0xdbff) fin++;
+    affiche = fin;
+    render();
+    planifier();
+  };
+
+  const planifier = () => {
+    if (instantane || timer !== null || affiche >= cible.length) return;
+    timer = setTimeout(tick, ANSWER_TYPE_MS);
+  };
+
+  render();
+  panel.scrollTop = panel.scrollHeight;
+
+  return {
+    // Nouveau texte cumulé (événement 'texte').
+    texte(t) {
+      cible = t;
+      if (instantane) affiche = t.length;
+      planifier();
+      render();
+    },
+    // Texte remplacé (événement 'erreur') : on le révèle depuis le début.
+    remplacer(t) {
+      stopTimer();
+      cible = t;
+      affiche = instantane ? t.length : 0;
+      planifier();
+      render();
+    },
+    liens(l) {
+      liens = l;
+      liensAffiches = false;
+      majLiens();
+    },
+    // Le flux SSE est terminé.
+    terminer() {
+      flux = false;
+      planifier();
+      render();
+    },
+    // Affichage complet et immédiat (401, 429, erreurs, réponse vide).
+    fixer(t, l) {
+      stopTimer();
+      instantane = true;
+      cible = t;
+      affiche = t.length;
+      flux = false;
+      liens = l || [];
+      liensAffiches = false;
+      render();
+    },
+    // Arrête la révélation : le texte déjà reçu s'affiche entièrement.
+    annuler() {
+      stopTimer();
+      instantane = true;
+      affiche = cible.length;
+      render();
+    },
+  };
 }
 
 function wireHomeSearchLinkButtons(elementOrPanel) {
@@ -3526,6 +3675,15 @@ async function askAssistant(question) {
   const panel = document.getElementById('homeSearchPanel');
   const token = getAiAssistantToken();
   if (!token) return;
+  // Nouvelle question : la révélation de la réponse précédente s'arrête
+  // proprement (texte entier affiché), et les événements encore en retard
+  // de l'ancienne requête ne relancent plus d'animation.
+  if (typerCourant) typerCourant.annuler();
+  typerCourant = null;
+  const generation = ++answerGeneration;
+  const estDepassee = () => generation !== answerGeneration;
+  const reduceMotion = window.matchMedia
+    ? window.matchMedia('(prefers-reduced-motion: reduce)').matches : false;
   panel.hidden = false;
   setHomeState('thinking');
 
@@ -3537,22 +3695,20 @@ async function askAssistant(question) {
   let erreurRecue = false;
   // La bulle de réponse n'existe qu'à partir du premier événement utile :
   // pendant la réflexion, c'est l'orbe qui est affiché (plus de bulle '…').
-  let reponseAffichee = false;
-  let bubbleIndex = -1;
+  let typer = null;
 
-  // Affiche (ou met à jour) la réponse et passe en état answered.
-  const afficherReponse = (texte, liens) => {
+  // Crée la bulle au premier événement utile et passe en état answered.
+  const assurerBulle = () => {
+    if (typer) return typer;
     setHomeState('answered');
-    reponseAffichee = true;
-    const html = homeSearchBubbleHtml(texte, liens);
-    if (bubbleIndex === -1) {
-      bubbleIndex = panel.children.length;
-      panel.insertAdjacentHTML('beforeend', html);
-    } else {
-      panel.children[bubbleIndex].outerHTML = html;
-    }
-    wireHomeSearchLinkButtons(panel.children[bubbleIndex]);
-    panel.scrollTop = panel.scrollHeight;
+    typer = createAnswerTyper(panel, reduceMotion);
+    if (estDepassee()) typer.annuler();
+    else typerCourant = typer;
+    return typer;
+  };
+  // Affichage immédiat (401, 429, erreurs de connexion, réponse vide).
+  const afficherReponse = (texte, liens) => {
+    assurerBulle().fixer(texte, liens);
   };
 
   try {
@@ -3590,24 +3746,28 @@ async function askAssistant(question) {
         const evenement = JSON.parse(ligne.slice(6));
         if (evenement.type === 'texte') {
           texteAccumule += evenement.texte;
-          afficherReponse(texteAccumule, liensRecus);
+          assurerBulle().texte(texteAccumule);
         }
         if (evenement.type === 'liens') {
           liensRecus = evenement.liens;
           // Les liens seuls n'ouvrent pas la réponse : ils ne sont rendus
-          // qu'une fois le texte affiché (ou pour le rafraîchir).
-          if (reponseAffichee) afficherReponse(texteAccumule, liensRecus);
+          // qu'une fois le texte révélé et le flux terminé.
+          if (typer) typer.liens(liensRecus);
         }
         if (evenement.type === 'erreur') {
           texteAccumule = `Une erreur est survenue : ${evenement.detail}`;
           erreurRecue = true;
-          afficherReponse(texteAccumule, liensRecus);
+          assurerBulle().remplacer(texteAccumule);
         }
       }
     }
-    // Flux terminé sans aucun texte : on sort quand même de la réflexion.
-    if (!reponseAffichee) {
+    // Flux terminé : la révélation finit (accélérée) puis les liens apparaissent.
+    if (!typer) {
+      // Flux terminé sans aucun texte : on sort quand même de la réflexion.
       afficherReponse("Je n'ai pas de réponse à te donner pour l'instant.", liensRecus);
+    } else {
+      typer.liens(liensRecus);
+      typer.terminer();
     }
     if (!erreurRecue) {
       homeSearchHistory.push({ role: 'user', content: question });

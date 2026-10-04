@@ -49,3 +49,20 @@ def test_ask_refuses_when_the_daily_budget_is_exceeded(client, monkeypatch):
         headers={"X-Bot-Token": "secret-token"})
 
     assert response.status_code == 429
+
+
+def test_ask_passes_the_requested_level_to_the_assistant_loop(client, monkeypatch):
+    niveaux_recus = []
+
+    def fake_loop(question, history, manual_positions=None, niveau=None, **kwargs):
+        niveaux_recus.append(niveau)
+        yield {"type": "fin"}
+
+    monkeypatch.setattr(api.assistant, "run_assistant_loop", fake_loop)
+    monkeypatch.setattr(api.usage, "budget_exceeded", lambda **kwargs: False)
+
+    client.post(
+        "/ask", json={"question": "Bonjour", "history": [], "niveau": "grand_public"},
+        headers={"X-Bot-Token": "secret-token"})
+
+    assert niveaux_recus == ["grand_public"]

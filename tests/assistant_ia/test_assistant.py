@@ -329,3 +329,31 @@ def test_run_assistant_loop_yields_erreur_event_when_the_api_call_raises():
     assert evenements[-1]["type"] == "fin"
     assert len(evenements) == 2
     assert len(client.messages.appels) == 1
+
+
+def test_construit_system_keeps_the_base_prompt_and_adds_the_level_instruction():
+    texte = assistant.construit_system("grand_public")
+
+    assert texte.startswith(assistant.SYSTEM_PROMPT)
+    assert assistant.CONSIGNES_NIVEAU["grand_public"] in texte
+    assert assistant.CONSIGNES_NIVEAU["technique"] not in texte
+
+
+def test_construit_system_falls_back_to_technique_on_unknown_or_malformed_level():
+    defaut = assistant.construit_system("technique")
+
+    assert assistant.construit_system("n'importe quoi") == defaut
+    assert assistant.construit_system(None) == defaut
+    assert assistant.construit_system(["grand_public"]) == defaut
+
+
+def test_run_assistant_loop_sends_the_chosen_level_in_the_system_prompt():
+    final = _FakeMessage(
+        content=[_FakeBlock("text", text="Safran devance Airbus.")],
+        stop_reason="end_turn", usage=_FakeUsage(10, 5))
+    client = _FakeClient([_FakeStream(["Safran devance Airbus."], final)])
+
+    list(assistant.run_assistant_loop("Q", [], niveau="grand_public", client=client))
+
+    envoye = client.messages.appels[0]["system"][0]["text"]
+    assert assistant.CONSIGNES_NIVEAU["grand_public"] in envoye

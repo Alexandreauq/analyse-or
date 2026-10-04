@@ -3056,6 +3056,7 @@ def fetch_company_financials(ticker: str) -> dict:
         {"date": idx.strftime("%Y-%m-%d"), "ticker": ticker, "amount": float(val)}
         for idx, val in dividends.items()
     ]
+    ratios["quote_currency"] = quote_currency
     return ratios
 
 
@@ -3712,6 +3713,11 @@ def _resolve_pending_shadow_benchmarks(
     return positions
 
 
+# Indices scorés mais jamais suivis en paper-trading : leurs signaux
+# n'entrent ni dans le bilan ni dans le périmètre du bot (voir ibkr_bot/signals.py).
+INDICES_HORS_SUIVI_PAPIER = {"EUROSTOXX50"}
+
+
 def update_signal_tracking(companies: list[dict], newly_triggered_entree: list[dict]) -> list[dict]:
     """Met à jour docs/signal_tracking.json : ouvre les nouvelles
     positions du jour (à partir de newly_triggered_entree, déjà calculé
@@ -3722,6 +3728,9 @@ def update_signal_tracking(companies: list[dict], newly_triggered_entree: list[d
     try:
         positions = load_signal_tracking()
         companies_by_ticker = {c["ticker"]: c for c in companies}
+        newly_triggered_entree = [
+            c for c in newly_triggered_entree if c.get("index") not in INDICES_HORS_SUIVI_PAPIER
+        ]
         index_prices = fetch_index_prices()
         today = datetime.today().strftime("%Y-%m-%d")
 
@@ -4872,6 +4881,29 @@ def compute_graham_defensive_badge(ratios: dict, is_financial: bool, is_trust: b
     return {"eligible": bool(all(criteria.values())), "criteria": criteria}
 
 
+CHAMPS_PRIX_ENTREE = ("current_price", "fair_value", "entry_price", "exit_price")
+
+
+def convertit_prix_entree(entry: dict, devise_cotation, devise_indice: str, taux) -> dict:
+    """Ramène les prix d'une entrée dans la devise de son indice. Une
+    entreprise cotée dans une autre devise (CRH et Flutter en USD dans
+    l'Euro Stoxx 50) affiche sinon un cours USD sous un symbole EUR. Si
+    le taux est indisponible, les prix passent à None plutôt que d'être
+    publiés dans la mauvaise devise (`prix_non_convertis` le signale)."""
+    entry["devise_prix"] = devise_indice
+    if not devise_cotation or devise_cotation == devise_indice:
+        return entry
+    if taux is None or _is_missing(taux) or taux <= 0:
+        for champ in CHAMPS_PRIX_ENTREE:
+            entry[champ] = None
+        entry["prix_non_convertis"] = True
+        return entry
+    for champ in CHAMPS_PRIX_ENTREE:
+        if not _is_missing(entry.get(champ)):
+            entry[champ] = entry[champ] * taux
+    return entry
+
+
 def build_company_entry(
     ticker: str, name: str, risk_free_rate: float | None, previous_analyses: dict,
     index_key: str = "CAC40", also_indices: list[str] | None = None,
@@ -5079,7 +5111,11 @@ def build_company_entry(
     }
     entry["_price_history_daily"] = data["_price_history_daily"]
     entry["_dividend_history"] = data["_dividend_history"]
-    return entry
+    devise_indice = INDEX_CURRENCY.get(index_key)
+    devise_cotation = data.get("quote_currency")
+    taux = (fetch_fx_rate(devise_cotation, devise_indice)
+            if devise_cotation and devise_cotation != devise_indice else 1.0)
+    return convertit_prix_entree(entry, devise_cotation, devise_indice, taux)
 
 
 def _attach_alerts_and_update_history(companies: list[dict]) -> tuple[list[dict], list[tuple]]:

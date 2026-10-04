@@ -1,0 +1,213 @@
+<title>Réponse IA et interactions</title>
+<style>
+  /* Valeurs reprises du site : fond #0a0e1a/#0f1524, texte #e8ecf5, gris #9aa6c4 */
+  :root {
+    color-scheme: dark;
+    --bg-1: #0f1524; --bg-2: #161d30; --bg-3: #1e2740;
+    --text: #e8ecf5; --muted: #9aa6c4; --accent: #d4af37;
+    --radius-lg: 16px; --radius-pill: 999px;
+    --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  body { margin: 0; height: 100vh; overflow: hidden; background: var(--bg-1); color: var(--text); font-family: Inter, system-ui, sans-serif; }
+
+  /* Contrôles de démonstration (haut, toujours visibles) */
+  .demo {
+    position: fixed; top: 14px; left: 50%; transform: translateX(-50%); z-index: 10;
+    display: flex; gap: 8px; align-items: center; background: rgba(22,29,48,0.9);
+    border: 1px solid rgba(255,255,255,0.08); border-radius: var(--radius-pill); padding: 6px;
+  }
+  .demo button {
+    font-size: 12px; color: var(--muted); background: none; border: 1px solid transparent;
+    border-radius: var(--radius-pill); padding: 6px 12px; cursor: pointer;
+  }
+  .demo button.on { color: var(--accent); border-color: rgba(212,175,55,0.4); }
+
+  /* Réponse : au centre de l'écran, toute la hauteur disponible */
+  .answer-wrap {
+    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    padding: 80px 16px 120px; box-sizing: border-box;
+  }
+  .answer {
+    width: min(760px, 100%); max-height: 100%; box-sizing: border-box; position: relative;
+    background: var(--bg-2); border: 1px solid rgba(255,255,255,0.06);
+    border-radius: var(--radius-lg); padding: 22px 26px 18px;
+    display: flex; flex-direction: column; gap: 14px; min-height: 0;
+  }
+  .copy {
+    align-self: flex-end; font-size: 12px; color: var(--muted);
+    background: var(--bg-3); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 6px 12px; cursor: pointer;
+    opacity: 0; transform: translateY(6px); pointer-events: none;
+    transition: opacity .5s var(--ease), transform .5s var(--ease), color .2s;
+  }
+  .copy.show { opacity: 1; transform: translateY(0); pointer-events: auto; }
+  .copy:hover { color: var(--text); }
+  .text {
+    overflow-y: auto; min-height: 0; font-size: 16px; line-height: 1.7; color: var(--text);
+    white-space: pre-wrap; margin: 0; padding-right: 6px;
+    scrollbar-width: thin; scrollbar-color: var(--muted) transparent;
+  }
+  .text::-webkit-scrollbar { width: 12px; }
+  .text::-webkit-scrollbar-track { background: transparent; }
+  .text::-webkit-scrollbar-thumb { background: var(--muted); border-radius: var(--radius-pill); border: 3px solid transparent; background-clip: padding-box; }
+  .text::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+  .caret { display: inline-block; width: 2px; height: 1em; margin-left: 2px; vertical-align: -0.15em; background: var(--accent); animation: blink 1s steps(1) infinite; }
+  .caret.off { display: none; }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  /* Survol d'un ticker : mini-fiche */
+  .tk { color: var(--accent); border-bottom: 1px dashed rgba(212,175,55,0.5); cursor: help; position: relative; }
+  .card {
+    position: absolute; left: 0; bottom: calc(100% + 8px); width: 220px; z-index: 5;
+    background: var(--bg-3); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 12px 14px;
+    font-size: 13px; line-height: 1.5; color: var(--text); box-shadow: 0 16px 40px rgba(0,0,0,0.5);
+    opacity: 0; transform: translateY(6px); pointer-events: none; transition: opacity .25s var(--ease), transform .25s var(--ease);
+    white-space: normal;
+  }
+  .tk:hover .card { opacity: 1; transform: translateY(0); }
+  .card b { display: block; font-size: 14px; margin-bottom: 4px; }
+  .card span { color: var(--muted); }
+
+  /* Questions de suite */
+  .follow { display: flex; flex-wrap: wrap; gap: 8px; opacity: 0; transform: translateY(6px); transition: opacity .5s var(--ease), transform .5s var(--ease); }
+  .follow.show { opacity: 1; transform: translateY(0); }
+  .follow button {
+    font-size: 13px; color: var(--accent); background: rgba(212,175,55,0.1); border: 1px solid rgba(212,175,55,0.35);
+    border-radius: 18px; padding: 8px 14px; cursor: pointer;
+  }
+  .follow button:hover { background: rgba(212,175,55,0.2); }
+
+  /* Barre de recherche : trois emplacements */
+  .search { position: fixed; z-index: 6; width: min(640px, calc(100% - 32px)); transition: all .6s var(--ease); }
+  .search input {
+    width: 100%; height: 58px; border-radius: 29px; box-sizing: border-box; border: 1px solid rgba(255,255,255,0.1);
+    background: rgba(22,29,48,0.95); color: var(--text); font-size: 16px; padding: 0 22px; outline: none;
+  }
+  .search input:focus { border-color: rgba(212,175,55,0.5); box-shadow: 0 0 0 5px rgba(212,175,55,0.1); }
+  .search input::placeholder { color: var(--muted); }
+  .pos-bottom .search { left: 50%; transform: translateX(-50%); bottom: 24px; }
+  .pos-top .search { left: 50%; transform: translateX(-50%); top: 68px; }
+  .pos-corner .search { right: 24px; bottom: 24px; left: auto; transform: none; width: 340px; }
+  .pos-corner .search input { height: 48px; font-size: 14px; border-radius: 24px; }
+  .pos-corner .answer-wrap { padding-right: 390px; }
+  .pos-top .answer-wrap { padding-top: 130px; }
+  .pos-bottom .answer-wrap { padding-bottom: 110px; }
+
+  @media (prefers-reduced-motion: reduce) { .caret { animation: none; } .card, .follow { transition: none; } }
+  @media (max-width: 600px) {
+    .pos-corner .search { width: calc(100% - 32px); }
+    .pos-corner .answer-wrap { padding-right: 16px; padding-bottom: 150px; }
+  }
+</style>
+
+<div class="demo">
+  <button data-pos="pos-bottom" class="on">Barre en bas</button>
+  <button data-pos="pos-top">Barre en haut</button>
+  <button data-pos="pos-corner">Barre dans le coin</button>
+  <button id="replay">Rejouer</button>
+</div>
+
+<div class="answer-wrap">
+  <div class="answer">
+    <p class="text" id="text"><span id="shown"></span><span class="caret" id="caret"></span></p>
+    <div class="follow" id="follow">
+      <button>Et sur la croissance ?</button>
+      <button>Compare avec LVMH</button>
+      <button>Quelles alertes actives ?</button>
+    </div>
+    <button class="copy" id="copy">Copier</button>
+  </div>
+</div>
+
+<div class="search" id="search">
+  <input type="search" placeholder="Demande-moi n'importe quoi sur tes données…">
+</div>
+
+<script>
+  const CHUNKS = [
+    "Safran devance Airbus de 5,5 points de score brut. ",
+    "L'écart vient surtout de la rentabilité : le ROCE de ",
+    "<span class=\"tk\">Safran<span class=\"card\"><b>Safran (SAF.PA)</b><span>Score 74,6 · tendance haussière<br>ROCE 55,2 % · ICR 77,1x</span></span></span>",
+    " est de 55 % contre 24 % pour ",
+    "<span class=\"tk\">Airbus<span class=\"card\"><b>Airbus (AIR.PA)</b><span>Score 69,1 · tendance neutre<br>ROCE 24,2 % · ICR 9,2x</span></span></span>",
+    ".\n\nLa dette nette est aussi plus faible chez Safran, ce qui pèse sur la note d'Airbus pour la solidité financière."
+  ];
+  const TEXT_PLAIN = CHUNKS.join('').replace(/<[^>]+>/g, '');
+
+  const shownEl = document.getElementById('shown');
+  const caret = document.getElementById('caret');
+  const follow = document.getElementById('follow');
+  const copyBtn = document.getElementById('copy');
+  const textEl = document.getElementById('text');
+  let html = '', pos = 0, timer = null;
+
+  // Le rendu HTML est révélé caractère par caractère sur le texte visible, les balises apparaissent d'un bloc
+  function render() {
+    shownEl.innerHTML = html;
+  }
+
+  function reveal() {
+    const full = CHUNKS.join('');
+    // Texte visible : on avance sur le texte brut, en incluant les balises entières au passage
+    let visibleCount = 0, i = 0, out = '';
+    while (i < full.length && visibleCount < pos) {
+      if (full[i] === '<') {
+        const end = full.indexOf('>', i);
+        out += full.slice(i, end + 1);
+        i = end + 1;
+      } else {
+        out += full[i];
+        i++;
+        visibleCount++;
+      }
+    }
+    html = out;
+    render();
+    textEl.scrollTop = textEl.scrollHeight;
+  }
+
+  function run() {
+    const full = CHUNKS.join('');
+    const plainLen = TEXT_PLAIN.length;
+    if (pos < plainLen) {
+      pos = Math.min(plainLen, pos + 1);
+      reveal();
+      timer = setTimeout(run, 14);
+    } else {
+      timer = null;
+      caret.classList.add('off');
+      follow.classList.add('show');
+      copyBtn.classList.add('show');
+    }
+  }
+
+  function play() {
+    clearTimeout(timer); timer = null;
+    pos = 0; html = ''; shownEl.innerHTML = '';
+    caret.classList.remove('off');
+    follow.classList.remove('show');
+    copyBtn.classList.remove('show');
+    run();
+  }
+
+  document.querySelectorAll('.demo [data-pos]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.body.className = btn.dataset.pos;
+      document.querySelectorAll('.demo [data-pos]').forEach(b => b.classList.toggle('on', b === btn));
+    });
+  });
+  document.getElementById('replay').addEventListener('click', play);
+
+  document.getElementById('copy').addEventListener('click', async () => {
+    const btn = document.getElementById('copy');
+    try {
+      await navigator.clipboard.writeText(TEXT_PLAIN);
+      btn.textContent = 'Copié';
+    } catch (e) {
+      btn.textContent = 'Copie refusée';
+    }
+    setTimeout(() => btn.textContent = 'Copier', 1600);
+  });
+
+  document.body.className = 'pos-bottom';
+  play();
+</script>

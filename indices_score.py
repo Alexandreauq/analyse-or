@@ -1113,6 +1113,125 @@ SBF120_COMPANIES = [
     {"ticker": "WLN.PA", "name": "Worldline"},
 ]
 
+# AEX All-Share : composition officielle Euronext (capture du 2026-10-04, live.euronext.com). 115 valeurs ; BM3EAC et GIG Group exclues (aucune donnée Yahoo).
+AEXALL_COMPANIES = [
+    {"ticker": "AALB.AS", "name": "AALBERTS NV"},
+    {"ticker": "ABN.AS", "name": "ABN AMRO BANK N.V."},
+    {"ticker": "AXS.AS", "name": "ACCSYS"},
+    {"ticker": "ACOMO.AS", "name": "ACOMO"},
+    {"ticker": "ADYEN.AS", "name": "ADYEN"},
+    {"ticker": "AED.BR", "name": "AEDIFICA"},
+    {"ticker": "AGN.AS", "name": "AEGON"},
+    {"ticker": "AGIL.AS", "name": "Agility Capital H"},
+    {"ticker": "AD.AS", "name": "AHOLD DELHAIZE"},
+    {"ticker": "AF.PA", "name": "AIR FRANCE-KLM"},
+    {"ticker": "AJAX.AS", "name": "AJAX"},
+    {"ticker": "AKZA.AS", "name": "AKZO NOBEL"},
+    {"ticker": "ALFEN.AS", "name": "ALFEN"},
+    {"ticker": "ALLFG.AS", "name": "ALLFUNDS GROUP"},
+    {"ticker": "AMUND.AS", "name": "ALMUNDA PRO NV"},
+    {"ticker": "ALX.AS", "name": "ALUMEXX N.V."},
+    {"ticker": "AMG.AS", "name": "AMG"},
+    {"ticker": "APAM.AS", "name": "APERAM"},
+    {"ticker": "ARCAD.AS", "name": "ARCADIS"},
+    {"ticker": "MT.AS", "name": "ARCELORMITTAL SA"},
+    {"ticker": "ASM.AS", "name": "ASM INTERNATIONAL"},
+    {"ticker": "ASML.AS", "name": "ASML HOLDING"},
+    {"ticker": "ASRNL.AS", "name": "ASR NEDERLAND"},
+    {"ticker": "AVTX.AS", "name": "AVANTIUM"},
+    {"ticker": "AZRN.AS", "name": "AZERION"},
+    {"ticker": "BAMNB.AS", "name": "BAM GROEP KON"},
+    {"ticker": "BNJ.AS", "name": "BANIJAY GROUP"},
+    {"ticker": "BFIT.AS", "name": "BASIC-FIT"},
+    {"ticker": "BESI.AS", "name": "BE SEMICONDUCTOR"},
+    {"ticker": "BEVER.AS", "name": "BEVER HOLDING"},
+    {"ticker": "BRNL.AS", "name": "BRUNEL INTERNAT"},
+    {"ticker": "CABKA.AS", "name": "CABKA"},
+    {"ticker": "CMCOM.AS", "name": "CM.COM"},
+    {"ticker": "CRBN.AS", "name": "CORBION"},
+    {"ticker": "CSG.AS", "name": "CSG"},
+    {"ticker": "CTAC.AS", "name": "CTAC"},
+    {"ticker": "CTPNV.AS", "name": "CTP"},
+    {"ticker": "CVC.AS", "name": "CVC CAPITAL"},
+    {"ticker": "DSFIR.AS", "name": "DSM FIRMENICH AG"},
+    {"ticker": "EAS2P.AS", "name": "EASE2PAY NV"},
+    {"ticker": "EBUS.AS", "name": "EBUSCO HOLDING"},
+    {"ticker": "ENVI.AS", "name": "ENVIPCO HOLDING"},
+    {"ticker": "ERC.AS", "name": "ER Capital"},
+    {"ticker": "ECT.AS", "name": "EUROCASTLE INVEST."},
+    {"ticker": "ECMPA.AS", "name": "EUROCOMMERCIAL"},
+    {"ticker": "ENX.PA", "name": "EURONEXT"},
+    {"ticker": "EXO.AS", "name": "EXOR NV"},
+    {"ticker": "FAGR.BR", "name": "FAGRON"},
+    {"ticker": "FAST.AS", "name": "FASTNED"},
+    {"ticker": "RACE.MI", "name": "FERRARI GROUP"},
+    {"ticker": "FLOW.AS", "name": "FLOW TRADERS"},
+    {"ticker": "FFARM.AS", "name": "FORFARMERS"},
+    {"ticker": "FUR.AS", "name": "FUGRO"},
+    {"ticker": "EARTH.AS", "name": "GREEN EARTH GROUP"},
+    {"ticker": "HAL.AS", "name": "HAL TRUST"},
+    {"ticker": "HAVAS.AS", "name": "HAVAS"},
+    {"ticker": "HWK.AS", "name": "HAWICK DATA NV"},
+    {"ticker": "HEIJM.AS", "name": "HEIJMANS KON"},
+    {"ticker": "HEIA.AS", "name": "HEINEKEN"},
+    {"ticker": "HEIO.AS", "name": "HEINEKEN HOLDING"},
+    {"ticker": "HOLCO.AS", "name": "HOLLAND COLOURS"},
+    {"ticker": "HYDRA.AS", "name": "HYDRATEC"},
+    {"ticker": "IMCD.AS", "name": "IMCD"},
+    {"ticker": "INGA.AS", "name": "ING GROEP N.V."},
+    {"ticker": "INPST.AS", "name": "INPOST"},
+    {"ticker": "KENDR.AS", "name": "KENDRION"},
+    {"ticker": "KPN.AS", "name": "KPN KON"},
+    {"ticker": "LKFT.AS", "name": "LAKEFRONT BIOTHER."},
+    {"ticker": "LVIDE.AS", "name": "LAVIDE HOLDING"},
+    {"ticker": "MICC.AS", "name": "MAGNUM"},
+    {"ticker": "NEDSE.AS", "name": "MKB Nedsense"},
+    {"ticker": "MORE.AS", "name": "MOREFIELD GROUP"},
+    {"ticker": "MTRK.AS", "name": "MOTORK"},
+    {"ticker": "NAI.AS", "name": "NAI ORD SHARES"},
+    {"ticker": "NEDAP.AS", "name": "NEDAP"},
+    {"ticker": "NRP.AS", "name": "NEPI ROCKCASTLE"},
+    {"ticker": "NSE.AS", "name": "NEW SOURCES ENERGY"},
+    {"ticker": "NN.AS", "name": "NN GROUP"},
+    {"ticker": "NSI.AS", "name": "NSI N.V."},
+    {"ticker": "NXFIL.AS", "name": "NX FILTRATION"},
+    {"ticker": "OCI.AS", "name": "OCI"},
+    {"ticker": "ONWD.BR", "name": "ONWARD MEDICAL"},
+    {"ticker": "PBH.AS", "name": "PB HOLDING"},
+    {"ticker": "PHARM.AS", "name": "PHARMING GROUP"},
+    {"ticker": "PHIA.AS", "name": "PHILIPS KON"},
+    {"ticker": "PORF.AS", "name": "PORCELEYNE FLES"},
+    {"ticker": "PNL.AS", "name": "POSTNL"},
+    {"ticker": "PRX.AS", "name": "PROSUS"},
+    {"ticker": "QEV.AS", "name": "QEV"},
+    {"ticker": "RAND.AS", "name": "RANDSTAD NV"},
+    {"ticker": "REN.AS", "name": "RELX"},
+    {"ticker": "RET.BR", "name": "RETAIL ESTATES"},
+    {"ticker": "SGO.PA", "name": "SAINT GOBAIN"},
+    {"ticker": "SBMO.AS", "name": "SBM OFFSHORE"},
+    {"ticker": "SHELL.AS", "name": "SHELL PLC"},
+    {"ticker": "SIFG.AS", "name": "SIF HOLDING"},
+    {"ticker": "LIGHT.AS", "name": "SIGNIFY NV"},
+    {"ticker": "SLIGR.AS", "name": "SLIGRO FOOD GROUP"},
+    {"ticker": "SWICH.AS", "name": "SWI CAPITAL"},
+    {"ticker": "TFG.AS", "name": "TETRAGON FIN GRP"},
+    {"ticker": "THEON.AS", "name": "THEON INTERNAT"},
+    {"ticker": "TWEKA.AS", "name": "TKH GROUP"},
+    {"ticker": "TOM2.AS", "name": "TOMTOM"},
+    {"ticker": "TRIO.AS", "name": "TRIODOS BANK"},
+    {"ticker": "UMG.AS", "name": "UMG"},
+    {"ticker": "UNA.AS", "name": "UNILEVER"},
+    {"ticker": "VLK.AS", "name": "V LANSCHOT KEMPEN"},
+    {"ticker": "VALUE.AS", "name": "VALUE8"},
+    {"ticker": "VASTB.BR", "name": "VASTNED"},
+    {"ticker": "VVY.AS", "name": "VIVORYON"},
+    {"ticker": "VTA.AS", "name": "VOLTA FINANCE"},
+    {"ticker": "VPK.AS", "name": "VOPAK"},
+    {"ticker": "WDP.BR", "name": "WDP"},
+    {"ticker": "WHA.AS", "name": "WERELDHAVE"},
+    {"ticker": "WKL.AS", "name": "WOLTERS KLUWER"},
+]
+
 _COMPANIES_HORS_EUROSTOXX50 = (
     [{**c, "index": "CAC40"} for c in CAC40_COMPANIES]
     + [{**c, "index": "DAX"} for c in DAX_COMPANIES]
@@ -1145,13 +1264,16 @@ def _ajoute_indice(entrees: list[dict], indice: str, composantes: list[dict]) ->
 
 
 COMPANIES = _ajoute_indice(
-    _ajoute_indice(_COMPANIES_HORS_EUROSTOXX50, "EUROSTOXX50", EUROSTOXX50_COMPANIES),
-    "SBF120", SBF120_COMPANIES,
+    _ajoute_indice(
+        _ajoute_indice(_COMPANIES_HORS_EUROSTOXX50, "EUROSTOXX50", EUROSTOXX50_COMPANIES),
+        "SBF120", SBF120_COMPANIES,
+    ),
+    "AEXALL", AEXALL_COMPANIES,
 )
 INDEX_NAMES = {
     "CAC40": "CAC 40", "DAX": "DAX", "NASDAQ": "Nasdaq 100", "DOW": "Dow Jones",
     "FTSE": "FTSE 100", "SMI": "SMI", "IBEX35": "IBEX 35", "FTSEMIB": "FTSE MIB",
-    "NIKKEI225": "Nikkei 225", "HANGSENG": "Hang Seng", "EUROSTOXX50": "Euro Stoxx 50", "SBF120": "SBF 120",
+    "NIKKEI225": "Nikkei 225", "HANGSENG": "Hang Seng", "EUROSTOXX50": "Euro Stoxx 50", "SBF120": "SBF 120", "AEXALL": "AEX All-Share",
 }
 
 # Devise native de chaque indice — CAC40/DAX publient en euros, le
@@ -1162,7 +1284,7 @@ INDEX_NAMES = {
 INDEX_CURRENCY = {
     "CAC40": "EUR", "DAX": "EUR", "NASDAQ": "USD", "DOW": "USD",
     "FTSE": "GBP", "SMI": "CHF", "IBEX35": "EUR", "FTSEMIB": "EUR",
-    "NIKKEI225": "JPY", "HANGSENG": "HKD", "EUROSTOXX50": "EUR", "SBF120": "EUR",
+    "NIKKEI225": "JPY", "HANGSENG": "HKD", "EUROSTOXX50": "EUR", "SBF120": "EUR", "AEXALL": "EUR",
 }
 
 # Même mapping que CURRENCY_SYMBOL côté frontend (docs/index.html) — pour
@@ -3604,6 +3726,8 @@ INDEX_YFINANCE_TICKERS = {
     "CAC40": "^FCHI", "DAX": "^GDAXI", "NASDAQ": "^NDX", "DOW": "^DJI",
     "FTSE": "^FTSE", "SMI": "^SSMI", "IBEX35": "^IBEX", "FTSEMIB": "FTSEMIB.MI",
     "NIKKEI225": "^N225", "HANGSENG": "^HSI", "EUROSTOXX50": "^STOXX50E", "SBF120": "^SBF120",
+    # Pas de ticker Yahoo pour l'AEX All-Share : l'AEX (25 valeurs) sert de proxy.
+    "AEXALL": "^AEX",
 }
 SIGNAL_STOP_LOSS_PCT = -20.0     # % perte déclenchant une clôture anticipée
 SIGNAL_SHADOW_DELAY_MONTHS = 6   # délai max avant clôture forcée du signal
@@ -3842,7 +3966,7 @@ def _resolve_pending_shadow_benchmarks(
 
 # Indices scorés mais jamais suivis en paper-trading : leurs signaux
 # n'entrent ni dans le bilan ni dans le périmètre du bot (voir ibkr_bot/signals.py).
-INDICES_HORS_SUIVI_PAPIER = {"EUROSTOXX50", "SBF120"}
+INDICES_HORS_SUIVI_PAPIER = {"EUROSTOXX50", "SBF120", "AEXALL"}
 
 
 def update_signal_tracking(companies: list[dict], newly_triggered_entree: list[dict]) -> list[dict]:

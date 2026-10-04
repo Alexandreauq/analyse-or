@@ -179,6 +179,13 @@ def _fiche_allegee(company: dict) -> dict:
     return {k: v for k, v in company.items() if k not in ("financial_analysis_html", "news")}
 
 
+def _nom_entreprise(ticker: str, indices_source) -> str | None:
+    """Nom officiel de l'entreprise (sert de mot-clé GDELT et de contrôle de
+    pertinence). None si le ticker est inconnu."""
+    company = _find_company(ticker, indices_source().get("companies", []))
+    return company.get("name") if company else None
+
+
 def fiche_entreprise(ticker: str, *, indices_source=data_sources.fetch_indices_data) -> dict:
     companies = indices_source().get("companies", [])
     company = _find_company(ticker, companies)
@@ -257,8 +264,9 @@ _HANDLERS = {
         i.get("positions_manuelles"), dashboard_source=deps["dashboard_source"]),
     "proposer_lien": lambda i, **deps: proposer_lien(i["cible_type"], i["cible_valeur"], i["libelle"]),
     "actualites_entreprise": lambda i, **deps: news.actualites_entreprise(
-        i["ticker"], news_source=deps["news_source"]),
-    "actualites_marche": lambda i, **deps: news.actualites_marche(news_source=deps["news_source"]),
+        i["ticker"], _nom_entreprise(i["ticker"], deps["indices_source"]),
+        finnhub_source=deps["finnhub_source"], gdelt_source=deps["gdelt_source"]),
+    "actualites_marche": lambda i, **deps: news.actualites_marche(gdelt_source=deps["gdelt_source"]),
 }
 
 
@@ -266,7 +274,8 @@ def dispatch_tool(
     name: str, tool_input: dict, *,
     indices_source=data_sources.fetch_indices_data,
     dashboard_source=data_sources.fetch_bot_dashboard,
-    news_source=data_sources.fetch_marketaux_news,
+    finnhub_source=data_sources.fetch_finnhub_company_news,
+    gdelt_source=data_sources.fetch_gdelt_articles,
 ) -> dict:
     """Execute l'outil nomme `name` avec `tool_input`. Ne leve JAMAIS :
     un nom inconnu ou une exception interne (cle manquante dans
@@ -277,6 +286,7 @@ def dispatch_tool(
         return {"erreur": f"outil inconnu : {name!r}"}
     try:
         return handler(tool_input, indices_source=indices_source,
-                       dashboard_source=dashboard_source, news_source=news_source)
+                       dashboard_source=dashboard_source,
+                       finnhub_source=finnhub_source, gdelt_source=gdelt_source)
     except Exception as e:
         return {"erreur": f"echec de l'outil {name} : {e}"}

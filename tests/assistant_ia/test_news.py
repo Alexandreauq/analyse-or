@@ -1,187 +1,211 @@
 # tests/assistant_ia/test_news.py
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 import assistant_ia.news as news
 
 MAINTENANT = datetime(2026, 10, 3, 12, 0, 0, tzinfo=timezone.utc)
 
 
-def _article(url, titre, published_at, entities=None, description="Resume."):
-    return {
-        "url": url, "title": titre, "published_at": published_at,
-        "source": "Source X", "description": description,
-        "entities": entities or [],
-    }
+def _unix(dt):
+    return int(dt.timestamp())
 
 
-def _entite(symbol, score):
-    return {"symbol": symbol, "match_score": score}
+def _fin(url, headline, quand, related="AAPL", summary="Resume."):
+    return {"url": url, "headline": headline, "datetime": _unix(quand),
+            "related": related, "source": "Reuters", "summary": summary}
 
 
-def test_params_entreprise_contains_symbol_window_and_score_threshold():
-    params = news.params_entreprise("MC.PA", MAINTENANT)
-
-    assert params == {
-        "symbols": "MC.PA",
-        "published_after": "2026-10-01T12:00:00",  # 48 h avant
-        "min_match_score": news.MIN_MATCH_SCORE,
-    }
+def _gdelt(url, titre, quand, domain="lemonde.fr"):
+    return {"url": url, "title": titre, "seendate": quand.strftime("%Y%m%dT%H%M%SZ"),
+            "domain": domain}
 
 
-def test_params_marche_contains_countries_and_24h_window():
-    params = news.params_marche(MAINTENANT)
+# --- Finnhub -----------------------------------------------------------------
 
-    assert params == {
-        "countries": news.PAYS_UNIVERS,
-        "published_after": "2026-10-02T12:00:00",  # 24 h avant
-    }
+def test_articles_finnhub_keeps_only_articles_tagged_with_the_symbol():
+    payload = [
+        _fin("https://a.com/1", "Apple publie", MAINTENANT, related="AAPL,MSFT"),
+        _fin("https://a.com/2", "Autre sujet", MAINTENANT, related="NVDA"),
+    ]
+
+    titres = [a["titre"] for a in news.articles_finnhub(payload, "AAPL")]
+
+    assert titres == ["Apple publie"]
 
 
-def test_normalise_keeps_only_articles_whose_entity_matches_the_ticker_above_threshold():
-    payload = {"data": [
-        _article("https://a.test/1", "LVMH bondit", "2026-10-03T08:00:00Z",
-                 entities=[_entite("MC.PA", 9.0)]),
-        _article("https://a.test/2", "Autre sujet", "2026-10-03T07:00:00Z",
-                 entities=[_entite("MC.PA", 2.0)]),  # score trop faible
-        _article("https://a.test/3", "Pas LVMH", "2026-10-03T06:00:00Z",
-                 entities=[_entite("KER.PA", 9.0)]),  # mauvais ticker
+def test_articles_finnhub_drops_non_http_urls_and_missing_dates():
+    payload = [
+        _fin("javascript:alert(1)", "Lien piégé", MAINTENANT),
+        {"url": "https://a.com/3", "headline": "Sans date", "related": "AAPL"},
+    ]
+
+    assert news.articles_finnhub(payload, "AAPL") == []
+
+
+def test_articles_finnhub_degrades_on_malformed_payload():
+    assert news.articles_finnhub({"erreur": "x"}, "AAPL") == []
+    assert news.articles_finnhub(["pas", "un", "dict"], "AAPL") == []
+
+
+# --- GDELT -------------------------------------------------------------------
+
+def test_articles_gdelt_for_a_company_requires_the_name_in_the_title():
+    payload = {"articles": [
+        _gdelt("https://a.com/1", "Safran signe un contrat", MAINTENANT),
+        _gdelt("https://a.com/2", "Airbus livre ses avions", MAINTENANT),
     ]}
 
-    articles = news.normalise(payload, ticker="MC.PA")
+    titres = [a["titre"] for a in news.articles_gdelt(payload, nom="Safran")]
 
-    assert [a["url"] for a in articles] == ["https://a.test/1"]
+    assert titres == ["Safran signe un contrat"]
 
 
-def test_normalise_deduplicates_by_url_and_by_normalised_title():
-    payload = {"data": [
-        _article("https://a.test/1", "LVMH bondit !", "2026-10-03T08:00:00Z", entities=[_entite("MC.PA", 9.0)]),
-        _article("https://a.test/1", "LVMH bondit !", "2026-10-03T08:00:00Z", entities=[_entite("MC.PA", 9.0)]),
-        _article("https://b.test/9", "LVMH bondit", "2026-10-03T07:00:00Z", entities=[_entite("MC.PA", 9.0)]),
+def test_articles_gdelt_market_mode_keeps_every_title():
+    payload = {"articles": [_gdelt("https://a.com/1", "Or en hausse", MAINTENANT)]}
+
+    assert len(news.articles_gdelt(payload)) == 1
+
+
+def test_articles_gdelt_survives_non_string_fields_and_bad_dates():
+    payload = {"articles": [
+        {"url": "https://a.com/1", "title": 42, "seendate": "20261003T120000Z"},
+        {"url": "https://a.com/2", "title": "Titre", "seendate": "pas une date"},
+        "pas un dict",
     ]}
 
-    articles = news.normalise(payload, ticker="MC.PA")
-
-    assert len(articles) == 1
+    assert news.articles_gdelt(payload) == []
 
 
-def test_normalise_sorts_newest_first_and_caps_at_five_articles():
-    payload = {"data": [
-        _article(f"https://a.test/{i}", f"Titre unique {i}", f"2026-10-03T0{i}:00:00Z",
-                 entities=[_entite("MC.PA", 9.0)])
-        for i in range(1, 8)
-    ]}
-
-    articles = news.normalise(payload, ticker="MC.PA")
-
-    assert len(articles) == news.MAX_ARTICLES
-    assert articles[0]["url"] == "https://a.test/7"  # le plus récent
+def test_articles_gdelt_degrades_on_malformed_payload():
+    assert news.articles_gdelt({"articles": "x"}) == []
+    assert news.articles_gdelt(None) == []
 
 
-def test_normalise_truncates_the_summary_to_300_characters():
-    long = "x" * 1000
-    payload = {"data": [
-        _article("https://a.test/1", "Titre", "2026-10-03T08:00:00Z",
-                 entities=[_entite("MC.PA", 9.0)], description=long),
-    ]}
+# --- Fusion ------------------------------------------------------------------
 
-    articles = news.normalise(payload, ticker="MC.PA")
+def test_fusionne_drops_articles_older_than_the_window():
+    vieux = news.articles_gdelt({"articles": [
+        _gdelt("https://a.com/vieux", "Ancien", MAINTENANT - timedelta(hours=60))]})
 
-    assert len(articles[0]["resume_court"]) == news.RESUME_MAX_CHARS
+    assert news.fusionne([vieux], MAINTENANT - timedelta(hours=48)) == []
 
 
-def test_normalise_drops_non_http_urls():
-    payload = {"data": [
-        _article("javascript:alert(1)", "Titre", "2026-10-03T08:00:00Z", entities=[_entite("MC.PA", 9.0)]),
-        _article("https://a.test/ok", "Titre bis", "2026-10-03T07:00:00Z", entities=[_entite("MC.PA", 9.0)]),
-    ]}
+def test_fusionne_deduplicates_across_sources_by_url_and_normalised_title():
+    finnhub = news.articles_finnhub([_fin("https://a.com/1", "Apple publie", MAINTENANT)], "AAPL")
+    gdelt = news.articles_gdelt({"articles": [
+        _gdelt("https://a.com/1", "Apple publie", MAINTENANT),
+        _gdelt("https://b.com/2", "  APPLE publie !! ", MAINTENANT),
+        _gdelt("https://c.com/3", "Autre", MAINTENANT),
+    ]}, nom=None)
 
-    articles = news.normalise(payload, ticker="MC.PA")
+    titres = [a["titre"] for a in news.fusionne([finnhub, gdelt], MAINTENANT - timedelta(hours=48))]
 
-    assert [a["url"] for a in articles] == ["https://a.test/ok"]
-
-
-def test_normalise_market_mode_does_not_require_an_entity_match():
-    payload = {"data": [
-        _article("https://a.test/m", "La BCE maintient ses taux", "2026-10-03T08:00:00Z", entities=[]),
-    ]}
-
-    articles = news.normalise(payload, ticker=None)
-
-    assert len(articles) == 1
+    assert len(titres) == 2
+    assert set(titres) == {"Apple publie", "Autre"}
 
 
-def test_normalise_survives_non_string_fields():
-    payload = {"data": [
-        {"url": "https://a.example/1", "title": 123, "description": "x",
-         "published_at": "2026-10-03T10:00:00"},
-        {"url": "https://a.example/2", "title": "Titre valide",
-         "published_at": "2026-10-03T09:00:00"},
-    ]}
+def test_fusionne_sorts_newest_first_and_caps_at_five_articles():
+    articles = news.articles_gdelt({"articles": [
+        _gdelt(f"https://a.com/{i}", f"Titre numéro {i}", MAINTENANT - timedelta(minutes=i))
+        for i in range(8)
+    ]})
 
-    resultat = news.normalise(payload)
+    retenus = news.fusionne([articles], MAINTENANT - timedelta(hours=1))
 
-    assert [a["titre"] for a in resultat] == ["Titre valide"]
-
-    payload_description = {"data": [
-        {"url": "https://a.example/3", "title": "Autre titre", "description": ["x"]},
-    ]}
-
-    resultat_description = news.normalise(payload_description)
-
-    assert resultat_description[0]["resume_court"] == ""
+    assert len(retenus) == news.MAX_ARTICLES
+    assert retenus[0]["titre"] == "Titre numéro 0"
 
 
-def test_normalise_survives_non_list_entities():
-    payload = {"data": [
-        {"url": "https://a.test/bad", "title": "Entites invalides", "published_at": "2026-10-03T09:00:00Z",
-         "entities": 5},
-        _article("https://a.test/ok", "LVMH bondit", "2026-10-03T08:00:00Z",
-                 entities=[_entite("MC.PA", 9.0)]),
-    ]}
+def test_fusionne_truncates_the_summary_to_300_characters():
+    articles = news.articles_finnhub(
+        [_fin("https://a.com/1", "Titre", MAINTENANT, summary="x" * 500)], "AAPL")
 
-    articles = news.normalise(payload, ticker="MC.PA")
-
-    assert [a["url"] for a in articles] == ["https://a.test/ok"]
+    assert len(news.fusionne([articles], MAINTENANT - timedelta(hours=48))[0]["resume_court"]) == 300
 
 
-def test_normalise_degrades_to_empty_list_on_malformed_payload():
-    assert news.normalise(None, ticker="MC.PA") == []
-    assert news.normalise({"data": "pas une liste"}, ticker="MC.PA") == []
+# --- Fonctions publiques -----------------------------------------------------
 
+def test_actualites_entreprise_combines_finnhub_and_gdelt_for_a_us_ticker():
+    finnhub = lambda sym, debut, fin: [_fin("https://a.com/1", "Apple publie", MAINTENANT)]
+    gdelt = lambda q, debut, ttl, cle: {"articles": [
+        _gdelt("https://b.com/2", "Apple Inc. sous pression", MAINTENANT)]}
 
-def test_actualites_entreprise_returns_articles_for_the_ticker():
-    appels = []
-
-    def fake_source(params, ttl_seconds, cache_key):
-        appels.append((params, ttl_seconds, cache_key))
-        return {"data": [_article("https://a.test/1", "LVMH bondit", "2026-10-03T08:00:00Z",
-                                  entities=[_entite("MC.PA", 9.0)])]}
-
-    resultat = news.actualites_entreprise("MC.PA", news_source=fake_source, now=MAINTENANT)
-
-    assert resultat["ticker"] == "MC.PA"
-    assert len(resultat["articles"]) == 1
-    assert appels[0][1] == news.TTL_ENTREPRISE_SECONDS
-    assert appels[0][2] == "entreprise:MC.PA"
-
-
-def test_actualites_entreprise_propagates_a_source_error():
     resultat = news.actualites_entreprise(
-        "MC.PA", news_source=lambda p, t, k: {"erreur": "indisponible"}, now=MAINTENANT)
+        "AAPL", "Apple", finnhub_source=finnhub, gdelt_source=gdelt, now=MAINTENANT)
 
-    assert resultat == {"erreur": "indisponible"}
+    assert resultat["ticker"] == "AAPL"
+    assert {a["titre"] for a in resultat["articles"]} == {"Apple publie", "Apple Inc. sous pression"}
 
 
-def test_actualites_marche_uses_the_market_ttl_and_no_symbol():
+def test_actualites_entreprise_skips_finnhub_for_a_european_ticker():
+    appels_finnhub = []
+
+    def finnhub(*args):
+        appels_finnhub.append(args)
+        return []
+
+    gdelt = lambda q, debut, ttl, cle: {"articles": [
+        _gdelt("https://a.com/1", "LVMH record", MAINTENANT)]}
+
+    resultat = news.actualites_entreprise(
+        "MC.PA", "LVMH", finnhub_source=finnhub, gdelt_source=gdelt, now=MAINTENANT)
+
+    assert appels_finnhub == []
+    assert [a["titre"] for a in resultat["articles"]] == ["LVMH record"]
+
+
+def test_actualites_entreprise_skips_gdelt_when_the_name_is_unknown():
+    gdelt_appels = []
+
+    def gdelt(*args):
+        gdelt_appels.append(args)
+        return {"articles": []}
+
+    news.actualites_entreprise("MC.PA", None, finnhub_source=lambda *a: [],
+                               gdelt_source=gdelt, now=MAINTENANT)
+
+    assert gdelt_appels == []
+
+
+def test_actualites_entreprise_returns_the_error_when_every_source_fails():
+    erreur = {"erreur": "actualites indisponibles (RuntimeError)"}
+
+    resultat = news.actualites_entreprise(
+        "MC.PA", "LVMH", finnhub_source=lambda *a: erreur,
+        gdelt_source=lambda *a: erreur, now=MAINTENANT)
+
+    assert resultat == erreur
+
+
+def test_actualites_entreprise_keeps_partial_results_when_one_source_fails():
+    erreur = {"erreur": "actualites indisponibles (RuntimeError)"}
+    gdelt = lambda q, debut, ttl, cle: {"articles": [
+        _gdelt("https://a.com/1", "LVMH record", MAINTENANT)]}
+
+    resultat = news.actualites_entreprise(
+        "AAPL", "LVMH", finnhub_source=lambda *a: erreur,
+        gdelt_source=gdelt, now=MAINTENANT)
+
+    assert [a["titre"] for a in resultat["articles"]] == ["LVMH record"]
+
+
+def test_actualites_marche_uses_the_24h_window_and_the_market_query():
     appels = []
 
-    def fake_source(params, ttl_seconds, cache_key):
-        appels.append((params, ttl_seconds, cache_key))
-        return {"data": []}
+    def gdelt(requete, debut, ttl, cle):
+        appels.append((requete, debut, ttl, cle))
+        return {"articles": []}
 
-    resultat = news.actualites_marche(news_source=fake_source, now=MAINTENANT)
+    resultat = news.actualites_marche(gdelt_source=gdelt, now=MAINTENANT)
 
+    requete, debut, ttl, cle = appels[0]
+    assert requete == news.REQUETE_MARCHE
+    assert debut == MAINTENANT - timedelta(hours=24)
+    assert ttl == news.TTL_MARCHE_SECONDS
     assert resultat == {"articles": []}
-    assert appels[0][1] == news.TTL_MARCHE_SECONDS
-    assert "symbols" not in appels[0][0]
-    assert appels[0][2] == "marche"
+
+
+def test_actualites_marche_propagates_a_source_error():
+    erreur = {"erreur": "actualites indisponibles (RuntimeError)"}
+
+    assert news.actualites_marche(gdelt_source=lambda *a: erreur, now=MAINTENANT) == erreur

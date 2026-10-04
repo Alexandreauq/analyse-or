@@ -3980,7 +3980,7 @@ const INDEX_DISPLAY_NAMES = {
 const INDEX_BENCHMARK_TICKERS = {
   CAC40: '^FCHI', DAX: '^GDAXI', NASDAQ: '^NDX', DOW: '^DJI',
   FTSE: '^FTSE', SMI: '^SSMI', IBEX35: '^IBEX', FTSEMIB: 'FTSEMIB.MI',
-  NIKKEI225: '^N225', HANGSENG: '^HSI', EUROSTOXX50: '^STOXX50E',
+  NIKKEI225: '^N225', HANGSENG: '^HSI', EUROSTOXX50: '^STOXX50E', SBF120: '^SBF120',
 };
 
 // Traduction des secteurs (company.sector, valeurs Yahoo Finance en
@@ -4019,6 +4019,7 @@ const INDEX_COUNTRY_BY_KEY = {
   NIKKEI225: 'Japon',
   HANGSENG: 'Hong Kong',
   EUROSTOXX50: 'Zone euro',
+  SBF120: 'France',
 };
 
 // Code court par indice, pour les badges (fiche entreprise, liste) — DJ
@@ -4046,6 +4047,7 @@ const INDEX_CURRENCY_BY_KEY = {
   NIKKEI225: 'JPY',
   HANGSENG: 'HKD',
   EUROSTOXX50: 'EUR',
+  SBF120: 'EUR',
 };
 
 // Symbole affiché par devise — un nouvel indice dans une devise pas
@@ -4681,7 +4683,7 @@ function positionCurrentPrice(p, companiesByTicker) {
 // indices_score.py) mais ne représentent jamais une décision que le bot
 // réel aurait pu prendre — à garder en phase avec INDICES_IN_SCOPE si
 // son périmètre change côté Python (audit 2026-09-21, point 4).
-const SIGNAL_TRACKING_OUT_OF_SCOPE_INDICES = new Set(['NIKKEI225', 'HANGSENG', 'EUROSTOXX50']);
+const SIGNAL_TRACKING_OUT_OF_SCOPE_INDICES = new Set(['NIKKEI225', 'HANGSENG', 'EUROSTOXX50', 'SBF120']);
 
 // Bloc de statistiques (positions clôturées/en cours, taux de réussite,
 // rendement moyen, alpha moyen) pour un sous-ensemble de positions —

@@ -188,7 +188,7 @@ def test_classement_schema_lists_the_exact_index_values_as_an_enum():
 
     assert schema["properties"]["indice"]["enum"] == [
         "CAC40", "DAX", "DOW", "FTSE", "FTSEMIB",
-        "EUROSTOXX50", "HANGSENG", "IBEX35", "NASDAQ", "NIKKEI225", "SMI",
+        "EUROSTOXX50", "HANGSENG", "IBEX35", "NASDAQ", "NIKKEI225", "SBF120", "SMI",
     ]
 
 

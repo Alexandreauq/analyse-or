@@ -1,0 +1,167 @@
+<title>Sélecteur de niveau de réponse</title>
+<style>
+  /* Valeurs reprises du site : fond sombre, bleu verre de la barre, or des accents */
+  :root {
+    color-scheme: dark;
+    --bg: #0b0f1a; --bg-2: #161d30;
+    --text: #e8ecf2; --muted: #7a84a0; --gold: #d4af37;
+    --blue: #2a5bff; --glass: rgba(255,255,255,0.04); --border: rgba(255,255,255,0.08);
+    --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  body { margin: 0; min-height: 100vh; background: var(--bg); color: var(--text); font-family: Inter, system-ui, sans-serif; }
+
+  /* Contrôles de démonstration (haut) */
+  .demo {
+    position: fixed; top: 14px; left: 50%; transform: translateX(-50%); z-index: 10;
+    display: flex; flex-wrap: wrap; gap: 6px; justify-content: center;
+    width: max-content; max-width: calc(100% - 32px); box-sizing: border-box;
+    background: rgba(22,29,48,0.92); border: 1px solid var(--border); border-radius: 999px; padding: 6px;
+  }
+  .demo button {
+    font-size: 12px; color: var(--muted); background: none; border: 1px solid transparent;
+    border-radius: 999px; padding: 6px 12px; cursor: pointer;
+  }
+  .demo button.on { color: var(--gold); border-color: rgba(212,175,55,0.4); }
+
+  .home { position: relative; min-height: 100vh; overflow: hidden; text-align: center; }
+  .wordmark {
+    position: absolute; top: 56px; left: 0; right: 0;
+    font-size: 14px; letter-spacing: 0.3em; text-transform: uppercase; color: var(--muted);
+  }
+  .stage {
+    position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+    width: min(720px, calc(100% - 32px));
+    display: flex; flex-direction: column; align-items: center; gap: 14px;
+  }
+
+  /* Sélecteur à deux niveaux (même composant à chaque emplacement) */
+  .seg {
+    display: inline-flex; background: var(--glass); border: 1px solid var(--border);
+    border-radius: 999px; padding: 3px;
+  }
+  .seg button {
+    font: inherit; font-size: 13px; color: var(--muted); background: none; border: 0;
+    border-radius: 999px; padding: 6px 14px; cursor: pointer;
+    transition: background .3s var(--ease), color .3s var(--ease);
+  }
+  .seg button:hover { color: var(--text); }
+  .seg button[aria-pressed="true"] { background: rgba(42,91,255,0.18); color: var(--text); }
+  .seg-label { font-size: 12px; color: var(--muted); margin-right: 8px; }
+  .sel { display: none; align-items: center; }
+
+  /* Barre de recherche */
+  .search { position: relative; width: 100%; }
+  .search input {
+    width: 100%; height: 68px; box-sizing: border-box; border-radius: 34px;
+    border: 1px solid var(--border); background: rgba(255,255,255,0.04);
+    color: var(--text); font-size: 18px; padding: 0 28px; outline: none;
+    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    transition: padding .3s var(--ease);
+  }
+  .search input:focus { border-color: rgba(42,91,255,0.4); box-shadow: 0 0 0 6px rgba(42,91,255,0.1); }
+  .search input::placeholder { color: var(--muted); }
+  .search .sel-inline { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); }
+
+  /* Réponse (affichée seulement en position 4) */
+  .answer-panel { display: none; width: 100%; }
+  .bubble {
+    position: relative; width: 100%; box-sizing: border-box; text-align: left;
+    background: var(--bg-2); border: 1px solid var(--border); border-radius: 16px; padding: 48px 26px 22px;
+  }
+  .bubble-tools { position: absolute; top: 12px; right: 12px; }
+  .bubble p { margin: 0; font-size: 17px; line-height: 1.7; color: var(--text); }
+  .bubble-tools .seg button { font-size: 12px; padding: 5px 11px; }
+
+  /* Emplacements : un seul affiché à la fois */
+  body.pos-top .sel-top,
+  body.pos-below .sel-below { display: flex; }
+  body.pos-inline .search input { padding-right: 260px; }
+  body.pos-inline .sel-inline { display: flex; }
+  body.pos-answer .answer-panel { display: block; }
+
+  @media (max-width: 600px) {
+    .seg-label { display: none; }
+    body.pos-inline .search input { padding-right: 16px; }
+    body.pos-inline .sel-inline { position: static; transform: none; margin-top: 10px; }
+    body.pos-inline .search { display: flex; flex-direction: column; align-items: center; }
+  }
+</style>
+
+<div class="demo">
+  <button data-pos="pos-top" class="on">1. Au-dessus de la barre</button>
+  <button data-pos="pos-inline">2. Dans la barre</button>
+  <button data-pos="pos-below">3. Sous la barre</button>
+  <button data-pos="pos-answer">4. Dans la réponse</button>
+</div>
+
+<div class="home">
+  <div class="wordmark">AI Investment</div>
+
+  <div class="stage">
+    <div class="answer-panel">
+      <div class="bubble">
+        <div class="bubble-tools seg" role="group" aria-label="Niveau de réponse">
+          <button type="button" data-level="tech" aria-pressed="true">Technique</button>
+          <button type="button" data-level="public" aria-pressed="false">Grand public</button>
+        </div>
+        <p class="answer-text"></p>
+      </div>
+    </div>
+
+    <div class="sel sel-top">
+      <span class="seg-label">Niveau de réponse</span>
+      <div class="seg" role="group" aria-label="Niveau de réponse">
+        <button type="button" data-level="tech" aria-pressed="true">Technique</button>
+        <button type="button" data-level="public" aria-pressed="false">Grand public</button>
+      </div>
+    </div>
+
+    <div class="search">
+      <input type="search" placeholder="Bienvenue. Que puis-je faire pour vous ?">
+      <div class="sel sel-inline">
+        <div class="seg" role="group" aria-label="Niveau de réponse">
+          <button type="button" data-level="tech" aria-pressed="true">Technique</button>
+          <button type="button" data-level="public" aria-pressed="false">Grand public</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="sel sel-below">
+      <span class="seg-label">Niveau de réponse</span>
+      <div class="seg" role="group" aria-label="Niveau de réponse">
+        <button type="button" data-level="tech" aria-pressed="true">Technique</button>
+        <button type="button" data-level="public" aria-pressed="false">Grand public</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Même réponse, deux niveaux : les chiffres sont identiques, seule l'explication change
+  const TEXTES = {
+    tech: "Safran affiche un ROCE de 55,2 % et un ICR de 77,1x, contre 24,2 % et 9,2x pour Airbus. Son score composite (74,6) devance celui d'Airbus (69,1) de 5,5 points.",
+    public: "Safran gagne sur deux points : il rapporte davantage avec l'argent investi dans l'entreprise (55 % contre 24 %) et il rembourse ses intérêts très facilement. C'est pour cela que sa note globale est plus haute que celle d'Airbus, de 5,5 points."
+  };
+  const answerText = document.querySelector('.answer-text');
+
+  function setLevel(level) {
+    document.querySelectorAll('[data-level]').forEach(btn => {
+      btn.setAttribute('aria-pressed', String(btn.dataset.level === level));
+    });
+    answerText.textContent = TEXTES[level];
+    document.body.dataset.level = level;
+  }
+
+  document.querySelectorAll('button[data-level]').forEach(btn => {
+    btn.addEventListener('click', () => setLevel(btn.dataset.level));
+  });
+  document.querySelectorAll('.demo button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.body.className = btn.dataset.pos;
+      document.querySelectorAll('.demo button').forEach(b => b.classList.toggle('on', b === btn));
+    });
+  });
+
+  document.body.className = 'pos-top';
+  setLevel('tech');
+</script>

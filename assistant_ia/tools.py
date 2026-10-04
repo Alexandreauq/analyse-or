@@ -1,5 +1,5 @@
 # assistant_ia/tools.py
-# Les 7 outils que Claude peut appeler (voir spec §6). Chaque outil est
+# Les 9 outils que Claude peut appeler (voir spec §6). Chaque outil est
 # une fonction pure (entree -> dict JSON-serialisable), testable sans
 # toucher a l'API Anthropic. dispatch_tool() ne leve JAMAIS — un outil
 # inconnu ou une erreur interne renvoie un dict {"erreur": ...}, que la
@@ -8,6 +8,7 @@
 from difflib import get_close_matches
 
 import assistant_ia.data_sources as data_sources
+import assistant_ia.news as news
 
 TOOL_DEFINITIONS = [
     {
@@ -115,6 +116,28 @@ TOOL_DEFINITIONS = [
             "required": ["cible_type", "cible_valeur", "libelle"],
         },
     },
+    {
+        "name": "actualites_entreprise",
+        "description": (
+            "Renvoie les actualités récentes (48 h, 5 maximum) d'une entreprise, "
+            "avec date, source, résumé court et lien. Ne cite une cause que si "
+            "un article la formule explicitement."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {"ticker": {"type": "string", "description": "Ticker exact, ex. MC.PA"}},
+            "required": ["ticker"],
+        },
+    },
+    {
+        "name": "actualites_marche",
+        "description": (
+            "Renvoie les actualités générales de marché des 24 dernières heures "
+            "(5 maximum) pour le contexte macro. Ce n'est jamais la cause du "
+            "mouvement d'une entreprise précise."
+        ),
+        "input_schema": {"type": "object", "properties": {}},
+    },
 ]
 
 
@@ -154,6 +177,13 @@ def _fiche_allegee(company: dict) -> dict:
     plusieurs fiche_entreprise/comparer_entreprises dans une meme
     conversation peut couter plusieurs dollars en une seule question."""
     return {k: v for k, v in company.items() if k not in ("financial_analysis_html", "news")}
+
+
+def _nom_entreprise(ticker: str, indices_source) -> str | None:
+    """Nom officiel de l'entreprise (sert de mot-clé GDELT et de contrôle de
+    pertinence). None si le ticker est inconnu."""
+    company = _find_company(ticker, indices_source().get("companies", []))
+    return company.get("name") if company else None
 
 
 def fiche_entreprise(ticker: str, *, indices_source=data_sources.fetch_indices_data) -> dict:
@@ -233,6 +263,10 @@ _HANDLERS = {
     "resume_portefeuille": lambda i, **deps: resume_portefeuille(
         i.get("positions_manuelles"), dashboard_source=deps["dashboard_source"]),
     "proposer_lien": lambda i, **deps: proposer_lien(i["cible_type"], i["cible_valeur"], i["libelle"]),
+    "actualites_entreprise": lambda i, **deps: news.actualites_entreprise(
+        i["ticker"], _nom_entreprise(i["ticker"], deps["indices_source"]),
+        finnhub_source=deps["finnhub_source"], gdelt_source=deps["gdelt_source"]),
+    "actualites_marche": lambda i, **deps: news.actualites_marche(gdelt_source=deps["gdelt_source"]),
 }
 
 
@@ -240,6 +274,8 @@ def dispatch_tool(
     name: str, tool_input: dict, *,
     indices_source=data_sources.fetch_indices_data,
     dashboard_source=data_sources.fetch_bot_dashboard,
+    finnhub_source=data_sources.fetch_finnhub_company_news,
+    gdelt_source=data_sources.fetch_gdelt_articles,
 ) -> dict:
     """Execute l'outil nomme `name` avec `tool_input`. Ne leve JAMAIS :
     un nom inconnu ou une exception interne (cle manquante dans
@@ -249,6 +285,8 @@ def dispatch_tool(
     if handler is None:
         return {"erreur": f"outil inconnu : {name!r}"}
     try:
-        return handler(tool_input, indices_source=indices_source, dashboard_source=dashboard_source)
+        return handler(tool_input, indices_source=indices_source,
+                       dashboard_source=dashboard_source,
+                       finnhub_source=finnhub_source, gdelt_source=gdelt_source)
     except Exception as e:
         return {"erreur": f"echec de l'outil {name} : {e}"}

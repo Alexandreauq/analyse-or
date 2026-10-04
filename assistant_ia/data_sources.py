@@ -5,7 +5,9 @@
 # les API protegees existantes de gold_bot/ibkr_bot pour leurs statuts/
 # positions (jamais une deuxieme lecture directe de leurs fichiers, pour
 # ne jamais faire diverger deux chemins de lecture de la meme donnee).
+import os
 import time
+from datetime import datetime
 
 import requests
 
@@ -66,3 +68,63 @@ def fetch_bot_dashboard(nom: str, http_get=requests.get) -> dict:
         return reponse.json()
     except Exception as e:
         return {"erreur": f"impossible de contacter le bot {nom} : {e}"}
+
+
+FINNHUB_COMPANY_NEWS_URL = "https://finnhub.io/api/v1/company-news"
+GDELT_DOC_URL = "https://api.gdeltproject.org/api/v2/doc/doc"
+FINNHUB_TTL_SECONDS = 2 * 3600
+# GDELT met souvent 10 a 15 s a repondre : le delai general (15 s) coupe trop tot.
+NEWS_TIMEOUT_SECONDS = 25
+_news_cache: dict = {}
+
+
+def _appel_actualites(url, params, headers, ttl_seconds, cache_key, *, http_get, now_fn, cache):
+    """Appel GET mis en cache, commun aux deux sources d'actualites. Ne leve
+    jamais. Seul le nom de la classe d'exception remonte : le texte d'une
+    exception peut contenir l'URL, et un token dans l'URL ne doit jamais
+    atteindre Claude. Une erreur n'est jamais mise en cache."""
+    if cache is None:
+        cache = _news_cache
+    maintenant = now_fn()
+    entree = cache.get(cache_key)
+    if entree is not None and (maintenant - entree[0]) < ttl_seconds:
+        return entree[1]
+    try:
+        reponse = http_get(url, params=params, headers=headers, timeout=NEWS_TIMEOUT_SECONDS)
+        reponse.raise_for_status()
+        donnees = reponse.json()
+    except Exception as e:
+        return {"erreur": f"actualites indisponibles ({type(e).__name__})"}
+    cache[cache_key] = (maintenant, donnees)
+    return donnees
+
+
+def fetch_finnhub_company_news(
+    symbole: str, debut_iso: str, fin_iso: str,
+    *, http_get=requests.get, now_fn=time.time, cache: dict | None = None,
+) -> dict | list:
+    """Actualites Finnhub rattachees au symbole (liste) ou {"erreur": str}.
+    Le jeton part dans l'en-tete X-Finnhub-Token, jamais dans l'URL."""
+    token = os.environ.get("FINNHUB_API_TOKEN", "")
+    if not token:
+        return {"erreur": "FINNHUB_API_TOKEN absent de l'environnement"}
+    return _appel_actualites(
+        FINNHUB_COMPANY_NEWS_URL, {"symbol": symbole, "from": debut_iso, "to": fin_iso},
+        {"X-Finnhub-Token": token}, FINNHUB_TTL_SECONDS, f"finnhub:{symbole}:{debut_iso}",
+        http_get=http_get, now_fn=now_fn, cache=cache)
+
+
+def fetch_gdelt_articles(
+    requete: str, debut: datetime, ttl_seconds: int, cache_key: str,
+    *, http_get=requests.get, now_fn=time.time, cache: dict | None = None,
+) -> dict:
+    """Articles GDELT (`{"articles": [...]}`) ou {"erreur": str}. Source sans
+    cle. GDELT limite a une requete toutes les 5 secondes : un refus arrive
+    en texte brut, non JSON, donc renvoye comme erreur et non mis en cache."""
+    params = {
+        "query": requete, "mode": "artlist", "format": "json", "maxrecords": 25,
+        "sort": "datetimedesc", "startdatetime": debut.strftime("%Y%m%d%H%M%S"),
+    }
+    return _appel_actualites(
+        GDELT_DOC_URL, params, None, ttl_seconds, cache_key,
+        http_get=http_get, now_fn=now_fn, cache=cache)

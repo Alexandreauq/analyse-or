@@ -163,12 +163,13 @@ def test_dispatch_tool_returns_an_error_dict_for_an_unknown_tool():
     assert "erreur" in resultat
 
 
-def test_tool_definitions_lists_all_seven_tools():
+def test_tool_definitions_lists_all_nine_tools():
     noms = {t["name"] for t in tools.TOOL_DEFINITIONS}
 
     assert noms == {
         "fiche_entreprise", "comparer_entreprises", "classement",
         "statut_bot", "positions_bot", "resume_portefeuille", "proposer_lien",
+        "actualites_entreprise", "actualites_marche",
     }
 
 
@@ -189,3 +190,62 @@ def test_classement_schema_lists_the_exact_index_values_as_an_enum():
         "CAC40", "DAX", "DOW", "FTSE", "FTSEMIB",
         "HANGSENG", "IBEX35", "NASDAQ", "NIKKEI225", "SMI",
     ]
+
+
+def _indices_avec_safran():
+    return {"companies": [{"ticker": "MC.PA", "name": "LVMH"}]}
+
+
+def test_dispatch_actualites_entreprise_passes_the_company_name_to_both_sources():
+    appels_gdelt = []
+
+    def gdelt(requete, debut, ttl, cle):
+        appels_gdelt.append((requete, cle))
+        return {"articles": []}
+
+    resultat = tools.dispatch_tool(
+        "actualites_entreprise", {"ticker": "MC.PA"},
+        indices_source=_indices_avec_safran, finnhub_source=lambda *a: [],
+        gdelt_source=gdelt)
+
+    assert appels_gdelt == [('"LVMH"', "entreprise:MC.PA")]
+    assert resultat == {"ticker": "MC.PA", "articles": []}
+
+
+def test_dispatch_actualites_entreprise_with_an_unknown_ticker_skips_gdelt():
+    appels_gdelt = []
+
+    def gdelt(*args):
+        appels_gdelt.append(args)
+        return {"articles": []}
+
+    tools.dispatch_tool(
+        "actualites_entreprise", {"ticker": "INCONNU.PA"},
+        indices_source=_indices_avec_safran, finnhub_source=lambda *a: [],
+        gdelt_source=gdelt)
+
+    assert appels_gdelt == []
+
+
+def test_dispatch_actualites_marche_needs_no_input():
+    resultat = tools.dispatch_tool(
+        "actualites_marche", {}, gdelt_source=lambda *a: {"articles": []})
+
+    assert resultat == {"articles": []}
+
+
+def test_dispatch_actualites_entreprise_returns_an_error_dict_when_all_sources_fail():
+    erreur = {"erreur": "actualites indisponibles (RuntimeError)"}
+    resultat = tools.dispatch_tool(
+        "actualites_entreprise", {"ticker": "MC.PA"},
+        indices_source=_indices_avec_safran, finnhub_source=lambda *a: erreur,
+        gdelt_source=lambda *a: erreur)
+
+    assert "erreur" in resultat
+
+
+def test_actualites_tool_schemas_have_the_expected_inputs():
+    par_nom = {t["name"]: t for t in tools.TOOL_DEFINITIONS}
+
+    assert par_nom["actualites_entreprise"]["input_schema"]["required"] == ["ticker"]
+    assert "properties" in par_nom["actualites_marche"]["input_schema"]

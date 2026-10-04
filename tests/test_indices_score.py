@@ -8298,3 +8298,59 @@ def test_risk_free_rate_with_cache_fallback_uses_cache_on_fetch_failure(monkeypa
         rates[currency] = fetched if fetched is not None else cache.get(currency)
 
     assert rates["EUR"] == 4.0  # repli sur le cache, pas None
+
+
+def test_convertit_prix_entree_multiplies_prices_into_the_index_currency():
+    entree = {"current_price": 100.0, "fair_value": 120.0, "entry_price": 90.0,
+              "exit_price": 150.0, "score": 80.0}
+
+    resultat = indices_score.convertit_prix_entree(entree, "USD", "EUR", 0.9)
+
+    assert resultat["current_price"] == pytest.approx(90.0)
+    assert resultat["fair_value"] == pytest.approx(108.0)
+    assert resultat["entry_price"] == pytest.approx(81.0)
+    assert resultat["exit_price"] == pytest.approx(135.0)
+    assert resultat["score"] == 80.0
+    assert resultat["devise_prix"] == "EUR"
+    assert "prix_non_convertis" not in resultat
+
+
+def test_convertit_prix_entree_leaves_prices_alone_when_currencies_match():
+    entree = {"current_price": 100.0, "fair_value": None}
+
+    resultat = indices_score.convertit_prix_entree(entree, "EUR", "EUR", None)
+
+    assert resultat["current_price"] == 100.0
+    assert resultat["fair_value"] is None
+    assert resultat["devise_prix"] == "EUR"
+
+
+def test_convertit_prix_entree_never_publishes_a_price_in_the_wrong_currency():
+    entree = {"current_price": 100.0, "fair_value": 120.0, "entry_price": 90.0, "exit_price": 150.0}
+
+    resultat = indices_score.convertit_prix_entree(entree, "USD", "EUR", None)
+
+    assert resultat["current_price"] is None
+    assert resultat["fair_value"] is None
+    assert resultat["entry_price"] is None
+    assert resultat["exit_price"] is None
+    assert resultat["prix_non_convertis"] is True
+
+
+def test_update_signal_tracking_never_opens_a_position_on_an_out_of_tracking_index(monkeypatch):
+    recues = []
+    monkeypatch.setattr(indices_score, "load_signal_tracking", lambda: [])
+    monkeypatch.setattr(indices_score, "save_signal_tracking", lambda positions: None)
+    monkeypatch.setattr(indices_score, "fetch_index_prices", lambda: {})
+    monkeypatch.setattr(indices_score, "_open_new_signal_positions",
+                        lambda positions, signaux, prix, today: recues.extend(signaux) or positions)
+    monkeypatch.setattr(indices_score, "_close_eligible_positions",
+                        lambda positions, *args, **kwargs: positions)
+    monkeypatch.setattr(indices_score, "_resolve_pending_shadow_benchmarks",
+                        lambda positions, *args, **kwargs: positions)
+
+    signaux = [{"ticker": "CS.PA", "index": "CAC40"},
+               {"ticker": "ASML.AS", "index": "EUROSTOXX50"}]
+    indices_score.update_signal_tracking([], signaux)
+
+    assert [s["ticker"] for s in recues] == ["CS.PA"]

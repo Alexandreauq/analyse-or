@@ -1,0 +1,165 @@
+<title>Variantes de l'orbe IA</title>
+<style>
+  :root {
+    color-scheme: dark;
+    --bg: #111418;
+    --text: #e8ecf2;
+    --muted: #7a8494;
+    --blue: #3aa0ff;
+    --blue-deep: #0a4f99;
+    --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  body {
+    margin: 0; min-height: 100%; background: var(--bg); color: var(--text);
+    font-family: Inter, system-ui, sans-serif;
+  }
+  .page { padding: 40px 16px; display: flex; flex-direction: column; align-items: center; gap: 40px; box-sizing: border-box; }
+  h1 { font-size: 14px; letter-spacing: 0.3em; text-transform: uppercase; color: var(--muted); font-weight: 500; margin: 0; }
+  .grid {
+    width: 100%; max-width: 1100px;
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px;
+  }
+  .card {
+    background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 24px; padding: 28px 20px 22px;
+    display: flex; flex-direction: column; align-items: center; gap: 18px; min-width: 0;
+  }
+  .card h2 { font-size: 15px; font-weight: 600; margin: 0; }
+  .card p { font-size: 13px; color: var(--muted); margin: 0; text-align: center; line-height: 1.5; }
+  .stage { height: 220px; width: 100%; display: flex; align-items: center; justify-content: center; }
+  .btn {
+    font-size: 13px; color: var(--blue); background: rgba(58,160,255,0.1);
+    border: 1px solid rgba(58,160,255,0.3); border-radius: 18px; padding: 8px 16px; cursor: pointer;
+    transition: background 0.3s var(--ease);
+  }
+  .btn:hover { background: rgba(58,160,255,0.18); }
+
+  /* 1. Plasma : nappes bleues fluides qui se mélangent */
+  .plasma { position: relative; width: 160px; height: 160px; filter: blur(14px) saturate(1.3); }
+  .plasma span {
+    position: absolute; width: 90px; height: 90px; border-radius: 50%;
+    background: radial-gradient(circle, var(--blue) 0%, var(--blue-deep) 70%, transparent 100%);
+    opacity: 0.85; mix-blend-mode: screen;
+    animation: drift 6s ease-in-out infinite;
+  }
+  .plasma span:nth-child(2) { animation-duration: 8s; animation-delay: -2s; width: 110px; height: 110px; }
+  .plasma span:nth-child(3) { animation-duration: 7s; animation-delay: -4s; width: 70px; height: 70px; }
+  @keyframes drift {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    33% { transform: translate(30px, -20px) scale(1.12); }
+    66% { transform: translate(-25px, 25px) scale(0.92); }
+  }
+  .plasma.idle span { animation-play-state: paused; }
+
+  /* 2. Waveform : cœur bleu entouré de barres qui vibrent en vague */
+  .wave { position: relative; width: 220px; height: 220px; display: flex; align-items: center; justify-content: center; }
+  .wave .core {
+    width: 56px; height: 56px; border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #d8efff, var(--blue) 55%, var(--blue-deep));
+    box-shadow: 0 0 40px rgba(58,160,255,0.45);
+    animation: pulse 2s ease-in-out infinite;
+  }
+  .wave .bar {
+    position: absolute; left: 50%; top: 50%; width: 4px; height: 26px; margin: -13px 0 0 -2px;
+    border-radius: 2px; background: var(--blue); transform-origin: center;
+    transform: rotate(var(--a)) translateY(-78px);
+    animation: bar 1.4s ease-in-out infinite;
+    animation-delay: calc(var(--i) * -0.09s);
+  }
+  @keyframes bar {
+    0%, 100% { height: 10px; margin-top: -5px; opacity: 0.45; }
+    50% { height: 34px; margin-top: -17px; opacity: 1; }
+  }
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); }
+  }
+  .wave.idle .bar, .wave.idle .core { animation-play-state: paused; }
+
+  /* 3. Particules : sphère de points bleus qui tourne */
+  .particles { position: relative; width: 160px; height: 160px; transform-style: preserve-3d; animation: spin3d 12s linear infinite; }
+  .particles i {
+    position: absolute; left: 50%; top: 50%; width: 6px; height: 6px; margin: -3px 0 0 -3px;
+    border-radius: 50%; background: var(--blue); box-shadow: 0 0 8px var(--blue);
+    transform: rotateY(var(--y)) rotateX(var(--x)) translateZ(80px);
+  }
+  @keyframes spin3d {
+    from { transform: rotateY(0deg) rotateX(18deg); }
+    to { transform: rotateY(360deg) rotateX(18deg); }
+  }
+  .particles.idle { animation-play-state: paused; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .plasma span, .wave .bar, .wave .core, .particles { animation: none; }
+  }
+</style>
+
+<div class="page">
+  <h1>Variantes de l'orbe</h1>
+  <div class="grid">
+
+    <div class="card">
+      <h2>1. Plasma</h2>
+      <p>Trois nappes bleues qui se mélangent en douceur, comme un liquide lumineux.</p>
+      <div class="stage">
+        <div class="plasma idle" id="p1"><span></span><span></span><span></span></div>
+      </div>
+      <button class="btn" data-target="p1">Réfléchir</button>
+    </div>
+
+    <div class="card">
+      <h2>2. Vague HUD</h2>
+      <p>Un cœur bleu entouré de barres qui vibrent en vague, à la manière d'une interface de Jarvis.</p>
+      <div class="stage">
+        <div class="wave idle" id="w1">
+          <div class="core"></div>
+          <script>
+            (function () {
+              const el = document.getElementById('w1');
+              for (let i = 0; i < 24; i++) {
+                const b = document.createElement('div');
+                b.className = 'bar';
+                b.style.setProperty('--a', (i * 15) + 'deg');
+                b.style.setProperty('--i', i);
+                el.appendChild(b);
+              }
+            })();
+          </script>
+        </div>
+      </div>
+      <button class="btn" data-target="w1">Réfléchir</button>
+    </div>
+
+    <div class="card">
+      <h2>3. Sphère de points</h2>
+      <p>Une sphère faite de points bleus qui tourne lentement sur elle-même.</p>
+      <div class="stage">
+        <div class="particles idle" id="s1"></div>
+      </div>
+      <button class="btn" data-target="s1">Réfléchir</button>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  (function () {
+    const sphere = document.getElementById('s1');
+    const n = 80;
+    for (let i = 0; i < n; i++) {
+      const p = document.createElement('i');
+      const phi = Math.acos(1 - 2 * (i + 0.5) / n);
+      const theta = Math.PI * (1 + Math.sqrt(5)) * i;
+      p.style.setProperty('--x', (phi * 180 / Math.PI - 90) + 'deg');
+      p.style.setProperty('--y', (theta * 180 / Math.PI) + 'deg');
+      sphere.appendChild(p);
+    }
+  })();
+
+  document.querySelectorAll('.btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const el = document.getElementById(btn.dataset.target);
+      el.classList.toggle('idle');
+      btn.textContent = el.classList.contains('idle') ? 'Réfléchir' : 'Arrêter';
+    });
+  });
+</script>

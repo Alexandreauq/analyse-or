@@ -6008,7 +6008,7 @@ def test_smi_financial_sector_tickers_are_in_smi_companies():
 
 
 def test_ibex35_does_not_duplicate_tickers_already_tracked_elsewhere():
-    """ArcelorMittal (CAC40, MT.PA), Ferrovial (NASDAQ, FER) et
+    """ArcelorMittal (CAC40, MT.AS), Ferrovial (NASDAQ, FER) et
     International Airlines Group (FTSE, IAG.L) sont des constituants IBEX
     35 réels mais restent suivis uniquement sous leur indice d'origine,
     avec also_indices=["IBEX35"] — pas dupliqués dans IBEX35_COMPANIES."""
@@ -6022,7 +6022,7 @@ def test_ibex35_does_not_duplicate_tickers_already_tracked_elsewhere():
     ibex_tickers = {c["ticker"] for c in indices_score.IBEX35_COMPANIES}
     assert other_tickers & ibex_tickers == set()
 
-    mt = next(c for c in indices_score.CAC40_COMPANIES if c["ticker"] == "MT.PA")
+    mt = next(c for c in indices_score.CAC40_COMPANIES if c["ticker"] == "MT.AS")
     fer = next(c for c in indices_score.NASDAQ_COMPANIES if c["ticker"] == "FER")
     iag = next(c for c in indices_score.FTSE_COMPANIES if c["ticker"] == "IAG.L")
     assert mt.get("also_indices") == ["IBEX35"]

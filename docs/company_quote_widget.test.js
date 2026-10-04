@@ -40,12 +40,32 @@ function test_NO_RELIABLE_COMPANY_TV_DATA_contains_exactly_hangseng_and_nikkei()
   console.log('OK: test_NO_RELIABLE_COMPANY_TV_DATA_contains_exactly_hangseng_and_nikkei');
 }
 
+function test_resolveCompanyTvSymbol_uses_yahoo_suffix_for_indices_without_mapping() {
+  // AEX All-Share mélange Amsterdam, Bruxelles et Milan : le suffixe Yahoo
+  // donne la place, pas l'indice (qui n'a pas de ligne dans la table).
+  assert.strictEqual(resolveCompanyTvSymbol('ASML.AS', 'AEXALL'), 'EURONEXT:ASML');
+  assert.strictEqual(resolveCompanyTvSymbol('AED.BR', 'AEXALL'), 'EURONEXT:AED');
+  assert.strictEqual(resolveCompanyTvSymbol('RACE.MI', 'AEXALL'), 'MIL:RACE');
+  assert.strictEqual(resolveCompanyTvSymbol('SAF.PA', 'SBF120'), 'EURONEXT:SAF');
+  console.log('OK: test_resolveCompanyTvSymbol_uses_yahoo_suffix_for_indices_without_mapping');
+}
+
+function test_resolveCompanyTvSymbol_returns_null_without_known_suffix() {
+  // CRH et Flutter (Euro Stoxx 50) n'ont pas de suffixe : pas de symbole
+  // deviné, l'appelant affiche le repli.
+  assert.strictEqual(resolveCompanyTvSymbol('CRH', 'EUROSTOXX50'), null);
+  assert.strictEqual(resolveCompanyTvSymbol('FLUT', 'EUROSTOXX50'), null);
+  console.log('OK: test_resolveCompanyTvSymbol_returns_null_without_known_suffix');
+}
+
 function main() {
   test_resolveCompanyTvSymbol_null_for_hangseng();
   test_resolveCompanyTvSymbol_null_for_nikkei225();
   test_resolveCompanyTvSymbol_builds_symbol_for_working_indices();
   test_resolveCompanyTvSymbol_applies_lse_epic_override();
   test_NO_RELIABLE_COMPANY_TV_DATA_contains_exactly_hangseng_and_nikkei();
+  test_resolveCompanyTvSymbol_uses_yahoo_suffix_for_indices_without_mapping();
+  test_resolveCompanyTvSymbol_returns_null_without_known_suffix();
   console.log('Tous les tests company_quote_widget.test.js sont passés.');
 }
 

@@ -325,9 +325,16 @@
   .home-level button:hover { color: var(--text); }
   .home-level button[aria-pressed="true"] { background: rgba(42,91,255,.18); color: var(--text); }
   .home-level button:focus-visible { outline: 2px solid rgba(42,91,255,.5); outline-offset: 1px; }
+  /* Téléphone : le sélecteur passe sous le texte, dans une barre un peu plus
+     haute, pour que le message de bienvenue reste entièrement lisible. */
   @media (max-width: 600px) {
-    #homeSearchInput { padding-right: 180px; }
-    .home-level button { font-size: 12px; padding: 6px 10px; }
+    #homeSearchInput {
+      height: auto; padding: 18px 18px 56px; border-radius: 28px; font-size: 15px;
+    }
+    .home-level {
+      right: auto; top: auto; bottom: 10px; left: 50%; transform: translateX(-50%);
+    }
+    .home-level button { font-size: 12px; padding: 6px 12px; }
   }
   .home.thinking .home-search {
     opacity: 0; transform: translate(-50%, -220%); pointer-events: none; visibility: hidden;

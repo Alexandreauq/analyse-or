@@ -50,6 +50,7 @@ async def ask(request: Request, x_bot_token: str | None = Header(default=None)):
     question = payload.get("question", "")
     history = payload.get("history", [])
     manual_positions = payload.get("manual_positions")
+    niveau = payload.get("niveau", assistant.NIVEAU_DEFAUT)
 
-    evenements = assistant.run_assistant_loop(question, history, manual_positions)
+    evenements = assistant.run_assistant_loop(question, history, manual_positions, niveau=niveau)
     return StreamingResponse(_formate_evenements_sse(evenements), media_type="text/event-stream")

@@ -310,6 +310,25 @@
     border-color: rgba(42,91,255,.4);
     box-shadow: 0 0 0 6px rgba(42,91,255,.1), 0 0 60px rgba(42,91,255,.2);
   }
+  /* Niveau de réponse : sélecteur Technique / Grand public à l'intérieur de la barre. */
+  #homeSearchInput { padding-right: 260px; }
+  .home-level {
+    position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+    display: inline-flex; padding: 3px; border-radius: 999px;
+    background: rgba(255,255,255,.04); border: 1px solid var(--border);
+  }
+  .home-level button {
+    font: inherit; font-size: 13px; color: var(--muted); background: none; border: 0;
+    border-radius: 999px; padding: 7px 14px; cursor: pointer;
+    transition: background .3s var(--ease), color .3s var(--ease);
+  }
+  .home-level button:hover { color: var(--text); }
+  .home-level button[aria-pressed="true"] { background: rgba(42,91,255,.18); color: var(--text); }
+  .home-level button:focus-visible { outline: 2px solid rgba(42,91,255,.5); outline-offset: 1px; }
+  @media (max-width: 600px) {
+    #homeSearchInput { padding-right: 180px; }
+    .home-level button { font-size: 12px; padding: 6px 10px; }
+  }
   .home.thinking .home-search {
     opacity: 0; transform: translate(-50%, -220%); pointer-events: none; visibility: hidden;
   }
@@ -1458,6 +1477,10 @@
     <div class="home-search">
       <input type="search" id="homeSearchInput" class="list-search"
              placeholder="Bienvenue. Que puis-je faire pour vous ?">
+      <div class="home-level" role="group" aria-label="Niveau de réponse">
+        <button type="button" data-niveau="technique">Technique</button>
+        <button type="button" data-niveau="grand_public">Grand public</button>
+      </div>
     </div>
     <div id="homeSearchPanel" class="home-search-panel" hidden></div>
   </div>
@@ -3740,6 +3763,7 @@ async function askAssistant(question) {
       headers: { 'Content-Type': 'application/json', 'X-Bot-Token': token },
       body: JSON.stringify({
         question, history: homeSearchHistory, manual_positions: positionsManuelles,
+        niveau: niveauReponse(),
       }),
     });
     if (response.status === 401) {
@@ -3802,9 +3826,33 @@ async function askAssistant(question) {
   }
 }
 
+// Niveau de la réponse (Technique / Grand public), mémorisé dans le navigateur.
+// Valeur par défaut ou stockage indisponible : 'technique'.
+const NIVEAU_REPONSE_KEY = 'analyse-or-answer-level';
+const NIVEAUX_REPONSE = ['technique', 'grand_public'];
+
+function niveauReponse() {
+  try {
+    const stocke = localStorage.getItem(NIVEAU_REPONSE_KEY);
+    if (NIVEAUX_REPONSE.includes(stocke)) return stocke;
+  } catch (e) { /* stockage bloqué : niveau par défaut */ }
+  return 'technique';
+}
+
+function setNiveauReponse(niveau) {
+  try { localStorage.setItem(NIVEAU_REPONSE_KEY, niveau); } catch (e) { /* non mémorisé */ }
+  document.querySelectorAll('.home-level button').forEach(b => {
+    b.setAttribute('aria-pressed', String(b.dataset.niveau === niveau));
+  });
+}
+
 function wireHomeSearch() {
   const input = document.getElementById('homeSearchInput');
   if (!input) return;
+  document.querySelectorAll('.home-level button').forEach(b => {
+    b.addEventListener('click', () => setNiveauReponse(b.dataset.niveau));
+  });
+  setNiveauReponse(niveauReponse());
   input.addEventListener('keydown', async (e) => {
     if (e.key !== 'Enter') return;
     // Barre masquée pendant la réflexion : pas de nouvel envoi tant que la

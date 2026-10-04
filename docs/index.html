@@ -280,14 +280,14 @@
        des dégradés ici faisaient apparaître un cadre sur téléphone. */
     background: var(--bg);
   }
-  .home-hero { position: absolute; top: 48px; left: 0; right: 0; display: flex; justify-content: center; }
+  .home-hero { position: absolute; top: 48px; left: 0; right: 0; display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; padding: 0 16px; }
   .home-wordmark {
     font-family: 'Newsreader', serif; font-weight: 400; font-size: clamp(2.5rem, 8.5vw, 3.5rem);
     letter-spacing: 0.03em; line-height: 1.05;
     background: linear-gradient(135deg, var(--gold-100), var(--gold) 55%, var(--gold-700));
     -webkit-background-clip: text; background-clip: text; color: transparent;
   }
-  .home-tagline { color: var(--muted); font-size: var(--text-base); max-width: 320px; line-height: var(--lh-relaxed); margin: 0; }
+  .home-tagline { color: var(--muted); font-size: var(--text-base); max-width: 420px; line-height: var(--lh-relaxed); margin: 0; }
   .home-stage { position: absolute; inset: 0; }
 
   /* Barre de recherche : verre translucide, pilule. Centrée au repos
@@ -1475,6 +1475,7 @@
 <div id="home" class="home">
   <div class="home-hero">
     <div class="home-wordmark">AI Investment</div>
+    <p class="home-tagline">Bienvenue dans AI Investment, l'outil qui décrypte les marchés : scores des entreprises, suivi de vos bots et de votre portefeuille.</p>
   </div>
   <div class="home-stage">
     <div class="home-orb" aria-hidden="true">

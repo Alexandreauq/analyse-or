@@ -989,6 +989,130 @@ EUROSTOXX50_COMPANIES = [
     {"ticker": "VNA.DE", "name": "Vonovia"},
 ]
 
+# SBF 120 : composition officielle Euronext (capture du 2026-10-04, live.euronext.com). Tickers vérifiés depuis le VPS.
+SBF120_COMPANIES = [
+    {"ticker": "ABVX.PA", "name": "Abivax"},
+    {"ticker": "AC.PA", "name": "Accor"},
+    {"ticker": "ADP.PA", "name": "Aéroports de Paris"},
+    {"ticker": "AF.PA", "name": "Air France-KLM"},
+    {"ticker": "AI.PA", "name": "Air Liquide"},
+    {"ticker": "AIR.PA", "name": "Airbus"},
+    {"ticker": "ALO.PA", "name": "Alstom"},
+    {"ticker": "ATE.PA", "name": "Alten"},
+    {"ticker": "AMUN.PA", "name": "Amundi"},
+    {"ticker": "APAM.AS", "name": "Aperam"},
+    {"ticker": "MT.AS", "name": "ArcelorMittal"},
+    {"ticker": "ARG.PA", "name": "Argan"},
+    {"ticker": "AKE.PA", "name": "Arkema"},
+    {"ticker": "ATO.PA", "name": "Atos"},
+    {"ticker": "CS.PA", "name": "AXA"},
+    {"ticker": "AYV.PA", "name": "Ayvens"},
+    {"ticker": "BB.PA", "name": "BIC"},
+    {"ticker": "BIM.PA", "name": "bioMérieux"},
+    {"ticker": "BNP.PA", "name": "BNP Paribas"},
+    {"ticker": "BOL.PA", "name": "Bolloré"},
+    {"ticker": "EN.PA", "name": "Bouygues"},
+    {"ticker": "BVI.PA", "name": "Bureau Veritas"},
+    {"ticker": "CAP.PA", "name": "Capgemini"},
+    {"ticker": "CARM.PA", "name": "Carmila"},
+    {"ticker": "CA.PA", "name": "Carrefour"},
+    {"ticker": "CLARI.PA", "name": "Clariane"},
+    {"ticker": "COFA.PA", "name": "Coface"},
+    {"ticker": "COV.PA", "name": "Covivio"},
+    {"ticker": "ACA.PA", "name": "Crédit Agricole"},
+    {"ticker": "BN.PA", "name": "Danone"},
+    {"ticker": "AM.PA", "name": "Dassault Aviation"},
+    {"ticker": "DSY.PA", "name": "Dassault Systèmes"},
+    {"ticker": "DBV.PA", "name": "DBV Technologies"},
+    {"ticker": "DBG.PA", "name": "Derichebourg"},
+    {"ticker": "EDEN.PA", "name": "Edenred"},
+    {"ticker": "FGR.PA", "name": "Eiffage"},
+    {"ticker": "ELIS.PA", "name": "Elis"},
+    {"ticker": "EMEIS.PA", "name": "Emeis"},
+    {"ticker": "ENGI.PA", "name": "Engie"},
+    {"ticker": "ERA.PA", "name": "Eramet"},
+    {"ticker": "EL.PA", "name": "EssilorLuxottica"},
+    {"ticker": "RF.PA", "name": "Eurazeo"},
+    {"ticker": "ERF.PA", "name": "Eurofins Scientific"},
+    {"ticker": "ENX.PA", "name": "Euronext"},
+    {"ticker": "ETL.PA", "name": "Eutelsat"},
+    {"ticker": "EXA.PA", "name": "Exail Technologies"},
+    {"ticker": "EXENS.PA", "name": "Exosens"},
+    {"ticker": "FDJU.PA", "name": "FDJ United"},
+    {"ticker": "FRVIA.PA", "name": "Forvia"},
+    {"ticker": "GFC.PA", "name": "Gecina"},
+    {"ticker": "GNFT.PA", "name": "Genfit"},
+    {"ticker": "GET.PA", "name": "Getlink"},
+    {"ticker": "GTT.PA", "name": "GTT"},
+    {"ticker": "RMS.PA", "name": "Hermès International"},
+    {"ticker": "ICAD.PA", "name": "Icade"},
+    {"ticker": "IDL.PA", "name": "ID Logistics"},
+    {"ticker": "NK.PA", "name": "Imerys"},
+    {"ticker": "IVA.PA", "name": "Inventiva"},
+    {"ticker": "IPN.PA", "name": "Ipsen"},
+    {"ticker": "IPS.PA", "name": "Ipsos"},
+    {"ticker": "DEC.PA", "name": "JCDecaux"},
+    {"ticker": "KER.PA", "name": "Kering"},
+    {"ticker": "LI.PA", "name": "Klépierre"},
+    {"ticker": "OR.PA", "name": "L'Oréal"},
+    {"ticker": "LR.PA", "name": "Legrand"},
+    {"ticker": "FII.PA", "name": "LISI"},
+    {"ticker": "MC.PA", "name": "LVMH"},
+    {"ticker": "MAU.PA", "name": "Maurel & Prom"},
+    {"ticker": "MEDCL.PA", "name": "Medincell"},
+    {"ticker": "MERY.PA", "name": "Mercialys"},
+    {"ticker": "MRN.PA", "name": "Mersen"},
+    {"ticker": "MMT.PA", "name": "M6 Métropole Télévision"},
+    {"ticker": "ML.PA", "name": "Michelin"},
+    {"ticker": "NANO.PA", "name": "Nanobiotix"},
+    {"ticker": "NEX.PA", "name": "Nexans"},
+    {"ticker": "OPM.PA", "name": "OPmobility"},
+    {"ticker": "ORA.PA", "name": "Orange"},
+    {"ticker": "RI.PA", "name": "Pernod Ricard"},
+    {"ticker": "PLX.PA", "name": "Pluxee"},
+    {"ticker": "PUB.PA", "name": "Publicis Groupe"},
+    {"ticker": "RCO.PA", "name": "Rémy Cointreau"},
+    {"ticker": "RNO.PA", "name": "Renault"},
+    {"ticker": "RXL.PA", "name": "Rexel"},
+    {"ticker": "RUI.PA", "name": "Rubis"},
+    {"ticker": "SK.PA", "name": "SEB"},
+    {"ticker": "SAF.PA", "name": "Safran"},
+    {"ticker": "SGO.PA", "name": "Saint-Gobain"},
+    {"ticker": "SAN.PA", "name": "Sanofi"},
+    {"ticker": "DIM.PA", "name": "Sartorius Stedim Biotech"},
+    {"ticker": "SU.PA", "name": "Schneider Electric"},
+    {"ticker": "SCR.PA", "name": "SCOR"},
+    {"ticker": "SESG.PA", "name": "SES"},
+    {"ticker": "GLE.PA", "name": "Société Générale"},
+    {"ticker": "SW.PA", "name": "Sodexo"},
+    {"ticker": "SOI.PA", "name": "Soitec"},
+    {"ticker": "SOLB.BR", "name": "Solvay"},
+    {"ticker": "SOP.PA", "name": "Sopra Steria"},
+    {"ticker": "SPIE.PA", "name": "SPIE"},
+    {"ticker": "STLAP.PA", "name": "Stellantis"},
+    {"ticker": "STMPA.PA", "name": "STMicroelectronics"},
+    {"ticker": "TE.PA", "name": "Technip Energies"},
+    {"ticker": "TEP.PA", "name": "Teleperformance"},
+    {"ticker": "TFI.PA", "name": "TF1"},
+    {"ticker": "HO.PA", "name": "Thales"},
+    {"ticker": "TTE.PA", "name": "TotalEnergies"},
+    {"ticker": "TRI.PA", "name": "Trigano"},
+    {"ticker": "UBI.PA", "name": "Ubisoft"},
+    {"ticker": "URW.PA", "name": "Unibail-Rodamco-Westfield"},
+    {"ticker": "FR.PA", "name": "Valeo"},
+    {"ticker": "VK.PA", "name": "Vallourec"},
+    {"ticker": "VLA.PA", "name": "Valneva"},
+    {"ticker": "VIE.PA", "name": "Veolia"},
+    {"ticker": "VCT.PA", "name": "Vicat"},
+    {"ticker": "DG.PA", "name": "Vinci"},
+    {"ticker": "VIRP.PA", "name": "Virbac"},
+    {"ticker": "VIRI.PA", "name": "Viridien"},
+    {"ticker": "VIV.PA", "name": "Vivendi"},
+    {"ticker": "VU.PA", "name": "Vusion"},
+    {"ticker": "MF.PA", "name": "Wendel"},
+    {"ticker": "WLN.PA", "name": "Worldline"},
+]
+
 _COMPANIES_HORS_EUROSTOXX50 = (
     [{**c, "index": "CAC40"} for c in CAC40_COMPANIES]
     + [{**c, "index": "DAX"} for c in DAX_COMPANIES]
@@ -1020,11 +1144,14 @@ def _ajoute_indice(entrees: list[dict], indice: str, composantes: list[dict]) ->
     return sortie
 
 
-COMPANIES = _ajoute_indice(_COMPANIES_HORS_EUROSTOXX50, "EUROSTOXX50", EUROSTOXX50_COMPANIES)
+COMPANIES = _ajoute_indice(
+    _ajoute_indice(_COMPANIES_HORS_EUROSTOXX50, "EUROSTOXX50", EUROSTOXX50_COMPANIES),
+    "SBF120", SBF120_COMPANIES,
+)
 INDEX_NAMES = {
     "CAC40": "CAC 40", "DAX": "DAX", "NASDAQ": "Nasdaq 100", "DOW": "Dow Jones",
     "FTSE": "FTSE 100", "SMI": "SMI", "IBEX35": "IBEX 35", "FTSEMIB": "FTSE MIB",
-    "NIKKEI225": "Nikkei 225", "HANGSENG": "Hang Seng", "EUROSTOXX50": "Euro Stoxx 50",
+    "NIKKEI225": "Nikkei 225", "HANGSENG": "Hang Seng", "EUROSTOXX50": "Euro Stoxx 50", "SBF120": "SBF 120",
 }
 
 # Devise native de chaque indice — CAC40/DAX publient en euros, le
@@ -1035,7 +1162,7 @@ INDEX_NAMES = {
 INDEX_CURRENCY = {
     "CAC40": "EUR", "DAX": "EUR", "NASDAQ": "USD", "DOW": "USD",
     "FTSE": "GBP", "SMI": "CHF", "IBEX35": "EUR", "FTSEMIB": "EUR",
-    "NIKKEI225": "JPY", "HANGSENG": "HKD", "EUROSTOXX50": "EUR",
+    "NIKKEI225": "JPY", "HANGSENG": "HKD", "EUROSTOXX50": "EUR", "SBF120": "EUR",
 }
 
 # Même mapping que CURRENCY_SYMBOL côté frontend (docs/index.html) — pour
@@ -3476,7 +3603,7 @@ def update_price_history(new_entries: list[dict], path=PRICE_HISTORY_PATH, today
 INDEX_YFINANCE_TICKERS = {
     "CAC40": "^FCHI", "DAX": "^GDAXI", "NASDAQ": "^NDX", "DOW": "^DJI",
     "FTSE": "^FTSE", "SMI": "^SSMI", "IBEX35": "^IBEX", "FTSEMIB": "FTSEMIB.MI",
-    "NIKKEI225": "^N225", "HANGSENG": "^HSI", "EUROSTOXX50": "^STOXX50E",
+    "NIKKEI225": "^N225", "HANGSENG": "^HSI", "EUROSTOXX50": "^STOXX50E", "SBF120": "^SBF120",
 }
 SIGNAL_STOP_LOSS_PCT = -20.0     # % perte déclenchant une clôture anticipée
 SIGNAL_SHADOW_DELAY_MONTHS = 6   # délai max avant clôture forcée du signal
@@ -3715,7 +3842,7 @@ def _resolve_pending_shadow_benchmarks(
 
 # Indices scorés mais jamais suivis en paper-trading : leurs signaux
 # n'entrent ni dans le bilan ni dans le périmètre du bot (voir ibkr_bot/signals.py).
-INDICES_HORS_SUIVI_PAPIER = {"EUROSTOXX50"}
+INDICES_HORS_SUIVI_PAPIER = {"EUROSTOXX50", "SBF120"}
 
 
 def update_signal_tracking(companies: list[dict], newly_triggered_entree: list[dict]) -> list[dict]:

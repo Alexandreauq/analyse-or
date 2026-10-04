@@ -1,6 +1,6 @@
 {
-  "date": "2026-10-03",
-  "composite_score": -28.9,
+  "date": "2026-10-04",
+  "composite_score": -30.9,
   "interpretation": "Défavorable — pas d'entrée même sur signal technique",
   "cftc_percentile": 55.769230769230774,
   "factors": [
@@ -18,9 +18,9 @@
     },
     {
       "name": "Anticipations d'inflation",
-      "score": 2.0000000000000018,
+      "score": 0.6666666666666674,
       "weight": 0.15,
-      "raw_value": "2.36% (il y a ~45j : 2.30%)"
+      "raw_value": "2.36% (il y a ~45j : 2.34%)"
     },
     {
       "name": "Ton de la Fed",
@@ -96,10 +96,10 @@
   ],
   "alerts": [
     {
-      "kind": "risque",
-      "title": "Chute rapide du score composite",
-      "detail": "Repricing de -20.2 points en moins de 5 jours.",
-      "date": "03/10/2026"
+      "kind": "info",
+      "title": "Pas de signal actif",
+      "detail": "Aucune des conditions de veille, d'entrée ou de risque n'est réunie aujourd'hui.",
+      "date": "04/10/2026"
     }
   ]
 }

@@ -59,7 +59,7 @@ CAC40_COMPANIES = [
     # vérifiés individuellement — plusieurs diffèrent du mnémonique
     # Euronext naïf + suffixe .PA, ex : STMicroelectronics/Stellantis).
     {"ticker": "AIR.PA", "name": "Airbus"},
-    {"ticker": "MT.PA", "name": "ArcelorMittal", "also_indices": ["IBEX35"]},
+    {"ticker": "MT.AS", "name": "ArcelorMittal", "also_indices": ["IBEX35"]},
     {"ticker": "OR.PA", "name": "L'Oréal"},
     {"ticker": "DG.PA", "name": "Vinci"},
     {"ticker": "RMS.PA", "name": "Hermès International"},
@@ -1066,7 +1066,7 @@ SECTOR_ADJUSTMENT = {"defensif": 1.3, "standard": 1.0, "cyclique": 0.7}
 # SECTOR_PROFILES, une vraie absence de donnée à la source. Complété au
 # fil des cas rencontrés en production, pas une liste exhaustive à priori.
 SECTOR_OVERRIDE_BY_TICKER = {
-    "MT.PA": "Basic Materials",  # ArcelorMittal (sidérurgie, cyclique)
+    "MT.AS": "Basic Materials",  # ArcelorMittal (sidérurgie, cyclique)
 }
 
 # Alias yfinance pour la récupération du cours (history()) uniquement —

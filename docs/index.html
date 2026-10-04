@@ -276,9 +276,9 @@
   .home {
     z-index: 1;
     overflow: hidden; text-align: center;
-    background:
-      radial-gradient(ellipse 600px 420px at 15% -5%, rgba(185,154,104,.14), transparent 60%),
-      radial-gradient(ellipse 500px 420px at 105% 105%, rgba(163,95,69,.08), transparent 60%);
+    /* Fond plat, même couleur que la marge mobile (voir border plus haut) :
+       des dégradés ici faisaient apparaître un cadre sur téléphone. */
+    background: var(--bg);
   }
   .home-hero { position: absolute; top: 48px; left: 0; right: 0; display: flex; justify-content: center; }
   .home-wordmark {

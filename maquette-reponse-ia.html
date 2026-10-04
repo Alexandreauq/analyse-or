@@ -1,0 +1,133 @@
+<title>Réponse IA animée</title>
+<style>
+  /* Valeurs reprises du site : fond #0a0e1a/#0f1524, texte #e8ecf5, gris #9aa6c4 */
+  :root {
+    color-scheme: dark;
+    --bg-0: #0a0e1a; --bg-1: #0f1524; --bg-2: #161d30;
+    --text: #e8ecf5; --muted: #9aa6c4; --accent: #d4af37;
+    --radius-md: 12px; --radius-lg: 16px; --radius-pill: 999px;
+    --ease: cubic-bezier(0.22, 1, 0.36, 1);
+    --speed: 16ms; /* délai par caractère : à modifier pour accélérer ou ralentir */
+  }
+  body {
+    margin: 0; min-height: 100%; background: var(--bg-1); color: var(--text);
+    font-family: Inter, system-ui, sans-serif;
+  }
+  .page { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 40px 16px; box-sizing: border-box; }
+  .bubble {
+    width: min(720px, 100%); box-sizing: border-box;
+    background: var(--bg-2); border: 1px solid rgba(255,255,255,0.06);
+    border-radius: var(--radius-lg); padding: 22px 26px;
+  }
+  .text {
+    max-height: 50vh; overflow-y: auto;
+    font-size: 16px; line-height: 1.7; color: var(--text); white-space: pre-wrap; margin: 0;
+    /* Scrollbar : mêmes couleurs, largeur et thumb arrondi que le reste du site */
+    scrollbar-width: thin; scrollbar-color: var(--muted) transparent;
+  }
+  .text::-webkit-scrollbar { width: 12px; }
+  .text::-webkit-scrollbar-track { background: transparent; }
+  .text::-webkit-scrollbar-thumb {
+    background: var(--muted); border-radius: var(--radius-pill);
+    border: 3px solid transparent; background-clip: padding-box;
+  }
+  .text::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+  .caret {
+    display: inline-block; width: 2px; height: 1em; margin-left: 2px; vertical-align: -0.15em;
+    background: var(--accent); animation: blink 1s steps(1) infinite;
+  }
+  .caret.off { display: none; }
+  @keyframes blink { 50% { opacity: 0; } }
+  .links { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; opacity: 0; transform: translateY(6px); transition: opacity .5s var(--ease), transform .5s var(--ease); }
+  .links.show { opacity: 1; transform: translateY(0); }
+  .link {
+    padding: 8px 14px; border-radius: 18px; font-size: 13px;
+    background: rgba(212,175,55,0.1); border: 1px solid rgba(212,175,55,0.35); color: var(--accent); cursor: pointer;
+  }
+  .controls { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); display: flex; gap: 10px; }
+  .controls button {
+    font-size: 13px; color: var(--muted); background: none; border: 1px dashed rgba(255,255,255,0.15);
+    border-radius: 10px; padding: 8px 14px; cursor: pointer;
+  }
+  @media (prefers-reduced-motion: reduce) { .caret { animation: none; } }
+</style>
+
+<div class="page">
+  <div class="bubble">
+    <p class="text" id="text"><span id="shown"></span><span class="caret" id="caret"></span></p>
+    <div class="links" id="links">
+      <button class="link">Voir Safran</button>
+      <button class="link">Voir Airbus</button>
+    </div>
+  </div>
+</div>
+
+<div class="controls">
+  <button id="replay">Rejouer</button>
+</div>
+
+<script>
+  // Texte d'exemple, découpé comme le ferait le flux du serveur (morceaux de taille variable)
+  const CHUNKS = [
+    "Safran devance Airbus de 5,5 points de score brut. ",
+    "L'écart vient surtout de la rentabilité : ",
+    "le ROCE de Safran est de 55 % contre 24 % pour Airbus.\n\n",
+    "La dette nette est aussi plus faible chez Safran, ",
+    "ce qui pèse sur la note d'Airbus pour la solidité financière."
+  ];
+  const SPEED = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--speed')) || 16;
+
+  const shown = document.getElementById('shown');
+  const caret = document.getElementById('caret');
+  const links = document.getElementById('links');
+  const text = document.getElementById('text');
+  let target = '';      // texte reçu jusqu'ici
+  let pos = 0;          // nombre de caractères affichés
+  let timer = null;
+
+  function step() {
+    if (pos < target.length) {
+      // Accélère si on est loin derrière le flux, pour ne pas prendre de retard
+      const behind = target.length - pos;
+      const n = behind > 120 ? 4 : behind > 40 ? 2 : 1;
+      pos = Math.min(target.length, pos + n);
+      shown.textContent = target.slice(0, pos);
+      text.scrollTop = text.scrollHeight;
+      timer = setTimeout(step, SPEED);
+    } else {
+      timer = null;
+    }
+  }
+
+  function push(chunk) {
+    target += chunk;
+    if (!timer) step();
+  }
+
+  function play() {
+    clearTimeout(timer); timer = null;
+    target = ''; pos = 0; shown.textContent = '';
+    links.classList.remove('show');
+    caret.classList.remove('off');
+    let i = 0;
+    const feed = () => {
+      if (i < CHUNKS.length) {
+        push(CHUNKS[i++]);
+        setTimeout(feed, 350 + Math.random() * 300); // le flux arrive par morceaux
+      } else {
+        // Fin du flux : on laisse finir l'écriture, puis on affiche les liens
+        const wait = () => {
+          if (pos >= target.length) {
+            caret.classList.add('off');
+            links.classList.add('show');
+          } else setTimeout(wait, 60);
+        };
+        wait();
+      }
+    };
+    feed();
+  }
+
+  document.getElementById('replay').addEventListener('click', play);
+  play();
+</script>

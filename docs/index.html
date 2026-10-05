@@ -326,6 +326,22 @@
     animation: home-mic-pulse 1.4s ease-in-out infinite;
   }
   .home-mic[hidden] { display: none; }
+  /* Historique des conversations (stocké dans le navigateur de l'utilisateur). */
+  .home-history-btn { position: absolute; left: 16px; bottom: 16px; z-index: 3; }
+  .home-history-panel {
+    position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+    width: min(640px, calc(100% - 32px)); max-height: 70vh; overflow-y: auto;
+    background: var(--bg-2); border: 1px solid var(--border); border-radius: 16px;
+    padding: 18px; z-index: 7; text-align: left; box-shadow: 0 16px 40px rgba(0,0,0,.4);
+  }
+  .home-history-panel[hidden] { display: none; }
+  .home-history-panel .home-history-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 10px; }
+  .home-history-item {
+    display: block; width: 100%; text-align: left; background: transparent; color: var(--text);
+    border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px; margin-top: 8px; cursor: pointer;
+  }
+  .home-history-item:hover { background: var(--bg-3); }
+  .home-history-item small { display: block; color: var(--muted); font-size: 12px; margin-bottom: 2px; }
   @keyframes home-mic-pulse { 50% { box-shadow: 0 0 0 6px rgba(42,91,255,.12); } }
   @media (prefers-reduced-motion: reduce) { .home-mic[aria-pressed="true"] { animation: none; } }
   .home-level {
@@ -1516,6 +1532,17 @@
       </div>
     </div>
     <div id="homeSearchPanel" class="home-search-panel" hidden></div>
+    <button type="button" id="homeHistoryButton" class="toggle-btn home-history-btn">Historique</button>
+    <div id="homeHistoryPanel" class="home-history-panel" hidden>
+      <div class="home-history-head">
+        <strong>Historique</strong>
+        <div>
+          <button type="button" class="toggle-btn" id="homeHistoryClear">Tout effacer</button>
+          <button type="button" class="toggle-btn" id="homeHistoryClose">Fermer</button>
+        </div>
+      </div>
+      <div id="homeHistoryList"></div>
+    </div>
   </div>
 </div>
 
@@ -3858,6 +3885,7 @@ async function askAssistant(question) {
     if (!erreurRecue) {
       homeSearchHistory.push({ role: 'user', content: question });
       homeSearchHistory.push({ role: 'assistant', content: texteAccumule });
+      saveAssistantExchange(question, texteAccumule);
     }
   } catch (e) {
     afficherReponse(
@@ -3923,9 +3951,79 @@ function wireVoiceSearch(input) {
   });
 }
 
+// Historique des conversations : stocké localement (localStorage), jamais envoyé
+// au serveur. Limité aux 30 dernières questions. Toute erreur de stockage est
+// ignorée : l'assistant fonctionne sans historique.
+const HISTORY_STORAGE_KEY = 'analyse-or-assistant-history';
+const HISTORY_MAX = 30;
+
+function loadAssistantHistory() {
+  try {
+    const brut = JSON.parse(localStorage.getItem(HISTORY_STORAGE_KEY) || '[]');
+    return Array.isArray(brut) ? brut : [];
+  } catch (e) { return []; }
+}
+
+function saveAssistantExchange(question, reponse) {
+  if (!question || !reponse) return;
+  const historique = loadAssistantHistory();
+  historique.unshift({ date: new Date().toISOString(), question, reponse });
+  try {
+    localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(historique.slice(0, HISTORY_MAX)));
+  } catch (e) { /* stockage plein ou bloqué : pas d'historique */ }
+}
+
+function renderAssistantHistory() {
+  const liste = document.getElementById('homeHistoryList');
+  const historique = loadAssistantHistory();
+  if (!historique.length) {
+    liste.innerHTML = '<p class="muted">Aucune conversation enregistrée sur cet appareil.</p>';
+    return;
+  }
+  liste.innerHTML = historique.map((e, i) => {
+    const date = new Date(e.date).toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' });
+    return `<button type="button" class="home-history-item" data-index="${i}">
+      <small>${escHtml(date)}</small>${escHtml(e.question)}</button>`;
+  }).join('');
+}
+
+// Rouvre une conversation enregistrée dans le panneau de réponse (sans appel réseau).
+function reopenAssistantExchange(index) {
+  const entree = loadAssistantHistory()[index];
+  if (!entree) return;
+  const panel = document.getElementById('homeSearchPanel');
+  if (typerCourant) typerCourant.annuler();
+  typerCourant = null;
+  panel.innerHTML = '';
+  panel.hidden = false;
+  setHomeState('answered');
+  createAnswerTyper(panel, true).fixer(entree.reponse, []);
+  document.getElementById('homeHistoryPanel').hidden = true;
+}
+
+function wireAssistantHistory() {
+  const bouton = document.getElementById('homeHistoryButton');
+  const panneau = document.getElementById('homeHistoryPanel');
+  if (!bouton || !panneau) return;
+  bouton.addEventListener('click', () => {
+    renderAssistantHistory();
+    panneau.hidden = !panneau.hidden;
+  });
+  document.getElementById('homeHistoryClose').addEventListener('click', () => { panneau.hidden = true; });
+  document.getElementById('homeHistoryClear').addEventListener('click', () => {
+    try { localStorage.removeItem(HISTORY_STORAGE_KEY); } catch (e) { /* ignoré */ }
+    renderAssistantHistory();
+  });
+  document.getElementById('homeHistoryList').addEventListener('click', (ev) => {
+    const item = ev.target.closest('.home-history-item');
+    if (item) reopenAssistantExchange(Number(item.dataset.index));
+  });
+}
+
 function wireHomeSearch() {
   const input = document.getElementById('homeSearchInput');
   if (!input) return;
+  wireAssistantHistory();
   wireVoiceSearch(input);
   document.querySelectorAll('.home-level button').forEach(b => {
     b.addEventListener('click', () => setNiveauReponse(b.dataset.niveau));

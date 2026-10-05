@@ -3265,6 +3265,7 @@ const INDEX_TV_SYMBOL_BY_KEY = {
   EUROSTOXX50: 'VANTAGE:EU50',
   SBF120: 'EURONEXT:SBF120',
   AEXALL: 'EURONEXT:AEX',
+  SP500: 'SP:SPX',
 };
 
 // Repli sans widget : affiche juste le niveau du jour de l'indice (voir
@@ -4026,6 +4027,7 @@ const INDEX_COUNTRY_BY_KEY = {
   EUROSTOXX50: 'Zone euro',
   SBF120: 'France',
   AEXALL: 'Pays-Bas',
+  SP500: 'États-Unis',
 };
 
 // Code court par indice, pour les badges (fiche entreprise, liste) — DJ
@@ -4055,6 +4057,7 @@ const INDEX_CURRENCY_BY_KEY = {
   EUROSTOXX50: 'EUR',
   SBF120: 'EUR',
   AEXALL: 'EUR',
+  SP500: 'USD',
 };
 
 // Symbole affiché par devise — un nouvel indice dans une devise pas
@@ -4690,7 +4693,7 @@ function positionCurrentPrice(p, companiesByTicker) {
 // indices_score.py) mais ne représentent jamais une décision que le bot
 // réel aurait pu prendre — à garder en phase avec INDICES_IN_SCOPE si
 // son périmètre change côté Python (audit 2026-09-21, point 4).
-const SIGNAL_TRACKING_OUT_OF_SCOPE_INDICES = new Set(['NIKKEI225', 'HANGSENG', 'EUROSTOXX50', 'SBF120', 'AEXALL']);
+const SIGNAL_TRACKING_OUT_OF_SCOPE_INDICES = new Set(['NIKKEI225', 'HANGSENG', 'EUROSTOXX50', 'SBF120', 'AEXALL', 'SP500']);
 
 // Bloc de statistiques (positions clôturées/en cours, taux de réussite,
 // rendement moyen, alpha moyen) pour un sous-ensemble de positions —

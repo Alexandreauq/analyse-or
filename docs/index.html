@@ -311,7 +311,7 @@
     box-shadow: 0 0 0 6px rgba(42,91,255,.1), 0 0 60px rgba(42,91,255,.2);
   }
   /* Niveau de réponse : sélecteur Technique / Grand public à l'intérieur de la barre. */
-  #homeSearchInput { padding-right: 260px; padding-left: 72px; }
+  #homeSearchInput { padding-right: 260px; padding-left: 120px; }
   /* Recherche vocale : bouton micro à gauche de la barre (voir wireHomeSearch). */
   .home-mic {
     position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
@@ -327,7 +327,8 @@
   }
   .home-mic[hidden] { display: none; }
   /* Historique des conversations (stocké dans le navigateur de l'utilisateur). */
-  .home-history-btn { position: absolute; left: 16px; bottom: 16px; z-index: 3; }
+  /* Bouton Historique dans la barre, à côté du micro (voir la maquette à 3 emplacements). */
+  .home-history-in { left: 66px; }
   .home-history-panel {
     position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
     width: min(640px, calc(100% - 32px)); max-height: 70vh; overflow-y: auto;
@@ -360,7 +361,8 @@
   /* Téléphone : barre à sa taille normale, sélecteur posé juste en dessous
      (hors de la barre) pour que le message de bienvenue reste lisible. */
   @media (max-width: 600px) {
-    #homeSearchInput { height: 72px; padding: 0 22px 0 62px; font-size: 16px; }
+    #homeSearchInput { height: 72px; padding: 0 62px; font-size: 15px; }
+    .home-history-in { left: auto; right: 14px; transform: translateY(-50%); }
     .home-mic { left: 12px; width: 40px; height: 40px; }
     .home-level {
       right: auto; top: 100%; bottom: auto; left: 50%;
@@ -1518,6 +1520,13 @@
     <div class="home-search">
       <input type="search" id="homeSearchInput" class="list-search"
              placeholder="Que puis-je faire pour vous ?">
+      <button type="button" id="homeHistoryInBar" class="home-mic home-history-in"
+              aria-label="Historique des conversations" title="Historique des conversations">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/>
+        </svg>
+      </button>
       <button type="button" id="homeMicButton" class="home-mic" aria-pressed="false"
               aria-label="Dicter la question" title="Dicter la question" hidden>
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -1532,7 +1541,6 @@
       </div>
     </div>
     <div id="homeSearchPanel" class="home-search-panel" hidden></div>
-    <button type="button" id="homeHistoryButton" class="toggle-btn home-history-btn">Historique</button>
     <div id="homeHistoryPanel" class="home-history-panel" hidden>
       <div class="home-history-head">
         <strong>Historique</strong>
@@ -4002,7 +4010,7 @@ function reopenAssistantExchange(index) {
 }
 
 function wireAssistantHistory() {
-  const bouton = document.getElementById('homeHistoryButton');
+  const bouton = document.getElementById('homeHistoryInBar');
   const panneau = document.getElementById('homeHistoryPanel');
   if (!bouton || !panneau) return;
   bouton.addEventListener('click', () => {

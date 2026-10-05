@@ -311,7 +311,23 @@
     box-shadow: 0 0 0 6px rgba(42,91,255,.1), 0 0 60px rgba(42,91,255,.2);
   }
   /* Niveau de réponse : sélecteur Technique / Grand public à l'intérieur de la barre. */
-  #homeSearchInput { padding-right: 260px; }
+  #homeSearchInput { padding-right: 260px; padding-left: 72px; }
+  /* Recherche vocale : bouton micro à gauche de la barre (voir wireHomeSearch). */
+  .home-mic {
+    position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+    width: 44px; height: 44px; border-radius: 50%; padding: 0;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: transparent; border: 1px solid var(--border); color: var(--muted);
+    cursor: pointer; transition: background .3s var(--ease), color .3s var(--ease), border-color .3s var(--ease);
+  }
+  .home-mic:hover { color: var(--text); }
+  .home-mic[aria-pressed="true"] {
+    background: rgba(42,91,255,.22); border-color: rgba(42,91,255,.5); color: var(--text);
+    animation: home-mic-pulse 1.4s ease-in-out infinite;
+  }
+  .home-mic[hidden] { display: none; }
+  @keyframes home-mic-pulse { 50% { box-shadow: 0 0 0 6px rgba(42,91,255,.12); } }
+  @media (prefers-reduced-motion: reduce) { .home-mic[aria-pressed="true"] { animation: none; } }
   .home-level {
     position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
     display: inline-flex; padding: 3px; border-radius: 999px;
@@ -328,7 +344,8 @@
   /* Téléphone : barre à sa taille normale, sélecteur posé juste en dessous
      (hors de la barre) pour que le message de bienvenue reste lisible. */
   @media (max-width: 600px) {
-    #homeSearchInput { height: 72px; padding: 0 22px; font-size: 16px; }
+    #homeSearchInput { height: 72px; padding: 0 22px 0 62px; font-size: 16px; }
+    .home-mic { left: 12px; width: 40px; height: 40px; }
     .home-level {
       right: auto; top: 100%; bottom: auto; left: 50%;
       transform: translateX(-50%); margin-top: 12px;
@@ -1485,6 +1502,14 @@
     <div class="home-search">
       <input type="search" id="homeSearchInput" class="list-search"
              placeholder="Que puis-je faire pour vous ?">
+      <button type="button" id="homeMicButton" class="home-mic" aria-pressed="false"
+              aria-label="Dicter la question" title="Dicter la question" hidden>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/>
+          <line x1="12" y1="18" x2="12" y2="21"/>
+        </svg>
+      </button>
       <div class="home-level" role="group" aria-label="Niveau de réponse">
         <button type="button" data-niveau="technique">Technique</button>
         <button type="button" data-niveau="grand_public">Grand public</button>
@@ -3860,9 +3885,48 @@ function setNiveauReponse(niveau) {
   });
 }
 
+// Recherche vocale : reconnaissance du navigateur (Chrome, Edge, Safari). Le
+// texte entendu remplit la barre ; l'envoi reste manuel (Entrée), pour qu'une
+// mauvaise transcription ne parte jamais seule vers l'assistant.
+function wireVoiceSearch(input) {
+  const micro = document.getElementById('homeMicButton');
+  const Reconnaissance = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!micro) return;
+  if (!Reconnaissance) return; // navigateur sans reconnaissance vocale : bouton masqué
+  const reco = new Reconnaissance();
+  reco.lang = 'fr-FR';
+  reco.interimResults = true;
+  reco.continuous = false;
+  reco.maxAlternatives = 1;
+  let base = '';
+  reco.onstart = () => {
+    base = input.value ? input.value.trim() + ' ' : '';
+    micro.setAttribute('aria-pressed', 'true');
+  };
+  reco.onresult = (e) => {
+    let texte = '';
+    for (const r of e.results) texte += r[0].transcript;
+    input.value = (base + texte).trim();
+  };
+  reco.onend = () => {
+    micro.setAttribute('aria-pressed', 'false');
+    input.focus();
+  };
+  reco.onerror = () => micro.setAttribute('aria-pressed', 'false');
+  micro.hidden = false;
+  micro.addEventListener('click', () => {
+    try {
+      if (micro.getAttribute('aria-pressed') === 'true') reco.stop(); else reco.start();
+    } catch (e) {
+      micro.setAttribute('aria-pressed', 'false');
+    }
+  });
+}
+
 function wireHomeSearch() {
   const input = document.getElementById('homeSearchInput');
   if (!input) return;
+  wireVoiceSearch(input);
   document.querySelectorAll('.home-level button').forEach(b => {
     b.addEventListener('click', () => setNiveauReponse(b.dataset.niveau));
   });

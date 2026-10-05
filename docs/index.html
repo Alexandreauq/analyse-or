@@ -379,39 +379,14 @@
   /* Orbe en verre affiché pendant la réflexion : translucide, flou, lueur
      bleue intérieure, respiration de la lumière et légère flottaison. Pas
      d'anneaux en orbite. */
-  .home-orb {
-    position: absolute; left: 50%; top: 50%; width: 150px; height: 150px;
-    margin: -75px 0 0 -75px; border-radius: 50%; pointer-events: none;
-    transform: scale(.2); opacity: 0;
-    transition: transform .8s var(--ease), opacity .5s var(--ease);
-    background: rgba(120,160,255,.10);
-    backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
-    border: 1px solid rgba(255,255,255,.22);
-    box-shadow:
-      inset 0 0 40px rgba(42,91,255,.55),
-      inset 0 -14px 28px rgba(7,13,51,.5),
-      0 24px 50px rgba(0,0,0,.5),
-      0 0 60px rgba(42,91,255,.35);
-    animation: home-orb-float 4s ease-in-out infinite;
+  /* Sphère de particules affichée pendant la réflexion (voir startHomeParticles). */
+  .home-particles {
+    position: absolute; left: 50%; top: 50%; width: 340px; height: 340px;
+    margin: -170px 0 0 -170px; pointer-events: none;
+    opacity: 0; transform: scale(.4);
+    transition: opacity .5s var(--ease), transform .8s var(--ease);
   }
-  .home.thinking .home-orb { transform: scale(1); opacity: 1; }
-  .home-orb-light {
-    position: absolute; left: 50%; top: 50%; width: 70px; height: 70px;
-    margin: -35px 0 0 -35px; border-radius: 50%;
-    background: radial-gradient(circle, #b8ccff, #2a5bff 55%, transparent 75%);
-    filter: blur(8px);
-    animation: home-orb-breathe 2.6s ease-in-out infinite;
-  }
-  .home-orb-shine {
-    position: absolute; top: 16px; left: 26px; width: 50px; height: 26px; border-radius: 50%;
-    background: radial-gradient(ellipse, rgba(255,255,255,.85), transparent 70%);
-    transform: rotate(-28deg);
-  }
-  @keyframes home-orb-float { 0%, 100% { translate: 0 0; } 50% { translate: 0 -8px; } }
-  @keyframes home-orb-breathe { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.12); } }
-  @media (prefers-reduced-motion: reduce) {
-    .home-orb, .home-orb-light { animation: none; }
-  }
+  .home.thinking .home-particles { opacity: 1; transform: scale(1); }
 
   /* Réponses : au-dessus du centre de l'écran, invisibles hors état answered. */
   .home-search-panel {
@@ -1513,10 +1488,7 @@
     <p class="home-tagline">Bienvenue dans AI Investment, l'outil qui décrypte les marchés : scores des entreprises, suivi de vos bots et de votre portefeuille.</p>
   </div>
   <div class="home-stage">
-    <div class="home-orb" aria-hidden="true">
-      <div class="home-orb-light"></div>
-      <div class="home-orb-shine"></div>
-    </div>
+    <canvas id="homeParticles" class="home-particles" aria-hidden="true"></canvas>
     <div class="home-search">
       <input type="search" id="homeSearchInput" class="list-search"
              placeholder="Que puis-je faire pour vous ?">
@@ -3782,8 +3754,65 @@ function wireHomeSearchLinkButtons(elementOrPanel) {
 // Etats de l'accueil, portes par des classes sur #home (voir CSS .home.thinking
 // / .home.answered) : repos = barre centree (aucune classe), thinking = barre
 // effacee + orbe, answered = barre en bas + reponse au centre.
+// Sphère de particules teal (maquette « Sphère 3D », version d'origine). Ne
+// tourne que pendant la réflexion, et s'arrête à la fin pour économiser le
+// téléphone. Mouvement figé si l'utilisateur a demandé moins d'animations.
+const PARTICULES_TEAL = [45, 212, 191];
+let particulesFrame = null;
+
+function startHomeParticles() {
+  const cv = document.getElementById('homeParticles');
+  if (!cv || particulesFrame !== null) return;
+  const ctx = cv.getContext('2d');
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  cv.width = 340 * dpr; cv.height = 340 * dpr;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const n = window.innerWidth < 600 ? 700 : 1100;
+  const points = Array.from({ length: n }, () => ({
+    a: Math.random() * Math.PI * 2,
+    b: Math.random() * Math.PI - Math.PI / 2,
+    jit: Math.random() - 0.5,
+    taille: 0.6 + Math.random() * 1.3,
+    phase: Math.random() * Math.PI * 2,
+  }));
+  const bruit = (x) => Math.sin(x) * 0.6 + Math.sin(x * 2.3 + 1.7) * 0.3 + Math.sin(x * 4.1 + 0.4) * 0.1;
+  const reduit = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const debut = performance.now();
+  const rgb = PARTICULES_TEAL.join(',');
+
+  function dessine(now) {
+    const t = reduit ? 0 : (now - debut) / 1000;
+    const cx = 170, cy = 170;
+    const R = 130 * (1 + 0.035 * Math.sin(t * 0.9));
+    const tps = t * 0.35;
+    const rot = t * 0.25;
+    ctx.clearRect(0, 0, 340, 340);
+    for (const p of points) {
+      const onde = 1 + 0.1 * bruit(p.a * 3 + tps) + 0.04 * Math.sin(p.phase + t * 1.3);
+      const r = R * onde * (1 + 0.05 * p.jit);
+      const x3 = r * Math.cos(p.b) * Math.cos(p.a + rot);
+      const y3 = r * Math.sin(p.b);
+      const z3 = r * Math.cos(p.b) * Math.sin(p.a + rot);
+      const persp = 1 / (1 - z3 / (R * 3.2));
+      const alpha = Math.max(0.08, Math.min(1, 0.35 + 0.55 * (z3 / (R * 1.4) + 0.5)));
+      ctx.fillStyle = `rgba(${rgb},${alpha})`;
+      const sz = p.taille * persp;
+      ctx.fillRect(cx + x3 * persp - sz / 2, cy + y3 * persp - sz / 2, sz, sz);
+    }
+    if (reduit) { particulesFrame = -1; return; }
+    particulesFrame = requestAnimationFrame(dessine);
+  }
+  particulesFrame = requestAnimationFrame(dessine);
+}
+
+function stopHomeParticles() {
+  if (particulesFrame !== null && particulesFrame !== -1) cancelAnimationFrame(particulesFrame);
+  particulesFrame = null;
+}
+
 function setHomeState(etat) {
   const home = document.getElementById('home');
+  if (etat === 'thinking') startHomeParticles(); else stopHomeParticles();
   home.classList.toggle('thinking', etat === 'thinking');
   home.classList.toggle('answered', etat === 'answered');
   // Pendant la réflexion la barre est invisible : on retire le focus pour que

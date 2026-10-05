@@ -49,7 +49,7 @@ TOOL_DEFINITIONS = [
                     "description": "Valeur exacte de l'indice, ex. CAC40, NASDAQ",
                     "enum": [
                         "CAC40", "DAX", "DOW", "FTSE", "FTSEMIB",
-                        "EUROSTOXX50", "HANGSENG", "IBEX35", "NASDAQ", "NIKKEI225", "SBF120", "AEXALL", "SMI",
+                        "EUROSTOXX50", "HANGSENG", "IBEX35", "NASDAQ", "NIKKEI225", "SBF120", "AEXALL", "SP500", "SMI",
                     ],
                 },
                 "secteur": {

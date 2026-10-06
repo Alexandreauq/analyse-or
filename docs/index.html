@@ -3596,6 +3596,18 @@ function matchInstantNav(query) {
 }
 
 let homeSearchHistory = [];
+let requeteCourante = null;
+
+// Retour à l'écran principal : on annule la réponse en cours, on efface la
+// réponse affichée et la barre revient au centre, quel que soit l'état.
+function revientAccueil() {
+  answerGeneration++;
+  if (requeteCourante) { requeteCourante.abort(); requeteCourante = null; }
+  if (typerCourant) { typerCourant.annuler(); typerCourant = null; }
+  const panel = document.getElementById('homeSearchPanel');
+  if (panel) { panel.innerHTML = ''; panel.hidden = true; }
+  setHomeState(null);
+}
 
 function homeSearchLinksHtml(liens) {
   return (liens || []).map(l => `
@@ -3883,9 +3895,12 @@ async function askAssistant(question) {
     assurerBulle().fixer(texte, liens);
   };
 
+  const requete = new AbortController();
+  requeteCourante = requete;
   try {
     const response = await fetch('https://goldbot.fr:8445/ask', {
       method: 'POST',
+      signal: requete.signal,
       headers: { 'Content-Type': 'application/json', 'X-Bot-Token': token },
       body: JSON.stringify({
         question, history: homeSearchHistory, manual_positions: positionsManuelles,
@@ -3950,6 +3965,7 @@ async function askAssistant(question) {
       saveAssistantExchange(question, texteAccumule);
     }
   } catch (e) {
+    if (estDepassee()) return; // annulée par un retour à l'accueil
     afficherReponse(
       "Je n'ai pas pu contacter l'assistant, reessaie dans un instant.", []);
   }
@@ -4084,6 +4100,8 @@ function wireAssistantHistory() {
 
 function wireHomeSearch() {
   const input = document.getElementById('homeSearchInput');
+  const logo = document.querySelector('.top-bar-wordmark');
+  if (logo) logo.addEventListener('click', () => revientAccueil());
   if (!input) return;
   wireAssistantHistory();
   wireVoiceSearch(input);

@@ -126,7 +126,7 @@ def test_score_croissance_strong_aligned_growth():
     result = score_croissance(cagr_ca=12.0, cagr_ebitda=12.0)
     assert result.name == "Croissance"
     assert result.weight == 0.16
-    assert result.score == 10.0  # moyenne 12% / échelle 10% -> plafonné à +10
+    assert result.score == 6.0  # moyenne 12% / échelle 20% -> +6
 
 
 def test_score_croissance_raw_value_does_not_claim_a_fixed_year_count():
@@ -147,7 +147,7 @@ def test_score_croissance_no_growth_is_neutral():
 
 def test_score_croissance_decline_is_negative():
     result = score_croissance(cagr_ca=-10.0, cagr_ebitda=-10.0)
-    assert result.score == -10.0
+    assert result.score == -5.0  # moyenne -10% / échelle 20% -> -5
 
 
 def test_score_croissance_penalizes_ebitda_divergence():

@@ -70,10 +70,11 @@
     derniere = now;
     const t = reduit ? 0 : (now - debut) / 1000;
     const parle = bulle.dataset.parle === '1';
-    const amp = parle ? 1.7 : 1;
+    const reflechit = bulle.dataset.reflechit === '1';
+    const amp = parle ? 1.7 : (reflechit ? 1.25 : 1);
     const cx = taille / 2, cy = taille / 2;
     const R = 34 * (1 + 0.035 * Math.sin(t * 0.9));
-    const tps = t * 0.35 * (parle ? 2 : 1);
+    const tps = t * 0.35 * (parle ? 2 : (reflechit ? 1.6 : 1));
     const rot = t * 0.25;
     ctx.clearRect(0, 0, taille, taille);
     for (const p of points) {
@@ -224,7 +225,15 @@
     if (!token) { ajouteMessage('Saisis d\'abord ton jeton d\'accès dans la barre d\'accueil.', 'ab-erreur'); return; }
     enCours = true;
     ajouteMessage(question, 'ab-question');
-    const reponse = ajouteMessage('…');
+    const reponse = ajouteMessage('Je réfléchis');
+    // Pendant la réflexion : la bulle s'agite et le message affiche des points qui avancent.
+    let points = 0;
+    let minuterie = setInterval(() => { points = (points % 3) + 1; reponse.textContent = 'Je réfléchis' + '.'.repeat(points); }, 400);
+    bulle.dataset.reflechit = '1';
+    const arreteReflexion = () => {
+      if (minuterie) { clearInterval(minuterie); minuterie = null; }
+      bulle.dataset.reflechit = '0';
+    };
     let texte = '';
     let navigation = null;
     let erreur = false;
@@ -254,7 +263,7 @@
           const ligne = bloc.split('\n').find((l) => l.indexOf('data: ') === 0);
           if (!ligne) continue;
           const ev = JSON.parse(ligne.slice(6));
-          if (ev.type === 'texte') { texte += ev.texte; reponse.textContent = texte; messages.scrollTop = messages.scrollHeight; }
+          if (ev.type === 'texte') { arreteReflexion(); texte += ev.texte; reponse.textContent = texte; messages.scrollTop = messages.scrollHeight; }
           else if (ev.type === 'liens') ajouteLiens(ev.liens);
           else if (ev.type === 'navigation') navigation = ev;
           else if (ev.type === 'erreur') { erreur = true; reponse.textContent = ev.detail || 'Erreur.'; reponse.classList.add('ab-erreur'); }
@@ -265,6 +274,7 @@
       reponse.textContent = (e && e.message) ? e.message : "Je n'ai pas pu contacter l'assistant, réessaie dans un instant.";
       reponse.classList.add('ab-erreur');
     } finally {
+      arreteReflexion();
       enCours = false;
     }
     if (!erreur && texte) {

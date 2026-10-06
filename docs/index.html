@@ -391,6 +391,8 @@
   .home.answered .home-particles { opacity: 1; left: 26%; top: 50%; transform: translate(-50%, -50%) scale(.72); }
   @media (max-width: 899px) {
     .home.answered .home-particles { left: 50%; top: 20%; transform: translate(-50%, -50%) scale(.5); }
+    /* Téléphone : la réponse commence sous la sphère et s'arrête au-dessus de la barre. */
+    .home.answered .home-search-panel { top: 36%; bottom: 180px; max-height: none; transform: translateX(-50%); }
   }
 
   /* Réponses : au-dessus du centre de l'écran, invisibles hors état answered. */

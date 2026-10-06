@@ -2217,7 +2217,7 @@ def score_structure_financiere(
     )
 
 
-GROWTH_SCALE = 10.0          # % de CAGR moyen pour un score plein
+GROWTH_SCALE = 20.0          # % de CAGR moyen pour un score plein (était 10 : saturait à -10 dès -10 %/an)
 GROWTH_DIVERGENCE_MARGIN = 5.0   # points d'écart CA/EBITDA tolérés avant pénalité
 GROWTH_DIVERGENCE_PENALTY = 3.0
 

@@ -79,7 +79,7 @@ def _construit_messages(question: str, history: list[dict]) -> list[dict]:
 
 def run_assistant_loop(
     question: str, history: list[dict], manual_positions: list[dict] | None = None,
-    *, niveau=NIVEAU_DEFAUT, client=None, tool_dispatch=None,
+    *, niveau=NIVEAU_DEFAUT, contexte=None, client=None, tool_dispatch=None,
 ):
     """Genere les evenements de la conversation : {"type": "texte", ...}
     au fil du streaming, {"type": "liens", "liens": [...]} une fois tous
@@ -94,6 +94,10 @@ def run_assistant_loop(
 
     messages = _construit_messages(question, history)
     system_text = construit_system(niveau)
+    if isinstance(contexte, str) and contexte.strip():
+        system_text += ("\n\nPage actuelle de l'utilisateur : " + contexte.strip()[:200] +
+                        ". Tu peux t'appuyer dessus sans qu'il le précise.")
+    navigation = None
 
     liens_collectes: list[dict] = []
 
@@ -128,6 +132,8 @@ def run_assistant_loop(
                 yield {"type": "texte", "texte": "\n\n[reponse tronquee par la limite de longueur]"}
             if liens_collectes:
                 yield {"type": "liens", "liens": liens_collectes}
+            if navigation:
+                yield {"type": "navigation", **navigation}
             yield {"type": "fin"}
             return
 
@@ -143,6 +149,8 @@ def run_assistant_loop(
             resultat = tool_dispatch(bloc.name, tool_input)
             if bloc.name == "proposer_lien" and "erreur" not in resultat:
                 liens_collectes.append(resultat)
+            if bloc.name == "aller_vers" and "erreur" not in resultat:
+                navigation = resultat
             resultats_outils.append({
                 "type": "tool_result", "tool_use_id": bloc.id,
                 "content": str(resultat),

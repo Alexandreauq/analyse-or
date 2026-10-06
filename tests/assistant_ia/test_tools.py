@@ -163,14 +163,25 @@ def test_dispatch_tool_returns_an_error_dict_for_an_unknown_tool():
     assert "erreur" in resultat
 
 
-def test_tool_definitions_lists_all_nine_tools():
+def test_tool_definitions_lists_all_ten_tools():
     noms = {t["name"] for t in tools.TOOL_DEFINITIONS}
 
     assert noms == {
         "fiche_entreprise", "comparer_entreprises", "classement",
         "statut_bot", "positions_bot", "resume_portefeuille", "proposer_lien",
-        "actualites_entreprise", "actualites_marche",
+        "actualites_entreprise", "actualites_marche", "aller_vers",
     }
+
+
+def test_aller_vers_accepts_known_sections_and_plain_tickers():
+    assert tools.aller_vers("section", "or") == {"cible_type": "section", "cible_valeur": "or"}
+    assert tools.aller_vers("ticker", "SAF.PA") == {"cible_type": "ticker", "cible_valeur": "SAF.PA"}
+
+
+def test_aller_vers_refuses_unknown_sections_and_hostile_tickers():
+    assert "erreur" in tools.aller_vers("section", "admin")
+    assert "erreur" in tools.aller_vers("ticker", "x#y=evil")
+    assert "erreur" in tools.aller_vers("url", "https://example.com")
 
 
 def _schema_for(nom):

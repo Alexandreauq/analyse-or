@@ -4647,10 +4647,12 @@ function renderIndicesList(companies) {
   // — chaque groupe devient un panneau dépliant. CAC 40 et DAX aujourd'hui ;
   // la structure est prête à en recevoir d'autres (Nasdaq…) sans changement
   // de code, seulement de nouvelles entreprises côté données.
+  // Une entreprise figure dans son indice principal ET dans chacun de ses indices
+  // partagés (also_indices) : elle apparaît alors avec la même fiche dans chaque groupe.
   const groups = {};
   companies.forEach(c => {
-    const key = c.index || 'Autre';
-    (groups[key] = groups[key] || []).push(c);
+    const cles = [c.index || 'Autre', ...(c.also_indices || [])];
+    cles.forEach(key => { (groups[key] = groups[key] || []).push(c); });
   });
   const indexKeys = Object.keys(groups);
   const indexNames = { ...INDEX_DISPLAY_NAMES, ...(indicesData.index_names || {}) };

@@ -58,6 +58,14 @@ function test_resolveCompanyTvSymbol_returns_null_without_known_suffix() {
   console.log('OK: test_resolveCompanyTvSymbol_returns_null_without_known_suffix');
 }
 
+function test_resolveCompanyTvSymbol_routes_sp500_companies_by_their_exchange() {
+  // Apple est au Nasdaq, Berkshire (classe B, tiret Yahoo) est au NYSE avec un point.
+  assert.strictEqual(resolveCompanyTvSymbol('AAPL', 'SP500'), 'NASDAQ:AAPL');
+  assert.strictEqual(resolveCompanyTvSymbol('BRK-B', 'SP500'), 'NYSE:BRK.B');
+  assert.strictEqual(resolveCompanyTvSymbol('ZZZ-UNKNOWN', 'SP500'), null);
+  console.log('OK: test_resolveCompanyTvSymbol_routes_sp500_companies_by_their_exchange');
+}
+
 function main() {
   test_resolveCompanyTvSymbol_null_for_hangseng();
   test_resolveCompanyTvSymbol_null_for_nikkei225();
@@ -66,6 +74,7 @@ function main() {
   test_NO_RELIABLE_COMPANY_TV_DATA_contains_exactly_hangseng_and_nikkei();
   test_resolveCompanyTvSymbol_uses_yahoo_suffix_for_indices_without_mapping();
   test_resolveCompanyTvSymbol_returns_null_without_known_suffix();
+  test_resolveCompanyTvSymbol_routes_sp500_companies_by_their_exchange();
   console.log('Tous les tests company_quote_widget.test.js sont passés.');
 }
 

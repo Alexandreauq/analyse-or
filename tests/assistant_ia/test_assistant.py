@@ -380,3 +380,29 @@ def test_run_assistant_loop_sends_the_chosen_level_in_the_system_prompt():
 
     envoye = client.messages.appels[0]["system"][0]["text"]
     assert assistant.CONSIGNES_NIVEAU["grand_public"] in envoye
+
+
+def test_run_assistant_loop_emits_a_navigation_event_for_aller_vers():
+    appel = _FakeBlock("tool_use", name="aller_vers", id="t1",
+                       input={"cible_type": "section", "cible_valeur": "or"})
+    premier = _FakeMessage(content=[appel], stop_reason="tool_use", usage=_FakeUsage(10, 5))
+    final = _FakeMessage(content=[_FakeBlock("text", text="Je vous ouvre le bot Or.")],
+                         stop_reason="end_turn", usage=_FakeUsage(10, 5))
+    client = _FakeClient([_FakeStream([], premier), _FakeStream(["Je vous ouvre le bot Or."], final)])
+
+    evenements = list(assistant.run_assistant_loop(
+        "Ouvre le bot Or", [], client=client,
+        tool_dispatch=lambda nom, entree: {"cible_type": "section", "cible_valeur": "or"}))
+
+    navigations = [e for e in evenements if e["type"] == "navigation"]
+    assert navigations == [{"type": "navigation", "cible_type": "section", "cible_valeur": "or"}]
+    assert evenements[-1]["type"] == "fin"
+
+
+def test_run_assistant_loop_adds_the_page_context_to_the_system_prompt():
+    final = _FakeMessage(content=[_FakeBlock("text", text="ok")], stop_reason="end_turn", usage=_FakeUsage(1, 1))
+    client = _FakeClient([_FakeStream(["ok"], final)])
+
+    list(assistant.run_assistant_loop("Q", [], client=client, contexte="fiche de SAF.PA"))
+
+    assert "fiche de SAF.PA" in client.messages.appels[0]["system"][0]["text"]

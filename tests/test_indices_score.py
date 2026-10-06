@@ -8371,3 +8371,10 @@ def test_update_signal_tracking_never_opens_a_position_on_an_out_of_tracking_ind
     indices_score.update_signal_tracking([], signaux)
 
     assert [s["ticker"] for s in recues] == ["CS.PA"]
+
+
+def test_premium_score_is_capped_at_the_penalty_cap():
+    # Une prime énorme (x4 sur la moyenne 5 ans) ne pénalise pas plus que le plafond.
+    score = indices_score._premium_score(current=40.0, avg_5y=10.0, cagr_ebitda=0.0)
+
+    assert score == -indices_score.VALUATION_PENALTY_CAP

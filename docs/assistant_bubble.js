@@ -229,7 +229,11 @@
         headers: { 'Content-Type': 'application/json', 'X-Bot-Token': token },
         body: JSON.stringify({ question, history: historique, contexte: contexteCourant(), niveau: 'technique' }),
       });
-      if (!res.ok || !res.body) throw new Error('HTTP ' + res.status);
+      if (!res.ok || !res.body) {
+        let detail = "L'assistant ne peut pas répondre pour le moment.";
+        try { const corps = await res.json(); if (corps && corps.detail) detail = corps.detail; } catch (e) { /* message par défaut */ }
+        throw new Error(detail);
+      }
       reponse.textContent = '';
       const lecteur = res.body.getReader();
       const dec = new TextDecoder();
@@ -253,7 +257,7 @@
       }
     } catch (e) {
       erreur = true;
-      reponse.textContent = 'Je n\'ai pas pu contacter l\'assistant, réessaie dans un instant.';
+      reponse.textContent = (e && e.message) ? e.message : "Je n'ai pas pu contacter l'assistant, réessaie dans un instant.";
       reponse.classList.add('ab-erreur');
     } finally {
       enCours = false;

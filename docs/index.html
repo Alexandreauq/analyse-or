@@ -3898,9 +3898,11 @@ async function askAssistant(question) {
         "Ton jeton d'acces est invalide. Recharge la page pour en saisir un nouveau.", []);
       return;
     }
-    if (response.status === 429) {
-      afficherReponse(
-        "Le budget quotidien de l'assistant est atteint. Reessaie demain.", []);
+    if (response.status === 429 || response.status === 503 || response.status === 400) {
+      // Le serveur explique la raison (budget, trop de questions, trop sollicité, question trop longue).
+      let detail = "L'assistant ne peut pas répondre pour le moment.";
+      try { const corps = await response.json(); if (corps && corps.detail) detail = corps.detail; } catch (e) { /* message par défaut */ }
+      afficherReponse(detail, []);
       return;
     }
     if (!response.ok) throw new Error(`HTTP ${response.status}`);

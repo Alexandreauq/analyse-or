@@ -88,7 +88,7 @@ def run_assistant_loop(
     tool_dispatch, qui appelle assistant_ia.tools, qui lit les fichiers
     publics/API bots — jamais ce module directement)."""
     if client is None:
-        client = anthropic.Anthropic()
+        client = anthropic.Anthropic(timeout=60.0, max_retries=2)
     if tool_dispatch is None:
         tool_dispatch = tools.dispatch_tool
 

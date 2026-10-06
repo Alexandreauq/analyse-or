@@ -5,6 +5,7 @@
 # inconnu ou une erreur interne renvoie un dict {"erreur": ...}, que la
 # boucle d'orchestration (Task 4) renvoie a Claude comme resultat
 # d'outil en erreur plutot que de casser tout l'echange.
+import re
 from difflib import get_close_matches
 
 import assistant_ia.data_sources as data_sources
@@ -95,6 +96,23 @@ TOOL_DEFINITIONS = [
         "input_schema": {
             "type": "object",
             "properties": {},
+        },
+    },
+    {
+        "name": "aller_vers",
+        "description": (
+            "Ouvre pour l'utilisateur une section du site (accueil, or, indices, "
+            "portefeuille) ou une fiche entreprise (ticker). Utilise-le uniquement "
+            "si l'utilisateur demande d'aller quelque part, ou si l'ouverture de cette "
+            "page répond clairement à sa question. Ne l'utilise jamais sans raison."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "cible_type": {"type": "string", "enum": ["section", "ticker"]},
+                "cible_valeur": {"type": "string", "description": "accueil, or, indices ou portefeuille ; ou un ticker exact"},
+            },
+            "required": ["cible_type", "cible_valeur"],
         },
     },
     {
@@ -246,6 +264,23 @@ def resume_portefeuille(
     return {"positions": toutes, "nombre_total": len(toutes)}
 
 
+SECTIONS_NAVIGABLES = ("accueil", "or", "indices", "portefeuille")
+
+
+def aller_vers(cible_type: str, cible_valeur: str) -> dict:
+    """Demande au site d'ouvrir une section ou une fiche entreprise. Ne change
+    rien d'autre : le site applique la navigation après la réponse."""
+    if cible_type == "section":
+        if cible_valeur not in SECTIONS_NAVIGABLES:
+            return {"erreur": f"section inconnue : {cible_valeur!r}"}
+    elif cible_type == "ticker":
+        if not isinstance(cible_valeur, str) or not re.fullmatch(r"[A-Za-z0-9.\-]{1,20}", cible_valeur):
+            return {"erreur": f"ticker invalide : {cible_valeur!r}"}
+    else:
+        return {"erreur": f"cible_type invalide : {cible_type!r}"}
+    return {"cible_type": cible_type, "cible_valeur": cible_valeur}
+
+
 def proposer_lien(cible_type: str, cible_valeur: str, libelle: str) -> dict:
     if cible_type not in ("ticker", "section"):
         return {"erreur": f"cible_type invalide : {cible_type!r}"}
@@ -263,6 +298,7 @@ _HANDLERS = {
     "resume_portefeuille": lambda i, **deps: resume_portefeuille(
         i.get("positions_manuelles"), dashboard_source=deps["dashboard_source"]),
     "proposer_lien": lambda i, **deps: proposer_lien(i["cible_type"], i["cible_valeur"], i["libelle"]),
+    "aller_vers": lambda i, **deps: aller_vers(i.get("cible_type"), i.get("cible_valeur")),
     "actualites_entreprise": lambda i, **deps: news.actualites_entreprise(
         i["ticker"], _nom_entreprise(i["ticker"], deps["indices_source"]),
         finnhub_source=deps["finnhub_source"], gdelt_source=deps["gdelt_source"]),

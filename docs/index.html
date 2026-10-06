@@ -342,6 +342,9 @@
     border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px; margin-top: 8px; cursor: pointer;
   }
   .home-history-item:hover { background: var(--bg-3); }
+  /* Nouvelle conversation : visible seulement quand une réponse est affichée. */
+  .home-newconv { display: none; position: absolute; top: 14px; right: 16px; z-index: 4; }
+  .home.answered .home-newconv { display: inline-flex; }
   .home-history-item small { display: block; color: var(--muted); font-size: 12px; margin-bottom: 2px; }
   @keyframes home-mic-pulse { 50% { box-shadow: 0 0 0 6px rgba(42,91,255,.12); } }
   @media (prefers-reduced-motion: reduce) { .home-mic[aria-pressed="true"] { animation: none; } }
@@ -1528,6 +1531,7 @@
       </div>
     </div>
     <div id="homeSearchPanel" class="home-search-panel" hidden></div>
+    <button type="button" id="homeNewConv" class="toggle-btn home-newconv">Nouvelle conversation</button>
     <div id="homeHistoryPanel" class="home-history-panel" hidden>
       <div class="home-history-head">
         <strong>Historique</strong>
@@ -3603,6 +3607,13 @@ let requeteCourante = null;
 
 // Retour à l'écran principal : on annule la réponse en cours, on efface la
 // réponse affichée et la barre revient au centre, quel que soit l'état.
+// Nouvelle conversation : on oublie l'historique envoyé à l'assistant et on
+// remet la barre normale. L'historique sauvegardé sur l'appareil reste consultable.
+function nouvelleConversation() {
+  homeSearchHistory = [];
+  revientAccueil();
+}
+
 function revientAccueil() {
   answerGeneration++;
   if (requeteCourante) { requeteCourante.abort(); requeteCourante = null; }
@@ -4105,6 +4116,8 @@ function wireHomeSearch() {
   const input = document.getElementById('homeSearchInput');
   const logo = document.querySelector('.top-bar-wordmark');
   if (logo) logo.addEventListener('click', () => revientAccueil());
+  const nouvelle = document.getElementById('homeNewConv');
+  if (nouvelle) nouvelle.addEventListener('click', () => nouvelleConversation());
   if (!input) return;
   wireAssistantHistory();
   wireVoiceSearch(input);

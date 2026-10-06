@@ -98,7 +98,7 @@
   panneau.innerHTML = [
     '<div class="ab-entete"><span>Assistant</span>',
     '<span><label class="ab-voix-sortie"><input type="checkbox" id="abVoixSortie"> Réponse à voix haute</label>',
-    ' <button type="button" id="abFermer">Fermer</button></span></div>',
+    ' <button type="button" id="abNouvelle">Nouvelle conversation</button> <button type="button" id="abFermer">Fermer</button></span></div>',
     '<div class="ab-messages" id="abMessages" aria-live="polite"></div>',
     '<form class="ab-form" id="abForm" autocomplete="off">',
     '<button type="button" id="abMicro" aria-pressed="false" aria-label="Dicter la question" title="Dicter">🎙</button>',
@@ -127,6 +127,11 @@
   }
   bulle.addEventListener('click', () => ouvre(panneau.hidden));
   panneau.querySelector('#abFermer').addEventListener('click', () => ouvre(false));
+  panneau.querySelector('#abNouvelle').addEventListener('click', () => {
+    historique = [];
+    messages.innerHTML = '';
+    champ.focus();
+  });
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !panneau.hidden) ouvre(false); });
 
   // ---- contexte : la page courante, pour que l'assistant sache où on est ----

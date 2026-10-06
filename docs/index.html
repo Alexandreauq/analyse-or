@@ -343,8 +343,10 @@
   }
   .home-history-item:hover { background: var(--bg-3); }
   /* Nouvelle conversation : visible seulement quand une réponse est affichée. */
-  .home-newconv { display: none; position: absolute; top: 14px; right: 16px; z-index: 4; }
-  .home.answered .home-newconv { display: inline-flex; }
+  .home-newconv { display: inline-flex; position: absolute; top: calc(100% + 14px); left: 50%; transform: translateX(-50%); z-index: 4; }
+  .home.thinking .home-newconv { display: none; }
+  .home.answered .home-newconv { top: auto; bottom: calc(100% + 14px); }
+  @media (max-width: 899px) { .home-newconv { top: calc(100% + 66px); } .home.answered .home-newconv { top: auto; bottom: calc(100% + 14px); } }
   .home-history-item small { display: block; color: var(--muted); font-size: 12px; margin-bottom: 2px; }
   @keyframes home-mic-pulse { 50% { box-shadow: 0 0 0 6px rgba(42,91,255,.12); } }
   @media (prefers-reduced-motion: reduce) { .home-mic[aria-pressed="true"] { animation: none; } }
@@ -1529,9 +1531,9 @@
         <button type="button" data-niveau="technique">Technique</button>
         <button type="button" data-niveau="grand_public">Grand public</button>
       </div>
+      <button type="button" id="homeNewConv" class="toggle-btn home-newconv">Nouvelle conversation</button>
     </div>
     <div id="homeSearchPanel" class="home-search-panel" hidden></div>
-    <button type="button" id="homeNewConv" class="toggle-btn home-newconv">Nouvelle conversation</button>
     <div id="homeHistoryPanel" class="home-history-panel" hidden>
       <div class="home-history-head">
         <strong>Historique</strong>

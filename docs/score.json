@@ -8,13 +8,13 @@
       "name": "Taux réels US 10 ans",
       "score": -10,
       "weight": 0.3,
-      "raw_value": "2.95% (il y a ~45j : 2.38%)"
+      "raw_value": "2.91% (il y a ~45j : 2.38%)"
     },
     {
       "name": "Dollar (DXY)",
       "score": -10,
       "weight": 0.15,
-      "raw_value": "102.32 (il y a 2 mois : 99.60)"
+      "raw_value": "102.30 (il y a 2 mois : 99.60)"
     },
     {
       "name": "Anticipations d'inflation",
@@ -48,9 +48,9 @@
     }
   ],
   "technical": {
-    "note": "Cours en-dessous de la MM200 (-9.3%) — tendance baissière",
-    "spot": 4129.2998046875,
-    "ma200": 4550.377999267578
+    "note": "Cours en-dessous de la MM200 (-9.2%) — tendance baissière",
+    "spot": 4131.2001953125,
+    "ma200": 4550.387501220703
   },
   "calendar": [
     {

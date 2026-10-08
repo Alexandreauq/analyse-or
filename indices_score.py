@@ -2268,6 +2268,7 @@ def score_generation_cash(fcf_conversion: float, *, data_available: bool = True)
 VALUATION_PREMIUM_SCALE = 3.0       # % d'écart au multiple historique pour 1 point de score
 VALUATION_GROWTH_DAMPENING_CAGR = 5.0   # au-dessus de ce CAGR EBITDA, une prime est jugée justifiée
 VALUATION_GROWTH_DAMPENING_FACTOR = 0.4  # atténuation de la pénalité si croissance forte
+VALUATION_PENALTY_CAP = 5.0  # plafond de la pénalité de prime (méthodologie : pénalité modérée, pas -10)
 
 
 def _premium_score(current: float, avg_5y: float, cagr_ebitda: float) -> float:
@@ -2295,7 +2296,7 @@ def _premium_score(current: float, avg_5y: float, cagr_ebitda: float) -> float:
         if cagr_ebitda >= VALUATION_GROWTH_DAMPENING_CAGR
         else 1.0
     )
-    penalty = _clamp(premium_pct / VALUATION_PREMIUM_SCALE, 0.0, 10.0) * dampening
+    penalty = _clamp(premium_pct / VALUATION_PREMIUM_SCALE, 0.0, VALUATION_PENALTY_CAP) * dampening
     return -penalty
 
 

@@ -2336,6 +2336,28 @@
       "shadow_resolved": false,
       "shadow_price": null,
       "shadow_return_pct": null
+    },
+    {
+      "id": "1605.T-2026-10-08",
+      "ticker": "1605.T",
+      "name": "Inpex",
+      "index": "NIKKEI225",
+      "status": "open",
+      "entry_date": "2026-10-08",
+      "entry_price": 3648.0,
+      "target_exit_price": 5709.399662483949,
+      "index_price_at_entry": 70035.7109375,
+      "methodology_version": "69eb103dfb9c573d1090413f8738d5062b95b4a2",
+      "close_date": null,
+      "close_price": null,
+      "close_reason": null,
+      "return_pct": null,
+      "index_price_at_close": null,
+      "index_return_pct": null,
+      "shadow_close_date": "2027-04-08",
+      "shadow_resolved": false,
+      "shadow_price": null,
+      "shadow_return_pct": null
     }
   ]
 }

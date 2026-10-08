@@ -1,6 +1,6 @@
 {
-  "updated": "2026-10-07T15:01:31Z",
-  "sync_status": "error",
-  "sync_error": "Erreur réseau MT5 (HTTP 504)",
+  "updated": "2026-10-08T15:09:56Z",
+  "sync_status": "ok",
+  "sync_error": null,
   "positions": []
 }

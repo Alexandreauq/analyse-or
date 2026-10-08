@@ -343,7 +343,12 @@
   }
   .home-history-item:hover { background: var(--bg-3); }
   /* Nouvelle conversation : visible seulement quand une réponse est affichée. */
-  .home-newconv { display: inline-flex; position: absolute; top: calc(100% + 14px); left: 50%; transform: translateX(-50%); z-index: 4; }
+  .home-newconv {
+    display: inline-flex; position: absolute; top: calc(100% + 14px); left: 50%; transform: translateX(-50%); z-index: 4;
+    background: rgba(226,232,240,.08); color: #e2e8f0; border: 1px solid rgba(226,232,240,.35);
+    border-radius: 10px; padding: 9px 18px; box-shadow: none;
+  }
+  .home-newconv:hover { background: rgba(226,232,240,.14); border-color: rgba(226,232,240,.5); }
   .home.thinking .home-newconv { display: none; }
   .home.answered .home-newconv { top: auto; bottom: calc(100% + 14px); }
   @media (max-width: 899px) { .home-newconv { top: calc(100% + 66px); } .home.answered .home-newconv { top: auto; bottom: calc(100% + 14px); } }

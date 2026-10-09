@@ -3531,35 +3531,61 @@ FETCH_RETRY_ATTEMPTS = 3
 FETCH_RETRY_DELAY_SECONDS = 2.0
 
 
-def _latest_column_is_usable(statement) -> bool:
-    """Vrai si la colonne la plus récente du relevé contient au moins
-    une valeur exploitable. Constat 2026-10-09 (MUV2.DE, reproductible
-    sur deux runs de production consécutifs) : une variante du même
-    rate-limiting documenté juste au-dessus, mais sur les VALEURS plutôt
-    que sur le nombre de lignes — le relevé a le bon nombre de lignes
-    (passe déjà le test MIN_STATEMENT_ROWS) mais sa colonne la plus
-    récente est entièrement NaN, invisible dans un diagnostic isolé hors
-    de la boucle complète (voir fetch_company_financials, equity_latest/
-    total_assets_latest qui en dépendent tombant alors à 0 silencieusement)."""
+# Lignes dont la valeur la plus récente doit être exploitable pour
+# qu'un relevé "balance_sheet" soit jugé sain (voir _latest_column_is_usable)
+# — constat 2026-10-09 (MUV2.DE, reproductible sur 3 runs de production
+# GitHub Actions consécutifs, diagnostic dédié à l'appui) : yfinance a
+# renvoyé un bilan avec "Total Assets" correctement rempli pour 2025
+# mais "Stockholders Equity" à NaN pour cette même date — un relevé
+# "pas entièrement NaN" (le check générique ci-dessous, suffisant pour
+# détecter un relevé totalement dégradé) laissait passer ce cas parce
+# que d'autres lignes du bilan étaient bien renseignées ; un appel
+# isolé hors de la boucle complète renvoyait les deux lignes correctes,
+# même rate-limiting Yahoo que le motif déjà documenté sur
+# _fetch_statement_with_retry, mais sur une ligne précise plutôt que
+# sur tout le relevé.
+_BALANCE_SHEET_CRITICAL_ROW_GROUPS = (
+    ("Total Assets",),
+    ("Stockholders Equity", "Common Stock Equity"),
+)
+
+
+def _latest_column_is_usable(statement, attribute_name: str) -> bool:
+    """Vrai si la colonne la plus récente du relevé contient les valeurs
+    dont on a besoin en aval. Pour `balance_sheet`, vérifie précisément
+    les lignes critiques ci-dessus (equity_latest/total_assets_latest
+    en dépendent directement, voir fetch_company_financials) ; pour les
+    autres relevés, un garde-fou plus générique (la colonne n'est pas
+    *entièrement* NaN) suffit, aucun cas de ligne précise dégradée n'y
+    ayant été constaté à ce jour."""
     if statement.empty or len(statement.columns) == 0:
         return False
+    latest_col = statement.columns[0]
+    if attribute_name == "balance_sheet":
+        return all(
+            any(
+                name in statement.index and not _is_missing(statement.loc[name, latest_col])
+                for name in names
+            )
+            for names in _BALANCE_SHEET_CRITICAL_ROW_GROUPS
+        )
     return not statement.iloc[:, 0].isna().all()
 
 
 def _fetch_statement_with_retry(ticker: str, attribute_name: str):
     """Certains appels yfinance renvoient occasionnellement un relevé
-    dégradé (quasi vide, ou avec une dernière colonne entièrement NaN)
-    sans lever d'exception, plutôt vu sur les tickers traités plus tard
-    dans la boucle des entreprises (rate-limiting probable de Yahoo) —
-    un diagnostic isolé sur ces mêmes tickers, hors de la boucle
-    complète, renvoyait les données complètes : pas un vrai trou de
-    données à la source. Un nouveau `yf.Ticker(...)` à chaque tentative
-    (pas le même objet réutilisé) pour éviter de retomber sur un
-    résultat mis en cache par yfinance."""
+    dégradé (quasi vide, ou avec des valeurs manquantes sur la colonne
+    la plus récente) sans lever d'exception, plutôt vu sur les tickers
+    traités plus tard dans la boucle des entreprises (rate-limiting
+    probable de Yahoo) — un diagnostic isolé sur ces mêmes tickers, hors
+    de la boucle complète, renvoyait les données complètes : pas un
+    vrai trou de données à la source. Un nouveau `yf.Ticker(...)` à
+    chaque tentative (pas le même objet réutilisé) pour éviter de
+    retomber sur un résultat mis en cache par yfinance."""
     statement = None
     for attempt in range(FETCH_RETRY_ATTEMPTS):
         statement = getattr(yf.Ticker(ticker), attribute_name)
-        if len(statement.index) >= MIN_STATEMENT_ROWS and _latest_column_is_usable(statement):
+        if len(statement.index) >= MIN_STATEMENT_ROWS and _latest_column_is_usable(statement, attribute_name):
             return statement
         if attempt < FETCH_RETRY_ATTEMPTS - 1:
             time.sleep(FETCH_RETRY_DELAY_SECONDS)
@@ -3600,10 +3626,6 @@ def fetch_company_financials(ticker: str) -> dict:
     financials = _fetch_statement_with_retry(ticker, "financials")
     balance_sheet = _fetch_statement_with_retry(ticker, "balance_sheet")
     cashflow = _fetch_statement_with_retry(ticker, "cashflow")
-    if ticker == "MUV2.DE":
-        print(f"DIAGNOSTIC MUV2.DE balance_sheet columns: {list(balance_sheet.columns)}", flush=True)
-        print(f"DIAGNOSTIC MUV2.DE balance_sheet equity row:\n{get_row(balance_sheet, 'Stockholders Equity', 'Common Stock Equity')}", flush=True)
-        print(f"DIAGNOSTIC MUV2.DE balance_sheet total_assets row:\n{get_row(balance_sheet, 'Total Assets')}", flush=True)
     quarterly_financials = t.quarterly_financials
     info = t.info
     shares_outstanding = info.get("sharesOutstanding") or 0.0

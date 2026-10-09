@@ -3531,19 +3531,35 @@ FETCH_RETRY_ATTEMPTS = 3
 FETCH_RETRY_DELAY_SECONDS = 2.0
 
 
+def _latest_column_is_usable(statement) -> bool:
+    """Vrai si la colonne la plus récente du relevé contient au moins
+    une valeur exploitable. Constat 2026-10-09 (MUV2.DE, reproductible
+    sur deux runs de production consécutifs) : une variante du même
+    rate-limiting documenté juste au-dessus, mais sur les VALEURS plutôt
+    que sur le nombre de lignes — le relevé a le bon nombre de lignes
+    (passe déjà le test MIN_STATEMENT_ROWS) mais sa colonne la plus
+    récente est entièrement NaN, invisible dans un diagnostic isolé hors
+    de la boucle complète (voir fetch_company_financials, equity_latest/
+    total_assets_latest qui en dépendent tombant alors à 0 silencieusement)."""
+    if statement.empty or len(statement.columns) == 0:
+        return False
+    return not statement.iloc[:, 0].isna().all()
+
+
 def _fetch_statement_with_retry(ticker: str, attribute_name: str):
     """Certains appels yfinance renvoient occasionnellement un relevé
-    dégradé (quasi vide) sans lever d'exception, plutôt vu sur les
-    tickers traités plus tard dans la boucle des entreprises (rate-
-    limiting probable de Yahoo) — un diagnostic isolé sur ces mêmes
-    tickers, hors de la boucle complète, renvoyait les données
-    complètes : pas un vrai trou de données à la source. Un nouveau
-    `yf.Ticker(...)` à chaque tentative (pas le même objet réutilisé)
-    pour éviter de retomber sur un résultat mis en cache par yfinance."""
+    dégradé (quasi vide, ou avec une dernière colonne entièrement NaN)
+    sans lever d'exception, plutôt vu sur les tickers traités plus tard
+    dans la boucle des entreprises (rate-limiting probable de Yahoo) —
+    un diagnostic isolé sur ces mêmes tickers, hors de la boucle
+    complète, renvoyait les données complètes : pas un vrai trou de
+    données à la source. Un nouveau `yf.Ticker(...)` à chaque tentative
+    (pas le même objet réutilisé) pour éviter de retomber sur un
+    résultat mis en cache par yfinance."""
     statement = None
     for attempt in range(FETCH_RETRY_ATTEMPTS):
         statement = getattr(yf.Ticker(ticker), attribute_name)
-        if len(statement.index) >= MIN_STATEMENT_ROWS:
+        if len(statement.index) >= MIN_STATEMENT_ROWS and _latest_column_is_usable(statement):
             return statement
         if attempt < FETCH_RETRY_ATTEMPTS - 1:
             time.sleep(FETCH_RETRY_DELAY_SECONDS)

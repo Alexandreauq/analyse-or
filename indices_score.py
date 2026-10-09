@@ -3539,11 +3539,21 @@ FETCH_RETRY_DELAY_SECONDS = 2.0
 # mais "Stockholders Equity" à NaN pour cette même date — un relevé
 # "pas entièrement NaN" (le check générique ci-dessous, suffisant pour
 # détecter un relevé totalement dégradé) laissait passer ce cas parce
-# que d'autres lignes du bilan étaient bien renseignées ; un appel
-# isolé hors de la boucle complète renvoyait les deux lignes correctes,
-# même rate-limiting Yahoo que le motif déjà documenté sur
-# _fetch_statement_with_retry, mais sur une ligne précise plutôt que
-# sur tout le relevé.
+# que d'autres lignes du bilan étaient bien renseignées.
+#
+# Limite connue acceptée (2026-10-09) : ce garde-fou déclenche bien le
+# retry sur MUV2.DE (vérifié par test), mais les 3 tentatives tombent
+# sur la MÊME réponse dégradée de Yahoo — un appel isolé hors de la
+# boucle complète renvoyait la donnée correcte, donc ce n'est pas un
+# trou de données à la source, mais un état soutenu (probablement un
+# throttling Yahoo propre au volume de requêtes des runners GitHub,
+# qui persiste plus longtemps que les ~6 secondes couvertes par les 3
+# tentatives) — pas quelque chose qu'un retry rapide peut contourner
+# sans ralentir tout le run pour un gain incertain. "Capitaux propres/
+# actif total" affiche donc 0.0% pour MUV2.DE (score structure
+# financière à -10) jusqu'à ce que Yahoo cesse de dégrader cette ligne
+# précise pour ce ticker — même statut que HKD/FRED ou SWICH.AS
+# (limite de données externes documentée, pas un bug du code).
 _BALANCE_SHEET_CRITICAL_ROW_GROUPS = (
     ("Total Assets",),
     ("Stockholders Equity", "Common Stock Equity"),

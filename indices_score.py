@@ -1827,6 +1827,8 @@ SECTOR_ADJUSTMENT = {"defensif": 1.3, "standard": 1.0, "cyclique": 0.7}
 # fil des cas rencontrés en production, pas une liste exhaustive à priori.
 SECTOR_OVERRIDE_BY_TICKER = {
     "MT.AS": "Basic Materials",  # ArcelorMittal (sidérurgie, cyclique)
+    "ML.PA": "Consumer Cyclical",  # Michelin (pneumatiques)
+    "FISV": "Technology",  # Fiserv (paiements/logiciels financiers)
 }
 
 # Alias yfinance pour la récupération du cours (history()) uniquement —
@@ -5286,6 +5288,16 @@ FX_TICKER_TO_USD = {
     "JPY": ("JPY=X", "divide"),
     "HKD": ("HKD=X", "divide"),
     "CNY": ("CNY=X", "divide"),  # cotation indirecte comme JPY/HKD (constat C1 — Hang Seng reportant en CNY)
+    # Ajoutés 2026-10-09 (consolidation) : absence de ces deux devises
+    # dans la table faisait échouer fetch_fx_rate pour BGEO.L (comptes en
+    # GEL, cotation GBp/GBP) et INPST.AS (comptes en PLN, cotation EUR),
+    # dégradant currency_mismatch_unresolved=True et donc
+    # shares_outstanding forcé à 0.0 (P/E, P/B, fair_value à zéro) alors
+    # que les comptes et le prix sont tous les deux disponibles — vérifié
+    # en direct via yfinance (GEL=X ~2.59, PLN=X ~3.9, même convention
+    # indirecte que JPY/HKD/CNY).
+    "GEL": ("GEL=X", "divide"),
+    "PLN": ("PLN=X", "divide"),
 }
 
 

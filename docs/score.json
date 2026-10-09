@@ -1,6 +1,6 @@
 {
-  "date": "2026-10-08",
-  "composite_score": -30.2,
+  "date": "2026-10-09",
+  "composite_score": -30.7,
   "interpretation": "Défavorable — pas d'entrée même sur signal technique",
   "cftc_percentile": 55.769230769230774,
   "factors": [
@@ -8,19 +8,19 @@
       "name": "Taux réels US 10 ans",
       "score": -10,
       "weight": 0.3,
-      "raw_value": "2.92% (il y a ~45j : 2.38%)"
+      "raw_value": "2.92% (il y a ~45j : 2.32%)"
     },
     {
       "name": "Dollar (DXY)",
       "score": -10,
       "weight": 0.15,
-      "raw_value": "102.09 (il y a 2 mois : 99.81)"
+      "raw_value": "102.12 (il y a 2 mois : 99.81)"
     },
     {
       "name": "Anticipations d'inflation",
-      "score": 1.3333333333333348,
+      "score": 1.0000000000000084,
       "weight": 0.15,
-      "raw_value": "2.36% (il y a ~45j : 2.32%)"
+      "raw_value": "2.35% (il y a ~45j : 2.32%)"
     },
     {
       "name": "Ton de la Fed",
@@ -48,19 +48,19 @@
     }
   ],
   "technical": {
-    "note": "Cours en-dessous de la MM200 (-8.6%) — tendance baissière",
-    "spot": 4160.10009765625,
-    "ma200": 4549.299002685547
+    "note": "Cours en-dessous de la MM200 (-8.3%) — tendance baissière",
+    "spot": 4172.10009765625,
+    "ma200": 4549.359002685547
   },
   "calendar": [
     {
-      "date": "08/10/2026",
-      "label": "Inscriptions chômage (hebdo)",
+      "date": "14/10/2026",
+      "label": "CPI (Indice des prix à la consommation)",
       "kind": "Donnée"
     },
     {
-      "date": "14/10/2026",
-      "label": "CPI (Indice des prix à la consommation)",
+      "date": "15/10/2026",
+      "label": "Inscriptions chômage (hebdo)",
       "kind": "Donnée"
     },
     {
@@ -99,7 +99,7 @@
       "kind": "info",
       "title": "Pas de signal actif",
       "detail": "Aucune des conditions de veille, d'entrée ou de risque n'est réunie aujourd'hui.",
-      "date": "08/10/2026"
+      "date": "09/10/2026"
     }
   ]
 }

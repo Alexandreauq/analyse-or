@@ -5194,6 +5194,38 @@ def test_fetch_statement_with_retry_retries_on_degraded_result(monkeypatch):
     assert len(sleeps) == 2  # 2 tentatives dégradées avant la bonne
 
 
+def test_fetch_statement_with_retry_retries_on_nan_latest_column(monkeypatch):
+    """Reproduit le motif constaté en production le 2026-10-09 sur
+    MUV2.DE (reproductible sur deux runs consécutifs) : le relevé a le
+    bon nombre de lignes (passe MIN_STATEMENT_ROWS) mais sa colonne la
+    plus récente est entièrement NaN — equity_latest/total_assets_latest
+    tombaient à 0 silencieusement en aval sans que ce garde-fou ne s'en
+    aperçoive avant ce correctif."""
+    cols = [pd.Timestamp("2025-12-31"), pd.Timestamp("2024-12-31")]
+    degraded = _fake_annual_df(
+        {f"Row{i}": [float("nan"), float(i)] for i in range(20)}, cols,
+    )
+    healthy = _fake_statement_with_row_count(20)
+    results = [degraded, healthy]
+
+    class _FakeTicker:
+        def __init__(self, ticker):
+            pass
+
+        @property
+        def financials(self):
+            return results.pop(0)
+
+    monkeypatch.setattr(indices_score.yf, "Ticker", _FakeTicker)
+    sleeps = []
+    monkeypatch.setattr(indices_score.time, "sleep", lambda s: sleeps.append(s))
+
+    result = indices_score._fetch_statement_with_retry("XX.PA", "financials")
+
+    assert result is healthy
+    assert len(sleeps) == 1
+
+
 def test_fetch_statement_with_retry_gives_up_after_max_attempts(monkeypatch):
     """Ne doit jamais boucler indéfiniment : après FETCH_RETRY_ATTEMPTS,
     renvoie le dernier résultat obtenu (même dégradé) plutôt que de

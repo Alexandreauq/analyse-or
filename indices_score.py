@@ -3600,6 +3600,10 @@ def fetch_company_financials(ticker: str) -> dict:
     financials = _fetch_statement_with_retry(ticker, "financials")
     balance_sheet = _fetch_statement_with_retry(ticker, "balance_sheet")
     cashflow = _fetch_statement_with_retry(ticker, "cashflow")
+    if ticker == "MUV2.DE":
+        print(f"DIAGNOSTIC MUV2.DE balance_sheet columns: {list(balance_sheet.columns)}", flush=True)
+        print(f"DIAGNOSTIC MUV2.DE balance_sheet equity row:\n{get_row(balance_sheet, 'Stockholders Equity', 'Common Stock Equity')}", flush=True)
+        print(f"DIAGNOSTIC MUV2.DE balance_sheet total_assets row:\n{get_row(balance_sheet, 'Total Assets')}", flush=True)
     quarterly_financials = t.quarterly_financials
     info = t.info
     shares_outstanding = info.get("sharesOutstanding") or 0.0

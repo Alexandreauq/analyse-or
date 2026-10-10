@@ -1,5 +1,5 @@
 {
-  "date": "2026-10-09",
+  "date": "2026-10-10",
   "composite_score": -30.8,
   "interpretation": "Défavorable — pas d'entrée même sur signal technique",
   "cftc_percentile": 51.28205128205128,
@@ -8,7 +8,7 @@
       "name": "Taux réels US 10 ans",
       "score": -10,
       "weight": 0.3,
-      "raw_value": "2.87% (il y a ~45j : 2.32%)"
+      "raw_value": "2.87% (il y a ~45j : 2.34%)"
     },
     {
       "name": "Dollar (DXY)",
@@ -99,7 +99,7 @@
       "kind": "info",
       "title": "Pas de signal actif",
       "detail": "Aucune des conditions de veille, d'entrée ou de risque n'est réunie aujourd'hui.",
-      "date": "09/10/2026"
+      "date": "10/10/2026"
     }
   ]
 }

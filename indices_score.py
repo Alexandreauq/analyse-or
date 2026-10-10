@@ -2000,6 +2000,33 @@ FINANCIAL_SECTOR_TICKERS = {
     # sans EBITDA/EBIT), voir project_indices_cac40 (mémoire) pour le
     # détail complet de l'investigation.
     "FBK.MI", "BMED.MI",
+    # S&P 500 (constat 2026-10-10) : cet audit n'avait jamais été fait
+    # spécifiquement pour cet indice — seuls GS/JPM/AXP/TRV y figuraient
+    # par recoupement avec le Dow Jones. Bank of America (BAC) découverte
+    # dégradée à "Donnée indisponible" sur 4 facteurs/7 (méthodologie
+    # standard appliquée à une banque) a motivé un audit complet des ~500
+    # valeurs. Chaque ticker ci-dessous vérifié individuellement via
+    # yf.Ticker(ticker).financials.index (même test que get_row) : ni
+    # "EBITDA" ni "EBIT" présent. Banques de dépôt/crédit/investissement
+    # et custodians :
+    "BAC", "C", "WFC", "USB", "PNC", "TFC", "MTB", "FITB", "HBAN", "RF",
+    "KEY", "CFG", "BNY", "STT", "NTRS", "MS",
+    # Émetteurs de crédit, même catégorie qu'AXP déjà présent :
+    "COF", "SYF",
+    # Courtiers reclassés sur constat empirique (même précédent que
+    # Nomura/Daiwa au Nikkei 225) : bilan désormais dominé par une
+    # activité bancaire (Schwab Bank pour SCHW, banque d'investissement
+    # pour RJF), pas d'EBITDA/EBIT exploitable contrairement à
+    # Interactive Brokers (IBKR) ou Robinhood (HOOD), vérifiés et exclus :
+    "SCHW", "RJF",
+    # Assurance vie/retraite — seuls assureurs S&P 500 sans EBIT/EBITDA
+    # exploitable ; la quasi-totalité des autres assureurs/réassureurs
+    # américains (AFL, ALL, AIG, CB, MET, PGR, WRB, GL, ERIE, AMP,
+    # BRK-B, L...) ONT une ligne EBIT exploitable chez yfinance,
+    # contrairement à AXA/Allianz/Munich Re/Hannover Rück — vérifiés et
+    # volontairement laissés en méthodologie standard, à ne pas ajouter
+    # sans nouvelle vérification directe :
+    "PFG", "PRU",
 }
 
 

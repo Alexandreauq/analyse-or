@@ -3624,6 +3624,20 @@ _BALANCE_SHEET_CRITICAL_ROW_GROUPS = (
 # connus pour n'avoir structurellement aucun EBITDA (FINANCIAL_SECTOR_TICKERS,
 # TRUST_TICKERS) : exiger cette ligne pour eux ferait échouer les 3
 # tentatives à chaque run, sans jamais pouvoir réussir.
+#
+# Limite connue acceptée (2026-10-10, run de production après ce
+# correctif) : le retry se déclenche bien pour les 13 (vérifié par
+# test), mais les 3 tentatives tombent sur la MÊME réponse dégradée —
+# exactement le même constat que MUV2.DE (balance_sheet) juste
+# au-dessus, deuxième confirmation indépendante que ce n'est pas un
+# aléa que quelques secondes de retry peuvent contourner. Probablement
+# une caractéristique de la plage d'IP des runners GitHub Actions côté
+# Yahoo (edge/cache ou throttling soutenu), pas un état qui s'épuise
+# avec le temps à l'intérieur d'un seul run — attendre plus longtemps
+# entre les tentatives n'a pas été testé et n'est pas garanti d'aider.
+# Pas de nouvelle tentative de correctif par retry sans une piste
+# différente : même statut documenté que MUV2.DE/HKD/SWICH.AS plutôt
+# que d'insister sur une approche qui a maintenant échoué deux fois.
 _FINANCIALS_CRITICAL_ROW_GROUPS = (
     ("Net Income", "Net Income Common Stockholders"),
     ("EBITDA", "Normalized EBITDA"),

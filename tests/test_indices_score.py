@@ -5159,7 +5159,7 @@ def test_fetch_statement_with_retry_returns_immediately_when_healthy(monkeypatch
     sleeps = []
     monkeypatch.setattr(indices_score.time, "sleep", lambda s: sleeps.append(s))
 
-    result = indices_score._fetch_statement_with_retry("XX.PA", "financials")
+    result = indices_score._fetch_statement_with_retry("BNP.PA", "financials")
 
     assert result is healthy
     assert call_count["n"] == 1
@@ -5220,7 +5220,7 @@ def test_fetch_statement_with_retry_retries_on_nan_latest_column(monkeypatch):
     sleeps = []
     monkeypatch.setattr(indices_score.time, "sleep", lambda s: sleeps.append(s))
 
-    result = indices_score._fetch_statement_with_retry("XX.PA", "financials")
+    result = indices_score._fetch_statement_with_retry("BNP.PA", "financials")
 
     assert result is healthy
     assert len(sleeps) == 1
@@ -5262,6 +5262,73 @@ def test_fetch_statement_with_retry_retries_on_balance_sheet_equity_nan(monkeypa
 
     assert result is healthy
     assert len(sleeps) == 1
+
+
+def test_fetch_statement_with_retry_retries_on_financials_missing_ebitda(monkeypatch):
+    """Reproduit le motif constaté en production le 2026-10-10 sur 13
+    grandes capitalisations (Continental, Alstom, Fresnillo... vérifiées
+    en direct) : le compte de résultat a le bon nombre de lignes et
+    "Net Income" est bien présent, mais "EBITDA"/"Normalized EBITDA" en
+    est totalement absent — un relevé "pas entièrement NaN" (le
+    garde-fou générique) laissait passer ce cas, affichant à tort
+    "Donnée indisponible" en valorisation pour des entreprises dont la
+    ligne EBITDA existe bel et bien chez Yahoo."""
+    cols = [pd.Timestamp("2025-12-31"), pd.Timestamp("2024-12-31")]
+    rows_degraded = {f"Row{i}": [float(i), float(i)] for i in range(18)}
+    rows_degraded["Net Income"] = [5.0e9, 4.8e9]
+    degraded = _fake_annual_df(rows_degraded, cols)
+
+    rows_healthy = dict(rows_degraded)
+    rows_healthy["EBITDA"] = [8.0e9, 7.5e9]
+    healthy = _fake_annual_df(rows_healthy, cols)
+
+    results = [degraded, healthy]
+
+    class _FakeTicker:
+        def __init__(self, ticker):
+            pass
+
+        @property
+        def financials(self):
+            return results.pop(0)
+
+    monkeypatch.setattr(indices_score.yf, "Ticker", _FakeTicker)
+    sleeps = []
+    monkeypatch.setattr(indices_score.time, "sleep", lambda s: sleeps.append(s))
+
+    result = indices_score._fetch_statement_with_retry("CON.DE", "financials")
+
+    assert result is healthy
+    assert len(sleeps) == 1
+
+
+def test_fetch_statement_with_retry_does_not_require_ebitda_for_financial_sector_ticker(monkeypatch):
+    """Les banques/assurances (FINANCIAL_SECTOR_TICKERS) n'ont
+    structurellement aucune ligne EBITDA chez yfinance — exiger sa
+    présence pour elles ferait échouer les 3 tentatives à chaque run
+    sans jamais pouvoir réussir. Le relevé sans EBITDA doit donc être
+    accepté immédiatement, comme avant ce correctif."""
+    cols = [pd.Timestamp("2025-12-31")]
+    rows = {f"Row{i}": [float(i)] for i in range(18)}
+    rows["Net Income"] = [5.0e9]
+    healthy_for_a_bank = _fake_annual_df(rows, cols)
+
+    class _FakeTicker:
+        def __init__(self, ticker):
+            pass
+
+        @property
+        def financials(self):
+            return healthy_for_a_bank
+
+    monkeypatch.setattr(indices_score.yf, "Ticker", _FakeTicker)
+    sleeps = []
+    monkeypatch.setattr(indices_score.time, "sleep", lambda s: sleeps.append(s))
+
+    result = indices_score._fetch_statement_with_retry("BNP.PA", "financials")
+
+    assert result is healthy_for_a_bank
+    assert sleeps == []
 
 
 def test_fetch_statement_with_retry_gives_up_after_max_attempts(monkeypatch):

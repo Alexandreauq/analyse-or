@@ -3586,27 +3586,53 @@ _BALANCE_SHEET_CRITICAL_ROW_GROUPS = (
     ("Stockholders Equity", "Common Stock Equity"),
 )
 
+# Même principe que ci-dessus pour "financials" — constat 2026-10-10 :
+# 13 entreprises (Publicis, Euronext, Fresenius, Continental, GEA Group,
+# Croda, Fresnillo, Halma, Intertek, Saipem, Sands China, Alstom, OCI),
+# toutes de grandes capitalisations établies sur des secteurs variés,
+# affichaient "Donnée indisponible (pas de ligne EBITDA/résultat net
+# exploitable)" en valorisation — vérifié en direct via yfinance pour 3
+# d'entre elles (Continental, Alstom, Fresnillo) : la ligne "EBITDA"
+# existe bel et bien chez Yahoo à l'instant du contrôle, donc pas un
+# vrai trou de données à la source, même famille de rate-limiting que
+# le cas balance_sheet ci-dessus. Ne s'applique PAS aux tickers déjà
+# connus pour n'avoir structurellement aucun EBITDA (FINANCIAL_SECTOR_TICKERS,
+# TRUST_TICKERS) : exiger cette ligne pour eux ferait échouer les 3
+# tentatives à chaque run, sans jamais pouvoir réussir.
+_FINANCIALS_CRITICAL_ROW_GROUPS = (
+    ("Net Income", "Net Income Common Stockholders"),
+    ("EBITDA", "Normalized EBITDA"),
+)
 
-def _latest_column_is_usable(statement, attribute_name: str) -> bool:
+
+def _latest_column_is_usable(statement, attribute_name: str, ticker: str = "") -> bool:
     """Vrai si la colonne la plus récente du relevé contient les valeurs
-    dont on a besoin en aval. Pour `balance_sheet`, vérifie précisément
-    les lignes critiques ci-dessus (equity_latest/total_assets_latest
-    en dépendent directement, voir fetch_company_financials) ; pour les
-    autres relevés, un garde-fou plus générique (la colonne n'est pas
-    *entièrement* NaN) suffit, aucun cas de ligne précise dégradée n'y
-    ayant été constaté à ce jour."""
+    dont on a besoin en aval. Pour `balance_sheet` et `financials` (hors
+    profil financier/trust, qui n'ont structurellement pas d'EBITDA),
+    vérifie précisément les lignes critiques ci-dessus ; pour les autres
+    cas, un garde-fou plus générique (la colonne n'est pas *entièrement*
+    NaN) suffit, aucun cas de ligne précise dégradée n'y ayant été
+    constaté à ce jour."""
     if statement.empty or len(statement.columns) == 0:
         return False
     latest_col = statement.columns[0]
     if attribute_name == "balance_sheet":
-        return all(
-            any(
-                name in statement.index and not _is_missing(statement.loc[name, latest_col])
-                for name in names
-            )
-            for names in _BALANCE_SHEET_CRITICAL_ROW_GROUPS
+        groups = _BALANCE_SHEET_CRITICAL_ROW_GROUPS
+    elif (
+        attribute_name == "financials"
+        and ticker not in FINANCIAL_SECTOR_TICKERS
+        and ticker not in TRUST_TICKERS
+    ):
+        groups = _FINANCIALS_CRITICAL_ROW_GROUPS
+    else:
+        return not statement.iloc[:, 0].isna().all()
+    return all(
+        any(
+            name in statement.index and not _is_missing(statement.loc[name, latest_col])
+            for name in names
         )
-    return not statement.iloc[:, 0].isna().all()
+        for names in groups
+    )
 
 
 def _fetch_statement_with_retry(ticker: str, attribute_name: str):
@@ -3622,7 +3648,7 @@ def _fetch_statement_with_retry(ticker: str, attribute_name: str):
     statement = None
     for attempt in range(FETCH_RETRY_ATTEMPTS):
         statement = getattr(yf.Ticker(ticker), attribute_name)
-        if len(statement.index) >= MIN_STATEMENT_ROWS and _latest_column_is_usable(statement, attribute_name):
+        if len(statement.index) >= MIN_STATEMENT_ROWS and _latest_column_is_usable(statement, attribute_name, ticker):
             return statement
         if attempt < FETCH_RETRY_ATTEMPTS - 1:
             time.sleep(FETCH_RETRY_DELAY_SECONDS)

@@ -1892,6 +1892,31 @@ SHARES_OUTSTANDING_FROM_MARKET_CAP_TICKERS = {
     "3993.HK",  # CMOC Group — ratio vérifié 0.18
     "3750.HK",  # Contemporary Amperex Technology (CATL) — ratio vérifié 0.05
     "0300.HK",  # Midea Group — ratio vérifié 0.09
+    # S&P 500 (audit 2026-10-10) : jamais vérifié pour cet indice avant
+    # — mécanisme confirmé identique à VOW3.DE (Yahoo calcule marketCap
+    # sur le total de TOUTES les classes d'actions, mais sharesOutstanding
+    # ne compte que celle du ticker interrogé), avec vérification croisée
+    # SEC EDGAR (10-K/10-Q) pour chaque ticker avant ajout, pas seulement
+    # le ratio yfinance seul.
+    "GOOGL",  # Alphabet Class A — ratio vérifié 0.480, SEC 10-K FY2025 : total A+B+C 12 211M vs sharesOutstanding 5 867M (Class A seule)
+    "GOOG",   # Alphabet Class C — ratio vérifié 0.452, même 10-K, sharesOutstanding 5 527M (Class C seule)
+    "BRK-B",  # Berkshire Hathaway — ratio vérifié 0.658, 10-K : 1 438 223 actions A-équiv. (≈2,157Md en B-équiv.) vs sharesOutstanding 1,408Md (actions B réelles seules)
+    "NWSA",   # News Corp Class A — ratio vérifié 0.667, impliedSharesOutstanding identique (538,8M) sur NWSA et NWS
+    "NWS",    # News Corp Class B — ratio vérifié 0.333, idem
+    "FOXA",   # Fox Corp Class A — ratio vérifié 0.478, impliedSharesOutstanding identique (421,7M) sur FOXA et FOX
+    "FOX",    # Fox Corp Class B — ratio vérifié 0.522, idem
+    "BF-B",   # Brown-Forman Class B — ratio vérifié 0.633, impliedSharesOutstanding ≈458,9M cohérent avec Class A+B connu (~459M)
+    "LEN",    # Lennar Class A — ratio vérifié 0.874, impliedSharesOutstanding (237,9M) = LEN (207,9M) + LEN-B (30,0M)
+    "EL",     # Estée Lauder — ratio vérifié 0.684, 10-Q oct. 2025 : Class A 234,8M + Class B 125,5M = 360,3M ≈ implied (362,3M)
+    "RL",     # Ralph Lauren — ratio vérifié 0.633, 10-K mai 2025 : Class A 39,9M + Class B 21,9M = 61,8M ≈ implied (59,6M)
+    "META",   # Meta Platforms — ratio vérifié 0.866, 10-Q 2025 : Class A ~2 187M + Class B ~343M = ~2 530M ≈ implied (2 548M)
+    "PLTR",   # Palantir — ratio vérifié 0.957, ARS FY2025 : Class A+B+F = 2 391,2M ≈ implied (2 403M) ; Class F = voting trust Karp/Thiel/Cohen
+    "WDAY",   # Workday — ratio vérifié 0.813, 10-K : Class A 215M + Class B 51M = 266M, cohérent avec implied actuel (241M)
+    "DASH",   # DoorDash — ratio vérifié 0.944, 10-K FY2025 : Class A 409,7M + Class B 24,6M = 434,2M ≈ implied (433,3M)
+    "COIN",   # Coinbase — ratio vérifié 0.844, 10-Q oct. 2025 : Class A 228,2M + Class B 41,5M = 269,7M ≈ implied (263,8M)
+    "RDDT",   # Reddit — ratio vérifié 0.759, 10-Q avril 2025 : Class A 129,5M + Class B 55,0M = 184,5M, cohérent avec implied actuel (192,4M)
+    "ABNB",   # Airbnb — ratio vérifié 0.701, 10-K confirme l'existence de Class B/C/H non cotées (seule Class A listée) ; confiance légèrement moindre, décompte exact de la Class B non retrouvé en externe
+    "CVNA",   # Carvana — ratio vérifié 0.649, prospectus fév. 2025 : Class A 134,1M + Class B 79,1M (63%/37%), proportion cohérente avec le split implied actuel (65%/35%)
 }
 
 # Banques et assurances françaises (BNP Paribas, Société Générale, Crédit

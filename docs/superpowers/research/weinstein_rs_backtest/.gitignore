@@ -1,0 +1,3 @@
+# Donnees derivees volumineuses, regenerees localement par build_weekly_grid.py
+# et les scripts de run_*.py (voir README.md). Jamais committees.
+data/

@@ -1853,6 +1853,7 @@ def _fake_ratios():
         "is_financial": False,
         "is_trust": False,
         "_price_history_daily": [],
+        "_volume_history_daily": [],
         "_dividend_history": [],
     }
 
@@ -5918,6 +5919,7 @@ def _fake_financial_ratios():
         "is_financial": True,
         "is_trust": False,
         "_price_history_daily": [],
+        "_volume_history_daily": [],
         "_dividend_history": [],
     }
 
@@ -6110,6 +6112,32 @@ def test_build_company_entry_carries_the_dividend_history_through(monkeypatch):
 
     assert "_dividend_history" in entry
     assert entry["_dividend_history"] == fake_ratios["_dividend_history"]
+    assert entry["ticker"] == "BNP.PA"
+    assert entry["index"] == "CAC40"
+
+
+def test_build_company_entry_carries_the_volume_history_through(monkeypatch):
+    """Meme cablage que _price_history_daily (voir
+    test_build_company_entry_carries_the_price_history_through) applique a
+    _volume_history_daily : build_company_entry doit la faire remonter
+    jusqu'a son dict de sortie, pour que main() puisse ensuite la retirer
+    (.pop) avant d'ecrire docs/indices.json et la rediriger vers
+    update_volume_history (docs/volume_history.json). Regression guard pour
+    l'oubli de cablage qui laissait docs/volume_history.json vide en
+    production."""
+    fake_ratios = _fake_financial_ratios()
+    fake_ratios["_volume_history_daily"] = [
+        {"date": "2024-01-01", "ticker": "BNP.PA", "volume": 123456.0},
+    ]
+    monkeypatch.setattr(indices_score, "fetch_company_financials", lambda ticker: fake_ratios)
+    monkeypatch.setattr(indices_score, "fetch_news", lambda name, prev=None: [])
+    monkeypatch.setattr(indices_score, "generate_financial_analysis", lambda *a, **k: "<p>Analyse.</p>")
+
+    entry = indices_score.build_company_entry(
+        "BNP.PA", "BNP Paribas", risk_free_rate=0.03, previous_analyses={}, index_key="CAC40")
+
+    assert "_volume_history_daily" in entry
+    assert entry["_volume_history_daily"] == fake_ratios["_volume_history_daily"]
     assert entry["ticker"] == "BNP.PA"
     assert entry["index"] == "CAC40"
 

@@ -6108,6 +6108,7 @@ def build_company_entry(
         "financial_analysis_quarter": financial_analysis_quarter,
     }
     entry["_price_history_daily"] = data["_price_history_daily"]
+    entry["_volume_history_daily"] = data["_volume_history_daily"]
     entry["_dividend_history"] = data["_dividend_history"]
     devise_indice = INDEX_CURRENCY.get(index_key)
     devise_cotation = data.get("quote_currency")

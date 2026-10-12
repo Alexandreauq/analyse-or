@@ -3959,6 +3959,19 @@ def fetch_company_financials(ticker: str) -> dict:
         {"date": idx.strftime("%Y-%m-%d"), "ticker": ticker, "price": float(val)}
         for idx, val in history.items()
     ]
+    # Meme principe que _price_history_daily, pour le volume (constat
+    # 2026-10-12 : la routine hebdomadaire de raisonnement IA sur
+    # actualite+volume ne peut pas appeler yfinance en direct depuis son
+    # bac a sable cloud, reseau bloque par la politique de l'environnement
+    # — elle lit donc depuis le depot comme pour le prix, via ce nouveau
+    # docs/volume_history.json plutot que de dependre d'un acces reseau
+    # qu'elle n'a pas). daily_volumes est deja reindexe sur history.index
+    # (memes dates), donc dropna() ecarte les jours sans valeur de volume
+    # exploitable sans desynchroniser les deux historiques.
+    ratios["_volume_history_daily"] = [
+        {"date": idx.strftime("%Y-%m-%d"), "ticker": ticker, "volume": float(val)}
+        for idx, val in daily_volumes.dropna().items()
+    ]
     ratios["_dividend_history"] = [
         {"date": idx.strftime("%Y-%m-%d"), "ticker": ticker, "amount": float(val)}
         for idx, val in dividends.items()
@@ -4375,6 +4388,72 @@ def update_price_history(new_entries: list[dict], path=PRICE_HISTORY_PATH, today
         return rounded
     except Exception as e:
         print(f"Erreur historique de prix : {e}")
+        return []
+
+
+# Meme retention que docs/price_history.json (voir update_price_history) :
+# ce fichier sert la routine IA hebdomadaire (actualite + contexte + volume),
+# pas un affichage grand public, mais la densite recente importe autant
+# (ratio volume semaine courante vs moyenne des semaines precedentes).
+VOLUME_HISTORY_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "docs", "volume_history.json")
+
+
+def _downsample_volume_entries(entries: list[dict], today) -> list[dict]:
+    """Meme regle que _downsample_price_entries, champ "volume" au lieu
+    de "price" — voir sa docstring pour le detail du downsampling."""
+    cutoff_recent = today - timedelta(days=PRICE_HISTORY_RECENT_DAYS)
+    cutoff_retention = today - timedelta(days=PRICE_HISTORY_RETENTION_DAYS)
+    recent_by_date: dict[str, dict] = {}
+    older_by_week: dict[tuple, dict] = {}
+    for entry in entries:
+        entry_date = datetime.strptime(entry["date"], "%Y-%m-%d").date()
+        if entry_date < cutoff_retention:
+            continue
+        if entry_date >= cutoff_recent:
+            recent_by_date[entry["date"]] = entry
+            continue
+        week_key = entry_date.isocalendar()[:2]
+        existing = older_by_week.get(week_key)
+        if existing is None or entry["date"] > existing["date"]:
+            older_by_week[week_key] = entry
+    result = list(older_by_week.values()) + list(recent_by_date.values())
+    result.sort(key=lambda e: e["date"])
+    return result
+
+
+def load_volume_history(path=VOLUME_HISTORY_PATH) -> list[dict]:
+    """Meme contrat que load_price_history : [] si le fichier est absent
+    ou corrompu, jamais d'exception."""
+    if not os.path.exists(path):
+        return []
+    try:
+        with open(path, encoding="utf-8") as fh:
+            return json.load(fh)
+    except json.JSONDecodeError:
+        return []
+
+
+def update_volume_history(new_entries: list[dict], path=VOLUME_HISTORY_PATH, today=None) -> list[dict]:
+    """Meme logique que update_price_history (voir sa docstring), champ
+    "volume" au lieu de "price". Arrondi a l'entier : le volume n'a pas
+    besoin de decimales et un entier reduit encore la taille du fichier."""
+    today = today or datetime.today().date()
+    try:
+        history = load_volume_history(path)
+        history.extend(new_entries)
+        by_ticker: dict[str, list[dict]] = {}
+        for entry in history:
+            by_ticker.setdefault(entry["ticker"], []).append(entry)
+        trimmed = []
+        for ticker_entries in by_ticker.values():
+            trimmed.extend(_downsample_volume_entries(ticker_entries, today))
+        rounded = [{**entry, "volume": round(entry["volume"])} for entry in trimmed]
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, "w", encoding="utf-8") as fh:
+            json.dump(rounded, fh, ensure_ascii=False, allow_nan=False, separators=(",", ":"))
+        return rounded
+    except Exception as e:
+        print(f"Erreur historique de volume : {e}")
         return []
 
 
@@ -6375,6 +6454,11 @@ def main():
         price_history_entries.extend(c.pop("_price_history_daily", []))
     price_history_entries.extend(fetch_index_price_history())
     update_price_history(price_history_entries)
+
+    volume_history_entries = []
+    for c in companies:
+        volume_history_entries.extend(c.pop("_volume_history_daily", []))
+    update_volume_history(volume_history_entries)
 
     dividend_history_entries = []
     for c in companies:

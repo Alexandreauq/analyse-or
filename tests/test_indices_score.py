@@ -1,4 +1,5 @@
 import email
+import os
 import pytest
 import requests
 from datetime import datetime
@@ -3556,6 +3557,130 @@ def test_update_price_history_rounds_prices_and_writes_compact_json(tmp_path):
 
 def test_load_dividend_history_returns_empty_list_when_file_is_absent(tmp_path):
     assert indices_score.load_dividend_history(str(tmp_path / "absent.json")) == []
+
+
+def test_update_volume_history_writes_new_entries_to_a_fresh_file(tmp_path):
+    path = str(tmp_path / "volume_history.json")
+    entries = [{"date": "2026-09-21", "ticker": "MC.PA", "volume": 1234567.0}]
+    result = indices_score.update_volume_history(entries, path=path, today=_date(2026, 9, 21))
+    assert result == [{"date": "2026-09-21", "ticker": "MC.PA", "volume": 1234567}]
+    assert indices_score.load_volume_history(path) == result
+
+
+def test_update_volume_history_accumulates_across_calls_and_downsamples(tmp_path):
+    path = str(tmp_path / "volume_history.json")
+    indices_score.update_volume_history(
+        [{"date": "2026-01-05", "ticker": "MC.PA", "volume": 900000.0}], path=path, today=_date(2026, 1, 5))
+    indices_score.update_volume_history(
+        [{"date": "2026-09-21", "ticker": "MC.PA", "volume": 1200000.0}], path=path, today=_date(2026, 9, 21))
+    result = indices_score.load_volume_history(path)
+    dates = [e["date"] for e in result]
+    assert "2026-01-05" in dates
+    assert "2026-09-21" in dates
+
+
+def test_update_volume_history_trims_independently_per_ticker(tmp_path):
+    path = str(tmp_path / "volume_history.json")
+    entries = [
+        {"date": "2026-09-21", "ticker": "MC.PA", "volume": 1234567.0},
+        {"date": "2026-09-21", "ticker": "SAP.DE", "volume": 654321.0},
+    ]
+    result = indices_score.update_volume_history(entries, path=path, today=_date(2026, 9, 21))
+    tickers = {e["ticker"] for e in result}
+    assert tickers == {"MC.PA", "SAP.DE"}
+
+
+def test_update_volume_history_never_writes_nan(tmp_path):
+    # round() sans ndigits leve TypeError sur NaN avant meme l'ecriture du
+    # fichier (contrairement a round(x, 4) pour le prix, qui laisse passer
+    # NaN jusqu'au json.dump) -- la propriete recherchee (aucun NaN ecrit)
+    # tient quand meme : soit le fichier n'existe pas, soit il ne contient
+    # pas "NaN".
+    path = str(tmp_path / "volume_history.json")
+    entries = [{"date": "2026-09-21", "ticker": "MC.PA", "volume": float("nan")}]
+    result = indices_score.update_volume_history(entries, path=path, today=_date(2026, 9, 21))
+    assert result == []
+    if os.path.exists(path):
+        with open(path, encoding="utf-8") as fh:
+            assert "NaN" not in fh.read()
+
+
+def test_update_volume_history_degrades_to_empty_list_on_unexpected_failure(tmp_path):
+    path = str(tmp_path / "sous_dossier_impossible" / "volume_history.json")
+    fichier_bloquant = tmp_path / "sous_dossier_impossible"
+    fichier_bloquant.write_text("x", encoding="utf-8")
+    result = indices_score.update_volume_history(
+        [{"date": "2026-09-21", "ticker": "MC.PA", "volume": 1234567.0}], path=path, today=_date(2026, 9, 21))
+    assert result == []
+
+
+def test_update_volume_history_rounds_to_integer_and_writes_compact_json(tmp_path):
+    path = str(tmp_path / "volume_history.json")
+    entries = [{"date": "2026-09-21", "ticker": "MC.PA", "volume": 1234567.8}]
+    result = indices_score.update_volume_history(entries, path=path, today=_date(2026, 9, 21))
+    assert result[0]["volume"] == 1234568
+    with open(path, encoding="utf-8") as fh:
+        content = fh.read()
+    assert "\n  " not in content
+    assert "1234568" in content
+
+
+def test_fetch_company_financials_includes_volume_history_daily(monkeypatch):
+    """Meme garantie que _price_history_daily (voir
+    test_fetch_company_financials_exposes_the_full_price_history_for_persistence,
+    dont ce test reprend exactement le montage) : le point de volume
+    quotidien doit etre present pour que la routine IA hebdomadaire
+    puisse lire le volume depuis le depot plutot que d'appeler yfinance
+    en direct depuis son bac a sable cloud (reseau bloque, constat
+    2026-10-12)."""
+    financials, balance_sheet, cashflow, _ = _make_fixture_statements()
+    financials.columns = pd.to_datetime(financials.columns)
+    balance_sheet.columns = pd.to_datetime(balance_sheet.columns)
+    cashflow.columns = pd.to_datetime(cashflow.columns)
+    quarterly = _fake_annual_df({"Diluted Average Shares": [100.0]}, [pd.Timestamp("2025-09-30")])
+    history_index = pd.date_range("2024-01-01", periods=3, freq="D")
+    history_close = pd.Series([100.0, 101.0, 102.0], index=history_index)
+    history_volume = pd.Series([5_000_000.0, 5_200_000.0, 5_500_000.0], index=history_index)
+
+    class _FakeTicker:
+        def __init__(self, ticker):
+            self._ticker = ticker
+
+        @property
+        def financials(self):
+            return financials
+
+        @property
+        def balance_sheet(self):
+            return balance_sheet
+
+        @property
+        def cashflow(self):
+            return cashflow
+
+        @property
+        def quarterly_financials(self):
+            return quarterly
+
+        @property
+        def info(self):
+            return {"sharesOutstanding": 1000.0, "beta": 0.9, "sector": "Basic Materials"}
+
+        def history(self, period=None):
+            return pd.DataFrame({"Close": history_close, "Volume": history_volume})
+
+    monkeypatch.setattr(indices_score.yf, "Ticker", _FakeTicker)
+    monkeypatch.setattr(indices_score.time, "sleep", lambda s: None)
+
+    result = indices_score.fetch_company_financials("MC.PA")
+
+    assert "_volume_history_daily" in result
+    entries = result["_volume_history_daily"]
+    assert len(entries) == 3
+    assert all(e["ticker"] == "MC.PA" for e in entries)
+    assert all(set(e.keys()) == {"date", "ticker", "volume"} for e in entries)
+    assert entries == sorted(entries, key=lambda e: e["date"])
+    assert entries[-1]["volume"] == pytest.approx(5_500_000.0)
 
 
 def test_load_dividend_history_degrades_to_empty_list_on_corrupt_json(tmp_path):

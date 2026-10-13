@@ -1,20 +1,20 @@
 {
-  "date": "2026-10-12",
-  "composite_score": -27.3,
+  "date": "2026-10-13",
+  "composite_score": -26.1,
   "interpretation": "Défavorable — pas d'entrée même sur signal technique",
   "cftc_percentile": 51.28205128205128,
   "factors": [
     {
       "name": "Taux réels US 10 ans",
-      "score": -9.000000000000004,
+      "score": -8.600000000000003,
       "weight": 0.3,
-      "raw_value": "2.87% (il y a ~45j : 2.42%)"
+      "raw_value": "2.87% (il y a ~45j : 2.44%)"
     },
     {
       "name": "Dollar (DXY)",
       "score": -10,
       "weight": 0.15,
-      "raw_value": "102.57 (il y a 2 mois : 100.01)"
+      "raw_value": "102.43 (il y a 2 mois : 99.96)"
     },
     {
       "name": "Anticipations d'inflation",
@@ -48,9 +48,9 @@
     }
   ],
   "technical": {
-    "note": "Cours en-dessous de la MM200 (-7.8%) — tendance baissière",
-    "spot": 4191.39990234375,
-    "ma200": 4546.44650024414
+    "note": "Cours en-dessous de la MM200 (-7.3%) — tendance baissière",
+    "spot": 4215.39990234375,
+    "ma200": 4545.005501708984
   },
   "calendar": [
     {
@@ -99,7 +99,7 @@
       "kind": "info",
       "title": "Pas de signal actif",
       "detail": "Aucune des conditions de veille, d'entrée ou de risque n'est réunie aujourd'hui.",
-      "date": "12/10/2026"
+      "date": "13/10/2026"
     }
   ]
 }

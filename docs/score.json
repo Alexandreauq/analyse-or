@@ -14,7 +14,7 @@
       "name": "Dollar (DXY)",
       "score": -10,
       "weight": 0.15,
-      "raw_value": "102.02 (il y a 2 mois : 99.64)"
+      "raw_value": "101.78 (il y a 2 mois : 99.64)"
     },
     {
       "name": "Anticipations d'inflation",
@@ -48,9 +48,9 @@
     }
   ],
   "technical": {
-    "note": "Cours en-dessous de la MM200 (-8.1%) — tendance baissière",
-    "spot": 4175.5,
-    "ma200": 4541.750499267579
+    "note": "Cours en-dessous de la MM200 (-7.3%) — tendance baissière",
+    "spot": 4209.5,
+    "ma200": 4540.839500732422
   },
   "calendar": [
     {
@@ -66,11 +66,6 @@
     {
       "date": "29/10/2026",
       "label": "PCE (dépenses de consommation des ménages)",
-      "kind": "Donnée"
-    },
-    {
-      "date": "29/10/2026",
-      "label": "PIB (GDP)",
       "kind": "Donnée"
     },
     {
@@ -91,6 +86,11 @@
     {
       "date": "17/11/2026",
       "label": "Ventes au détail",
+      "kind": "Donnée"
+    },
+    {
+      "date": "?",
+      "label": "PIB (GDP) (indisponible : 502 Server Error: Bad Gateway for url: https://api.stlouisfed.org/fred/release/dates?release_id=53&api_key=62d93f9759e8efae0332711f64933090&file_type=json&sort_order=asc&include_release_dates_with_no_data=true&limit=10000)",
       "kind": "Donnée"
     }
   ],

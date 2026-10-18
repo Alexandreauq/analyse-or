@@ -1,14 +1,14 @@
 {
-  "date": "2026-10-17",
-  "composite_score": -20.4,
+  "date": "2026-10-18",
+  "composite_score": -22.7,
   "interpretation": "Défavorable — pas d'entrée même sur signal technique",
   "cftc_percentile": 50.641025641025635,
   "factors": [
     {
       "name": "Taux réels US 10 ans",
-      "score": -6.5999999999999925,
+      "score": -7.1999999999999975,
       "weight": 0.3,
-      "raw_value": "2.78% (il y a ~45j : 2.45%)"
+      "raw_value": "2.78% (il y a ~45j : 2.42%)"
     },
     {
       "name": "Dollar (DXY)",
@@ -18,9 +18,9 @@
     },
     {
       "name": "Anticipations d'inflation",
-      "score": 0.33333333333334103,
+      "score": 0.0,
       "weight": 0.15,
-      "raw_value": "2.35% (il y a ~45j : 2.34%)"
+      "raw_value": "2.35% (il y a ~45j : 2.35%)"
     },
     {
       "name": "Ton de la Fed",
@@ -99,7 +99,7 @@
       "kind": "info",
       "title": "Pas de signal actif",
       "detail": "Aucune des conditions de veille, d'entrée ou de risque n'est réunie aujourd'hui.",
-      "date": "17/10/2026"
+      "date": "18/10/2026"
     }
   ]
 }

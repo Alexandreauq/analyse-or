@@ -1,0 +1,380 @@
+{
+ "date_test": "2026-10-19",
+ "date_verification_prevue": "2026-11-16",
+ "methodologie": "Test prospectif (pas un backtest) : raisonnement combine sur 4 dimensions (actualite, technique stage/score/rendements, sectoriel, volume 5j vs 20j precedents), zero appel reseau, donnees du depot au 2026-10-18. Pari date et enregistre avant connaitre le resultat. Ecart au protocole : seules 2 entreprises non deja pariees avaient une actu 'majeure'/'notable' recente (l'echelle d'importance en produit tres peu) ; candidats retenus sur mouvements forts (|rendement 5j| eleve, volume anormal) et couverture presse dense des 14 derniers jours. Biais a garder en tete : ces candidats sont surtout des titres ayant deja fortement bouge (momentum/retournement), pas des chocs d'actu purs ; contexte dominant = sell-off IA/dette 'neocloud' du 16 octobre. Appels de 'retracement' = pari de retour a la moyenne.",
+ "paris": [
+  {
+   "ticker": "CRWV",
+   "nom": "CoreWeave",
+   "secteur": "Technology",
+   "prix_entree": 61.39,
+   "appel": "neutre",
+   "confiance": "tres_faible",
+   "dimension_dominante": "sectoriel",
+   "stage_label": "Neutre",
+   "score": -95.0,
+   "sector_profile": "cyclique",
+   "rendement_5j_pct": -25.2,
+   "rendement_20j_pct": -24.5,
+   "volume_ratio_5j_vs_20j": 2.59,
+   "actualites_recentes": [
+    "2026-10-15 (+0) Le retour à la réalité des géants surendettés de la tech - Les Echos",
+    "2026-10-16 (+0) Pourquoi CoreWeave est dans le collimateur de l'inquiétude liée à l'IA - Boursorama",
+    "2026-10-16 (+0) CoreWeave est mal comprise, assure un de ses actionnaires - Zonebourse Suisse",
+    "2026-10-16 (+0) Les bourses en direct | Wall Street termine dans le rouge, le Nasdaq lâche plus de 2%, Coreweave chute de près"
+   ],
+   "contexte_sectoriel": [
+    "CIEN -26.0% (5j)",
+    "COHR -25.5% (5j)",
+    "LITE -25.3% (5j)"
+   ],
+   "raison": "Peur de la dette des 'neocloud' IA : -25% en 5j, volume 2.59x. Contagion sectorielle evidente mais capitulation vs debut de purge indecidable ; fondamentaux tres faibles. Aucun avantage directionnel."
+  },
+  {
+   "ticker": "NBIS",
+   "nom": "Nebius Group",
+   "secteur": "Communication Services",
+   "prix_entree": 165.47,
+   "appel": "neutre_leger_haussier",
+   "confiance": "faible",
+   "dimension_dominante": "technique",
+   "stage_label": "Neutre",
+   "score": -80.6,
+   "sector_profile": "standard",
+   "rendement_5j_pct": -25.2,
+   "rendement_20j_pct": -26.0,
+   "volume_ratio_5j_vs_20j": 1.84,
+   "actualites_recentes": [
+    "2026-10-15 (+0) NEBIUS GROUP CL.A termine en hausse - Boursier.com",
+    "2026-10-17 (+0) Nebius Stock Fell 12% in a Day as CoreWeave’s Debt Scare Spread. Here’s Why Its Balance Sheet Isn’t CoreWeave’",
+    "2026-10-16 (+0) NEBIUS GROUP CL.A finit en forte baisse - Boursier.com",
+    "2026-10-14 (+0) Nebius Stocks Fall 10.33% Although Insider Sale Followed a June Trading Plan - TradingView"
+   ],
+   "contexte_sectoriel": [
+    "ETL.PA +28.0% (5j)",
+    "PSKY -24.6% (5j)",
+    "SESG.PA +19.1% (5j)"
+   ],
+   "raison": "-26% sur 20j, victime collaterale de la contagion CoreWeave (la presse note un bilan different). Survente technique -> rebond possible, mais tendance et contagion IA restent contre."
+  },
+  {
+   "ticker": "VRT",
+   "nom": "Vertiv",
+   "secteur": "Industrials",
+   "prix_entree": 206.42,
+   "appel": "neutre",
+   "confiance": "tres_faible",
+   "dimension_dominante": "actu",
+   "stage_label": "Déclin",
+   "score": 85.6,
+   "sector_profile": "standard",
+   "rendement_5j_pct": -15.0,
+   "rendement_20j_pct": -17.2,
+   "volume_ratio_5j_vs_20j": 1.61,
+   "actualites_recentes": [
+    "2026-10-16 (+0) Vertiv Holdings Co.: Objectif de Cours et Consensus des Analystes | VRT | US92537N1081 - Zonebourse",
+    "2026-10-14 (+0) Vertiv Announces Date of Third Quarter 2026 Earnings Release and Conference Call - TradingView",
+    "2026-10-15 (+0) Pourquoi l’action Vertiv chute-t-elle aujourd’hui ? - Investing.com France",
+    "2026-10-14 (+0) Construire l'avenir numérique de l'Afrique : Wojtek Piorko de Vertiv parle d'IA, de centres de données et de p"
+   ],
+   "contexte_sectoriel": [
+    "RKLB -25.5% (5j)",
+    "6532.T +22.2% (5j)",
+    "BE -21.1% (5j)"
+   ],
+   "raison": "-15% en 5j avec resultats T3 annonces prochainement : evenement binaire, phase Declin mais score fondamental positif. Direction non tranchee."
+  },
+  {
+   "ticker": "6857.T",
+   "nom": "Advantest",
+   "secteur": "Technology",
+   "prix_entree": 34530.0,
+   "appel": "haussier",
+   "confiance": "faible",
+   "dimension_dominante": "technique",
+   "stage_label": "Achat",
+   "score": 97.2,
+   "sector_profile": "cyclique",
+   "rendement_5j_pct": -15.6,
+   "rendement_20j_pct": -2.1,
+   "volume_ratio_5j_vs_20j": 1.5,
+   "actualites_recentes": [
+    "2026-10-15 (+0) Pourquoi le titre Advantest s’effondre-t-il aujourd’hui ? - Investing.com France",
+    "2026-10-13 (+0) Advantest Corporation présente ses dernières solutions de test des semi-conducteurs à SEMICON West 2026 - Zone"
+   ],
+   "contexte_sectoriel": [
+    "CIEN -26.0% (5j)",
+    "COHR -25.5% (5j)",
+    "LITE -25.3% (5j)"
+   ],
+   "raison": "Phase Achat, score 97, mais -15.6% en 5j ('s'effondre') dans le sell-off semi/IA. Repli dans une tendance haussiere avec volume 1.5x : rebond probable mais le secteur reste fragile."
+  },
+  {
+   "ticker": "7733.T",
+   "nom": "Olympus",
+   "secteur": "Healthcare",
+   "prix_entree": 1690.0,
+   "appel": "baissier",
+   "confiance": "moyenne",
+   "dimension_dominante": "actu",
+   "stage_label": "Neutre",
+   "score": -29.6,
+   "sector_profile": "defensif",
+   "rendement_5j_pct": -15.1,
+   "rendement_20j_pct": -21.4,
+   "volume_ratio_5j_vs_20j": 1.69,
+   "actualites_recentes": [
+    "2026-10-13 (+0) Olympus Corporation - Notice Regarding Receipt Of Warning Letter From FDA - TradingView",
+    "2026-10-14 (+0) Pourquoi l’action Olympus s’effondre-t-elle aujourd’hui ? - Investing.com France",
+    "2026-10-16 (+0) Le test de l'Olympus TG-4 par le Lab 01net.com - 01/07 - Orange Actualités",
+    "2026-10-12 (+0) Baiacool - Tides of Olympus - Trailer officiel de date de sortie - IGN France"
+   ],
+   "contexte_sectoriel": [
+    "4506.T +16.3% (5j)",
+    "MEDCL.PA -11.5% (5j)",
+    "2269.HK -10.5% (5j)"
+   ],
+   "raison": "Warning Letter de la FDA -> -15% et volume 1.69x. Ces dossiers se resolvent en mois, risque de nouvelles restrictions ; 20j a -21%, momentum negatif."
+  },
+  {
+   "ticker": "RCO.PA",
+   "nom": "Rémy Cointreau",
+   "secteur": "Consumer Defensive",
+   "prix_entree": 51.55,
+   "appel": "baissier",
+   "confiance": "faible",
+   "dimension_dominante": "volume",
+   "stage_label": "Achat",
+   "score": -77.6,
+   "sector_profile": "defensif",
+   "rendement_5j_pct": 20.6,
+   "rendement_20j_pct": 23.6,
+   "volume_ratio_5j_vs_20j": 2.7,
+   "actualites_recentes": [
+    "2026-10-14 (+0) SORTIE : Achat Call Remy Cointreau MR1FS8 - Bourse Direct",
+    "2026-10-13 (+0) Pernod ricard : Pourquoi les ventes de LVMH propulsent Rémy Cointreau, Pernod Ricard et L'Oréal en Bourse - BF",
+    "2026-10-13 (+0) Spiritueux : Remy Cointreau et Pernod Ricard pétillent - Boursier.com",
+    "2026-10-16 (+0) Cognac : l'action Rémy Cointreau franchit sa résistance de 49,28 €, RSI à 73 - Idéal Investisseur"
+   ],
+   "contexte_sectoriel": [
+    "RI.PA +10.7% (5j)",
+    "BF-B +9.4% (5j)",
+    "MICC.AS +9.3% (5j)"
+   ],
+   "raison": "+20.6% en 5j, volume 2.7x, sur lecture croisee des ventes LVMH (pas de news propre). Score fondamental -78 : excès de mouvement sectoriel, retracement partiel probable."
+  },
+  {
+   "ticker": "BC.MI",
+   "nom": "Brunello Cucinelli",
+   "secteur": "Consumer Cyclical",
+   "prix_entree": 87.28,
+   "appel": "haussier",
+   "confiance": "faible",
+   "dimension_dominante": "actu",
+   "stage_label": "Achat",
+   "score": -1.3,
+   "sector_profile": "cyclique",
+   "rendement_5j_pct": 8.3,
+   "rendement_20j_pct": 10.5,
+   "volume_ratio_5j_vs_20j": 1.54,
+   "actualites_recentes": [
+    "2026-10-17 (+0) Brunello Cucinelli : un troisième trimestre meilleur que prévu - FashionNetwork France",
+    "2026-10-16 (+0) Brunello Cucinelli surclasse les attentes au 3e trimestre et relève ses objectifs 2026 - Boursorama",
+    "2026-10-16 (+0) Défilé - Brunello Cucinelli - Homme Printemps-Eté 2027 - Madame Figaro",
+    "2026-10-15 (+0) Brunello Cucinelli Sees 2026 Revenue Growth Of 12% At Constant Exchange Rates - TradingView"
+   ],
+   "contexte_sectoriel": [
+    "FAST.AS -18.2% (5j)",
+    "5802.T -11.6% (5j)",
+    "JD.L +11.0% (5j)"
+   ],
+   "raison": "T3 meilleur que prevu et objectifs 2026 releves : post-earnings drift positif, phase Achat, volume 1.54x. Mais deja +8% en 5j donc potentiel partiellement consomme."
+  },
+  {
+   "ticker": "ETL.PA",
+   "nom": "Eutelsat",
+   "secteur": "Communication Services",
+   "prix_entree": 1.77,
+   "appel": "baissier",
+   "confiance": "faible",
+   "dimension_dominante": "volume",
+   "stage_label": "Déclin",
+   "score": -98.2,
+   "sector_profile": "standard",
+   "rendement_5j_pct": 28.0,
+   "rendement_20j_pct": 0.7,
+   "volume_ratio_5j_vs_20j": 3.32,
+   "actualites_recentes": [
+    "2026-10-16 (+0) Guerre en Ukraine : l’Union européenne incapable de remplacer le réseau Starlink à court terme malgré la propo",
+    "2026-10-16 (+0) SES et Eutelsat bondissent, Oddo BHF en soutien - Boursorama",
+    "2026-10-16 (+0) Eutelsat : une éventuelle alternative à Starlink en Ukraine ? - Idéal Investisseur",
+    "2026-10-14 (+0) Les actions d'Eutelsat s'envolent alors que l'Ukraine annonce des restrictions sur le service Starlink à usage"
+   ],
+   "contexte_sectoriel": [
+    "NBIS -25.2% (5j)",
+    "PSKY -24.6% (5j)",
+    "SESG.PA +19.1% (5j)"
+   ],
+   "raison": "+28% en 5j, volume 3.3x, sur restrictions Starlink en Ukraine : pic speculatif/narratif avec fondamentaux tres faibles (-98). Retracement attendu, mais le theme geopolitique peut prolonger."
+  },
+  {
+   "ticker": "ERA.PA",
+   "nom": "Eramet",
+   "secteur": "Basic Materials",
+   "prix_entree": 37.36,
+   "appel": "baissier",
+   "confiance": "faible",
+   "dimension_dominante": "actu",
+   "stage_label": "Déclin",
+   "score": -99.9,
+   "sector_profile": "cyclique",
+   "rendement_5j_pct": -17.6,
+   "rendement_20j_pct": -13.9,
+   "volume_ratio_5j_vs_20j": 2.28,
+   "actualites_recentes": [
+    "2026-10-16 (+0) ERAMET Cours Action ERA, Cotation Bourse Euronext Paris - Boursorama",
+    "2026-10-13 (+0) Eramet cède 14,43% - Boursier.com",
+    "2026-10-13 (+0) Eramet : ces trois minerais stratégiques sur lesquels mise le géant français - Les Echos",
+    "2026-10-12 (+0) L’Etat vole au secours du groupe minier Eramet, en difficulté financière - Le Monde.fr"
+   ],
+   "contexte_sectoriel": [
+    "GIVN.SW +13.8% (5j)",
+    "4004.T -13.7% (5j)",
+    "5301.T -11.4% (5j)"
+   ],
+   "raison": "Etat 'au secours' d'un groupe en difficulte financiere : -17.6% en 5j, volume 2.28x, fondamentaux -99.9. Dilution/restructuration possible ; mais le soutien public limite la baisse."
+  },
+  {
+   "ticker": "4506.T",
+   "nom": "Sumitomo Pharma",
+   "secteur": "Healthcare",
+   "prix_entree": 1840.5,
+   "appel": "neutre_prudent",
+   "confiance": "faible",
+   "dimension_dominante": "technique",
+   "stage_label": "Neutre",
+   "score": -4.4,
+   "sector_profile": "defensif",
+   "rendement_5j_pct": 16.3,
+   "rendement_20j_pct": 23.9,
+   "volume_ratio_5j_vs_20j": 1.93,
+   "actualites_recentes": [
+    "2026-10-15 (+0) Sumitomo Pharma Co., Ltd. : Morgan Stanley revoit son opinion à la hausse - Zonebourse Suisse",
+    "2026-10-15 (+0) Sumitomo Pharma Co., Ltd. : Morgan Stanley revoit son opinion à la hausse - Zonebourse"
+   ],
+   "contexte_sectoriel": [
+    "7733.T -15.1% (5j)",
+    "MEDCL.PA -11.5% (5j)",
+    "2269.HK -10.5% (5j)"
+   ],
+   "raison": "Upgrade Morgan Stanley, +16% en 5j et +24% sur 20j, volume 1.9x : mouvement deja tres etendu apres une news mineure, fondamentaux neutres. Pas d'avantage."
+  },
+  {
+   "ticker": "GIVN.SW",
+   "nom": "Givaudan",
+   "secteur": "Basic Materials",
+   "prix_entree": 3915.0,
+   "appel": "haussier",
+   "confiance": "faible",
+   "dimension_dominante": "technique",
+   "stage_label": "Achat",
+   "score": 63.0,
+   "sector_profile": "cyclique",
+   "rendement_5j_pct": 13.8,
+   "rendement_20j_pct": 20.5,
+   "volume_ratio_5j_vs_20j": 2.18,
+   "actualites_recentes": [
+    "2026-10-16 (+0) Givaudan en léger repli après cinq hausses à la suite - Boursorama",
+    "2026-10-16 (+0) Givaudan en léger repli après cinq hausses à la suite - Bourse Direct",
+    "2026-10-14 (+0) Givaudan : l’activité sur neuf mois portée par la parfumerie - Premium Beauty News",
+    "2026-10-13 (+0) Givaudan porté par ses activités de parfumerie sur neuf mois - FashionNetwork France"
+   ],
+   "contexte_sectoriel": [
+    "ERA.PA -17.6% (5j)",
+    "4004.T -13.7% (5j)",
+    "5301.T -11.4% (5j)"
+   ],
+   "raison": "Phase Achat, 9 mois portes par la parfumerie, +13.8% en 5j (volume 2.18x) apres cinq hausses d'affilee. Tendance forte mais deja etendue : haussier prudent."
+  },
+  {
+   "ticker": "IMB.L",
+   "nom": "Imperial Brands",
+   "secteur": "Consumer Defensive",
+   "prix_entree": 28.79,
+   "appel": "neutre_leger_haussier",
+   "confiance": "faible",
+   "dimension_dominante": "actu",
+   "stage_label": "Neutre",
+   "score": 49.4,
+   "sector_profile": "defensif",
+   "rendement_5j_pct": 8.2,
+   "rendement_20j_pct": 15.5,
+   "volume_ratio_5j_vs_20j": 1.68,
+   "actualites_recentes": [
+    "2026-10-16 (+0) REG - Imperial Brands PLC - Holding(s) in Company - TradingView",
+    "2026-10-08 (+0) Imperial Brands sur la fin d'une belle séquence ? - Zonebourse",
+    "2026-10-08 (+0) Pourquoi le titre Imperial Brands est-il en hausse aujourd’hui ? - Investing.com France",
+    "2026-10-08 (+0) Résultats de l'exercice 26 d'Imperial Brands : rachat d'actions de 1,5 milliard de livres sterling - Quartz en"
+   ],
+   "contexte_sectoriel": [
+    "RCO.PA +20.6% (5j)",
+    "RI.PA +10.7% (5j)",
+    "BF-B +9.4% (5j)"
+   ],
+   "raison": "Resultats FY26 et rachat d'actions de 1.5 Md GBP : soutien mecanique, defensif. Deja +15% sur 20j, donc potentiel limite."
+  },
+  {
+   "ticker": "FAST.AS",
+   "nom": "FASTNED",
+   "secteur": "Consumer Cyclical",
+   "prix_entree": 35.55,
+   "appel": "baissier",
+   "confiance": "faible",
+   "dimension_dominante": "technique",
+   "stage_label": "Achat",
+   "score": -91.9,
+   "sector_profile": "cyclique",
+   "rendement_5j_pct": -18.2,
+   "rendement_20j_pct": -14.1,
+   "volume_ratio_5j_vs_20j": 1.62,
+   "actualites_recentes": [
+    "2026-10-15 (+0) Support des 37,95 € enfoncé : l'action Fastned rechute malgré sa guidance confirmée - Idéal Investisseur",
+    "2026-10-15 (+0) Fastned accélère son rythme de déploiement alors que son chiffre d’affaires du troisième trimestre atteint 51,",
+    "2026-10-15 (+0) Cours, actualités, cotation et historique des capital-actions Fastned BV (FSF.SG) - Yahoo Finance France",
+    "2026-10-14 (+0) Fastned Q3 Revenue Reaches EUR 51.3 Million - TradingView"
+   ],
+   "contexte_sectoriel": [
+    "5802.T -11.6% (5j)",
+    "JD.L +11.0% (5j)",
+    "7832.T +10.1% (5j)"
+   ],
+   "raison": "Support 37.95 enfonce malgre guidance confirmee, -18% en 5j, volume 1.6x : la technique domine l'actu neutre. Mais survente."
+  },
+  {
+   "ticker": "PRY.MI",
+   "nom": "Prysmian",
+   "secteur": "Industrials",
+   "prix_entree": 109.4,
+   "appel": "neutre_leger_haussier",
+   "confiance": "faible",
+   "dimension_dominante": "sectoriel",
+   "stage_label": "Neutre",
+   "score": 59.6,
+   "sector_profile": "standard",
+   "rendement_5j_pct": -11.2,
+   "rendement_20j_pct": -10.7,
+   "volume_ratio_5j_vs_20j": 1.72,
+   "actualites_recentes": [
+    "2026-10-13 (+0) Prysmian Completes Acquisition Of Xtera With Enterprise Value Of $65 Million - TradingView",
+    "2026-10-13 (+0) Prysmian finalise l’acquisition de Xtera et renforce ses activités dans les câbles sous-marins de télécommunic",
+    "2026-10-13 (+0) Cours du Prysmian Tokenized Stock (xStock) (PRYx), Graphiques, Capitalisation - CoinMarketCap"
+   ],
+   "contexte_sectoriel": [
+    "RKLB -25.5% (5j)",
+    "6532.T +22.2% (5j)",
+    "BE -21.1% (5j)"
+   ],
+   "raison": "-11% en 5j (volume 1.72x) alors que la news propre est mineure (acquisition Xtera) : probable contagion du sell-off infrastructures IA/data centers ; rebond possible si le secteur se stabilise."
+  }
+ ]
+}

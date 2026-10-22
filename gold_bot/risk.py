@@ -124,15 +124,18 @@ class CircuitBreaker:
     de threshold_pct — il ne se réinitialise qu'au même moment que
     `_starting_balance`/`_day`, au rollover de jour."""
 
-    def __init__(self, threshold_pct: float = 0.10, now_fn=None, persist_path=None):
+    def __init__(self, threshold_pct: float = 0.10, now_fn=None, persist_path=None,
+                 max_trades_per_day: int | None = None):
         if not 0 < threshold_pct <= 1:
             raise ValueError("threshold_pct doit être compris entre 0 (exclu) et 1 (inclus)")
         self.threshold_pct = threshold_pct
+        self.max_trades_per_day = max_trades_per_day
         self._now_fn = now_fn or (lambda: datetime.now(timezone.utc))
         self._persist_path = persist_path
         self._day = None
         self._starting_balance = None
         self._tripped_today = False
+        self._trades_opened_today = 0
         if persist_path is not None:
             saved = state.load_state(persist_path)
             saved_day = saved.get("circuit_breaker_day")
@@ -142,10 +145,12 @@ class CircuitBreaker:
                     self._day = date.fromisoformat(saved_day)
                     self._starting_balance = float(saved_balance)
                     self._tripped_today = bool(saved.get("circuit_breaker_tripped_today", False))
+                    self._trades_opened_today = int(saved.get("circuit_breaker_trades_opened_today", 0))
                 except (ValueError, TypeError):
                     self._day = None
                     self._starting_balance = None
                     self._tripped_today = False
+                    self._trades_opened_today = 0
 
     def check(self, current_balance: float) -> None:
         """À appeler avant toute décision — fixe le solde de référence
@@ -172,6 +177,7 @@ class CircuitBreaker:
             self._day = today
             self._starting_balance = current_balance
             self._tripped_today = False
+            self._trades_opened_today = 0
             self._persist()
 
     def _persist(self) -> None:
@@ -182,9 +188,18 @@ class CircuitBreaker:
                 "circuit_breaker_day": self._day.isoformat(),
                 "circuit_breaker_starting_balance": self._starting_balance,
                 "circuit_breaker_tripped_today": self._tripped_today,
+                "circuit_breaker_trades_opened_today": self._trades_opened_today,
             },
             self._persist_path,
         )
+
+    def record_trade_opened(self) -> None:
+        """À appeler une fois par trade réellement ouvert (une seule fois
+        même si l'ouverture se scinde en plusieurs ordres broker -- voir
+        gold_bot.loop.run_cycle). Ne vérifie ni ne déclenche le plafond
+        elle-même : c'est can_open_position() qui lit le compteur."""
+        self._trades_opened_today += 1
+        self._persist()
 
     def can_open_position(self, current_balance: float) -> bool:
         self.check(current_balance)
@@ -193,6 +208,10 @@ class CircuitBreaker:
         # entre-temps (profil de risque augmenté en cours de journée).
         # Voir la docstring de la classe.
         if self._tripped_today:
+            return False
+        if self.max_trades_per_day is not None and self._trades_opened_today >= self.max_trades_per_day:
+            self._tripped_today = True
+            self._persist()
             return False
         loss = self._starting_balance - current_balance
         if loss < self._starting_balance * self.threshold_pct:

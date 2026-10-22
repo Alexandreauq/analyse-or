@@ -329,3 +329,80 @@ def test_resolve_risk_profile_falls_back_to_default_for_invalid_values():
     assert risk.resolve_risk_profile(5.0) == risk.DEFAULT_RISK_PROFILE
     assert risk.resolve_risk_profile(None) == risk.DEFAULT_RISK_PROFILE
     assert risk.resolve_risk_profile(True) == risk.DEFAULT_RISK_PROFILE
+
+
+def test_circuit_breaker_allows_when_under_trade_count_limit():
+    cb = risk.CircuitBreaker(threshold_pct=0.10, max_trades_per_day=2,
+                              now_fn=lambda: datetime(2026, 9, 10, tzinfo=timezone.utc))
+    cb.check(10000)
+    cb.record_trade_opened()
+    assert cb.can_open_position(10000) is True  # 1 trade ouvert, plafond à 2
+
+
+def test_circuit_breaker_blocks_when_trade_count_limit_reached():
+    cb = risk.CircuitBreaker(threshold_pct=0.10, max_trades_per_day=2,
+                              now_fn=lambda: datetime(2026, 9, 10, tzinfo=timezone.utc))
+    cb.check(10000)
+    cb.record_trade_opened()
+    cb.record_trade_opened()
+    assert cb.can_open_position(10000) is False  # 2 trades ouverts, plafond atteint
+
+
+def test_circuit_breaker_with_no_max_trades_per_day_never_blocks_on_count():
+    cb = risk.CircuitBreaker(threshold_pct=0.10, now_fn=lambda: datetime(2026, 9, 10, tzinfo=timezone.utc))
+    cb.check(10000)
+    for _ in range(50):
+        cb.record_trade_opened()
+    assert cb.can_open_position(10000) is True  # max_trades_per_day=None (défaut) -> pas de plafond
+
+
+def test_circuit_breaker_trade_count_resets_on_new_day():
+    clock = {"now": datetime(2026, 9, 10, 23, 0, tzinfo=timezone.utc)}
+    cb = risk.CircuitBreaker(threshold_pct=0.10, max_trades_per_day=2, now_fn=lambda: clock["now"])
+    cb.check(10000)
+    cb.record_trade_opened()
+    cb.record_trade_opened()
+    assert cb.can_open_position(10000) is False
+    clock["now"] = datetime(2026, 9, 11, 1, 0, tzinfo=timezone.utc)  # jour suivant UTC
+    assert cb.can_open_position(10000) is True  # compteur remis à zéro
+
+
+def test_circuit_breaker_trade_count_persists_across_instances(tmp_path):
+    path = str(tmp_path / "state.json")
+    cb1 = risk.CircuitBreaker(threshold_pct=0.10, max_trades_per_day=2,
+                               now_fn=lambda: datetime(2026, 9, 10, tzinfo=timezone.utc), persist_path=path)
+    cb1.check(10000)
+    cb1.record_trade_opened()
+    cb1.record_trade_opened()
+    # Nouvelle instance (simule un redémarrage) le même jour UTC : doit
+    # retrouver le compteur persisté, pas repartir de zéro.
+    cb2 = risk.CircuitBreaker(threshold_pct=0.10, max_trades_per_day=2,
+                               now_fn=lambda: datetime(2026, 9, 10, 18, tzinfo=timezone.utc), persist_path=path)
+    assert cb2.can_open_position(10000) is False
+
+
+def test_circuit_breaker_trade_count_trip_stays_tripped_like_loss_trip():
+    # Même sémantique que test_circuit_breaker_stays_tripped_after_threshold_raised_mid_day :
+    # un déclenchement par nombre de trades ne doit pas se "dé-déclencher"
+    # silencieusement si max_trades_per_day est relevé le même jour.
+    cb = risk.CircuitBreaker(threshold_pct=0.10, max_trades_per_day=2,
+                              now_fn=lambda: datetime(2026, 9, 10, tzinfo=timezone.utc))
+    cb.check(10000)
+    cb.record_trade_opened()
+    cb.record_trade_opened()
+    assert cb.can_open_position(10000) is False
+    cb.max_trades_per_day = 10  # relèvement en cours de journée
+    assert cb.can_open_position(10000) is False  # reste bloqué
+
+
+def test_circuit_breaker_trade_count_trip_does_not_affect_loss_based_check():
+    # Les deux motifs de déclenchement sont indépendants à l'évaluation,
+    # mais partagent le même flag _tripped_today une fois déclenchés
+    # (comportement voulu, cohérent avec "reset automatique le lendemain"
+    # pour les deux). Ici on vérifie juste qu'un compte largement sous le
+    # seuil de perte reste bloqué uniquement à cause du nombre de trades.
+    cb = risk.CircuitBreaker(threshold_pct=0.50, max_trades_per_day=1,
+                              now_fn=lambda: datetime(2026, 9, 10, tzinfo=timezone.utc))
+    cb.check(10000)
+    cb.record_trade_opened()
+    assert cb.can_open_position(9900) is False  # -1%, bien sous le seuil de perte (50%) -> bloqué par le compteur

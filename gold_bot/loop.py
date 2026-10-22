@@ -10,6 +10,7 @@ import time
 import traceback
 from datetime import datetime, timedelta, timezone
 
+import gold_bot.backtest as backtest
 import gold_bot.bot as bot
 import gold_bot.broker as broker
 import gold_bot.confluence as confluence
@@ -55,6 +56,13 @@ LATEST_CANDLES_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "
 LATEST_BALANCE_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "latest_balance.json")
 LATEST_POSITIONS_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "latest_positions.json")
 
+# TTL de l'historique utilisé par la vérification des cotes
+# (gold_bot.odds_check) -- un historique de plusieurs dizaines de jours
+# n'a pas besoin d'être rafraîchi à chaque cycle (60s) ; 24h tient
+# largement compte de l'évolution réelle du marché pour ce besoin.
+HISTORICAL_ODDS_CACHE_MAX_AGE_SECONDS = 24 * 3600
+HISTORICAL_ODDS_WINDOW_DAYS = 90
+
 
 def _candles_cache_path(symbol: str) -> str:
     """LATEST_CANDLES_PATH reste réservé à XAUUSD (symbole par défaut,
@@ -65,6 +73,40 @@ def _candles_cache_path(symbol: str) -> str:
     if symbol == SYMBOL:
         return LATEST_CANDLES_PATH
     return os.path.join(os.path.dirname(os.path.abspath(__file__)), f"latest_candles_{symbol.lower()}.json")
+
+
+def _historical_candles_cache_path(symbol: str) -> str:
+    return os.path.join(os.path.dirname(os.path.abspath(__file__)), f"historical_candles_cache_{symbol.lower()}.json")
+
+
+def _load_or_fetch_historical_candles(token: str, account_id: str, symbol: str,
+                                       region: str, now_dt: datetime) -> list[dict]:
+    """Charge l'historique mis en cache pour `symbol` s'il a moins de
+    HISTORICAL_ODDS_CACHE_MAX_AGE_SECONDS, sinon le récupère via
+    backtest.fetch_gold_candles_range et le met en cache. Ne lève jamais
+    -- un échec réseau renvoie [] (odds_check.historical_odds_for_setup
+    traite un historique vide comme "insufficient_history", qui ne
+    bloque jamais un trade), la vérification des cotes dégrade donc
+    sans jamais interrompre le cycle."""
+    path = _historical_candles_cache_path(symbol)
+    if os.path.exists(path):
+        try:
+            with open(path, encoding="utf-8") as f:
+                cached = json.load(f)
+            fetched_at = datetime.fromisoformat(cached["fetched_at"])
+            if (now_dt - fetched_at).total_seconds() < HISTORICAL_ODDS_CACHE_MAX_AGE_SECONDS:
+                return cached["candles"]
+        except (OSError, json.JSONDecodeError, KeyError, ValueError):
+            pass
+    try:
+        candles = backtest.fetch_gold_candles_range(
+            token, account_id, now_dt - timedelta(days=HISTORICAL_ODDS_WINDOW_DAYS), now_dt,
+            region=region, symbol=symbol,
+        )
+    except Exception:
+        return []
+    _save_cache({"candles": candles, "fetched_at": _now_iso()}, path)
+    return candles
 
 
 def execute_steps(token: str, account_id: str, steps: list[dict],
@@ -247,11 +289,12 @@ def run_cycle(token: str, account_id: str,
         _save_cache({"positions": open_positions, "fetched_at": _now_iso()}, LATEST_POSITIONS_PATH)
         spec = _with_retry(lambda: broker.get_symbol_specification(token, account_id, symbol, region))
         contract_size = spec["contractSize"]
+        historical_candles = _load_or_fetch_historical_candles(token, account_id, symbol, region, now_dt)
         decision = bot.decide_and_act_vwap(
             candles, contract_size=contract_size, balance=balance, equity=equity,
             volume_step=spec["volumeStep"], min_volume=spec["minVolume"], max_volume=spec["maxVolume"],
             open_positions=open_positions, circuit_breaker=circuit_breaker, symbol=symbol,
-            risk_pct=profile_params["risk_pct"],
+            risk_pct=profile_params["risk_pct"], historical_candles=historical_candles,
         )
         decision = {**decision, "symbol": symbol}
     except Exception as e:

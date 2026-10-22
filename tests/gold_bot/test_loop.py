@@ -222,6 +222,111 @@ def test_run_cycle_executes_when_not_dry_run(monkeypatch, tmp_path):
     assert result["action"] == "exécuté"
 
 
+def test_run_cycle_records_trade_opened_on_successful_order(monkeypatch, tmp_path):
+    """Même montage que test_run_cycle_executes_when_not_dry_run
+    (dry_run=False, kill_switch=False, un step "ouverture_simulee" qui
+    aboutit sans erreur) -- le coupe-circuit partagé doit voir son
+    compteur de trades/jour avancer après une exécution réelle
+    réussie."""
+    monkeypatch.setattr(loop.state, "load_state", lambda *a, **k: {"kill_switch": False, "dry_run": False})
+    monkeypatch.setattr(loop, "DECISIONS_LOG_PATH", str(tmp_path / "decisions_log.jsonl"))
+    monkeypatch.setattr(loop, "LATEST_CANDLES_PATH", str(tmp_path / "latest_candles.json"))
+    monkeypatch.setattr(loop, "LATEST_BALANCE_PATH", str(tmp_path / "latest_balance.json"))
+    monkeypatch.setattr(loop, "LATEST_POSITIONS_PATH", str(tmp_path / "latest_positions.json"))
+    monkeypatch.setattr(loop.confluence, "fetch_gold_candles", lambda *a, **k: [_FRESH_CANDLE])
+    monkeypatch.setattr(loop.broker, "get_account_information", lambda *a, **k: {"balance": 10000, "equity": 10000})
+    monkeypatch.setattr(loop.bot, "reconcile_positions", lambda *a, **k: [])
+    monkeypatch.setattr(loop.broker, "get_symbol_specification", lambda *a, **k: {"contractSize": 100, "volumeStep": 0.01, "minVolume": 0.01, "maxVolume": 500})
+    fake_steps = [{"type": "ouverture_simulee", "symbol": "XAUUSD", "direction": "achat",
+                    "volume": 1.0, "entry": 2100, "stop_loss": 2095, "take_profit": 2115}]
+    monkeypatch.setattr(loop.bot, "decide_and_act_vwap", lambda *a, **k: {"action": "simulation", "steps": fake_steps})
+    monkeypatch.setattr(loop.broker, "place_market_order", lambda *a, **k: {"orderId": "3"})
+
+    cb = loop.risk.CircuitBreaker(persist_path=str(tmp_path / "cb_state.json"))
+    assert cb._trades_opened_today == 0
+
+    result = loop.run_cycle("tok", "acc", cb, now=_FRESH_NOW)
+
+    assert result["action"] == "exécuté"
+    assert cb._trades_opened_today == 1
+
+
+def test_run_cycle_does_not_record_trade_on_modification_only(monkeypatch, tmp_path):
+    """Même montage, mais decide_and_act_vwap renvoie un step
+    "modification_simulee" (mise à jour du stop suiveur sur une position
+    déjà ouverte) -- ne doit jamais compter comme un nouveau trade."""
+    monkeypatch.setattr(loop.state, "load_state", lambda *a, **k: {"kill_switch": False, "dry_run": False})
+    monkeypatch.setattr(loop, "DECISIONS_LOG_PATH", str(tmp_path / "decisions_log.jsonl"))
+    monkeypatch.setattr(loop, "LATEST_CANDLES_PATH", str(tmp_path / "latest_candles.json"))
+    monkeypatch.setattr(loop, "LATEST_BALANCE_PATH", str(tmp_path / "latest_balance.json"))
+    monkeypatch.setattr(loop, "LATEST_POSITIONS_PATH", str(tmp_path / "latest_positions.json"))
+    monkeypatch.setattr(loop.confluence, "fetch_gold_candles", lambda *a, **k: [_FRESH_CANDLE])
+    monkeypatch.setattr(loop.broker, "get_account_information", lambda *a, **k: {"balance": 10000, "equity": 10000})
+    monkeypatch.setattr(loop.bot, "reconcile_positions", lambda *a, **k: [])
+    monkeypatch.setattr(loop.broker, "get_symbol_specification", lambda *a, **k: {"contractSize": 100, "volumeStep": 0.01, "minVolume": 0.01, "maxVolume": 500})
+    fake_steps = [{"type": "modification_simulee", "position_id": "42", "symbol": "XAUUSD", "new_stop_loss": 2098.5}]
+    monkeypatch.setattr(loop.bot, "decide_and_act_vwap", lambda *a, **k: {"action": "simulation", "steps": fake_steps})
+    monkeypatch.setattr(loop.broker, "modify_position_stop_loss", lambda *a, **k: {"orderId": "4"})
+
+    cb = loop.risk.CircuitBreaker(persist_path=str(tmp_path / "cb_state.json"))
+
+    result = loop.run_cycle("tok", "acc", cb, now=_FRESH_NOW)
+
+    assert result["action"] == "exécuté"
+    assert cb._trades_opened_today == 0
+
+
+def test_run_cycle_does_not_record_trade_when_execution_fails(monkeypatch, tmp_path):
+    """Même montage que le test de succès ci-dessus, mais
+    broker.place_market_order lève -- execute_steps capture l'erreur et
+    la renvoie dans results, run_cycle ne doit jamais compter un trade
+    sur un échec d'exécution."""
+    monkeypatch.setattr(loop.state, "load_state", lambda *a, **k: {"kill_switch": False, "dry_run": False})
+    monkeypatch.setattr(loop, "DECISIONS_LOG_PATH", str(tmp_path / "decisions_log.jsonl"))
+    monkeypatch.setattr(loop, "LATEST_CANDLES_PATH", str(tmp_path / "latest_candles.json"))
+    monkeypatch.setattr(loop, "LATEST_BALANCE_PATH", str(tmp_path / "latest_balance.json"))
+    monkeypatch.setattr(loop, "LATEST_POSITIONS_PATH", str(tmp_path / "latest_positions.json"))
+    monkeypatch.setattr(loop.confluence, "fetch_gold_candles", lambda *a, **k: [_FRESH_CANDLE])
+    monkeypatch.setattr(loop.broker, "get_account_information", lambda *a, **k: {"balance": 10000, "equity": 10000})
+    monkeypatch.setattr(loop.bot, "reconcile_positions", lambda *a, **k: [])
+    monkeypatch.setattr(loop.broker, "get_symbol_specification", lambda *a, **k: {"contractSize": 100, "volumeStep": 0.01, "minVolume": 0.01, "maxVolume": 500})
+    fake_steps = [{"type": "ouverture_simulee", "symbol": "XAUUSD", "direction": "achat",
+                    "volume": 1.0, "entry": 2100, "stop_loss": 2095, "take_profit": 2115}]
+    monkeypatch.setattr(loop.bot, "decide_and_act_vwap", lambda *a, **k: {"action": "simulation", "steps": fake_steps})
+    monkeypatch.setattr(loop.broker, "place_market_order",
+                         lambda *a, **k: (_ for _ in ()).throw(RuntimeError("échec MetaApi")))
+
+    cb = loop.risk.CircuitBreaker(persist_path=str(tmp_path / "cb_state.json"))
+
+    result = loop.run_cycle("tok", "acc", cb, now=_FRESH_NOW)
+
+    assert result["action"] == "erreur"
+    assert cb._trades_opened_today == 0
+
+
+def test_run_cycle_passes_max_trades_per_day_from_risk_profile(monkeypatch, tmp_path):
+    """Même montage que
+    test_run_cycle_applies_active_risk_profile_to_sizing_and_circuit_breaker
+    (dry_run=True, risk_profile=5) -- max_trades_per_day doit être relu
+    depuis le profil actif à chaque cycle, même schéma que
+    threshold_pct."""
+    monkeypatch.setattr(loop.state, "load_state", lambda *a, **k: {"kill_switch": False, "dry_run": True, "risk_profile": 5})
+    monkeypatch.setattr(loop, "DECISIONS_LOG_PATH", str(tmp_path / "decisions_log.jsonl"))
+    monkeypatch.setattr(loop, "LATEST_CANDLES_PATH", str(tmp_path / "latest_candles.json"))
+    monkeypatch.setattr(loop, "LATEST_BALANCE_PATH", str(tmp_path / "latest_balance.json"))
+    monkeypatch.setattr(loop, "LATEST_POSITIONS_PATH", str(tmp_path / "latest_positions.json"))
+    monkeypatch.setattr(loop.confluence, "fetch_gold_candles", lambda *a, **k: [_FRESH_CANDLE])
+    monkeypatch.setattr(loop.broker, "get_account_information", lambda *a, **k: {"balance": 10000, "equity": 10000})
+    monkeypatch.setattr(loop.bot, "reconcile_positions", lambda *a, **k: [])
+    monkeypatch.setattr(loop.broker, "get_symbol_specification", lambda *a, **k: {"contractSize": 100, "volumeStep": 0.01, "minVolume": 0.01, "maxVolume": 500})
+    monkeypatch.setattr(loop.bot, "decide_and_act_vwap", lambda *a, **k: {"action": "aucune", "reason": "signal neutre"})
+
+    cb = loop.risk.CircuitBreaker(persist_path=str(tmp_path / "cb_state.json"))
+    loop.run_cycle("tok", "acc", cb, now=_FRESH_NOW)
+
+    assert cb.max_trades_per_day == loop.risk.RISK_PROFILE_PARAMS[5]["max_trades_per_day"]
+
+
 def test_entry_price_has_drifted_false_within_tolerance():
     step = {"entry": 2100, "stop_loss": 2095}  # risque prévu = 5, seuil = 1.25
     assert loop._entry_price_has_drifted(step, 2101) is False

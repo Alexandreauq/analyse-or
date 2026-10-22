@@ -406,3 +406,14 @@ def test_circuit_breaker_trade_count_trip_does_not_affect_loss_based_check():
     cb.check(10000)
     cb.record_trade_opened()
     assert cb.can_open_position(9900) is False  # -1%, bien sous le seuil de perte (50%) -> bloqué par le compteur
+
+
+def test_circuit_breaker_record_trade_opened_before_any_check_does_not_raise(tmp_path):
+    # record_trade_opened() ne doit jamais planter sur une instance neuve
+    # (persist_path fourni, aucun check()/can_open_position() encore appelé,
+    # donc _day est None) : il dégrade en simple incrément sans persister.
+    path = str(tmp_path / "state.json")
+    cb = risk.CircuitBreaker(threshold_pct=0.10, max_trades_per_day=2,
+                              now_fn=lambda: datetime(2026, 9, 10, tzinfo=timezone.utc), persist_path=path)
+    cb.record_trade_opened()  # ne doit pas lever AttributeError
+    assert cb._trades_opened_today == 1

@@ -199,6 +199,10 @@ class CircuitBreaker:
         gold_bot.loop.run_cycle). Ne vérifie ni ne déclenche le plafond
         elle-même : c'est can_open_position() qui lit le compteur."""
         self._trades_opened_today += 1
+        if self._day is None:
+            # Aucun check() encore : pas de baseline, donc rien à persister
+            # (_persist() exige _day). Le prochain check() repart de zéro.
+            return
         self._persist()
 
     def can_open_position(self, current_balance: float) -> bool:

@@ -524,7 +524,7 @@ Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>"
 
 **Interfaces:**
 - Consumes: `vwap_reversion.resample_15min`, `vwap_reversion.compute_indicators`, `vwap_reversion.get_symbol_params`, `vwap_reversion.MIN_BARS_INTO_SESSION`, `vwap_reversion.SESSION_END_HOUR_UTC` (all existing, read-only).
-- Produces: `_find_historical_entries(candles_5min: list[dict], direction: str, symbol: str = "XAUUSD") -> list[dict]` — each returned dict is `{"entry_index": int, "entry_price": float, "stop_loss": float, "entry_time": str}` (index into the ORIGINAL `candles_5min` list, found by matching the 15-min bucket's bar to the last 5-min candle at or before its bucket time). Consumed by Task 6 (`_simulate_exit`) and Task 7 (`historical_odds_for_setup`).
+- Produces: `_find_historical_entries(candles_5min: list[dict], direction: str, symbol: str = "XAUUSD") -> list[dict]` — each returned dict is `{"entry_time": str, "entry_price": float, "stop_loss": float}`, in chronological order. Consumed by Task 6 (`_simulate_exit`, `historical_odds_for_setup`).
 
 This task only detects where, in history, the same entry condition `decide_and_act_vwap` uses would have fired — it does not simulate any exit yet (Task 6).
 
@@ -714,6 +714,8 @@ Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>"
 
 This reuses `vwap_reversion.compute_trailing_stop` directly (the exact function the live loop calls) rather than re-implementing the trailing-stop math, so the simulated exits can never drift from the real bot's behavior. It replicates the SL/TP-touch priority and end-of-data handling already established in `gold_bot/backtest.py::simulate_trades` (SL wins on a simultaneous touch; an unresolved trade at the end of available history is closed at the last known price rather than dropped).
 
+`_simulate_exit` also returns a `"close_time"` key (the timestamp of whichever candle closed the simulated trade) alongside `close_reason`/`close_price`/`return_pct`. `historical_odds_for_setup` uses it to deduplicate overlapping raw entries from `_find_historical_entries`: if the market stays beyond the entry band for several consecutive 15-minute bars, each bar would otherwise count as its own "entry," even though the real bot only ever holds one position at a time and blocks new signal detection while one is open (see `bot.decide_and_act_vwap`'s `if matching:` branch). Entries are walked in chronological order (already guaranteed by Task 5) and any entry falling before the previous *simulated* trade's `close_time` is skipped — otherwise the same market excursion would be counted as several independent trials, biasing the sample.
+
 - [ ] **Step 1: Write the failing test**
 
 Add to `tests/gold_bot/test_odds_check.py`:
@@ -732,6 +734,7 @@ def test_simulate_exit_closes_on_stop_touch():
     )
     assert result["close_reason"] == "stop_touche"
     assert result["return_pct"] < 0
+    assert result["close_time"] == "2026-01-01 05:05:00"
 
 
 def test_simulate_exit_closes_at_session_end():
@@ -745,6 +748,7 @@ def test_simulate_exit_closes_at_session_end():
     )
     assert result["close_reason"] == "fin_session"
     assert result["return_pct"] > 0  # 1981 > 1975, achat gagnant
+    assert result["close_time"] == "2026-01-01 22:00:00"
 
 
 def test_simulate_exit_closes_at_end_of_available_history_when_unresolved():
@@ -758,6 +762,7 @@ def test_simulate_exit_closes_at_end_of_available_history_when_unresolved():
     )
     assert result["close_reason"] == "fin_historique"
     assert result["close_price"] == 1976.0
+    assert result["close_time"] == "2026-01-01 05:05:00"
 
 
 def test_historical_odds_for_setup_insufficient_history_does_not_block(monkeypatch):
@@ -768,13 +773,19 @@ def test_historical_odds_for_setup_insufficient_history_does_not_block(monkeypat
 
 
 def test_historical_odds_for_setup_favorable_when_average_return_positive(monkeypatch):
-    entries = [{"entry_time": f"2026-01-0{i} 05:00:00", "entry_price": 1975.0, "stop_loss": 1960.0} for i in range(1, 21)]
+    # Entrees espacees d'un jour chacune, cloture simulee 2h apres
+    # l'entree (bien avant l'entree suivante) -- aucune ne doit etre
+    # ignoree par la deduplication des signaux chevauchants.
+    entries = [{"entry_time": f"2026-01-0{i:02d} 05:00:00", "entry_price": 1975.0, "stop_loss": 1960.0}
+               for i in range(1, 21)]
     monkeypatch.setattr(odds_check, "_find_historical_entries", lambda candles, direction, symbol="XAUUSD": entries)
-    monkeypatch.setattr(
-        odds_check, "_simulate_exit",
-        lambda candles, direction, entry_price, initial_stop, entry_time, symbol="XAUUSD":
-            {"close_reason": "fin_session", "close_price": 1985.0, "return_pct": 0.5},
-    )
+
+    def fake_simulate_exit(candles, direction, entry_price, initial_stop, entry_time, symbol="XAUUSD"):
+        day = entry_time.split(" ")[0]
+        return {"close_reason": "fin_session", "close_price": 1985.0, "return_pct": 0.5,
+                "close_time": f"{day} 07:00:00"}
+
+    monkeypatch.setattr(odds_check, "_simulate_exit", fake_simulate_exit)
     result = odds_check.historical_odds_for_setup([{"dummy": True}], "achat", min_sample_size=20)
     assert result["sample_size"] == 20
     assert result["verdict"] == "favorable"
@@ -782,15 +793,44 @@ def test_historical_odds_for_setup_favorable_when_average_return_positive(monkey
 
 
 def test_historical_odds_for_setup_unfavorable_when_average_return_negative(monkeypatch):
-    entries = [{"entry_time": f"2026-01-0{i} 05:00:00", "entry_price": 1975.0, "stop_loss": 1960.0} for i in range(1, 21)]
+    entries = [{"entry_time": f"2026-01-0{i:02d} 05:00:00", "entry_price": 1975.0, "stop_loss": 1960.0}
+               for i in range(1, 21)]
     monkeypatch.setattr(odds_check, "_find_historical_entries", lambda candles, direction, symbol="XAUUSD": entries)
-    monkeypatch.setattr(
-        odds_check, "_simulate_exit",
-        lambda candles, direction, entry_price, initial_stop, entry_time, symbol="XAUUSD":
-            {"close_reason": "stop_touche", "close_price": 1960.0, "return_pct": -0.3},
-    )
+
+    def fake_simulate_exit(candles, direction, entry_price, initial_stop, entry_time, symbol="XAUUSD"):
+        day = entry_time.split(" ")[0]
+        return {"close_reason": "stop_touche", "close_price": 1960.0, "return_pct": -0.3,
+                "close_time": f"{day} 07:00:00"}
+
+    monkeypatch.setattr(odds_check, "_simulate_exit", fake_simulate_exit)
     result = odds_check.historical_odds_for_setup([{"dummy": True}], "achat", min_sample_size=20)
     assert result["verdict"] == "unfavorable"
+
+
+def test_historical_odds_for_setup_skips_entries_overlapping_a_still_open_simulated_position(monkeypatch):
+    # 3 entrees brutes : la 2e tombe PENDANT la position simulee ouverte
+    # par la 1re (close_time de la 1re = 10h, entree de la 2e = 8h, donc
+    # avant la cloture) -- doit etre ignoree. La 3e tombe apres la
+    # cloture de la 1re -- doit etre retenue. Sans deduplication, les 3
+    # seraient comptees comme des trades independants alors que le bot
+    # reel n'aurait jamais ouvert la 2e (position deja ouverte sur la 1re).
+    entries = [
+        {"entry_time": "2026-01-01 05:00:00", "entry_price": 1975.0, "stop_loss": 1960.0},
+        {"entry_time": "2026-01-01 08:00:00", "entry_price": 1976.0, "stop_loss": 1961.0},
+        {"entry_time": "2026-01-01 11:00:00", "entry_price": 1977.0, "stop_loss": 1962.0},
+    ]
+    monkeypatch.setattr(odds_check, "_find_historical_entries", lambda candles, direction, symbol="XAUUSD": entries)
+
+    def fake_simulate_exit(candles, direction, entry_price, initial_stop, entry_time, symbol="XAUUSD"):
+        # La position ouverte a 05:00 se cloture a 10:00 (apres l'entree
+        # brute de 08:00, avant celle de 11:00) ; les autres cloturent
+        # vite, peu importe (jamais evaluees pour la 2e, ignoree avant).
+        close_time = "2026-01-01 10:00:00" if entry_time == "2026-01-01 05:00:00" else "2026-01-01 12:00:00"
+        return {"close_reason": "fin_session", "close_price": 1985.0, "return_pct": 0.5, "close_time": close_time}
+
+    monkeypatch.setattr(odds_check, "_simulate_exit", fake_simulate_exit)
+    result = odds_check.historical_odds_for_setup([{"dummy": True}], "achat", min_sample_size=2)
+    assert result["sample_size"] == 2  # l'entree de 08:00 (chevauchante) a ete ignoree
 ```
 
 (Add `import pytest` at the top of `tests/gold_bot/test_odds_check.py` if not already present from Task 5.)
@@ -830,12 +870,14 @@ def _simulate_exit(candles_after_entry: list[dict], direction: str, entry_price:
         if sl_touched:
             return_pct = ((stop - entry_price) / entry_price * 100 if is_achat
                            else (entry_price - stop) / entry_price * 100)
-            return {"close_reason": "stop_touche", "close_price": stop, "return_pct": return_pct}
+            return {"close_reason": "stop_touche", "close_price": stop, "return_pct": return_pct,
+                    "close_time": candle["time"]}
 
         if hour >= vwap_reversion.SESSION_END_HOUR_UTC:
             return_pct = ((candle["close"] - entry_price) / entry_price * 100 if is_achat
                            else (entry_price - candle["close"]) / entry_price * 100)
-            return {"close_reason": "fin_session", "close_price": candle["close"], "return_pct": return_pct}
+            return {"close_reason": "fin_session", "close_price": candle["close"], "return_pct": return_pct,
+                    "close_time": candle["time"]}
 
         new_stop = vwap_reversion.compute_trailing_stop(
             history_so_far, direction, entry_time, entry_price, stop, symbol=symbol)
@@ -845,7 +887,8 @@ def _simulate_exit(candles_after_entry: list[dict], direction: str, entry_price:
     last_price = candles_after_entry[-1]["close"]
     return_pct = ((last_price - entry_price) / entry_price * 100 if is_achat
                    else (entry_price - last_price) / entry_price * 100)
-    return {"close_reason": "fin_historique", "close_price": last_price, "return_pct": return_pct}
+    return {"close_reason": "fin_historique", "close_price": last_price, "return_pct": return_pct,
+            "close_time": candles_after_entry[-1]["time"]}
 
 
 def historical_odds_for_setup(candles_5min: list[dict], direction: str, symbol: str = "XAUUSD",
@@ -857,21 +900,41 @@ def historical_odds_for_setup(candles_5min: list[dict], direction: str, symbol: 
     Au-dela, verdict "unfavorable" (bloque) si et seulement si
     l'esperance moyenne sur l'echantillon est negative ou nulle --
     critere simple et objectif, pas de combinaison taux de reussite/
-    multiple de R arbitraire (voir la spec pour la justification)."""
+    multiple de R arbitraire (voir la spec pour la justification).
+
+    Deduplication des signaux chevauchants : _find_historical_entries
+    renvoie TOUTE bougie 15min ou la condition d'entree est vraie --
+    si le marche reste plusieurs bougies consecutives au-dela de la
+    bande vwap +/- entry_sigma*std, chacune compte comme une
+    "entree" distincte alors que le bot reel n'aurait ouvert qu'UNE
+    position (voir bot.decide_and_act_vwap : une position deja
+    ouverte bloque toute recherche de nouveau signal jusqu'a sa
+    cloture). Reproduit ce comportement ici : les entrees sont
+    parcourues dans l'ordre chronologique (deja garanti par
+    _find_historical_entries), et toute entree dont `entry_time`
+    tombe avant la cloture simulee de la position precedente est
+    ignoree -- sans cela, un meme mouvement de marche serait compte
+    plusieurs fois comme des trades independants, biaisant
+    artificiellement l'echantillon."""
     entries = _find_historical_entries(candles_5min, direction, symbol=symbol)
     if len(entries) < min_sample_size:
         return {"sample_size": len(entries), "win_rate_pct": None, "avg_return_pct": None,
                 "verdict": "insufficient_history"}
 
     outcomes = []
+    blocked_until = None
     for entry in entries:
         entry_dt = datetime.fromisoformat(entry["entry_time"].replace(" ", "T")).replace(tzinfo=timezone.utc)
+        if blocked_until is not None and entry_dt < blocked_until:
+            continue
         after = [c for c in candles_5min
                  if datetime.fromisoformat(c["time"].replace(" ", "T")).replace(tzinfo=timezone.utc) > entry_dt]
         if not after:
             continue
-        outcomes.append(_simulate_exit(
-            after, direction, entry["entry_price"], entry["stop_loss"], entry["entry_time"], symbol=symbol))
+        outcome = _simulate_exit(
+            after, direction, entry["entry_price"], entry["stop_loss"], entry["entry_time"], symbol=symbol)
+        outcomes.append(outcome)
+        blocked_until = datetime.fromisoformat(outcome["close_time"].replace(" ", "T")).replace(tzinfo=timezone.utc)
 
     if len(outcomes) < min_sample_size:
         return {"sample_size": len(outcomes), "win_rate_pct": None, "avg_return_pct": None,

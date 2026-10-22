@@ -269,6 +269,7 @@ def test_run_cycle_does_not_record_trade_on_modification_only(monkeypatch, tmp_p
     monkeypatch.setattr(loop.broker, "modify_position_stop_loss", lambda *a, **k: {"orderId": "4"})
 
     cb = loop.risk.CircuitBreaker(persist_path=str(tmp_path / "cb_state.json"))
+    assert cb._trades_opened_today == 0
 
     result = loop.run_cycle("tok", "acc", cb, now=_FRESH_NOW)
 
@@ -302,6 +303,44 @@ def test_run_cycle_does_not_record_trade_when_execution_fails(monkeypatch, tmp_p
 
     assert result["action"] == "erreur"
     assert cb._trades_opened_today == 0
+
+
+def test_run_cycle_records_trade_opened_once_for_partial_and_runner_legs(monkeypatch, tmp_path):
+    """gold_bot.bot.decide_and_act_vwap peut scinder une entrée en deux
+    ordres broker quand le compte est assez gros pour une prise de
+    profit partielle (jambe partielle + jambe runner, voir
+    bot.py:314-322 : deux steps "ouverture_simulee" dans la même liste
+    quand runner_volume >= volume_step) -- le compteur de trades/jour ne
+    doit avancer qu'une fois par CYCLE, jamais une fois par step. Un
+    "correctif" qui remplacerait le any(...) de run_cycle par une boucle
+    appelant record_trade_opened() par step correspondant doublerait
+    silencieusement le compte sans ce test."""
+    monkeypatch.setattr(loop.state, "load_state", lambda *a, **k: {"kill_switch": False, "dry_run": False})
+    monkeypatch.setattr(loop, "DECISIONS_LOG_PATH", str(tmp_path / "decisions_log.jsonl"))
+    monkeypatch.setattr(loop, "LATEST_CANDLES_PATH", str(tmp_path / "latest_candles.json"))
+    monkeypatch.setattr(loop, "LATEST_BALANCE_PATH", str(tmp_path / "latest_balance.json"))
+    monkeypatch.setattr(loop, "LATEST_POSITIONS_PATH", str(tmp_path / "latest_positions.json"))
+    monkeypatch.setattr(loop.confluence, "fetch_gold_candles", lambda *a, **k: [_FRESH_CANDLE])
+    monkeypatch.setattr(loop.broker, "get_account_information", lambda *a, **k: {"balance": 10000, "equity": 10000})
+    monkeypatch.setattr(loop.bot, "reconcile_positions", lambda *a, **k: [])
+    monkeypatch.setattr(loop.broker, "get_symbol_specification", lambda *a, **k: {"contractSize": 100, "volumeStep": 0.01, "minVolume": 0.01, "maxVolume": 500})
+    fake_steps = [
+        {"type": "ouverture_simulee", "symbol": "XAUUSD", "direction": "achat",
+         "volume": 0.6, "entry": 2100, "stop_loss": 2095, "take_profit": 2110},
+        {"type": "ouverture_simulee", "symbol": "XAUUSD", "direction": "achat",
+         "volume": 0.4, "entry": 2100, "stop_loss": 2095, "take_profit": None},
+    ]
+    monkeypatch.setattr(loop.bot, "decide_and_act_vwap", lambda *a, **k: {"action": "simulation", "steps": fake_steps})
+    monkeypatch.setattr(loop.broker, "place_market_order", lambda *a, **k: {"orderId": "5"})
+
+    cb = loop.risk.CircuitBreaker(persist_path=str(tmp_path / "cb_state.json"))
+    assert cb._trades_opened_today == 0
+
+    result = loop.run_cycle("tok", "acc", cb, now=_FRESH_NOW)
+
+    assert result["action"] == "exécuté"
+    assert len(result["results"]) == 2
+    assert cb._trades_opened_today == 1
 
 
 def test_run_cycle_passes_max_trades_per_day_from_risk_profile(monkeypatch, tmp_path):

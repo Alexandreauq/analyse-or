@@ -1,5 +1,7 @@
 from datetime import datetime, timedelta, timezone
 
+import pytest
+
 import gold_bot.odds_check as odds_check
 import gold_bot.vwap_reversion as vwap_reversion
 
@@ -80,3 +82,115 @@ def test_find_historical_entries_ignores_bars_at_or_after_session_end(monkeypatc
     monkeypatch.setattr(odds_check.vwap_reversion, "compute_indicators", lambda c: c)
     candles_5min = _make_5min_candles(1, datetime(2026, 1, 1, tzinfo=timezone.utc), lambda i: 2000.0)
     assert odds_check._find_historical_entries(candles_5min, "achat") == []
+
+
+def test_simulate_exit_closes_on_stop_touch():
+    # achat a 1975, stop a 1960 -- une bougie qui touche 1960 en low doit
+    # clore au stop, retour negatif.
+    candles_after_entry = [
+        {"time": "2026-01-01 05:05:00", "open": 1975.0, "high": 1976.0, "low": 1959.0, "close": 1960.0,
+         "tick_volume": 10, "spread": 2},
+    ]
+    result = odds_check._simulate_exit(
+        candles_after_entry, direction="achat", entry_price=1975.0, initial_stop=1960.0,
+        entry_time="2026-01-01 05:00:00", symbol="XAUUSD",
+    )
+    assert result["close_reason"] == "stop_touche"
+    assert result["return_pct"] < 0
+    assert result["close_time"] == "2026-01-01 05:05:00"
+
+
+def test_simulate_exit_closes_at_session_end():
+    candles_after_entry = [
+        {"time": "2026-01-01 22:00:00", "open": 1980.0, "high": 1982.0, "low": 1978.0, "close": 1981.0,
+         "tick_volume": 10, "spread": 2},
+    ]
+    result = odds_check._simulate_exit(
+        candles_after_entry, direction="achat", entry_price=1975.0, initial_stop=1960.0,
+        entry_time="2026-01-01 05:00:00", symbol="XAUUSD",
+    )
+    assert result["close_reason"] == "fin_session"
+    assert result["return_pct"] > 0  # 1981 > 1975, achat gagnant
+    assert result["close_time"] == "2026-01-01 22:00:00"
+
+
+def test_simulate_exit_closes_at_end_of_available_history_when_unresolved():
+    candles_after_entry = [
+        {"time": "2026-01-01 05:05:00", "open": 1976.0, "high": 1977.0, "low": 1974.0, "close": 1976.0,
+         "tick_volume": 10, "spread": 2},
+    ]
+    result = odds_check._simulate_exit(
+        candles_after_entry, direction="achat", entry_price=1975.0, initial_stop=1960.0,
+        entry_time="2026-01-01 05:00:00", symbol="XAUUSD",
+    )
+    assert result["close_reason"] == "fin_historique"
+    assert result["close_price"] == 1976.0
+    assert result["close_time"] == "2026-01-01 05:05:00"
+
+
+def test_historical_odds_for_setup_insufficient_history_does_not_block(monkeypatch):
+    monkeypatch.setattr(odds_check, "_find_historical_entries", lambda candles, direction, symbol="XAUUSD": [])
+    result = odds_check.historical_odds_for_setup([{"dummy": True}], "achat", min_sample_size=20)
+    assert result["verdict"] == "insufficient_history"
+    assert result["sample_size"] == 0
+
+
+def test_historical_odds_for_setup_favorable_when_average_return_positive(monkeypatch):
+    # Entrees espacees d'un jour chacune, cloture simulee 2h apres
+    # l'entree (bien avant l'entree suivante) -- aucune ne doit etre
+    # ignoree par la deduplication des signaux chevauchants.
+    entries = [{"entry_time": f"2026-01-{i:02d} 05:00:00", "entry_price": 1975.0, "stop_loss": 1960.0}
+               for i in range(1, 21)]
+    monkeypatch.setattr(odds_check, "_find_historical_entries", lambda candles, direction, symbol="XAUUSD": entries)
+
+    def fake_simulate_exit(candles, direction, entry_price, initial_stop, entry_time, symbol="XAUUSD"):
+        day = entry_time.split(" ")[0]
+        return {"close_reason": "fin_session", "close_price": 1985.0, "return_pct": 0.5,
+                "close_time": f"{day} 07:00:00"}
+
+    monkeypatch.setattr(odds_check, "_simulate_exit", fake_simulate_exit)
+    result = odds_check.historical_odds_for_setup([{"dummy": True}], "achat", min_sample_size=20)
+    assert result["sample_size"] == 20
+    assert result["verdict"] == "favorable"
+    assert result["avg_return_pct"] == pytest.approx(0.5)
+
+
+def test_historical_odds_for_setup_unfavorable_when_average_return_negative(monkeypatch):
+    entries = [{"entry_time": f"2026-01-{i:02d} 05:00:00", "entry_price": 1975.0, "stop_loss": 1960.0}
+               for i in range(1, 21)]
+    monkeypatch.setattr(odds_check, "_find_historical_entries", lambda candles, direction, symbol="XAUUSD": entries)
+
+    def fake_simulate_exit(candles, direction, entry_price, initial_stop, entry_time, symbol="XAUUSD"):
+        day = entry_time.split(" ")[0]
+        return {"close_reason": "stop_touche", "close_price": 1960.0, "return_pct": -0.3,
+                "close_time": f"{day} 07:00:00"}
+
+    monkeypatch.setattr(odds_check, "_simulate_exit", fake_simulate_exit)
+    result = odds_check.historical_odds_for_setup([{"dummy": True}], "achat", min_sample_size=20)
+    assert result["verdict"] == "unfavorable"
+
+
+def test_historical_odds_for_setup_skips_entries_overlapping_a_still_open_simulated_position(monkeypatch):
+    # 3 entrees brutes : la 2e tombe PENDANT la position simulee ouverte
+    # par la 1re (close_time de la 1re = 10h, entree de la 2e = 8h, donc
+    # avant la cloture) -- doit etre ignoree. La 3e tombe apres la
+    # cloture de la 1re -- doit etre retenue. Sans deduplication, les 3
+    # seraient comptees comme des trades independants alors que le bot
+    # reel n'aurait jamais ouvert la 2e (position deja ouverte sur la 1re).
+    entries = [
+        {"entry_time": "2026-01-01 05:00:00", "entry_price": 1975.0, "stop_loss": 1960.0},
+        {"entry_time": "2026-01-01 08:00:00", "entry_price": 1976.0, "stop_loss": 1961.0},
+        {"entry_time": "2026-01-01 11:00:00", "entry_price": 1977.0, "stop_loss": 1962.0},
+    ]
+    monkeypatch.setattr(odds_check, "_find_historical_entries", lambda candles, direction, symbol="XAUUSD": entries)
+
+    def fake_simulate_exit(candles, direction, entry_price, initial_stop, entry_time, symbol="XAUUSD"):
+        # La position ouverte a 05:00 se cloture a 10:00 (apres l'entree
+        # brute de 08:00, avant celle de 11:00) ; les autres cloturent
+        # vite, peu importe (jamais evaluees pour la 2e, ignoree avant).
+        close_time = "2026-01-01 10:00:00" if entry_time == "2026-01-01 05:00:00" else "2026-01-01 12:00:00"
+        return {"close_reason": "fin_session", "close_price": 1985.0, "return_pct": 0.5, "close_time": close_time}
+
+    monkeypatch.setattr(odds_check, "_simulate_exit", fake_simulate_exit)
+    result = odds_check.historical_odds_for_setup([{"dummy": True}], "achat", min_sample_size=2)
+    assert result["sample_size"] == 2  # l'entree de 08:00 (chevauchante) a ete ignoree

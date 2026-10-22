@@ -1348,7 +1348,7 @@ Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>"
 
 ---
 
-## Addendum: Task 8 — final whole-branch review fix wave
+### Task 8: Final whole-branch review fix wave
 
 The final review (after all 7 tasks passed their own task review, 4 of them
 through one fix round each) found cross-task issues no single task's review

@@ -210,6 +210,7 @@ def run_cycle(token: str, account_id: str,
     # que de recréer l'objet, ce qui perdrait cet état.
     profile_params = risk.risk_profile_params(current_state.get("risk_profile"))
     circuit_breaker.threshold_pct = profile_params["threshold_pct"]
+    circuit_breaker.max_trades_per_day = profile_params["max_trades_per_day"]
 
     try:
         candles = _with_retry(lambda: confluence.fetch_gold_candles(
@@ -311,6 +312,8 @@ def run_cycle(token: str, account_id: str,
 
     results = execute_steps(token, account_id, steps, region)
     had_error = any(r["error"] for r in results) or not results
+    if not had_error and any(s["type"] == "ouverture_simulee" for s in steps):
+        circuit_breaker.record_trade_opened()
     result = {"action": "erreur" if had_error else "exécuté", "steps": steps, "results": results, "symbol": symbol}
     _log_decision(result, path=DECISIONS_LOG_PATH)
     return result

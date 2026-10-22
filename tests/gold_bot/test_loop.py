@@ -1,5 +1,5 @@
 import json
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 import pytest
 
@@ -1072,8 +1072,18 @@ def test_run_cycle_reuses_cached_historical_candles_within_ttl(monkeypatch, tmp_
         loop, "_historical_candles_cache_path", lambda symbol: str(tmp_path / "historical_candles_cache.json"),
         raising=False,
     )
-    fake_candles = [_FRESH_CANDLE]
-    monkeypatch.setattr(loop.confluence, "fetch_gold_candles", lambda *a, **k: fake_candles)
+    # _now_iso est figé : c'est la valeur écrite comme "fetched_at" dans le
+    # cache lors du premier appel -- sans ce contrôle, la comparaison de TTL
+    # se ferait contre l'horloge murale réelle, pas contre une durée
+    # maîtrisée par le test (voir la correction demandée en revue).
+    monkeypatch.setattr(loop, "_now_iso", lambda: "2026-10-22T10:00:00+00:00")
+    first_now = datetime(2026, 10, 22, 10, 0, 1, tzinfo=timezone.utc)
+    second_now = datetime(2026, 10, 22, 11, 0, 0, tzinfo=timezone.utc)  # +1h, bien sous le TTL de 24h
+    candle_times = iter([
+        (first_now - timedelta(minutes=1)).strftime("%Y-%m-%d %H:%M:%S"),
+        (second_now - timedelta(minutes=1)).strftime("%Y-%m-%d %H:%M:%S"),
+    ])
+    monkeypatch.setattr(loop.confluence, "fetch_gold_candles", lambda *a, **k: [{"time": next(candle_times), "close": 2100}])
     fetch_calls = []
     monkeypatch.setattr(loop.backtest, "fetch_gold_candles_range",
                          lambda *a, **k: fetch_calls.append(1) or [{"fake": "history"}])
@@ -1083,9 +1093,45 @@ def test_run_cycle_reuses_cached_historical_candles_within_ttl(monkeypatch, tmp_
     monkeypatch.setattr(loop.bot, "decide_and_act_vwap", lambda candles, **kwargs: {"action": "aucune", "reason": "x"})
 
     cb = loop.risk.CircuitBreaker(persist_path=str(tmp_path / "cb_state.json"))
-    loop.run_cycle("tok", "acc", cb, now=_FRESH_NOW)
-    loop.run_cycle("tok", "acc", cb, now=_FRESH_NOW)
+    loop.run_cycle("tok", "acc", cb, now=first_now)
+    loop.run_cycle("tok", "acc", cb, now=second_now)
     assert len(fetch_calls) == 1  # deuxième cycle réutilise le cache, pas de second fetch réseau
+
+
+def test_run_cycle_refetches_historical_candles_when_cache_is_stale(monkeypatch, tmp_path):
+    monkeypatch.setattr(loop.state, "load_state", lambda *a, **k: {"kill_switch": False, "dry_run": True})
+    monkeypatch.setattr(loop, "DECISIONS_LOG_PATH", str(tmp_path / "decisions_log.jsonl"))
+    monkeypatch.setattr(loop, "LATEST_CANDLES_PATH", str(tmp_path / "latest_candles.json"))
+    monkeypatch.setattr(loop, "LATEST_BALANCE_PATH", str(tmp_path / "latest_balance.json"))
+    monkeypatch.setattr(loop, "LATEST_POSITIONS_PATH", str(tmp_path / "latest_positions.json"))
+    monkeypatch.setattr(
+        loop, "_historical_candles_cache_path", lambda symbol: str(tmp_path / "historical_candles_cache.json"),
+        raising=False,
+    )
+    # Même contrôle que le test ci-dessus, mais avec un écart de 2 jours
+    # entre l'écriture du cache et le second cycle -- bien au-delà du TTL
+    # de 24h, pour prouver que le cache est bien considéré périmé et
+    # redéclenche un vrai fetch réseau, pas réutilisé indéfiniment.
+    monkeypatch.setattr(loop, "_now_iso", lambda: "2026-10-20T10:00:00+00:00")
+    first_now = datetime(2026, 10, 20, 10, 0, 1, tzinfo=timezone.utc)
+    second_now = datetime(2026, 10, 22, 10, 0, 0, tzinfo=timezone.utc)  # +2 jours, bien au-delà du TTL de 24h
+    candle_times = iter([
+        (first_now - timedelta(minutes=1)).strftime("%Y-%m-%d %H:%M:%S"),
+        (second_now - timedelta(minutes=1)).strftime("%Y-%m-%d %H:%M:%S"),
+    ])
+    monkeypatch.setattr(loop.confluence, "fetch_gold_candles", lambda *a, **k: [{"time": next(candle_times), "close": 2100}])
+    fetch_calls = []
+    monkeypatch.setattr(loop.backtest, "fetch_gold_candles_range",
+                         lambda *a, **k: fetch_calls.append(1) or [{"fake": "history"}])
+    monkeypatch.setattr(loop.broker, "get_account_information", lambda *a, **k: {"balance": 10000.0, "equity": 10000.0})
+    monkeypatch.setattr(loop.bot, "reconcile_positions", lambda *a, **k: [])
+    monkeypatch.setattr(loop.broker, "get_symbol_specification", lambda *a, **k: {"contractSize": 100, "volumeStep": 0.01, "minVolume": 0.01, "maxVolume": 500})
+    monkeypatch.setattr(loop.bot, "decide_and_act_vwap", lambda candles, **kwargs: {"action": "aucune", "reason": "x"})
+
+    cb = loop.risk.CircuitBreaker(persist_path=str(tmp_path / "cb_state.json"))
+    loop.run_cycle("tok", "acc", cb, now=first_now)
+    loop.run_cycle("tok", "acc", cb, now=second_now)
+    assert len(fetch_calls) == 2  # cache perime -> second cycle refait un vrai fetch reseau
 
 
 def test_symbols_includes_gold_and_silver():

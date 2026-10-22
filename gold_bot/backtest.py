@@ -33,7 +33,7 @@ RESULTS_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "backtes
 
 
 def fetch_gold_candles_range(token: str, account_id: str, start: datetime, end: datetime,
-                              region: str = broker.DEFAULT_MT5_REGION) -> list[dict]:
+                              region: str = broker.DEFAULT_MT5_REGION, symbol: str = "XAUUSD") -> list[dict]:
     """Récupère tout l'historique XAU/USD 5min entre `start` et `end`
     (bornes incluses, UTC) via l'API de données de marché MetaApi, en
     paginant par blocs de MAX_OUTPUT_SIZE via le paramètre `start_time`
@@ -55,7 +55,7 @@ def fetch_gold_candles_range(token: str, account_id: str, start: datetime, end: 
     max_iterations = max(10, int((end - start).total_seconds() / 60 / 5 / MAX_OUTPUT_SIZE) + 10)
 
     for _ in range(max_iterations):
-        raw = broker.get_historical_candles(token, account_id, "XAUUSD", "5m",
+        raw = broker.get_historical_candles(token, account_id, symbol, "5m",
                                              start_time=cursor, limit=MAX_OUTPUT_SIZE, region=region)
         if not raw:
             break

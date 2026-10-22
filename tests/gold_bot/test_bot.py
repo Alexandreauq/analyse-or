@@ -526,6 +526,59 @@ def test_decide_and_act_vwap_opens_achat_with_partial_and_runner_legs(monkeypatc
     assert runner["volume"] == pytest.approx(0.10)  # 0.33 - 0.23
 
 
+def test_decide_and_act_vwap_blocked_by_unfavorable_odds_check(monkeypatch):
+    state = _vwap_state(close=1975.0, vwap=2010.0, vwap_std=20.0, ema200=1900.0)
+    monkeypatch.setattr(bot.vwap_reversion, "latest_state", lambda candles: state)
+    monkeypatch.setattr(
+        bot.odds_check, "historical_odds_for_setup",
+        lambda candles, direction, symbol="XAUUSD": {
+            "sample_size": 25, "win_rate_pct": 30.0, "avg_return_pct": -0.2, "verdict": "unfavorable",
+        },
+    )
+    result = bot.decide_and_act_vwap(
+        [{"dummy": True}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
+        balance=10000, equity=10000, open_positions=[], circuit_breaker=_open_circuit_breaker(),
+        historical_candles=[{"dummy": True}],
+    )
+    assert result == {"action": "aucune", "reason": "cotes historiques defavorables pour ce type de signal"}
+
+
+def test_decide_and_act_vwap_opens_when_odds_check_favorable(monkeypatch):
+    state = _vwap_state(close=1975.0, vwap=2010.0, vwap_std=20.0, ema200=1900.0)
+    monkeypatch.setattr(bot.vwap_reversion, "latest_state", lambda candles: state)
+    monkeypatch.setattr(
+        bot.odds_check, "historical_odds_for_setup",
+        lambda candles, direction, symbol="XAUUSD": {
+            "sample_size": 25, "win_rate_pct": 60.0, "avg_return_pct": 0.3, "verdict": "favorable",
+        },
+    )
+    result = bot.decide_and_act_vwap(
+        [{"dummy": True}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
+        balance=10000, equity=10000, open_positions=[], circuit_breaker=_open_circuit_breaker(),
+        historical_candles=[{"dummy": True}],
+    )
+    assert result["action"] == "simulation"
+
+
+def test_decide_and_act_vwap_skips_odds_check_when_no_historical_candles(monkeypatch):
+    # historical_candles=None (comportement par defaut) -> la verification
+    # est sautee entierement, jamais un blocage par defaut faute de
+    # donnees (coherent avec le reste de decide_and_act_vwap, qui ne
+    # bloque jamais sur l'absence d'une donnee optionnelle).
+    state = _vwap_state(close=1975.0, vwap=2010.0, vwap_std=20.0, ema200=1900.0)
+    monkeypatch.setattr(bot.vwap_reversion, "latest_state", lambda candles: state)
+
+    def _fail_if_called(*a, **k):
+        raise AssertionError("historical_odds_for_setup ne doit pas être appelé sans historical_candles")
+    monkeypatch.setattr(bot.odds_check, "historical_odds_for_setup", _fail_if_called)
+
+    result = bot.decide_and_act_vwap(
+        [{"dummy": True}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
+        balance=10000, equity=10000, open_positions=[], circuit_breaker=_open_circuit_breaker(),
+    )
+    assert result["action"] == "simulation"
+
+
 def test_decide_and_act_vwap_uses_xagusd_params_when_symbol_is_xagusd(monkeypatch):
     # Meme etat que le test or ci-dessus (ENTRY_SIGMA=1.5 identique pour
     # les deux symboles, donc meme condition d'entree declenchee) mais

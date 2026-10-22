@@ -9,6 +9,7 @@ from datetime import datetime, timezone
 import gold_bot.broker as broker
 import gold_bot.confluence as confluence
 import gold_bot.macro_signal as macro_signal
+import gold_bot.odds_check as odds_check
 import gold_bot.risk as risk
 import gold_bot.vwap_reversion as vwap_reversion
 
@@ -197,7 +198,8 @@ def decide_and_act_swing(macro_payload: dict, candles: list[dict], *, contract_s
 def decide_and_act_vwap(candles: list[dict], *, contract_size: float, balance: float, equity: float,
                          volume_step: float, min_volume: float, max_volume: float,
                          open_positions: list[dict], circuit_breaker: "risk.CircuitBreaker",
-                         symbol: str = "XAUUSD", risk_pct: float = 0.05) -> dict:
+                         symbol: str = "XAUUSD", risk_pct: float = 0.05,
+                         historical_candles: list[dict] | None = None) -> dict:
     """Moteur scalping retour-à-la-VWAP + filtre EMA200 + stop suiveur
     EMA50 -- voir docs/superpowers/specs/2026-09-30-gold-bot-vwap-
     reversion-design.md et son addendum (stop suiveur + recalibrage
@@ -285,6 +287,11 @@ def decide_and_act_vwap(candles: list[dict], *, contract_size: float, balance: f
     distance = abs(entry_price - stop_loss)
     if distance < entry_price * vwap_reversion.MIN_DISTANCE_PCT:
         return {"action": "aucune", "reason": "distance entree-stop trop faible (ecart-type degenere)"}
+
+    if historical_candles is not None:
+        odds = odds_check.historical_odds_for_setup(historical_candles, direction, symbol=symbol)
+        if odds["verdict"] == "unfavorable":
+            return {"action": "aucune", "reason": "cotes historiques defavorables pour ce type de signal"}
 
     if not circuit_breaker.can_open_position(equity):
         return {"action": "aucune", "reason": "coupe-circuit journalier déclenché"}

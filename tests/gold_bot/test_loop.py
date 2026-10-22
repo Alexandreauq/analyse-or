@@ -1033,6 +1033,61 @@ def test_run_cycle_passes_candles_to_decide_and_act_vwap(monkeypatch, tmp_path):
     assert captured["candles"] == fake_candles
 
 
+def test_run_cycle_fetches_historical_candles_and_passes_them_to_decide_and_act(monkeypatch, tmp_path):
+    monkeypatch.setattr(loop.state, "load_state", lambda *a, **k: {"kill_switch": False, "dry_run": True})
+    monkeypatch.setattr(loop, "DECISIONS_LOG_PATH", str(tmp_path / "decisions_log.jsonl"))
+    monkeypatch.setattr(loop, "LATEST_CANDLES_PATH", str(tmp_path / "latest_candles.json"))
+    monkeypatch.setattr(loop, "LATEST_BALANCE_PATH", str(tmp_path / "latest_balance.json"))
+    monkeypatch.setattr(loop, "LATEST_POSITIONS_PATH", str(tmp_path / "latest_positions.json"))
+    monkeypatch.setattr(
+        loop, "_historical_candles_cache_path", lambda symbol: str(tmp_path / "historical_candles_cache.json"),
+        raising=False,
+    )
+    fake_candles = [_FRESH_CANDLE]
+    monkeypatch.setattr(loop.confluence, "fetch_gold_candles", lambda *a, **k: fake_candles)
+    monkeypatch.setattr(loop.backtest, "fetch_gold_candles_range", lambda *a, **k: [{"fake": "history"}])
+    monkeypatch.setattr(loop.broker, "get_account_information", lambda *a, **k: {"balance": 10000.0, "equity": 10000.0})
+    monkeypatch.setattr(loop.bot, "reconcile_positions", lambda *a, **k: [])
+    monkeypatch.setattr(loop.broker, "get_symbol_specification", lambda *a, **k: {"contractSize": 100, "volumeStep": 0.01, "minVolume": 0.01, "maxVolume": 500})
+    captured = {}
+
+    def fake_decide_and_act_vwap(candles, **kwargs):
+        captured["historical_candles"] = kwargs.get("historical_candles")
+        return {"action": "aucune", "reason": "pas de signal d'entree"}
+
+    monkeypatch.setattr(loop.bot, "decide_and_act_vwap", fake_decide_and_act_vwap)
+
+    loop.run_cycle("tok", "acc", loop.risk.CircuitBreaker(), now=_FRESH_NOW)
+
+    assert captured["historical_candles"] == [{"fake": "history"}]
+
+
+def test_run_cycle_reuses_cached_historical_candles_within_ttl(monkeypatch, tmp_path):
+    monkeypatch.setattr(loop.state, "load_state", lambda *a, **k: {"kill_switch": False, "dry_run": True})
+    monkeypatch.setattr(loop, "DECISIONS_LOG_PATH", str(tmp_path / "decisions_log.jsonl"))
+    monkeypatch.setattr(loop, "LATEST_CANDLES_PATH", str(tmp_path / "latest_candles.json"))
+    monkeypatch.setattr(loop, "LATEST_BALANCE_PATH", str(tmp_path / "latest_balance.json"))
+    monkeypatch.setattr(loop, "LATEST_POSITIONS_PATH", str(tmp_path / "latest_positions.json"))
+    monkeypatch.setattr(
+        loop, "_historical_candles_cache_path", lambda symbol: str(tmp_path / "historical_candles_cache.json"),
+        raising=False,
+    )
+    fake_candles = [_FRESH_CANDLE]
+    monkeypatch.setattr(loop.confluence, "fetch_gold_candles", lambda *a, **k: fake_candles)
+    fetch_calls = []
+    monkeypatch.setattr(loop.backtest, "fetch_gold_candles_range",
+                         lambda *a, **k: fetch_calls.append(1) or [{"fake": "history"}])
+    monkeypatch.setattr(loop.broker, "get_account_information", lambda *a, **k: {"balance": 10000.0, "equity": 10000.0})
+    monkeypatch.setattr(loop.bot, "reconcile_positions", lambda *a, **k: [])
+    monkeypatch.setattr(loop.broker, "get_symbol_specification", lambda *a, **k: {"contractSize": 100, "volumeStep": 0.01, "minVolume": 0.01, "maxVolume": 500})
+    monkeypatch.setattr(loop.bot, "decide_and_act_vwap", lambda candles, **kwargs: {"action": "aucune", "reason": "x"})
+
+    cb = loop.risk.CircuitBreaker(persist_path=str(tmp_path / "cb_state.json"))
+    loop.run_cycle("tok", "acc", cb, now=_FRESH_NOW)
+    loop.run_cycle("tok", "acc", cb, now=_FRESH_NOW)
+    assert len(fetch_calls) == 1  # deuxième cycle réutilise le cache, pas de second fetch réseau
+
+
 def test_symbols_includes_gold_and_silver():
     assert loop.SYMBOLS == ["XAUUSD", "XAGUSD"]
 

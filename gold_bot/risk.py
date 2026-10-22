@@ -8,11 +8,11 @@ import gold_bot.state as state
 
 
 RISK_PROFILE_PARAMS: dict[int, dict[str, float]] = {
-    1: {"risk_pct": 0.02, "threshold_pct": 0.05},
-    2: {"risk_pct": 0.035, "threshold_pct": 0.075},
-    3: {"risk_pct": 0.05, "threshold_pct": 0.10},
-    4: {"risk_pct": 0.075, "threshold_pct": 0.135},
-    5: {"risk_pct": 0.10, "threshold_pct": 0.175},
+    1: {"risk_pct": 0.02, "threshold_pct": 0.05, "max_trades_per_day": 2},
+    2: {"risk_pct": 0.035, "threshold_pct": 0.075, "max_trades_per_day": 3},
+    3: {"risk_pct": 0.05, "threshold_pct": 0.10, "max_trades_per_day": 4},
+    4: {"risk_pct": 0.075, "threshold_pct": 0.135, "max_trades_per_day": 6},
+    5: {"risk_pct": 0.10, "threshold_pct": 0.175, "max_trades_per_day": 8},
 }
 DEFAULT_RISK_PROFILE = 3
 # Levier max réellement disponible sur le compte Vantage/MT5 utilisé

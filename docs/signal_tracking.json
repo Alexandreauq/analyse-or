@@ -2512,6 +2512,28 @@
       "shadow_resolved": false,
       "shadow_price": null,
       "shadow_return_pct": null
+    },
+    {
+      "id": "4543.T-2026-10-22",
+      "ticker": "4543.T",
+      "name": "Terumo",
+      "index": "NIKKEI225",
+      "status": "open",
+      "entry_date": "2026-10-22",
+      "entry_price": 2429.5,
+      "target_exit_price": 3150.1046673577393,
+      "index_price_at_entry": 62907.83984375,
+      "methodology_version": "81e7b41d8ebd7441c6a8dfc7b8f3a7a04622af6f",
+      "close_date": null,
+      "close_price": null,
+      "close_reason": null,
+      "return_pct": null,
+      "index_price_at_close": null,
+      "index_return_pct": null,
+      "shadow_close_date": "2027-04-22",
+      "shadow_resolved": false,
+      "shadow_price": null,
+      "shadow_return_pct": null
     }
   ]
 }

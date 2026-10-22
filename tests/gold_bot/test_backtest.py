@@ -435,3 +435,33 @@ def test_run_backtest_wires_fetch_and_simulation_together(monkeypatch):
     assert captured["end"] == end
     assert result["candle_count"] == len(fake_candles)
     assert result["summary"]["trade_count"] == 0
+
+
+def test_fetch_gold_candles_range_uses_the_requested_symbol(monkeypatch):
+    captured_symbols = []
+
+    def fake_get_historical_candles(token, account_id, symbol, timeframe, start_time, limit, region):
+        captured_symbols.append(symbol)
+        return []
+
+    monkeypatch.setattr(backtest.broker, "get_historical_candles", fake_get_historical_candles)
+    backtest.fetch_gold_candles_range(
+        "token", "account", datetime(2026, 1, 1, tzinfo=timezone.utc),
+        datetime(2026, 1, 2, tzinfo=timezone.utc), symbol="XAGUSD",
+    )
+    assert captured_symbols == ["XAGUSD"]
+
+
+def test_fetch_gold_candles_range_defaults_to_xauusd(monkeypatch):
+    captured_symbols = []
+
+    def fake_get_historical_candles(token, account_id, symbol, timeframe, start_time, limit, region):
+        captured_symbols.append(symbol)
+        return []
+
+    monkeypatch.setattr(backtest.broker, "get_historical_candles", fake_get_historical_candles)
+    backtest.fetch_gold_candles_range(
+        "token", "account", datetime(2026, 1, 1, tzinfo=timezone.utc),
+        datetime(2026, 1, 2, tzinfo=timezone.utc),
+    )
+    assert captured_symbols == ["XAUUSD"]

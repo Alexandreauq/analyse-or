@@ -268,19 +268,32 @@ def test_circuit_breaker_tripped_flag_persists_across_instances(tmp_path):
 
 
 def test_risk_profile_params_profile_1_is_most_conservative():
-    assert risk.risk_profile_params(1) == {"risk_pct": 0.02, "threshold_pct": 0.05}
+    assert risk.risk_profile_params(1) == {"risk_pct": 0.02, "threshold_pct": 0.05, "max_trades_per_day": 2}
 
 
 def test_risk_profile_params_profile_3_matches_current_defaults():
-    assert risk.risk_profile_params(3) == {"risk_pct": 0.05, "threshold_pct": 0.10}
+    assert risk.risk_profile_params(3) == {"risk_pct": 0.05, "threshold_pct": 0.10, "max_trades_per_day": 4}
 
 
 def test_risk_profile_params_profile_5_is_most_aggressive():
-    assert risk.risk_profile_params(5) == {"risk_pct": 0.10, "threshold_pct": 0.175}
+    assert risk.risk_profile_params(5) == {"risk_pct": 0.10, "threshold_pct": 0.175, "max_trades_per_day": 8}
 
 
 def test_risk_profile_params_all_five_profiles_present():
     assert set(risk.RISK_PROFILE_PARAMS.keys()) == {1, 2, 3, 4, 5}
+
+
+def test_risk_profile_params_includes_max_trades_per_day_for_every_profile():
+    for profile in (1, 2, 3, 4, 5):
+        params = risk.risk_profile_params(profile)
+        assert isinstance(params["max_trades_per_day"], int)
+        assert params["max_trades_per_day"] > 0
+
+
+def test_risk_profile_params_max_trades_per_day_increases_with_profile():
+    values = [risk.risk_profile_params(p)["max_trades_per_day"] for p in (1, 2, 3, 4, 5)]
+    assert values == sorted(values)
+    assert values[0] < values[-1]
 
 
 def test_risk_profile_params_falls_back_to_default_when_out_of_range():

@@ -56,47 +56,109 @@ def _find_historical_entries(candles_5min: list[dict], direction: str, symbol: s
 def _simulate_exit(candles_after_entry: list[dict], direction: str, entry_price: float,
                     initial_stop: float, entry_time: str, symbol: str = "XAUUSD") -> dict:
     """Rejoue la sortie reelle bougie par bougie a partir de
-    `candles_after_entry` (5min, strictement apres la bougie d'entree),
-    en reutilisant vwap_reversion.compute_trailing_stop a chaque pas
-    (jamais une reimplementation separee du stop suiveur -- la fidelite
-    aux vraies mecaniques de sortie est le point de ce module). Meme
-    priorite de cloture que gold_bot.backtest.simulate_trades : stop
-    touche d'abord (gagnant en cas de toucher simultane avec le TP de la
-    jambe partielle, meme desambiguisation prudente), puis fin de
-    session (SESSION_END_HOUR_UTC), puis fin de l'historique fourni
-    (ferme au dernier prix connu plutot que d'etre ignore)."""
+    `candles_after_entry` (5min, strictement apres la bougie d'entree).
+
+    MODELISE LES DEUX JAMBES de decide_and_act_vwap quand
+    get_symbol_params(symbol)["partial_tp_pct"] > 0 (XAUUSD et XAGUSD
+    aujourd'hui -- voir vwap_reversion.PARTIAL_TP_PCT/XAGUSD_PARTIAL_TP_PCT) :
+    - **Jambe partielle** (partial_tp_pct du volume) : stop FIXE a
+      `initial_stop` -- decide_and_act_vwap exclut explicitement du
+      suivi toute position avec takeProfit (`runner_matching = [p for p
+      in matching if not p.get("takeProfit")]`), donc son stop ne bouge
+      JAMAIS -- cible fixe a `entry_price +/- partial_tp_r * distance`.
+      Stop gagnant en cas de toucher simultane avec sa propre cible
+      (meme convention que gold_bot.backtest.simulate_trades).
+    - **Jambe runner** (1 - partial_tp_pct du volume) : stop SUIVEUR via
+      vwap_reversion.compute_trailing_stop a chaque pas (jamais une
+      reimplementation separee -- la fidelite aux vraies mecaniques de
+      sortie est le point de ce module), jamais de cible.
+    Les DEUX jambes se cloturent aussi de force a la fin de session
+    (SESSION_END_HOUR_UTC, meme decide_and_act_vwap qui cloture TOUTES
+    les positions `matching` a ce moment-la, pas seulement le runner),
+    ou a la fin de l'historique fourni (fermees au dernier prix connu
+    plutot que d'etre ignorees).
+
+    Le retour renvoye (`return_pct`) est la moyenne ponderee des deux
+    jambes par `partial_tp_pct` -- reproduit le P&L REEL combine du
+    bot plutot que de ne modeliser qu'une jambe runner a 100% du volume
+    (ce que faisait une version anterieure de cette fonction : un bug
+    trouve en revue, puisque ~70% du volume reel suit en fait une
+    cible fixe, jamais le stop suiveur). Si `partial_tp_pct <= 0`
+    (aucun symbole aujourd'hui, mais defensif), tout le volume reste
+    en jambe unique runner -- comportement inchange.
+
+    `close_reason`/`close_price`/`close_time` refletent la jambe
+    RUNNER specifiquement (pas un melange) : c'est elle qui determine
+    la duree reelle de blocage d'un nouveau signal cote
+    historical_odds_for_setup dans la tres grande majorite des cas
+    (son stop ne peut que se resserrer en faveur du trade, jamais
+    s'eloigner), seul `return_pct` est le melange des deux jambes."""
     is_achat = direction == "achat"
+    params = vwap_reversion.get_symbol_params(symbol)
+    distance = abs(entry_price - initial_stop)
+    partial_tp_pct = params["partial_tp_pct"]
+    has_partial_leg = partial_tp_pct > 0
+    if has_partial_leg:
+        partial_target = (entry_price + params["partial_tp_r"] * distance if is_achat
+                           else entry_price - params["partial_tp_r"] * distance)
+
+    def _return_pct(price):
+        return ((price - entry_price) / entry_price * 100 if is_achat
+                else (entry_price - price) / entry_price * 100)
+
     stop = initial_stop
     history_so_far = [{"time": entry_time, "open": entry_price, "high": entry_price,
                         "low": entry_price, "close": entry_price, "tick_volume": 0, "spread": 0}]
 
+    partial_return = None
+    runner_return = runner_close_reason = runner_close_price = runner_close_time = None
+
     for candle in candles_after_entry:
         history_so_far.append(candle)
         hour = datetime.fromisoformat(candle["time"].replace(" ", "T")).replace(tzinfo=timezone.utc).hour
+        session_ended = hour >= vwap_reversion.SESSION_END_HOUR_UTC
 
-        sl_touched = candle["low"] <= stop if is_achat else candle["high"] >= stop
-        if sl_touched:
-            return_pct = ((stop - entry_price) / entry_price * 100 if is_achat
-                           else (entry_price - stop) / entry_price * 100)
-            return {"close_reason": "stop_touche", "close_price": stop, "return_pct": return_pct,
-                    "close_time": candle["time"]}
+        if has_partial_leg and partial_return is None:
+            sl_hit = candle["low"] <= initial_stop if is_achat else candle["high"] >= initial_stop
+            if sl_hit:
+                partial_return = _return_pct(initial_stop)
+            else:
+                tp_hit = candle["high"] >= partial_target if is_achat else candle["low"] <= partial_target
+                if tp_hit:
+                    partial_return = _return_pct(partial_target)
+                elif session_ended:
+                    partial_return = _return_pct(candle["close"])
 
-        if hour >= vwap_reversion.SESSION_END_HOUR_UTC:
-            return_pct = ((candle["close"] - entry_price) / entry_price * 100 if is_achat
-                           else (entry_price - candle["close"]) / entry_price * 100)
-            return {"close_reason": "fin_session", "close_price": candle["close"], "return_pct": return_pct,
-                    "close_time": candle["time"]}
+        if runner_return is None:
+            sl_hit = candle["low"] <= stop if is_achat else candle["high"] >= stop
+            if sl_hit:
+                runner_return = _return_pct(stop)
+                runner_close_reason, runner_close_price, runner_close_time = "stop_touche", stop, candle["time"]
+            elif session_ended:
+                runner_return = _return_pct(candle["close"])
+                runner_close_reason = "fin_session"
+                runner_close_price, runner_close_time = candle["close"], candle["time"]
+            else:
+                new_stop = vwap_reversion.compute_trailing_stop(
+                    history_so_far, direction, entry_time, entry_price, stop, symbol=symbol)
+                if new_stop is not None:
+                    stop = new_stop
 
-        new_stop = vwap_reversion.compute_trailing_stop(
-            history_so_far, direction, entry_time, entry_price, stop, symbol=symbol)
-        if new_stop is not None:
-            stop = new_stop
+        if runner_return is not None and (not has_partial_leg or partial_return is not None):
+            break
 
-    last_price = candles_after_entry[-1]["close"]
-    return_pct = ((last_price - entry_price) / entry_price * 100 if is_achat
-                   else (entry_price - last_price) / entry_price * 100)
-    return {"close_reason": "fin_historique", "close_price": last_price, "return_pct": return_pct,
-            "close_time": candles_after_entry[-1]["time"]}
+    if runner_return is None:
+        last = candles_after_entry[-1]
+        runner_return = _return_pct(last["close"])
+        runner_close_reason, runner_close_price, runner_close_time = "fin_historique", last["close"], last["time"]
+    if has_partial_leg and partial_return is None:
+        partial_return = _return_pct(candles_after_entry[-1]["close"])
+
+    blended_return = (partial_tp_pct * partial_return + (1 - partial_tp_pct) * runner_return
+                       if has_partial_leg else runner_return)
+
+    return {"close_reason": runner_close_reason, "close_price": runner_close_price,
+            "return_pct": blended_return, "close_time": runner_close_time}
 
 
 def historical_odds_for_setup(candles_5min: list[dict], direction: str, symbol: str = "XAUUSD",
@@ -135,13 +197,23 @@ def historical_odds_for_setup(candles_5min: list[dict], direction: str, symbol: 
         entry_dt = datetime.fromisoformat(entry["entry_time"].replace(" ", "T")).replace(tzinfo=timezone.utc)
         if blocked_until is not None and entry_dt < blocked_until:
             continue
+        # N'exclut QUE les bougies dont le "time" est parsable et <=
+        # entry_dt -- une bougie sans "time" exploitable (jamais le cas
+        # pour de vraies donnees 5min, mais vrai pour un fixture de test
+        # minimal comme [{"dummy": True}]) est conservee plutot que de
+        # faire planter le filtre : ce module ne doit jamais lever sur
+        # un historique partiel ou mal forme, voir le contrat
+        # "insufficient_history ne bloque jamais le trade" ci-dessus.
         after = []
         for c in candles_5min:
             c_time = c.get("time")
             if c_time is not None:
-                c_dt = datetime.fromisoformat(c_time.replace(" ", "T")).replace(tzinfo=timezone.utc)
-                if c_dt <= entry_dt:
-                    continue
+                try:
+                    c_dt = datetime.fromisoformat(c_time.replace(" ", "T")).replace(tzinfo=timezone.utc)
+                    if c_dt <= entry_dt:
+                        continue
+                except ValueError:
+                    pass
             after.append(c)
         if not after:
             continue

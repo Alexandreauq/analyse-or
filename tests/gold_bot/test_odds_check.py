@@ -128,6 +128,42 @@ def test_simulate_exit_closes_at_end_of_available_history_when_unresolved():
     assert result["close_time"] == "2026-01-01 05:05:00"
 
 
+def test_simulate_exit_blends_partial_leg_target_with_runner_leg_stop():
+    # XAUUSD : partial_tp_pct=0.7, partial_tp_r=2.0 (vwap_reversion.PARTIAL_TP_PCT/
+    # PARTIAL_TP_R). distance = 1975-1960 = 15 -> cible partielle = 1975 + 2.0*15 = 2005.
+    # Bougie 1 : touche la cible partielle (high=2006) SANS toucher le stop
+    # runner (low=1970 > stop=1960) -- la jambe partielle se cloture ici,
+    # la jambe runner continue (son stop ne bouge pas : avec seulement 2
+    # bougies 5min dans l'historique fourni, compute_trailing_stop ne peut
+    # pas calculer -- EMA200_PERIOD=200 -- et renvoie None, voir sa
+    # docstring).
+    # Bougie 2 : touche le stop runner, toujours a 1960 (low=1958).
+    # Les deux jambes divergent donc reellement : la partielle est
+    # gagnante (+), le runner est perdant (-) -- preuve que le melange
+    # n'est pas un cas degenere a une seule bougie (contrairement aux 3
+    # tests precedents, ou les deux jambes se resolvent forcement de
+    # facon identique sur leur unique bougie).
+    candles_after_entry = [
+        {"time": "2026-01-01 05:05:00", "open": 1980.0, "high": 2006.0, "low": 1970.0, "close": 2000.0,
+         "tick_volume": 10, "spread": 2},
+        {"time": "2026-01-01 05:10:00", "open": 2000.0, "high": 2001.0, "low": 1958.0, "close": 1959.0,
+         "tick_volume": 10, "spread": 2},
+    ]
+    result = odds_check._simulate_exit(
+        candles_after_entry, direction="achat", entry_price=1975.0, initial_stop=1960.0,
+        entry_time="2026-01-01 05:00:00", symbol="XAUUSD",
+    )
+    partial_return = (2005.0 - 1975.0) / 1975.0 * 100  # cible partielle touchee, bougie 1
+    runner_return = (1960.0 - 1975.0) / 1975.0 * 100   # stop runner touche (jamais suivi), bougie 2
+    expected = 0.7 * partial_return + 0.3 * runner_return
+    assert result["return_pct"] == pytest.approx(expected)
+    # close_reason/close_price/close_time refletent la jambe runner
+    # (voir docstring de _simulate_exit) -- elle se cloture a la bougie 2.
+    assert result["close_reason"] == "stop_touche"
+    assert result["close_price"] == 1960.0
+    assert result["close_time"] == "2026-01-01 05:10:00"
+
+
 def test_historical_odds_for_setup_insufficient_history_does_not_block(monkeypatch):
     monkeypatch.setattr(odds_check, "_find_historical_entries", lambda candles, direction, symbol="XAUUSD": [])
     result = odds_check.historical_odds_for_setup([{"dummy": True}], "achat", min_sample_size=20)

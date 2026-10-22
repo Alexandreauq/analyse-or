@@ -1345,3 +1345,920 @@ Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>"
 - **Architecture guarantee preserved**: `decide_and_act_vwap` never imports or calls `broker`/network code (Task 7 passes data in, never fetches) — verified against the existing module docstring in `loop.py` before writing Task 7.
 - **Type/interface consistency checked**: `historical_odds_for_setup`'s return shape (`sample_size`/`win_rate_pct`/`avg_return_pct`/`verdict`) is identical across Task 6 (producer) and Task 7 (consumer, via the mocked `verdict` key). `_find_historical_entries`'s return shape (`entry_time`/`entry_price`/`stop_loss`) is identical across Task 5 (producer) and Task 6 (`historical_odds_for_setup`, consumer).
 - **No placeholder steps**: every implementation step contains complete, runnable code; every test step contains complete assertions. The two "Note for the implementer" callouts (Tasks 4 and 7) are explicit only about *mirroring an existing test's mock setup* (named precisely, with file/pattern to copy) rather than inventing new fixture conventions — they are not placeholders for missing logic, every assertion and the code under test is fully specified.
+
+---
+
+## Addendum: Task 8 — final whole-branch review fix wave
+
+The final review (after all 7 tasks passed their own task review, 4 of them
+through one fix round each) found cross-task issues no single task's review
+could see. The biggest: **the runner leg's trailing stop never actually
+trails inside `odds_check._simulate_exit`**. `vwap_reversion.compute_trailing_stop`
+requires at least `EMA200_PERIOD` (200) resampled 15-minute candles before it
+will compute anything (`if len(candles_15min) < EMA200_PERIOD: return None`,
+see `gold_bot/vwap_reversion.py`). A single trading session (00:00-22:00 UTC)
+holds at most ~88 fifteen-minute bars. The Task 6 version of `_simulate_exit`
+only ever fed `compute_trailing_stop` a synthetic entry candle plus whatever
+came *after* entry within the same session — so that 200-bar threshold was
+**never reached in production use**, meaning every simulated runner leg
+effectively traded on a fixed stop, contradicting the module's entire stated
+purpose (replaying the bot's *real* exit mechanics). In live trading,
+`decide_and_act_vwap` feeds `compute_trailing_stop` whatever window `loop.py`
+fetched that cycle (up to `CANDLES_FETCH_LIMIT=1000` 5-minute candles, ~3.5
+days) — `_simulate_exit` must do the same: a real sliding window of actual
+historical candles ending at each replay step, not a session-bounded,
+synthetic-seeded one.
+
+The final review also found: a look-ahead bias in entry-to-exit candle
+selection (the 15-minute entry bucket's own candles were being replayed a
+second time as if they were "after" the entry); the spec's promised spread
+deduction was silently dropped; the odds-check gate runs before the (free,
+in-memory) circuit-breaker check, paying the now-much-costlier replay even
+when the circuit breaker alone would already block the trade; the historical
+candle cache has no backoff on fetch failure (retries a 90-day/~20-page
+MetaApi fetch every 60s during an outage); the daily trade counter
+undercounts when an entry's partial leg succeeds but its runner leg's order
+fails; and two of the previously-deferred Minor findings (missing `TypeError`
+in the cache-read except tuple, `"Z"`-suffix `fromisoformat` inconsistency)
+turn out to matter more than estimated, since the function they're in blocks
+*all* position management for a symbol (not just new entries) when it
+misbehaves.
+
+**Files:**
+- Modify: `gold_bot/odds_check.py` (rewrite `_simulate_exit` and
+  `historical_odds_for_setup`; add `_candles_fingerprint`,
+  `_verdict_cache_path`, `historical_odds_for_setup_cached`; new imports)
+- Modify: `gold_bot/loop.py` (harden `_load_or_fetch_historical_candles`,
+  add a failure-backoff constant, fix trade-counting to not require every
+  step in a batch to succeed)
+- Modify: `gold_bot/bot.py` (reorder the circuit-breaker and odds-check
+  gates in `decide_and_act_vwap`; call the cached wrapper)
+- Modify: `.gitignore` (new cache files)
+- Test: `tests/gold_bot/test_odds_check.py`, `tests/gold_bot/test_loop.py`,
+  `tests/gold_bot/test_bot.py`
+
+**Interfaces:**
+- `_simulate_exit`'s signature changes: it now takes the FULL
+  `candles_5min: list[dict]` and an `entry_index: int` (the index of the
+  first candle at or after the entry bucket's close) instead of a
+  pre-sliced `candles_after_entry` list. Callers inside this same module
+  (`historical_odds_for_setup`) are the only callers — no other task's
+  code calls `_simulate_exit` directly.
+- New public function `historical_odds_for_setup_cached(candles_5min,
+  direction, symbol="XAUUSD", min_sample_size=20) -> dict` — same return
+  shape as `historical_odds_for_setup` (unchanged: `sample_size`/
+  `win_rate_pct`/`avg_return_pct`/`verdict`). `gold_bot/bot.py` calls this
+  cached wrapper instead of the raw function from now on.
+
+- [ ] **Step 1: Write the failing tests for the rewritten `_simulate_exit`**
+
+Replace ALL FOUR existing `_simulate_exit` tests in
+`tests/gold_bot/test_odds_check.py` (`test_simulate_exit_closes_on_stop_touch`,
+`test_simulate_exit_closes_at_session_end`,
+`test_simulate_exit_closes_at_end_of_available_history_when_unresolved`,
+`test_simulate_exit_blends_partial_leg_target_with_runner_leg_stop`) with
+the versions below — the signature changed (`candles_5min` + `entry_index`
+instead of `candles_after_entry`), so every call site in these tests must
+be updated. Also add two new tests proving the trailing stop and the
+bucket-end filtering actually work. Replace the whole block of five
+functions (the four existing ones plus the new fifth) with:
+
+```python
+def test_simulate_exit_closes_on_stop_touch():
+    # achat a 1975, stop a 1960 -- une bougie qui touche 1960 en low doit
+    # clore au stop, retour negatif. candles_5min[0] est la bougie
+    # d'entree elle-meme (non utilisee par le stop fixe partiel/initial,
+    # seulement comme reference temporelle) ; entry_index=1 pointe la
+    # premiere bougie APRES l'entree.
+    candles_5min = [
+        {"time": "2026-01-01 05:00:00", "open": 1975.0, "high": 1975.0, "low": 1975.0, "close": 1975.0,
+         "tick_volume": 10, "spread": 0},
+        {"time": "2026-01-01 05:05:00", "open": 1975.0, "high": 1976.0, "low": 1959.0, "close": 1960.0,
+         "tick_volume": 10, "spread": 2},
+    ]
+    result = odds_check._simulate_exit(
+        candles_5min, entry_index=1, direction="achat", entry_price=1975.0, initial_stop=1960.0,
+        entry_time="2026-01-01 05:00:00", symbol="XAUUSD",
+    )
+    assert result["close_reason"] == "stop_touche"
+    assert result["return_pct"] < 0
+    assert result["close_time"] == "2026-01-01 05:05:00"
+
+
+def test_simulate_exit_closes_at_session_end():
+    candles_5min = [
+        {"time": "2026-01-01 05:00:00", "open": 1975.0, "high": 1975.0, "low": 1975.0, "close": 1975.0,
+         "tick_volume": 10, "spread": 0},
+        {"time": "2026-01-01 22:00:00", "open": 1980.0, "high": 1982.0, "low": 1978.0, "close": 1981.0,
+         "tick_volume": 10, "spread": 2},
+    ]
+    result = odds_check._simulate_exit(
+        candles_5min, entry_index=1, direction="achat", entry_price=1975.0, initial_stop=1960.0,
+        entry_time="2026-01-01 05:00:00", symbol="XAUUSD",
+    )
+    assert result["close_reason"] == "fin_session"
+    assert result["return_pct"] > 0  # 1981 > 1975, achat gagnant
+    assert result["close_time"] == "2026-01-01 22:00:00"
+
+
+def test_simulate_exit_closes_at_end_of_available_history_when_unresolved():
+    candles_5min = [
+        {"time": "2026-01-01 05:00:00", "open": 1975.0, "high": 1975.0, "low": 1975.0, "close": 1975.0,
+         "tick_volume": 10, "spread": 0},
+        {"time": "2026-01-01 05:05:00", "open": 1976.0, "high": 1977.0, "low": 1974.0, "close": 1976.0,
+         "tick_volume": 10, "spread": 2},
+    ]
+    result = odds_check._simulate_exit(
+        candles_5min, entry_index=1, direction="achat", entry_price=1975.0, initial_stop=1960.0,
+        entry_time="2026-01-01 05:00:00", symbol="XAUUSD",
+    )
+    assert result["close_reason"] == "fin_historique"
+    # close_price reste le prix de marche brut (non ajuste du spread) --
+    # seul return_pct deduit le cout du spread, voir _spread_cost_pct.
+    assert result["close_price"] == 1976.0
+    assert result["return_pct"] == pytest.approx(
+        (1976.0 - 1975.0) / 1975.0 * 100 - (2 * backtest.XAUUSD_POINT_SIZE) / 1975.0 * 100)
+    assert result["close_time"] == "2026-01-01 05:05:00"
+
+
+def test_simulate_exit_blends_partial_leg_target_with_runner_leg_stop():
+    # XAUUSD : partial_tp_pct=0.7, partial_tp_r=2.0. distance = 1975-1960 = 15
+    # -> cible partielle = 1975 + 2.0*15 = 2005. Bougie 1 : touche la cible
+    # partielle (high=2006) SANS toucher le stop runner (low=1970 > 1960) --
+    # la jambe partielle se cloture ici. Bougie 2 : touche le stop runner,
+    # toujours a 1960 (compute_trailing_stop ne peut pas encore calculer
+    # avec seulement 3 bougies 5min dans l'historique -- EMA200_PERIOD=200,
+    # voir le nouveau test ci-dessous pour le cas ou le suivi s'active
+    # vraiment). Spread nul sur ces 2 bougies pour garder le calcul simple.
+    candles_5min = [
+        {"time": "2026-01-01 05:00:00", "open": 1975.0, "high": 1975.0, "low": 1975.0, "close": 1975.0,
+         "tick_volume": 10, "spread": 0},
+        {"time": "2026-01-01 05:05:00", "open": 1980.0, "high": 2006.0, "low": 1970.0, "close": 2000.0,
+         "tick_volume": 10, "spread": 0},
+        {"time": "2026-01-01 05:10:00", "open": 2000.0, "high": 2001.0, "low": 1958.0, "close": 1959.0,
+         "tick_volume": 10, "spread": 0},
+    ]
+    result = odds_check._simulate_exit(
+        candles_5min, entry_index=1, direction="achat", entry_price=1975.0, initial_stop=1960.0,
+        entry_time="2026-01-01 05:00:00", symbol="XAUUSD",
+    )
+    partial_return = (2005.0 - 1975.0) / 1975.0 * 100  # cible partielle touchee, bougie 1
+    runner_return = (1960.0 - 1975.0) / 1975.0 * 100   # stop runner touche (pas encore suivi), bougie 2
+    expected = 0.7 * partial_return + 0.3 * runner_return
+    assert result["return_pct"] == pytest.approx(expected)
+    assert result["close_reason"] == "stop_touche"
+    assert result["close_price"] == 1960.0
+    assert result["close_time"] == "2026-01-01 05:10:00"
+
+
+def _make_trending_session(base_day: str, start_hour: int, n_bars: int, start_price: float,
+                            price_step: float, spread: float = 1.0) -> list[dict]:
+    """Construit `n_bars` bougies 5min consecutives a partir de
+    `base_day`/`start_hour` (UTC), prix = start_price + i*price_step
+    (haute/basse = +/-0.5 autour du close pour laisser un peu d'amplitude
+    sans jamais toucher un stop). Utilise pour construire plusieurs jours
+    d'historique REEL (pas un mock des indicateurs) afin de faire
+    reellement s'activer compute_trailing_stop (seuil EMA200_PERIOD=200
+    bougies 15min, soit >= 600 bougies 5min d'affilee)."""
+    out = []
+    t = datetime.fromisoformat(f"{base_day}T{start_hour:02d}:00:00").replace(tzinfo=timezone.utc)
+    for i in range(n_bars):
+        price = start_price + i * price_step
+        out.append({
+            "time": t.strftime("%Y-%m-%d %H:%M:%S"), "open": price, "high": price + 0.5,
+            "low": price - 0.5, "close": price, "tick_volume": 10, "spread": spread,
+        })
+        t += timedelta(minutes=5)
+    return out
+
+
+def test_simulate_exit_trailing_stop_actually_tightens_with_enough_real_history():
+    # Reproduit le defaut trouve en revue finale de branche : avec
+    # seulement les bougies depuis l'entree, compute_trailing_stop ne
+    # calcule jamais (< 200 bougies 15min dans une seule session). Ici,
+    # 3 jours complets de bougies 5min AVANT l'entree donnent assez
+    # d'historique pour EMA200 ; une monte franche puis un RETOUR BRUTAL
+    # jusqu'au niveau du stop INITIAL tranche, de maniere decisive, si le
+    # suiveur s'est vraiment resserre : le retour (-90 sur 30 bougies,
+    # bien plus profond que les -15 de distance initiale) est assez
+    # severe pour toucher N'IMPORTE QUEL stop, trailed ou non -- sans
+    # suivi reel (bug), il touche exactement le stop initial
+    # (close_price == initial_stop) ; avec un suivi reellement actif, le
+    # stop s'est deja resserre AU-DESSUS de ce niveau pendant la monte,
+    # donc le toucher se fait forcement a un prix strictement superieur.
+    pre_entry = _make_trending_session("2026-01-01", 0, 864, 1900.0, 0.01)  # 3 jours, prix quasi plat
+    entry_candle = pre_entry[-1]
+    initial_stop = entry_candle["close"] - 15.0
+    uptrend = _make_trending_session("2026-01-04", 0, 100, entry_candle["close"] + 0.5, 0.5)  # +50 sur 100 bougies
+    peak_price = uptrend[-1]["close"]
+    pullback = _make_trending_session("2026-01-04", 8, 30, peak_price - 3.0, -3.0)  # retour de -90 sur 30 bougies
+    candles_5min = pre_entry + uptrend + pullback
+    entry_index = len(pre_entry)
+
+    result = odds_check._simulate_exit(
+        candles_5min, entry_index=entry_index, direction="achat", entry_price=entry_candle["close"],
+        initial_stop=initial_stop, entry_time=entry_candle["time"], symbol="XAUUSD",
+    )
+    assert result["close_reason"] == "stop_touche"
+    assert result["close_price"] > initial_stop  # preuve decisive : sinon == initial_stop exactement
+
+
+def test_historical_odds_for_setup_excludes_candles_inside_the_entry_bucket(monkeypatch):
+    # Biais d'anticipation trouve en revue finale de branche : le bucket
+    # 15min d'entree (05:00-05:15) couvre 3 bougies 5min (05:00, 05:05,
+    # 05:10) dont le CLOSE (celui de 05:10) determine entry_price. La
+    # simulation ne doit commencer qu'a la bougie de 05:15 (premiere APRES
+    # la cloture du bucket), jamais inclure 05:05/05:10 une deuxieme fois.
+    entries = [{"entry_time": "2026-01-01 05:00:00", "entry_price": 1975.0, "stop_loss": 1960.0}] + \
+        [{"entry_time": f"2026-01-{i:02d} 05:00:00", "entry_price": 1975.0, "stop_loss": 1960.0} for i in range(2, 21)]
+    monkeypatch.setattr(odds_check, "_find_historical_entries", lambda candles, direction, symbol="XAUUSD": entries)
+
+    captured_entry_indices = []
+
+    def fake_simulate_exit(candles_5min, entry_index, direction, entry_price, initial_stop, entry_time, symbol="XAUUSD"):
+        captured_entry_indices.append((entry_time, entry_index, candles_5min[entry_index]["time"] if entry_index < len(candles_5min) else None))
+        day = entry_time.split(" ")[0]
+        return {"close_reason": "fin_session", "close_price": 1985.0, "return_pct": 0.5,
+                "close_time": f"{day} 07:00:00"}
+
+    monkeypatch.setattr(odds_check, "_simulate_exit", fake_simulate_exit)
+
+    candles_5min = [
+        {"time": "2026-01-01 05:00:00", "open": 1975.0, "high": 1975.0, "low": 1975.0, "close": 1975.0, "spread": 0},
+        {"time": "2026-01-01 05:05:00", "open": 1975.0, "high": 1975.0, "low": 1975.0, "close": 1975.0, "spread": 0},
+        {"time": "2026-01-01 05:10:00", "open": 1975.0, "high": 1975.0, "low": 1975.0, "close": 1975.0, "spread": 0},
+        {"time": "2026-01-01 05:15:00", "open": 1975.0, "high": 1975.0, "low": 1975.0, "close": 1975.0, "spread": 0},
+    ]
+    odds_check.historical_odds_for_setup(candles_5min, "achat", min_sample_size=20)
+    first_call_time, first_entry_index, first_candle_time = captured_entry_indices[0]
+    assert first_call_time == "2026-01-01 05:00:00"
+    # La bougie a l'index trouve doit etre a 05:15 (la premiere a ou apres
+    # la cloture du bucket 05:00-05:15), jamais 05:05 ou 05:10.
+    assert first_candle_time == "2026-01-01 05:15:00"
+```
+
+`import pytest` and `from datetime import datetime, timedelta, timezone`
+are already present at the top of `tests/gold_bot/test_odds_check.py`
+(from Task 5/6) — nothing to add there. Add
+`import gold_bot.backtest as backtest` (needed for the
+`XAUUSD_POINT_SIZE` reference in the updated
+`test_simulate_exit_closes_at_end_of_available_history_when_unresolved`).
+
+- [ ] **Step 2: Run tests to verify they fail**
+
+Run: `python -m pytest tests/gold_bot/test_odds_check.py -v`
+Expected: FAIL (signature mismatch — `_simulate_exit` doesn't accept
+`entry_index` yet; `historical_odds_for_setup` doesn't exclude in-bucket
+candles yet).
+
+- [ ] **Step 3: Rewrite `_simulate_exit` and `historical_odds_for_setup`**
+
+Add the import at the top of `gold_bot/odds_check.py` (alongside the
+existing `vwap_reversion` import) and update the module docstring's
+"aucun appel reseau/broker" line to clarify local file caching is fine
+(mirrors the precedent already set by `gold_bot.risk.CircuitBreaker`'s
+own local state persistence):
+
+```python
+# gold_bot/odds_check.py
+# Verification des cotes historiques avant l'ouverture d'un trade --
+# voir docs/superpowers/specs/2026-10-22-gold-bot-risk-gate-design.md.
+# Module pur vis-a-vis du RESEAU (aucun appel broker/MetaApi) : recoit
+# un historique de bougies 5min deja recupere (par gold_bot.loop) et
+# rejoue les memes mecaniques de decision/sortie que
+# gold_bot.bot.decide_and_act_vwap, pour estimer les cotes reelles du
+# meme type de signal dans le passe. Fait cependant de la lecture/
+# ecriture de cache LOCALE (verdict memorise, voir
+# historical_odds_for_setup_cached) -- meme precedent que
+# gold_bot.risk.CircuitBreaker, qui persiste deja son propre etat
+# localement depuis une fonction par ailleurs "pure" cote reseau.
+import json
+import os
+from datetime import datetime, timezone
+
+import gold_bot.backtest as backtest
+import gold_bot.vwap_reversion as vwap_reversion
+```
+
+Entirely replace the existing `_simulate_exit` function (everything from
+`def _simulate_exit(candles_after_entry: ...` through its closing
+`return {...}`) with:
+
+```python
+# Fenetre glissante de bougies 5min passee a compute_trailing_stop a
+# chaque pas, pour reproduire fidelement ce qu'une boucle live voit
+# reellement a un instant donne (gold_bot.loop.CANDLES_FETCH_LIMIT =
+# 1000 ; valeur dupliquee ici plutot qu'importee pour eviter un cycle
+# d'import odds_check -> loop -> bot -> odds_check, ce module etant
+# repris par gold_bot.bot, lui-meme importe par gold_bot.loop).
+TRAILING_STOP_WINDOW_SIZE = 1000
+
+
+def _spread_cost_pct(entry_price: float, spread_points: float, symbol: str) -> float:
+    """Cout du spread en % du prix d'entree, meme convention que
+    gold_bot.backtest._compute_return. Seul XAUUSD a une taille de point
+    verifiee (backtest.XAUUSD_POINT_SIZE, "coté à 2 décimales chez ce
+    courtier" -- hypothese documentee dans backtest.py, jamais verifiee
+    pour XAGUSD). Pour tout autre symbole, ne deduit rien plutot que
+    d'appliquer une conversion non verifiee -- trouve en revue finale de
+    branche (la spec promettait cette deduction, oubliee dans une
+    version anterieure de ce module)."""
+    if symbol != "XAUUSD":
+        return 0.0
+    return (spread_points * backtest.XAUUSD_POINT_SIZE) / entry_price * 100
+
+
+def _simulate_exit(candles_5min: list[dict], entry_index: int, direction: str, entry_price: float,
+                    initial_stop: float, entry_time: str, symbol: str = "XAUUSD") -> dict:
+    """Rejoue la sortie reelle bougie par bougie a partir de
+    `candles_5min[entry_index]` (la premiere bougie 5min A OU APRES la
+    cloture du bucket 15min d'entree -- voir historical_odds_for_setup,
+    qui calcule cet index ; ne JAMAIS passer l'index d'une bougie a
+    l'interieur du bucket d'entree lui-meme, biais d'anticipation trouve
+    en revue finale de branche).
+
+    A chaque pas, le stop suiveur de la jambe runner est recalcule via
+    vwap_reversion.compute_trailing_stop sur une fenetre glissante de
+    jusqu'a TRAILING_STOP_WINDOW_SIZE VRAIES bougies 5min se terminant a
+    la bougie courante (`candles_5min[max(0, i-WINDOW+1):i+1]`) --
+    EXACTEMENT ce qu'une boucle live lui donnerait a ce moment-la (voir
+    gold_bot.loop.CANDLES_FETCH_LIMIT, gold_bot.bot.decide_and_act_vwap).
+    Une version anterieure de cette fonction ne lui donnait qu'une
+    bougie d'entree synthetique plus les bougies depuis l'entree : avec
+    au plus ~88 bougies 15min dans une session (0h-22h UTC), le seuil
+    EMA200_PERIOD=200 de compute_trailing_stop n'etait JAMAIS atteint en
+    pratique, et le stop suiveur ne suivait donc jamais -- trouve en
+    revue finale de branche. Consequence residuelle acceptee : les toutes
+    premieres entrees de la fenetre de 90 jours recuperee
+    (HISTORICAL_ODDS_WINDOW_DAYS, gold_bot.loop), qui n'ont pas encore
+    ~2 jours d'historique REEL avant elles dans les donnees recuperees,
+    degradent de la meme facon (compute_trailing_stop renvoie None, le
+    stop reste fixe jusqu'a ce que suffisamment d'historique existe) --
+    c'est attendu (meme degradation qu'un bot qui demarre), pas une
+    regression de ce correctif. Autre ecart residuel documente : l'EMA200
+    calculee ici repart de zero a chaque fenetre glissante plutot que
+    d'etre continue depuis le tout debut de l'historique recupere comme
+    en live continu -- poids residuel faible (~3.6% au bout de 200
+    bougies) mais reel, accepte pour eviter de repasser des milliers de
+    bougies a chaque pas (voir aussi historical_odds_for_setup_cached,
+    qui rend ce cout tolerable en ne le payant qu'une fois par
+    rafraichissement du cache d'historique plutot qu'a chaque cycle).
+
+    Modelise les DEUX jambes de decide_and_act_vwap quand
+    get_symbol_params(symbol)["partial_tp_pct"] > 0 (XAUUSD et XAGUSD
+    aujourd'hui) : la jambe partielle (stop FIXE a `initial_stop`, cible
+    fixe a `entry_price +/- partial_tp_r * distance`, stop gagnant en
+    cas de toucher simultane avec sa propre cible) et la jambe runner
+    (stop suiveur ci-dessus, jamais de cible). Les deux se cloturent
+    aussi de force a la fin de session (SESSION_END_HOUR_UTC, comme
+    TOUTES les positions `matching` dans decide_and_act_vwap), ou a la
+    fin de l'historique fourni.
+
+    Le retour renvoye (`return_pct`) est la moyenne ponderee des deux
+    jambes par `partial_tp_pct`, APRES deduction du cout du spread (voir
+    _spread_cost_pct) -- la spec promettait cette deduction, oubliee
+    dans une version anterieure. Si `partial_tp_pct <= 0`, tout le
+    volume reste en jambe unique runner.
+
+    `close_reason`/`close_price` refletent la jambe RUNNER specifiquement
+    (pas un melange). `close_time`, en revanche, est le PLUS TARDIF des
+    deux cloture (max partielle/runner) -- avec le stop suiveur
+    desormais reellement actif, la jambe partielle peut survivre plus
+    longtemps que le runner (elle ne se cloture que sur son propre stop
+    fixe, sa cible fixe, ou la fin de session), et c'est elle qui
+    determine la duree reelle de blocage d'un nouveau signal cote
+    historical_odds_for_setup (decide_and_act_vwap bloque tant que
+    N'IMPORTE QUELLE jambe `matching` reste ouverte) -- corrige une
+    approximation de la version precedente, trouvee en revue finale."""
+    is_achat = direction == "achat"
+    params = vwap_reversion.get_symbol_params(symbol)
+    distance = abs(entry_price - initial_stop)
+    partial_tp_pct = params["partial_tp_pct"]
+    has_partial_leg = partial_tp_pct > 0
+    if has_partial_leg:
+        partial_target = (entry_price + params["partial_tp_r"] * distance if is_achat
+                           else entry_price - params["partial_tp_r"] * distance)
+
+    def _return_pct(price, spread_points):
+        raw = ((price - entry_price) / entry_price * 100 if is_achat
+               else (entry_price - price) / entry_price * 100)
+        return raw - _spread_cost_pct(entry_price, spread_points, symbol)
+
+    stop = initial_stop
+    partial_return = partial_close_time = None
+    runner_return = runner_close_reason = runner_close_price = runner_close_time = None
+
+    for i in range(entry_index, len(candles_5min)):
+        candle = candles_5min[i]
+        hour = datetime.fromisoformat(candle["time"].replace(" ", "T")).replace(tzinfo=timezone.utc).hour
+        session_ended = hour >= vwap_reversion.SESSION_END_HOUR_UTC
+        spread = candle.get("spread", 0.0)
+
+        if has_partial_leg and partial_return is None:
+            sl_hit = candle["low"] <= initial_stop if is_achat else candle["high"] >= initial_stop
+            if sl_hit:
+                partial_return, partial_close_time = _return_pct(initial_stop, spread), candle["time"]
+            else:
+                tp_hit = candle["high"] >= partial_target if is_achat else candle["low"] <= partial_target
+                if tp_hit:
+                    partial_return, partial_close_time = _return_pct(partial_target, spread), candle["time"]
+                elif session_ended:
+                    partial_return, partial_close_time = _return_pct(candle["close"], spread), candle["time"]
+
+        if runner_return is None:
+            sl_hit = candle["low"] <= stop if is_achat else candle["high"] >= stop
+            if sl_hit:
+                runner_return = _return_pct(stop, spread)
+                runner_close_reason, runner_close_price, runner_close_time = "stop_touche", stop, candle["time"]
+            elif session_ended:
+                runner_return = _return_pct(candle["close"], spread)
+                runner_close_reason = "fin_session"
+                runner_close_price, runner_close_time = candle["close"], candle["time"]
+            else:
+                window = candles_5min[max(0, i - TRAILING_STOP_WINDOW_SIZE + 1):i + 1]
+                new_stop = vwap_reversion.compute_trailing_stop(
+                    window, direction, entry_time, entry_price, stop, symbol=symbol)
+                if new_stop is not None:
+                    stop = new_stop
+
+        if runner_return is not None and (not has_partial_leg or partial_return is not None):
+            break
+
+    if runner_return is None:
+        last = candles_5min[-1]
+        runner_return = _return_pct(last["close"], last.get("spread", 0.0))
+        runner_close_reason, runner_close_price, runner_close_time = "fin_historique", last["close"], last["time"]
+    if has_partial_leg and partial_return is None:
+        last = candles_5min[-1]
+        partial_return, partial_close_time = _return_pct(last["close"], last.get("spread", 0.0)), last["time"]
+
+    blended_return = (partial_tp_pct * partial_return + (1 - partial_tp_pct) * runner_return
+                       if has_partial_leg else runner_return)
+    dedup_close_time = max(runner_close_time, partial_close_time) if has_partial_leg else runner_close_time
+
+    return {"close_reason": runner_close_reason, "close_price": runner_close_price,
+            "return_pct": blended_return, "close_time": dedup_close_time}
+```
+
+Entirely replace `historical_odds_for_setup`'s body from `entries =
+_find_historical_entries(...)` through its final `return {...}` with:
+
+```python
+def historical_odds_for_setup(candles_5min: list[dict], direction: str, symbol: str = "XAUUSD",
+                               min_sample_size: int = 20) -> dict:
+    """Point d'entree public -- voir docs/superpowers/specs/2026-10-22-
+    gold-bot-risk-gate-design.md. `min_sample_size` sous ce seuil ->
+    verdict "insufficient_history", NE bloque jamais le trade. Au-dela,
+    "unfavorable" (bloque) si et seulement si l'esperance moyenne nette
+    (spread deduit, voir _simulate_exit) est negative ou nulle.
+
+    Pour chaque entree detectee par _find_historical_entries (dont
+    `entry_time` est le DEBUT du bucket 15min, voir sa docstring), la
+    simulation ne doit commencer qu'a la toute premiere bougie 5min A OU
+    APRES la CLOTURE de ce bucket (`entry_time + 15min`) -- jamais
+    pendant le bucket lui-meme, qui a deja determine `entry_price` (son
+    propre prix de cloture). Inclure ces bougies une deuxieme fois dans
+    la simulation serait un biais d'anticipation -- trouve en revue
+    finale de branche."""
+    entries = _find_historical_entries(candles_5min, direction, symbol=symbol)
+    if len(entries) < min_sample_size:
+        return {"sample_size": len(entries), "win_rate_pct": None, "avg_return_pct": None,
+                "verdict": "insufficient_history"}
+
+    outcomes = []
+    blocked_until = None
+    for entry in entries:
+        entry_dt = datetime.fromisoformat(entry["entry_time"].replace(" ", "T")).replace(tzinfo=timezone.utc)
+        if blocked_until is not None and entry_dt < blocked_until:
+            continue
+        bucket_end = entry_dt + timedelta(minutes=15)
+        entry_index = None
+        for i, c in enumerate(candles_5min):
+            c_time = c.get("time")
+            if c_time is None:
+                continue
+            try:
+                c_dt = datetime.fromisoformat(c_time.replace(" ", "T")).replace(tzinfo=timezone.utc)
+            except ValueError:
+                continue
+            if c_dt >= bucket_end:
+                entry_index = i
+                break
+        if entry_index is None:
+            continue
+        outcome = _simulate_exit(
+            candles_5min, entry_index, direction, entry["entry_price"], entry["stop_loss"],
+            entry["entry_time"], symbol=symbol)
+        outcomes.append(outcome)
+        blocked_until = datetime.fromisoformat(outcome["close_time"].replace(" ", "T")).replace(tzinfo=timezone.utc)
+
+    if len(outcomes) < min_sample_size:
+        return {"sample_size": len(outcomes), "win_rate_pct": None, "avg_return_pct": None,
+                "verdict": "insufficient_history"}
+
+    avg_return_pct = sum(o["return_pct"] for o in outcomes) / len(outcomes)
+    win_rate_pct = sum(1 for o in outcomes if o["return_pct"] > 0) / len(outcomes) * 100
+    verdict = "unfavorable" if avg_return_pct <= 0 else "favorable"
+    return {"sample_size": len(outcomes), "win_rate_pct": win_rate_pct,
+            "avg_return_pct": avg_return_pct, "verdict": verdict}
+
+
+def _candles_fingerprint(candles_5min: list[dict]) -> str:
+    """Identifiant bon marche (O(1), pas un hash de tout le contenu)
+    pour detecter si `candles_5min` a change depuis le dernier appel --
+    change des que loop.py rafraichit son cache d'historique (nouvelle
+    premiere/derniere bougie ou nombre de bougies different), reste
+    stable sinon (meme liste reutilisee a chaque cycle tant que le
+    cache de loop.py n'expire pas, voir
+    loop.HISTORICAL_ODDS_CACHE_MAX_AGE_SECONDS)."""
+    if not candles_5min:
+        return "empty"
+    return f"{len(candles_5min)}:{candles_5min[0].get('time')}:{candles_5min[-1].get('time')}"
+
+
+def _verdict_cache_path(symbol: str, direction: str) -> str:
+    return os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                         f"odds_verdict_cache_{symbol.lower()}_{direction}.json")
+
+
+def historical_odds_for_setup_cached(candles_5min: list[dict], direction: str, symbol: str = "XAUUSD",
+                                      min_sample_size: int = 20) -> dict:
+    """Memoise historical_odds_for_setup par (symbol, direction,
+    empreinte de candles_5min, voir _candles_fingerprint). Le replay
+    complet (recalcul du stop suiveur sur une fenetre glissante REELLE a
+    chaque bougie depuis le correctif de revue finale de branche, voir
+    _simulate_exit) est devenu nettement plus couteux -- inutile de le
+    refaire a chaque cycle (60s) tant que l'historique sous-jacent n'a
+    pas change (rafraichi au plus une fois par 24h cote loop.py).
+    gold_bot.bot.decide_and_act_vwap appelle CETTE fonction, jamais la
+    version non memoisee, directement."""
+    fingerprint = _candles_fingerprint(candles_5min)
+    path = _verdict_cache_path(symbol, direction)
+    if os.path.exists(path):
+        try:
+            with open(path, encoding="utf-8") as f:
+                cached = json.load(f)
+            if cached.get("fingerprint") == fingerprint:
+                return cached["verdict"]
+        except Exception:
+            pass
+    verdict = historical_odds_for_setup(candles_5min, direction, symbol=symbol, min_sample_size=min_sample_size)
+    try:
+        with open(path, "w", encoding="utf-8") as f:
+            json.dump({"fingerprint": fingerprint, "verdict": verdict}, f)
+    except OSError:
+        pass
+    return verdict
+```
+
+Also add `from datetime import timedelta` to the existing `from datetime
+import datetime, timezone` line at the top of `gold_bot/odds_check.py`
+(needed by `historical_odds_for_setup`'s `bucket_end` computation).
+
+- [ ] **Step 4: Run the `odds_check.py` tests to verify they pass**
+
+Run: `python -m pytest tests/gold_bot/test_odds_check.py -v`
+Expected: PASS (all tests, including the two new ones).
+
+- [ ] **Step 5: Write the failing test for `historical_odds_for_setup_cached`**
+
+Add to `tests/gold_bot/test_odds_check.py`:
+
+```python
+def test_historical_odds_for_setup_cached_reuses_result_for_same_fingerprint(monkeypatch, tmp_path):
+    call_count = {"n": 0}
+
+    def fake_historical_odds_for_setup(candles, direction, symbol="XAUUSD", min_sample_size=20):
+        call_count["n"] += 1
+        return {"sample_size": 25, "win_rate_pct": 60.0, "avg_return_pct": 0.3, "verdict": "favorable"}
+
+    monkeypatch.setattr(odds_check, "historical_odds_for_setup", fake_historical_odds_for_setup)
+    monkeypatch.setattr(odds_check, "_verdict_cache_path", lambda symbol, direction: str(tmp_path / "verdict.json"))
+
+    candles = [{"time": "2026-01-01 05:00:00"}, {"time": "2026-01-01 05:05:00"}]
+    result1 = odds_check.historical_odds_for_setup_cached(candles, "achat")
+    result2 = odds_check.historical_odds_for_setup_cached(candles, "achat")  # meme empreinte
+    assert result1 == result2
+    assert call_count["n"] == 1  # pas recalcule la deuxieme fois
+
+
+def test_historical_odds_for_setup_cached_recomputes_when_candles_change(monkeypatch, tmp_path):
+    call_count = {"n": 0}
+
+    def fake_historical_odds_for_setup(candles, direction, symbol="XAUUSD", min_sample_size=20):
+        call_count["n"] += 1
+        return {"sample_size": 25, "win_rate_pct": 60.0, "avg_return_pct": 0.3, "verdict": "favorable"}
+
+    monkeypatch.setattr(odds_check, "historical_odds_for_setup", fake_historical_odds_for_setup)
+    monkeypatch.setattr(odds_check, "_verdict_cache_path", lambda symbol, direction: str(tmp_path / "verdict.json"))
+
+    odds_check.historical_odds_for_setup_cached(
+        [{"time": "2026-01-01 05:00:00"}, {"time": "2026-01-01 05:05:00"}], "achat")
+    odds_check.historical_odds_for_setup_cached(
+        [{"time": "2026-01-02 05:00:00"}, {"time": "2026-01-02 05:05:00"}], "achat")  # autre empreinte
+    assert call_count["n"] == 2  # recalcule, l'historique a change
+```
+
+- [ ] **Step 6: Run tests to verify they pass**
+
+Run: `python -m pytest tests/gold_bot/test_odds_check.py -v`
+Expected: PASS (all tests in the file).
+
+- [ ] **Step 7: Write the failing tests for `bot.py`'s reordered gate + cached call**
+
+In `tests/gold_bot/test_bot.py`, find the two tests
+`test_decide_and_act_vwap_blocked_by_unfavorable_odds_check` and
+`test_decide_and_act_vwap_opens_when_odds_check_favorable` (added in
+Task 7) and update BOTH of their `monkeypatch.setattr(bot.odds_check,
+"historical_odds_for_setup", ...)` lines to patch
+`"historical_odds_for_setup_cached"` instead (same lambda signature,
+just the attribute name changes) — `decide_and_act_vwap` now calls the
+cached wrapper. Then add one new test proving the circuit-breaker check
+now runs BEFORE the odds check (so a tripped circuit breaker is never
+masked by an "unfavorable odds" message, and the expensive replay is
+skipped when the free check would already block):
+
+```python
+def test_decide_and_act_vwap_checks_circuit_breaker_before_odds_check(monkeypatch):
+    state = _vwap_state(close=1975.0, vwap=2010.0, vwap_std=20.0, ema200=1900.0)
+    monkeypatch.setattr(bot.vwap_reversion, "latest_state", lambda candles: state)
+
+    def _fail_if_called(*a, **k):
+        raise AssertionError("historical_odds_for_setup_cached ne doit pas etre appele "
+                              "quand le coupe-circuit est deja declenche")
+    monkeypatch.setattr(bot.odds_check, "historical_odds_for_setup_cached", _fail_if_called)
+
+    from datetime import datetime, timezone
+    cb = risk.CircuitBreaker(threshold_pct=0.10, now_fn=lambda: datetime(2026, 9, 10, tzinfo=timezone.utc))
+    cb.check(10000)  # reference de depart du jour
+    result = bot.decide_and_act_vwap(
+        [{"dummy": True}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
+        balance=10000, equity=8900, open_positions=[], circuit_breaker=cb,  # -11%, coupe-circuit declenche
+        historical_candles=[{"dummy": True}],
+    )
+    assert result == {"action": "aucune", "reason": "coupe-circuit journalier déclenché"}
+```
+
+- [ ] **Step 8: Run tests to verify they fail**
+
+Run: `python -m pytest tests/gold_bot/test_bot.py -k odds_check -v`
+Expected: the new test FAILS (the function isn't reordered yet — the
+odds-check mock would currently be reached and raise `AssertionError`
+instead of the circuit breaker short-circuiting first); the two updated
+tests FAIL with `AttributeError` (`historical_odds_for_setup_cached`
+doesn't exist on `bot.odds_check` yet from `bot.py`'s perspective, since
+`bot.py` still calls the uncached name).
+
+- [ ] **Step 9: Reorder the gate and call the cached wrapper in `bot.py`**
+
+In `gold_bot/bot.py`, find the block (added in Task 7) that currently
+reads:
+
+```python
+    if historical_candles is not None:
+        odds = odds_check.historical_odds_for_setup(historical_candles, direction, symbol=symbol)
+        if odds["verdict"] == "unfavorable":
+            return {"action": "aucune", "reason": "cotes historiques defavorables pour ce type de signal"}
+
+    if not circuit_breaker.can_open_position(equity):
+        return {"action": "aucune", "reason": "coupe-circuit journalier déclenché"}
+```
+
+Replace it with (order swapped — cheap, in-memory check first; the
+spec's original rationale for odds-check-first was "avant de consommer
+un appel réseau pour le solde", which turned out to be incorrect —
+`run_cycle` already has `equity` before calling `decide_and_act_vwap`,
+no network call is saved either way — found in final branch review):
+
+```python
+    if not circuit_breaker.can_open_position(equity):
+        return {"action": "aucune", "reason": "coupe-circuit journalier déclenché"}
+
+    if historical_candles is not None:
+        odds = odds_check.historical_odds_for_setup_cached(historical_candles, direction, symbol=symbol)
+        if odds["verdict"] == "unfavorable":
+            return {"action": "aucune", "reason": "cotes historiques defavorables pour ce type de signal"}
+```
+
+- [ ] **Step 10: Run the `bot.py` tests to verify they pass**
+
+Run: `python -m pytest tests/gold_bot/test_bot.py -v`
+Expected: PASS (all tests in the file).
+
+- [ ] **Step 11: Write the failing tests for `loop.py`'s hardened cache + fixed trade-counting**
+
+Add to `tests/gold_bot/test_loop.py`:
+
+```python
+def test_load_or_fetch_historical_candles_never_raises_on_malformed_cache_content(monkeypatch, tmp_path):
+    # JSON valide mais pas un dict (TypeError sur cached["fetched_at"]
+    # avec l'ancien tuple d'exceptions precis, puisque l'indexation
+    # d'une liste par une chaine leve TypeError, pas KeyError) -- doit
+    # degrader vers un nouveau fetch plutot que de lever. Trouve en
+    # revue finale de branche : la docstring promettait "ne leve
+    # jamais", un tuple d'exceptions trop precis ne le garantissait pas
+    # vraiment.
+    cache_path = tmp_path / "hist.json"
+    cache_path.write_text("[]", encoding="utf-8")
+    monkeypatch.setattr(loop, "_historical_candles_cache_path", lambda symbol: str(cache_path), raising=False)
+    monkeypatch.setattr(loop.backtest, "fetch_gold_candles_range", lambda *a, **k: [{"fake": "history"}])
+
+    result = loop._load_or_fetch_historical_candles(
+        "token", "account", "XAUUSD", "london", datetime(2026, 10, 22, 10, 0, tzinfo=timezone.utc))
+
+    assert result == [{"fake": "history"}]  # cache malforme ignore, nouveau fetch reussi utilise
+
+
+def test_load_or_fetch_historical_candles_backs_off_after_a_fetch_failure(monkeypatch, tmp_path):
+    cache_path = str(tmp_path / "hist.json")
+    monkeypatch.setattr(loop, "_historical_candles_cache_path", lambda symbol: cache_path, raising=False)
+    fetch_calls = []
+
+    def failing_fetch(*a, **k):
+        fetch_calls.append(1)
+        raise RuntimeError("MetaApi 429")
+
+    monkeypatch.setattr(loop.backtest, "fetch_gold_candles_range", failing_fetch)
+    now1 = datetime(2026, 10, 22, 10, 0, 0, tzinfo=timezone.utc)
+    result1 = loop._load_or_fetch_historical_candles("token", "account", "XAUUSD", "london", now1)
+    assert result1 == []
+    assert len(fetch_calls) == 1
+    # 10 minutes plus tard, bien sous le backoff d'echec (1h) : ne doit
+    # PAS retenter un fetch.
+    now2 = datetime(2026, 10, 22, 10, 10, 0, tzinfo=timezone.utc)
+    result2 = loop._load_or_fetch_historical_candles("token", "account", "XAUUSD", "london", now2)
+    assert result2 == []
+    assert len(fetch_calls) == 1
+    # 2 heures plus tard, au-dela du backoff d'echec : doit retenter.
+    now3 = datetime(2026, 10, 22, 12, 10, 0, tzinfo=timezone.utc)
+    loop._load_or_fetch_historical_candles("token", "account", "XAUUSD", "london", now3)
+    assert len(fetch_calls) == 2
+
+
+def test_run_cycle_counts_trade_when_partial_leg_succeeds_but_runner_leg_fails(monkeypatch, tmp_path):
+    # Reprend le meme montage que test_run_cycle_records_trade_opened_once_for_partial_and_runner_legs
+    # (Task 4), mais fait echouer SEULEMENT l'ordre de la jambe runner --
+    # une vraie position (la jambe partielle) a tout de meme ete ouverte,
+    # elle doit donc etre comptee. Trouve en revue finale de branche :
+    # l'ancienne condition (not had_error and any(...)) sous-comptait ce
+    # cas, puisque had_error devient vrai des qu'UNE SEULE etape echoue
+    # dans le lot.
+    cb = risk.CircuitBreaker(persist_path=str(tmp_path / "cb_state.json"))
+    assert cb._trades_opened_today == 0
+    # ... (meme montage de base que les autres tests de run_cycle dans ce
+    # fichier -- decide_and_act_vwap renvoie 2 steps "ouverture_simulee"
+    # (partielle + runner), mais broker.place_market_order reussit pour
+    # la partielle et leve une exception pour le runner)
+
+    loop.run_cycle("token", "account", cb, now=datetime(2026, 10, 22, 10, 0, tzinfo=timezone.utc))
+    assert cb._trades_opened_today == 1
+```
+
+**Note for the implementer**: for
+`test_run_cycle_counts_trade_when_partial_leg_succeeds_but_runner_leg_fails`,
+mirror `test_run_cycle_records_trade_opened_once_for_partial_and_runner_legs`'s
+exact setup (added in Task 4's fix round — read it first), changing only
+the runner leg's execution outcome to a failure.
+
+- [ ] **Step 12: Run tests to verify they fail**
+
+Run: `python -m pytest tests/gold_bot/test_loop.py -k "historical_candles or partial_leg_succeeds" -v`
+Expected: FAIL (hardening/backoff/counting-fix not implemented yet).
+
+- [ ] **Step 13: Harden `_load_or_fetch_historical_candles` and fix trade-counting in `loop.py`**
+
+Add a new constant next to the existing `HISTORICAL_ODDS_CACHE_MAX_AGE_SECONDS`:
+
+```python
+HISTORICAL_ODDS_CACHE_MAX_AGE_SECONDS = 24 * 3600
+# Ne retente pas un fetch de 90 jours (~20 pages MetaApi) plus d'une fois
+# par heure apres un echec -- MetaApi a deja renvoye des 429 dans ce
+# projet ; retenter a chaque cycle (60s) pendant une panne prolongee
+# serait pire que l'absence temporaire de verification des cotes.
+HISTORICAL_ODDS_FAILURE_BACKOFF_SECONDS = 3600
+HISTORICAL_ODDS_WINDOW_DAYS = 90
+```
+
+Entirely replace `_load_or_fetch_historical_candles`'s body with:
+
+```python
+def _load_or_fetch_historical_candles(token: str, account_id: str, symbol: str,
+                                       region: str, now_dt: datetime) -> list[dict]:
+    """Charge l'historique mis en cache pour `symbol` s'il a moins de
+    HISTORICAL_ODDS_CACHE_MAX_AGE_SECONDS (succes) ou
+    HISTORICAL_ODDS_FAILURE_BACKOFF_SECONDS (dernier essai en echec),
+    sinon le (re)recupere via backtest.fetch_gold_candles_range. Ne leve
+    JAMAIS : `except Exception` volontairement large sur toute la
+    lecture/parsing du cache (fichier corrompu, JSON valide mais pas un
+    dict, horodatage sans fuseau...) plutot qu'un tuple d'exceptions
+    precis -- trouve insuffisant en revue finale de branche, puisque
+    cette fonction est appelee AVANT decide_and_act_vwap et qu'une
+    exception non capturee ici bloquerait alors aussi la gestion des
+    positions deja ouvertes (stop suiveur, cloture de fin de session),
+    pas seulement la recherche de nouveaux signaux."""
+    path = _historical_candles_cache_path(symbol)
+    if os.path.exists(path):
+        try:
+            with open(path, encoding="utf-8") as f:
+                cached = json.load(f)
+            fetched_at = datetime.fromisoformat(cached["fetched_at"].replace("Z", "+00:00"))
+            age = (now_dt - fetched_at).total_seconds()
+            if cached.get("is_failure_backoff"):
+                if age < HISTORICAL_ODDS_FAILURE_BACKOFF_SECONDS:
+                    return []
+            elif age < HISTORICAL_ODDS_CACHE_MAX_AGE_SECONDS:
+                return cached["candles"]
+        except Exception:
+            pass
+    try:
+        candles = backtest.fetch_gold_candles_range(
+            token, account_id, now_dt - timedelta(days=HISTORICAL_ODDS_WINDOW_DAYS), now_dt,
+            region=region, symbol=symbol,
+        )
+    except Exception:
+        _save_cache({"candles": [], "fetched_at": _now_iso(), "is_failure_backoff": True}, path)
+        return []
+    _save_cache({"candles": candles, "fetched_at": _now_iso()}, path)
+    return candles
+```
+
+(The only functional changes from the Task 7 version: the cache-read
+`try` now catches `Exception` broadly instead of a specific tuple;
+`fetched_at` is parsed with `.replace("Z", "+00:00")` first, matching
+the rest of the codebase's convention; and a failed fetch is now cached
+as an explicit `is_failure_backoff` marker with its own, shorter TTL
+instead of writing nothing at all.)
+
+Then, in `run_cycle`, find the trade-counting block (added in Task 4,
+right after `execute_steps`):
+
+```python
+    results = execute_steps(token, account_id, steps, region)
+    had_error = any(r["error"] for r in results) or not results
+    if not had_error and any(s["type"] == "ouverture_simulee" for s in steps):
+        circuit_breaker.record_trade_opened()
+```
+
+Replace the trade-counting condition only (keep `had_error` and its use
+in the final `result["action"]` line unchanged — it's still correct for
+that purpose, just not for trade-counting):
+
+```python
+    results = execute_steps(token, account_id, steps, region)
+    had_error = any(r["error"] for r in results) or not results
+    opened_successfully = any(
+        r["step"]["type"] == "ouverture_simulee" and r["error"] is None for r in results
+    )
+    if opened_successfully:
+        circuit_breaker.record_trade_opened()
+```
+
+- [ ] **Step 14: Run tests to verify they pass**
+
+Run: `python -m pytest tests/gold_bot/test_loop.py -v`
+Expected: PASS (all tests in the file).
+
+- [ ] **Step 15: Update `.gitignore`**
+
+Add these lines to `.gitignore`, alongside the existing `gold_bot/*.json`
+entries:
+
+```
+gold_bot/historical_candles_cache_xauusd.json
+gold_bot/historical_candles_cache_xagusd.json
+gold_bot/odds_verdict_cache_xauusd_achat.json
+gold_bot/odds_verdict_cache_xauusd_vente.json
+gold_bot/odds_verdict_cache_xagusd_achat.json
+gold_bot/odds_verdict_cache_xagusd_vente.json
+```
+
+- [ ] **Step 16: Run the full suite**
+
+Run: `python -m pytest tests/ -q`
+Expected: PASS. This touches every module the whole plan built —
+confirm nothing anywhere broke.
+
+- [ ] **Step 17: Commit**
+
+```bash
+git add gold_bot/odds_check.py gold_bot/loop.py gold_bot/bot.py .gitignore \
+        tests/gold_bot/test_odds_check.py tests/gold_bot/test_loop.py tests/gold_bot/test_bot.py
+git commit -m "fix(gold-bot): corrige les defauts trouves en revue finale de branche
+
+Defaut critique : le stop suiveur de la jambe runner ne s'activait
+jamais dans odds_check._simulate_exit (fenetre glissante limitee a
+l'apres-entree d'une seule session, jamais les 200 bougies 15min
+necessaires a compute_trailing_stop) -- rejoue desormais sur une
+vraie fenetre glissante de bougies 5min, comme en live.
+
+Corrige aussi : biais d'anticipation sur les bougies du bucket
+d'entree, deduction du spread manquante (promise par la spec),
+coupe-circuit verifie avant les cotes historiques (plus couteuses,
+jamais l'inverse), memoisation du verdict par empreinte de l'historique
+(necessaire une fois le suivi reellement actif), durcissement de
+_load_or_fetch_historical_candles (except trop precis, pas de backoff
+sur echec reseau), sous-comptage du plafond de trades/jour en cas
+d'echec partiel d'une entree a deux jambes.
+
+Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>"
+```

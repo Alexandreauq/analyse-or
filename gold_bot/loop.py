@@ -61,6 +61,11 @@ LATEST_POSITIONS_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)),
 # n'a pas besoin d'être rafraîchi à chaque cycle (60s) ; 24h tient
 # largement compte de l'évolution réelle du marché pour ce besoin.
 HISTORICAL_ODDS_CACHE_MAX_AGE_SECONDS = 24 * 3600
+# Ne retente pas un fetch de 90 jours (~20 pages MetaApi) plus d'une fois
+# par heure apres un echec -- MetaApi a deja renvoye des 429 dans ce
+# projet ; retenter a chaque cycle (60s) pendant une panne prolongee
+# serait pire que l'absence temporaire de verification des cotes.
+HISTORICAL_ODDS_FAILURE_BACKOFF_SECONDS = 3600
 HISTORICAL_ODDS_WINDOW_DAYS = 90
 
 
@@ -82,21 +87,30 @@ def _historical_candles_cache_path(symbol: str) -> str:
 def _load_or_fetch_historical_candles(token: str, account_id: str, symbol: str,
                                        region: str, now_dt: datetime) -> list[dict]:
     """Charge l'historique mis en cache pour `symbol` s'il a moins de
-    HISTORICAL_ODDS_CACHE_MAX_AGE_SECONDS, sinon le récupère via
-    backtest.fetch_gold_candles_range et le met en cache. Ne lève jamais
-    -- un échec réseau renvoie [] (odds_check.historical_odds_for_setup
-    traite un historique vide comme "insufficient_history", qui ne
-    bloque jamais un trade), la vérification des cotes dégrade donc
-    sans jamais interrompre le cycle."""
+    HISTORICAL_ODDS_CACHE_MAX_AGE_SECONDS (succes) ou
+    HISTORICAL_ODDS_FAILURE_BACKOFF_SECONDS (dernier essai en echec),
+    sinon le (re)recupere via backtest.fetch_gold_candles_range. Ne leve
+    JAMAIS : `except Exception` volontairement large sur toute la
+    lecture/parsing du cache (fichier corrompu, JSON valide mais pas un
+    dict, horodatage sans fuseau...) plutot qu'un tuple d'exceptions
+    precis -- trouve insuffisant en revue finale de branche, puisque
+    cette fonction est appelee AVANT decide_and_act_vwap et qu'une
+    exception non capturee ici bloquerait alors aussi la gestion des
+    positions deja ouvertes (stop suiveur, cloture de fin de session),
+    pas seulement la recherche de nouveaux signaux."""
     path = _historical_candles_cache_path(symbol)
     if os.path.exists(path):
         try:
             with open(path, encoding="utf-8") as f:
                 cached = json.load(f)
-            fetched_at = datetime.fromisoformat(cached["fetched_at"])
-            if (now_dt - fetched_at).total_seconds() < HISTORICAL_ODDS_CACHE_MAX_AGE_SECONDS:
+            fetched_at = datetime.fromisoformat(cached["fetched_at"].replace("Z", "+00:00"))
+            age = (now_dt - fetched_at).total_seconds()
+            if cached.get("is_failure_backoff"):
+                if age < HISTORICAL_ODDS_FAILURE_BACKOFF_SECONDS:
+                    return []
+            elif age < HISTORICAL_ODDS_CACHE_MAX_AGE_SECONDS:
                 return cached["candles"]
-        except (OSError, json.JSONDecodeError, KeyError, ValueError):
+        except Exception:
             pass
     try:
         candles = backtest.fetch_gold_candles_range(
@@ -104,6 +118,7 @@ def _load_or_fetch_historical_candles(token: str, account_id: str, symbol: str,
             region=region, symbol=symbol,
         )
     except Exception:
+        _save_cache({"candles": [], "fetched_at": _now_iso(), "is_failure_backoff": True}, path)
         return []
     _save_cache({"candles": candles, "fetched_at": _now_iso()}, path)
     return candles
@@ -355,7 +370,10 @@ def run_cycle(token: str, account_id: str,
 
     results = execute_steps(token, account_id, steps, region)
     had_error = any(r["error"] for r in results) or not results
-    if not had_error and any(s["type"] == "ouverture_simulee" for s in steps):
+    opened_successfully = any(
+        r["step"]["type"] == "ouverture_simulee" and r["error"] is None for r in results
+    )
+    if opened_successfully:
         circuit_breaker.record_trade_opened()
     result = {"action": "erreur" if had_error else "exécuté", "steps": steps, "results": results, "symbol": symbol}
     _log_decision(result, path=DECISIONS_LOG_PATH)

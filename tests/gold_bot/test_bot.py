@@ -530,7 +530,7 @@ def test_decide_and_act_vwap_blocked_by_unfavorable_odds_check(monkeypatch):
     state = _vwap_state(close=1975.0, vwap=2010.0, vwap_std=20.0, ema200=1900.0)
     monkeypatch.setattr(bot.vwap_reversion, "latest_state", lambda candles: state)
     monkeypatch.setattr(
-        bot.odds_check, "historical_odds_for_setup",
+        bot.odds_check, "historical_odds_for_setup_cached",
         lambda candles, direction, symbol="XAUUSD": {
             "sample_size": 25, "win_rate_pct": 30.0, "avg_return_pct": -0.2, "verdict": "unfavorable",
         },
@@ -547,7 +547,7 @@ def test_decide_and_act_vwap_opens_when_odds_check_favorable(monkeypatch):
     state = _vwap_state(close=1975.0, vwap=2010.0, vwap_std=20.0, ema200=1900.0)
     monkeypatch.setattr(bot.vwap_reversion, "latest_state", lambda candles: state)
     monkeypatch.setattr(
-        bot.odds_check, "historical_odds_for_setup",
+        bot.odds_check, "historical_odds_for_setup_cached",
         lambda candles, direction, symbol="XAUUSD": {
             "sample_size": 25, "win_rate_pct": 60.0, "avg_return_pct": 0.3, "verdict": "favorable",
         },
@@ -558,6 +558,26 @@ def test_decide_and_act_vwap_opens_when_odds_check_favorable(monkeypatch):
         historical_candles=[{"dummy": True}],
     )
     assert result["action"] == "simulation"
+
+
+def test_decide_and_act_vwap_checks_circuit_breaker_before_odds_check(monkeypatch):
+    state = _vwap_state(close=1975.0, vwap=2010.0, vwap_std=20.0, ema200=1900.0)
+    monkeypatch.setattr(bot.vwap_reversion, "latest_state", lambda candles: state)
+
+    def _fail_if_called(*a, **k):
+        raise AssertionError("historical_odds_for_setup_cached ne doit pas etre appele "
+                              "quand le coupe-circuit est deja declenche")
+    monkeypatch.setattr(bot.odds_check, "historical_odds_for_setup_cached", _fail_if_called)
+
+    from datetime import datetime, timezone
+    cb = risk.CircuitBreaker(threshold_pct=0.10, now_fn=lambda: datetime(2026, 9, 10, tzinfo=timezone.utc))
+    cb.check(10000)  # reference de depart du jour
+    result = bot.decide_and_act_vwap(
+        [{"dummy": True}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
+        balance=10000, equity=8900, open_positions=[], circuit_breaker=cb,  # -11%, coupe-circuit declenche
+        historical_candles=[{"dummy": True}],
+    )
+    assert result == {"action": "aucune", "reason": "coupe-circuit journalier déclenché"}
 
 
 def test_decide_and_act_vwap_skips_odds_check_when_no_historical_candles(monkeypatch):

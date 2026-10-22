@@ -6,6 +6,12 @@ gold_bot/decisions_log.jsonl
 gold_bot/latest_candles.json
 gold_bot/latest_balance.json
 gold_bot/latest_positions.json
+gold_bot/historical_candles_cache_xauusd.json
+gold_bot/historical_candles_cache_xagusd.json
+gold_bot/odds_verdict_cache_xauusd_achat.json
+gold_bot/odds_verdict_cache_xauusd_vente.json
+gold_bot/odds_verdict_cache_xagusd_achat.json
+gold_bot/odds_verdict_cache_xagusd_vente.json
 ibkr_bot/state.json
 ibkr_bot/positions.json
 ibkr_bot/real_trading_log.jsonl

@@ -288,13 +288,13 @@ def decide_and_act_vwap(candles: list[dict], *, contract_size: float, balance: f
     if distance < entry_price * vwap_reversion.MIN_DISTANCE_PCT:
         return {"action": "aucune", "reason": "distance entree-stop trop faible (ecart-type degenere)"}
 
-    if historical_candles is not None:
-        odds = odds_check.historical_odds_for_setup(historical_candles, direction, symbol=symbol)
-        if odds["verdict"] == "unfavorable":
-            return {"action": "aucune", "reason": "cotes historiques defavorables pour ce type de signal"}
-
     if not circuit_breaker.can_open_position(equity):
         return {"action": "aucune", "reason": "coupe-circuit journalier déclenché"}
+
+    if historical_candles is not None:
+        odds = odds_check.historical_odds_for_setup_cached(historical_candles, direction, symbol=symbol)
+        if odds["verdict"] == "unfavorable":
+            return {"action": "aucune", "reason": "cotes historiques defavorables pour ce type de signal"}
 
     raw_size = risk.compute_position_size(balance, entry_price, stop_loss, contract_size, risk_pct=risk_pct)
     total_size = risk.round_to_volume_step(raw_size, volume_step, min_volume, max_volume)

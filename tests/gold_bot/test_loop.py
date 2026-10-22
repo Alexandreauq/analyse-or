@@ -1134,6 +1134,105 @@ def test_run_cycle_refetches_historical_candles_when_cache_is_stale(monkeypatch,
     assert len(fetch_calls) == 2  # cache perime -> second cycle refait un vrai fetch reseau
 
 
+def test_load_or_fetch_historical_candles_never_raises_on_malformed_cache_content(monkeypatch, tmp_path):
+    # JSON valide mais pas un dict (TypeError sur cached["fetched_at"]
+    # avec l'ancien tuple d'exceptions precis, puisque l'indexation
+    # d'une liste par une chaine leve TypeError, pas KeyError) -- doit
+    # degrader vers un nouveau fetch plutot que de lever. Trouve en
+    # revue finale de branche : la docstring promettait "ne leve
+    # jamais", un tuple d'exceptions trop precis ne le garantissait pas
+    # vraiment.
+    cache_path = tmp_path / "hist.json"
+    cache_path.write_text("[]", encoding="utf-8")
+    monkeypatch.setattr(loop, "_historical_candles_cache_path", lambda symbol: str(cache_path), raising=False)
+    monkeypatch.setattr(loop.backtest, "fetch_gold_candles_range", lambda *a, **k: [{"fake": "history"}])
+
+    result = loop._load_or_fetch_historical_candles(
+        "token", "account", "XAUUSD", "london", datetime(2026, 10, 22, 10, 0, tzinfo=timezone.utc))
+
+    assert result == [{"fake": "history"}]  # cache malforme ignore, nouveau fetch reussi utilise
+
+
+def test_load_or_fetch_historical_candles_backs_off_after_a_fetch_failure(monkeypatch, tmp_path):
+    cache_path = str(tmp_path / "hist.json")
+    monkeypatch.setattr(loop, "_historical_candles_cache_path", lambda symbol: cache_path, raising=False)
+    # _save_cache ecrit "fetched_at" via loop._now_iso() (horloge reelle),
+    # jamais via le `now_dt` injecte -- doit etre fige ici pour que le
+    # calcul du backoff reste deterministe (meme precedent que
+    # test_run_cycle_refetches_historical_candles_when_cache_is_stale,
+    # qui mocke deja _now_iso pour la meme raison).
+    fake_now_iso = {"value": None}
+    monkeypatch.setattr(loop, "_now_iso", lambda: fake_now_iso["value"])
+    fetch_calls = []
+
+    def failing_fetch(*a, **k):
+        fetch_calls.append(1)
+        raise RuntimeError("MetaApi 429")
+
+    monkeypatch.setattr(loop.backtest, "fetch_gold_candles_range", failing_fetch)
+    now1 = datetime(2026, 10, 22, 10, 0, 0, tzinfo=timezone.utc)
+    fake_now_iso["value"] = now1.strftime("%Y-%m-%dT%H:%M:%SZ")
+    result1 = loop._load_or_fetch_historical_candles("token", "account", "XAUUSD", "london", now1)
+    assert result1 == []
+    assert len(fetch_calls) == 1
+    # 10 minutes plus tard, bien sous le backoff d'echec (1h) : ne doit
+    # PAS retenter un fetch.
+    now2 = datetime(2026, 10, 22, 10, 10, 0, tzinfo=timezone.utc)
+    result2 = loop._load_or_fetch_historical_candles("token", "account", "XAUUSD", "london", now2)
+    assert result2 == []
+    assert len(fetch_calls) == 1
+    # 2 heures plus tard, au-dela du backoff d'echec : doit retenter.
+    now3 = datetime(2026, 10, 22, 12, 10, 0, tzinfo=timezone.utc)
+    loop._load_or_fetch_historical_candles("token", "account", "XAUUSD", "london", now3)
+    assert len(fetch_calls) == 2
+
+
+def test_run_cycle_counts_trade_when_partial_leg_succeeds_but_runner_leg_fails(monkeypatch, tmp_path):
+    # Reprend le meme montage que test_run_cycle_records_trade_opened_once_for_partial_and_runner_legs
+    # (Task 4), mais fait echouer SEULEMENT l'ordre de la jambe runner --
+    # une vraie position (la jambe partielle) a tout de meme ete ouverte,
+    # elle doit donc etre comptee. Trouve en revue finale de branche :
+    # l'ancienne condition (not had_error and any(...)) sous-comptait ce
+    # cas, puisque had_error devient vrai des qu'UNE SEULE etape echoue
+    # dans le lot.
+    monkeypatch.setattr(loop.state, "load_state", lambda *a, **k: {"kill_switch": False, "dry_run": False})
+    monkeypatch.setattr(loop, "DECISIONS_LOG_PATH", str(tmp_path / "decisions_log.jsonl"))
+    monkeypatch.setattr(loop, "LATEST_CANDLES_PATH", str(tmp_path / "latest_candles.json"))
+    monkeypatch.setattr(loop, "LATEST_BALANCE_PATH", str(tmp_path / "latest_balance.json"))
+    monkeypatch.setattr(loop, "LATEST_POSITIONS_PATH", str(tmp_path / "latest_positions.json"))
+    monkeypatch.setattr(loop.confluence, "fetch_gold_candles", lambda *a, **k: [_FRESH_CANDLE])
+    monkeypatch.setattr(loop.broker, "get_account_information", lambda *a, **k: {"balance": 10000, "equity": 10000})
+    monkeypatch.setattr(loop.bot, "reconcile_positions", lambda *a, **k: [])
+    monkeypatch.setattr(loop.broker, "get_symbol_specification", lambda *a, **k: {"contractSize": 100, "volumeStep": 0.01, "minVolume": 0.01, "maxVolume": 500})
+    fake_steps = [
+        {"type": "ouverture_simulee", "symbol": "XAUUSD", "direction": "achat",
+         "volume": 0.6, "entry": 2100, "stop_loss": 2095, "take_profit": 2110},
+        {"type": "ouverture_simulee", "symbol": "XAUUSD", "direction": "achat",
+         "volume": 0.4, "entry": 2100, "stop_loss": 2095, "take_profit": None},
+    ]
+    monkeypatch.setattr(loop.bot, "decide_and_act_vwap", lambda *a, **k: {"action": "simulation", "steps": fake_steps})
+
+    def fake_place_market_order(token, account_id, symbol, direction, volume, stop_loss, take_profit, region):
+        if take_profit is None:
+            # Jambe runner (pas de takeProfit) : son ordre echoue --
+            # la jambe partielle, elle, a reussi (voir ci-dessous).
+            raise RuntimeError("ordre runner refuse par le broker")
+        return {"orderId": "5"}
+
+    monkeypatch.setattr(loop.broker, "place_market_order", fake_place_market_order)
+
+    cb = loop.risk.CircuitBreaker(persist_path=str(tmp_path / "cb_state.json"))
+    assert cb._trades_opened_today == 0
+
+    # now=_FRESH_NOW (pas un horodatage arbitraire) -- _FRESH_CANDLE n'est
+    # fraiche que par rapport a _FRESH_NOW ; un autre "now" ferait
+    # echouer le garde donnees-perimees de run_cycle avant meme d'y
+    # arriver, invalidant tout le test (voir _FRESH_NOW/_FRESH_CANDLE en
+    # tete de fichier, meme convention que les autres tests run_cycle).
+    loop.run_cycle("token", "account", cb, now=_FRESH_NOW)
+    assert cb._trades_opened_today == 1
+
+
 def test_symbols_includes_gold_and_silver():
     assert loop.SYMBOLS == ["XAUUSD", "XAGUSD"]
 

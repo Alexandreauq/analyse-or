@@ -322,3 +322,16 @@ def test_compute_quantity_by_risk_zero_stop_distance_returns_a_dedicated_reason(
     plan = sizing.compute_quantity_by_risk(
         "MC.PA", "EUR", 415.0, 1.0, balance_eur=1000.0, risk_pct=0.05, stop_loss_pct=0.0)
     assert plan["motif"] == "budget_risque_invalide"
+
+
+def test_compute_quantity_by_risk_none_stop_loss_returns_a_dedicated_reason_not_a_crash():
+    plan = sizing.compute_quantity_by_risk(
+        "MC.PA", "EUR", 415.0, 1.0, balance_eur=1000.0, risk_pct=0.05, stop_loss_pct=None)
+    assert plan["motif"] == "budget_risque_invalide"
+    assert plan["quantite"] == 0
+
+
+def test_compute_quantity_by_risk_nan_stop_loss_returns_a_dedicated_reason():
+    plan = sizing.compute_quantity_by_risk(
+        "MC.PA", "EUR", 415.0, 1.0, balance_eur=1000.0, risk_pct=0.05, stop_loss_pct=float("nan"))
+    assert plan["motif"] == "budget_risque_invalide"

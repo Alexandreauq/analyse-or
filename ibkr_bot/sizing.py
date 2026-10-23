@@ -183,8 +183,14 @@ def compute_quantity_by_risk(
         "budget_eur_nominal": 0.0,
         "motif": None,
     }
+    # Validation du stop AVANT abs() : abs(None) leve un TypeError, et
+    # le docstring promet un motif dedie, jamais une exception.
+    stop_loss_valide = (
+        isinstance(stop_loss_pct, (int, float)) and not isinstance(stop_loss_pct, bool)
+        and math.isfinite(stop_loss_pct) and stop_loss_pct != 0
+    )
     if not (_is_positive_number(balance_eur) and _is_positive_number(risk_pct)
-            and _is_positive_number(abs(stop_loss_pct))):
+            and stop_loss_valide):
         plan["motif"] = "budget_risque_invalide"
         return plan
     budget_eur = balance_eur * risk_pct / (abs(stop_loss_pct) / 100)

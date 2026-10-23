@@ -1,4 +1,5 @@
 import json
+import os
 
 import pytest
 
@@ -1229,10 +1230,14 @@ def test_run_batch_sizes_the_entry_by_risk_based_budget_not_a_fixed_500(env):
 # --- coupe-circuit journalier (shared_risk.CircuitBreaker) ----------
 
 def test_run_batch_allows_entries_on_the_very_first_run(env):
-    """Demarrage a froid (aucun fichier circuit_breaker_state.json
-    persiste au prealable) : le coupe-circuit ne doit jamais bloquer le
-    tout premier batch, faute de reference anterieure a comparer
-    (can_open_position_daily renvoie toujours True a son premier appel)."""
+    """Demarrage a froid EN MODE REEL (aucun fichier
+    circuit_breaker_state.json persiste au prealable -- le coupe-circuit
+    n'est construit/appele qu'en mode reel depuis le fix round 1, voir
+    test_dry_run_bypasses_the_circuit_breaker_entirely) : le coupe-circuit
+    ne doit jamais bloquer le tout premier batch, faute de reference
+    anterieure a comparer (can_open_position_daily renvoie toujours True a
+    son premier appel)."""
+    ecrire_etat(env, dry_run=False)
     gw = FakeGateway()
 
     run = daily.run_batch(TODAY, gw=gw, sleep_fn=lambda s: None,
@@ -1244,12 +1249,16 @@ def test_run_batch_allows_entries_on_the_very_first_run(env):
 
 
 def test_run_batch_blocks_entries_after_a_large_equity_drop_since_the_previous_run(env):
-    """Deux batchs consecutifs, meme fichier d'etat persiste (meme
-    env["paths"]) : le 1er run, sans aucun signal du jour (tracking vide),
-    fixe la reference d'equite a 1000 (cash seul, aucune position ouverte)
-    sans jamais rien acheter. Le 2e run arrive avec un cash tombe a 850
-    (-15 %, au-dela du seuil de 10 %) ET un signal financable -> ce signal
-    doit etre rejete par le coupe-circuit, pas achete."""
+    """Deux batchs consecutifs REELS (fix round 1, revue opus : le
+    coupe-circuit ne s'applique qu'en mode reel -- voir
+    test_dry_run_bypasses_the_circuit_breaker_entirely), meme fichier
+    d'etat persiste (meme env["paths"]) : le 1er run, sans aucun signal du
+    jour (tracking vide), fixe la reference d'equite a 1000 (cash seul,
+    aucune position ouverte) sans jamais rien acheter. Le 2e run arrive
+    avec un cash tombe a 850 (-15 %, au-dela du seuil de 10 %) ET un signal
+    financable -> ce signal doit etre rejete par le coupe-circuit, pas
+    achete."""
+    ecrire_etat(env, dry_run=False)
     with open(env["paths"]["tracking"], "w", encoding="utf-8") as fh:
         json.dump({"positions": []}, fh)
     gw1 = FakeGateway(base_cash=1000.0)
@@ -1266,6 +1275,60 @@ def test_run_batch_blocks_entries_after_a_large_equity_drop_since_the_previous_r
     assert run2["entrees"] == []
     assert any(r["raison"] == "coupe_circuit_journalier_declenche"
               for r in run2["signaux_rejetes"])
+
+
+def test_dry_run_bypasses_the_circuit_breaker_entirely(env):
+    """Fix round 1 (revue opus) : en dry_run, positions_ouvertes contient
+    des positions SIMULEES alors que base_cash est le VRAI solde IBKR,
+    jamais affecte par un trade simule -- melanger les deux dans equity_eur
+    rendrait le coupe-circuit bruyant sur du pur bruit de simulation. Il
+    doit donc etre entierement court-circuite en dry_run : un gros repli de
+    solde entre deux batchs dry_run ne doit jamais bloquer une entree, et
+    ne doit JAMAIS faire persister circuit_breaker_state.json (la reference
+    ne doit suivre que des journees reelles)."""
+    ecrire_etat(env, dry_run=True)
+    gw1 = FakeGateway(base_cash=1000.0)
+    daily.run_batch(TODAY, gw=gw1, sleep_fn=lambda s: None,
+                    account_id="U1", paths=env["paths"])
+
+    gw2 = FakeGateway(base_cash=850.0)   # -15 %, bien au-dela du seuil de 10 %
+    run2 = daily.run_batch(TODAY, gw=gw2, sleep_fn=lambda s: None,
+                           account_id="U1", paths=env["paths"])
+
+    assert not any(r["raison"] == "coupe_circuit_journalier_declenche"
+                  for r in run2["signaux_rejetes"])
+    assert not os.path.exists(env["paths"]["circuit_breaker_state"])
+
+
+def test_a_failed_balance_fetch_blocks_entries_without_poisoning_the_circuit_breaker_baseline(env):
+    """Fix round 2 (revue opus) : si base_currency_cash echoue, le repli a
+    0.0 ne doit jamais etre PERSISTE comme reference du coupe-circuit --
+    sinon une vraie perte survenue le meme jour serait masquee le
+    lendemain (comparee a une reference artificiellement nulle). Les
+    entrees du jour sont rejetees par prudence (meme effet qu'un
+    coupe-circuit declenche), SANS que le coupe-circuit soit construit ni
+    appele -- une reference deja persistee doit survivre intacte."""
+    ecrire_etat(env, dry_run=False)
+    gw1 = FakeGateway(base_cash=1000.0)
+    daily.run_batch(TODAY, gw=gw1, sleep_fn=lambda s: None,
+                    account_id="U1", paths=env["paths"])
+    with open(env["paths"]["circuit_breaker_state"], encoding="utf-8") as fh:
+        etat_avant = json.load(fh)
+
+    class _GwEnPanne(FakeGateway):
+        def base_currency_cash(self, base_url, account_id):
+            raise RuntimeError("500 Internal Server Error")
+
+    gw2 = _GwEnPanne()
+    run2 = daily.run_batch(TODAY, gw=gw2, sleep_fn=lambda s: None,
+                           account_id="U1", paths=env["paths"])
+
+    assert run2["entrees"] == []
+    assert any(r["raison"] == "coupe_circuit_journalier_declenche"
+              for r in run2["signaux_rejetes"])
+    with open(env["paths"]["circuit_breaker_state"], encoding="utf-8") as fh:
+        etat_apres = json.load(fh)
+    assert etat_apres == etat_avant
 
 
 def test_real_mode_buys_the_selected_signals(env):

@@ -17,6 +17,7 @@ ibkr_bot/positions.json
 ibkr_bot/real_trading_log.jsonl
 ibkr_bot/conid_cache.json
 ibkr_bot/latest_account.json
+ibkr_bot/circuit_breaker_state.json
 
 # Worktrees de travail (superpowers:using-git-worktrees)
 .worktrees/

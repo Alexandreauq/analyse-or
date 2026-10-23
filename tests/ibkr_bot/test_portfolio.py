@@ -22,7 +22,8 @@ def _signal(ticker, score, **overrides):
     return signal
 
 
-def _plan(ticker, quantite=5, devise_compte="EUR", cout=500.0, motif=None):
+def _plan(ticker, quantite=5, devise_compte="EUR", cout=500.0, motif=None,
+          budget_eur_nominal=500.0):
     return {
         "ticker": ticker,
         "quantite": quantite,
@@ -32,6 +33,7 @@ def _plan(ticker, quantite=5, devise_compte="EUR", cout=500.0, motif=None):
         "budget_converti": 500.0,
         "prix_unitaire_cotation": 100.0,
         "cout_estime_devise_compte": cout,
+        "budget_eur_nominal": budget_eur_nominal,
         "motif": motif,
     }
 
@@ -682,6 +684,43 @@ def test_select_entries_accepts_a_cost_exactly_equal_to_the_base_cash():
 
     assert len(retenus) == 1
     assert rejets == []
+
+
+def test_select_entries_uses_the_per_signal_risk_based_budget_for_the_balance_guard():
+    """Avec un budget variable par signal (dimensionnement par le
+    risque, Tache 3), le garde-fou de solde doit sommer le budget REEL
+    de chaque signal, pas une constante fixe -- deux signaux a 5 EUR
+    chacun doivent passer sur un solde de 10 EUR, la que l'ancien
+    comportement (BUDGET_EUR=500 fixe) les aurait tous les deux
+    rejetes."""
+    signaux = [_signal("A.PA", 48.8), _signal("B.PA", 26.9)]
+    plans = {
+        "A.PA": _plan("A.PA", budget_eur_nominal=5.0),
+        "B.PA": _plan("B.PA", budget_eur_nominal=5.0),
+    }
+    contrats = _contrats(["A.PA", "B.PA"])
+
+    retenus, rejets = portfolio.select_entries(
+        signaux, [], plans, contrats, base_cash=10.0)
+
+    assert [r["signal"]["ticker"] for r in retenus] == ["A.PA", "B.PA"]
+    assert rejets == []
+
+
+def test_select_entries_rejects_when_the_per_signal_budget_exceeds_cash():
+    signaux = [_signal("A.PA", 48.8), _signal("B.PA", 26.9)]
+    plans = {
+        "A.PA": _plan("A.PA", budget_eur_nominal=8.0),
+        "B.PA": _plan("B.PA", budget_eur_nominal=8.0),
+    }
+    contrats = _contrats(["A.PA", "B.PA"])
+
+    retenus, rejets = portfolio.select_entries(
+        signaux, [], plans, contrats, base_cash=10.0)
+
+    assert [r["signal"]["ticker"] for r in retenus] == ["A.PA"]
+    assert rejets == [{"ticker": "B.PA", "rang": 2, "score": 26.9,
+                       "raison": "solde_insuffisant"}]
 
 
 # --- persistance -----------------------------------------------------

@@ -891,6 +891,7 @@ def run_batch(today: str | None = None, *, gw=gateway, sleep_fn=time.sleep,
                                        "raison": rejet.get("raison"),
                                        "rang": None, "score": None})
 
+    base_cash_connu = True
     try:
         base_cash = gw.base_currency_cash(base_url, account_id)
     except Exception as e:
@@ -898,6 +899,7 @@ def run_batch(today: str | None = None, *, gw=gateway, sleep_fn=time.sleep,
         # tout, ce qui est le sens sur (spec 9.9).
         run["erreurs"].append({"etape": "base_currency_cash", "detail": str(e)})
         base_cash = 0.0
+        base_cash_connu = False
     journal.save_account_snapshot({"base_cash": base_cash},
                                   chemins["account_snapshot"])
 
@@ -909,12 +911,37 @@ def run_batch(today: str | None = None, *, gw=gateway, sleep_fn=time.sleep,
     # can_open_position_daily(), pas can_open_position() (voir sa
     # docstring dans shared_risk.py). Instance et fichier d'etat propres a
     # ibkr_bot, independants de ceux de gold_bot.
-    equity_eur = base_cash + sum(
-        (p.get("valeur_actuelle_eur") or 0.0) for p in positions_ouvertes)
-    circuit_breaker = shared_risk.CircuitBreaker(
-        threshold_pct=DAILY_LOSS_THRESHOLD_PCT,
-        persist_path=chemins["circuit_breaker_state"])
-    coupe_circuit_ouvert = circuit_breaker.can_open_position_daily(equity_eur)
+    #
+    # Fix round 1 (revue opus) : en dry_run, positions_ouvertes contient
+    # des positions SIMULEES alors que base_cash est le VRAI solde IBKR,
+    # jamais affecte par un trade simule -- une sortie simulee peut donc
+    # faire chuter equity_eur de toute la valeur de la position sans
+    # qu'aucun capital reel n'ait bouge. Le coupe-circuit protege du
+    # capital reel ; il n'a rien a proteger en dry_run. On le court-circuite
+    # ENTIEREMENT (jamais construit, jamais appele) plutot que de le
+    # laisser tourner sur du bruit de simulation -- la reference persistee
+    # ne doit donc jamais suivre une journee dry_run.
+    #
+    # Fix round 2 (revue opus) : si le solde n'a pas pu etre lu (ci-dessus),
+    # equity_eur reposerait sur le repli 0.0 -- et can_open_position_daily
+    # PERSISTERAIT ce 0.0 comme reference de demain, masquant une vraie
+    # perte survenue aujourd'hui (l'equite reelle de demain paraitrait un
+    # enorme "gain" face a cette reference artificiellement nulle). On
+    # rejette donc les entrees du jour par prudence (meme effet qu'un
+    # coupe-circuit declenche), SANS construire ni appeler le coupe-circuit
+    # -- une reference existante doit survivre intacte pour le prochain run
+    # ou le solde sera de nouveau lisible.
+    if etat["dry_run"]:
+        coupe_circuit_ouvert = True
+    elif not base_cash_connu:
+        coupe_circuit_ouvert = False
+    else:
+        equity_eur = base_cash + sum(
+            (p.get("valeur_actuelle_eur") or 0.0) for p in positions_ouvertes)
+        circuit_breaker = shared_risk.CircuitBreaker(
+            threshold_pct=DAILY_LOSS_THRESHOLD_PCT,
+            persist_path=chemins["circuit_breaker_state"])
+        coupe_circuit_ouvert = circuit_breaker.can_open_position_daily(equity_eur)
 
     cache_conid = contracts.load_cache(chemins["conid_cache"])
     plans: dict[str, dict] = {}

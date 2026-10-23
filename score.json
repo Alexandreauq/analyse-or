@@ -1,5 +1,5 @@
 {
-  "date": "2026-10-22",
+  "date": "2026-10-23",
   "composite_score": -23.4,
   "interpretation": "Défavorable — pas d'entrée même sur signal technique",
   "cftc_percentile": 50.641025641025635,
@@ -14,7 +14,7 @@
       "name": "Dollar (DXY)",
       "score": -10,
       "weight": 0.15,
-      "raw_value": "101.62 (il y a 2 mois : 99.00)"
+      "raw_value": "101.55 (il y a 2 mois : 99.00)"
     },
     {
       "name": "Anticipations d'inflation",
@@ -49,15 +49,10 @@
   ],
   "technical": {
     "note": "Cours en-dessous de la MM200 (-10.8%) — tendance baissière",
-    "spot": 4046.60009765625,
-    "ma200": 4535.102501220703
+    "spot": 4043.300048828125,
+    "ma200": 4535.086000976563
   },
   "calendar": [
-    {
-      "date": "22/10/2026",
-      "label": "Inscriptions chômage (hebdo)",
-      "kind": "Donnée"
-    },
     {
       "date": "27/10–28/10/2026",
       "label": "Réunion FOMC",
@@ -66,6 +61,11 @@
     {
       "date": "29/10/2026",
       "label": "PCE (dépenses de consommation des ménages)",
+      "kind": "Donnée"
+    },
+    {
+      "date": "29/10/2026",
+      "label": "Inscriptions chômage (hebdo)",
       "kind": "Donnée"
     },
     {
@@ -99,7 +99,7 @@
       "kind": "info",
       "title": "Pas de signal actif",
       "detail": "Aucune des conditions de veille, d'entrée ou de risque n'est réunie aujourd'hui.",
-      "date": "22/10/2026"
+      "date": "23/10/2026"
     }
   ]
 }

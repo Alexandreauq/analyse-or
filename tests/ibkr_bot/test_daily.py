@@ -1972,3 +1972,61 @@ def test_a_real_run_batch_result_renders_correctly_through_notify(env, monkeypat
     assert run["reconciliation"]["actives"] == 1        # Important #1
     assert "1 position(s) active(s)" in html             # ... et rendu tel quel
     assert "fatal: divergent branches" in html            # Important #2
+
+
+# --- Tache 7 : verification des cotes historiques avant achat ----------
+
+def test_run_batch_rejects_a_signal_with_unfavorable_historical_odds(env):
+    """25 positions cloturees du meme indice (CAC40), alpha moyen negatif
+    -> le signal du jour sur ce meme indice (MC.PA, deja resolu/finance
+    par les fixtures par defaut) doit etre rejete avant d'etre achete,
+    meme s'il passerait tous les autres filtres."""
+    historique = [
+        {"id": f"H{i}", "ticker": f"H{i}.PA", "name": f"H{i}", "index": "CAC40",
+         "status": "closed", "entry_date": "2026-01-01", "entry_price": 10.0,
+         "target_exit_price": 11.0, "close_date": "2026-02-01", "close_price": 9.0,
+         "close_reason": "stop_loss", "return_pct": -10.0, "index_return_pct": 1.0}
+        for i in range(25)
+    ]
+    aujourdhui = {"id": "MC.PA-2026-09-15", "ticker": "MC.PA", "name": "LVMH",
+                  "index": "CAC40", "status": "open", "entry_date": TODAY,
+                  "entry_price": 88.0, "target_exit_price": 120.0}
+    with open(env["paths"]["tracking"], "w", encoding="utf-8") as fh:
+        json.dump({"positions": historique + [aujourdhui]}, fh)
+    gw = FakeGateway()
+
+    run = daily.run_batch(TODAY, gw=gw, sleep_fn=lambda s: None,
+                          account_id="U1", paths=env["paths"])
+
+    assert run["entrees"] == []
+    rejets = {r["ticker"]: r["raison"] for r in run["signaux_rejetes"]}
+    assert rejets["MC.PA"] == "cotes_historiques_defavorables"
+    assert 17275 not in [o["conid"] for o in gw.ordres]
+
+
+def test_run_batch_buys_a_signal_when_historical_odds_are_favorable(env):
+    """Symetrique : alpha moyen POSITIF sur le meme indice ne doit pas
+    bloquer l'achat -- l'ADBE du jour (NASDAQ, aucun historique CAC40 ne
+    le concerne) reste achetable, et un MC.PA (CAC40) avec un historique
+    favorable passe aussi."""
+    historique = [
+        {"id": f"H{i}", "ticker": f"H{i}.PA", "name": f"H{i}", "index": "CAC40",
+         "status": "closed", "entry_date": "2026-01-01", "entry_price": 10.0,
+         "target_exit_price": 11.0, "close_date": "2026-02-01", "close_price": 11.0,
+         "close_reason": "target_atteint", "return_pct": 10.0, "index_return_pct": 1.0}
+        for i in range(25)
+    ]
+    aujourdhui = {"id": "MC.PA-2026-09-15", "ticker": "MC.PA", "name": "LVMH",
+                  "index": "CAC40", "status": "open", "entry_date": TODAY,
+                  "entry_price": 88.0, "target_exit_price": 120.0}
+    with open(env["paths"]["tracking"], "w", encoding="utf-8") as fh:
+        json.dump({"positions": historique + [aujourdhui]}, fh)
+    gw = FakeGateway()
+
+    run = daily.run_batch(TODAY, gw=gw, sleep_fn=lambda s: None,
+                          account_id="U1", paths=env["paths"])
+
+    assert not any(r["raison"] == "cotes_historiques_defavorables"
+                  for r in run["signaux_rejetes"])
+    assert len(run["entrees"]) == 1
+    assert run["entrees"][0]["ticker"] == "MC.PA"

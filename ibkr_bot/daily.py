@@ -30,6 +30,7 @@ import ibkr_bot.contracts as contracts
 import ibkr_bot.gateway as gateway
 import ibkr_bot.journal as journal
 import ibkr_bot.notify as notify
+import ibkr_bot.odds_check as odds_check
 import ibkr_bot.portfolio as portfolio
 import ibkr_bot.signals as signals
 import ibkr_bot.sizing as sizing
@@ -922,6 +923,12 @@ def run_batch(today: str | None = None, *, gw=gateway, sleep_fn=time.sleep,
             conids_detenus.add(int(brute.get("conid")))
         except (TypeError, ValueError):
             continue
+    # docs/signal_tracking.json ne stocke pas de champ "sector" sur les
+    # positions (seulement "index") -- ce lookup, construit a partir des
+    # donnees du jour, est ce qui permet a odds_check.historical_odds_for_signal
+    # de retomber sur le secteur quand l'echantillon par indice est trop
+    # petit (voir ibkr_bot/odds_check.py).
+    ticker_to_sector = {t: c.get("sector", "") for t, c in companies.items()}
     signaux_financables = []
     for signal in signaux:
         ticker = signal["ticker"]
@@ -972,6 +979,20 @@ def run_batch(today: str | None = None, *, gw=gateway, sleep_fn=time.sleep,
             })
             run["signaux_rejetes"].append({
                 "ticker": ticker, "raison": "devise_incoherente",
+                "rang": None, "score": signal.get("score"),
+            })
+            continue
+        # Verification des cotes historiques (Tache 5/7, spec 2026-10-23) :
+        # un signal dont l'indice (ou a defaut le secteur) a historiquement
+        # perdu de l'argent en moyenne vs son indice de reference ne doit
+        # jamais etre achete, meme s'il passe tous les autres filtres de
+        # financabilite ci-dessus. "insufficient_history"/"favorable" ne
+        # bloquent jamais (voir odds_check.historical_odds_for_signal).
+        verdict = odds_check.historical_odds_for_signal(
+            paper_positions, ticker_to_sector, signal["index"], signal["sector"])
+        if verdict["verdict"] == "unfavorable":
+            run["signaux_rejetes"].append({
+                "ticker": ticker, "raison": "cotes_historiques_defavorables",
                 "rang": None, "score": signal.get("score"),
             })
             continue

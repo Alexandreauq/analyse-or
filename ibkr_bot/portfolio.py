@@ -150,19 +150,24 @@ def select_entries(
     MAX_NEW_ENTRIES_PER_DAY entrees SUPPLEMENTAIRES en plus de celles
     deja ouvertes plus tot le meme jour.
 
-    GARDE-FOU DE SOLDE (spec 9.9, revu) : IBKR convertit automatiquement
-    le budget EUR vers la devise locale au moment de l'achat (mecanisme
-    IDEAL, spec 9.1) — il n'est donc pas necessaire de detenir du cash
-    deja converti dans la devise de chaque signal. Le garde-fou compare
-    a la place le cash total dans la devise de BASE du compte
-    (`base_cash`, typiquement gateway.base_currency_cash()) au budget
-    cumule engage au fil du classement. Chaque position retenue engage
-    au plus BUDGET_EUR (le cout reel, arrondi a l'action entiere
-    inferieure, ne peut etre que <= BUDGET_EUR) : utiliser ce montant
-    fixe plutot que `cout_estime_devise_compte` (dans une devise
-    etrangere, non directement comparable a `base_cash` sans un taux de
-    conversion que cette fonction n'a pas) est le choix conservateur et
-    simple retenu ici.
+    GARDE-FOU DE SOLDE (spec 9.9, revu 2026-10-23 pour un budget
+    variable par signal) : IBKR convertit automatiquement le budget EUR
+    vers la devise locale au moment de l'achat (mecanisme IDEAL, spec
+    9.1) -- il n'est donc pas necessaire de detenir du cash deja converti
+    dans la devise de chaque signal. Le garde-fou compare a la place le
+    cash total dans la devise de BASE du compte (`base_cash`,
+    typiquement gateway.base_currency_cash()) au budget cumule engage au
+    fil du classement. Chaque position retenue engage au plus
+    plan["budget_eur_nominal"] (le budget NOMINAL en EUR qui a servi a
+    calculer la quantite -- fixe (BUDGET_EUR) ou base sur le risque
+    (sizing.compute_quantity_by_risk), selon ce que l'appelant a passe a
+    sizing.py) : c'est ce montant par position, et non plus une constante
+    BUDGET_EUR, qui alimente le garde-fou. Le cout reel, arrondi a
+    l'action entiere inferieure, ne peut etre que <= ce budget.
+    `cout_estime_devise_compte` (dans une devise etrangere, non
+    directement comparable a `base_cash` sans un taux de conversion que
+    cette fonction n'a pas) reste ecarte : seule la SOURCE du montant a
+    change, pas la logique du garde-fou.
     """
     tickers_detenus = {p["ticker"] for p in open_positions}
     places = free_slots(open_positions)
@@ -221,11 +226,12 @@ def select_entries(
             rejets.append({**base, "raison": "plafond_zone_atteint"})
             continue
 
-        if base_cash - engage < BUDGET_EUR:
+        budget_signal = plan.get("budget_eur_nominal", BUDGET_EUR)
+        if base_cash - engage < budget_signal:
             rejets.append({**base, "raison": "solde_insuffisant"})
             continue
 
-        engage += BUDGET_EUR
+        engage += budget_signal
         places -= 1
         tickers_detenus.add(ticker)
         if secteur:

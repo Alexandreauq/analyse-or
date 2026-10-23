@@ -252,3 +252,73 @@ def test_compute_quantity_never_raises_on_garbage_input():
 def test_budget_constant_is_500_eur():
     assert sizing.BUDGET_EUR == 500.0
     assert math.isclose(sizing.PENCE_PER_POUND, 100.0)
+
+
+# --- budget_eur_nominal (garde-fou de solde generalise, Tache 4) ------
+
+def test_compute_quantity_stores_the_nominal_eur_budget_used():
+    plan = sizing.compute_quantity("MC.PA", "EUR", 415.0, 1.0)
+    assert plan["budget_eur_nominal"] == pytest.approx(sizing.BUDGET_EUR)
+
+
+def test_compute_quantity_stores_a_custom_nominal_eur_budget():
+    plan = sizing.compute_quantity("MC.PA", "EUR", 415.0, 1.0, budget_eur=50.0)
+    assert plan["budget_eur_nominal"] == pytest.approx(50.0)
+
+
+def test_compute_quantity_stores_zero_nominal_budget_on_invalid_price():
+    plan = sizing.compute_quantity("MC.PA", "EUR", float("nan"), 1.0)
+    assert plan["budget_eur_nominal"] == 0.0
+    assert plan["motif"] == "prix_ou_taux_invalide"
+
+
+def test_compute_quantity_stores_the_nominal_budget_even_when_price_exceeds_it():
+    """budget_eur_nominal est rempli AVANT le controle de quantite<1
+    (meme motif que budget_converti/prix_unitaire_cotation) -- utile
+    pour l'audit meme quand le signal est finalement rejete."""
+    plan = sizing.compute_quantity("MC.PA", "EUR", 100_000.0, 1.0)
+    assert plan["motif"] == "signal_ignore_prix_unitaire_superieur_au_budget"
+    assert plan["budget_eur_nominal"] == pytest.approx(sizing.BUDGET_EUR)
+
+
+# --- compute_quantity_by_risk -----------------------------------------
+
+def test_compute_quantity_by_risk_scales_budget_with_balance_and_stop():
+    """20 EUR de solde, risque 5%, stop a 20% -> budget nominal de
+    20*0.05/0.20 = 5 EUR (resout la sous-capitalisation : un budget qui
+    suit le vrai solde plutot qu'une constante fixe)."""
+    plan = sizing.compute_quantity_by_risk(
+        "MC.PA", "EUR", 4.0, 1.0, balance_eur=20.0, risk_pct=0.05, stop_loss_pct=-20.0)
+    assert plan["budget_eur_nominal"] == pytest.approx(5.0)
+    assert plan["quantite"] == 1  # 5 EUR / 4 EUR = 1.25 -> 1
+
+
+def test_compute_quantity_by_risk_matches_compute_quantity_given_the_same_budget():
+    """Sanity check : pour un budget equivalent, compute_quantity_by_risk
+    et compute_quantity produisent le meme plan (meme fonction en
+    dessous). balance_eur*risk_pct/(abs(stop)/100) = 100*0.05/0.05 =
+    100 EUR, exactement le budget_eur passe a compute_quantity."""
+    direct = sizing.compute_quantity("MC.PA", "EUR", 415.0, 1.0, budget_eur=100.0)
+    via_risk = sizing.compute_quantity_by_risk(
+        "MC.PA", "EUR", 415.0, 1.0, balance_eur=100.0, risk_pct=0.05, stop_loss_pct=-5.0)
+    assert via_risk["budget_eur_nominal"] == pytest.approx(direct["budget_eur_nominal"])
+    assert via_risk["quantite"] == direct["quantite"]
+
+
+def test_compute_quantity_by_risk_invalid_balance_returns_a_dedicated_reason():
+    plan = sizing.compute_quantity_by_risk(
+        "MC.PA", "EUR", 415.0, 1.0, balance_eur=0.0, risk_pct=0.05, stop_loss_pct=-20.0)
+    assert plan["quantite"] == 0
+    assert plan["motif"] == "budget_risque_invalide"
+
+
+def test_compute_quantity_by_risk_invalid_risk_pct_returns_a_dedicated_reason():
+    plan = sizing.compute_quantity_by_risk(
+        "MC.PA", "EUR", 415.0, 1.0, balance_eur=1000.0, risk_pct=0.0, stop_loss_pct=-20.0)
+    assert plan["motif"] == "budget_risque_invalide"
+
+
+def test_compute_quantity_by_risk_zero_stop_distance_returns_a_dedicated_reason():
+    plan = sizing.compute_quantity_by_risk(
+        "MC.PA", "EUR", 415.0, 1.0, balance_eur=1000.0, risk_pct=0.05, stop_loss_pct=0.0)
+    assert plan["motif"] == "budget_risque_invalide"

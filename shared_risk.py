@@ -76,6 +76,7 @@ class CircuitBreaker:
         self._starting_balance = None
         self._tripped_today = False
         self._trades_opened_today = 0
+        self._last_balance = None
         if persist_path is not None:
             saved = _load_state(persist_path)
             saved_day = saved.get("circuit_breaker_day")
@@ -91,6 +92,12 @@ class CircuitBreaker:
                     self._starting_balance = None
                     self._tripped_today = False
                     self._trades_opened_today = 0
+            saved_last_balance = saved.get("circuit_breaker_last_balance")
+            if saved_last_balance is not None:
+                try:
+                    self._last_balance = float(saved_last_balance)
+                except (TypeError, ValueError):
+                    self._last_balance = None
 
     def check(self, current_balance: float) -> None:
         """À appeler avant toute décision — fixe le solde de référence
@@ -129,6 +136,7 @@ class CircuitBreaker:
                 "circuit_breaker_starting_balance": self._starting_balance,
                 "circuit_breaker_tripped_today": self._tripped_today,
                 "circuit_breaker_trades_opened_today": self._trades_opened_today,
+                "circuit_breaker_last_balance": self._last_balance,
             },
             self._persist_path,
         )
@@ -163,3 +171,31 @@ class CircuitBreaker:
         self._tripped_today = True
         self._persist()
         return False
+
+    def can_open_position_daily(self, current_balance: float) -> bool:
+        """Coupe-circuit pour un appelant qui ne vérifie qu'UNE FOIS par
+        période (ex. ibkr_bot/daily.py, un batch par jour) — check() et
+        can_open_position() supposent plusieurs vérifications par jour
+        UTC (voir leur docstring) : avec un seul appel par jour, check()
+        fixerait systématiquement la référence À LA VALEUR QU'IL COMPARE
+        DANS LE MÊME APPEL, rendant le coupe-circuit muet pour toujours.
+
+        Compare `current_balance` à la valeur persistée lors du DERNIER
+        appel (champ dédié `_last_balance`, jamais `_starting_balance`/
+        `_day` — deux concepts indépendants, pour ne jamais interférer
+        avec check()/can_open_position() si jamais utilisés sur le même
+        objet), PUIS avance la référence à `current_balance` pour le
+        prochain appel. Premier appel jamais vu (démarrage à froid) :
+        fixe la référence et laisse passer, rien à comparer encore --
+        même convention que _starting_balance au premier cycle de
+        check(). Pas de latch `_tripped_today` ici : un seul appel par
+        jour, rien à latcher jusqu'au lendemain."""
+        if self._last_balance is None:
+            self._last_balance = current_balance
+            self._persist()
+            return True
+        loss = self._last_balance - current_balance
+        tripped = loss >= self._last_balance * self.threshold_pct
+        self._last_balance = current_balance
+        self._persist()
+        return not tripped

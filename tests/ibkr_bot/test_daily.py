@@ -149,6 +149,7 @@ def env(tmp_path, monkeypatch):
         "indices": str(tmp_path / "docs" / "indices.json"),
         "tracking": str(tmp_path / "docs" / "signal_tracking.json"),
         "account_snapshot": str(tmp_path / "latest_account.json"),
+        "circuit_breaker_state": str(tmp_path / "circuit_breaker_state.json"),
     }
     return {"tmp": tmp_path, "paths": paths, "emails": emails}
 
@@ -1223,6 +1224,48 @@ def test_run_batch_sizes_the_entry_by_risk_based_budget_not_a_fixed_500(env):
     assert not any(r["raison"] == "solde_insuffisant" for r in run["signaux_rejetes"])
     assert [e["ticker"] for e in run["entrees"]] == ["MC.PA"]
     assert run["entrees"][0]["quantite"] == 1   # floor(5/4), pas floor(500/4)=125
+
+
+# --- coupe-circuit journalier (shared_risk.CircuitBreaker) ----------
+
+def test_run_batch_allows_entries_on_the_very_first_run(env):
+    """Demarrage a froid (aucun fichier circuit_breaker_state.json
+    persiste au prealable) : le coupe-circuit ne doit jamais bloquer le
+    tout premier batch, faute de reference anterieure a comparer
+    (can_open_position_daily renvoie toujours True a son premier appel)."""
+    gw = FakeGateway()
+
+    run = daily.run_batch(TODAY, gw=gw, sleep_fn=lambda s: None,
+                          account_id="U1", paths=env["paths"])
+
+    assert [e["ticker"] for e in run["entrees"]] == ["MC.PA", "ADBE"]
+    assert not any(r["raison"] == "coupe_circuit_journalier_declenche"
+                  for r in run["signaux_rejetes"])
+
+
+def test_run_batch_blocks_entries_after_a_large_equity_drop_since_the_previous_run(env):
+    """Deux batchs consecutifs, meme fichier d'etat persiste (meme
+    env["paths"]) : le 1er run, sans aucun signal du jour (tracking vide),
+    fixe la reference d'equite a 1000 (cash seul, aucune position ouverte)
+    sans jamais rien acheter. Le 2e run arrive avec un cash tombe a 850
+    (-15 %, au-dela du seuil de 10 %) ET un signal financable -> ce signal
+    doit etre rejete par le coupe-circuit, pas achete."""
+    with open(env["paths"]["tracking"], "w", encoding="utf-8") as fh:
+        json.dump({"positions": []}, fh)
+    gw1 = FakeGateway(base_cash=1000.0)
+    run1 = daily.run_batch(TODAY, gw=gw1, sleep_fn=lambda s: None,
+                           account_id="U1", paths=env["paths"])
+    assert run1["entrees"] == []   # aucun signal, rien a acheter -> equite = cash seul
+
+    with open(env["paths"]["tracking"], "w", encoding="utf-8") as fh:
+        json.dump(TRACKING, fh)
+    gw2 = FakeGateway(base_cash=850.0)
+    run2 = daily.run_batch(TODAY, gw=gw2, sleep_fn=lambda s: None,
+                           account_id="U1", paths=env["paths"])
+
+    assert run2["entrees"] == []
+    assert any(r["raison"] == "coupe_circuit_journalier_declenche"
+              for r in run2["signaux_rejetes"])
 
 
 def test_real_mode_buys_the_selected_signals(env):

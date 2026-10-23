@@ -896,8 +896,10 @@ def run_batch(today: str | None = None, *, gw=gateway, sleep_fn=time.sleep,
     for signal in signaux:
         ticker = signal["ticker"]
         taux = _taux_de_change(gw, base_url, signal["currency"], taux_par_devise, run)
-        plans[ticker] = sizing.compute_quantity(
-            ticker, signal["currency"], signal["current_price"], taux)
+        plans[ticker] = sizing.compute_quantity_by_risk(
+            ticker, signal["currency"], signal["current_price"], taux,
+            balance_eur=base_cash, risk_pct=sizing.RISK_PCT,
+            stop_loss_pct=portfolio.STOP_LOSS_PCT)
         contrats[ticker] = contracts.resolve_conid(
             ticker,
             lambda symbole: gw.search_contract(base_url, symbole),

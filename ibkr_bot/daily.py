@@ -793,6 +793,57 @@ def run_batch(today: str | None = None, *, gw=gateway, sleep_fn=time.sleep,
     # traitent deja comme "detection de retrait desactivee, ne jamais
     # clore pour ce motif" -- le comportement sur d'avant la critique n°1.
     roster_tickers = set(indices.get("roster", [])) or None
+
+    # --- Coupe-circuit de perte journaliere : equite PRE-SORTIES --------
+    # (spec 2026-10-23, Fix 1 revue finale de branche) : l'equite utilisee
+    # par le coupe-circuit est mesuree ICI, AVANT que la boucle de sorties
+    # ci-dessous n'envoie le moindre ordre de vente -- jamais apres. Une
+    # vente dont l'ordre est parti (statut "execute") retire aussitot sa
+    # position de positions_ouvertes, mais le cash reel pousse par IBKR
+    # (gw.base_currency_cash) peut accuser un reel decalage avant que le
+    # produit de cette vente n'y apparaisse. Mesurer l'equite APRES les
+    # sorties sous-evaluerait transitoirement l'equite de la PLEINE valeur
+    # de la position vendue (pas seulement sa perte) -- combine au
+    # dimensionnement par le risque (jusqu'a 25% du cash par position,
+    # Composant A), presque toute sortie ordinaire ressemblerait a une
+    # chute d'equite de plus de 10% et declencherait le coupe-circuit le
+    # jour meme ou une sortie devrait au contraire liberer de la place.
+    # taux_par_devise est cree ICI (pas apres les sorties) : reutilise tel
+    # quel par la valorisation post-sorties plus bas ET par le
+    # dimensionnement des entrees en section 7, sans second appel reseau
+    # pour une devise deja vue aujourd'hui.
+    taux_par_devise: dict[str, float] = {}
+    if etat["dry_run"]:
+        # Le coupe-circuit est de toute facon court-circuite en dry_run
+        # (section 7, Fix round 1) : inutile de bruler un appel reseau de
+        # plus pour un resultat qui sera jete.
+        equity_avant_sorties_eur = None
+        base_cash_avant_sorties_connu = True
+    else:
+        _valoriser_positions(positions_ouvertes, companies, gw, base_url,
+                             taux_par_devise, run)
+        base_cash_avant_sorties_connu = True
+        try:
+            base_cash_avant_sorties = gw.base_currency_cash(base_url, account_id)
+        except Exception as e:
+            run["erreurs"].append({"etape": "base_currency_cash_pre_sorties",
+                                   "detail": str(e)})
+            base_cash_avant_sorties = 0.0
+            base_cash_avant_sorties_connu = False
+        # Fix 2 (revue finale de branche) : gateway.base_currency_cash peut
+        # renvoyer 0.0 SANS lever d'exception quand la cle "BASE" est
+        # absente de ledger() (ex. juste apres la connexion, avant que IBKR
+        # n'ait fini de pousser accountValues) -- indistinguable d'un
+        # compte reellement a sec sans aller lire gateway.py plus loin. On
+        # traite ce cas comme un echec de lecture pour le coupe-circuit :
+        # mieux vaut rejeter les entrees du jour par prudence que de
+        # persister un 0.0 comme reference de demain (meme risque que le
+        # round 1 de revue visait a fermer, par une autre porte).
+        if base_cash_avant_sorties == 0.0:
+            base_cash_avant_sorties_connu = False
+        equity_avant_sorties_eur = base_cash_avant_sorties + sum(
+            (p.get("valeur_actuelle_eur") or 0.0) for p in positions_ouvertes)
+
     # portfolio.positions_to_close() est appelee UNE POSITION A LA FOIS
     # (plutot qu'une seule fois sur toute la liste) pour isoler une ligne
     # corrompue de positions.json : c'est une fonction pure, sans etat
@@ -875,10 +926,11 @@ def run_batch(today: str | None = None, *, gw=gateway, sleep_fn=time.sleep,
 
     # --- Valorisation EUR (P&L latent, plan FX P&L 2026-10-03) --------
     # Apres les sorties (positions_ouvertes est deja purge des positions
-    # vendues aujourd'hui) et AVANT les entrees : le cache de taux cree
-    # ici est reutilise plus bas (section 7) sans second appel reseau
-    # pour une devise deja vue aujourd'hui.
-    taux_par_devise: dict[str, float] = {}
+    # vendues aujourd'hui) et AVANT les entrees. taux_par_devise a deja ete
+    # cree plus haut, avant les sorties (equite du coupe-circuit, Fix 1
+    # revue finale de branche) -- reutilise ici tel quel, puis par le
+    # dimensionnement des entrees en section 7, sans appel reseau
+    # supplementaire pour une devise deja vue aujourd'hui.
     _valoriser_positions(positions_ouvertes, companies, gw, base_url,
                          taux_par_devise, run)
     _sauver_positions()
@@ -891,7 +943,6 @@ def run_batch(today: str | None = None, *, gw=gateway, sleep_fn=time.sleep,
                                        "raison": rejet.get("raison"),
                                        "rang": None, "score": None})
 
-    base_cash_connu = True
     try:
         base_cash = gw.base_currency_cash(base_url, account_id)
     except Exception as e:
@@ -899,49 +950,53 @@ def run_batch(today: str | None = None, *, gw=gateway, sleep_fn=time.sleep,
         # tout, ce qui est le sens sur (spec 9.9).
         run["erreurs"].append({"etape": "base_currency_cash", "detail": str(e)})
         base_cash = 0.0
-        base_cash_connu = False
     journal.save_account_snapshot({"base_cash": base_cash},
                                   chemins["account_snapshot"])
 
     # Coupe-circuit de perte journaliere (spec 2026-10-23) : verifie AVANT
-    # toute nouvelle entree, sur l'equite reelle du compte (cash + valeur
-    # EUR des positions ouvertes, deja calculee ci-dessus par
-    # _valoriser_positions) -- jamais sur le seul cash, qui ignorerait les
-    # positions en cours. Un seul appel par batch (un batch par jour) :
+    # toute nouvelle entree. Un seul appel par batch (un batch par jour) :
     # can_open_position_daily(), pas can_open_position() (voir sa
     # docstring dans shared_risk.py). Instance et fichier d'etat propres a
     # ibkr_bot, independants de ceux de gold_bot.
     #
-    # Fix round 1 (revue opus) : en dry_run, positions_ouvertes contient
-    # des positions SIMULEES alors que base_cash est le VRAI solde IBKR,
-    # jamais affecte par un trade simule -- une sortie simulee peut donc
-    # faire chuter equity_eur de toute la valeur de la position sans
-    # qu'aucun capital reel n'ait bouge. Le coupe-circuit protege du
-    # capital reel ; il n'a rien a proteger en dry_run. On le court-circuite
-    # ENTIEREMENT (jamais construit, jamais appele) plutot que de le
-    # laisser tourner sur du bruit de simulation -- la reference persistee
-    # ne doit donc jamais suivre une journee dry_run.
+    # Fix 1 (revue finale de branche) : equity_avant_sorties_eur /
+    # base_cash_avant_sorties_connu ont deja ete calcules plus haut, AVANT
+    # la boucle de sorties -- jamais ici, apres (voir le commentaire au
+    # point de calcul pour le raisonnement complet sur le decalage
+    # cash/positions qu'une mesure ICI introduirait). `base_cash` ci-dessus
+    # est deliberement un second appel reseau distinct, dedie au
+    # dimensionnement des entrees ci-dessous, qui veut legitimement le cash
+    # LIBERE par les sorties du jour -- jamais reinjecte dans le
+    # coupe-circuit.
     #
-    # Fix round 2 (revue opus) : si le solde n'a pas pu etre lu (ci-dessus),
-    # equity_eur reposerait sur le repli 0.0 -- et can_open_position_daily
-    # PERSISTERAIT ce 0.0 comme reference de demain, masquant une vraie
-    # perte survenue aujourd'hui (l'equite reelle de demain paraitrait un
-    # enorme "gain" face a cette reference artificiellement nulle). On
-    # rejette donc les entrees du jour par prudence (meme effet qu'un
-    # coupe-circuit declenche), SANS construire ni appeler le coupe-circuit
-    # -- une reference existante doit survivre intacte pour le prochain run
-    # ou le solde sera de nouveau lisible.
+    # Fix round 1 (revue opus, round de correctifs precedent) : en
+    # dry_run, positions_ouvertes contient des positions SIMULEES alors
+    # que base_cash est le VRAI solde IBKR, jamais affecte par un trade
+    # simule -- une sortie simulee peut donc faire chuter l'equite de
+    # toute la valeur de la position sans qu'aucun capital reel n'ait
+    # bouge. Le coupe-circuit protege du capital reel ; il n'a rien a
+    # proteger en dry_run. On le court-circuite ENTIEREMENT (jamais
+    # construit, jamais appele, et equity_avant_sorties_eur n'est meme pas
+    # calcule plus haut) plutot que de le laisser tourner sur du bruit de
+    # simulation -- la reference persistee ne doit donc jamais suivre une
+    # journee dry_run.
+    #
+    # Fix 2 (revue finale de branche) : base_cash_avant_sorties_connu est
+    # deja False si base_currency_cash a leve OU renvoye silencieusement
+    # 0.0 (voir le point de calcul) -- dans les deux cas, on rejette les
+    # entrees du jour par prudence (meme effet qu'un coupe-circuit
+    # declenche), SANS construire ni appeler le coupe-circuit : une
+    # reference existante doit survivre intacte pour le prochain run ou le
+    # solde sera de nouveau lisible.
     if etat["dry_run"]:
         coupe_circuit_ouvert = True
-    elif not base_cash_connu:
+    elif not base_cash_avant_sorties_connu:
         coupe_circuit_ouvert = False
     else:
-        equity_eur = base_cash + sum(
-            (p.get("valeur_actuelle_eur") or 0.0) for p in positions_ouvertes)
         circuit_breaker = shared_risk.CircuitBreaker(
             threshold_pct=DAILY_LOSS_THRESHOLD_PCT,
             persist_path=chemins["circuit_breaker_state"])
-        coupe_circuit_ouvert = circuit_breaker.can_open_position_daily(equity_eur)
+        coupe_circuit_ouvert = circuit_breaker.can_open_position_daily(equity_avant_sorties_eur)
 
     cache_conid = contracts.load_cache(chemins["conid_cache"])
     plans: dict[str, dict] = {}

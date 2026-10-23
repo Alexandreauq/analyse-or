@@ -77,6 +77,14 @@ class CircuitBreaker:
         self._tripped_today = False
         self._trades_opened_today = 0
         self._last_balance = None
+        # Verrou intra-jour dedie a can_open_position_daily() (Fix 3, revue
+        # finale de branche) -- champs INDEPENDANTS de _day/_starting_balance/
+        # _tripped_today ci-dessus, qui appartiennent exclusivement a
+        # check()/can_open_position() (un patron d'appel different, voir
+        # leur docstring). Jamais touches ici : voir can_open_position_daily()
+        # pour le detail du verrou lui-meme.
+        self._daily_ref_day = None
+        self._daily_ref_balance = None
         if persist_path is not None:
             saved = _load_state(persist_path)
             saved_day = saved.get("circuit_breaker_day")
@@ -98,6 +106,18 @@ class CircuitBreaker:
                     self._last_balance = float(saved_last_balance)
                 except (TypeError, ValueError):
                     self._last_balance = None
+            # Meme chargement defensif que _last_balance ci-dessus, dans son
+            # propre try/except independant du garde saved_day/saved_balance
+            # utilise par check() plus haut (Fix 3, revue finale de branche).
+            saved_daily_ref_day = saved.get("circuit_breaker_daily_ref_day")
+            saved_daily_ref_balance = saved.get("circuit_breaker_daily_ref_balance")
+            if saved_daily_ref_day is not None and saved_daily_ref_balance is not None:
+                try:
+                    self._daily_ref_day = date.fromisoformat(saved_daily_ref_day)
+                    self._daily_ref_balance = float(saved_daily_ref_balance)
+                except (TypeError, ValueError):
+                    self._daily_ref_day = None
+                    self._daily_ref_balance = None
 
     def check(self, current_balance: float) -> None:
         """À appeler avant toute décision — fixe le solde de référence
@@ -137,6 +157,9 @@ class CircuitBreaker:
                 "circuit_breaker_tripped_today": self._tripped_today,
                 "circuit_breaker_trades_opened_today": self._trades_opened_today,
                 "circuit_breaker_last_balance": self._last_balance,
+                "circuit_breaker_daily_ref_day": (
+                    self._daily_ref_day.isoformat() if self._daily_ref_day is not None else None),
+                "circuit_breaker_daily_ref_balance": self._daily_ref_balance,
             },
             self._persist_path,
         )
@@ -180,22 +203,63 @@ class CircuitBreaker:
         fixerait systématiquement la référence À LA VALEUR QU'IL COMPARE
         DANS LE MÊME APPEL, rendant le coupe-circuit muet pour toujours.
 
-        Compare `current_balance` à la valeur persistée lors du DERNIER
-        appel (champ dédié `_last_balance`, jamais `_starting_balance`/
-        `_day` — deux concepts indépendants, pour ne jamais interférer
-        avec check()/can_open_position() si jamais utilisés sur le même
-        objet), PUIS avance la référence à `current_balance` pour le
-        prochain appel. Premier appel jamais vu (démarrage à froid) :
-        fixe la référence et laisse passer, rien à comparer encore --
-        même convention que _starting_balance au premier cycle de
-        check(). Pas de latch `_tripped_today` ici : un seul appel par
-        jour, rien à latcher jusqu'au lendemain."""
+        Compare `current_balance` à une référence dérivée de la valeur
+        persistée lors du DERNIER appel (champ dédié `_last_balance`,
+        jamais `_starting_balance`/`_day` — deux concepts indépendants,
+        pour ne jamais interférer avec check()/can_open_position() si
+        jamais utilisés sur le même objet). Premier appel jamais vu
+        (démarrage à froid) : fixe la référence et laisse passer, rien à
+        comparer encore -- même convention que _starting_balance au
+        premier cycle de check().
+
+        VERROU INTRA-JOUR (Fix 3, revue finale de branche 2026-10-23) :
+        en production, un batch quotidien peut être relancé manuellement
+        PLUSIEURS FOIS le même jour calendaire (voir
+        deploy/README-ibkr.md, procédure de redémarrage). Sans verrou,
+        un second appel le même jour comparerait `current_balance` à
+        `_last_balance` tel qu'avancé par le PREMIER appel de ce même
+        jour -- si ce premier appel a déclenché le coupe-circuit, la
+        perte réelle du jour deviendrait invisible au second appel
+        (comparée à une référence déjà abaissée quelques instants plus
+        tôt), contournant silencieusement la protection pour le reste de
+        la journée. `_daily_ref_day`/`_daily_ref_balance` gèlent donc la
+        référence de comparaison pour TOUS les appels d'un même jour
+        calendaire sur la valeur en vigueur AVANT le premier appel de ce
+        jour (c'est-à-dire l'ancien `_last_balance`, jamais le résultat
+        du jour lui-même) :
+          - premier appel JAMAIS vu : `_last_balance` devient
+            `current_balance`, qui sert aussi de référence gelée du jour
+            (rien d'antérieur à comparer) ; passe toujours.
+          - premier appel d'un NOUVEAU jour calendaire (`_daily_ref_day`
+            != aujourd'hui) : comparaison normale contre l'ancien
+            `_last_balance`, PUIS gel de cette même valeur comme
+            référence du jour pour d'éventuels rappels.
+          - rappel sur le MÊME jour calendaire (`_daily_ref_day` ==
+            aujourd'hui) : comparaison contre la référence GELÉE
+            `_daily_ref_balance`, jamais contre `_last_balance` (qui a pu
+            être avancé par un appel précédent ce même jour).
+        `_last_balance` continue, dans tous les cas, à être avancé à
+        `current_balance` à chaque appel -- c'est lui qui devient la
+        référence dès qu'un VRAI changement de jour calendaire survient.
+        Champs persistés indépendamment de `_tripped_today` (qui reste
+        réservé à check()/can_open_position(), un patron d'appel
+        différent) : un seul appel par jour ici en régime normal, rien à
+        latcher au-delà du jour courant lui-même."""
+        today = self._now_fn().date()
         if self._last_balance is None:
             self._last_balance = current_balance
+            self._daily_ref_day = today
+            self._daily_ref_balance = current_balance
             self._persist()
             return True
-        loss = self._last_balance - current_balance
-        tripped = loss >= self._last_balance * self.threshold_pct
+        if self._daily_ref_day != today:
+            reference = self._last_balance
+            self._daily_ref_day = today
+            self._daily_ref_balance = reference
+        else:
+            reference = self._daily_ref_balance
+        loss = reference - current_balance
+        tripped = loss >= reference * self.threshold_pct
         self._last_balance = current_balance
         self._persist()
         return not tripped

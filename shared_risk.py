@@ -44,10 +44,10 @@ class CircuitBreaker:
     position existante — seul un filtre sur can_open_position().
     `now_fn` est injectable pour les tests (horloge fixe/contrôlable).
     `persist_path`, si fourni, persiste {day, starting_balance,
-    tripped_today} — sans lui, l'état reste en mémoire uniquement (perdu
-    au redémarrage), ce qui suffit pour les tests mais pas en
-    production, où un redémarrage ne doit pas réinitialiser le seuil du
-    jour au solde courant.
+    tripped_today} localement — sans lui, l'état reste en mémoire
+    uniquement (perdu au redémarrage), ce qui suffit pour les tests
+    mais pas en production, où un redémarrage ne doit pas réinitialiser
+    le seuil du jour au solde courant.
 
     `threshold_pct` est un attribut public mutable, en place par
     l'appelant (gold_bot.loop.run_cycle relit le profil de risque actif
@@ -96,9 +96,19 @@ class CircuitBreaker:
         """À appeler avant toute décision — fixe le solde de référence
         du jour s'il n'existe pas encore, si on a changé de jour UTC, OU
         si le solde de référence actuellement retenu n'est pas positif
-        alors que le solde courant l'est (corrige un compte pas encore
-        financé au premier cycle du jour). Réinitialise aussi le flag de
-        déclenchement dans les deux cas."""
+        alors que le solde courant l'est. Ce dernier cas corrige un bug
+        trouvé le 2026-09-29 (état réel constaté sur le VPS : compte pas
+        encore financé au premier cycle du jour, solde de référence figé
+        à 0) : sans lui, un compte financé EN COURS de journée UTC après
+        un premier contrôle à solde nul gardait indéfiniment un solde de
+        référence de 0 jusqu'au rollover du lendemain — can_open_position
+        calcule alors `loss = 0 - current_balance`, toujours négatif donc
+        toujours sous le seuil, désactivant silencieusement le
+        coupe-circuit pour le reste de la journée quelle que soit
+        l'ampleur réelle d'une perte. Réinitialise aussi le flag de
+        déclenchement dans les deux cas (nouveau jour ou nouveau solde de
+        référence) : un déclenchement figé sur un ancien solde de
+        référence non pertinent ne doit pas survivre au rebaselining."""
         today = self._now_fn().date()
         needs_new_baseline = self._day != today or (
             self._starting_balance is not None and self._starting_balance <= 0 and current_balance > 0
@@ -124,16 +134,23 @@ class CircuitBreaker:
         )
 
     def record_trade_opened(self) -> None:
-        """À appeler une fois par trade réellement ouvert (une seule
-        fois même si l'ouverture se scinde en plusieurs ordres broker).
-        Ne vérifie ni ne déclenche le plafond elle-même."""
+        """À appeler une fois par trade réellement ouvert (une seule fois
+        même si l'ouverture se scinde en plusieurs ordres broker). Ne
+        vérifie ni ne déclenche le plafond elle-même : c'est
+        can_open_position() qui lit le compteur."""
         self._trades_opened_today += 1
         if self._day is None:
+            # Aucun check() encore : pas de baseline, donc rien à persister
+            # (_persist() exige _day). Le prochain check() repart de zéro.
             return
         self._persist()
 
     def can_open_position(self, current_balance: float) -> bool:
         self.check(current_balance)
+        # Une fois déclenché un jour donné, reste déclenché pour le
+        # reste de ce jour UTC — même si threshold_pct est relevé
+        # entre-temps (profil de risque augmenté en cours de journée).
+        # Voir la docstring de la classe.
         if self._tripped_today:
             return False
         if self.max_trades_per_day is not None and self._trades_opened_today >= self.max_trades_per_day:

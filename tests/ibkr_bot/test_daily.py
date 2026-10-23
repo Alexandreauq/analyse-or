@@ -1179,13 +1179,50 @@ def test_dry_run_places_no_order_but_journals_everything(env):
     assert run["statut"] == "termine"
     assert [e["ticker"] for e in run["entrees"]] == ["MC.PA", "ADBE"]
     assert all(e["statut"] == "simule" for e in run["entrees"])
-    assert run["entrees"][0]["quantite"] == 5          # floor(500 / 90)
+    # Budget nominal desormais par le risque : 10000 (FakeGateway.base_cash
+    # par defaut) * RISK_PCT(0.05) / (abs(STOP_LOSS_PCT)/100 = 0.20) = 2500
+    # EUR, plus l'ancien BUDGET_EUR=500 fixe.
+    assert run["entrees"][0]["quantite"] == 27         # floor(2500 / 90)
     assert run["entrees"][0]["rang"] == 1              # score 55.2 > 40.0
     assert run["entrees"][0]["conid"] == 17275
     assert run["entrees"][0]["prix_reference_sizing"] == 90.0
     assert run["entrees"][0]["prix_paper"] == 88.0
     journalise = lire_journal(env)[0]
     assert [e["ticker"] for e in journalise["entrees"]] == ["MC.PA", "ADBE"]
+
+
+def test_run_batch_sizes_the_entry_by_risk_based_budget_not_a_fixed_500(env):
+    """Solde reel a 20 EUR (cas reel de sous-capitalisation, voir
+    sizing.compute_quantity_by_risk) : le budget nominal engage doit
+    valoir 20 * RISK_PCT(0.05) / (abs(STOP_LOSS_PCT)/100 = 0.20) = 5 EUR,
+    jamais BUDGET_EUR=500. A 4 EUR/action, la quantite doit donc etre 1
+    (floor(5/4)), jamais 125 (floor(500/4), l'ancien calcul) -- et le
+    signal ne doit plus etre rejete en solde_insuffisant comme il
+    l'aurait ete avec un budget nominal fixe de 500 EUR face a un solde
+    de 20 EUR."""
+    indices = {
+        "updated": TODAY,
+        "index_currency": {"CAC40": "EUR"},
+        "companies": [{"ticker": "MC.PA", "index": "CAC40", "score": 55.2,
+                       "current_price": 4.0, "stage_label": None}],
+        "roster": ["MC.PA"],
+    }
+    with open(env["paths"]["indices"], "w", encoding="utf-8") as fh:
+        json.dump(indices, fh)
+    tracking = {"positions": [
+        {"id": "MC.PA-2026-09-15", "ticker": "MC.PA", "name": "LVMH", "index": "CAC40",
+         "status": "open", "entry_date": TODAY, "entry_price": 3.8,
+         "target_exit_price": 6.0}]}
+    with open(env["paths"]["tracking"], "w", encoding="utf-8") as fh:
+        json.dump(tracking, fh)
+    gw = FakeGateway(base_cash=20.0)
+
+    run = daily.run_batch(TODAY, gw=gw, sleep_fn=lambda s: None,
+                          account_id="U1", paths=env["paths"])
+
+    assert not any(r["raison"] == "solde_insuffisant" for r in run["signaux_rejetes"])
+    assert [e["ticker"] for e in run["entrees"]] == ["MC.PA"]
+    assert run["entrees"][0]["quantite"] == 1   # floor(5/4), pas floor(500/4)=125
 
 
 def test_real_mode_buys_the_selected_signals(env):
@@ -1195,8 +1232,10 @@ def test_real_mode_buys_the_selected_signals(env):
     run = daily.run_batch(TODAY, gw=gw, sleep_fn=lambda s: None,
                           account_id="U1", paths=env["paths"])
 
+    # Budget nominal par le risque : 2500 EUR (voir le test de sizing
+    # dedie ci-dessus), plus l'ancien BUDGET_EUR=500 fixe.
     assert [(o["conid"], o["side"], o["quantity"]) for o in gw.ordres] == [
-        (17275, "BUY", 5), (202070, "BUY", 1)]
+        (17275, "BUY", 27), (202070, "BUY", 6)]
     assert all(e["statut"] == "execute" for e in run["entrees"])
     import ibkr_bot.portfolio as portfolio
     enregistrees = portfolio.load_positions(env["paths"]["positions"])
@@ -1346,8 +1385,9 @@ def test_a_london_fill_price_is_stored_in_pounds(env):
     run = daily.run_batch(TODAY, gw=gw, sleep_fn=lambda s: None,
                           account_id="U1", paths=env["paths"])
 
-    # Budget 500 EUR * 0.86 = 430 GBP = 43000 GBp ; 43000 / 295 -> 145.
-    assert gw.ordres == [{"conid": 98765, "side": "BUY", "quantity": 145}]
+    # Budget nominal par le risque : 2500 EUR * 0.86 = 2150 GBP =
+    # 215000 GBp ; 215000 / 295 -> 728.
+    assert gw.ordres == [{"conid": 98765, "side": "BUY", "quantity": 728}]
     entree = run["entrees"][0]
     assert entree["prix_execution_cotation"] == pytest.approx(296.0)
     assert entree["prix_execution"] == pytest.approx(2.96)

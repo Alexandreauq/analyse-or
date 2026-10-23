@@ -1,4 +1,5 @@
 import json
+import os
 
 import pytest
 
@@ -149,6 +150,7 @@ def env(tmp_path, monkeypatch):
         "indices": str(tmp_path / "docs" / "indices.json"),
         "tracking": str(tmp_path / "docs" / "signal_tracking.json"),
         "account_snapshot": str(tmp_path / "latest_account.json"),
+        "circuit_breaker_state": str(tmp_path / "circuit_breaker_state.json"),
     }
     return {"tmp": tmp_path, "paths": paths, "emails": emails}
 
@@ -1179,13 +1181,154 @@ def test_dry_run_places_no_order_but_journals_everything(env):
     assert run["statut"] == "termine"
     assert [e["ticker"] for e in run["entrees"]] == ["MC.PA", "ADBE"]
     assert all(e["statut"] == "simule" for e in run["entrees"])
-    assert run["entrees"][0]["quantite"] == 5          # floor(500 / 90)
+    # Budget nominal desormais par le risque : 10000 (FakeGateway.base_cash
+    # par defaut) * RISK_PCT(0.05) / (abs(STOP_LOSS_PCT)/100 = 0.20) = 2500
+    # EUR, plus l'ancien BUDGET_EUR=500 fixe.
+    assert run["entrees"][0]["quantite"] == 27         # floor(2500 / 90)
     assert run["entrees"][0]["rang"] == 1              # score 55.2 > 40.0
     assert run["entrees"][0]["conid"] == 17275
     assert run["entrees"][0]["prix_reference_sizing"] == 90.0
     assert run["entrees"][0]["prix_paper"] == 88.0
     journalise = lire_journal(env)[0]
     assert [e["ticker"] for e in journalise["entrees"]] == ["MC.PA", "ADBE"]
+
+
+def test_run_batch_sizes_the_entry_by_risk_based_budget_not_a_fixed_500(env):
+    """Solde reel a 20 EUR (cas reel de sous-capitalisation, voir
+    sizing.compute_quantity_by_risk) : le budget nominal engage doit
+    valoir 20 * RISK_PCT(0.05) / (abs(STOP_LOSS_PCT)/100 = 0.20) = 5 EUR,
+    jamais BUDGET_EUR=500. A 4 EUR/action, la quantite doit donc etre 1
+    (floor(5/4)), jamais 125 (floor(500/4), l'ancien calcul) -- et le
+    signal ne doit plus etre rejete en solde_insuffisant comme il
+    l'aurait ete avec un budget nominal fixe de 500 EUR face a un solde
+    de 20 EUR."""
+    indices = {
+        "updated": TODAY,
+        "index_currency": {"CAC40": "EUR"},
+        "companies": [{"ticker": "MC.PA", "index": "CAC40", "score": 55.2,
+                       "current_price": 4.0, "stage_label": None}],
+        "roster": ["MC.PA"],
+    }
+    with open(env["paths"]["indices"], "w", encoding="utf-8") as fh:
+        json.dump(indices, fh)
+    tracking = {"positions": [
+        {"id": "MC.PA-2026-09-15", "ticker": "MC.PA", "name": "LVMH", "index": "CAC40",
+         "status": "open", "entry_date": TODAY, "entry_price": 3.8,
+         "target_exit_price": 6.0}]}
+    with open(env["paths"]["tracking"], "w", encoding="utf-8") as fh:
+        json.dump(tracking, fh)
+    gw = FakeGateway(base_cash=20.0)
+
+    run = daily.run_batch(TODAY, gw=gw, sleep_fn=lambda s: None,
+                          account_id="U1", paths=env["paths"])
+
+    assert not any(r["raison"] == "solde_insuffisant" for r in run["signaux_rejetes"])
+    assert [e["ticker"] for e in run["entrees"]] == ["MC.PA"]
+    assert run["entrees"][0]["quantite"] == 1   # floor(5/4), pas floor(500/4)=125
+
+
+# --- coupe-circuit journalier (shared_risk.CircuitBreaker) ----------
+
+def test_run_batch_allows_entries_on_the_very_first_run(env):
+    """Demarrage a froid EN MODE REEL (aucun fichier
+    circuit_breaker_state.json persiste au prealable -- le coupe-circuit
+    n'est construit/appele qu'en mode reel depuis le fix round 1, voir
+    test_dry_run_bypasses_the_circuit_breaker_entirely) : le coupe-circuit
+    ne doit jamais bloquer le tout premier batch, faute de reference
+    anterieure a comparer (can_open_position_daily renvoie toujours True a
+    son premier appel)."""
+    ecrire_etat(env, dry_run=False)
+    gw = FakeGateway()
+
+    run = daily.run_batch(TODAY, gw=gw, sleep_fn=lambda s: None,
+                          account_id="U1", paths=env["paths"])
+
+    assert [e["ticker"] for e in run["entrees"]] == ["MC.PA", "ADBE"]
+    assert not any(r["raison"] == "coupe_circuit_journalier_declenche"
+                  for r in run["signaux_rejetes"])
+
+
+def test_run_batch_blocks_entries_after_a_large_equity_drop_since_the_previous_run(env):
+    """Deux batchs consecutifs REELS (fix round 1, revue opus : le
+    coupe-circuit ne s'applique qu'en mode reel -- voir
+    test_dry_run_bypasses_the_circuit_breaker_entirely), meme fichier
+    d'etat persiste (meme env["paths"]) : le 1er run, sans aucun signal du
+    jour (tracking vide), fixe la reference d'equite a 1000 (cash seul,
+    aucune position ouverte) sans jamais rien acheter. Le 2e run arrive
+    avec un cash tombe a 850 (-15 %, au-dela du seuil de 10 %) ET un signal
+    financable -> ce signal doit etre rejete par le coupe-circuit, pas
+    achete."""
+    ecrire_etat(env, dry_run=False)
+    with open(env["paths"]["tracking"], "w", encoding="utf-8") as fh:
+        json.dump({"positions": []}, fh)
+    gw1 = FakeGateway(base_cash=1000.0)
+    run1 = daily.run_batch(TODAY, gw=gw1, sleep_fn=lambda s: None,
+                           account_id="U1", paths=env["paths"])
+    assert run1["entrees"] == []   # aucun signal, rien a acheter -> equite = cash seul
+
+    with open(env["paths"]["tracking"], "w", encoding="utf-8") as fh:
+        json.dump(TRACKING, fh)
+    gw2 = FakeGateway(base_cash=850.0)
+    run2 = daily.run_batch(TODAY, gw=gw2, sleep_fn=lambda s: None,
+                           account_id="U1", paths=env["paths"])
+
+    assert run2["entrees"] == []
+    assert any(r["raison"] == "coupe_circuit_journalier_declenche"
+              for r in run2["signaux_rejetes"])
+
+
+def test_dry_run_bypasses_the_circuit_breaker_entirely(env):
+    """Fix round 1 (revue opus) : en dry_run, positions_ouvertes contient
+    des positions SIMULEES alors que base_cash est le VRAI solde IBKR,
+    jamais affecte par un trade simule -- melanger les deux dans equity_eur
+    rendrait le coupe-circuit bruyant sur du pur bruit de simulation. Il
+    doit donc etre entierement court-circuite en dry_run : un gros repli de
+    solde entre deux batchs dry_run ne doit jamais bloquer une entree, et
+    ne doit JAMAIS faire persister circuit_breaker_state.json (la reference
+    ne doit suivre que des journees reelles)."""
+    ecrire_etat(env, dry_run=True)
+    gw1 = FakeGateway(base_cash=1000.0)
+    daily.run_batch(TODAY, gw=gw1, sleep_fn=lambda s: None,
+                    account_id="U1", paths=env["paths"])
+
+    gw2 = FakeGateway(base_cash=850.0)   # -15 %, bien au-dela du seuil de 10 %
+    run2 = daily.run_batch(TODAY, gw=gw2, sleep_fn=lambda s: None,
+                           account_id="U1", paths=env["paths"])
+
+    assert not any(r["raison"] == "coupe_circuit_journalier_declenche"
+                  for r in run2["signaux_rejetes"])
+    assert not os.path.exists(env["paths"]["circuit_breaker_state"])
+
+
+def test_a_failed_balance_fetch_blocks_entries_without_poisoning_the_circuit_breaker_baseline(env):
+    """Fix round 2 (revue opus) : si base_currency_cash echoue, le repli a
+    0.0 ne doit jamais etre PERSISTE comme reference du coupe-circuit --
+    sinon une vraie perte survenue le meme jour serait masquee le
+    lendemain (comparee a une reference artificiellement nulle). Les
+    entrees du jour sont rejetees par prudence (meme effet qu'un
+    coupe-circuit declenche), SANS que le coupe-circuit soit construit ni
+    appele -- une reference deja persistee doit survivre intacte."""
+    ecrire_etat(env, dry_run=False)
+    gw1 = FakeGateway(base_cash=1000.0)
+    daily.run_batch(TODAY, gw=gw1, sleep_fn=lambda s: None,
+                    account_id="U1", paths=env["paths"])
+    with open(env["paths"]["circuit_breaker_state"], encoding="utf-8") as fh:
+        etat_avant = json.load(fh)
+
+    class _GwEnPanne(FakeGateway):
+        def base_currency_cash(self, base_url, account_id):
+            raise RuntimeError("500 Internal Server Error")
+
+    gw2 = _GwEnPanne()
+    run2 = daily.run_batch(TODAY, gw=gw2, sleep_fn=lambda s: None,
+                           account_id="U1", paths=env["paths"])
+
+    assert run2["entrees"] == []
+    assert any(r["raison"] == "coupe_circuit_journalier_declenche"
+              for r in run2["signaux_rejetes"])
+    with open(env["paths"]["circuit_breaker_state"], encoding="utf-8") as fh:
+        etat_apres = json.load(fh)
+    assert etat_apres == etat_avant
 
 
 def test_real_mode_buys_the_selected_signals(env):
@@ -1195,8 +1338,10 @@ def test_real_mode_buys_the_selected_signals(env):
     run = daily.run_batch(TODAY, gw=gw, sleep_fn=lambda s: None,
                           account_id="U1", paths=env["paths"])
 
+    # Budget nominal par le risque : 2500 EUR (voir le test de sizing
+    # dedie ci-dessus), plus l'ancien BUDGET_EUR=500 fixe.
     assert [(o["conid"], o["side"], o["quantity"]) for o in gw.ordres] == [
-        (17275, "BUY", 5), (202070, "BUY", 1)]
+        (17275, "BUY", 27), (202070, "BUY", 6)]
     assert all(e["statut"] == "execute" for e in run["entrees"])
     import ibkr_bot.portfolio as portfolio
     enregistrees = portfolio.load_positions(env["paths"]["positions"])
@@ -1346,8 +1491,9 @@ def test_a_london_fill_price_is_stored_in_pounds(env):
     run = daily.run_batch(TODAY, gw=gw, sleep_fn=lambda s: None,
                           account_id="U1", paths=env["paths"])
 
-    # Budget 500 EUR * 0.86 = 430 GBP = 43000 GBp ; 43000 / 295 -> 145.
-    assert gw.ordres == [{"conid": 98765, "side": "BUY", "quantity": 145}]
+    # Budget nominal par le risque : 2500 EUR * 0.86 = 2150 GBP =
+    # 215000 GBp ; 215000 / 295 -> 728.
+    assert gw.ordres == [{"conid": 98765, "side": "BUY", "quantity": 728}]
     entree = run["entrees"][0]
     assert entree["prix_execution_cotation"] == pytest.approx(296.0)
     assert entree["prix_execution"] == pytest.approx(2.96)
@@ -1932,3 +2078,61 @@ def test_a_real_run_batch_result_renders_correctly_through_notify(env, monkeypat
     assert run["reconciliation"]["actives"] == 1        # Important #1
     assert "1 position(s) active(s)" in html             # ... et rendu tel quel
     assert "fatal: divergent branches" in html            # Important #2
+
+
+# --- Tache 7 : verification des cotes historiques avant achat ----------
+
+def test_run_batch_rejects_a_signal_with_unfavorable_historical_odds(env):
+    """25 positions cloturees du meme indice (CAC40), alpha moyen negatif
+    -> le signal du jour sur ce meme indice (MC.PA, deja resolu/finance
+    par les fixtures par defaut) doit etre rejete avant d'etre achete,
+    meme s'il passerait tous les autres filtres."""
+    historique = [
+        {"id": f"H{i}", "ticker": f"H{i}.PA", "name": f"H{i}", "index": "CAC40",
+         "status": "closed", "entry_date": "2026-01-01", "entry_price": 10.0,
+         "target_exit_price": 11.0, "close_date": "2026-02-01", "close_price": 9.0,
+         "close_reason": "stop_loss", "return_pct": -10.0, "index_return_pct": 1.0}
+        for i in range(25)
+    ]
+    aujourdhui = {"id": "MC.PA-2026-09-15", "ticker": "MC.PA", "name": "LVMH",
+                  "index": "CAC40", "status": "open", "entry_date": TODAY,
+                  "entry_price": 88.0, "target_exit_price": 120.0}
+    with open(env["paths"]["tracking"], "w", encoding="utf-8") as fh:
+        json.dump({"positions": historique + [aujourdhui]}, fh)
+    gw = FakeGateway()
+
+    run = daily.run_batch(TODAY, gw=gw, sleep_fn=lambda s: None,
+                          account_id="U1", paths=env["paths"])
+
+    assert run["entrees"] == []
+    rejets = {r["ticker"]: r["raison"] for r in run["signaux_rejetes"]}
+    assert rejets["MC.PA"] == "cotes_historiques_defavorables"
+    assert 17275 not in [o["conid"] for o in gw.ordres]
+
+
+def test_run_batch_buys_a_signal_when_historical_odds_are_favorable(env):
+    """Symetrique : alpha moyen POSITIF sur le meme indice ne doit pas
+    bloquer l'achat -- l'ADBE du jour (NASDAQ, aucun historique CAC40 ne
+    le concerne) reste achetable, et un MC.PA (CAC40) avec un historique
+    favorable passe aussi."""
+    historique = [
+        {"id": f"H{i}", "ticker": f"H{i}.PA", "name": f"H{i}", "index": "CAC40",
+         "status": "closed", "entry_date": "2026-01-01", "entry_price": 10.0,
+         "target_exit_price": 11.0, "close_date": "2026-02-01", "close_price": 11.0,
+         "close_reason": "target_atteint", "return_pct": 10.0, "index_return_pct": 1.0}
+        for i in range(25)
+    ]
+    aujourdhui = {"id": "MC.PA-2026-09-15", "ticker": "MC.PA", "name": "LVMH",
+                  "index": "CAC40", "status": "open", "entry_date": TODAY,
+                  "entry_price": 88.0, "target_exit_price": 120.0}
+    with open(env["paths"]["tracking"], "w", encoding="utf-8") as fh:
+        json.dump({"positions": historique + [aujourdhui]}, fh)
+    gw = FakeGateway()
+
+    run = daily.run_batch(TODAY, gw=gw, sleep_fn=lambda s: None,
+                          account_id="U1", paths=env["paths"])
+
+    assert not any(r["raison"] == "cotes_historiques_defavorables"
+                  for r in run["signaux_rejetes"])
+    assert len(run["entrees"]) == 1
+    assert run["entrees"][0]["ticker"] == "MC.PA"

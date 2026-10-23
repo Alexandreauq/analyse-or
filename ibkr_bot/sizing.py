@@ -20,6 +20,7 @@
 import math
 
 BUDGET_EUR = 500.0          # budget nominal par position (spec 3.1)
+RISK_PCT = 0.05             # dimensionnement par le risque (spec 2026-10-23)
 PENCE_SUFFIX = ".L"         # suffixe yfinance du London Stock Exchange
 PENCE_PER_POUND = 100.0
 
@@ -106,6 +107,7 @@ def compute_quantity(
         "budget_converti": 0.0,
         "prix_unitaire_cotation": 0.0,
         "cout_estime_devise_compte": 0.0,
+        "budget_eur_nominal": 0.0,
         "motif": None,
     }
 
@@ -124,6 +126,7 @@ def compute_quantity(
 
     plan["budget_converti"] = budget_cotation
     plan["prix_unitaire_cotation"] = prix_cotation
+    plan["budget_eur_nominal"] = budget_eur
 
     # Tolerance epsilon : en arithmetique flottante, un ratio
     # mathematiquement entier (ex. 420.6 / 0.8412 -> exactement 1) peut
@@ -144,3 +147,52 @@ def compute_quantity(
     plan["quantite"] = int(quantite)
     plan["cout_estime_devise_compte"] = quantite * unit_price_indices
     return plan
+
+
+def compute_quantity_by_risk(
+    ticker: str, index_currency: str, unit_price_indices: float,
+    fx_rate: float, balance_eur: float, risk_pct: float, stop_loss_pct: float,
+) -> dict:
+    """Variante de compute_quantity dont le budget n'est plus une
+    constante fixe mais derive du VRAI solde : le budget nominal en EUR
+    engage sur ce signal vaut (balance_eur * risk_pct) / (distance de
+    stop en %) -- la perte si le stop est touche vaut alors exactement
+    balance_eur * risk_pct, quel que soit le solde reel du compte.
+    Resout au meme endroit la sous-capitalisation connue (BUDGET_EUR a
+    500 EUR sur un compte reel a ~20 EUR, aucun ordre reel jamais passe)
+    et l'absence de lien entre le stop-loss (deja utilise en SORTIE,
+    voir portfolio.STOP_LOSS_PCT) et la taille de position a l'ENTREE.
+
+    `stop_loss_pct` est une distance en % (ex. -20.0, voir
+    portfolio.STOP_LOSS_PCT) -- seule sa valeur absolue compte ici, le
+    signe n'a pas a etre coherent avec celui de portfolio.py.
+    `budget_risque_invalide` (motif dedie, jamais confondu avec
+    prix_ou_taux_invalide qui vient de compute_quantity) si balance_eur,
+    risk_pct ou abs(stop_loss_pct) n'est pas un nombre strictement
+    positif fini -- division par zero ou budget negatif evites
+    explicitement plutot que de laisser l'exception remonter."""
+    plan = {
+        "ticker": ticker,
+        "quantite": 0,
+        "devise_cotation": quotation_currency(index_currency, ticker),
+        "devise_compte": index_currency,
+        "taux_de_change": fx_rate if _is_positive_number(fx_rate) else 0.0,
+        "budget_converti": 0.0,
+        "prix_unitaire_cotation": 0.0,
+        "cout_estime_devise_compte": 0.0,
+        "budget_eur_nominal": 0.0,
+        "motif": None,
+    }
+    # Validation du stop AVANT abs() : abs(None) leve un TypeError, et
+    # le docstring promet un motif dedie, jamais une exception.
+    stop_loss_valide = (
+        isinstance(stop_loss_pct, (int, float)) and not isinstance(stop_loss_pct, bool)
+        and math.isfinite(stop_loss_pct) and stop_loss_pct != 0
+    )
+    if not (_is_positive_number(balance_eur) and _is_positive_number(risk_pct)
+            and stop_loss_valide):
+        plan["motif"] = "budget_risque_invalide"
+        return plan
+    budget_eur = balance_eur * risk_pct / (abs(stop_loss_pct) / 100)
+    return compute_quantity(
+        ticker, index_currency, unit_price_indices, fx_rate, budget_eur=budget_eur)

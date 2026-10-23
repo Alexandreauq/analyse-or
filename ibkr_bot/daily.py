@@ -22,6 +22,7 @@
 import math
 import os
 import re
+import shared_risk
 import subprocess
 import time
 from datetime import datetime, timezone
@@ -30,6 +31,7 @@ import ibkr_bot.contracts as contracts
 import ibkr_bot.gateway as gateway
 import ibkr_bot.journal as journal
 import ibkr_bot.notify as notify
+import ibkr_bot.odds_check as odds_check
 import ibkr_bot.portfolio as portfolio
 import ibkr_bot.signals as signals
 import ibkr_bot.sizing as sizing
@@ -48,6 +50,14 @@ REPO_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 GIT_PULL_TIMEOUT_SECONDS = 120
 
+# Coupe-circuit de perte journaliere (spec 2026-10-23) : seuil de 10%,
+# meme ordre de grandeur que le profil de risque "equilibre" (3) de
+# gold_bot (threshold_pct=0.10) -- ajustable sans impact sur gold_bot,
+# instance et fichier d'etat entierement independants.
+DAILY_LOSS_THRESHOLD_PCT = 0.10
+CIRCUIT_BREAKER_STATE_PATH = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "circuit_breaker_state.json")
+
 DEFAULT_PATHS = {
     "state": state.STATE_PATH,
     "positions": portfolio.POSITIONS_PATH,
@@ -56,6 +66,7 @@ DEFAULT_PATHS = {
     "indices": signals.INDICES_PATH,
     "tracking": signals.SIGNAL_TRACKING_PATH,
     "account_snapshot": journal.LATEST_ACCOUNT_PATH,
+    "circuit_breaker_state": CIRCUIT_BREAKER_STATE_PATH,
 }
 
 
@@ -782,6 +793,57 @@ def run_batch(today: str | None = None, *, gw=gateway, sleep_fn=time.sleep,
     # traitent deja comme "detection de retrait desactivee, ne jamais
     # clore pour ce motif" -- le comportement sur d'avant la critique n°1.
     roster_tickers = set(indices.get("roster", [])) or None
+
+    # --- Coupe-circuit de perte journaliere : equite PRE-SORTIES --------
+    # (spec 2026-10-23, Fix 1 revue finale de branche) : l'equite utilisee
+    # par le coupe-circuit est mesuree ICI, AVANT que la boucle de sorties
+    # ci-dessous n'envoie le moindre ordre de vente -- jamais apres. Une
+    # vente dont l'ordre est parti (statut "execute") retire aussitot sa
+    # position de positions_ouvertes, mais le cash reel pousse par IBKR
+    # (gw.base_currency_cash) peut accuser un reel decalage avant que le
+    # produit de cette vente n'y apparaisse. Mesurer l'equite APRES les
+    # sorties sous-evaluerait transitoirement l'equite de la PLEINE valeur
+    # de la position vendue (pas seulement sa perte) -- combine au
+    # dimensionnement par le risque (jusqu'a 25% du cash par position,
+    # Composant A), presque toute sortie ordinaire ressemblerait a une
+    # chute d'equite de plus de 10% et declencherait le coupe-circuit le
+    # jour meme ou une sortie devrait au contraire liberer de la place.
+    # taux_par_devise est cree ICI (pas apres les sorties) : reutilise tel
+    # quel par la valorisation post-sorties plus bas ET par le
+    # dimensionnement des entrees en section 7, sans second appel reseau
+    # pour une devise deja vue aujourd'hui.
+    taux_par_devise: dict[str, float] = {}
+    if etat["dry_run"]:
+        # Le coupe-circuit est de toute facon court-circuite en dry_run
+        # (section 7, Fix round 1) : inutile de bruler un appel reseau de
+        # plus pour un resultat qui sera jete.
+        equity_avant_sorties_eur = None
+        base_cash_avant_sorties_connu = True
+    else:
+        _valoriser_positions(positions_ouvertes, companies, gw, base_url,
+                             taux_par_devise, run)
+        base_cash_avant_sorties_connu = True
+        try:
+            base_cash_avant_sorties = gw.base_currency_cash(base_url, account_id)
+        except Exception as e:
+            run["erreurs"].append({"etape": "base_currency_cash_pre_sorties",
+                                   "detail": str(e)})
+            base_cash_avant_sorties = 0.0
+            base_cash_avant_sorties_connu = False
+        # Fix 2 (revue finale de branche) : gateway.base_currency_cash peut
+        # renvoyer 0.0 SANS lever d'exception quand la cle "BASE" est
+        # absente de ledger() (ex. juste apres la connexion, avant que IBKR
+        # n'ait fini de pousser accountValues) -- indistinguable d'un
+        # compte reellement a sec sans aller lire gateway.py plus loin. On
+        # traite ce cas comme un echec de lecture pour le coupe-circuit :
+        # mieux vaut rejeter les entrees du jour par prudence que de
+        # persister un 0.0 comme reference de demain (meme risque que le
+        # round 1 de revue visait a fermer, par une autre porte).
+        if base_cash_avant_sorties == 0.0:
+            base_cash_avant_sorties_connu = False
+        equity_avant_sorties_eur = base_cash_avant_sorties + sum(
+            (p.get("valeur_actuelle_eur") or 0.0) for p in positions_ouvertes)
+
     # portfolio.positions_to_close() est appelee UNE POSITION A LA FOIS
     # (plutot qu'une seule fois sur toute la liste) pour isoler une ligne
     # corrompue de positions.json : c'est une fonction pure, sans etat
@@ -864,10 +926,11 @@ def run_batch(today: str | None = None, *, gw=gateway, sleep_fn=time.sleep,
 
     # --- Valorisation EUR (P&L latent, plan FX P&L 2026-10-03) --------
     # Apres les sorties (positions_ouvertes est deja purge des positions
-    # vendues aujourd'hui) et AVANT les entrees : le cache de taux cree
-    # ici est reutilise plus bas (section 7) sans second appel reseau
-    # pour une devise deja vue aujourd'hui.
-    taux_par_devise: dict[str, float] = {}
+    # vendues aujourd'hui) et AVANT les entrees. taux_par_devise a deja ete
+    # cree plus haut, avant les sorties (equite du coupe-circuit, Fix 1
+    # revue finale de branche) -- reutilise ici tel quel, puis par le
+    # dimensionnement des entrees en section 7, sans appel reseau
+    # supplementaire pour une devise deja vue aujourd'hui.
     _valoriser_positions(positions_ouvertes, companies, gw, base_url,
                          taux_par_devise, run)
     _sauver_positions()
@@ -890,19 +953,73 @@ def run_batch(today: str | None = None, *, gw=gateway, sleep_fn=time.sleep,
     journal.save_account_snapshot({"base_cash": base_cash},
                                   chemins["account_snapshot"])
 
+    # Coupe-circuit de perte journaliere (spec 2026-10-23) : verifie AVANT
+    # toute nouvelle entree. Un seul appel par batch (un batch par jour) :
+    # can_open_position_daily(), pas can_open_position() (voir sa
+    # docstring dans shared_risk.py). Instance et fichier d'etat propres a
+    # ibkr_bot, independants de ceux de gold_bot.
+    #
+    # Fix 1 (revue finale de branche) : equity_avant_sorties_eur /
+    # base_cash_avant_sorties_connu ont deja ete calcules plus haut, AVANT
+    # la boucle de sorties -- jamais ici, apres (voir le commentaire au
+    # point de calcul pour le raisonnement complet sur le decalage
+    # cash/positions qu'une mesure ICI introduirait). `base_cash` ci-dessus
+    # est deliberement un second appel reseau distinct, dedie au
+    # dimensionnement des entrees ci-dessous, qui veut legitimement le cash
+    # LIBERE par les sorties du jour -- jamais reinjecte dans le
+    # coupe-circuit.
+    #
+    # Fix round 1 (revue opus, round de correctifs precedent) : en
+    # dry_run, positions_ouvertes contient des positions SIMULEES alors
+    # que base_cash est le VRAI solde IBKR, jamais affecte par un trade
+    # simule -- une sortie simulee peut donc faire chuter l'equite de
+    # toute la valeur de la position sans qu'aucun capital reel n'ait
+    # bouge. Le coupe-circuit protege du capital reel ; il n'a rien a
+    # proteger en dry_run. On le court-circuite ENTIEREMENT (jamais
+    # construit, jamais appele, et equity_avant_sorties_eur n'est meme pas
+    # calcule plus haut) plutot que de le laisser tourner sur du bruit de
+    # simulation -- la reference persistee ne doit donc jamais suivre une
+    # journee dry_run.
+    #
+    # Fix 2 (revue finale de branche) : base_cash_avant_sorties_connu est
+    # deja False si base_currency_cash a leve OU renvoye silencieusement
+    # 0.0 (voir le point de calcul) -- dans les deux cas, on rejette les
+    # entrees du jour par prudence (meme effet qu'un coupe-circuit
+    # declenche), SANS construire ni appeler le coupe-circuit : une
+    # reference existante doit survivre intacte pour le prochain run ou le
+    # solde sera de nouveau lisible.
+    if etat["dry_run"]:
+        coupe_circuit_ouvert = True
+    elif not base_cash_avant_sorties_connu:
+        coupe_circuit_ouvert = False
+    else:
+        circuit_breaker = shared_risk.CircuitBreaker(
+            threshold_pct=DAILY_LOSS_THRESHOLD_PCT,
+            persist_path=chemins["circuit_breaker_state"])
+        coupe_circuit_ouvert = circuit_breaker.can_open_position_daily(equity_avant_sorties_eur)
+
     cache_conid = contracts.load_cache(chemins["conid_cache"])
     plans: dict[str, dict] = {}
     contrats: dict[str, dict] = {}
-    for signal in signaux:
-        ticker = signal["ticker"]
-        taux = _taux_de_change(gw, base_url, signal["currency"], taux_par_devise, run)
-        plans[ticker] = sizing.compute_quantity(
-            ticker, signal["currency"], signal["current_price"], taux)
-        contrats[ticker] = contracts.resolve_conid(
-            ticker,
-            lambda symbole: gw.search_contract(base_url, symbole),
-            lambda conid: gw.contract_info(base_url, conid),
-            cache_conid, today)
+    if coupe_circuit_ouvert:
+        for signal in signaux:
+            ticker = signal["ticker"]
+            taux = _taux_de_change(gw, base_url, signal["currency"], taux_par_devise, run)
+            plans[ticker] = sizing.compute_quantity_by_risk(
+                ticker, signal["currency"], signal["current_price"], taux,
+                balance_eur=base_cash, risk_pct=sizing.RISK_PCT,
+                stop_loss_pct=portfolio.STOP_LOSS_PCT)
+            contrats[ticker] = contracts.resolve_conid(
+                ticker,
+                lambda symbole: gw.search_contract(base_url, symbole),
+                lambda conid: gw.contract_info(base_url, conid),
+                cache_conid, today)
+    else:
+        for signal in signaux:
+            run["signaux_rejetes"].append({
+                "ticker": signal["ticker"], "raison": "coupe_circuit_journalier_declenche",
+                "rang": None, "score": signal.get("score"),
+            })
     try:
         contracts.save_cache(cache_conid, chemins["conid_cache"])
     except Exception as e:
@@ -920,60 +1037,87 @@ def run_batch(today: str | None = None, *, gw=gateway, sleep_fn=time.sleep,
             conids_detenus.add(int(brute.get("conid")))
         except (TypeError, ValueError):
             continue
+    # docs/signal_tracking.json ne stocke pas de champ "sector" sur les
+    # positions (seulement "index") -- ce lookup, construit a partir des
+    # donnees du jour, est ce qui permet a odds_check.historical_odds_for_signal
+    # de retomber sur le secteur quand l'echantillon par indice est trop
+    # petit (voir ibkr_bot/odds_check.py).
+    ticker_to_sector = {t: c.get("sector", "") for t, c in companies.items()}
     signaux_financables = []
-    for signal in signaux:
-        ticker = signal["ticker"]
-        raison_indisponible = tickers_indisponibles.get(ticker)
-        if raison_indisponible is not None:
-            run["signaux_rejetes"].append({
-                "ticker": ticker, "raison": raison_indisponible,
-                "rang": None, "score": signal.get("score"),
-            })
-            continue
-        contrat = contrats.get(ticker) or {}
-        if contrat.get("conid") is not None and contrat["conid"] in conids_detenus:
-            run["signaux_rejetes"].append({
-                "ticker": ticker, "raison": "deja_detenu_hors_journal",
-                "rang": None, "score": signal.get("score"),
-            })
-            continue
-        # Important #3 (revue finale de branche) : contracts.py valide la
-        # devise du contrat resolu contre EXPECTED_VENUE (suffixe du
-        # ticker), sizing.py prend independamment `devise_compte` dans
-        # index_currency de docs/indices.json. Les deux sources ne sont
-        # aujourd'hui jamais confrontees l'une a l'autre — elles
-        # coincident pour les 8 indices actuels, mais rien n'empecherait
-        # un futur indice ou elles divergent de dimensionner un budget
-        # dans une devise et d'executer dans une autre, exactement l'erreur
-        # que le garde-fou pence/livre existe deja pour empecher. On ne
-        # compare que lorsque les deux devises sont effectivement connues
-        # (un contrat non resolu porte deja une devise vide et sera rejete
-        # plus loin par select_entries via `contrat_non_resolu`).
-        plan = plans.get(ticker) or {}
-        devise_contrat = contrat.get("currency")
-        devise_sizing = plan.get("devise_compte")
-        # Comparaison insensible a la casse : le LSE annonce sa devise
-        # tantot "GBP", tantot "GBp" (contracts.py accepte les deux
-        # explicitement, voir EXPECTED_VENUE) — une comparaison stricte
-        # rejetterait a tort tout contrat FTSE resolu en "GBp" alors que
-        # sizing.py utilise toujours "GBP" (index_currency), un faux
-        # positif trouve a la revue finale de branche.
-        if (devise_contrat and devise_sizing
-                and devise_contrat.upper() != devise_sizing.upper()):
-            run["erreurs"].append({
-                "etape": "coherence_devise",
-                "detail": (f"{ticker} : devise du contrat resolu "
-                           f"({devise_contrat}) differente de la devise de "
-                           f"sizing ({devise_sizing}) — signal rejete par "
-                           f"prudence plutot que d'executer dans une devise "
-                           f"differente de celle du budget"),
-            })
-            run["signaux_rejetes"].append({
-                "ticker": ticker, "raison": "devise_incoherente",
-                "rang": None, "score": signal.get("score"),
-            })
-            continue
-        signaux_financables.append(signal)
+    # Coupe-circuit declenche -> on ne financera aucune nouvelle entree
+    # aujourd'hui : signaux_financables reste [] et la boucle entiere
+    # (odds-check inclus) est sautee. Inutile d'evaluer les cotes
+    # historiques (reseau/calcul) pour des signaux qu'on n'achetera de
+    # toute facon pas ; les rejets explicites ont deja ete journalises
+    # plus haut, dans la boucle plans/contrats.
+    if coupe_circuit_ouvert:
+        for signal in signaux:
+            ticker = signal["ticker"]
+            raison_indisponible = tickers_indisponibles.get(ticker)
+            if raison_indisponible is not None:
+                run["signaux_rejetes"].append({
+                    "ticker": ticker, "raison": raison_indisponible,
+                    "rang": None, "score": signal.get("score"),
+                })
+                continue
+            contrat = contrats.get(ticker) or {}
+            if contrat.get("conid") is not None and contrat["conid"] in conids_detenus:
+                run["signaux_rejetes"].append({
+                    "ticker": ticker, "raison": "deja_detenu_hors_journal",
+                    "rang": None, "score": signal.get("score"),
+                })
+                continue
+            # Important #3 (revue finale de branche) : contracts.py valide la
+            # devise du contrat resolu contre EXPECTED_VENUE (suffixe du
+            # ticker), sizing.py prend independamment `devise_compte` dans
+            # index_currency de docs/indices.json. Les deux sources ne sont
+            # aujourd'hui jamais confrontees l'une a l'autre — elles
+            # coincident pour les 8 indices actuels, mais rien n'empecherait
+            # un futur indice ou elles divergent de dimensionner un budget
+            # dans une devise et d'executer dans une autre, exactement l'erreur
+            # que le garde-fou pence/livre existe deja pour empecher. On ne
+            # compare que lorsque les deux devises sont effectivement connues
+            # (un contrat non resolu porte deja une devise vide et sera rejete
+            # plus loin par select_entries via `contrat_non_resolu`).
+            plan = plans.get(ticker) or {}
+            devise_contrat = contrat.get("currency")
+            devise_sizing = plan.get("devise_compte")
+            # Comparaison insensible a la casse : le LSE annonce sa devise
+            # tantot "GBP", tantot "GBp" (contracts.py accepte les deux
+            # explicitement, voir EXPECTED_VENUE) — une comparaison stricte
+            # rejetterait a tort tout contrat FTSE resolu en "GBp" alors que
+            # sizing.py utilise toujours "GBP" (index_currency), un faux
+            # positif trouve a la revue finale de branche.
+            if (devise_contrat and devise_sizing
+                    and devise_contrat.upper() != devise_sizing.upper()):
+                run["erreurs"].append({
+                    "etape": "coherence_devise",
+                    "detail": (f"{ticker} : devise du contrat resolu "
+                               f"({devise_contrat}) differente de la devise de "
+                               f"sizing ({devise_sizing}) — signal rejete par "
+                               f"prudence plutot que d'executer dans une devise "
+                               f"differente de celle du budget"),
+                })
+                run["signaux_rejetes"].append({
+                    "ticker": ticker, "raison": "devise_incoherente",
+                    "rang": None, "score": signal.get("score"),
+                })
+                continue
+            # Verification des cotes historiques (Tache 5/7, spec 2026-10-23) :
+            # un signal dont l'indice (ou a defaut le secteur) a historiquement
+            # perdu de l'argent en moyenne vs son indice de reference ne doit
+            # jamais etre achete, meme s'il passe tous les autres filtres de
+            # financabilite ci-dessus. "insufficient_history"/"favorable" ne
+            # bloquent jamais (voir odds_check.historical_odds_for_signal).
+            verdict = odds_check.historical_odds_for_signal(
+                paper_positions, ticker_to_sector, signal["index"], signal["sector"])
+            if verdict["verdict"] == "unfavorable":
+                run["signaux_rejetes"].append({
+                    "ticker": ticker, "raison": "cotes_historiques_defavorables",
+                    "rang": None, "score": signal.get("score"),
+                })
+                continue
+            signaux_financables.append(signal)
 
     # NOTE : les signaux ecartes ci-dessus ne sont pas passes a
     # select_entries, donc les `rang` renvoyes se comptent sur les seuls

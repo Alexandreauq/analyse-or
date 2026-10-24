@@ -643,7 +643,9 @@
     .ai-pill-bar { height: 50px; padding: 0 5px 0 16px; }
     .ai-pill-bar input, .ai-pill-hint { font-size: 14.5px; }
     .ai-pill-hint { left: 16px; right: 92px; }
-    .home.answered .home-hero { padding-top: 12px; }
+    /* Hero réduit aligné sur le bouton Thème (40px à 12px du haut), pour
+       que la première bulle commence sous lui. */
+    .home.answered .home-hero { padding-top: 16px; min-height: 64px; }
     .home.answered .home-main { padding-bottom: 8px; }
   }
 
@@ -3968,155 +3970,112 @@ function revientAccueil() {
 
 function homeSearchLinksHtml(liens) {
   return (liens || []).map(l => `
-    <button class="toggle-btn home-search-link" type="button"
+    <button class="ai-link home-search-link" type="button"
             data-cible-type="${escHtml(l.cible_type)}" data-cible-valeur="${escHtml(l.cible_valeur)}"
             data-libelle="${escHtml(l.libelle)}">${escHtml(l.libelle)}</button>`).join('');
 }
 
-// Effet machine à écrire pour une bulle de réponse. Le texte reçu (cible) est
-// révélé caractère par caractère (~15 ms par caractère, accéléré si le retard
-// dépasse ANSWER_TYPE_LAG ou une fois le flux terminé) avec un curseur qui
-// clignote pendant l'écriture. Les liens ne sont rendus qu'une fois le flux
-// terminé ET le texte entièrement révélé. Préférence reduced-motion : texte
-// affiché d'un coup, sans curseur. annuler() arrête tout proprement (utilisé
-// quand une nouvelle question démarre). Le texte passe toujours par escHtml.
-const ANSWER_TYPE_MS = 15;
-const ANSWER_TYPE_LAG = 120;
+const ICONE_COPIER = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a1 1 0 0 1 1-1h10"/></svg>';
+const ICONE_ECOUTER = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9z M16 9a4 4 0 0 1 0 6"/></svg>';
+
+// Lecture à voix haute d'une réponse (bouton écouter) : un appui lance, un
+// second appui arrête ; une seule lecture à la fois sur la page.
+function lireAVoixHaute(texte, bouton) {
+  if (!window.speechSynthesis || !texte) return;
+  const enCours = bouton.getAttribute('aria-pressed') === 'true';
+  window.speechSynthesis.cancel();
+  document.querySelectorAll('.ai-listen[aria-pressed="true"]').forEach(b => b.setAttribute('aria-pressed', 'false'));
+  if (enCours) return;
+  const u = new SpeechSynthesisUtterance(texte);
+  u.lang = 'fr-FR';
+  u.onend = u.onerror = () => bouton.setAttribute('aria-pressed', 'false');
+  bouton.setAttribute('aria-pressed', 'true');
+  window.speechSynthesis.speak(u);
+}
+
+// Copier / écouter sous une réponse terminée (partagé avec l'agent).
+function wireAnswerActions(actionsEl, texteFn) {
+  actionsEl.innerHTML = `
+    <button type="button" class="ai-icon-btn ai-copy" aria-label="Copier la réponse" title="Copier">${ICONE_COPIER}</button>
+    ${window.speechSynthesis ? `<button type="button" class="ai-icon-btn ai-listen" aria-pressed="false" aria-label="Écouter la réponse" title="Écouter">${ICONE_ECOUTER}</button>` : ''}`;
+  actionsEl.classList.add('ai-reveal-after');
+  const copier = actionsEl.querySelector('.ai-copy');
+  copier.addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText(texteFn());
+      copier.title = 'Copié';
+    } catch (e) {
+      copier.title = 'Copie refusée';
+    }
+    copier.setAttribute('aria-pressed', 'true');
+    setTimeout(() => { copier.title = 'Copier'; copier.removeAttribute('aria-pressed'); }, 1600);
+  });
+  const ecouter = actionsEl.querySelector('.ai-listen');
+  if (ecouter) ecouter.addEventListener('click', () => lireAVoixHaute(texteFn(), ecouter));
+}
+
+// Un échange de la conversation de l'accueil : bulle question (droite) +
+// bulle réponse (gauche, avatar or) rédigée mot par mot (createWordReveal,
+// voir answer_reveal.js). Les liens et les actions copier / écouter
+// apparaissent en fondu une fois le texte entièrement affiché. Même API que
+// l'ancien createAnswerTyper : askAssistant, revientAccueil et
+// reopenAssistantExchange n'ont changé que leur appel.
 let typerCourant = null;   // révélation en cours de la dernière réponse
 let answerGeneration = 0;  // incrémenté à chaque nouvelle question
 
-function createAnswerTyper(panel, reduceMotion) {
-  panel.insertAdjacentHTML('beforeend', `
-    <div class="home-search-bubble">
-      <p class="home-search-text"><span class="home-search-run"></span><span class="answer-caret" aria-hidden="true"></span></p>
-      <div class="home-search-links"></div>
-      <button class="home-search-copy" type="button">Copier</button>
+function createHomeAnswer(thread, question, reduceMotion) {
+  if (question) {
+    const q = document.createElement('div');
+    q.className = 'ai-msg-user';
+    q.textContent = question;
+    thread.appendChild(q);
+  }
+  thread.insertAdjacentHTML('beforeend', `
+    <div class="ai-msg-ai">
+      <span class="ai-avatar" aria-hidden="true"></span>
+      <div class="ai-msg-body">
+        <div class="ai-msg-text"></div>
+        <div class="ai-links"></div>
+        <div class="ai-actions"></div>
+      </div>
     </div>`);
-  const bubble = panel.lastElementChild;
-  const run = bubble.querySelector('.home-search-run');
-  const caret = bubble.querySelector('.answer-caret');
-  const linksEl = bubble.querySelector('.home-search-links');
-  const copieBtn = bubble.querySelector('.home-search-copy');
-
-  let cible = '';          // texte complet reçu jusqu'ici
-  let affiche = 0;         // unités de code déjà révélées
-  let flux = true;         // le flux SSE n'est pas encore terminé
-  // Pas d'animation : préférence reduced-motion, réponse annulée ou fixée d'un coup.
-  let instantane = reduceMotion;
+  const msg = thread.lastElementChild;
+  const textEl = msg.querySelector('.ai-msg-text');
+  const linksEl = msg.querySelector('.ai-links');
+  const actionsEl = msg.querySelector('.ai-actions');
   let liens = [];
-  let liensAffiches = false;
-  let timer = null;
+  let pret = false;
 
-  const caretVisible = () =>
-    !reduceMotion && !instantane && (flux || affiche < cible.length);
-
-  const majLiens = () => {
-    const pret = !flux && affiche >= cible.length;
-    if (!pret) {
-      if (liensAffiches) { linksEl.innerHTML = ''; liensAffiches = false; }
-      return;
-    }
-    if (!liensAffiches) {
-      linksEl.innerHTML = homeSearchLinksHtml(liens);
-      wireHomeSearchLinkButtons(bubble);
-      liensAffiches = true;
+  // Suit le bas de la conversation seulement si l'utilisateur n'a pas remonté.
+  const suivre = () => {
+    if (thread.scrollHeight - thread.scrollTop - thread.clientHeight < 96) {
+      thread.scrollTo({ top: thread.scrollHeight, behavior: reduceMotion ? 'auto' : 'smooth' });
     }
   };
-
-  const render = () => {
-    document.getElementById('home').classList.toggle('speaking', caretVisible());
-    // Suit le bas de la réponse seulement si l'utilisateur n'a pas remonté.
-    const suitBas = panel.scrollHeight - panel.scrollTop - panel.clientHeight < 48;
-    run.innerHTML = escHtml(cible.slice(0, affiche));
-    caret.hidden = !caretVisible();
-    majLiens();
-    copieBtn.classList.toggle('show', !flux && affiche >= cible.length && cible.length > 0);
-    if (suitBas) panel.scrollTop = panel.scrollHeight;
+  const afficherLiens = () => {
+    linksEl.innerHTML = homeSearchLinksHtml(liens);
+    linksEl.classList.add('ai-reveal-after');
+    wireHomeSearchLinkButtons(linksEl);
   };
-
-  const stopTimer = () => {
-    if (timer !== null) { clearTimeout(timer); timer = null; }
-  };
-
-  const tick = () => {
-    timer = null;
-    const reste = cible.length - affiche;
-    if (reste <= 0) { render(); return; }
-    let pas = 1;
-    if (!flux) pas = Math.ceil(reste / 10);              // flux fini : rattrapage rapide
-    else if (reste > ANSWER_TYPE_LAG) pas = Math.ceil(reste / 40); // trop en retard
-    let fin = Math.min(cible.length, affiche + pas);
-    // Ne jamais couper une paire de substitution (emoji) en deux.
-    const code = cible.charCodeAt(fin - 1);
-    if (fin < cible.length && code >= 0xd800 && code <= 0xdbff) fin++;
-    affiche = fin;
-    render();
-    planifier();
-  };
-
-  const planifier = () => {
-    if (instantane || timer !== null || affiche >= cible.length) return;
-    timer = setTimeout(tick, ANSWER_TYPE_MS);
-  };
-
-  copieBtn.addEventListener('click', async () => {
-    try {
-      await navigator.clipboard.writeText(cible);
-      copieBtn.textContent = 'Copié';
-    } catch (e) {
-      copieBtn.textContent = 'Copie refusée';
-    }
-    setTimeout(() => { copieBtn.textContent = 'Copier'; }, 1600);
+  const reveal = createWordReveal(textEl, {
+    reduceMotion,
+    onProgress: suivre,
+    onDone: () => {
+      pret = true;
+      afficherLiens();
+      if (reveal.text()) wireAnswerActions(actionsEl, () => reveal.text());
+      suivre();
+    },
   });
-
-  render();
-  panel.scrollTop = panel.scrollHeight;
+  suivre();
 
   return {
-    // Nouveau texte cumulé (événement 'texte').
-    texte(t) {
-      cible = t;
-      if (instantane) affiche = t.length;
-      planifier();
-      render();
-    },
-    // Texte remplacé (événement 'erreur') : on le révèle depuis le début.
-    remplacer(t) {
-      stopTimer();
-      cible = t;
-      affiche = instantane ? t.length : 0;
-      planifier();
-      render();
-    },
-    liens(l) {
-      liens = l;
-      liensAffiches = false;
-      majLiens();
-    },
-    // Le flux SSE est terminé.
-    terminer() {
-      flux = false;
-      planifier();
-      render();
-    },
-    // Affichage complet et immédiat (401, 429, erreurs, réponse vide).
-    fixer(t, l) {
-      stopTimer();
-      instantane = true;
-      cible = t;
-      affiche = t.length;
-      flux = false;
-      liens = l || [];
-      liensAffiches = false;
-      render();
-    },
-    // Arrête la révélation : le texte déjà reçu s'affiche entièrement.
-    annuler() {
-      stopTimer();
-      instantane = true;
-      affiche = cible.length;
-      render();
-    },
+    texte(t) { reveal.setText(t); },
+    remplacer(t) { textEl.classList.add('is-error'); reveal.replace(t); },
+    liens(l) { liens = l || []; if (pret) afficherLiens(); },
+    terminer() { reveal.finish(); },
+    fixer(t, l) { liens = l || []; reveal.fix(t); },
+    annuler() { reveal.cancel(); },
   };
 }
 
@@ -4134,13 +4093,17 @@ function wireHomeSearchLinkButtons(elementOrPanel) {
   });
 }
 
-// Etats de l'accueil, portes par des classes sur #home (voir CSS .home.thinking
-// / .home.answered) : repos = barre centree (aucune classe), thinking = barre
-// effacee + orbe, answered = barre en bas + reponse au centre.
-// Sphère de particules teal (maquette « Sphère 3D », version d'origine). Ne
-// tourne que pendant la réflexion, et s'arrête à la fin pour économiser le
-// téléphone. Mouvement figé si l'utilisateur a demandé moins d'animations.
-const PARTICULES_TEAL = [45, 212, 191];
+// Etats de l'accueil, portés par des classes sur #home (voir CSS .home.thinking
+// / .home.answered) : repos = barre + tuiles (aucune classe), thinking =
+// saisie effacée + sphère, answered = conversation en bulles, saisie en bas.
+// Sphère de particules or (couleur lue sur --orb-mid). Ne tourne que pendant
+// la réflexion, et s'arrête à la fin pour économiser le téléphone. Mouvement
+// figé si l'utilisateur a demandé moins d'animations.
+function couleurParticules() {
+  const hex = getComputedStyle(document.documentElement).getPropertyValue('--orb-mid').trim() || '#b99a68';
+  const n = parseInt(hex.replace('#', ''), 16);
+  return [(n >> 16) & 255, (n >> 8) & 255, n & 255].join(',');
+}
 let particulesFrame = null;
 
 function startHomeParticles() {
@@ -4161,12 +4124,12 @@ function startHomeParticles() {
   const bruit = (x) => Math.sin(x) * 0.6 + Math.sin(x * 2.3 + 1.7) * 0.3 + Math.sin(x * 4.1 + 0.4) * 0.1;
   const reduit = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const debut = performance.now();
-  const rgb = PARTICULES_TEAL.join(',');
+  const rgb = couleurParticules();
 
   function dessine(now) {
     const home = document.getElementById('home');
     // La boucle s'arrête d'elle-même quand l'accueil n'est ni en réflexion ni en réponse.
-    if (!home || !(home.classList.contains('thinking') || home.classList.contains('answered'))) {
+    if (!home || !home.classList.contains('thinking')) {
       particulesFrame = null;
       ctx.clearRect(0, 0, 340, 340);
       return;
@@ -4204,7 +4167,7 @@ function stopHomeParticles() {
 
 function setHomeState(etat) {
   const home = document.getElementById('home');
-  if (etat === 'thinking' || etat === 'answered') startHomeParticles(); else stopHomeParticles();
+  if (etat === 'thinking') startHomeParticles(); else stopHomeParticles();
   home.classList.toggle('thinking', etat === 'thinking');
   home.classList.toggle('answered', etat === 'answered');
   // Pendant la réflexion la barre est invisible : on retire le focus pour que
@@ -4243,7 +4206,7 @@ async function askAssistant(question) {
   const assurerBulle = () => {
     if (typer) return typer;
     setHomeState('answered');
-    typer = createAnswerTyper(panel, reduceMotion);
+    typer = createHomeAnswer(panel, question, reduceMotion);
     if (estDepassee()) typer.annuler();
     else typerCourant = typer;
     return typer;
@@ -4433,7 +4396,7 @@ function reopenAssistantExchange(index) {
   panel.innerHTML = '';
   panel.hidden = false;
   setHomeState('answered');
-  createAnswerTyper(panel, true).fixer(entree.reponse, []);
+  createHomeAnswer(panel, entree.question, true).fixer(entree.reponse, []);
   document.getElementById('homeHistoryPanel').hidden = true;
 }
 

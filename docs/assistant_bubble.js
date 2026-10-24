@@ -312,6 +312,7 @@
   panneau.querySelector('#abFermer').addEventListener('click', () => ouvre(false));
   panneau.querySelector('#abReplier').addEventListener('click', () => ouvre(false));
   panneau.querySelector('#abNouvelle').addEventListener('click', () => {
+    abandonneRequete();
     historique = [];
     messages.innerHTML = '';
     majContexte();
@@ -426,9 +427,21 @@
   // ---- envoi : streaming SSE ----
   let historique = [];
   let enCours = false;
+  // Conversation courante : « Nouvelle conversation » l'incrémente et annule la
+  // requête en cours, dont les événements en retard sont alors ignorés.
+  let generation = 0;
+  let requete = null;
+  function abandonneRequete() {
+    generation++;
+    if (requete) { requete.abort(); requete = null; }
+    enCours = false;
+    etatSphere.reflechit = false;
+  }
 
   async function pose(question) {
     if (enCours || !question) return;
+    const maGeneration = generation;
+    const depassee = () => maGeneration !== generation;
     const token = typeof getAiAssistantToken === 'function' ? getAiAssistantToken() : null;
     ajouteQuestion(question);
     const rep = ajouteReponse();
@@ -446,7 +459,7 @@
         rendLiens(rep.liens, liensRecus);
         if (reveal.text() && !erreur && typeof wireAnswerActions === 'function') {
           wireAnswerActions(rep.actions, () => reveal.text());
-          if (voixLue && typeof lireAVoixHaute === 'function') {
+          if (voixLue && !depassee() && !panneau.hidden && typeof lireAVoixHaute === 'function') {
             const ecouter = rep.actions.querySelector('.ai-listen');
             if (ecouter) lireAVoixHaute(reveal.text(), ecouter);
           }
@@ -461,9 +474,12 @@
       return;
     }
     enCours = true;
+    const controleur = new AbortController();
+    requete = controleur;
     try {
       const res = await fetch(ENDPOINT, {
         method: 'POST',
+        signal: controleur.signal,
         headers: { 'Content-Type': 'application/json', 'X-Bot-Token': token },
         body: JSON.stringify({ question, history: historique, contexte: contexteCourant(), niveau: niveauCourant() }),
       });
@@ -477,6 +493,7 @@
       let tampon = '';
       for (;;) {
         const { value, done } = await lecteur.read();
+        if (depassee()) { lecteur.cancel().catch(() => {}); return; }
         if (done) break;
         tampon += dec.decode(value, { stream: true });
         let fin;
@@ -494,13 +511,18 @@
       }
       reveal.finish();
     } catch (e) {
+      if (depassee()) return;
       erreur = true;
       rep.texte.classList.add('is-error');
       reveal.fix((e && e.message) ? e.message : "Je n'ai pas pu contacter l'assistant, réessaie dans un instant.");
     } finally {
-      enCours = false;
-      etatSphere.reflechit = false;
+      if (!depassee()) {
+        enCours = false;
+        etatSphere.reflechit = false;
+        requete = null;
+      }
     }
+    if (depassee()) return;
     if (!erreur && texte) {
       historique.push({ role: 'user', content: question });
       historique.push({ role: 'assistant', content: texte });

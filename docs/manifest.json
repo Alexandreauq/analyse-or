@@ -6,9 +6,10 @@
   "display": "standalone",
   "background_color": "#0a0e1a",
   "theme_color": "#0a0e1a",
-  "description": "Analyse macro-fondamentale automatisée — score de l'or, avec alertes et calendrier macro.",
+  "description": "L'IA note chaque jour l'or et des centaines d'entreprises mondiales, repère les points d'entrée et suit ton portefeuille.",
   "icons": [
     { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
-    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icons/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
   ]
 }

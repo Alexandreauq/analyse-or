@@ -1,14 +1,14 @@
 {
-  "date": "2026-10-23",
-  "composite_score": -12.0,
+  "date": "2026-10-24",
+  "composite_score": -10.2,
   "interpretation": "Neutre — pas d'action",
   "cftc_percentile": 34.61538461538461,
   "factors": [
     {
       "name": "Taux réels US 10 ans",
-      "score": -4.199999999999999,
+      "score": -3.600000000000003,
       "weight": 0.3,
-      "raw_value": "2.64% (il y a ~45j : 2.43%)"
+      "raw_value": "2.64% (il y a ~45j : 2.46%)"
     },
     {
       "name": "Dollar (DXY)",
@@ -99,7 +99,7 @@
       "kind": "info",
       "title": "Pas de signal actif",
       "detail": "Aucune des conditions de veille, d'entrée ou de risque n'est réunie aujourd'hui.",
-      "date": "23/10/2026"
+      "date": "24/10/2026"
     }
   ]
 }

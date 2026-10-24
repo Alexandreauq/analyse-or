@@ -185,7 +185,7 @@
   sphereDans(lanceur, 96, 420);
   // Onglet « IA » de la barre d'onglets mobile : même sphère.
   const orbeOnglet = document.querySelector('#bottomNavIa .nav-orb');
-  if (orbeOnglet) sphereDans(orbeOnglet, 48, 220);
+  if (orbeOnglet) sphereDans(orbeOnglet, 54, 240);
 
   // ---- voile (mobile, voir Task 8) + panneau ----
   const voile = document.createElement('div');

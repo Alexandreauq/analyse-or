@@ -83,7 +83,7 @@
        pour que tools/capture.mjs puisse simuler l'encoche en les surchargeant. */
     --safe-top: env(safe-area-inset-top, 0px); --safe-bottom: env(safe-area-inset-bottom, 0px);
     --safe-left: env(safe-area-inset-left, 0px); --safe-right: env(safe-area-inset-right, 0px);
-    --bottomnav-h: calc(68px + var(--safe-bottom));
+    --bottomnav-h: calc(78px + var(--safe-bottom));
     --ease: cubic-bezier(.22,1,.36,1);
 
     /* Assistant IA (pilule de saisie, bulles, sphère) — voir "UI kit 2026-10". */
@@ -269,13 +269,13 @@
   .top-bar .nav-item.active { background: var(--bg-3); color: var(--gold); }
   .bottom-nav .nav-item {
     flex: 1; min-width: 0; flex-direction: column; justify-content: flex-start; align-items: center;
-    gap: 5px; padding: 9px 2px 0; font-size: 11px; font-weight: 600; text-align: center; line-height: 1;
+    gap: 6px; padding: 10px 2px 0; font-size: 12px; font-weight: 600; text-align: center; line-height: 1;
   }
   .bottom-nav .nav-ico {
-    width: 46px; height: 32px; border-radius: 16px; display: grid; place-items: center;
+    width: 54px; height: 36px; border-radius: 18px; display: grid; place-items: center;
     transition: background .15s ease;
   }
-  .bottom-nav .nav-ico .nav-icon { width: 27px; height: 27px; }
+  .bottom-nav .nav-ico .nav-icon { width: 30px; height: 30px; }
   .bottom-nav .nav-item.active { color: var(--gold); }
   .bottom-nav .nav-item.active .nav-ico { background: var(--bg-3); }
   .bottom-nav .nav-item-ia { color: var(--agent); }
@@ -284,7 +284,7 @@
        libellé "IA" reste aligné sur ceux des autres onglets. Sphère de
        particules turquoise animée de l'agent, dessinée dans un canvas par
        assistant_bubble.js (même sphère que le lanceur desktop). */
-    width: 56px; height: 56px; margin-top: -24px; border-radius: 50%; flex-shrink: 0; overflow: hidden;
+    width: 62px; height: 62px; margin-top: -26px; border-radius: 50%; flex-shrink: 0; overflow: hidden;
     border: 4px solid var(--bg-1); background: var(--agent-orb-bg);
     box-shadow: 0 0 0 1px var(--agent-soft), 0 0 22px var(--agent-glow);
   }
@@ -522,21 +522,21 @@
   @media (min-width: 1024px) {
     .home:not(.answered) { justify-content: center; padding-top: var(--topbar-h); }
     .home:not(.answered) .home-hero { padding-top: 0; gap: clamp(10px, 1.6vh, 18px); }
-    .home:not(.answered) .home-wordmark { font-size: clamp(3.25rem, 4.6vw + 1vh, 4.5rem); }
-    .home:not(.answered) .home-tagline { font-size: clamp(1rem, .5vw + .6rem, 1.125rem); max-width: 560px; }
+    .home:not(.answered) .home-wordmark { font-size: clamp(3rem, 3.6vw + 1vh, 3.9rem); }
+    .home:not(.answered) .home-tagline { font-size: clamp(.95rem, .4vw + .6rem, 1.05rem); max-width: 540px; }
     .home:not(.answered) .home-main {
-      flex: none; justify-content: flex-start; max-width: 1180px;
-      padding-top: clamp(24px, 4.5vh, 56px); gap: clamp(14px, 2vh, 22px);
+      flex: none; justify-content: flex-start; max-width: 1100px;
+      padding-top: clamp(20px, 3.5vh, 44px); gap: clamp(12px, 1.6vh, 18px);
     }
-    .home-compose { max-width: 700px; }
-    .home-compose .ai-pill-bar { height: 58px; }
-    .home .home-tiles { max-width: clamp(860px, 62vw, 1180px); gap: 18px; margin-top: clamp(18px, 4.5vh, 60px); }
-    .home-tile { padding: 20px 22px 18px; min-height: clamp(160px, 20vh, 220px); border-radius: 18px; }
-    .home-tile-key { font-size: 11.5px; }
-    .home-tile-value { font-size: clamp(30px, 2.2vw + 6px, 40px); margin: 10px 0 8px; }
-    .home-tile .tone-neutral { font-size: clamp(22px, 1.4vw + 4px, 28px); margin: 12px 0 10px; }
-    .home-tile-detail { font-size: 13px; }
-    .home-tile-go { font-size: 12.5px; margin-top: 14px; }
+    .home-compose { max-width: 660px; }
+    .home-compose .ai-pill-bar { height: 56px; }
+    .home .home-tiles { max-width: clamp(860px, 54vw, 1040px); gap: 16px; margin-top: clamp(16px, 3.5vh, 44px); }
+    .home-tile { padding: 18px 20px 16px; min-height: clamp(150px, 17vh, 185px); border-radius: 18px; }
+    .home-tile-key { font-size: 11px; }
+    .home-tile-value { font-size: clamp(28px, 1.6vw + 8px, 34px); margin: 8px 0 6px; }
+    .home-tile .tone-neutral { font-size: clamp(20px, 1vw + 6px, 24px); margin: 10px 0 8px; }
+    .home-tile-detail { font-size: 12.5px; }
+    .home-tile-go { font-size: 12px; margin-top: 12px; }
     .home.answered .home-hero { padding-top: calc(var(--topbar-h) + 16px); }
     .home.answered .home-main { padding-top: 12px; }
   }
@@ -652,8 +652,15 @@
     }
   }
   @media (max-width: 1023px) {
+    /* Guide ouvert (clavier souvent ouvert aussi) : l'accroche disparaît, la
+       liste prend l'espace restant et défile, la saisie reste au-dessus de
+       la barre d'onglets. */
+    .home.guide-open .home-tagline { display: none; }
+    .home.guide-open .home-hero { padding-top: 16px; }
+    .home.guide-open .home-main { justify-content: flex-start; padding-top: 12px; }
     .home.guide-open .home-guide-mobile {
       display: block; width: 100%; max-width: 480px; text-align: left;
+      flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain;
       animation: content-fade-in .25s var(--ease) both;
     }
     .home-guide-mobile .home-guide-title { margin-top: 10px; }

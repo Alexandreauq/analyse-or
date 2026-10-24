@@ -91,3 +91,26 @@ def test_ecrit_resultats_writes_valid_json(tmp_path):
 
     contenu = json.loads(chemin.read_text(encoding="utf-8"))
     assert contenu["paris"][0]["ticker"] == "TEST.PA"
+
+
+def test_main_wires_sampling_replay_and_resolution_together(monkeypatch):
+    signal_exemple = _signal_exemple()
+    monkeypatch.setattr(
+        analyste_replay.analyste_backtest, "genere_signaux_historiques",
+        lambda *a, **k: [signal_exemple])
+    monkeypatch.setattr(
+        analyste_replay, "appelle_gemini",
+        lambda prompt, **k: {"appel": "haussier", "confiance": "moyenne",
+                             "dimension_dominante": "technique", "raison": "..."})
+    monkeypatch.setattr(
+        analyste_replay, "resout_pari",
+        lambda signal, pari, **k: {**signal, **pari, "return_pct": 5.0})
+    chemins_ecrits = []
+    monkeypatch.setattr(
+        analyste_replay, "ecrit_resultats",
+        lambda paris, chemin: chemins_ecrits.append((paris, chemin)))
+
+    analyste_replay.main(chemin_sortie="sortie-test.json")
+
+    assert len(chemins_ecrits) == 1
+    assert chemins_ecrits[0][0][0]["return_pct"] == 5.0

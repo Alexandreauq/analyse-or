@@ -125,5 +125,29 @@
       "C:\\Users\\alexa\\AppData\\Local\\Temp\\claude\\c--Users-alexa-OneDrive-Documents-GitHub-analyse-or\\e48fbd3f-01d3-4675-94df-28ae72e8c893\\scratchpad",
       "C:\\Users\\alexa\\Desktop"
     ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash|Grep",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "graphify hook-guard search",
+            "timeout": 10
+          }
+        ]
+      },
+      {
+        "matcher": "Read|Glob",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "graphify hook-guard read",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
   }
 }

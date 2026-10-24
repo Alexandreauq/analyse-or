@@ -67,6 +67,34 @@
     .ab-level { align-self: center; }
     .ab-level.ui-seg { height: 30px; }
     .ab-level.ui-seg button { font-size: 11.5px; padding: 0 11px; }
+
+    /* Mobile / tablette : pas de sphère flottante (l'onglet « IA » de la barre
+       d'onglets ouvre l'agent), le panneau devient une feuille qui monte du
+       bas presque plein écran ; la page reste visible en haut, assombrie. */
+    @media (max-width: 1023px) {
+      .ab-launch { display: none; }
+      .ab-scrim {
+        position: fixed; inset: 0; z-index: 30; background: var(--scrim);
+        animation: ab-fade-in .25s ease both;
+      }
+      .ab-panel {
+        left: 0; right: 0; bottom: 0; top: calc(var(--safe-top) + 56px);
+        width: auto; max-height: none; border-radius: 24px 24px 0 0;
+        border: 0; border-top: 1px solid var(--border-strong);
+        animation: ab-sheet-in .32s var(--ease) both;
+        touch-action: pan-y;
+      }
+      .ab-panel.is-dragging { animation: none; transition: none; }
+      .ab-panel.is-settling { transition: transform .2s var(--ease); }
+      .ab-grab { display: block; width: 40px; height: 4px; border-radius: 2px; background: var(--border-strong); margin: 8px auto 0; }
+      .ab-head { padding-top: 8px; touch-action: none; }
+      .ab-head .ab-close { display: none; }
+      .ab-head .ab-chevron { display: grid; }
+      .ab-foot { padding-bottom: calc(12px + var(--safe-bottom)); }
+    }
+    @keyframes ab-sheet-in { from { transform: translateY(100%); } to { transform: none; } }
+    @keyframes ab-fade-in { from { opacity: 0; } to { opacity: 1; } }
+    @media (prefers-reduced-motion: reduce) { .ab-panel, .ab-scrim { animation: none; } }
   `;
   document.head.appendChild(style);
 
@@ -221,6 +249,34 @@
     champ.focus();
   });
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !panneau.hidden) ouvre(false); });
+
+  // Feuille mobile : glisser la poignée / l'en-tête vers le bas pour fermer
+  // (au-delà de 80px), sinon elle revient en place.
+  const SEUIL_FERMETURE = 80;
+  let depart = null;
+  const zoneGlisser = (cible) => cible.closest('.ab-grab, .ab-head') && !cible.closest('button');
+  panneau.addEventListener('pointerdown', (e) => {
+    if (!window.matchMedia('(max-width: 1023px)').matches || !zoneGlisser(e.target)) return;
+    depart = e.clientY;
+    panneau.classList.add('is-dragging');
+    panneau.setPointerCapture(e.pointerId);
+  });
+  panneau.addEventListener('pointermove', (e) => {
+    if (depart === null) return;
+    panneau.style.transform = `translateY(${Math.max(0, e.clientY - depart)}px)`;
+  });
+  const finGlisser = (e) => {
+    if (depart === null) return;
+    const dy = e.clientY - depart;
+    depart = null;
+    panneau.classList.remove('is-dragging');
+    if (dy > SEUIL_FERMETURE) { panneau.style.transform = ''; ouvre(false); return; }
+    panneau.classList.add('is-settling');
+    panneau.style.transform = '';
+    setTimeout(() => panneau.classList.remove('is-settling'), 220);
+  };
+  panneau.addEventListener('pointerup', finGlisser);
+  panneau.addEventListener('pointercancel', finGlisser);
   window.addEventListener('hashchange', majVisibilite);
   majVisibilite();
 

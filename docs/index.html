@@ -530,6 +530,111 @@
   .home-history-item:hover { background: var(--bg-3); }
   .home-history-item small { display: block; color: var(--muted); font-size: 12px; margin-bottom: 2px; }
 
+  /* Tuiles du jour (desktop) : discrètes au repos, s'éclairent au survol,
+     passent en fond flouté quand le guide est ouvert. Données : home_today.js. */
+  .home-tiles { display: none; }
+  .home-tile {
+    display: flex; flex-direction: column; text-align: left; padding: 15px 16px 14px;
+    border-radius: 16px; border: 1px solid var(--border-subtle);
+    background: color-mix(in srgb, var(--bg-2) 45%, transparent); color: var(--text);
+    animation: content-fade-in .5s var(--ease) backwards;
+    transition: transform .18s var(--ease), background .18s ease, border-color .18s ease, box-shadow .18s ease;
+  }
+  .home-tile:nth-child(2) { animation-delay: .06s; }
+  .home-tile:nth-child(3) { animation-delay: .12s; }
+  .home-tile:nth-child(4) { animation-delay: .18s; }
+  .home-tile:hover { background: var(--bg-2); border-color: var(--border-strong); transform: translateY(-2px); box-shadow: var(--shadow-3); }
+  .home-tile-key { font-size: 10.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--text-faint); }
+  .home-tile-value { font-family: 'Newsreader', serif; font-size: 28px; line-height: 1.15; margin: 6px 0 4px; }
+  .home-tile-detail { font-size: 11.5px; line-height: 1.45; color: var(--muted); flex: 1; }
+  .home-tile-spark:empty { display: none; }
+  .home-tile-go { font-size: 11.5px; color: var(--gold); margin-top: 10px; }
+  .tone-pos { color: var(--green-300); } .tone-neg { color: var(--rust-300); }
+  .tone-gold { color: var(--gold); } .tone-neutral { color: var(--text); }
+  .home-tile .tone-neutral { font-size: 20px; margin: 10px 0 6px; }
+  @media (min-width: 1024px) {
+    .home-tiles {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;
+      width: 100%; max-width: 860px; margin-top: 14px;
+      transition: opacity .3s var(--ease), filter .3s var(--ease);
+    }
+    .home.guide-open .home-tiles { opacity: .18; filter: blur(1.5px); pointer-events: none; }
+  }
+
+  /* Carte « Aujourd'hui » (mobile) : 4 lignes compactes façon widget. */
+  .home-today { display: none; }
+  @media (max-width: 1023px) {
+    .home-today {
+      display: block; width: 100%; max-width: 480px; text-align: left; overflow: hidden;
+      border: 1px solid var(--border-subtle); border-radius: 16px;
+      background: color-mix(in srgb, var(--bg-2) 55%, transparent);
+    }
+    .home.guide-open .home-today { display: none; }
+  }
+  .home-today-head {
+    display: flex; justify-content: space-between; padding: 10px 14px 6px;
+    font-size: 10.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--text-faint);
+  }
+  .home-today-row {
+    display: flex; align-items: center; gap: 11px; height: 42px; padding: 0 12px 0 14px;
+    border-top: 1px solid var(--border-subtle); color: var(--text); font-size: 13px;
+  }
+  .home-today-ico {
+    width: 28px; height: 28px; border-radius: 8px; background: var(--bg-3); color: var(--muted);
+    display: grid; place-items: center; flex-shrink: 0;
+  }
+  .home-today-ico svg { width: 16px; height: 16px; display: block; fill: none; stroke: currentColor;
+    stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+  .home-today-label { flex: 1; min-width: 0; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .home-today-label small { color: var(--text-faint); font-size: 12px; }
+  .home-today-value { font-family: 'Newsreader', serif; font-size: 18px; flex-shrink: 0; }
+  .home-today-value.tone-neutral { font-family: 'Inter', sans-serif; font-size: 12px; color: var(--muted); }
+  .home-today-chev { color: var(--border-strong); font-size: 18px; line-height: 1; flex-shrink: 0; }
+
+  /* Guide « ce que je sais faire » : panneau sous la barre (desktop) ou
+     liste à la place de la carte « Aujourd'hui » (mobile). */
+  .home-guide { display: none; }
+  .home-guide-mobile { display: none; }
+  .home-guide-q {
+    display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%;
+    text-align: left; padding: 8px 10px; margin-bottom: 6px; border-radius: 10px;
+    border: 1px solid transparent; background: var(--bg-3); color: var(--text); font: inherit; font-size: 12.5px;
+  }
+  .home-guide-q:hover, .home-guide-q.is-selected { background: var(--bg-4); border-color: var(--gold-700); }
+  .home-guide-q .ai-kbd { visibility: hidden; margin: 0; }
+  .home-guide-q.is-selected .ai-kbd { visibility: visible; }
+  .home-guide-title {
+    display: flex; align-items: center; gap: 6px; margin: 0 0 4px; color: var(--gold);
+    font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase;
+  }
+  .home-guide-title svg { width: 15px; height: 15px; display: block; fill: none; stroke: currentColor;
+    stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+  .home-guide-text { margin: 0 0 8px; color: var(--muted); font-size: 11.5px; line-height: 1.4; }
+  @media (min-width: 1024px) {
+    .home.guide-open .home-guide {
+      display: grid; grid-template-columns: repeat(var(--guide-cols, 3), 1fr); gap: 16px;
+      position: absolute; left: 0; right: 0; top: calc(100% + 10px); z-index: 5;
+      padding: 16px; text-align: left; border-radius: 18px;
+      background: var(--bg-2); border: 1px solid var(--border); box-shadow: var(--shadow-3);
+      animation: content-fade-in .25s var(--ease) both;
+    }
+    .home-guide-foot {
+      grid-column: 1 / -1; display: flex; justify-content: space-between; gap: 12px;
+      padding-top: 10px; border-top: 1px solid var(--border); color: var(--text-faint); font-size: 11px;
+    }
+  }
+  @media (max-width: 1023px) {
+    .home.guide-open .home-guide-mobile {
+      display: block; width: 100%; max-width: 480px; text-align: left;
+      animation: content-fade-in .25s var(--ease) both;
+    }
+    .home-guide-mobile .home-guide-title { margin-top: 10px; }
+    .home-guide-foot { display: none; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .home-tiles, .home-guide, .home-guide-mobile { transition: none; animation: none; }
+  }
+
   @media (max-width: 1023px) {
     .home-hero { padding-top: 44px; }
     .home-wordmark { font-size: clamp(2rem, 8.5vw, 2.5rem); }
@@ -1559,6 +1664,8 @@
   </div>
   <div class="home-main">
     <div id="homeSearchPanel" class="home-thread ai-thread" aria-live="polite" hidden></div>
+    <div id="homeToday" class="home-today" aria-label="Aujourd'hui"></div>
+    <div id="homeGuideMobile" class="home-guide-mobile"></div>
     <div class="home-compose">
       <div class="home-compose-top">
         <button type="button" id="homeHistoryInBar" class="ui-chip">
@@ -1587,7 +1694,9 @@
         <button type="button" data-niveau="technique">Technique</button>
         <button type="button" data-niveau="grand_public">Grand public</button>
       </div>
+      <div id="homeGuide" class="home-guide" role="listbox" aria-label="Ce que je sais faire"></div>
     </div>
+    <div id="homeTiles" class="home-tiles"></div>
   </div>
   <div id="homeHistoryPanel" class="home-history-panel" hidden>
     <div class="home-history-head">
@@ -3649,6 +3758,166 @@ async function ensureIndicesData() {
   }
 }
 
+// Infos du jour de l'accueil (tuiles desktop + carte « Aujourd'hui » mobile,
+// même source : buildHomeToday, voir home_today.js). Chaque source peut
+// manquer (fichier absent, API du bot injoignable) : la tuile affiche alors
+// « indisponible » au lieu de bloquer les autres.
+let homeTodayLoaded = false;
+const HOME_TODAY_ICONS = {
+  or: '<svg viewBox="0 0 24 24"><use href="#icon-or"/></svg>',
+  top: '<svg viewBox="0 0 24 24"><use href="#icon-indices"/></svg>',
+  signaux: '<svg viewBox="0 0 24 24"><path d="M4 17l5-5 4 3 7-8"/></svg>',
+  bots: '<svg viewBox="0 0 24 24"><rect x="5" y="7" width="14" height="11" rx="3"/><path d="M12 4v3M9.5 12h.01M14.5 12h.01"/></svg>',
+};
+const HOME_TILE_LINKS = { or: "Voir l'analyse", top: 'Explorer les indices', signaux: 'Suivi des signaux', bots: 'Portefeuille' };
+
+async function fetchJsonOrNull(url) {
+  try {
+    const res = await fetch(url + '?t=' + Date.now());
+    return res.ok ? await res.json() : null;
+  } catch (e) { return null; }
+}
+
+function withTimeout(promise, ms) {
+  return Promise.race([promise, new Promise(res => setTimeout(() => res(null), ms))]);
+}
+
+async function loadHomeToday() {
+  const [score, signals, ibkr] = await Promise.all([
+    fetchJsonOrNull('score.json'),
+    fetchJsonOrNull('signal_tracking.json'),
+    fetchJsonOrNull('ibkr_bot_status.json'),
+    ensureIndicesData(),
+    withTimeout(botStatusData ? Promise.resolve() : loadBotStatus(), 4000),
+  ]);
+  const companies = indicesData && Array.isArray(indicesData.companies) ? indicesData.companies : null;
+  let signalSummary = null;
+  if (signals && Array.isArray(signals.positions) && companies) {
+    const byTicker = {};
+    companies.forEach(c => { byTicker[c.ticker] = c; });
+    signalSummary = computeSignalSummary(signals.positions,
+      p => positionCurrentReturnPct(p, byTicker), positionCurrentIndexReturnPct, SIGNAL_TRACKING_OUT_OF_SCOPE_INDICES);
+  }
+  const items = buildHomeToday({
+    score, companies, signals: signalSummary, botOr: botStatusData, botActions: ibkr,
+    botActionsLabels: IBKR_BOT_STATUS_LABELS,
+  });
+  document.getElementById('homeTagline').textContent = homeTagline(companies ? companies.length : null);
+  document.getElementById('homeTiles').innerHTML = items.map(i => `
+    <a class="home-tile" href="${i.href}">
+      <span class="home-tile-key">${escHtml(i.label)}</span>
+      <span class="home-tile-value tone-${i.tone}">${escHtml(i.value)}</span>
+      <span class="home-tile-detail">${escHtml(i.detail)}</span>
+      <span class="home-tile-spark"></span>
+      <span class="home-tile-go">${HOME_TILE_LINKS[i.key]} →</span>
+    </a>`).join('');
+  const date = new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' });
+  document.getElementById('homeToday').innerHTML = `
+    <div class="home-today-head"><span>Aujourd'hui</span><span>${date}</span></div>
+    ${items.map(i => {
+      const s = homeTodayShort(i);
+      return `
+    <a class="home-today-row" href="${i.href}">
+      <span class="home-today-ico">${HOME_TODAY_ICONS[i.key]}</span>
+      <span class="home-today-label">${escHtml(s.label)} <small>· ${escHtml(s.sub)}</small></span>
+      <span class="home-today-value tone-${i.tone}">${i.key === 'bots' ? '●' : escHtml(i.value)}</span>
+      <span class="home-today-chev" aria-hidden="true">›</span>
+    </a>`;
+    }).join('')}`;
+}
+
+// Guide « ce que je sais faire » : ouvert au focus de la barre (accueil au
+// repos uniquement), filtré pendant la frappe, piloté au clavier (↑↓ choisit,
+// Entrée envoie la question choisie, Échap ferme).
+let homeGuideSelected = -1;
+
+function homeGuideColonnes() {
+  const n = indicesData && Array.isArray(indicesData.companies) ? indicesData.companies.length.toLocaleString('fr-FR') : 'Des centaines d\'';
+  return filterGuide(HOME_GUIDE, document.getElementById('homeSearchInput').value)
+    .map(c => ({ ...c, texte: c.texte.replace('{n}', n) }));
+}
+
+function renderHomeGuide() {
+  const colonnes = homeGuideColonnes();
+  const home = document.getElementById('home');
+  const ouvert = home.classList.contains('guide-open');
+  let index = 0;
+  const colHtml = c => `
+    <div>
+      <p class="home-guide-title"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#${c.icone}"/></svg>${escHtml(c.titre)}</p>
+      <p class="home-guide-text">${escHtml(c.texte)}</p>
+      ${c.questions.map(q => `<button type="button" class="home-guide-q${index === homeGuideSelected ? ' is-selected' : ''}" role="option" data-index="${index++}">${escHtml(q)}<span class="ai-kbd">↵</span></button>`).join('')}
+    </div>`;
+  const html = colonnes.map(colHtml).join('');
+  index = 0;
+  document.getElementById('homeGuide').style.setProperty('--guide-cols', String(Math.max(1, colonnes.length)));
+  document.getElementById('homeGuide').innerHTML = html
+    + '<div class="home-guide-foot"><span>↑↓ pour choisir · ↵ pour envoyer · esc pour fermer</span><span>Les questions se filtrent pendant la frappe</span></div>';
+  document.getElementById('homeGuideMobile').innerHTML = html;
+  home.classList.toggle('guide-empty', !colonnes.length);
+  if (ouvert && !colonnes.length) home.classList.remove('guide-open');
+}
+
+function homeGuideQuestions() {
+  return [...document.querySelectorAll(window.matchMedia('(min-width: 1024px)').matches
+    ? '#homeGuide .home-guide-q' : '#homeGuideMobile .home-guide-q')];
+}
+
+function setHomeGuideOpen(ouvrir) {
+  const home = document.getElementById('home');
+  const possible = !home.classList.contains('answered') && !home.classList.contains('thinking');
+  homeGuideSelected = -1;
+  home.classList.toggle('guide-open', ouvrir && possible);
+  if (ouvrir && possible) renderHomeGuide();
+}
+
+function moveHomeGuideSelection(delta) {
+  const qs = homeGuideQuestions();
+  if (!qs.length) return;
+  homeGuideSelected = (homeGuideSelected + delta + qs.length) % qs.length;
+  qs.forEach((q, i) => q.classList.toggle('is-selected', i === homeGuideSelected));
+}
+
+function homeGuideSelectionText() {
+  if (!document.getElementById('home').classList.contains('guide-open') || homeGuideSelected < 0) return null;
+  const q = homeGuideQuestions()[homeGuideSelected];
+  return q ? q.firstChild.textContent : null;
+}
+
+function wireHomeGuide(input) {
+  input.addEventListener('focus', () => setHomeGuideOpen(true));
+  input.addEventListener('blur', () => setTimeout(() => {
+    if (document.activeElement !== input) setHomeGuideOpen(false);
+  }, 150));
+  input.addEventListener('input', () => {
+    homeGuideSelected = -1;
+    if (document.activeElement === input) {
+      document.getElementById('home').classList.add('guide-open');
+      renderHomeGuide();
+    }
+  });
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      moveHomeGuideSelection(e.key === 'ArrowDown' ? 1 : -1);
+    } else if (e.key === 'Escape') {
+      setHomeGuideOpen(false);
+      input.blur();
+    }
+  });
+  ['homeGuide', 'homeGuideMobile'].forEach(id => {
+    const el = document.getElementById(id);
+    // mousedown : garder le focus dans la barre (sinon le blur ferme le guide avant le clic).
+    el.addEventListener('mousedown', (e) => e.preventDefault());
+    el.addEventListener('click', (e) => {
+      const q = e.target.closest('.home-guide-q');
+      if (!q) return;
+      setHomeGuideOpen(false);
+      submitHomeQuery(q.firstChild.textContent);
+    });
+  });
+}
+
 // Sections connues du routeur (voir parseRoute) — mots-cles francais
 // courants qui doivent rediriger directement sans passer par l'IA.
 const INSTANT_NAV_SECTIONS = {
@@ -4203,10 +4472,16 @@ function wireHomeSearch() {
   input.addEventListener('keydown', (e) => {
     if (e.key !== 'Enter') return;
     e.preventDefault();
+    const choisie = homeGuideSelectionText();
+    setHomeGuideOpen(false);
+    submitHomeQuery(choisie || input.value);
+  });
+  document.getElementById('homeSendButton').addEventListener('click', () => {
+    setHomeGuideOpen(false);
     submitHomeQuery(input.value);
   });
-  document.getElementById('homeSendButton').addEventListener('click', () => submitHomeQuery(input.value));
   wireHomePill(input);
+  wireHomeGuide(input);
 }
 
 // Envoi depuis la barre de l'accueil (Entrée, bouton envoyer, question du
@@ -5583,6 +5858,10 @@ function renderRoute(animate) {
   }
   if (route.screen === 'portefeuille') {
     loadPortfolioScreen();
+  }
+  if (route.screen === 'home' && !homeTodayLoaded) {
+    homeTodayLoaded = true;
+    loadHomeToday();
   }
 }
 

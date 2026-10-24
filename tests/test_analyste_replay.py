@@ -50,10 +50,15 @@ def test_appelle_gemini_retries_on_429(monkeypatch):
 
 
 def test_appelle_gemini_reraises_last_error_after_exhausting_retries():
+    appels = {"n": 0}
+
     def client_toujours_limite(prompt, cle_api, modele):
+        appels["n"] += 1
         raise analyste_replay.ErreurLimiteDebit("quota depasse")
 
     with pytest.raises(analyste_replay.ErreurLimiteDebit):
         analyste_replay.appelle_gemini(
             "prompt test", cle_api="fausse-cle", client=client_toujours_limite,
             sleep_fn=lambda s: None, max_tentatives=3)
+
+    assert appels["n"] == 3

@@ -191,3 +191,37 @@ def test_fetch_news_error_never_leaks_the_finnhub_token(monkeypatch):
 
     assert "secret-finnhub" not in resultat["erreur"]
     assert resultat["erreur"] == "actualites indisponibles (RuntimeError)"
+
+
+def test_fetch_gdelt_articles_sends_enddatetime_when_fin_is_provided():
+    appels = []
+    def http_get_factice(url, params=None, headers=None, timeout=None):
+        appels.append(params)
+        class Reponse:
+            def raise_for_status(self): pass
+            def json(self): return {"articles": []}
+        return Reponse()
+
+    debut = datetime(2026, 1, 1)
+    fin = datetime(2026, 1, 15)
+    data_sources.fetch_gdelt_articles(
+        "test", debut, 60, "cle-test", fin=fin,
+        http_get=http_get_factice, now_fn=lambda: 0.0, cache={})
+
+    assert appels[0]["enddatetime"] == "20260115000000"
+
+
+def test_fetch_gdelt_articles_omits_enddatetime_when_fin_is_absent():
+    appels = []
+    def http_get_factice(url, params=None, headers=None, timeout=None):
+        appels.append(params)
+        class Reponse:
+            def raise_for_status(self): pass
+            def json(self): return {"articles": []}
+        return Reponse()
+
+    data_sources.fetch_gdelt_articles(
+        "test", datetime(2026, 1, 1), 60, "cle-test-2",
+        http_get=http_get_factice, now_fn=lambda: 0.0, cache={})
+
+    assert "enddatetime" not in appels[0]

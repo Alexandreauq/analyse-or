@@ -84,6 +84,16 @@
     --safe-top: env(safe-area-inset-top, 0px); --safe-bottom: env(safe-area-inset-bottom, 0px);
     --safe-left: env(safe-area-inset-left, 0px); --safe-right: env(safe-area-inset-right, 0px);
     --bottomnav-h: calc(68px + var(--safe-bottom));
+    --ease: cubic-bezier(.22,1,.36,1);
+
+    /* Assistant IA (pilule de saisie, bulles, sphère) — voir "UI kit 2026-10". */
+    --orb-hi: #e8dcc0; --orb-mid: #b99a68; --orb-lo: #6b5430;  /* sphère dorée : même or dans les 2 thèmes */
+    --ai-ring-idle: var(--border-strong); --ai-ring-a: var(--gold); --ai-ring-b: var(--gold-100); --ai-ring-track: var(--border);
+    --ai-glow: rgba(185,154,104,.22);
+    --ai-input-bg: #121a2c;
+    --ai-send-from: var(--gold-100); --ai-send-to: var(--gold); --ai-send-ink: var(--bg-0);
+    --ai-user-bubble: var(--bg-4);
+    --rv-fade: 220ms;
     --bg-translucent: rgba(10,14,26,.9);
 
     /* Breakpoints (référence — non utilisables en valeur CSS, documentés pour cohérence media queries) */
@@ -117,6 +127,10 @@
     --shadow-3: 0 12px 28px rgba(80,63,20,.14);
     --shadow-accent-glow: 0 0 0 1px rgba(6,78,59,.3), 0 8px 20px rgba(6,78,59,.12);
     --bg-translucent: rgba(251,242,222,.9);
+
+    --ai-glow: rgba(138,109,63,.28);
+    --ai-input-bg: var(--bg-2);
+    --ai-send-from: #c9a96e; --ai-send-to: #8a6d3f; --ai-send-ink: #fdf8ee;
   }
   /* Version desktop du thème clair un peu plus soutenue (moins pâle) que la
      version mobile — mobile garde exactement la palette Champagne/Emerald
@@ -262,7 +276,7 @@
        libellé "IA" reste aligné sur ceux des autres onglets. */
     width: 56px; height: 56px; margin-top: -24px; border-radius: 50%; flex-shrink: 0;
     border: 4px solid var(--bg-1);
-    background: radial-gradient(circle at 35% 35%, var(--gold-100), var(--gold) 45%, var(--gold-700) 100%);
+    background: radial-gradient(circle at 35% 35%, var(--orb-hi), var(--orb-mid) 45%, var(--orb-lo) 100%);
     box-shadow: 0 0 24px rgba(185,154,104,.45);
   }
   .bottom-nav .nav-item-ia.active { color: var(--gold); }
@@ -283,231 +297,249 @@
      la zone protégée (le padding-top ne décale pas un enfant absolu). */
   #home > .screen-theme-toggle { top: calc(var(--safe-top) + 12px); }
 
-  /* Écran d'accueil : plein écran. La barre de recherche est centrée au
-     repos ; pendant la réflexion (#home.thinking) elle s'efface en remontant
-     et un orbe en verre apparaît au centre ; après la réponse (#home.answered)
-     elle se place en bas et la réponse s'affiche au-dessus. Les positions
-     sont absolues (pas de flux) pour que rien ne déborde en largeur sur
-     téléphone : la marge de 16px vient du border mobile ci-dessus. */
-  .home {
-    z-index: 1;
-    overflow: hidden; text-align: center;
-    /* Fond plat, même couleur que la marge mobile (voir border plus haut) :
-       des dégradés ici faisaient apparaître un cadre sur téléphone. */
-    background: var(--bg);
+  /* ===== UI kit 2026-10 =====
+     Composants partagés par l'accueil et l'agent IA (assistant_bubble.js) :
+     pilule de saisie lumineuse, pastilles, sélecteur segmenté, boutons ronds,
+     bulles de conversation, rédaction mot par mot (answer_reveal.js).
+     Couleurs uniquement via variables (voir :root / html[data-theme="light"]).
+     Voir docs/superpowers/specs/2026-10-24-accueil-agent-redesign-design.md. */
+  @property --ang { syntax: '<angle>'; initial-value: 0deg; inherits: false; }
+  @keyframes ai-ring-spin { to { --ang: 360deg; } }
+
+  /* Pilule : anneau de 1.5px (le fond du conteneur), barre pleine dedans.
+     Repos = filet sobre ; .is-active (focus, saisie, réflexion) = lueur or
+     conique qui tourne. Sur mobile la lueur est permanente. */
+  .ai-pill {
+    width: 100%; padding: 1.5px; border-radius: 999px; background: var(--ai-ring-idle);
+    transition: box-shadow .3s var(--ease);
   }
-  .home-hero { position: absolute; top: 48px; left: 0; right: 0; display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; padding: 0 16px; }
+  .ai-pill.is-active {
+    background: conic-gradient(from var(--ang), var(--ai-ring-a), var(--ai-ring-track) 22%,
+                var(--ai-ring-track) 58%, var(--ai-ring-b) 78%, var(--ai-ring-a));
+    animation: ai-ring-spin 6s linear infinite;
+    box-shadow: 0 0 30px var(--ai-glow);
+  }
+  @media (max-width: 1023px) {
+    .ai-pill {
+      background: conic-gradient(from var(--ang), var(--ai-ring-a), var(--ai-ring-track) 22%,
+                  var(--ai-ring-track) 58%, var(--ai-ring-b) 78%, var(--ai-ring-a));
+      animation: ai-ring-spin 6s linear infinite;
+      box-shadow: 0 0 30px var(--ai-glow);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) { .ai-pill, .ai-pill.is-active { animation: none; } }
+  .ai-pill-bar {
+    position: relative; height: 54px; border-radius: 999px; background: var(--ai-input-bg);
+    display: flex; align-items: center; gap: 2px; padding: 0 7px 0 22px; text-align: left;
+  }
+  .ai-pill-bar input {
+    flex: 1; min-width: 0; height: 100%; border: 0; outline: 0; background: transparent;
+    color: var(--text); font: inherit; font-size: 15.5px; padding: 0;
+  }
+  .ai-pill-bar input::placeholder { color: var(--muted); }
+  .ai-pill-bar input::-webkit-search-cancel-button { display: none; }
+  /* Placeholder animé : "Demande-moi" + exemple en or, posé sur l'input vide. */
+  .ai-pill-hint {
+    position: absolute; left: 22px; right: 140px; top: 50%; transform: translateY(-50%);
+    font-size: 15.5px; color: var(--muted); pointer-events: none;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    transition: opacity .35s var(--ease);
+  }
+  .ai-pill-hint b { color: var(--gold-100); font-weight: 500; }
+  .ai-pill-hint.is-fading { opacity: 0; }
+  .ai-pill-hint[hidden] { display: none; }
+  .ai-kbd {
+    display: inline-grid; place-items: center; min-width: 22px; height: 20px; padding: 0 6px;
+    border: 1px solid var(--border); border-radius: 6px; color: var(--text-faint);
+    font-size: 11px; line-height: 1; margin-right: 6px; flex-shrink: 0;
+  }
+  @media (max-width: 1023px) { .ai-kbd { display: none; } }
+  .ai-round {
+    width: 40px; height: 40px; border-radius: 50%; padding: 0; flex-shrink: 0;
+    display: grid; place-items: center; border: 0; background: transparent; color: var(--muted);
+    transition: background .2s ease, color .2s ease, transform .12s ease;
+  }
+  .ai-round svg { width: 20px; height: 20px; display: block; fill: none; stroke: currentColor;
+    stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+  .ai-round:active { transform: scale(.94); }
+  .ai-round[hidden] { display: none; }
+  .ai-mic:hover { color: var(--text); }
+  .ai-mic[aria-pressed="true"] { background: var(--green-soft); color: var(--text); }
+  .ai-send { background: linear-gradient(135deg, var(--ai-send-from), var(--ai-send-to)); color: var(--ai-send-ink); }
+
+  /* Pastille (Historique, Nouvelle conversation, suggestions) et sélecteur
+     segmenté (Technique / Grand public) : hauteur fixe, texte centré. */
+  .ui-chip {
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    height: 32px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--border);
+    background: transparent; color: var(--muted); font: inherit; font-size: 12.5px; line-height: 1;
+    white-space: nowrap; transition: color .15s ease, border-color .15s ease, background .15s ease;
+  }
+  .ui-chip:hover { color: var(--text); border-color: var(--border-strong); }
+  .ui-chip svg { width: 15px; height: 15px; display: block; fill: none; stroke: currentColor;
+    stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+  .ui-chip[hidden] { display: none; }
+  .ui-seg {
+    display: inline-flex; align-items: center; height: 34px; padding: 3px;
+    border-radius: 999px; background: var(--bg-2); border: 1px solid var(--border);
+  }
+  .ui-seg button {
+    display: inline-flex; align-items: center; justify-content: center; height: 100%;
+    padding: 0 13px; border: 0; border-radius: 999px; background: none;
+    color: var(--muted); font: inherit; font-size: 12.5px; line-height: 1;
+    transition: background .2s ease, color .2s ease;
+  }
+  .ui-seg button:hover { color: var(--text); }
+  .ui-seg button[aria-pressed="true"] { background: var(--bg-4); color: var(--gold-100); }
+  .ui-seg button:focus-visible, .ui-chip:focus-visible, .ai-round:focus-visible {
+    outline: 2px solid var(--gold); outline-offset: 2px;
+  }
+
+  /* Rédaction mot par mot (answer_reveal.js) : chaque mot passe du flou au net. */
+  .rv-w { animation: rv-in var(--rv-fade) ease-out both; }
+  .rv-w.rv-static { animation: none; }
+  @keyframes rv-in {
+    from { opacity: 0; filter: blur(4px); transform: translateY(2px); }
+    to { opacity: 1; filter: blur(0); transform: none; }
+  }
+  .rv-streaming::after {
+    content: ''; display: inline-block; width: 2px; height: 1em; margin-left: 2px;
+    vertical-align: -0.15em; background: var(--gold); border-radius: 1px;
+    animation: rv-caret 1s step-end infinite;
+  }
+  @keyframes rv-caret { 50% { opacity: 0; } }
+  @media (prefers-reduced-motion: reduce) {
+    .rv-w { animation: none; }
+    .rv-streaming::after { animation: none; }
+  }
+
+  /* Conversation en bulles (accueil + agent). */
+  .ai-thread {
+    display: flex; flex-direction: column; gap: 16px; text-align: left;
+    overflow-y: auto; overflow-x: hidden; overscroll-behavior: contain;
+    scrollbar-width: thin; scrollbar-color: var(--muted) transparent;
+  }
+  .ai-msg-user {
+    align-self: flex-end; max-width: 82%; padding: 9px 14px;
+    background: var(--ai-user-bubble); color: var(--text);
+    border-radius: 18px 18px 4px 18px; font-size: 14.5px; line-height: 1.5;
+    white-space: pre-wrap; overflow-wrap: anywhere;
+  }
+  .ai-msg-ai { display: flex; gap: 10px; align-items: flex-start; }
+  .ai-avatar {
+    width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0; margin-top: 2px;
+    background: radial-gradient(circle at 35% 35%, var(--orb-hi), var(--orb-mid) 45%, var(--orb-lo) 100%);
+    box-shadow: 0 0 10px rgba(185,154,104,.4);
+  }
+  .ai-avatar.is-thinking { animation: ai-avatar-pulse 1.2s ease-in-out infinite; }
+  @keyframes ai-avatar-pulse { 50% { transform: scale(.82); box-shadow: 0 0 18px rgba(185,154,104,.7); } }
+  @media (prefers-reduced-motion: reduce) { .ai-avatar.is-thinking { animation: none; } }
+  .ai-msg-body { min-width: 0; flex: 1; }
+  .ai-msg-text { font-size: 15.5px; line-height: 1.65; color: var(--text); white-space: pre-wrap; overflow-wrap: anywhere; }
+  .ai-msg-text.is-error { color: var(--rust-300); }
+  .ai-links, .ai-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .ai-links:empty, .ai-actions:empty { display: none; }
+  .ai-reveal-after { animation: content-fade-in .35s var(--ease) both; }
+  .ai-link {
+    display: inline-flex; align-items: center; height: 30px; padding: 0 12px; border-radius: 999px;
+    border: 1px solid var(--gold-700); background: rgba(185,154,104,.08); color: var(--gold-100);
+    font: inherit; font-size: 12.5px; line-height: 1; white-space: nowrap;
+  }
+  .ai-link::after { content: ' →'; white-space: pre; }
+  .ai-link:hover { background: rgba(185,154,104,.16); }
+  .ai-actions { gap: 2px; margin-top: 6px; }
+  .ai-icon-btn {
+    width: 30px; height: 30px; border-radius: 9px; border: 0; background: none; padding: 0;
+    display: grid; place-items: center; color: var(--text-faint);
+  }
+  .ai-icon-btn:hover { color: var(--text); background: var(--bg-3); }
+  .ai-icon-btn[aria-pressed="true"] { color: var(--gold-100); background: var(--bg-3); }
+  .ai-icon-btn svg { width: 16px; height: 16px; display: block; fill: none; stroke: currentColor;
+    stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+
+  /* ===== Accueil =====
+     Colonne centrée : hero (nom + accroche), bloc de saisie (Historique au-
+     dessus, pilule, niveau dessous), puis tuiles du jour (desktop) ou carte
+     « Aujourd'hui » (mobile, au-dessus de la saisie). États portés par #home :
+     .guide-open (clic dans la barre), .thinking (réflexion), .answered
+     (conversation affichée : hero réduit, fil qui défile, saisie en bas). */
+  .home {
+    z-index: 1; overflow: hidden; text-align: center; background: var(--bg);
+    display: flex; flex-direction: column; align-items: center;
+  }
+  .home-hero {
+    flex-shrink: 0; display: flex; flex-direction: column; align-items: center; gap: 10px;
+    padding: 56px 20px 0; transition: padding .4s var(--ease);
+  }
   .home-wordmark {
-    font-family: 'Newsreader', serif; font-weight: 400; font-size: clamp(2.5rem, 8.5vw, 3.5rem);
+    font-family: 'Newsreader', serif; font-weight: 400; font-size: clamp(2.25rem, 8vw, 3.25rem);
     letter-spacing: 0.03em; line-height: 1.05;
     background: linear-gradient(135deg, var(--gold-100), var(--gold) 55%, var(--gold-700));
     -webkit-background-clip: text; background-clip: text; color: transparent;
+    transition: font-size .4s var(--ease);
   }
-  .home-tagline { color: var(--muted); font-size: var(--text-base); max-width: 420px; line-height: var(--lh-relaxed); margin: 0; }
-  .home-stage { position: absolute; inset: 0; }
+  .home-tagline { color: var(--muted); font-size: var(--text-base); max-width: 480px; line-height: var(--lh-relaxed); margin: 0; }
+  .home-main {
+    flex: 1; min-height: 0; width: 100%; max-width: 900px; padding: 0 20px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 22px;
+  }
+  .home-compose { width: 100%; max-width: 640px; display: flex; flex-direction: column; align-items: center; gap: 12px; position: relative; }
+  .home-compose-top { display: flex; justify-content: center; gap: 8px; }
+  .home-newconv { display: none; }
+  .home.answered .home-newconv { display: inline-flex; }
 
-  /* Barre de recherche : verre translucide, pilule. Centrée au repos
-     (bottom: 50% + translate 50% = centre exact, sans top:auto pour que la
-     transition de bottom reste numérique). */
-  .home-search {
-    position: absolute; left: 50%; bottom: 50%; transform: translate(-50%, 50%);
-    width: min(920px, calc(100% - 32px));
-    transition: bottom .8s var(--ease), transform .8s var(--ease),
-                opacity .5s var(--ease), visibility .5s;
+  /* Réflexion : sphère de particules or au centre (voir startHomeParticles). */
+  .home-particles {
+    position: absolute; left: 50%; top: 50%; width: 340px; height: 340px; pointer-events: none;
+    opacity: 0; transform: translate(-50%, -50%) scale(.4);
+    transition: opacity .5s var(--ease), transform .8s var(--ease);
   }
-  #homeSearchInput {
-    width: 100%; height: 72px; box-sizing: border-box; padding: 0 28px;
-    border-radius: 36px; font-size: 18px;
-    background: var(--bg-translucent); border: 1px solid var(--border);
-    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-    transition: border-color .4s var(--ease), box-shadow .4s var(--ease);
+  .home.thinking .home-particles { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+
+  /* Conversation (#homeSearchPanel) : absente au repos. */
+  .home-thread { display: none; width: 100%; max-width: 720px; }
+  .home.answered .home-thread { display: flex; flex: 1; min-height: 0; padding: 8px 8px 8px 0; }
+  .home.answered .home-hero { padding-top: 20px; }
+  .home.answered .home-tagline { display: none; }
+  .home.answered .home-wordmark { font-size: 1.6rem; }
+  .home.answered .home-main { justify-content: flex-end; padding-bottom: 20px; }
+  .home.thinking .home-hero, .home.thinking .home-today, .home.thinking .home-tiles,
+  .home.thinking .home-compose { opacity: 0; pointer-events: none; transition: opacity .3s var(--ease); }
+  .home.answered .home-today, .home.answered .home-tiles, .home.answered .home-guide { display: none; }
+
+  @media (min-width: 1024px) {
+    .home-hero { padding-top: calc(var(--topbar-h) + 48px); }
+    .home.answered .home-hero { padding-top: calc(var(--topbar-h) + 16px); }
+    .home-main { justify-content: flex-start; padding-top: 34px; }
   }
-  #homeSearchInput:focus {
-    border-color: rgba(42,91,255,.4);
-    box-shadow: 0 0 0 6px rgba(42,91,255,.1), 0 0 60px rgba(42,91,255,.2);
-  }
-  /* Niveau de réponse : sélecteur Technique / Grand public à l'intérieur de la barre. */
-  #homeSearchInput { padding-right: 260px; padding-left: 120px; }
-  /* Recherche vocale : bouton micro à gauche de la barre (voir wireHomeSearch). */
-  .home-mic {
-    position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
-    width: 44px; height: 44px; border-radius: 50%; padding: 0;
-    display: inline-flex; align-items: center; justify-content: center;
-    background: transparent; border: 1px solid var(--border); color: var(--muted);
-    cursor: pointer; transition: background .3s var(--ease), color .3s var(--ease), border-color .3s var(--ease);
-  }
-  .home-mic:hover { color: var(--text); }
-  .home-mic[aria-pressed="true"] {
-    background: rgba(42,91,255,.22); border-color: rgba(42,91,255,.5); color: var(--text);
-    animation: home-mic-pulse 1.4s ease-in-out infinite;
-  }
-  .home-mic[hidden] { display: none; }
-  /* Historique des conversations (stocké dans le navigateur de l'utilisateur). */
-  /* Bouton Historique dans la barre, à côté du micro (voir la maquette à 3 emplacements). */
-  .home-history-in { left: 66px; }
+
+  /* Historique (stocké dans le navigateur) : panneau au centre de l'écran. */
   .home-history-panel {
     position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
     width: min(640px, calc(100% - 32px)); max-height: 70vh; overflow-y: auto;
     background: var(--bg-2); border: 1px solid var(--border); border-radius: 16px;
-    padding: 18px; z-index: 7; text-align: left; box-shadow: 0 16px 40px rgba(0,0,0,.4);
+    padding: 18px; z-index: 7; text-align: left; box-shadow: var(--shadow-3);
   }
   .home-history-panel[hidden] { display: none; }
   .home-history-panel .home-history-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 10px; }
+  .home-history-head > div { display: flex; gap: 8px; }
   .home-history-item {
     display: block; width: 100%; text-align: left; background: transparent; color: var(--text);
     border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px; margin-top: 8px; cursor: pointer;
   }
   .home-history-item:hover { background: var(--bg-3); }
-  /* Nouvelle conversation : visible seulement quand une réponse est affichée. */
-  .home-newconv {
-    display: inline-flex; position: absolute; top: calc(100% + 14px); left: 50%; transform: translateX(-50%); z-index: 4;
-    background: rgba(226,232,240,.08); color: #e2e8f0; border: 1px solid rgba(226,232,240,.35);
-    border-radius: 10px; padding: 9px 18px; box-shadow: none;
-  }
-  .home-newconv:hover { background: rgba(226,232,240,.14); border-color: rgba(226,232,240,.5); }
-  .home.thinking .home-newconv { display: none; }
-  .home.answered .home-newconv { top: auto; bottom: calc(100% + 14px); }
-  @media (max-width: 899px) { .home-newconv { top: calc(100% + 66px); } .home.answered .home-newconv { top: auto; bottom: calc(100% + 14px); } }
   .home-history-item small { display: block; color: var(--muted); font-size: 12px; margin-bottom: 2px; }
-  @keyframes home-mic-pulse { 50% { box-shadow: 0 0 0 6px rgba(42,91,255,.12); } }
-  @media (prefers-reduced-motion: reduce) { .home-mic[aria-pressed="true"] { animation: none; } }
-  .home-level {
-    position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
-    display: inline-flex; padding: 3px; border-radius: 999px;
-    background: rgba(255,255,255,.04); border: 1px solid var(--border);
-  }
-  .home-level button {
-    font: inherit; font-size: 13px; color: var(--muted); background: none; border: 0;
-    border-radius: 999px; padding: 7px 14px; cursor: pointer;
-    transition: background .3s var(--ease), color .3s var(--ease);
-  }
-  .home-level button:hover { color: var(--text); }
-  .home-level button[aria-pressed="true"] { background: rgba(42,91,255,.18); color: var(--text); }
-  .home-level button:focus-visible { outline: 2px solid rgba(42,91,255,.5); outline-offset: 1px; }
-  /* Téléphone : barre à sa taille normale, sélecteur posé juste en dessous
-     (hors de la barre) pour que le message de bienvenue reste lisible. */
-  @media (max-width: 600px) {
-    #homeSearchInput { height: 72px; padding: 0 62px; font-size: 15px; }
-    .home-history-in { left: auto; right: 14px; transform: translateY(-50%); }
-    .home-mic { left: 12px; width: 40px; height: 40px; }
-    .home-level {
-      right: auto; top: 100%; bottom: auto; left: 50%;
-      transform: translateX(-50%); margin-top: 12px;
-      background: none; border: 0; padding: 0; gap: 4px;
-    }
-    .home-level button { font-size: 12px; padding: 6px 12px; }
-  }
-  .home.thinking .home-search {
-    opacity: 0; transform: translate(-50%, -220%); pointer-events: none; visibility: hidden;
-  }
-  .home.answered .home-search { bottom: 40px; transform: translate(-50%, 0); }
 
-  /* Orbe en verre affiché pendant la réflexion : translucide, flou, lueur
-     bleue intérieure, respiration de la lumière et légère flottaison. Pas
-     d'anneaux en orbite. */
-  /* Sphère de particules affichée pendant la réflexion (voir startHomeParticles). */
-  .home-particles {
-    position: absolute; left: 50%; top: 50%; width: 340px; height: 340px;
-    margin: 0; pointer-events: none;
-    opacity: 0; transform: translate(-50%, -50%) scale(.4);
-    transition: opacity .5s var(--ease), transform 1s var(--ease), left 1s var(--ease), top 1s var(--ease);
-  }
-  .home.thinking .home-particles { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-  /* Réponse prête : la sphère glisse à gauche et rapetisse, la réponse s'affiche à droite. */
-  .home.answered .home-particles { opacity: 1; left: 26%; top: 50%; transform: translate(-50%, -50%) scale(.72); }
-  @media (max-width: 899px) {
-    .home.answered .home-particles { left: 50%; top: 20%; transform: translate(-50%, -50%) scale(.5); }
-    /* Téléphone : la réponse commence sous la sphère et s'arrête au-dessus de la barre. */
-    .home.answered .home-search-panel { top: 36%; bottom: 180px; max-height: none; transform: translateX(-50%); }
-  }
-
-  /* Réponses : au-dessus du centre de l'écran, invisibles hors état answered. */
-  .home-search-panel {
-    position: absolute; left: 50%; top: 42%; transform: translate(-50%, -50%);
-    width: min(720px, calc(100% - 32px)); max-height: 50vh;
-    overflow-y: auto; overflow-x: hidden; padding-right: 14px;
-    opacity: 0; pointer-events: none; transition: opacity .6s var(--ease);
-    /* Scrollbar : mêmes couleurs, largeur et thumb arrondi que le carrousel
-       Portefeuille (.portfolio-pager-content), voir plus haut. */
-    scrollbar-width: thin; scrollbar-color: var(--muted) transparent;
-  }
-  .home-search-panel::-webkit-scrollbar { width: 12px; }
-  .home-search-panel::-webkit-scrollbar-track { background: transparent; }
-  .home-search-panel::-webkit-scrollbar-thumb {
-    background: var(--muted); border-radius: var(--radius-pill);
-    border: 3px solid transparent; background-clip: padding-box;
-  }
-  .home-search-panel::-webkit-scrollbar-thumb:hover { background: var(--accent); }
-  .home.answered .home-search-panel { opacity: 1; pointer-events: auto; }
-  /* Côte à côte sur grand écran : la réponse occupe la moitié droite. */
-  @media (min-width: 900px) {
-    .home-search-panel { transition: opacity .6s var(--ease), left 1s var(--ease), top 1s var(--ease), width 1s var(--ease), max-height 1s var(--ease); }
-    .home.answered .home-search-panel {
-      left: 72%; top: 50%; width: min(440px, 36vw); max-height: calc(100vh - 230px);
-      text-align: left;
-    }
-  }
-  .home-search-bubble { padding-bottom: 8px; }
-  .home-search-bubble + .home-search-bubble { margin-top: 24px; }
-  .home-search-bubble p {
-    margin: 0 0 16px; font-size: 17px; line-height: 1.7; color: var(--text);
-    white-space: pre-wrap; overflow-wrap: anywhere;
-  }
-  /* Curseur de l'effet machine à écrire (voir createAnswerTyper). */
-  .answer-caret {
-    display: inline-block; width: 2px; height: 1.1em; margin-left: 2px;
-    vertical-align: -0.2em; background: var(--accent);
-    animation: answer-caret-blink 1s step-end infinite;
-  }
-  @keyframes answer-caret-blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
-  @media (prefers-reduced-motion: reduce) {
-    .answer-caret { animation: none; }
-  }
-  .home-search-links { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
-  /* Copier : apparaît sous la réponse une fois l'écriture terminée. */
-  .home-search-copy {
-    display: block; margin: 16px auto 0; font-size: 12px; color: var(--muted);
-    background: var(--bg-translucent); border: 1px solid var(--border); border-radius: 8px;
-    padding: 6px 12px; cursor: pointer;
-    opacity: 0; transform: translateY(6px); pointer-events: none;
-    transition: opacity .5s var(--ease), transform .5s var(--ease), color .2s;
-  }
-  .home-search-copy.show { opacity: 1; transform: translateY(0); pointer-events: auto; }
-  .home-search-copy:hover { color: var(--text); }
-
-  .home-modules { display: flex; flex-direction: column; gap: 14px; width: 100%; max-width: 420px; }
-  .module-card {
-    display: flex; flex-direction: column; gap: 6px; text-align: left; padding: 20px 22px;
-    background: var(--bg-2); border: 1px solid var(--border); border-radius: var(--radius-xl);
-    box-shadow: var(--shadow-2); color: var(--text); position: relative; overflow: hidden;
-    animation: home-card-in .5s cubic-bezier(.22,1,.36,1) backwards;
-    transition: transform .18s cubic-bezier(.22,1,.36,1), border-color .18s ease, box-shadow .18s ease;
-  }
-  .module-card:nth-child(1) { animation-delay: .05s; }
-  .module-card:nth-child(2) { animation-delay: .12s; }
-  .module-card:nth-child(3) { animation-delay: .19s; }
-  .module-card::before {
-    content: ''; position: absolute; inset: 0 0 auto 0; height: 50%;
-    background: linear-gradient(180deg, rgba(255,255,255,.03), transparent); pointer-events: none;
-  }
-  .module-card:hover { transform: translateY(-3px); border-color: var(--accent); box-shadow: var(--shadow-3); }
-  .module-card:active { transform: translateY(-1px) scale(.99); }
-  .module-card-icon {
-    width: 22px; height: 22px; fill: none; stroke: var(--accent);
-    stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; margin-bottom: 2px;
-  }
-  .module-card-name { font-family: 'Newsreader', serif; font-weight: 400; font-size: var(--text-xl); }
-  .module-card-desc { color: var(--muted); font-size: var(--text-sm); line-height: var(--lh-normal); }
-  /* Carte Or : garde son identité or dédiée, indépendante de l'accent
-     général (qui devient vert émeraude en thème clair). */
-  .module-card-accent { border-color: var(--gold-700); box-shadow: var(--shadow-accent-glow); }
-  .module-card-accent:hover { border-color: var(--gold); }
-  .module-card-accent .module-card-icon { stroke: var(--gold); }
-  .module-card-disabled { opacity: .4; pointer-events: none; }
-  @keyframes home-card-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-  @media (min-width: 640px) {
-    .home-modules { flex-direction: row; max-width: 720px; }
-    .module-card { flex: 1; }
+  @media (max-width: 1023px) {
+    .home-hero { padding-top: 44px; }
+    .home-wordmark { font-size: clamp(2rem, 8.5vw, 2.5rem); }
+    .home-tagline { font-size: var(--text-sm); max-width: 300px; }
+    .home-main { padding: 0 4px 12px; gap: 18px; }
+    .ai-pill-bar { height: 50px; padding: 0 5px 0 16px; }
+    .ai-pill-bar input, .ai-pill-hint { font-size: 14.5px; }
+    .ai-pill-hint { left: 16px; right: 92px; }
+    .home.answered .home-hero { padding-top: 12px; }
+    .home.answered .home-main { padding-bottom: 8px; }
   }
 
   /* Écran d'un module (Or) */
@@ -515,7 +547,6 @@
   header { padding: 24px 64px 0 20px; position: relative; }
   @media (min-width: 1024px) {
     header { padding-top: calc(var(--topbar-h) + 36px); padding-right: 20px; }
-    .home-hero { top: calc(var(--topbar-h) + 36px); }
   }
   .back-link {
     display: inline-flex; align-items: center; gap: 6px;
@@ -1459,7 +1490,7 @@
     .skeleton-line { animation: none; }
     .bar-fill, .score-gauge-marker { transition: none !important; }
     .hero-number, .index-card-list, .company-layout, .ai-analysis,
-    .module-card { animation: none !important; }
+    .home-tile { animation: none !important; }
   }
 </style>
 </head>
@@ -1521,47 +1552,52 @@
 
 <div id="home" class="home">
   <button class="screen-theme-toggle" type="button" aria-label="Basculer mode jour/nuit"><svg class="nav-icon theme-icon"><use href="#icon-sun"/></svg></button>
+  <canvas id="homeParticles" class="home-particles" aria-hidden="true"></canvas>
   <div class="home-hero">
-    <div class="home-wordmark">AI Investment</div>
-    <p class="home-tagline">Bienvenue dans AI Investment, l'outil qui décrypte les marchés : scores des entreprises, suivi de vos bots et de votre portefeuille.</p>
+    <h1 class="home-wordmark">AI Investment</h1>
+    <p class="home-tagline" id="homeTagline">L'IA note chaque jour l'or et des centaines d'entreprises mondiales, repère les points d'entrée et suit ton portefeuille.</p>
   </div>
-  <div class="home-stage">
-    <canvas id="homeParticles" class="home-particles" aria-hidden="true"></canvas>
-    <div class="home-search">
-      <input type="search" id="homeSearchInput" class="list-search"
-             placeholder="Que puis-je faire pour vous ?">
-      <button type="button" id="homeHistoryInBar" class="home-mic home-history-in"
-              aria-label="Historique des conversations" title="Historique des conversations">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-             stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/>
-        </svg>
-      </button>
-      <button type="button" id="homeMicButton" class="home-mic" aria-pressed="false"
-              aria-label="Dicter la question" title="Dicter la question" hidden>
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-             stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/>
-          <line x1="12" y1="18" x2="12" y2="21"/>
-        </svg>
-      </button>
-      <div class="home-level" role="group" aria-label="Niveau de réponse">
+  <div class="home-main">
+    <div id="homeSearchPanel" class="home-thread ai-thread" aria-live="polite" hidden></div>
+    <div class="home-compose">
+      <div class="home-compose-top">
+        <button type="button" id="homeHistoryInBar" class="ui-chip">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Historique
+        </button>
+        <button type="button" id="homeNewConv" class="ui-chip home-newconv">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Nouvelle conversation
+        </button>
+      </div>
+      <div class="ai-pill" id="homePill">
+        <div class="ai-pill-bar">
+          <input type="search" id="homeSearchInput" autocomplete="off" enterkeyhint="send"
+                 aria-label="Pose ta question à l'assistant" placeholder="">
+          <span class="ai-pill-hint" id="homePillHint" aria-hidden="true">Demande-moi <b></b></span>
+          <span class="ai-kbd" aria-hidden="true">/</span>
+          <button type="button" id="homeMicButton" class="ai-round ai-mic" aria-pressed="false"
+                  aria-label="Dicter la question" title="Dicter la question" hidden>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>
+          </button>
+          <button type="button" id="homeSendButton" class="ai-round ai-send" aria-label="Envoyer la question">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="ui-seg home-level" role="group" aria-label="Niveau de réponse">
         <button type="button" data-niveau="technique">Technique</button>
         <button type="button" data-niveau="grand_public">Grand public</button>
       </div>
-      <button type="button" id="homeNewConv" class="toggle-btn home-newconv">Nouvelle conversation</button>
     </div>
-    <div id="homeSearchPanel" class="home-search-panel" hidden></div>
-    <div id="homeHistoryPanel" class="home-history-panel" hidden>
-      <div class="home-history-head">
-        <strong>Historique</strong>
-        <div>
-          <button type="button" class="toggle-btn" id="homeHistoryClear">Tout effacer</button>
-          <button type="button" class="toggle-btn" id="homeHistoryClose">Fermer</button>
-        </div>
+  </div>
+  <div id="homeHistoryPanel" class="home-history-panel" hidden>
+    <div class="home-history-head">
+      <strong>Historique</strong>
+      <div>
+        <button type="button" class="ui-chip" id="homeHistoryClear">Tout effacer</button>
+        <button type="button" class="ui-chip" id="homeHistoryClose">Fermer</button>
       </div>
-      <div id="homeHistoryList"></div>
     </div>
+    <div id="homeHistoryList"></div>
   </div>
 </div>
 
@@ -1720,6 +1756,11 @@
      correspondance + une fonction pure), contrairement à ces trois autres
      modules qui portent un vrai moteur logique. -->
 <script src="company_quote_widget.js"></script>
+<!-- Accueil + agent IA : rédaction mot par mot, infos du jour, textes de
+     guidage (logique pure, testée sous Node — voir docs/*.test.js). -->
+<script src="answer_reveal.js"></script>
+<script src="home_today.js"></script>
+<script src="assistant_suggestions.js"></script>
 <script>
 // Pas d'enregistrement en local : le cache du service worker resservait une
 // version périmée à chaque itération de dev malgré un rechargement.
@@ -3900,6 +3941,7 @@ function setHomeState(etat) {
   // Pendant la réflexion la barre est invisible : on retire le focus pour que
   // le clavier mobile se ferme et qu'un Enter ne reparte pas en double.
   if (etat === 'thinking') document.getElementById('homeSearchInput').blur();
+  majHomePillActive();
 }
 
 async function askAssistant(question) {
@@ -4158,23 +4200,81 @@ function wireHomeSearch() {
     b.addEventListener('click', () => setNiveauReponse(b.dataset.niveau));
   });
   setNiveauReponse(niveauReponse());
-  input.addEventListener('keydown', async (e) => {
+  input.addEventListener('keydown', (e) => {
     if (e.key !== 'Enter') return;
-    // Barre masquée pendant la réflexion : pas de nouvel envoi tant que la
-    // réponse précédente n'est pas arrivée.
-    if (document.getElementById('home').classList.contains('thinking')) return;
-    const query = input.value;
-    await ensureIndicesData();
-    const navHash = matchInstantNav(query);
-    if (navHash) {
-      location.hash = navHash;
-      input.value = '';
-      return;
-    }
-    if (query.trim()) {
-      askAssistant(query.trim());
-      input.value = '';
-    }
+    e.preventDefault();
+    submitHomeQuery(input.value);
+  });
+  document.getElementById('homeSendButton').addEventListener('click', () => submitHomeQuery(input.value));
+  wireHomePill(input);
+}
+
+// Envoi depuis la barre de l'accueil (Entrée, bouton envoyer, question du
+// guide) : navigation instantanée sans IA si la requête désigne clairement
+// une section ou une entreprise, sinon question à l'assistant.
+async function submitHomeQuery(texte) {
+  const input = document.getElementById('homeSearchInput');
+  // Pas de nouvel envoi tant que la réponse précédente n'est pas arrivée.
+  if (document.getElementById('home').classList.contains('thinking')) return;
+  const query = (texte || '').trim();
+  if (!query) return;
+  await ensureIndicesData();
+  const navHash = matchInstantNav(query);
+  input.value = '';
+  majHomePillHint();
+  if (navHash) { location.hash = navHash; return; }
+  askAssistant(query);
+}
+
+// Placeholder animé (« Demande-moi » + exemple en or qui change toutes les
+// 4 s, voir PLACEHOLDER_EXAMPLES), lueur de la pilule (.is-active au focus,
+// pendant la saisie et la réflexion) et raccourci « / » pour viser la barre.
+const HOME_HINT_MS = 4000;
+let homeHintIndex = 0;
+
+function majHomePillHint() {
+  const input = document.getElementById('homeSearchInput');
+  const hint = document.getElementById('homePillHint');
+  if (!input || !hint) return;
+  hint.hidden = input.value !== '' || document.activeElement === input;
+  input.placeholder = document.activeElement === input ? 'Pose ta question…' : '';
+}
+
+function majHomePillActive() {
+  const input = document.getElementById('homeSearchInput');
+  const actif = document.activeElement === input || input.value !== ''
+    || document.getElementById('home').classList.contains('thinking');
+  document.getElementById('homePill').classList.toggle('is-active', actif);
+}
+
+function wireHomePill(input) {
+  const hint = document.getElementById('homePillHint');
+  const exemple = hint.querySelector('b');
+  exemple.textContent = PLACEHOLDER_EXAMPLES[0];
+  const reduit = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (!reduit) {
+    setInterval(() => {
+      if (hint.hidden || document.hidden) return;
+      hint.classList.add('is-fading');
+      setTimeout(() => {
+        homeHintIndex = nextPlaceholderIndex(homeHintIndex, PLACEHOLDER_EXAMPLES.length);
+        exemple.textContent = PLACEHOLDER_EXAMPLES[homeHintIndex];
+        hint.classList.remove('is-fading');
+      }, 350);
+    }, HOME_HINT_MS);
+  }
+  ['focus', 'blur', 'input'].forEach(ev => input.addEventListener(ev, () => {
+    majHomePillHint();
+    majHomePillActive();
+  }));
+  majHomePillHint();
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== '/' || e.ctrlKey || e.metaKey || e.altKey) return;
+    if (parseRoute().screen !== 'home') return;
+    const cible = e.target;
+    if (cible && (cible.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(cible.tagName))) return;
+    e.preventDefault();
+    input.focus();
   });
 }
 

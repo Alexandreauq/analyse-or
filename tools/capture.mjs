@@ -90,6 +90,8 @@ async function main() {
     });
 
     await send('Page.enable');
+    // Sans fenêtre active, focus() ne déclenche ni :focus ni l'événement focus.
+    await send('Emulation.setFocusEmulationEnabled', { enabled: true });
     const mobile = o.width < 1024;
     await send('Emulation.setDeviceMetricsOverride', { width: o.width, height: o.height, deviceScaleFactor: 1, mobile });
     if (mobile) await send('Emulation.setTouchEmulationEnabled', { enabled: true, maxTouchPoints: 5 });

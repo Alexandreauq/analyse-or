@@ -22,7 +22,27 @@ function test_filterGuide_ne_garde_que_les_questions_correspondantes() {
   assert.deepStrictEqual(filterGuide(HOME_GUIDE, 'evenement macro')[0].questions, ['Quel est le prochain événement macro ?']);
 }
 
+function test_suggestionsForRoute_fiche_entreprise() {
+  const { suggestionsForRoute } = require('./assistant_suggestions.js');
+  assert.deepStrictEqual(suggestionsForRoute('#indices/MC.PA', 'LVMH'), ["Explique le repère d'entrée de LVMH", 'Critères Graham de LVMH ?']);
+  assert.deepStrictEqual(suggestionsForRoute('#indices/MC.PA'), ["Explique le repère d'entrée de MC.PA", 'Critères Graham de MC.PA ?']);
+  assert.strictEqual(suggestionsForRoute('#xyz').length, 2);
+  assert.deepStrictEqual(suggestionsForRoute('#portefeuille'), ['Analyse mon portefeuille', 'Quel est le statut des bots ?']);
+}
+
+function test_contextLabel_par_route() {
+  const { contextLabel } = require('./assistant_suggestions.js');
+  assert.strictEqual(contextLabel('#indices/MC.PA', 'LVMH'), 'Fiche LVMH');
+  assert.strictEqual(contextLabel('#indices/MC.PA/analyse', 'LVMH'), 'Analyse LVMH');
+  assert.strictEqual(contextLabel('#indices/suivi'), 'Suivi des signaux');
+  assert.strictEqual(contextLabel('#indices/compare/MC.PA,RMS.PA'), 'Comparateur');
+  assert.strictEqual(contextLabel(''), 'Accueil');
+  assert.strictEqual(contextLabel('#or'), 'Or');
+}
+
 test_exemples_du_placeholder();
+test_suggestionsForRoute_fiche_entreprise();
+test_contextLabel_par_route();
 test_normalizeText_minuscules_sans_accents();
 test_filterGuide_ne_garde_que_les_questions_correspondantes();
 console.log('OK');

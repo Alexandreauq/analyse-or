@@ -220,7 +220,15 @@ def ecrit_resultats(paris_resolus: list[dict], chemin: str) -> None:
     dirname = os.path.dirname(chemin)
     if dirname:
         os.makedirs(dirname, exist_ok=True)
-    with open(chemin, "w", encoding="utf-8") as fh:
+    # Correctif anti-corruption (revue 2) : ecrire directement dans
+    # `chemin` avec "w" laissait un fichier TRONQUE et invalide si
+    # json.dump levait en cours de route (NaN, allow_nan=False) --
+    # confirme empiriquement par la revue precedente. On ecrit plutot
+    # dans un fichier temporaire puis on bascule avec os.replace() :
+    # si json.dump leve, le fichier final (celui de la derniere
+    # ecriture reussie) reste intact.
+    chemin_temp = chemin + ".tmp"
+    with open(chemin_temp, "w", encoding="utf-8") as fh:
         # FIX 6 (revue finale) : allow_nan=False -- meme pattern que
         # indices_score.py::save_risk_free_rate_cache. json.dump ecrit NaN
         # tel quel par defaut (JSON invalide au sens strict, que
@@ -230,6 +238,7 @@ def ecrit_resultats(paris_resolus: list[dict], chemin: str) -> None:
         # d'ecrire un fichier silencieusement corrompu.
         json.dump({"methode": "backtest_retroactif", "paris": paris_resolus}, fh,
                    ensure_ascii=False, indent=2, allow_nan=False)
+    os.replace(chemin_temp, chemin)
 
 
 def main(chemin_sortie: str = "docs/superpowers/experiments/2026-10-24-analyste-backtest-6-12-mois.json") -> None:
@@ -289,12 +298,31 @@ def main(chemin_sortie: str = "docs/superpowers/experiments/2026-10-24-analyste-
         except Exception as e:
             print(f"Pari ignore ({signal.get('ticker')}, {signal.get('date_cible')}) : {e!r}")
             continue
-        ecrit_resultats(paris_resolus, chemin_sortie)
+        try:
+            ecrit_resultats(paris_resolus, chemin_sortie)
+        except Exception as e:
+            # Correctif (revue 2) : un echec isole de L'ECRITURE elle-meme
+            # (ex. NaN dans CE pari precis, allow_nan=False) ne doit pas
+            # non plus faire perdre tout le run -- meme garde-fou que le
+            # try/except ci-dessus pour Gemini/resolution, mais a l'etage
+            # de l'ecriture (c'est elle qui, avant ce correctif, n'etait
+            # PAS couverte et faisait remonter l'exception jusqu'a faire
+            # sortir main() entierement). On retire aussi le pari qui
+            # vient de faire echouer l'ecriture : le laisser dans
+            # paris_resolus ferait echouer TOUTES les ecritures suivantes
+            # a cause de lui, meme pour des paris sains.
+            print(f"Ecriture ignoree ({signal.get('ticker')}, {signal.get('date_cible')}) : {e!r}")
+            paris_resolus.pop()
 
-    if not signaux:
-        # Aucun signal echantillonne (cas limite) : ecrit tout de meme un
-        # fichier (vide) plutot que rien -- la boucle ci-dessus n'ecrit
-        # jamais si elle ne s'execute pas une seule fois.
+    if not paris_resolus:
+        # Aucun pari resolu avec succes (cas limite) -- que ce soit parce
+        # qu'aucun signal n'a ete echantillonne, OU parce que tous les
+        # signaux echantillonnes ont echoue en resolution/ecriture (FIX,
+        # revue 2 -- l'ancienne condition `if not signaux` ne couvrait
+        # pas ce second cas) : ecrit tout de meme un fichier (vide) plutot
+        # que rien. Jamais de double ecriture dans le cas normal : quand
+        # paris_resolus n'est pas vide, la boucle ci-dessus l'a deja
+        # ecrit a sa derniere iteration reussie.
         ecrit_resultats(paris_resolus, chemin_sortie)
 
 

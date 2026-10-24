@@ -4220,6 +4220,9 @@ async function askAssistant(question) {
   // de l'ancienne requête ne relancent plus d'animation.
   if (typerCourant) typerCourant.annuler();
   typerCourant = null;
+  // La requête précédente est abandonnée : ses événements en retard ne
+  // doivent plus rien afficher ni entrer dans l'historique de conversation.
+  if (requeteCourante) { requeteCourante.abort(); requeteCourante = null; }
   const generation = ++answerGeneration;
   const estDepassee = () => generation !== answerGeneration;
   const reduceMotion = window.matchMedia
@@ -4283,6 +4286,7 @@ async function askAssistant(question) {
     let buffer = '';
     while (true) {
       const { done, value } = await reader.read();
+      if (estDepassee()) { reader.cancel().catch(() => {}); return; }
       if (done) break;
       buffer += decoder.decode(value, { stream: true });
       const lignes = buffer.split('\n\n');
@@ -4315,7 +4319,8 @@ async function askAssistant(question) {
       typer.liens(liensRecus);
       typer.terminer();
     }
-    if (!erreurRecue) {
+    if (estDepassee()) return;
+    if (!erreurRecue && texteAccumule) {
       homeSearchHistory.push({ role: 'user', content: question });
       homeSearchHistory.push({ role: 'assistant', content: texteAccumule });
       saveAssistantExchange(question, texteAccumule);

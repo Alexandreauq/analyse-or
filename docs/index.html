@@ -94,6 +94,11 @@
     --ai-send-from: var(--gold-100); --ai-send-to: var(--gold); --ai-send-ink: var(--bg-0);
     --ai-user-bubble: var(--bg-4);
     --rv-fade: 220ms;
+    /* Agent IA (assistant_bubble.js) : identité turquoise, distincte de l'or de
+       la barre de l'accueil — ce sont deux conversations séparées. */
+    --agent: #2dd4bf; --agent-hi: #7fe7d6; --agent-deep: #0f766e;
+    --agent-soft: rgba(45,212,191,.12); --agent-bubble: rgba(45,212,191,.16); --agent-glow: rgba(45,212,191,.24);
+    --agent-orb-bg: rgba(10,18,22,.85);
     --bg-translucent: rgba(10,14,26,.9);
 
     /* Breakpoints (référence — non utilisables en valeur CSS, documentés pour cohérence media queries) */
@@ -129,6 +134,8 @@
     --bg-translucent: rgba(251,242,222,.9);
 
     --scrim: rgba(40,30,10,.35);
+    --agent: #0f9488; --agent-hi: #0d7c72; --agent-deep: #0f9488;
+    --agent-soft: rgba(15,148,136,.10); --agent-bubble: rgba(15,148,136,.14); --agent-glow: rgba(15,148,136,.22);
     --ai-glow: rgba(138,109,63,.28);
     --ai-input-bg: var(--bg-2);
     --ai-send-from: #c9a96e; --ai-send-to: #8a6d3f; --ai-send-ink: #fdf8ee;
@@ -271,17 +278,18 @@
   .bottom-nav .nav-ico .nav-icon { width: 27px; height: 27px; }
   .bottom-nav .nav-item.active { color: var(--gold); }
   .bottom-nav .nav-item.active .nav-ico { background: var(--bg-3); }
-  .bottom-nav .nav-item-ia { color: var(--gold-100); }
+  .bottom-nav .nav-item-ia { color: var(--agent); }
   .nav-orb {
     /* -24px : l'orbe occupe la même hauteur (32px) qu'une .nav-ico, donc le
-       libellé "IA" reste aligné sur ceux des autres onglets. */
-    width: 56px; height: 56px; margin-top: -24px; border-radius: 50%; flex-shrink: 0;
-    border: 4px solid var(--bg-1);
-    background: radial-gradient(circle at 35% 35%, var(--orb-hi), var(--orb-mid) 45%, var(--orb-lo) 100%);
-    box-shadow: 0 0 24px rgba(185,154,104,.45);
+       libellé "IA" reste aligné sur ceux des autres onglets. Sphère de
+       particules turquoise animée de l'agent, dessinée dans un canvas par
+       assistant_bubble.js (même sphère que le lanceur desktop). */
+    width: 56px; height: 56px; margin-top: -24px; border-radius: 50%; flex-shrink: 0; overflow: hidden;
+    border: 4px solid var(--bg-1); background: var(--agent-orb-bg);
+    box-shadow: 0 0 0 1px var(--agent-soft), 0 0 22px var(--agent-glow);
   }
-  .bottom-nav .nav-item-ia.active { color: var(--gold); }
-  .bottom-nav .nav-item-ia.active .nav-orb { box-shadow: 0 0 0 2px var(--gold), 0 0 28px rgba(185,154,104,.6); }
+  .nav-orb canvas { width: 100%; height: 100%; display: block; }
+  .bottom-nav .nav-item-ia.active .nav-orb { box-shadow: 0 0 0 2px var(--agent), 0 0 28px var(--agent-glow); }
 
   /* Bouton Thème mobile : dans l'en-tête de chaque écran, défile avec la
      page (pas position:fixed) — jamais sous l'encoche / la Dynamic Island,
@@ -5955,15 +5963,10 @@ document.getElementById('pfOrTocTrigger').addEventListener('click', () => toggle
 window.addEventListener('hashchange', () => renderRoute(true));
 renderRoute(false);
 
-// Onglet central "IA" (mobile) : sur l'accueil, la barre centrale fait déjà
-// office d'assistant → on y place le curseur ; ailleurs, ouvre l'agent
+// Onglet central "IA" (mobile) : ouvre l'agent partout, accueil compris —
+// sa conversation est distincte de celle de la barre de l'accueil
 // (window.AssistantIA, défini par assistant_bubble.js, chargé en différé).
 document.getElementById('bottomNavIa').addEventListener('click', () => {
-  if (parseRoute().screen === 'home') {
-    const input = document.getElementById('homeSearchInput');
-    if (input) input.focus();
-    return;
-  }
   if (window.AssistantIA) window.AssistantIA.toggle();
 });
 

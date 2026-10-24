@@ -21,21 +21,36 @@
   // ---- styles propres à l'agent (couleurs : variables du thème uniquement) ----
   const style = document.createElement('style');
   style.textContent = `
+    /* Lanceur : la sphère de particules turquoise d'origine, qui tourne sur
+       elle-même (voir dessineSphere), sur toutes les pages desktop. */
     .ab-launch {
-      position: fixed; right: max(20px, var(--safe-right)); bottom: max(20px, var(--safe-bottom)); z-index: 30;
-      width: 56px; height: 56px; border-radius: 50%; border: 0; padding: 0; display: grid; place-items: center;
-      background: radial-gradient(circle at 35% 35%, var(--orb-hi), var(--orb-mid) 45%, var(--orb-lo) 100%);
-      /* Croix toujours sombre : la sphère reste dorée dans les 2 thèmes. */
-      box-shadow: 0 0 26px rgba(185,154,104,.35), var(--shadow-2); color: #0a0e1a;
-      transition: transform .15s var(--ease);
+      position: fixed; right: max(18px, var(--safe-right)); bottom: max(18px, var(--safe-bottom)); z-index: 30;
+      width: 96px; height: 96px; border-radius: 50%; padding: 0; overflow: hidden;
+      border: 1px solid var(--agent-soft); background: var(--agent-orb-bg);
+      box-shadow: 0 0 24px var(--agent-glow);
+      transition: transform .15s var(--ease), box-shadow .2s ease;
     }
-    .ab-launch:hover { transform: scale(1.05); }
-    .ab-launch:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
-    .ab-launch svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; opacity: 0; transition: opacity .15s ease; }
-    .ab-launch[aria-expanded="true"] svg { opacity: 1; }
+    .ab-launch canvas { width: 100%; height: 100%; display: block; }
+    .ab-launch:hover { transform: scale(1.04); }
+    .ab-launch[aria-expanded="true"] { box-shadow: 0 0 0 2px var(--agent), 0 0 30px var(--agent-glow); }
+    .ab-launch:focus-visible { outline: 2px solid var(--agent); outline-offset: 3px; }
     .ab-launch[hidden], .ab-panel[hidden], .ab-scrim[hidden] { display: none; }
+
+    /* Identité turquoise de l'agent (≠ or de la barre de l'accueil) : on
+       redéfinit les variables du kit à l'intérieur du panneau seulement. */
     .ab-panel {
-      position: fixed; right: max(20px, var(--safe-right)); bottom: calc(max(20px, var(--safe-bottom)) + 70px); z-index: 31;
+      --ai-ring-a: var(--agent); --ai-ring-b: var(--agent-hi); --ai-glow: var(--agent-glow);
+      --ai-send-from: var(--agent-hi); --ai-send-to: var(--agent); --ai-send-ink: #04211d;
+      --ai-user-bubble: var(--agent-bubble);
+      --gold: var(--agent); --gold-100: var(--agent-hi); --gold-700: var(--agent-deep);
+    }
+    .ab-panel .ai-avatar { background: radial-gradient(circle at 35% 35%, var(--agent-hi), var(--agent) 50%, var(--agent-deep) 100%); box-shadow: 0 0 10px var(--agent-glow); }
+    .ab-panel .ai-link { background: var(--agent-soft); }
+    .ab-panel .ui-seg button[aria-pressed="true"] { color: var(--agent-hi); background: var(--agent-bubble); }
+    .ab-head-orb { width: 30px; height: 30px; border-radius: 50%; overflow: hidden; flex-shrink: 0; background: var(--agent-orb-bg); }
+    .ab-head-orb canvas { width: 100%; height: 100%; display: block; }
+    .ab-panel {
+      position: fixed; right: max(18px, var(--safe-right)); bottom: calc(max(18px, var(--safe-bottom)) + 110px); z-index: 31;
       width: min(380px, calc(100vw - 40px)); max-height: min(620px, calc(100vh - 140px));
       display: flex; flex-direction: column; text-align: left;
       background: var(--bg-2); border: 1px solid var(--border); border-radius: 20px; box-shadow: var(--shadow-3);
@@ -43,7 +58,6 @@
     }
     .ab-grab { display: none; }
     .ab-head { display: flex; align-items: center; gap: 8px; padding: 12px 10px 10px 14px; border-bottom: 1px solid var(--border); }
-    .ab-head .ai-avatar { width: 20px; height: 20px; margin: 0; }
     .ab-title { font-weight: 600; font-size: 13.5px; color: var(--text); }
     .ab-ctx {
       display: inline-flex; align-items: center; gap: 6px; height: 24px; padding: 0 9px; min-width: 0;
@@ -108,14 +122,70 @@
     envoyer: '<path d="M12 19V5M5 12l7-7 7 7"/>',
   };
 
-  // ---- lanceur (desktop) ----
+  // ---- sphère de particules turquoise (sphère d'origine de l'agent) ----
+  // Points répartis sur une sphère qui tourne sur elle-même, ondulation
+  // légère ; plus agitée quand l'agent réfléchit ou parle. ~30 images/s, en
+  // pause quand l'onglet est caché ou le canvas invisible ; figée si
+  // l'utilisateur a demandé moins d'animations.
+  const TEAL = [45, 212, 191];
+  const etatSphere = { reflechit: false, parle: false };
+  const bruit = (x) => Math.sin(x) * 0.6 + Math.sin(x * 2.3 + 1.7) * 0.3 + Math.sin(x * 4.1 + 0.4) * 0.1;
+  function dessineSphere(cv, taille, nbPoints) {
+    const points = Array.from({ length: nbPoints }, () => ({
+      a: Math.random() * Math.PI * 2, b: Math.random() * Math.PI - Math.PI / 2,
+      jit: Math.random() - 0.5, taille: 0.5 + Math.random() * 1.1, phase: Math.random() * Math.PI * 2,
+    }));
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const ctx = cv.getContext('2d');
+    cv.width = taille * dpr; cv.height = taille * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const debut = performance.now();
+    const echelle = taille / 96;
+    let derniere = 0;
+    function frame(now) {
+      requestAnimationFrame(frame);
+      if (now - derniere < 33 || document.hidden || !cv.offsetParent) return;
+      derniere = now;
+      const t = reduit ? 0 : (now - debut) / 1000;
+      const amp = etatSphere.parle ? 1.7 : (etatSphere.reflechit ? 1.25 : 1);
+      const cx = taille / 2, cy = taille / 2;
+      const R = 34 * echelle * (1 + 0.035 * Math.sin(t * 0.9));
+      const tps = t * 0.35 * (etatSphere.parle ? 2 : (etatSphere.reflechit ? 1.6 : 1));
+      const rot = t * 0.25;
+      ctx.clearRect(0, 0, taille, taille);
+      for (const p of points) {
+        const onde = 1 + 0.1 * amp * bruit(p.a * 3 + tps) + 0.04 * amp * Math.sin(p.phase + t * 1.3);
+        const r = R * onde * (1 + 0.05 * amp * p.jit);
+        const x3 = r * Math.cos(p.b) * Math.cos(p.a + rot);
+        const y3 = r * Math.sin(p.b);
+        const z3 = r * Math.cos(p.b) * Math.sin(p.a + rot);
+        const persp = 1 / (1 - z3 / (R * 3.2));
+        const alpha = Math.max(0.08, Math.min(1, 0.35 + 0.55 * (z3 / (R * 1.4) + 0.5)));
+        ctx.fillStyle = 'rgba(' + TEAL.join(',') + ',' + alpha + ')';
+        const sz = p.taille * persp * Math.max(0.6, echelle);
+        ctx.fillRect(cx + x3 * persp - sz / 2, cy + y3 * persp - sz / 2, sz, sz);
+      }
+    }
+    requestAnimationFrame(frame);
+  }
+  function sphereDans(conteneur, taille, nbPoints) {
+    const cv = document.createElement('canvas');
+    cv.setAttribute('aria-hidden', 'true');
+    conteneur.appendChild(cv);
+    dessineSphere(cv, taille, nbPoints);
+  }
+
+  // ---- lanceur (desktop, toutes les pages) ----
   const lanceur = document.createElement('button');
   lanceur.type = 'button';
   lanceur.className = 'ab-launch';
   lanceur.setAttribute('aria-label', 'Ouvrir l\'assistant');
   lanceur.setAttribute('aria-expanded', 'false');
-  lanceur.innerHTML = SVG(ICONES.fermer);
   document.body.appendChild(lanceur);
+  sphereDans(lanceur, 96, 420);
+  // Onglet « IA » de la barre d'onglets mobile : même sphère.
+  const orbeOnglet = document.querySelector('#bottomNavIa .nav-orb');
+  if (orbeOnglet) sphereDans(orbeOnglet, 48, 220);
 
   // ---- voile (mobile, voir Task 8) + panneau ----
   const voile = document.createElement('div');
@@ -131,7 +201,7 @@
   panneau.innerHTML = `
     <div class="ab-grab" aria-hidden="true"></div>
     <div class="ab-head">
-      <span class="ai-avatar" aria-hidden="true"></span>
+      <span class="ab-head-orb" id="abHeadOrb"></span>
       <span class="ab-title">Assistant</span>
       <span class="ab-ctx" id="abCtx"></span>
       <span class="ab-sp"></span>
@@ -156,6 +226,7 @@
       </div>
     </div>`;
   document.body.appendChild(panneau);
+  sphereDans(panneau.querySelector('#abHeadOrb'), 30, 140);
   const messages = panneau.querySelector('#abMessages');
   const champ = panneau.querySelector('#abQuestion');
   const formulaire = panneau.querySelector('#abForm');
@@ -181,7 +252,6 @@
 
   // ---- contexte : la page courante ----
   function routeCourante() { return location.hash || '#home'; }
-  function estAccueil() { return decoupeRoute(routeCourante()).section === 'accueil'; }
   function nomEntreprise() {
     const r = decoupeRoute(routeCourante());
     if (!r.ticker || typeof indicesData === 'undefined' || !indicesData || !Array.isArray(indicesData.companies)) return null;
@@ -220,7 +290,6 @@
 
   // ---- ouverture / fermeture ----
   function ouvre(ouvrir) {
-    if (ouvrir && estAccueil()) ouvrir = false;
     panneau.hidden = !ouvrir;
     voile.hidden = !ouvrir;
     lanceur.setAttribute('aria-expanded', String(ouvrir));
@@ -233,10 +302,10 @@
       champ.focus();
     }
   }
+  // Présent sur toutes les pages, accueil compris (conversation distincte de
+  // la barre de l'accueil) : seuls le contexte et les suggestions changent.
   function majVisibilite() {
-    lanceur.hidden = estAccueil();
-    if (estAccueil()) ouvre(false);
-    else if (!panneau.hidden) majContexte();
+    if (!panneau.hidden) majContexte();
   }
   lanceur.addEventListener('click', () => ouvre(panneau.hidden));
   voile.addEventListener('click', () => ouvre(false));
@@ -363,6 +432,7 @@
     const token = typeof getAiAssistantToken === 'function' ? getAiAssistantToken() : null;
     ajouteQuestion(question);
     const rep = ajouteReponse();
+    etatSphere.reflechit = true;
     suivre();
     let liensRecus = [];
     let texte = '';
@@ -416,7 +486,7 @@
           const ligne = bloc.split('\n').find((l) => l.indexOf('data: ') === 0);
           if (!ligne) continue;
           const ev = JSON.parse(ligne.slice(6));
-          if (ev.type === 'texte') { rep.avatar.classList.remove('is-thinking'); texte += ev.texte; reveal.setText(texte); }
+          if (ev.type === 'texte') { rep.avatar.classList.remove('is-thinking'); etatSphere.reflechit = false; texte += ev.texte; reveal.setText(texte); }
           else if (ev.type === 'liens') liensRecus = ev.liens || [];
           else if (ev.type === 'navigation') navigation = ev;
           else if (ev.type === 'erreur') { erreur = true; rep.texte.classList.add('is-error'); reveal.replace(ev.detail || 'Erreur.'); }
@@ -429,6 +499,7 @@
       reveal.fix((e && e.message) ? e.message : "Je n'ai pas pu contacter l'assistant, réessaie dans un instant.");
     } finally {
       enCours = false;
+      etatSphere.reflechit = false;
     }
     if (!erreur && texte) {
       historique.push({ role: 'user', content: question });

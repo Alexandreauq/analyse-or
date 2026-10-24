@@ -5783,8 +5783,18 @@ function parseRoute() {
   return { screen: 'home' };
 }
 
+// Masquage différé d'un écran (fin du fondu) : un seul en attente par écran,
+// annulé si l'écran est réaffiché entre-temps — sinon un retour rapide (ou
+// un transitionend venu d'un enfant) masquait l'écran qu'on venait d'ouvrir.
+const paneHideCancels = {};
+
+function cancelPendingHide(id) {
+  if (paneHideCancels[id]) { paneHideCancels[id](); delete paneHideCancels[id]; }
+}
+
 function showPane(id, animate) {
   const el = document.getElementById(id);
+  cancelPendingHide(id);
   const alreadyVisible = !el.hidden && el.classList.contains('screen-in');
   el.hidden = false;
   if (alreadyVisible) return;
@@ -5799,19 +5809,20 @@ function showPane(id, animate) {
 
 function hidePane(id, animate) {
   const el = document.getElementById(id);
+  cancelPendingHide(id);
   if (el.hidden) return;
-  if (!animate) {
-    el.classList.remove('screen-in');
-    el.hidden = true;
-    return;
-  }
   el.classList.remove('screen-in');
+  // Pas d'animation (ou transition coupée par prefers-reduced-motion) :
+  // aucun transitionend ne viendra, on masque tout de suite.
+  const dureeFondu = parseFloat(getComputedStyle(el).transitionDuration) || 0;
+  if (!animate || dureeFondu === 0) { el.hidden = true; return; }
   const onEnd = (e) => {
-    if (e.propertyName !== 'opacity') return;
+    if (e.target !== el || e.propertyName !== 'opacity') return;
     el.hidden = true;
-    el.removeEventListener('transitionend', onEnd);
+    cancelPendingHide(id);
   };
   el.addEventListener('transitionend', onEnd);
+  paneHideCancels[id] = () => el.removeEventListener('transitionend', onEnd);
 }
 
 // Mémorise l'écran d'origine pour le lien "retour" d'une fiche entreprise

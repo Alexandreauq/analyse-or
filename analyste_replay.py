@@ -113,13 +113,19 @@ def construit_prompt(signal: dict) -> str:
 
 
 def appelle_gemini(
-    prompt: str, *, cle_api: str | None = None, modele: str = "gemini-2.5-flash",
+    prompt: str, *, cle_api: str | None = None, modele: str = "gemini-3.8-flash",
     client=_appel_http_gemini, max_tentatives: int = 5, sleep_fn=time.sleep,
 ) -> dict:
-    """Appelle l'API Gemini avec backoff simple sur ErreurLimiteDebit
-    (niveau gratuit : 5 requetes/minute). `client` injectable pour les
-    tests (defaut : _appel_http_gemini, l'appel HTTP reel). Lit la cle
-    depuis GEMINI_API_KEY si `cle_api` est None."""
+    """Appelle l'API Gemini avec backoff simple sur ErreurLimiteDebit.
+    `modele` : gemini-2.5-flash (choix initial du plan) a ete retire pour
+    les nouveaux utilisateurs cote Google le 2026-10-25 (404 "no longer
+    available to new users"), remplace par gemini-3.8-flash -- verifie
+    directement contre l'API ce jour-la (requete reelle, cle_api=cle
+    utilisateur, responseMimeType=application/json : reponse 200, JSON
+    valide dans parts[0]["text"], pas de part "reflexion" separee qui
+    casserait l'indexation). `client` injectable pour les tests (defaut :
+    _appel_http_gemini, l'appel HTTP reel). Lit la cle depuis
+    GEMINI_API_KEY si `cle_api` est None."""
     cle_api = cle_api or os.environ.get("GEMINI_API_KEY")
     derniere_erreur = None
     for tentative in range(max_tentatives):

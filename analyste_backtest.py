@@ -296,8 +296,19 @@ def score_point_in_temps(
     # reporte peu fiable, marketCap/prix est un meilleur proxy).
     if ticker in indices_score.SHARES_OUTSTANDING_FROM_MARKET_CAP_TICKERS and not currency_mismatch_unresolved:
         market_cap_info = t.info.get("marketCap")
-        if market_cap_info and current_price:
-            shares_outstanding = market_cap_info / current_price
+        # Correctif anti-fuite (revue 2) : `marketCap` chez yfinance est
+        # TOUJOURS la valeur du jour reel, jamais point-in-temps -- la
+        # diviser par `current_price` (le prix a date_cible) encoderait
+        # dans shares_outstanding tout le mouvement de prix entre
+        # date_cible et aujourd'hui, soit exactement la fuite du futur que
+        # ce module existe pour empecher. En production (non retroactive,
+        # indices_score.py:3911-3914), market_cap/current_price sont DEUX
+        # valeurs du jour reel -- un ratio volontairement independant de
+        # la date. On doit diviser par un prix lui aussi du jour reel pour
+        # preserver cette independance a la date.
+        prix_aujourdhui = t.info.get("currentPrice") or t.info.get("regularMarketPrice")
+        if market_cap_info and prix_aujourdhui:
+            shares_outstanding = market_cap_info / prix_aujourdhui
 
     is_financial = ticker in indices_score.FINANCIAL_SECTOR_TICKERS
     is_trust = ticker in indices_score.TRUST_TICKERS

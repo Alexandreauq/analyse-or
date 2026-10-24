@@ -170,6 +170,68 @@ def test_ecrit_resultats_raises_on_nan_instead_of_writing_invalid_json(tmp_path)
         analyste_replay.ecrit_resultats(paris, str(chemin))
 
 
+def test_ecrit_resultats_is_atomic_original_file_survives_a_failed_rewrite(tmp_path):
+    """Correctif anti-corruption (revue 2) : ecrit_resultats ecrivait jusqu'ici
+    directement dans le fichier final avec "w" -- un json.dump qui leve en
+    cours de route (NaN, allow_nan=False) laissait alors un fichier
+    TRONQUE et invalide, pas l'ancien contenu valide de la derniere
+    ecriture reussie. L'ecriture doit passer par un fichier temporaire
+    puis os.replace(), pour que l'ancien fichier reste intact si la
+    nouvelle ecriture echoue."""
+    chemin = tmp_path / "resultats.json"
+    premier_paris = [{"ticker": "TEST.PA", "methode": "backtest_retroactif", "return_pct": 10.0}]
+    analyste_replay.ecrit_resultats(premier_paris, str(chemin))
+    contenu_initial = chemin.read_text(encoding="utf-8")
+
+    deuxieme_paris = [{"ticker": "TEST.PA", "methode": "backtest_retroactif", "return_pct": float("nan")}]
+    with pytest.raises(ValueError):
+        analyste_replay.ecrit_resultats(deuxieme_paris, str(chemin))
+
+    assert chemin.read_text(encoding="utf-8") == contenu_initial
+    contenu = json.loads(contenu_initial)
+    assert contenu["paris"][0]["return_pct"] == 10.0
+
+
+def test_main_continues_past_a_failing_write_and_still_writes_succeeding_signals(monkeypatch):
+    """ecrit_resultats elle-meme peut lever (ex. NaN dans CE pari precis,
+    allow_nan=False) -- cet echec d'ECRITURE pour un seul signal ne doit
+    pas non plus faire perdre les signaux resolus avant/apres lui dans la
+    meme execution (meme garde-fou que pour une exception Gemini/
+    resolution du FIX 5, mais a l'etage de l'ecriture, FIX introduit par
+    la revue 2). Le signal en echec ne doit pas non plus rester coince
+    dans paris_resolus pour toujours (sinon TOUTES les ecritures
+    suivantes echoueraient aussi a cause de lui)."""
+    monkeypatch.setenv("GEMINI_API_KEY", "fausse-cle")
+    signaux = [
+        {**_signal_exemple(), "ticker": "A.PA"},
+        {**_signal_exemple(), "ticker": "B.PA"},
+        {**_signal_exemple(), "ticker": "C.PA"},
+    ]
+    monkeypatch.setattr(
+        analyste_replay.analyste_backtest, "genere_signaux_historiques",
+        lambda *a, **k: signaux)
+    monkeypatch.setattr(
+        analyste_replay, "appelle_gemini",
+        lambda prompt, **k: {"appel": "haussier", "confiance": "moyenne",
+                             "dimension_dominante": "technique", "raison": "..."})
+    monkeypatch.setattr(
+        analyste_replay, "resout_pari",
+        lambda signal, pari, **k: {**signal, **pari, "return_pct": 5.0})
+
+    appels_ecriture = []
+
+    def ecrit_resultats_qui_echoue_pour_b(paris, chemin):
+        if paris and paris[-1]["ticker"] == "B.PA":
+            raise ValueError("Out of range float values are not JSON compliant")
+        appels_ecriture.append([p["ticker"] for p in paris])
+
+    monkeypatch.setattr(analyste_replay, "ecrit_resultats", ecrit_resultats_qui_echoue_pour_b)
+
+    analyste_replay.main(chemin_sortie="sortie-test.json")
+
+    assert appels_ecriture[-1] == ["A.PA", "C.PA"]
+
+
 def test_main_wires_sampling_replay_and_resolution_together(monkeypatch):
     monkeypatch.setenv("GEMINI_API_KEY", "fausse-cle")
     signal_exemple = _signal_exemple()

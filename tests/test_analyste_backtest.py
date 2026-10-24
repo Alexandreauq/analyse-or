@@ -381,9 +381,18 @@ def test_score_point_in_temps_applies_sector_override_by_ticker(monkeypatch):
 
 
 def test_score_point_in_temps_overrides_shares_outstanding_from_market_cap(monkeypatch):
-    """FIX 2c : pour les tickers de SHARES_OUTSTANDING_FROM_MARKET_CAP_TICKERS,
-    shares_outstanding = marketCap / current_price (reporte peu fiable),
-    applique AVANT extract_ratios."""
+    """FIX 2c (et correctif anti-fuite de la revue 2) : pour les tickers de
+    SHARES_OUTSTANDING_FROM_MARKET_CAP_TICKERS, shares_outstanding =
+    marketCap / prix_aujourdhui -- marketCap vient de `info` (toujours la
+    valeur du jour reel chez yfinance, jamais point-in-temps) donc DOIT
+    etre divise par un prix lui aussi du jour reel (`currentPrice`/
+    `regularMarketPrice`), jamais par `current_price` (le prix point-in-
+    temps a date_cible). Diviser par `current_price` ferait fuiter tout le
+    mouvement de prix entre date_cible et aujourd'hui dans
+    shares_outstanding -- exactement la fuite que ce module existe pour
+    empecher. `currentPrice` est ici volontairement tres different du prix
+    point-in-temps (qui vaut ~249 d'apres l'historique factice ci-dessous)
+    pour que le test distingue la formule correcte de la formule buguee."""
     historique = _historique_minimale()
 
     def historique_factice(ticker, date_cible, history_ticker=None, annees=6, **kw):
@@ -401,7 +410,7 @@ def test_score_point_in_temps_overrides_shares_outstanding_from_market_cap(monke
     class TickerFondamentauxFactice:
         quarterly_financials = _StatementVideFactice()
         info = InfoFactice(sharesOutstanding=1.0, beta=1.0, sector="Technology",
-                            marketCap=100_000_000.0)
+                            marketCap=100_000_000.0, currentPrice=50.0)
 
     captured = {}
 
@@ -429,7 +438,11 @@ def test_score_point_in_temps_overrides_shares_outstanding_from_market_cap(monke
         fetch_statement=fetch_statement_factice,
         ticker_fondamentaux_source=lambda t: TickerFondamentauxFactice())
 
-    assert captured["shares_outstanding"] == pytest.approx(
+    # current_price point-in-temps (~249) != currentPrice du jour (50) :
+    # les deux formules donnent des resultats bien distincts.
+    assert captured["current_price"] != pytest.approx(50.0)
+    assert captured["shares_outstanding"] == pytest.approx(100_000_000.0 / 50.0)
+    assert captured["shares_outstanding"] != pytest.approx(
         100_000_000.0 / captured["current_price"])
 
 

@@ -105,12 +105,17 @@ def _score_actualite_recente_point_in_temps(news_items: list[dict]) -> "indices_
     signifie simplement "tout ce qui a ete fourni", sans re-filtrer par
     une horloge reelle qui n'a aucun sens pour une date passee. Le reste
     de la formule (ponderation par importance, clamp, forme du resultat)
-    reproduit exactement indices_score.score_actualite_recente -- seule
-    la ligne de filtre par fraicheur est retiree, rien d'autre. Exception
-    deliberee et isolee a "ne jamais reimplementer la logique de scoring"
-    (contrairement aux 12 autres fonctions score_* reutilisees telles
-    quelles) : la fonction reelle est structurellement inutilisable ici,
-    pas seulement moins pratique a appeler."""
+    reproduit exactement indices_score.score_actualite_recente -- cette
+    fonction retire le filtre de fraicheur ET la validation de format de
+    date qui l'accompagnait dans la fonction reelle (la boucle complete
+    `try: datetime.strptime(...)/if item_date.date() >= cutoff`, pas
+    seulement la ligne de comparaison de date) -- sans risque ici puisque
+    actus_classifiees_point_in_temps (Taches 2-3) garantit deja un champ
+    'date' propre en amont. Exception deliberee et isolee a "ne jamais
+    reimplementer la logique de scoring" (contrairement aux 12 autres
+    fonctions score_* reutilisees telles quelles) : la fonction reelle
+    est structurellement inutilisable ici, pas seulement moins pratique
+    a appeler."""
     if not news_items:
         return indices_score.FactorResult(
             "Actualité récente", 0.0, indices_score.WEIGHTS["actualite_recente"],
@@ -156,6 +161,7 @@ _RATIOS_FALLBACK_NEUTRES = {
     "current_ev_ebitda": 0.0, "avg_ev_ebitda_5y": 0.0,
     "current_pe": 0.0, "avg_pe_5y": 0.0,
     "current_pb": 0.0, "avg_pb_5y": 0.0,
+    "current_ratio": 0.0, "no_loss_years": False,
     "valuation_available": False,
     "fcf": 0.0, "fcf_normalized": 0.0,
     "net_debt": 0.0, "equity": 0.0,

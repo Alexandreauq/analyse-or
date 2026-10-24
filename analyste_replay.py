@@ -46,6 +46,10 @@ def _appel_http_gemini(prompt: str, cle_api: str, modele: str, *, http_post=None
     return json.loads(texte)
 
 
+def _fmt_pct(valeur: float | None) -> str:
+    return f"{valeur:+.1f}%" if valeur is not None else "n/d"
+
+
 def construit_prompt(signal: dict) -> str:
     """Meme raisonnement a 4 dimensions (actualite, technique, secteur,
     volume) que docs/superpowers/experiments/2026-10-19-ia-news-reasoning-
@@ -61,12 +65,34 @@ def construit_prompt(signal: dict) -> str:
     `historique_prix_volume_point_in_temps` (Tache 3), qui re-filtrent
     chacune leur propre source deja censee respecter la borne. Comparaison
     de chaines : les deux valeurs sont des ISO "YYYY-MM-DD" dans ce
-    pipeline (confirme par les Taches 2-3)."""
+    pipeline (confirme par les Taches 2-3).
+
+    FIX 8 (revue finale) : surface aussi `rendement_5j_pct`/
+    `rendement_20j_pct`/`volume_ratio_5j_vs_20j` (deja calcules par
+    score_point_in_temps, analyste_backtest.py, sur l'historique deja
+    tronque point-in-temps -- aucune fuite supplementaire) pour donner au
+    modele une vraie donnee sur les dimensions "technique"/"volume" du
+    raisonnement a 4 dimensions, plutot que de lui demander de raisonner
+    sur du vide qu'il serait tente de combler par sa connaissance
+    generale -- exactement ce que l'instruction anti-fuite essaie
+    d'empecher. Accede via `.get()` (jamais par crochet direct) : les
+    signaux plus anciens / les fixtures de test existantes n'ont pas ces
+    champs, et doivent continuer a produire un prompt valide (repli
+    "n/d"). Ne tente PAS de combler la dimension "secteur" par un contexte
+    de pairs du meme secteur/indice a la meme date -- demanderait de
+    construire un pool comparatif inter-entreprises a date fixee, le meme
+    type de simplification deja acceptee pour le pool de recalibration de
+    percentile (Tache 5, score_recalibrated=False) ; hors perimetre de ce
+    chantier pour la meme raison."""
     date_cible = signal["date_cible"]
     actus_bornees = [a for a in signal["actus"] if a["date"] <= date_cible]
     actus_texte = "\n".join(
         f"- {a['date']} ({a['importance']}) : {a['titre']}" for a in actus_bornees
     ) or "(aucune actualite recente exploitable)"
+    rendement_5j = _fmt_pct(signal.get("rendement_5j_pct"))
+    rendement_20j = _fmt_pct(signal.get("rendement_20j_pct"))
+    ratio_volume = signal.get("volume_ratio_5j_vs_20j")
+    ratio_volume_txt = f"{ratio_volume:.2f}" if ratio_volume is not None else "n/d"
     return (
         f"Tu es un analyste financier. Nous sommes le {date_cible}. "
         f"Ne raisonne qu'a partir des donnees fournies ci-dessous. "
@@ -76,6 +102,7 @@ def construit_prompt(signal: dict) -> str:
         f"Phase technique (Weinstein) : {signal['stage_label']}\n"
         f"Score fondamental composite : {signal['score']:.1f}\n"
         f"Prix actuel : {signal['current_price']:.2f}, repere d'entree : {signal['entry_price']:.2f}\n"
+        f"Rendement 5j / 20j : {rendement_5j} / {rendement_20j} -- ratio volume 5j vs 20j : {ratio_volume_txt}\n"
         f"Actualites recentes (bornees au {date_cible}) :\n{actus_texte}\n\n"
         f"En raisonnant sur ces 4 dimensions (actualite, technique, secteur, volume), "
         f"donne un appel (haussier / neutre / baissier), un niveau de confiance "
@@ -119,9 +146,30 @@ def _prix_a_date(ticker: str, date_str: str) -> float:
     return float(historique["Close"].iloc[0])
 
 
+def _prix_avant_date(ticker: str, date_str: str) -> float:
+    """Dernier cours de cloture STRICTEMENT avant date_str -- aligne
+    l'entree indice sur l'entree action (signal["current_price"], deja
+    "dernier close avant date_cible", voir le commentaire de resout_pari).
+
+    FIX 4 (revue finale) : `_prix_a_date` renvoie le PREMIER close ON OU
+    APRES sa date -- utilisee jusqu'ici aussi pour `index_entree`, alors
+    que `prix_entree` (action) est le DERNIER close AVANT date_cible.
+    Quand date_cible tombe un week-end (2/7 du temps), ces deux
+    conventions divergent (vendredi pour l'action, lundi pour l'indice) :
+    alpha_pct mesurait alors en partie un mouvement d'indice que l'action
+    n'a jamais partage, puisque le marche actions etait ferme ce jour-la
+    pour elle aussi. Utilisee UNIQUEMENT pour index_entree ci-dessous --
+    la sortie (action et indice) reste sur `prix_source`/`_prix_a_date`,
+    les deux dates de sortie etant deja mutuellement coherentes (meme
+    convention "a ou apres" des deux cotes)."""
+    import yfinance as yf
+    historique = yf.Ticker(ticker).history(end=date_str)
+    return float(historique["Close"].dropna().iloc[-1])
+
+
 def resout_pari(
     signal: dict, pari: dict, *, index_yfinance_ticker: str | None = None,
-    prix_source=_prix_a_date,
+    prix_source=_prix_a_date, prix_source_avant=_prix_avant_date,
 ) -> dict:
     """Resolution IMMEDIATE (le prix ~1 mois apres date_cible est deja
     connu aujourd'hui, contrairement au test prospectif qui doit attendre
@@ -141,8 +189,10 @@ def resout_pari(
     il est garanti non-None pour tout signal qui arrive jusqu'ici (sinon
     score_point_in_temps renvoie None et la Tache 5 filtre le signal en
     amont). `prix_source` reste utilise pour la sortie de l'action et
-    pour les deux niveaux de l'indice, qui n'ont pas d'equivalent
-    deja calcule sur le signal."""
+    pour la sortie de l'indice (les deux "a ou apres" date_resolution,
+    deja mutuellement coherentes) ; `prix_source_avant` (FIX 4) est
+    utilise UNIQUEMENT pour l'entree de l'indice, pour l'aligner sur la
+    meme convention "dernier close avant" que `prix_entree`."""
     import datetime as _dt
     index_ticker = index_yfinance_ticker or INDEX_YFINANCE_TICKER[signal["index"]]
     date_cible = signal["date_cible"]
@@ -152,7 +202,7 @@ def resout_pari(
 
     prix_entree = signal["current_price"]
     prix_sortie = prix_source(signal["ticker"], date_resolution)
-    index_entree = prix_source(index_ticker, date_cible)
+    index_entree = prix_source_avant(index_ticker, date_cible)
     index_sortie = prix_source(index_ticker, date_resolution)
 
     return_pct = (prix_sortie - prix_entree) / prix_entree * 100
@@ -167,12 +217,19 @@ def resout_pari(
 
 
 def ecrit_resultats(paris_resolus: list[dict], chemin: str) -> None:
-    import os
     dirname = os.path.dirname(chemin)
     if dirname:
         os.makedirs(dirname, exist_ok=True)
     with open(chemin, "w", encoding="utf-8") as fh:
-        json.dump({"methode": "backtest_retroactif", "paris": paris_resolus}, fh, ensure_ascii=False, indent=2)
+        # FIX 6 (revue finale) : allow_nan=False -- meme pattern que
+        # indices_score.py::save_risk_free_rate_cache. json.dump ecrit NaN
+        # tel quel par defaut (JSON invalide au sens strict, que
+        # JSON.parse()/Response.json() refusent) ; un seul NaN avait deja
+        # suffi a casser le chargement d'un fichier entier par le passe
+        # (incident documente) -- echouer tot et bruyamment plutot que
+        # d'ecrire un fichier silencieusement corrompu.
+        json.dump({"methode": "backtest_retroactif", "paris": paris_resolus}, fh,
+                   ensure_ascii=False, indent=2, allow_nan=False)
 
 
 def main(chemin_sortie: str = "docs/superpowers/experiments/2026-10-24-analyste-backtest-6-12-mois.json") -> None:
@@ -190,7 +247,25 @@ def main(chemin_sortie: str = "docs/superpowers/experiments/2026-10-24-analyste-
     derive). Sans ce filtre, le tirage pourrait produire un signal
     NIKKEI225/HANGSENG, qui ferait lever un KeyError dans resout_pari
     (INDEX_YFINANCE_TICKER ci-dessus ne couvre que les 8 indices du
-    perimetre)."""
+    perimetre).
+
+    FIX 5 (revue finale) : la cle GEMINI_API_KEY est verifiee TOUT DE
+    SUITE, avant tout echantillonnage -- sinon son absence n'etait
+    decouverte qu'au premier appel Gemini, APRES avoir deja depense le
+    budget d'appels yfinance/FRED de l'echantillonnage complet. Chaque
+    signal est aussi isole dans son propre try/except (une erreur
+    Gemini/reseau sur un seul pari ne doit jamais faire perdre les
+    paris deja resolus dans la meme execution), et ecrit_resultats est
+    appele apres CHAQUE signal reussi (pas seulement a la toute fin) --
+    elle ecrase tout le fichier a chaque fois, ce qui convient a cette
+    taille de donnees, et garantit qu'un crash en cours de route laisse
+    quand meme un fichier avec tout ce qui a deja reussi."""
+    if not os.environ.get("GEMINI_API_KEY"):
+        raise RuntimeError(
+            "GEMINI_API_KEY n'est pas definie -- requise avant de lancer "
+            "l'echantillonnage (qui consomme du budget yfinance/FRED pour "
+            "rien si l'appel Gemini est de toute facon impossible ensuite).")
+
     companies_perimetre = [
         c for c in indices_score.COMPANIES if c["index"] in ibkr_bot.signals.INDICES_IN_SCOPE
     ]
@@ -207,11 +282,20 @@ def main(chemin_sortie: str = "docs/superpowers/experiments/2026-10-24-analyste-
 
     paris_resolus = []
     for signal in signaux:
-        prompt = construit_prompt(signal)
-        pari = appelle_gemini(prompt)
-        paris_resolus.append(resout_pari(signal, pari))
+        try:
+            prompt = construit_prompt(signal)
+            pari = appelle_gemini(prompt)
+            paris_resolus.append(resout_pari(signal, pari))
+        except Exception as e:
+            print(f"Pari ignore ({signal.get('ticker')}, {signal.get('date_cible')}) : {e!r}")
+            continue
+        ecrit_resultats(paris_resolus, chemin_sortie)
 
-    ecrit_resultats(paris_resolus, chemin_sortie)
+    if not signaux:
+        # Aucun signal echantillonne (cas limite) : ecrit tout de meme un
+        # fichier (vide) plutot que rien -- la boucle ci-dessus n'ecrit
+        # jamais si elle ne s'execute pas une seule fois.
+        ecrit_resultats(paris_resolus, chemin_sortie)
 
 
 if __name__ == "__main__":

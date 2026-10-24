@@ -159,6 +159,39 @@ def actualites_entreprise(
     return {"ticker": ticker, "articles": fusionne(listes, debut)}
 
 
+def actualites_entreprise_point_in_temps(
+    ticker: str, nom: str, date_cible: datetime, fenetre_jours: int = 14,
+    *, gdelt_source=data_sources.fetch_gdelt_articles,
+) -> dict:
+    """Variante point-in-temps de actualites_entreprise : actus GDELT
+    bornees STRICTEMENT par date_cible (jamais apres), sur une fenetre de
+    `fenetre_jours` avant elle -- utilisee par analyste_backtest.py pour
+    reconstituer ce qui etait reellement connaissable a une date passee,
+    jamais par les appelants de fraicheur existants. Finnhub est exclu ICI
+    (contrairement a actualites_entreprise) : son offre gratuite ne
+    supporte pas de recherche historique bornee par date de la meme facon
+    que GDELT -- voir data_sources.fetch_finnhub_company_news, qui prend
+    `debut_iso`/`fin_iso` mais dont la couverture reelle de l'offre
+    gratuite se limite a l'actualite recente, non verifiable comme fiable
+    pour une date d'il y a 6-12 mois.
+
+    Pas de cache ni de TTL (contrairement a actualites_entreprise) : une
+    requete point-in-temps pour (ticker, date_cible) donne doit toujours
+    renvoyer le meme resultat, jamais une version perimee d'un appel
+    precedent a une autre date -- l'appelant (analyste_backtest.py) gere
+    son propre cache sur disque si besoin, voir sa Tache."""
+    debut = date_cible - timedelta(days=fenetre_jours)
+    brut = gdelt_source(f'"{nom}"', debut, 0, f"point_in_temps:{ticker}:{date_cible.isoformat()}", fin=date_cible)
+    if "erreur" in brut:
+        return brut
+    articles = articles_gdelt(brut, nom=nom)
+    # Garde-fou defensif : ne jamais se fier uniquement a enddatetime cote
+    # API GDELT -- re-filtre explicitement ici, meme si Tache 1 l'a deja
+    # fait cote requete (deux couches, jamais une seule).
+    articles = [a for a in articles if a["date"] <= date_cible]
+    return {"ticker": ticker, "articles": fusionne([articles], debut)}
+
+
 def actualites_marche(
     *, gdelt_source=data_sources.fetch_gdelt_articles, now: datetime | None = None,
 ) -> dict:

@@ -209,3 +209,50 @@ def test_actualites_marche_propagates_a_source_error():
     erreur = {"erreur": "actualites indisponibles (RuntimeError)"}
 
     assert news.actualites_marche(gdelt_source=lambda *a: erreur, now=MAINTENANT) == erreur
+
+
+# --- Point-in-temps ----------------------------------------------------------
+
+def test_actualites_entreprise_point_in_temps_bounds_both_sides():
+    appels = []
+    def gdelt_source_factice(requete, debut, ttl, cle, fin=None):
+        appels.append((debut, fin))
+        return {"articles": [
+            {"title": "Entreprise Test annonce un partenariat", "seendate": "20260601T100000Z",
+             "domain": "lemonde.fr", "url": "https://lemonde.fr/a"},
+        ]}
+
+    date_cible = datetime(2026, 6, 15, tzinfo=timezone.utc)
+    resultat = news.actualites_entreprise_point_in_temps(
+        "TEST.PA", "Entreprise Test", date_cible, fenetre_jours=14,
+        gdelt_source=gdelt_source_factice)
+
+    debut_appele, fin_appele = appels[0]
+    assert fin_appele == date_cible
+    assert debut_appele == date_cible - timedelta(days=14)
+    assert len(resultat["articles"]) == 1
+
+
+def test_actualites_entreprise_point_in_temps_rejects_article_after_date_cible():
+    """Garde-fou anti-fuite defensif : meme si la source GDELT renvoyait
+    (a tort) un article posterieur a date_cible, il ne doit jamais
+    atteindre le resultat -- ne jamais se fier uniquement a enddatetime
+    cote API, toujours re-filtrer cote code (meme philosophie que
+    ibkr_bot/odds_check.py : jamais confiance aveugle a une seule couche
+    de garde-fou)."""
+    def gdelt_source_avec_fuite(requete, debut, ttl, cle, fin=None):
+        return {"articles": [
+            {"title": "Entreprise Test annonce un partenariat", "seendate": "20260601T100000Z",
+             "domain": "lemonde.fr", "url": "https://lemonde.fr/a"},
+            {"title": "Entreprise Test chute en bourse", "seendate": "20260620T100000Z",
+             "domain": "lemonde.fr", "url": "https://lemonde.fr/b"},
+        ]}
+
+    date_cible = datetime(2026, 6, 15, tzinfo=timezone.utc)
+    resultat = news.actualites_entreprise_point_in_temps(
+        "TEST.PA", "Entreprise Test", date_cible, fenetre_jours=14,
+        gdelt_source=gdelt_source_avec_fuite)
+
+    dates_resultat = [a["date"] for a in resultat["articles"]]
+    assert "2026-06-20T10:00" not in dates_resultat
+    assert len(resultat["articles"]) == 1

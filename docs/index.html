@@ -1877,6 +1877,13 @@
 // Pas d'enregistrement en local : le cache du service worker resservait une
 // version périmée à chaque itération de dev malgré un rechargement.
 const isLocalDev = ['localhost', '127.0.0.1'].includes(location.hostname);
+// En local, un service worker installé lors d'une session de dev précédente
+// continuerait de servir une ancienne version : on le désinscrit et on vide
+// ses caches.
+if ('serviceWorker' in navigator && isLocalDev) {
+  navigator.serviceWorker.getRegistrations().then(rs => rs.forEach(r => r.unregister())).catch(() => {});
+  if (window.caches) caches.keys().then(ks => ks.forEach(k => caches.delete(k))).catch(() => {});
+}
 if ('serviceWorker' in navigator && !isLocalDev) {
   navigator.serviceWorker.register('service-worker.js').catch(() => {});
 }

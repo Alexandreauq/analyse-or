@@ -128,3 +128,11 @@ Décision utilisateur : les deux conversations restent **séparées, comme aujou
 - Navigation complète au clavier sur l'accueil desktop (`/`, ↑↓, Entrée, Échap).
 - `npm`/`node` tests JS existants verts.
 - Parcours de non-régression de l'assistant : question → réflexion → réponse tapée → liens → copier ; historique ; dictée ; changement de niveau ; nouvelle conversation ; retour accueil pendant une réponse.
+
+## 7. Addendum 2026-10-24 — retour après essai en local
+
+Décisions de l'utilisateur après avoir vu la refonte, qui remplacent les points correspondants plus haut :
+
+- **Lanceur de l'agent** : retour à l'**ancienne sphère de particules turquoise animée** qui tourne sur elle-même (96px), à la place de la petite sphère dorée statique (4.6). La même sphère animée remplit l'orbe de l'onglet « IA » sur mobile et l'avatar d'en-tête du panneau.
+- **Agent visible partout sur desktop, accueil compris** (remplace le masquage sur l'accueil, section 5). Sur mobile, l'onglet « IA » ouvre l'agent sur toutes les pages, accueil compris (il ne place plus le curseur dans la barre centrale).
+- **Deux conversations bien distinctes visuellement** : la barre de l'accueil reste **or**, l'agent prend une **identité turquoise** (anneau de la pilule, bouton envoyer, bulles de l'utilisateur, avatar, liens, puce de niveau), via des variables `--agent*` redéfinies dans le panneau. Les deux conversations restent séparées (4.9).

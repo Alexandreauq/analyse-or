@@ -528,6 +528,130 @@ def test_score_point_in_temps_sets_fondamentaux_degrades_on_ratios_failure(monke
     assert resultat["fondamentaux_degrades"] is True
 
 
+def _fixture_score_point_in_temps_base(monkeypatch, entry_price, stage_label):
+    """Fabrique commune aux 3 tests de l'optimisation de cout ci-dessous :
+    fixe entry_price via un estimate_valuation_targets factice (plutot que
+    de reconstruire un DCF/actif net complet) et stage_label via un
+    classify_weinstein_stage factice, independamment l'un de l'autre --
+    exactement les deux entrees de la porte near_entry/stage_label que
+    cette optimisation doit respecter."""
+    historique = _historique_minimale()
+
+    def historique_factice(ticker, date_cible, history_ticker=None, annees=6, **kw):
+        return historique[historique.index < date_cible]
+
+    def fetch_statement_factice(ticker, nom_attribut):
+        return _StatementVideFactice()
+
+    class InfoFactice(dict):
+        pass
+
+    class TickerFondamentauxFactice:
+        quarterly_financials = _StatementVideFactice()
+        info = InfoFactice(sharesOutstanding=1_000_000.0, beta=1.0, sector="Technology")
+
+    def estimate_valuation_targets_factice(data, cost_of_capital, cost_of_equity=None, risk_free_rate=None):
+        return {"fair_value": entry_price, "entry_price": entry_price, "exit_price": entry_price}
+
+    monkeypatch.setattr(indices_score, "estimate_valuation_targets", estimate_valuation_targets_factice)
+
+    def classify_weinstein_stage_factice(*a, **kw):
+        return {"stage": 2, "stage_label": stage_label, "volume_confirme": True}
+
+    monkeypatch.setattr(indices_score, "classify_weinstein_stage", classify_weinstein_stage_factice)
+
+    return dict(
+        historique_source=historique_factice,
+        fetch_statement=fetch_statement_factice,
+        ticker_fondamentaux_source=lambda t: TickerFondamentauxFactice())
+
+
+def test_score_point_in_temps_skips_news_fetch_when_price_far_from_entry(monkeypatch):
+    """Optimisation de cout (demande explicite utilisateur, 2026-10-24) :
+    quand near_entry est deja faux (prix courant nettement au-dessus du
+    repere d'entree), compute_company_alerts rejettera "entree" quel que
+    soit le facteur actualite -- actus_source (GDELT + Haiku par article)
+    ne doit donc jamais etre appele."""
+    # current_price point-in-temps de _historique_minimale() vaut ~249.9
+    # (100.0 + 1499 * 0.1) -- entry_price = 100.0 est nettement en
+    # dessous, donc current_price > entry_price de bien plus que
+    # NEAR_ENTRY_PCT (5.0) : near_entry est faux pour deux raisons
+    # independantes (current_price > entry_price ET l'ecart > 5%).
+    kwargs = _fixture_score_point_in_temps_base(monkeypatch, entry_price=100.0, stage_label="Achat")
+
+    appels = []
+
+    def actus_source_qui_compte(ticker, nom, date_cible, **kw):
+        appels.append((ticker, nom, date_cible))
+        return []
+
+    date_cible = pd.Timestamp("2026-06-01", tz="UTC")
+    resultat = analyste_backtest.score_point_in_temps(
+        "TEST.PA", "Entreprise Test", date_cible, "CAC40",
+        actus_source=actus_source_qui_compte, **kwargs)
+
+    assert resultat is not None
+    assert appels == []
+    assert resultat["actus"] == []
+    assert resultat["entry_price"] == pytest.approx(100.0)
+
+
+def test_score_point_in_temps_fetches_news_when_near_entry_and_not_declin(monkeypatch):
+    """Cas symetrique : near_entry vrai (prix a 1% sous le repere
+    d'entree, dans la bande NEAR_ENTRY_PCT) et stage_label != "Declin" --
+    la condition "entree" de compute_company_alerts reste possible selon
+    le facteur actualite, donc actus_source DOIT etre appele."""
+    historique = _historique_minimale()
+    current_price_attendu = float(historique["Close"].iloc[-1])  # ~249.9
+    # entry_price choisi pour que current_price soit juste en dessous,
+    # a 1% du repere (< NEAR_ENTRY_PCT = 5.0).
+    entry_price = current_price_attendu / 0.99
+    kwargs = _fixture_score_point_in_temps_base(monkeypatch, entry_price=entry_price, stage_label="Achat")
+
+    appels = []
+
+    def actus_source_qui_compte(ticker, nom, date_cible, **kw):
+        appels.append((ticker, nom, date_cible))
+        return []
+
+    date_cible = pd.Timestamp("2026-06-01", tz="UTC")
+    resultat = analyste_backtest.score_point_in_temps(
+        "TEST.PA", "Entreprise Test", date_cible, "CAC40",
+        actus_source=actus_source_qui_compte, **kwargs)
+
+    assert resultat is not None
+    assert len(appels) == 1
+    assert appels[0][0] == "TEST.PA"
+
+
+def test_score_point_in_temps_skips_news_fetch_when_stage_is_declin(monkeypatch):
+    """Cas stage_label == "Declin" alors meme que near_entry serait vrai
+    au seul critere prix : compute_company_alerts rejette "entree" quel
+    que soit le facteur actualite (stage_label != "Declin" est un ET
+    independant de near_entry) -- actus_source ne doit donc pas etre
+    appele non plus dans ce cas."""
+    historique = _historique_minimale()
+    current_price_attendu = float(historique["Close"].iloc[-1])
+    entry_price = current_price_attendu / 0.99  # near_entry serait vrai...
+    kwargs = _fixture_score_point_in_temps_base(monkeypatch, entry_price=entry_price, stage_label="Déclin")
+
+    appels = []
+
+    def actus_source_qui_compte(ticker, nom, date_cible, **kw):
+        appels.append((ticker, nom, date_cible))
+        return []
+
+    date_cible = pd.Timestamp("2026-06-01", tz="UTC")
+    resultat = analyste_backtest.score_point_in_temps(
+        "TEST.PA", "Entreprise Test", date_cible, "CAC40",
+        actus_source=actus_source_qui_compte, **kwargs)
+
+    assert resultat is not None
+    assert appels == []
+    assert resultat["actus"] == []
+    assert resultat["stage_label"] == "Déclin"
+
+
 # Actu volontairement ancienne (bien plus de 14 jours avant "aujourd'hui",
 # quelle que soit la date reelle d'execution de ce test) -- c'est
 # exactement la situation d'un backtest sur un date_cible historique.

@@ -99,3 +99,73 @@ def appelle_gemini(
             if tentative < max_tentatives - 1:
                 sleep_fn(60)  # niveau gratuit : 5 req/min, on attend une minute pleine
     raise derniere_erreur
+
+
+HORIZON_RESOLUTION_JOURS = 30  # ~1 mois, meme ordre de grandeur que le test prospectif
+
+INDEX_YFINANCE_TICKER = {
+    "CAC40": "^FCHI", "DAX": "^GDAXI", "NASDAQ": "^IXIC", "DOW": "^DJI",
+    "FTSE": "^FTSE", "SMI": "^SSMI", "IBEX35": "^IBEX", "FTSEMIB": "FTSEMIB.MI",
+}
+
+
+def _prix_a_date(ticker: str, date_str: str) -> float:
+    import yfinance as yf
+    historique = yf.Ticker(ticker).history(start=date_str, end=None)
+    return float(historique["Close"].iloc[0])
+
+
+def resout_pari(
+    signal: dict, pari: dict, *, index_yfinance_ticker: str | None = None,
+    prix_source=_prix_a_date,
+) -> dict:
+    """Resolution IMMEDIATE (le prix ~1 mois apres date_cible est deja
+    connu aujourd'hui, contrairement au test prospectif qui doit attendre
+    que le temps passe reellement). `index_yfinance_ticker` : resolu via
+    INDEX_YFINANCE_TICKER[signal["index"]] si non fourni.
+
+    `prix_entree` est pris directement sur `signal["current_price"]`
+    (deja calcule par `score_point_in_temps` dans analyste_backtest.py,
+    cf. `historique_prix_volume_point_in_temps` qui tronque avec
+    `historique.index < date_cible`) plutot que via un nouvel appel a
+    `prix_source` : c'est litteralement le prix sur lequel le signal
+    d'entree (near_entry / score) a ete decide. Un appel `prix_source(...,
+    start=date_cible)` renverrait le premier jour de bourse ON OU APRES
+    date_cible -- potentiellement un jour et un prix differents de celui
+    utilise par le signal lui-meme. On evite donc cette incoherence (et
+    un appel reseau redondant) en reutilisant `current_price` tel quel ;
+    il est garanti non-None pour tout signal qui arrive jusqu'ici (sinon
+    score_point_in_temps renvoie None et la Tache 5 filtre le signal en
+    amont). `prix_source` reste utilise pour la sortie de l'action et
+    pour les deux niveaux de l'indice, qui n'ont pas d'equivalent
+    deja calcule sur le signal."""
+    import datetime as _dt
+    index_ticker = index_yfinance_ticker or INDEX_YFINANCE_TICKER[signal["index"]]
+    date_cible = signal["date_cible"]
+    date_resolution = (
+        _dt.datetime.strptime(date_cible, "%Y-%m-%d") + _dt.timedelta(days=HORIZON_RESOLUTION_JOURS)
+    ).strftime("%Y-%m-%d")
+
+    prix_entree = signal["current_price"]
+    prix_sortie = prix_source(signal["ticker"], date_resolution)
+    index_entree = prix_source(index_ticker, date_cible)
+    index_sortie = prix_source(index_ticker, date_resolution)
+
+    return_pct = (prix_sortie - prix_entree) / prix_entree * 100
+    index_return_pct = (index_sortie - index_entree) / index_entree * 100
+
+    return {
+        **signal, **pari, "methode": "backtest_retroactif",
+        "date_resolution": date_resolution,
+        "return_pct": return_pct, "index_return_pct": index_return_pct,
+        "alpha_pct": return_pct - index_return_pct,
+    }
+
+
+def ecrit_resultats(paris_resolus: list[dict], chemin: str) -> None:
+    import os
+    dirname = os.path.dirname(chemin)
+    if dirname:
+        os.makedirs(dirname, exist_ok=True)
+    with open(chemin, "w", encoding="utf-8") as fh:
+        json.dump({"methode": "backtest_retroactif", "paris": paris_resolus}, fh, ensure_ascii=False, indent=2)

@@ -62,3 +62,32 @@ def test_appelle_gemini_reraises_last_error_after_exhausting_retries():
             sleep_fn=lambda s: None, max_tentatives=3)
 
     assert appels["n"] == 3
+
+
+def test_resout_pari_computes_return_and_alpha_vs_index():
+    signal = _signal_exemple()
+    pari = {"appel": "haussier", "confiance": "moyenne", "dimension_dominante": "technique", "raison": "..."}
+
+    def prix_source_factice(ticker_ou_indice, date):
+        valeurs = {
+            ("TEST.PA", "2026-04-01"): 100.0, ("TEST.PA", "2026-05-01"): 110.0,
+            ("^FCHI", "2026-04-01"): 8000.0, ("^FCHI", "2026-05-01"): 8080.0,
+        }
+        return valeurs[(ticker_ou_indice, date)]
+
+    resultat = analyste_replay.resout_pari(
+        signal, pari, index_yfinance_ticker="^FCHI", prix_source=prix_source_factice)
+
+    assert resultat["return_pct"] == pytest.approx(10.0)
+    assert resultat["index_return_pct"] == pytest.approx(1.0)
+    assert resultat["methode"] == "backtest_retroactif"
+
+
+def test_ecrit_resultats_writes_valid_json(tmp_path):
+    chemin = tmp_path / "resultats.json"
+    paris = [{"ticker": "TEST.PA", "methode": "backtest_retroactif", "return_pct": 10.0}]
+
+    analyste_replay.ecrit_resultats(paris, str(chemin))
+
+    contenu = json.loads(chemin.read_text(encoding="utf-8"))
+    assert contenu["paris"][0]["ticker"] == "TEST.PA"

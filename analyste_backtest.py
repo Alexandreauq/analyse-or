@@ -88,6 +88,50 @@ def _weekly_series_jusqua(historique: pd.DataFrame, date_cible) -> tuple[pd.Seri
     return closes.resample("W").last().dropna(), volumes.resample("W").mean()
 
 
+def _score_actualite_recente_point_in_temps(news_items: list[dict]) -> "indices_score.FactorResult":
+    """Reimplementation de indices_score.score_actualite_recente SANS son
+    filtre de fraicheur interne (`datetime.now() - 14 jours`) -- ce filtre
+    est incompatible par construction avec un date_cible historique (aucun
+    parametre de date n'existe pour l'injecter dans la fonction reelle) :
+    pour un date_cible vieux de plusieurs mois, `item_date.date() >=
+    (datetime.now() - 14j).date()` rejette TOUT item, quel que soit son
+    contenu -- la fonction reelle degrade silencieusement vers son cas
+    neutre pour n'importe quel backtest retroactif, pas seulement dans de
+    rares cas limites.
+
+    Tous les `news_items` sont deja bornes point-in-temps en amont par
+    actus_classifiees_point_in_temps (Taches 2-3, fenetre de 14 jours
+    AVANT date_cible) -- donc "recent" au sens de cette fonction, ici,
+    signifie simplement "tout ce qui a ete fourni", sans re-filtrer par
+    une horloge reelle qui n'a aucun sens pour une date passee. Le reste
+    de la formule (ponderation par importance, clamp, forme du resultat)
+    reproduit exactement indices_score.score_actualite_recente -- seule
+    la ligne de filtre par fraicheur est retiree, rien d'autre. Exception
+    deliberee et isolee a "ne jamais reimplementer la logique de scoring"
+    (contrairement aux 12 autres fonctions score_* reutilisees telles
+    quelles) : la fonction reelle est structurellement inutilisable ici,
+    pas seulement moins pratique a appeler."""
+    if not news_items:
+        return indices_score.FactorResult(
+            "Actualité récente", 0.0, indices_score.WEIGHTS["actualite_recente"],
+            "Aucune actualité récente exploitable",
+        )
+    weighted_sum = 0.0
+    total_weight = 0.0
+    for item in news_items:
+        weight = indices_score.NEWS_IMPORTANCE_WEIGHTS.get(item.get("importance", "mineure"), 1.0)
+        weighted_sum += item.get("sentiment", 0) * weight
+        total_weight += weight
+    avg_sentiment = weighted_sum / total_weight if total_weight else 0.0
+    score = indices_score._clamp(avg_sentiment * 10)
+    majeure_count = sum(1 for item in news_items if item.get("importance") == "majeure")
+    majeure_note = f", dont {majeure_count} majeure(s)" if majeure_count else ""
+    return indices_score.FactorResult(
+        "Actualité récente", score, indices_score.WEIGHTS["actualite_recente"],
+        f"Ton moyen pondéré des {len(news_items)} actualités point-in-temps : {avg_sentiment:+.2f}{majeure_note}",
+    )
+
+
 # Repli neutre si extract_ratios/extract_ratios_financial leve une exception
 # (fondamentaux vides ou trop incomplets chez la source, ex : tous les
 # exercices manquants) -- union des cles des deux fonctions
@@ -207,7 +251,7 @@ def score_point_in_temps(
                 ratios.get("current_pe"), ratios.get("avg_pe_5y"),
                 ratios.get("current_pb"), ratios.get("avg_pb_5y"), ratios.get("cagr_net_income")),
             indices_score.score_dynamique_recente(ecart_pct_ma200, ratios.get("quarterly_yoy_growth_ca"), ratios.get("cagr_ca")),
-            indices_score.score_actualite_recente(actus),
+            _score_actualite_recente_point_in_temps(actus),
         ]
     elif is_trust:
         factors = [
@@ -217,7 +261,7 @@ def score_point_in_temps(
             indices_score.score_generation_cash_trust(),
             indices_score.score_valorisation_trust(ratios.get("current_pb")),
             indices_score.score_dynamique_recente(ecart_pct_ma200, ratios.get("quarterly_yoy_growth_ca"), ratios.get("cagr_ca")),
-            indices_score.score_actualite_recente(actus),
+            _score_actualite_recente_point_in_temps(actus),
         ]
     else:
         factors = [
@@ -235,7 +279,7 @@ def score_point_in_temps(
                 ratios.get("current_pe"), ratios.get("avg_pe_5y"), ratios.get("cagr_ebitda"),
                 data_available=ratios.get("valuation_available", False)),
             indices_score.score_dynamique_recente(ecart_pct_ma200, ratios.get("quarterly_yoy_growth_ca"), ratios.get("cagr_ca")),
-            indices_score.score_actualite_recente(actus),
+            _score_actualite_recente_point_in_temps(actus),
         ]
     composite = indices_score.compute_composite(factors)
     valuation_targets = indices_score.estimate_valuation_targets(ratios, cost_of_capital, cost_of_equity, risk_free_rate)

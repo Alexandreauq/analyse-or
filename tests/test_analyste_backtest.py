@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 from dateutil.relativedelta import relativedelta
 
 import analyste_backtest
+import indices_score
 
 
 class _TickerFactice:
@@ -132,3 +133,43 @@ def test_score_point_in_temps_builds_a_composite_with_seven_factors(monkeypatch)
     assert "stage_label" in resultat
     assert "entry_price" in resultat
     assert resultat["actus"] == []
+
+
+# Actu volontairement ancienne (bien plus de 14 jours avant "aujourd'hui",
+# quelle que soit la date reelle d'execution de ce test) -- c'est
+# exactement la situation d'un backtest sur un date_cible historique.
+_ACTU_ANCIENNE_MAIS_IMPORTANTE = [
+    {"date": "2025-06-01", "sentiment": 0.8, "importance": "majeure"},
+]
+
+
+def test_score_actualite_recente_reel_degrade_vers_neutre_sur_une_actu_ancienne():
+    """Demontre le bug : indices_score.score_actualite_recente filtre par
+    datetime.now() - 14 jours, donc une actu de point_in_temps (toujours
+    datee dans le passe par construction) est systematiquement rejetee,
+    quel que soit son sentiment ou son importance."""
+    resultat = indices_score.score_actualite_recente(_ACTU_ANCIENNE_MAIS_IMPORTANTE)
+
+    assert resultat.score == 0.0
+    assert resultat.raw_value == "Aucune actualité récente exploitable"
+
+
+def test_score_actualite_recente_point_in_temps_restitue_le_signal():
+    """La version point-in-temps ne filtre pas par horloge reelle -- la
+    meme actu ancienne doit produire un score reflettant son sentiment
+    positif (0.8) et son importance ('majeure'), pas 0.0."""
+    resultat = analyste_backtest._score_actualite_recente_point_in_temps(
+        _ACTU_ANCIENNE_MAIS_IMPORTANTE)
+
+    assert resultat.score > 0.0
+    assert "majeure" in resultat.raw_value
+
+
+def test_score_actualite_recente_point_in_temps_liste_vide_meme_forme_que_le_reel():
+    """Parite avec le cas vide de la fonction reelle (name/score/weight/
+    raw_value identiques) -- seul le filtre de fraicheur change, pas le
+    cas neutre."""
+    assert (
+        analyste_backtest._score_actualite_recente_point_in_temps([])
+        == indices_score.score_actualite_recente([])
+    )

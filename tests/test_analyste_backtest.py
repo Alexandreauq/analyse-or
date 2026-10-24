@@ -173,3 +173,61 @@ def test_score_actualite_recente_point_in_temps_liste_vide_meme_forme_que_le_ree
         analyste_backtest._score_actualite_recente_point_in_temps([])
         == indices_score.score_actualite_recente([])
     )
+
+
+def test_genere_signaux_historiques_stops_once_target_sample_is_reached(monkeypatch):
+    compteur = {"appels": 0}
+
+    def score_point_in_temps_factice(ticker, name, date_cible, index_key, **kw):
+        compteur["appels"] += 1
+        # Un signal sur deux declenche "entree" (composite au-dessus du
+        # seuil, cours a 1% au-dessous du repere d'entree -- near_entry
+        # exige current_price <= entry_price, cf. compute_company_alerts) ;
+        # l'autre, non (score defavorable ET cours loin du repere).
+        favorable = compteur["appels"] % 2 == 0
+        return {
+            "ticker": ticker, "name": name, "index": index_key,
+            "date_cible": str(date_cible)[:10],
+            "score_raw": 30.0 if favorable else -30.0,
+            "stage_label": "Achat" if favorable else "Neutre",
+            "current_price": 99.0 if favorable else 100.0,
+            "entry_price": 100.0 if favorable else 50.0,
+            "exit_price": 150.0, "factors": [], "score": 30.0 if favorable else -30.0,
+        }
+
+    companies = [{"ticker": f"T{i}.PA", "name": f"Entreprise {i}", "index": "CAC40"} for i in range(200)]
+
+    resultats = analyste_backtest.genere_signaux_historiques(
+        companies, {}, {}, cible_echantillon=5, max_tentatives=100,
+        score_source=score_point_in_temps_factice, graine=42)
+
+    assert 5 <= len(resultats) <= 5
+    assert compteur["appels"] <= 100
+    assert all(r["ticker"] for r in resultats)
+
+
+def test_genere_signaux_historiques_respects_the_fixed_seed_for_reproducibility():
+    def score_point_in_temps_factice(ticker, name, date_cible, index_key, **kw):
+        return {
+            "ticker": ticker, "name": name, "index": index_key,
+            "date_cible": str(date_cible)[:10], "score_raw": 30.0,
+            "stage_label": "Achat",
+            # current_price <= entry_price et a moins de 5% de celui-ci
+            # (near_entry, compute_company_alerts) -- declenche "entree" a
+            # chaque appel, pour que le tirage remplisse reellement
+            # l'echantillon cible et exerce vraiment la graine fixe.
+            "current_price": 99.0, "entry_price": 100.0,
+            "exit_price": 150.0, "factors": [], "score": 30.0,
+        }
+
+    companies = [{"ticker": f"T{i}.PA", "name": f"Entreprise {i}", "index": "CAC40"} for i in range(50)]
+
+    resultats_1 = analyste_backtest.genere_signaux_historiques(
+        companies, {}, {}, cible_echantillon=3, max_tentatives=50,
+        score_source=score_point_in_temps_factice, graine=20261024)
+    resultats_2 = analyste_backtest.genere_signaux_historiques(
+        companies, {}, {}, cible_echantillon=3, max_tentatives=50,
+        score_source=score_point_in_temps_factice, graine=20261024)
+
+    assert [r["ticker"] for r in resultats_1] == [r["ticker"] for r in resultats_2]
+    assert len(resultats_1) == 3

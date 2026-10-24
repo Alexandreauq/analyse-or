@@ -15,12 +15,21 @@
 # Tache 2), puis on reutilise a l'identique les fonctions existantes de
 # indices_score.py qui ne font que du calcul pur ou du traitement d'article
 # (fetch_article_text, summarize_news_item).
+import random
+from datetime import timedelta
+
 import pandas as pd
 import yfinance as yf
 from dateutil.relativedelta import relativedelta
 
 import assistant_ia.news as news
 import indices_score
+
+FENETRE_JOURS_MIN = 180
+FENETRE_JOURS_MAX = 365
+ECHANTILLON_CIBLE = 40  # milieu de la fourchette 30-50 de la spec
+MAX_TENTATIVES_ECHANTILLONNAGE = 2000
+GRAINE_ALEATOIRE = 20261024
 
 
 def historique_prix_volume_point_in_temps(
@@ -300,3 +309,62 @@ def score_point_in_temps(
         "fair_value": valuation_targets["fair_value"], "entry_price": valuation_targets["entry_price"],
         "exit_price": valuation_targets["exit_price"], "actus": actus,
     }
+
+
+def _tire_date_cible(generateur: random.Random, aujourdhui) -> object:
+    """Date aleatoire entre FENETRE_JOURS_MIN et FENETRE_JOURS_MAX avant
+    aujourdhui -- jamais au-dela (fenetre validee avec l'utilisateur)."""
+    jours_avant = generateur.randint(FENETRE_JOURS_MIN, FENETRE_JOURS_MAX)
+    return aujourdhui - timedelta(days=jours_avant)
+
+
+def genere_signaux_historiques(
+    companies: list[dict], risk_free_rate_by_currency: dict, fx_rate_by_currency: dict,
+    cible_echantillon: int = ECHANTILLON_CIBLE, max_tentatives: int = MAX_TENTATIVES_ECHANTILLONNAGE,
+    graine: int = GRAINE_ALEATOIRE, *, score_source=score_point_in_temps, aujourdhui=None,
+) -> list[dict]:
+    """Tire au hasard des (entreprise, date_cible) jusqu'a obtenir
+    `cible_echantillon` signaux "entree" confirmes (meme condition que
+    l'alerte live, compute_company_alerts), ou jusqu'a `max_tentatives`
+    essais -- jamais un balayage exhaustif de toutes les dates x tous les
+    tickers, trop couteux en appels yfinance (voir spec, option "pilote
+    resserre"). `aujourdhui` injectable pour les tests (defaut : date
+    reelle du jour).
+
+    Note methodologique (a documenter aussi dans le commit) :
+    indices_score.recalibrate_scores_by_profile compare le score d'une
+    entreprise au pool de TOUTES les entreprises du meme profil scorees
+    LA MEME DATE -- ici, chaque tirage porte sur une date differente, il
+    n'y a jamais de vrai pool comparable d'un coup. Ce module accepte
+    cette simplification : score brut non recalibre (`score_recalibrated=
+    False` passe a compute_company_alerts ci-dessous), qui desactive le
+    filtre de percentile et ne garde que score_favorable/near_entry/
+    stage_label -- voir la docstring de compute_company_alerts -- plutot
+    que de reconstruire un pool historique complet pour chaque date
+    tiree, hors du perimetre valide avec l'utilisateur (fenetre reduite,
+    pas une refonte de la methodologie de recalibration)."""
+    import datetime as _dt
+    aujourdhui = aujourdhui or _dt.datetime.now(_dt.timezone.utc)
+    generateur = random.Random(graine)
+    retenus: list[dict] = []
+    for _ in range(max_tentatives):
+        if len(retenus) >= cible_echantillon:
+            break
+        company = generateur.choice(companies)
+        date_cible = _tire_date_cible(generateur, aujourdhui)
+        resultat = score_source(
+            company["ticker"], company["name"], date_cible, company["index"],
+            risk_free_rate=risk_free_rate_by_currency.get(company["index"]),
+            fx_rate_to_usd=fx_rate_by_currency.get(company["index"], 1.0),
+        )
+        if resultat is None:
+            continue
+        resultat["score"] = resultat["score_raw"]  # pas de recalibration par pool ici (voir note ci-dessus)
+        alerts = indices_score.compute_company_alerts(
+            resultat["ticker"], resultat["score_raw"], resultat["current_price"],
+            resultat["entry_price"], [], news_items=None, stage_label=resultat["stage_label"],
+            score_recalibrated=False, score=resultat["score"],
+        )
+        if any(a["kind"] == "entree" for a in alerts):
+            retenus.append(resultat)
+    return retenus

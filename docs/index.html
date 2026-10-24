@@ -4307,7 +4307,8 @@ function niveauReponse() {
 
 function setNiveauReponse(niveau) {
   try { localStorage.setItem(NIVEAU_REPONSE_KEY, niveau); } catch (e) { /* non mémorisé */ }
-  document.querySelectorAll('.home-level button').forEach(b => {
+  // Même réglage pour la barre de l'accueil et l'agent (.ab-level).
+  document.querySelectorAll('.home-level button, .ab-level button').forEach(b => {
     b.setAttribute('aria-pressed', String(b.dataset.niveau === niveau));
   });
 }

@@ -1,143 +1,168 @@
 // docs/assistant_bubble.js
-// Assistant IA présent sur toutes les pages : une sphère de particules en bas à
-// droite. Un appui ouvre un panneau où l'on pose sa question à l'écrit ou à
-// l'oral. La réponse peut être lue à voix haute. L'assistant connaît la page
-// courante (contexte) et peut ouvrir une autre section ou une fiche (événement
-// navigation). Chargé par index.html ; s'appuie sur getAiAssistantToken() défini là.
+// Agent IA présent sur toutes les pages sauf l'accueil (la barre centrale y
+// fait déjà ce travail). Desktop : petite sphère dorée en bas à droite qui
+// ouvre un panneau flottant. Mobile : ouvert par l'onglet central « IA » de la
+// barre d'onglets, en feuille qui monte du bas. L'agent connaît la page
+// courante (contexte envoyé à l'API + puce « Fiche LVMH »), propose des
+// suggestions liées à la page, et peut ouvrir une autre section (événement
+// navigation). Conversation indépendante de celle de l'accueil.
+// S'appuie sur index.html (chargé avant, celui-ci est en defer) :
+// getAiAssistantToken, niveauReponse / setNiveauReponse, wireAnswerActions,
+// lireAVoixHaute, et sur answer_reveal.js / assistant_suggestions.js.
+// Composants visuels : UI kit 2026-10 (index.html). Voir
+// docs/superpowers/specs/2026-10-24-accueil-agent-redesign-design.md (4.6, 4.7).
 (function () {
   const ENDPOINT = 'https://goldbot.fr:8445/ask';
   const CLE_VOIX = 'analyse-or-assistant-voix-sortie';
-  const TEAL = [45, 212, 191];
   const SECTIONS = { accueil: '#home', or: '#or', indices: '#indices', portefeuille: '#portefeuille' };
   const ETIQUETTES = { '#home': 'accueil', '#or': 'bot Or et scalping', '#indices': 'indices (scores et signaux)', '#portefeuille': 'portefeuille' };
+  const reduit = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  // ---- styles (injectés pour ne pas alourdir index.html) ----
+  // ---- styles propres à l'agent (couleurs : variables du thème uniquement) ----
   const style = document.createElement('style');
-  style.textContent = [
-    '.ab-bulle { position: fixed; right: 18px; bottom: 18px; width: 96px; height: 96px; border-radius: 50%;',
-    '  border: 1px solid rgba(45,212,191,.25); background: rgba(10,18,22,.6); padding: 0; cursor: pointer; z-index: 30; }',
-    '.ab-bulle canvas { width: 100%; height: 100%; display: block; border-radius: 50%; }',
-    '.ab-bulle:focus-visible { outline: 2px solid rgba(45,212,191,.6); outline-offset: 3px; }',
-    '.ab-panneau { position: fixed; right: 18px; bottom: 124px; width: min(400px, calc(100vw - 36px)); max-height: 62vh;',
-    '  display: flex; flex-direction: column; gap: 10px; background: #161d30; border: 1px solid rgba(255,255,255,.1);',
-    '  border-radius: 16px; padding: 14px; z-index: 31; box-shadow: 0 16px 40px rgba(0,0,0,.45); }',
-    '.ab-panneau[hidden] { display: none; }',
-    '.ab-entete { display: flex; justify-content: space-between; align-items: center; color: #9aa6c4; font-size: 13px; }',
-    '.ab-entete button { background: none; border: 1px solid rgba(255,255,255,.12); color: #9aa6c4; border-radius: 10px; padding: 4px 10px; cursor: pointer; font: inherit; font-size: 12px; }',
-    '.ab-messages { overflow-y: auto; display: flex; flex-direction: column; gap: 10px; min-height: 80px; padding-right: 4px; }',
-    '.ab-msg { font-size: 15px; line-height: 1.6; color: #e8ecf5; white-space: pre-wrap; overflow-wrap: anywhere; }',
-    '.ab-msg.ab-question { color: #9aa6c4; font-size: 13px; }',
-    '.ab-msg.ab-erreur { color: #f0b3a8; }',
-    '.ab-liens { display: flex; flex-wrap: wrap; gap: 8px; }',
-    '.ab-liens button { background: rgba(45,212,191,.1); border: 1px solid rgba(45,212,191,.35); color: #7fe7d6; border-radius: 16px; padding: 6px 12px; cursor: pointer; font: inherit; font-size: 13px; }',
-    '.ab-form { display: flex; gap: 8px; align-items: center; }',
-    '.ab-form input { flex: 1; min-width: 0; height: 44px; border-radius: 22px; border: 1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.04); color: #e8ecf5; padding: 0 16px; font: inherit; font-size: 15px; outline: none; }',
-    '.ab-form button { height: 44px; min-width: 44px; border-radius: 22px; border: 1px solid rgba(255,255,255,.12); background: none; color: #9aa6c4; cursor: pointer; font: inherit; }',
-    '.ab-form button[aria-pressed="true"] { background: rgba(42,91,255,.22); color: #e8ecf5; }',
-    '.ab-voix-sortie { font-size: 12px; color: #9aa6c4; display: flex; align-items: center; gap: 6px; }',
-    '@media (max-width: 600px) { .ab-bulle { width: 84px; height: 84px; right: 12px; bottom: 12px; } .ab-panneau { right: 12px; bottom: 108px; } }',
-  ].join('\n');
+  style.textContent = `
+    .ab-launch {
+      position: fixed; right: max(20px, var(--safe-right)); bottom: max(20px, var(--safe-bottom)); z-index: 30;
+      width: 56px; height: 56px; border-radius: 50%; border: 0; padding: 0; display: grid; place-items: center;
+      background: radial-gradient(circle at 35% 35%, var(--orb-hi), var(--orb-mid) 45%, var(--orb-lo) 100%);
+      /* Croix toujours sombre : la sphère reste dorée dans les 2 thèmes. */
+      box-shadow: 0 0 26px rgba(185,154,104,.35), var(--shadow-2); color: #0a0e1a;
+      transition: transform .15s var(--ease);
+    }
+    .ab-launch:hover { transform: scale(1.05); }
+    .ab-launch:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
+    .ab-launch svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; opacity: 0; transition: opacity .15s ease; }
+    .ab-launch[aria-expanded="true"] svg { opacity: 1; }
+    .ab-launch[hidden], .ab-panel[hidden], .ab-scrim[hidden] { display: none; }
+    .ab-panel {
+      position: fixed; right: max(20px, var(--safe-right)); bottom: calc(max(20px, var(--safe-bottom)) + 70px); z-index: 31;
+      width: min(380px, calc(100vw - 40px)); max-height: min(620px, calc(100vh - 140px));
+      display: flex; flex-direction: column; text-align: left;
+      background: var(--bg-2); border: 1px solid var(--border); border-radius: 20px; box-shadow: var(--shadow-3);
+      animation: content-fade-in .25s var(--ease) both;
+    }
+    .ab-grab { display: none; }
+    .ab-head { display: flex; align-items: center; gap: 8px; padding: 12px 10px 10px 14px; border-bottom: 1px solid var(--border); }
+    .ab-head .ai-avatar { width: 20px; height: 20px; margin: 0; }
+    .ab-title { font-weight: 600; font-size: 13.5px; color: var(--text); }
+    .ab-ctx {
+      display: inline-flex; align-items: center; gap: 6px; height: 24px; padding: 0 9px; min-width: 0;
+      border-radius: 999px; background: var(--bg-3); color: var(--muted); font-size: 11px; white-space: nowrap;
+      overflow: hidden; text-overflow: ellipsis;
+    }
+    .ab-ctx::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--green-300); flex-shrink: 0; }
+    .ab-sp { flex: 1; }
+    .ab-head .ab-chevron { display: none; }
+    .ab-thread { flex: 1; min-height: 120px; padding: 14px; }
+    .ab-thread .ai-msg-text { font-size: 14px; line-height: 1.6; }
+    .ab-thread .ai-msg-user { font-size: 13.5px; }
+    .ab-empty { color: var(--muted); font-size: 13px; line-height: 1.5; margin: auto 0; text-align: center; padding: 8px 12px; }
+    .ab-foot { display: flex; flex-direction: column; gap: 9px; padding: 10px 12px 12px; border-top: 1px solid var(--border); }
+    .ab-sugg { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; }
+    .ab-sugg::-webkit-scrollbar { display: none; }
+    .ab-sugg .ui-chip { height: 28px; font-size: 11.5px; flex-shrink: 0; }
+    .ab-foot .ai-pill-bar { height: 46px; padding: 0 5px 0 16px; }
+    .ab-foot .ai-pill-bar input { font-size: 14px; }
+    .ab-foot .ai-round { width: 36px; height: 36px; }
+    .ab-level { align-self: center; }
+    .ab-level.ui-seg { height: 30px; }
+    .ab-level.ui-seg button { font-size: 11.5px; padding: 0 11px; }
+  `;
   document.head.appendChild(style);
 
-  // ---- bulle : sphère de particules ----
-  const bulle = document.createElement('button');
-  bulle.type = 'button';
-  bulle.className = 'ab-bulle';
-  bulle.setAttribute('aria-label', 'Ouvrir l\'assistant');
-  bulle.setAttribute('aria-expanded', 'false');
-  const cv = document.createElement('canvas');
-  bulle.appendChild(cv);
-  document.body.appendChild(bulle);
+  const SVG = (d) => `<svg viewBox="0 0 24 24" aria-hidden="true">${d}</svg>`;
+  const ICONES = {
+    voix: '<path d="M4 9v6h4l5 4V5L8 9z M16 9a4 4 0 0 1 0 6"/>',
+    nouvelle: '<path d="M12 5v14M5 12h14"/>',
+    fermer: '<path d="M6 6l12 12M18 6L6 18"/>',
+    chevron: '<path d="M6 9l6 6 6-6"/>',
+    micro: '<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/>',
+    envoyer: '<path d="M12 19V5M5 12l7-7 7 7"/>',
+  };
 
-  const points = Array.from({ length: 420 }, () => ({
-    a: Math.random() * Math.PI * 2, b: Math.random() * Math.PI - Math.PI / 2,
-    jit: Math.random() - 0.5, taille: 0.5 + Math.random() * 1.1, phase: Math.random() * Math.PI * 2,
-  }));
-  const bruit = (x) => Math.sin(x) * 0.6 + Math.sin(x * 2.3 + 1.7) * 0.3 + Math.sin(x * 4.1 + 0.4) * 0.1;
-  const dpr = Math.min(window.devicePixelRatio || 1, 2);
-  const ctx = cv.getContext('2d');
-  const taille = 96;
-  cv.width = taille * dpr; cv.height = taille * dpr;
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  const reduit = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const debut = performance.now();
-  let derniere = 0;
+  // ---- lanceur (desktop) ----
+  const lanceur = document.createElement('button');
+  lanceur.type = 'button';
+  lanceur.className = 'ab-launch';
+  lanceur.setAttribute('aria-label', 'Ouvrir l\'assistant');
+  lanceur.setAttribute('aria-expanded', 'false');
+  lanceur.innerHTML = SVG(ICONES.fermer);
+  document.body.appendChild(lanceur);
 
-  function dessine(now) {
-    requestAnimationFrame(dessine);
-    // ~30 images par seconde : la bulle est toujours là, il faut ménager le téléphone.
-    if (now - derniere < 33) return;
-    derniere = now;
-    const t = reduit ? 0 : (now - debut) / 1000;
-    const parle = bulle.dataset.parle === '1';
-    const reflechit = bulle.dataset.reflechit === '1';
-    const amp = parle ? 1.7 : (reflechit ? 1.25 : 1);
-    const cx = taille / 2, cy = taille / 2;
-    const R = 34 * (1 + 0.035 * Math.sin(t * 0.9));
-    const tps = t * 0.35 * (parle ? 2 : (reflechit ? 1.6 : 1));
-    const rot = t * 0.25;
-    ctx.clearRect(0, 0, taille, taille);
-    for (const p of points) {
-      const onde = 1 + 0.1 * amp * bruit(p.a * 3 + tps) + 0.04 * amp * Math.sin(p.phase + t * 1.3);
-      const r = R * onde * (1 + 0.05 * amp * p.jit);
-      const x3 = r * Math.cos(p.b) * Math.cos(p.a + rot);
-      const y3 = r * Math.sin(p.b);
-      const z3 = r * Math.cos(p.b) * Math.sin(p.a + rot);
-      const persp = 1 / (1 - z3 / (R * 3.2));
-      const alpha = Math.max(0.08, Math.min(1, 0.35 + 0.55 * (z3 / (R * 1.4) + 0.5)));
-      ctx.fillStyle = 'rgba(' + TEAL.join(',') + ',' + alpha + ')';
-      const sz = p.taille * persp;
-      ctx.fillRect(cx + x3 * persp - sz / 2, cy + y3 * persp - sz / 2, sz, sz);
-    }
-  }
-  requestAnimationFrame(dessine);
+  // ---- voile (mobile, voir Task 8) + panneau ----
+  const voile = document.createElement('div');
+  voile.className = 'ab-scrim';
+  voile.hidden = true;
+  document.body.appendChild(voile);
 
-  // ---- panneau ----
   const panneau = document.createElement('div');
-  panneau.className = 'ab-panneau';
+  panneau.className = 'ab-panel';
+  panneau.setAttribute('role', 'dialog');
+  panneau.setAttribute('aria-label', 'Assistant IA');
   panneau.hidden = true;
-  panneau.innerHTML = [
-    '<div class="ab-entete"><span>Assistant</span>',
-    '<span><label class="ab-voix-sortie"><input type="checkbox" id="abVoixSortie"> Réponse à voix haute</label>',
-    ' <button type="button" id="abNouvelle">Nouvelle conversation</button> <button type="button" id="abFermer">Fermer</button></span></div>',
-    '<div class="ab-messages" id="abMessages" aria-live="polite"></div>',
-    '<form class="ab-form" id="abForm" autocomplete="off">',
-    '<button type="button" id="abMicro" aria-pressed="false" aria-label="Dicter la question" title="Dicter">🎙</button>',
-    '<input type="search" id="abQuestion" placeholder="Que puis-je faire pour vous ?">',
-    '<button type="submit" aria-label="Envoyer">➤</button></form>',
-  ].join('');
+  panneau.innerHTML = `
+    <div class="ab-grab" aria-hidden="true"></div>
+    <div class="ab-head">
+      <span class="ai-avatar" aria-hidden="true"></span>
+      <span class="ab-title">Assistant</span>
+      <span class="ab-ctx" id="abCtx"></span>
+      <span class="ab-sp"></span>
+      <button type="button" class="ai-icon-btn" id="abVoix" aria-pressed="false" aria-label="Lire les réponses à voix haute" title="Lecture à voix haute">${SVG(ICONES.voix)}</button>
+      <button type="button" class="ai-icon-btn" id="abNouvelle" aria-label="Nouvelle conversation" title="Nouvelle conversation">${SVG(ICONES.nouvelle)}</button>
+      <button type="button" class="ai-icon-btn ab-close" id="abFermer" aria-label="Fermer l'assistant" title="Fermer">${SVG(ICONES.fermer)}</button>
+      <button type="button" class="ai-icon-btn ab-chevron" id="abReplier" aria-label="Fermer l'assistant" title="Fermer">${SVG(ICONES.chevron)}</button>
+    </div>
+    <div class="ai-thread ab-thread" id="abMessages" aria-live="polite"></div>
+    <div class="ab-foot">
+      <div class="ab-sugg" id="abSugg"></div>
+      <form class="ai-pill is-active" id="abForm" autocomplete="off">
+        <div class="ai-pill-bar">
+          <input type="search" id="abQuestion" enterkeyhint="send" aria-label="Question à l'assistant">
+          <button type="button" class="ai-round ai-mic" id="abMicro" aria-pressed="false" aria-label="Dicter la question" title="Dicter">${SVG(ICONES.micro)}</button>
+          <button type="submit" class="ai-round ai-send" aria-label="Envoyer">${SVG(ICONES.envoyer)}</button>
+        </div>
+      </form>
+      <div class="ui-seg ab-level" role="group" aria-label="Niveau de réponse">
+        <button type="button" data-niveau="technique">Technique</button>
+        <button type="button" data-niveau="grand_public">Grand public</button>
+      </div>
+    </div>`;
   document.body.appendChild(panneau);
   const messages = panneau.querySelector('#abMessages');
   const champ = panneau.querySelector('#abQuestion');
   const formulaire = panneau.querySelector('#abForm');
   const micro = panneau.querySelector('#abMicro');
-  const voixSortie = panneau.querySelector('#abVoixSortie');
+  const boutonVoix = panneau.querySelector('#abVoix');
 
+  // ---- lecture vocale automatique (bascule d'en-tête, mémorisée) ----
   let voixLue = false;
   try { voixLue = localStorage.getItem(CLE_VOIX) === '1'; } catch (e) { voixLue = false; }
-  voixSortie.checked = voixLue;
-  voixSortie.addEventListener('change', () => {
-    try { localStorage.setItem(CLE_VOIX, voixSortie.checked ? '1' : '0'); } catch (e) { /* ignoré */ }
-    if (!voixSortie.checked && window.speechSynthesis) window.speechSynthesis.cancel();
+  boutonVoix.setAttribute('aria-pressed', String(voixLue));
+  boutonVoix.addEventListener('click', () => {
+    voixLue = !voixLue;
+    boutonVoix.setAttribute('aria-pressed', String(voixLue));
+    try { localStorage.setItem(CLE_VOIX, voixLue ? '1' : '0'); } catch (e) { /* ignoré */ }
+    if (!voixLue && window.speechSynthesis) window.speechSynthesis.cancel();
   });
 
-  function ouvre(ouvrir) {
-    panneau.hidden = !ouvrir;
-    bulle.setAttribute('aria-expanded', ouvrir ? 'true' : 'false');
-    if (ouvrir) champ.focus();
+  // ---- niveau de réponse (même réglage que l'accueil) ----
+  panneau.querySelectorAll('.ab-level button').forEach(b => {
+    b.addEventListener('click', () => { if (typeof setNiveauReponse === 'function') setNiveauReponse(b.dataset.niveau); });
+  });
+  const niveauCourant = () => (typeof niveauReponse === 'function' ? niveauReponse() : 'technique');
+
+  // ---- contexte : la page courante ----
+  function routeCourante() { return location.hash || '#home'; }
+  function estAccueil() { return decoupeRoute(routeCourante()).section === 'accueil'; }
+  function nomEntreprise() {
+    const r = decoupeRoute(routeCourante());
+    if (!r.ticker || typeof indicesData === 'undefined' || !indicesData || !Array.isArray(indicesData.companies)) return null;
+    const c = indicesData.companies.find(x => x.ticker === r.ticker);
+    return c ? c.name : null;
   }
-  bulle.addEventListener('click', () => ouvre(panneau.hidden));
-  panneau.querySelector('#abFermer').addEventListener('click', () => ouvre(false));
-  panneau.querySelector('#abNouvelle').addEventListener('click', () => {
-    historique = [];
-    messages.innerHTML = '';
-    champ.focus();
-  });
-  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !panneau.hidden) ouvre(false); });
-
-  // ---- contexte : la page courante, pour que l'assistant sache où on est ----
+  // Libellé envoyé à l'API (inchangé depuis la première version de l'agent).
   function contexteCourant() {
-    const h = location.hash || '#home';
+    const h = routeCourante();
     if (h.indexOf('#indices/') === 0) {
       let ticker = h.slice('#indices/'.length);
       try { ticker = decodeURIComponent(ticker); } catch (e) { /* on garde tel quel */ }
@@ -146,51 +171,109 @@
     return ETIQUETTES[h] || 'accueil';
   }
 
-  function ajouteMessage(texte, classe) {
-    const d = document.createElement('div');
-    d.className = 'ab-msg ' + (classe || '');
-    d.textContent = texte;
-    messages.appendChild(d);
-    messages.scrollTop = messages.scrollHeight;
-    return d;
-  }
-
-  function ajouteLiens(liens) {
-    if (!liens || !liens.length) return;
-    const d = document.createElement('div');
-    d.className = 'ab-liens';
-    for (const l of liens) {
+  function majContexte() {
+    const nom = nomEntreprise();
+    panneau.querySelector('#abCtx').textContent = contextLabel(routeCourante(), nom);
+    champ.placeholder = nom ? `Pose une question sur ${nom}…` : 'Pose ta question…';
+    const sugg = panneau.querySelector('#abSugg');
+    sugg.innerHTML = '';
+    suggestionsForRoute(routeCourante(), nom).forEach(texte => {
       const b = document.createElement('button');
       b.type = 'button';
-      b.textContent = l.libelle || l.cible_valeur;
-      b.addEventListener('click', () => allerVers(l.cible_type, l.cible_valeur));
-      d.appendChild(b);
+      b.className = 'ui-chip';
+      b.textContent = texte;
+      b.addEventListener('click', () => pose(texte));
+      sugg.appendChild(b);
+    });
+    if (!messages.children.length) {
+      messages.innerHTML = '<p class="ab-empty">Pose une question sur cette page, ou choisis une suggestion ci-dessous.</p>';
     }
+  }
+
+  // ---- ouverture / fermeture ----
+  function ouvre(ouvrir) {
+    if (ouvrir && estAccueil()) ouvrir = false;
+    panneau.hidden = !ouvrir;
+    voile.hidden = !ouvrir;
+    lanceur.setAttribute('aria-expanded', String(ouvrir));
+    lanceur.setAttribute('aria-label', ouvrir ? 'Fermer l\'assistant' : 'Ouvrir l\'assistant');
+    const onglet = document.getElementById('bottomNavIa');
+    if (onglet) onglet.classList.toggle('active', ouvrir);
+    if (ouvrir) {
+      if (typeof setNiveauReponse === 'function') setNiveauReponse(niveauCourant());
+      majContexte();
+      champ.focus();
+    }
+  }
+  function majVisibilite() {
+    lanceur.hidden = estAccueil();
+    if (estAccueil()) ouvre(false);
+    else if (!panneau.hidden) majContexte();
+  }
+  lanceur.addEventListener('click', () => ouvre(panneau.hidden));
+  voile.addEventListener('click', () => ouvre(false));
+  panneau.querySelector('#abFermer').addEventListener('click', () => ouvre(false));
+  panneau.querySelector('#abReplier').addEventListener('click', () => ouvre(false));
+  panneau.querySelector('#abNouvelle').addEventListener('click', () => {
+    historique = [];
+    messages.innerHTML = '';
+    majContexte();
+    champ.focus();
+  });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !panneau.hidden) ouvre(false); });
+  window.addEventListener('hashchange', majVisibilite);
+  majVisibilite();
+
+  // ---- messages ----
+  function ajouteQuestion(texte) {
+    const vide = messages.querySelector('.ab-empty');
+    if (vide) vide.remove();
+    const d = document.createElement('div');
+    d.className = 'ai-msg-user';
+    d.textContent = texte;
     messages.appendChild(d);
   }
+  function ajouteReponse() {
+    messages.insertAdjacentHTML('beforeend', `
+      <div class="ai-msg-ai">
+        <span class="ai-avatar is-thinking" aria-hidden="true"></span>
+        <div class="ai-msg-body"><div class="ai-msg-text"></div><div class="ai-links"></div><div class="ai-actions"></div></div>
+      </div>`);
+    const msg = messages.lastElementChild;
+    return {
+      avatar: msg.querySelector('.ai-avatar'),
+      texte: msg.querySelector('.ai-msg-text'),
+      liens: msg.querySelector('.ai-links'),
+      actions: msg.querySelector('.ai-actions'),
+    };
+  }
+  const suivre = () => {
+    if (messages.scrollHeight - messages.scrollTop - messages.clientHeight < 96) {
+      messages.scrollTo({ top: messages.scrollHeight, behavior: reduit ? 'auto' : 'smooth' });
+    }
+  };
 
   function hashPour(cibleType, cibleValeur) {
     if (cibleType === 'ticker') return '#indices/' + encodeURIComponent(cibleValeur);
     return SECTIONS[cibleValeur] || '#' + cibleValeur;
   }
-
   function allerVers(cibleType, cibleValeur) {
     location.hash = hashPour(cibleType, cibleValeur);
   }
-
-  // ---- voix de sortie : lit la réponse à voix haute si demandé ----
-  function lisReponse(texte) {
-    if (!voixSortie.checked || !window.speechSynthesis || !texte) return;
-    const u = new SpeechSynthesisUtterance(texte);
-    u.lang = 'fr-FR';
-    u.onstart = () => { bulle.dataset.parle = '1'; };
-    u.onend = () => { bulle.dataset.parle = '0'; };
-    u.onerror = () => { bulle.dataset.parle = '0'; };
-    window.speechSynthesis.cancel();
-    window.speechSynthesis.speak(u);
+  function rendLiens(el, liens) {
+    el.innerHTML = '';
+    (liens || []).forEach(l => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'ai-link';
+      b.textContent = l.libelle || l.cible_valeur;
+      b.addEventListener('click', () => allerVers(l.cible_type, l.cible_valeur));
+      el.appendChild(b);
+    });
+    el.classList.add('ai-reveal-after');
   }
 
-  // ---- voix d'entrée : même principe que la barre d'accueil ----
+  // ---- voix d'entrée : dictée ----
   const Reco = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (Reco) {
     const reco = new Reco();
@@ -215,40 +298,54 @@
     micro.hidden = true;
   }
 
-  // ---- envoi : streaming SSE, comme la barre d'accueil ----
+  // ---- envoi : streaming SSE ----
   let historique = [];
   let enCours = false;
 
   async function pose(question) {
-    if (enCours) return;
+    if (enCours || !question) return;
     const token = typeof getAiAssistantToken === 'function' ? getAiAssistantToken() : null;
-    if (!token) { ajouteMessage('Saisis d\'abord ton jeton d\'accès dans la barre d\'accueil.', 'ab-erreur'); return; }
-    enCours = true;
-    ajouteMessage(question, 'ab-question');
-    const reponse = ajouteMessage('Je réfléchis');
-    // Pendant la réflexion : la bulle s'agite et le message affiche des points qui avancent.
-    let points = 0;
-    let minuterie = setInterval(() => { points = (points % 3) + 1; reponse.textContent = 'Je réfléchis' + '.'.repeat(points); }, 400);
-    bulle.dataset.reflechit = '1';
-    const arreteReflexion = () => {
-      if (minuterie) { clearInterval(minuterie); minuterie = null; }
-      bulle.dataset.reflechit = '0';
-    };
+    ajouteQuestion(question);
+    const rep = ajouteReponse();
+    suivre();
+    let liensRecus = [];
     let texte = '';
     let navigation = null;
     let erreur = false;
+    const reveal = createWordReveal(rep.texte, {
+      reduceMotion: reduit,
+      onProgress: suivre,
+      onDone: () => {
+        rep.avatar.classList.remove('is-thinking');
+        rendLiens(rep.liens, liensRecus);
+        if (reveal.text() && !erreur && typeof wireAnswerActions === 'function') {
+          wireAnswerActions(rep.actions, () => reveal.text());
+          if (voixLue && typeof lireAVoixHaute === 'function') {
+            const ecouter = rep.actions.querySelector('.ai-listen');
+            if (ecouter) lireAVoixHaute(reveal.text(), ecouter);
+          }
+        }
+        suivre();
+      },
+    });
+    if (!token) {
+      erreur = true;
+      rep.texte.classList.add('is-error');
+      reveal.fix('Saisis d\'abord ton jeton d\'accès dans la barre d\'accueil.');
+      return;
+    }
+    enCours = true;
     try {
       const res = await fetch(ENDPOINT, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'X-Bot-Token': token },
-        body: JSON.stringify({ question, history: historique, contexte: contexteCourant(), niveau: 'technique' }),
+        body: JSON.stringify({ question, history: historique, contexte: contexteCourant(), niveau: niveauCourant() }),
       });
       if (!res.ok || !res.body) {
         let detail = "L'assistant ne peut pas répondre pour le moment.";
         try { const corps = await res.json(); if (corps && corps.detail) detail = corps.detail; } catch (e) { /* message par défaut */ }
         throw new Error(detail);
       }
-      reponse.textContent = '';
       const lecteur = res.body.getReader();
       const dec = new TextDecoder();
       let tampon = '';
@@ -263,27 +360,30 @@
           const ligne = bloc.split('\n').find((l) => l.indexOf('data: ') === 0);
           if (!ligne) continue;
           const ev = JSON.parse(ligne.slice(6));
-          if (ev.type === 'texte') { arreteReflexion(); texte += ev.texte; reponse.textContent = texte; messages.scrollTop = messages.scrollHeight; }
-          else if (ev.type === 'liens') ajouteLiens(ev.liens);
+          if (ev.type === 'texte') { rep.avatar.classList.remove('is-thinking'); texte += ev.texte; reveal.setText(texte); }
+          else if (ev.type === 'liens') liensRecus = ev.liens || [];
           else if (ev.type === 'navigation') navigation = ev;
-          else if (ev.type === 'erreur') { erreur = true; reponse.textContent = ev.detail || 'Erreur.'; reponse.classList.add('ab-erreur'); }
+          else if (ev.type === 'erreur') { erreur = true; rep.texte.classList.add('is-error'); reveal.replace(ev.detail || 'Erreur.'); }
         }
       }
+      reveal.finish();
     } catch (e) {
       erreur = true;
-      reponse.textContent = (e && e.message) ? e.message : "Je n'ai pas pu contacter l'assistant, réessaie dans un instant.";
-      reponse.classList.add('ab-erreur');
+      rep.texte.classList.add('is-error');
+      reveal.fix((e && e.message) ? e.message : "Je n'ai pas pu contacter l'assistant, réessaie dans un instant.");
     } finally {
-      arreteReflexion();
       enCours = false;
     }
     if (!erreur && texte) {
       historique.push({ role: 'user', content: question });
       historique.push({ role: 'assistant', content: texte });
-      lisReponse(texte);
     }
     if (navigation && !erreur) {
-      ajouteMessage('Je vous ouvre la page…', 'ab-question');
+      const d = document.createElement('p');
+      d.className = 'ab-empty';
+      d.textContent = 'Je vous ouvre la page…';
+      messages.appendChild(d);
+      suivre();
       setTimeout(() => allerVers(navigation.cible_type, navigation.cible_valeur), 1200);
     }
   }
@@ -295,4 +395,11 @@
     champ.value = '';
     pose(q);
   });
+
+  window.AssistantIA = {
+    open() { ouvre(true); },
+    close() { ouvre(false); },
+    toggle() { ouvre(panneau.hidden); },
+    isOpen() { return !panneau.hidden; },
+  };
 })();

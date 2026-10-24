@@ -181,7 +181,10 @@ def actualites_entreprise_point_in_temps(
     precedent a une autre date -- l'appelant (analyste_backtest.py) gere
     son propre cache sur disque si besoin, voir sa Tache."""
     debut = date_cible - timedelta(days=fenetre_jours)
-    brut = gdelt_source(f'"{nom}"', debut, 0, f"point_in_temps:{ticker}:{date_cible.isoformat()}", fin=date_cible)
+    # cache={} : dict jetable propre a cet appel, jamais le _news_cache partage
+    # (pas de reutilisation entre dates, et aucun etat qui grossit sans limite).
+    brut = gdelt_source(f'"{nom}"', debut, 0, f"point_in_temps:{ticker}:{date_cible.isoformat()}",
+                        fin=date_cible, cache={})
     if "erreur" in brut:
         return brut
     articles = articles_gdelt(brut, nom=nom)

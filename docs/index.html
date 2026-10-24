@@ -225,12 +225,20 @@
     background: var(--bg-translucent); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
     border-bottom: 1px solid var(--border);
   }
-  .top-bar-wordmark {
+  .top-bar-wordmark { display: inline-flex; align-items: center; gap: 10px; margin-right: 28px; }
+  .top-bar-wordmark .brand-text {
     font-family: 'Newsreader', serif; font-weight: 400; font-size: var(--text-lg);
-    letter-spacing: 0.03em; margin-right: 28px;
+    letter-spacing: 0.03em;
     background: linear-gradient(135deg, var(--gold-100), var(--gold) 55%, var(--gold-700));
     -webkit-background-clip: text; background-clip: text; color: transparent;
   }
+  /* Logo « Orbite & signal » (voir docs/icons/logo-symbol.svg) : anneau or,
+     point turquoise de l'agent — couleurs via variables (style sur les formes du <symbol> : les règles CSS
+     n'atteignent pas l'intérieur d'un <use>), suit le thème. */
+  .brand-mark { display: block; flex-shrink: 0; }
+  .top-bar-wordmark .brand-mark { width: 28px; height: 28px; }
+  .home-mark { width: clamp(44px, 5.5vh, 64px); height: clamp(44px, 5.5vh, 64px); margin-bottom: 2px; }
+  .home.answered .home-mark, .home.guide-open .home-mark { display: none; }
   .theme-toggle {
     margin-left: auto; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;
     background: none; border: 1px solid var(--border); border-radius: var(--radius-pill); color: var(--text-faint);
@@ -1648,12 +1656,13 @@
   <symbol id="icon-portefeuille" viewBox="0 0 24 24"><path d="M4 8h16v11a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z M9 8V6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2 M4 13h16"/></symbol>
   <symbol id="icon-close" viewBox="0 0 24 24"><path d="M5 5l14 14M19 5L5 19"/></symbol>
   <symbol id="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.6M12 18.9v2.6M4.6 4.6l1.8 1.8M17.6 17.6l1.8 1.8M2.5 12h2.6M18.9 12h2.6M4.6 19.4l1.8-1.8M17.6 6.4l1.8-1.8"/></symbol>
+  <symbol id="logo-mark" viewBox="0 0 256 256"><path style="fill: var(--gold)" d="M163.45 43.39 A97.0 97.0 0 1 0 212.61 92.55 L185.21 104.75 A67.0 67.0 0 1 1 151.25 70.79 Z"/><circle style="fill: var(--agent)" cx="181.98" cy="74.02" r="26"/></symbol>
   <symbol id="icon-moon" viewBox="0 0 24 24"><path d="M20 14.3A8.2 8.2 0 1 1 9.7 4 6.6 6.6 0 0 0 20 14.3z"/></symbol>
 </svg>
 
 <!-- Desktop (≥1024px) : barre horizontale fixe en haut. -->
 <nav class="top-bar" aria-label="Navigation principale">
-  <a href="#home" class="top-bar-wordmark">AI Investment</a>
+  <a href="#home" class="top-bar-wordmark" aria-label="AI Investment — accueil"><svg class="brand-mark" viewBox="0 0 256 256" aria-hidden="true"><use href="#logo-mark"/></svg><span class="brand-text">AI Investment</span></a>
   <button class="nav-item" data-route="or">
     <svg class="nav-icon"><use href="#icon-or"/></svg>
     <span>Or</span>
@@ -1699,6 +1708,7 @@
   <button class="screen-theme-toggle" type="button" aria-label="Basculer mode jour/nuit"><svg class="nav-icon theme-icon"><use href="#icon-sun"/></svg></button>
   <canvas id="homeParticles" class="home-particles" aria-hidden="true"></canvas>
   <div class="home-hero">
+    <svg class="brand-mark home-mark" viewBox="0 0 256 256" aria-hidden="true"><use href="#logo-mark"/></svg>
     <h1 class="home-wordmark">AI Investment</h1>
     <p class="home-tagline" id="homeTagline">L'IA note chaque jour l'or et des centaines d'entreprises mondiales, repère les points d'entrée et suit ton portefeuille.</p>
   </div>

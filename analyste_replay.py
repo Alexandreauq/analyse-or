@@ -9,6 +9,10 @@ import json
 import os
 import time
 
+import analyste_backtest
+import ibkr_bot.signals
+import indices_score
+
 GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/{modele}:generateContent"
 
 
@@ -169,3 +173,46 @@ def ecrit_resultats(paris_resolus: list[dict], chemin: str) -> None:
         os.makedirs(dirname, exist_ok=True)
     with open(chemin, "w", encoding="utf-8") as fh:
         json.dump({"methode": "backtest_retroactif", "paris": paris_resolus}, fh, ensure_ascii=False, indent=2)
+
+
+def main(chemin_sortie: str = "docs/superpowers/experiments/2026-10-24-analyste-backtest-6-12-mois.json") -> None:
+    """Point d'entree bout-en-bout : echantillonnage (Tache 5) -> pour
+    chaque signal, prompt + appel Gemini (Tache 6) -> resolution
+    immediate (Tache 7) -> ecriture. Lance une fois, manuellement --
+    pas de timer/cron (chantier ponctuel, pas un service).
+
+    Filtre `indices_score.COMPANIES` sur `ibkr_bot.signals.INDICES_IN_SCOPE`
+    avant de le passer a `genere_signaux_historiques` : COMPANIES couvre
+    les 10 indices suivis par l'app (dont NIKKEI225 et HANGSENG), mais le
+    perimetre de ce backtest est explicitement les 8 indices passes au
+    reel (meme liste que le plan, exactement ibkr_bot.signals.
+    INDICES_IN_SCOPE -- une seule source de verite, pas de risque de
+    derive). Sans ce filtre, le tirage pourrait produire un signal
+    NIKKEI225/HANGSENG, qui ferait lever un KeyError dans resout_pari
+    (INDEX_YFINANCE_TICKER ci-dessus ne couvre que les 8 indices du
+    perimetre)."""
+    companies_perimetre = [
+        c for c in indices_score.COMPANIES if c["index"] in ibkr_bot.signals.INDICES_IN_SCOPE
+    ]
+    risk_free_rate_by_currency = {
+        currency: indices_score.fetch_risk_free_rate(series_id)
+        for currency, series_id in indices_score.RISK_FREE_SERIES_BY_CURRENCY.items()
+    }
+    fx_rate_by_currency = {
+        currency: indices_score.fetch_fx_rate_to_usd(currency)
+        for currency in set(indices_score.INDEX_CURRENCY.values())
+    }
+    signaux = analyste_backtest.genere_signaux_historiques(
+        companies_perimetre, risk_free_rate_by_currency, fx_rate_by_currency)
+
+    paris_resolus = []
+    for signal in signaux:
+        prompt = construit_prompt(signal)
+        pari = appelle_gemini(prompt)
+        paris_resolus.append(resout_pari(signal, pari))
+
+    ecrit_resultats(paris_resolus, chemin_sortie)
+
+
+if __name__ == "__main__":
+    main()

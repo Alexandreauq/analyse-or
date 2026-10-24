@@ -1,6 +1,6 @@
 {
-  "updated": "2026-10-23T13:02:37Z",
-  "sync_status": "error",
-  "sync_error": "Erreur réseau MT5 (pas de réponse)",
+  "updated": "2026-10-24T12:25:31Z",
+  "sync_status": "ok",
+  "sync_error": null,
   "positions": []
 }

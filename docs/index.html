@@ -78,7 +78,12 @@
     --lh-tight: 1.1; --lh-snug: 1.3; --lh-normal: 1.5; --lh-relaxed: 1.65;
 
     /* Layout */
-    --topbar-h: 76px; --drawer-w: min(280px, 80vw);
+    --topbar-h: 76px;
+    /* Safe areas iOS : toujours lues via ces variables (pas env() direct)
+       pour que tools/capture.mjs puisse simuler l'encoche en les surchargeant. */
+    --safe-top: env(safe-area-inset-top, 0px); --safe-bottom: env(safe-area-inset-bottom, 0px);
+    --safe-left: env(safe-area-inset-left, 0px); --safe-right: env(safe-area-inset-right, 0px);
+    --bottomnav-h: calc(68px + var(--safe-bottom));
     --bg-translucent: rgba(10,14,26,.9);
 
     /* Breakpoints (référence — non utilisables en valeur CSS, documentés pour cohérence media queries) */
@@ -135,30 +140,26 @@
 
   .app { max-width: 720px; margin: 0 auto; }
 
-  /* Vraie navigation "push" façon app native : l'écran entrant glisse de
-     droite à gauche PENDANT que #home recule (léger translateX + assombri),
-     plutôt que de simplement glisser par-dessus une accueil figée — sinon
-     l'accueil reste visible dans l'espace pas encore couvert le temps de
-     l'animation. #home suit exactement le même traitement que les autres
-     écrans, juste avec des valeurs de recul au lieu d'un glissement complet. */
+  /* Transition en fondu simple entre les 4 écrans (accueil compris) :
+     l'écran entrant passe de opacity 0 à 1, le sortant l'inverse — jamais de
+     déplacement, donc jamais un écran vu "à travers" un autre pendant la
+     bascule. pointer-events coupé tant qu'un écran n'est pas au premier
+     plan, pour ne pas intercepter de clics pendant qu'il est transparent. */
   .home, #or, #indices, #portefeuille {
     position: fixed; inset: 0; overflow-y: auto; -webkit-overflow-scrolling: touch;
     background: var(--bg);
     scrollbar-width: none;      /* Firefox */
     -ms-overflow-style: none;   /* vieux Edge */
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.22s ease;
   }
   .home::-webkit-scrollbar, #or::-webkit-scrollbar, #indices::-webkit-scrollbar, #portefeuille::-webkit-scrollbar { display: none; }
-  .home {
-    transition: transform 0.32s cubic-bezier(.22,1,.36,1), filter 0.32s cubic-bezier(.22,1,.36,1);
+  .home.screen-in, #or.screen-in, #indices.screen-in, #portefeuille.screen-in { opacity: 1; pointer-events: auto; }
+  #or, #indices, #portefeuille { z-index: 2; }
+  .home.no-anim, #or.no-anim, #indices.no-anim, #portefeuille.no-anim { transition: none; }
+  @media (prefers-reduced-motion: reduce) {
+    .home, #or, #indices, #portefeuille { transition: none; }
   }
-  .home.screen-back { transform: translateX(-18%) scale(.97); filter: brightness(.82); }
-  .home.no-anim { transition: none; }
-  #or, #indices, #portefeuille {
-    z-index: 2; transform: translateX(100%);
-    transition: transform 0.32s cubic-bezier(.22,1,.36,1);
-  }
-  #or.screen-in, #indices.screen-in, #portefeuille.screen-in { transform: translateX(0); }
-  #or.no-anim, #indices.no-anim, #portefeuille.no-anim { transition: none; }
 
   /* Sur mobile/tablette, le contenu touchait exactement les bords de
      l'écran — on laisse une petite marge respirer tout autour plutôt que
@@ -177,10 +178,16 @@
        (voir background:var(--bg) juste au-dessus) pour que la marge se
        fonde et ne se remarque pas comme un cadre. */
     .home, #or, #indices, #portefeuille { border: 16px solid var(--bg); }
+    /* Haut : sous la barre d'état / l'encoche ; bas : la barre d'onglets
+       fixe (box-sizing:border-box rétrécit aussi la zone de scroll interne
+       des écrans en 100%/100svh comme #or.suivi-active ou #portefeuille). */
+    .home, #or, #indices, #portefeuille {
+      padding-top: var(--safe-top); padding-bottom: var(--bottomnav-h);
+    }
   }
 
 
-  /* Nav des modules (Or / Minières / Indices) : bouton menu + panneau latéral
+  /* Nav des modules (Or / Indices / Portefeuille) : barre d'onglets en bas
      sur mobile/tablette, barre horizontale fixe sur desktop — les deux
      coexistent dans le DOM, l'affichage bascule par media query. */
   .nav-icon { width: 20px; height: 20px; fill: none; stroke: currentColor;
@@ -214,58 +221,67 @@
     background: rgba(243,228,194,.88); border-bottom-color: var(--border-strong);
   }
 
-  /* Mobile/tablette (<1024px) : bouton menu discret + panneau latéral. */
-  .menu-button {
-    position: fixed; top: max(12px, env(safe-area-inset-top)); left: max(12px, env(safe-area-inset-left));
-    z-index: 20; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center;
-    background: var(--bg-2); border: 1px solid var(--border); border-radius: var(--radius-md);
-    color: var(--text); box-shadow: var(--shadow-1); transition: transform .12s ease, border-color .15s ease;
+  /* Mobile/tablette (<1024px) : barre d'onglets fixe en bas, façon app
+     native — tous les onglets atteignables en un tap. Onglet central "IA"
+     surélevé (orbe dorée) qui ouvre l'agent (voir assistant_bubble.js). */
+  .bottom-nav {
+    display: none; position: fixed; left: 0; right: 0; bottom: 0; z-index: 20;
+    height: var(--bottomnav-h); padding: 0 var(--safe-right) var(--safe-bottom) var(--safe-left);
+    align-items: flex-start;
+    background: var(--bg-translucent); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    border-top: 1px solid var(--border);
   }
-  .menu-button:active { transform: scale(.94); }
-  .nav-item:active { transform: scale(.97); }
-  .drawer-scrim {
-    position: fixed; inset: 0; z-index: 30; background: var(--scrim);
-    opacity: 0; pointer-events: none; transition: opacity .25s ease;
-  }
-  .drawer-scrim.is-open { opacity: 1; pointer-events: auto; }
-  .drawer {
-    position: fixed; top: 0; bottom: 0; left: 0; z-index: 31; width: var(--drawer-w);
-    background: var(--bg-1); border-right: 1px solid var(--border);
-    padding: max(28px, env(safe-area-inset-top)) 16px 16px;
-    display: flex; flex-direction: column; gap: 6px;
-    transform: translateX(calc(-1 * var(--drawer-w) - 8px));
-    transition: transform .3s cubic-bezier(.22,1,.36,1);
-  }
-  .drawer.is-open { transform: translateX(0); }
-  .drawer-wordmark {
-    font-family: 'Newsreader', serif; font-weight: 400; font-size: var(--text-lg);
-    letter-spacing: 0.03em; padding: 0 10px; margin-bottom: 24px;
-    background: linear-gradient(135deg, var(--gold-100), var(--gold) 55%, var(--gold-700));
-    -webkit-background-clip: text; background-clip: text; color: transparent;
-  }
-  @media (min-width: 1024px) { .menu-button, .drawer-scrim, .drawer { display: none; } }
+  @media (max-width: 1023px) { .bottom-nav { display: flex; } }
 
   .nav-item {
     position: relative; display: flex; align-items: center;
     background: none; border: none; text-align: left; color: var(--text-faint);
     transition: color .15s ease, background .15s ease, transform .12s ease;
   }
-  .nav-item.disabled { opacity: .35; pointer-events: none; }
+  .nav-item:active { transform: scale(.97); }
   .top-bar .nav-item {
     flex-direction: row; gap: 8px; padding: 8px 14px; border-radius: var(--radius-pill);
     font-size: var(--text-sm); font-weight: 500;
   }
   .top-bar .nav-item:hover { background: var(--bg-2); color: var(--text); }
   .top-bar .nav-item.active { background: var(--bg-3); color: var(--gold); }
-  .drawer .nav-item {
-    gap: 12px; padding: 12px 10px; border-radius: var(--radius-md);
-    font-size: var(--text-sm); font-weight: 500;
-    border-left: 2px solid transparent;
+  .bottom-nav .nav-item {
+    flex: 1; min-width: 0; flex-direction: column; justify-content: flex-start; align-items: center;
+    gap: 5px; padding: 9px 2px 0; font-size: 11px; font-weight: 600; text-align: center; line-height: 1;
   }
-  .drawer .nav-item:hover { background: var(--bg-2); color: var(--text); }
-  .drawer .nav-item.active {
-    background: var(--bg-3); color: var(--gold); border-left-color: var(--gold);
+  .bottom-nav .nav-ico {
+    width: 46px; height: 32px; border-radius: 16px; display: grid; place-items: center;
+    transition: background .15s ease;
   }
+  .bottom-nav .nav-ico .nav-icon { width: 27px; height: 27px; }
+  .bottom-nav .nav-item.active { color: var(--gold); }
+  .bottom-nav .nav-item.active .nav-ico { background: var(--bg-3); }
+  .bottom-nav .nav-item-ia { color: var(--gold-100); }
+  .nav-orb {
+    /* -24px : l'orbe occupe la même hauteur (32px) qu'une .nav-ico, donc le
+       libellé "IA" reste aligné sur ceux des autres onglets. */
+    width: 56px; height: 56px; margin-top: -24px; border-radius: 50%; flex-shrink: 0;
+    border: 4px solid var(--bg-1);
+    background: radial-gradient(circle at 35% 35%, var(--gold-100), var(--gold) 45%, var(--gold-700) 100%);
+    box-shadow: 0 0 24px rgba(185,154,104,.45);
+  }
+  .bottom-nav .nav-item-ia.active { color: var(--gold); }
+  .bottom-nav .nav-item-ia.active .nav-orb { box-shadow: 0 0 0 2px var(--gold), 0 0 28px rgba(185,154,104,.6); }
+
+  /* Bouton Thème mobile : dans l'en-tête de chaque écran, défile avec la
+     page (pas position:fixed) — jamais sous l'encoche / la Dynamic Island,
+     l'écran ayant déjà padding-top: var(--safe-top). Desktop : celui de la
+     .top-bar. */
+  .screen-theme-toggle {
+    position: absolute; top: 12px; right: max(12px, var(--safe-right)); z-index: 3;
+    width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; padding: 0;
+    background: var(--bg-2); border: 1px solid var(--border); color: var(--muted);
+  }
+  .screen-theme-toggle:active { transform: scale(.94); }
+  @media (min-width: 1024px) { .screen-theme-toggle { display: none; } }
+  /* #home est lui-même le conteneur positionné : son bouton se cale sous
+     la zone protégée (le padding-top ne décale pas un enfant absolu). */
+  #home > .screen-theme-toggle { top: calc(var(--safe-top) + 12px); }
 
   /* Écran d'accueil : plein écran. La barre de recherche est centrée au
      repos ; pendant la réflexion (#home.thinking) elle s'efface en remontant
@@ -496,9 +512,9 @@
 
   /* Écran d'un module (Or) */
   .screen main { padding: 0 20px 40px; }
-  header { padding: 64px 20px 0; }
+  header { padding: 24px 64px 0 20px; position: relative; }
   @media (min-width: 1024px) {
-    header { padding-top: calc(var(--topbar-h) + 36px); }
+    header { padding-top: calc(var(--topbar-h) + 36px); padding-right: 20px; }
     .home-hero { top: calc(var(--topbar-h) + 36px); }
   }
   .back-link {
@@ -730,7 +746,7 @@
   .mobile-key-bar {
     display: flex; align-items: center; justify-content: space-between; gap: 10px;
     position: sticky; top: 0; z-index: 5; margin: 0 -20px 16px;
-    padding: 10px 20px 10px 64px;
+    padding: 10px 20px;
     background: var(--bg-translucent); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
     border-bottom: 1px solid var(--border);
   }
@@ -850,12 +866,18 @@
   .indices-compare-bar {
     display: none; position: fixed; left: 0; right: 0; bottom: 0; z-index: 15;
     align-items: center; justify-content: space-between; gap: 12px;
-    padding: 12px max(16px, env(safe-area-inset-left)) max(12px, env(safe-area-inset-bottom));
+    padding: 12px max(16px, var(--safe-left)) max(12px, var(--safe-bottom));
     background: var(--bg-translucent); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
     border-top: 1px solid var(--border);
   }
   .indices-compare-bar.is-visible { display: flex; }
   #indices.has-compare-bar { padding-bottom: 72px; }
+  /* Mobile : la barre d'onglets occupe déjà le bas — le comparateur remonte
+     juste au-dessus, et #indices garde la place pour les deux. */
+  @media (max-width: 1023px) {
+    .indices-compare-bar { bottom: var(--bottomnav-h); padding-bottom: 12px; }
+    #indices.has-compare-bar { padding-bottom: calc(72px + var(--bottomnav-h)); }
+  }
   .indices-compare-bar-chips { display: flex; gap: 8px; flex-wrap: wrap; flex: 1 1 auto; min-width: 0; }
   .indices-compare-chip {
     display: inline-flex; align-items: center; gap: 6px; background: var(--bg-2); border: 1px solid var(--border);
@@ -1444,11 +1466,10 @@
 <body>
 
 <svg style="display:none" aria-hidden="true">
+  <symbol id="icon-home" viewBox="0 0 24 24"><path d="M4 11.5L12 4l8 7.5 M6 10v9a1 1 0 0 0 1 1h3v-6h4v6h3a1 1 0 0 0 1-1v-9"/></symbol>
   <symbol id="icon-or" viewBox="0 0 24 24"><path d="M6.5 8h11l3 9h-17z"/></symbol>
-  <symbol id="icon-minieres" viewBox="0 0 24 24"><path d="M12 3l6.5 6.5L12 21 5.5 9.5z M6.5 9.5h11"/></symbol>
   <symbol id="icon-indices" viewBox="0 0 24 24"><path d="M4 20h16M6.5 20v-5.5M12 20V8M17.5 20v-9.5"/></symbol>
   <symbol id="icon-portefeuille" viewBox="0 0 24 24"><path d="M4 8h16v11a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z M9 8V6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2 M4 13h16"/></symbol>
-  <symbol id="icon-menu" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></symbol>
   <symbol id="icon-close" viewBox="0 0 24 24"><path d="M5 5l14 14M19 5L5 19"/></symbol>
   <symbol id="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.6M12 18.9v2.6M4.6 4.6l1.8 1.8M17.6 17.6l1.8 1.8M2.5 12h2.6M18.9 12h2.6M4.6 19.4l1.8-1.8M17.6 6.4l1.8-1.8"/></symbol>
   <symbol id="icon-moon" viewBox="0 0 24 24"><path d="M20 14.3A8.2 8.2 0 1 1 9.7 4 6.6 6.6 0 0 0 20 14.3z"/></symbol>
@@ -1461,10 +1482,6 @@
     <svg class="nav-icon"><use href="#icon-or"/></svg>
     <span>Or</span>
   </button>
-  <button class="nav-item disabled" disabled>
-    <svg class="nav-icon"><use href="#icon-minieres"/></svg>
-    <span>Minières</span>
-  </button>
   <button class="nav-item" data-route="indices">
     <svg class="nav-icon"><use href="#icon-indices"/></svg>
     <span>Indices</span>
@@ -1474,40 +1491,36 @@
     <span>Portefeuille</span>
   </button>
   <button class="theme-toggle" id="themeToggleDesktop" type="button" aria-label="Basculer mode jour/nuit">
-    <svg class="nav-icon" id="themeToggleDesktopIcon"><use href="#icon-sun"/></svg>
+    <svg class="nav-icon theme-icon"><use href="#icon-sun"/></svg>
   </button>
 </nav>
 
-<!-- Mobile/tablette (<1024px) : bouton menu + panneau latéral. -->
-<button class="menu-button" id="menuButton" type="button" aria-label="Ouvrir le menu" aria-expanded="false">
-  <svg class="nav-icon" id="menuButtonIcon"><use href="#icon-menu"/></svg>
-</button>
-<div class="drawer-scrim" id="drawerScrim"></div>
-<nav class="drawer" id="drawer" aria-label="Navigation principale">
-  <a href="#home" class="drawer-wordmark">AI Investment</a>
-  <button class="nav-item" data-route="or">
-    <svg class="nav-icon"><use href="#icon-or"/></svg>
+<!-- Mobile/tablette (<1024px) : barre d'onglets fixe en bas. -->
+<nav class="bottom-nav" aria-label="Navigation principale">
+  <button class="nav-item" data-route="home" type="button">
+    <span class="nav-ico"><svg class="nav-icon"><use href="#icon-home"/></svg></span>
+    <span>Accueil</span>
+  </button>
+  <button class="nav-item" data-route="or" type="button">
+    <span class="nav-ico"><svg class="nav-icon"><use href="#icon-or"/></svg></span>
     <span>Or</span>
   </button>
-  <button class="nav-item disabled" disabled>
-    <svg class="nav-icon"><use href="#icon-minieres"/></svg>
-    <span>Minières</span>
+  <button class="nav-item nav-item-ia" id="bottomNavIa" type="button" aria-label="Assistant IA">
+    <span class="nav-orb" aria-hidden="true"></span>
+    <span>IA</span>
   </button>
-  <button class="nav-item" data-route="indices">
-    <svg class="nav-icon"><use href="#icon-indices"/></svg>
+  <button class="nav-item" data-route="indices" type="button">
+    <span class="nav-ico"><svg class="nav-icon"><use href="#icon-indices"/></svg></span>
     <span>Indices</span>
   </button>
-  <button class="nav-item" data-route="portefeuille">
-    <svg class="nav-icon"><use href="#icon-portefeuille"/></svg>
+  <button class="nav-item" data-route="portefeuille" type="button">
+    <span class="nav-ico"><svg class="nav-icon"><use href="#icon-portefeuille"/></svg></span>
     <span>Portefeuille</span>
-  </button>
-  <button class="nav-item" id="themeToggleDrawer" type="button">
-    <svg class="nav-icon" id="themeToggleDrawerIcon"><use href="#icon-sun"/></svg>
-    <span id="themeToggleDrawerLabel">Mode jour</span>
   </button>
 </nav>
 
 <div id="home" class="home">
+  <button class="screen-theme-toggle" type="button" aria-label="Basculer mode jour/nuit"><svg class="nav-icon theme-icon"><use href="#icon-sun"/></svg></button>
   <div class="home-hero">
     <div class="home-wordmark">AI Investment</div>
     <p class="home-tagline">Bienvenue dans AI Investment, l'outil qui décrypte les marchés : scores des entreprises, suivi de vos bots et de votre portefeuille.</p>
@@ -1555,6 +1568,7 @@
 <div id="or" class="screen" hidden>
   <div class="app">
   <header>
+    <button class="screen-theme-toggle" type="button" aria-label="Basculer mode jour/nuit"><svg class="nav-icon theme-icon"><use href="#icon-sun"/></svg></button>
     <div class="eyebrow">Analyse — phase 1</div>
     <h1>Or</h1>
     <p class="updated" id="updated"></p>
@@ -1611,6 +1625,7 @@
 <div id="indices" class="screen" hidden>
   <div class="app">
   <header>
+    <button class="screen-theme-toggle" type="button" aria-label="Basculer mode jour/nuit"><svg class="nav-icon theme-icon"><use href="#icon-sun"/></svg></button>
     <div class="eyebrow">Indice actions</div>
     <h1 id="indicesTitle">Indices</h1>
     <p class="updated" id="indicesUpdated"></p>
@@ -1637,6 +1652,7 @@
   </aside>
   <div class="app">
   <header>
+    <button class="screen-theme-toggle" type="button" aria-label="Basculer mode jour/nuit"><svg class="nav-icon theme-icon"><use href="#icon-sun"/></svg></button>
     <div class="eyebrow">Suivi personnel</div>
     <h1>Portefeuille</h1>
   </header>
@@ -1705,7 +1721,10 @@
      modules qui portent un vrai moteur logique. -->
 <script src="company_quote_widget.js"></script>
 <script>
-if ('serviceWorker' in navigator) {
+// Pas d'enregistrement en local : le cache du service worker resservait une
+// version périmée à chaque itération de dev malgré un rechargement.
+const isLocalDev = ['localhost', '127.0.0.1'].includes(location.hostname);
+if ('serviceWorker' in navigator && !isLocalDev) {
   navigator.serviceWorker.register('service-worker.js').catch(() => {});
 }
 
@@ -3555,7 +3574,7 @@ function render(data) {
   if (matchMedia('(min-width: 1024px)').matches) animateFactorBars();
 }
 
-const SLIDING_PANES = ['or', 'indices', 'portefeuille'];
+const SLIDING_PANES = ['home', 'or', 'indices', 'portefeuille'];
 let indicesLoaded = false;
 let indicesData = null;
 let realPortfolioData = null;
@@ -5414,7 +5433,7 @@ function hidePane(id, animate) {
   }
   el.classList.remove('screen-in');
   const onEnd = (e) => {
-    if (e.propertyName !== 'transform') return;
+    if (e.propertyName !== 'opacity') return;
     el.hidden = true;
     el.removeEventListener('transitionend', onEnd);
   };
@@ -5449,14 +5468,6 @@ function renderRoute(animate) {
     if (id === route.screen) showPane(id, animate);
     else hidePane(id, animate);
   });
-  // #home recule (translateX + assombri) dès qu'un écran est ouvert par-dessus,
-  // et revient au premier plan au retour — synchronisé avec le glissement
-  // de l'écran actif ci-dessus pour un vrai effet de "push", pas un simple
-  // recouvrement d'une accueil figée (voir commentaire CSS .home.screen-back).
-  const home = document.getElementById('home');
-  if (!animate) home.classList.add('no-anim');
-  home.classList.toggle('screen-back', route.screen !== 'home');
-  if (!animate) requestAnimationFrame(() => home.classList.remove('no-anim'));
   if (route.screen !== 'or') {
     stopScalpingPolling();
   }
@@ -5593,19 +5604,17 @@ document.getElementById('pfOrTocTrigger').addEventListener('click', () => toggle
 window.addEventListener('hashchange', () => renderRoute(true));
 renderRoute(false);
 
-// Panneau latéral mobile : ouvert/fermé via classe .is-open, se ferme au
-// clic sur le fond, sur Échap, ou dès qu'on choisit une destination.
-const menuButton = document.getElementById('menuButton');
-const menuButtonIcon = document.getElementById('menuButtonIcon');
-const drawer = document.getElementById('drawer');
-const drawerScrim = document.getElementById('drawerScrim');
-
-function setDrawerOpen(open) {
-  drawer.classList.toggle('is-open', open);
-  drawerScrim.classList.toggle('is-open', open);
-  menuButton.setAttribute('aria-expanded', String(open));
-  menuButtonIcon.querySelector('use').setAttribute('href', open ? '#icon-close' : '#icon-menu');
-}
+// Onglet central "IA" (mobile) : sur l'accueil, la barre centrale fait déjà
+// office d'assistant → on y place le curseur ; ailleurs, ouvre l'agent
+// (window.AssistantIA, défini par assistant_bubble.js, chargé en différé).
+document.getElementById('bottomNavIa').addEventListener('click', () => {
+  if (parseRoute().screen === 'home') {
+    const input = document.getElementById('homeSearchInput');
+    if (input) input.focus();
+    return;
+  }
+  if (window.AssistantIA) window.AssistantIA.toggle();
+});
 
 document.getElementById('scalpExpandBtn').addEventListener('click', (e) => {
   const box = document.getElementById('scalpChartBox');
@@ -5613,17 +5622,8 @@ document.getElementById('scalpExpandBtn').addEventListener('click', (e) => {
   e.currentTarget.textContent = expanded ? 'Réduire' : 'Agrandir';
 });
 
-menuButton.addEventListener('click', () => setDrawerOpen(!drawer.classList.contains('is-open')));
-drawerScrim.addEventListener('click', () => setDrawerOpen(false));
-drawer.querySelectorAll('.nav-item[data-route], .drawer-wordmark').forEach(item => {
-  item.addEventListener('click', () => setDrawerOpen(false));
-});
-document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape') setDrawerOpen(false);
-});
-
-// Bascule jour/nuit : persistée (localStorage), deux boutons (barre desktop
-// + panneau latéral mobile) restent synchronisés entre eux.
+// Bascule jour/nuit : persistée (localStorage), un bouton dans la barre
+// desktop + un par en-tête d'écran sur mobile, tous synchronisés.
 const THEME_COLOR_BY_MODE = { dark: '#0a0e1a', light: '#fbf2de' };
 
 function applyTheme(theme) {
@@ -5632,12 +5632,9 @@ function applyTheme(theme) {
   document.getElementById('themeColorMeta').setAttribute('content', THEME_COLOR_BY_MODE[theme]);
   // L'icône représente le mode VERS lequel on bascule en cliquant (pas le
   // mode actuel) — en clair on montre la lune (bascule vers la nuit), en
-  // sombre on montre le soleil (bascule vers le jour). Même logique que le
-  // libellé juste en dessous.
+  // sombre on montre le soleil (bascule vers le jour).
   const icon = theme === 'light' ? '#icon-moon' : '#icon-sun';
-  document.getElementById('themeToggleDesktopIcon').querySelector('use').setAttribute('href', icon);
-  document.getElementById('themeToggleDrawerIcon').querySelector('use').setAttribute('href', icon);
-  document.getElementById('themeToggleDrawerLabel').textContent = theme === 'light' ? 'Mode nuit' : 'Mode jour';
+  document.querySelectorAll('.theme-icon use').forEach(u => u.setAttribute('href', icon));
 }
 
 function toggleTheme() {
@@ -5645,8 +5642,7 @@ function toggleTheme() {
 }
 
 applyTheme(isLightTheme() ? 'light' : 'dark');
-document.getElementById('themeToggleDesktop').addEventListener('click', toggleTheme);
-document.getElementById('themeToggleDrawer').addEventListener('click', toggleTheme);
+document.querySelectorAll('#themeToggleDesktop, .screen-theme-toggle').forEach(b => b.addEventListener('click', toggleTheme));
 
 wireHomeSearch();
 </script>

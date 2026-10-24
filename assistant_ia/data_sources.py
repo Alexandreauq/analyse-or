@@ -116,15 +116,26 @@ def fetch_finnhub_company_news(
 
 def fetch_gdelt_articles(
     requete: str, debut: datetime, ttl_seconds: int, cache_key: str,
-    *, http_get=requests.get, now_fn=time.time, cache: dict | None = None,
+    *, fin: datetime | None = None, http_get=requests.get, now_fn=time.time,
+    cache: dict | None = None,
 ) -> dict:
     """Articles GDELT (`{"articles": [...]}`) ou {"erreur": str}. Source sans
     cle. GDELT limite a une requete toutes les 5 secondes : un refus arrive
-    en texte brut, non JSON, donc renvoye comme erreur et non mis en cache."""
+    en texte brut, non JSON, donc renvoye comme erreur et non mis en cache.
+
+    `fin` (optionnel, borne haute) : ajoute `enddatetime` a la requete GDELT
+    quand il est fourni -- sans lui, GDELT renvoie les articles les plus
+    RECENTS correspondant a la requete (tries datetimedesc), ce qui
+    inclurait des articles posterieurs a `debut` sans aucune limite --
+    necessaire pour une recherche point-in-temps (voir analyste_backtest.py),
+    jamais utilise par les appelants de fraicheur existants (assistant_ia/
+    news.py), qui ne le passent pas et conservent le comportement actuel."""
     params = {
         "query": requete, "mode": "artlist", "format": "json", "maxrecords": 25,
         "sort": "datetimedesc", "startdatetime": debut.strftime("%Y%m%d%H%M%S"),
     }
+    if fin is not None:
+        params["enddatetime"] = fin.strftime("%Y%m%d%H%M%S")
     return _appel_actualites(
         GDELT_DOC_URL, params, None, ttl_seconds, cache_key,
         http_get=http_get, now_fn=now_fn, cache=cache)

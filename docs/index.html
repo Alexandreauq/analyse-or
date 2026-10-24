@@ -516,10 +516,29 @@
   .home.thinking .home-compose { opacity: 0; pointer-events: none; transition: opacity .3s var(--ease); }
   .home.answered .home-today, .home.answered .home-tiles, .home.answered .home-guide { display: none; }
 
+  /* Desktop au repos : tout le bloc (nom, barre, tuiles) centré dans la
+     hauteur sous la barre du haut, espacements et tuiles qui grandissent
+     avec la fenêtre (vh) pour occuper la page sans déborder en petit écran. */
   @media (min-width: 1024px) {
-    .home-hero { padding-top: calc(var(--topbar-h) + 48px); }
+    .home:not(.answered) { justify-content: center; padding-top: var(--topbar-h); }
+    .home:not(.answered) .home-hero { padding-top: 0; gap: clamp(10px, 1.6vh, 18px); }
+    .home:not(.answered) .home-wordmark { font-size: clamp(3.25rem, 4.6vw + 1vh, 4.5rem); }
+    .home:not(.answered) .home-tagline { font-size: clamp(1rem, .5vw + .6rem, 1.125rem); max-width: 560px; }
+    .home:not(.answered) .home-main {
+      flex: none; justify-content: flex-start; max-width: 1180px;
+      padding-top: clamp(24px, 4.5vh, 56px); gap: clamp(14px, 2vh, 22px);
+    }
+    .home-compose { max-width: 700px; }
+    .home-compose .ai-pill-bar { height: 58px; }
+    .home .home-tiles { max-width: clamp(860px, 62vw, 1180px); gap: 18px; margin-top: clamp(18px, 4.5vh, 60px); }
+    .home-tile { padding: 20px 22px 18px; min-height: clamp(160px, 20vh, 220px); border-radius: 18px; }
+    .home-tile-key { font-size: 11.5px; }
+    .home-tile-value { font-size: clamp(30px, 2.2vw + 6px, 40px); margin: 10px 0 8px; }
+    .home-tile .tone-neutral { font-size: clamp(22px, 1.4vw + 4px, 28px); margin: 12px 0 10px; }
+    .home-tile-detail { font-size: 13px; }
+    .home-tile-go { font-size: 12.5px; margin-top: 14px; }
     .home.answered .home-hero { padding-top: calc(var(--topbar-h) + 16px); }
-    .home-main { justify-content: flex-start; padding-top: 34px; }
+    .home.answered .home-main { padding-top: 12px; }
   }
 
   /* Historique (stocké dans le navigateur) : panneau au centre de l'écran. */

@@ -90,3 +90,45 @@ def test_actus_classifiees_point_in_temps_never_includes_date_after_date_cible(m
     assert resultat[0]["sentiment"] == 0.5
     assert resultat[0]["importance"] == "notable"
     assert resultat[0]["date"] == "2025-11-20"
+
+
+def test_score_point_in_temps_builds_a_composite_with_seven_factors(monkeypatch):
+    historique = pd.DataFrame({
+        "Close": [100.0 + i * 0.1 for i in range(1500)],
+        "Volume": [10000] * 1500,
+    }, index=pd.date_range("2022-01-01", periods=1500, freq="D", tz="UTC"))
+
+    def historique_factice(ticker, date_cible, history_ticker=None, annees=6, **kw):
+        return historique[historique.index < date_cible]
+
+    def actus_factices(ticker, nom, date_cible, **kw):
+        return []
+
+    class StatementFactice:
+        columns = []
+        def __getitem__(self, item):
+            raise KeyError(item)
+
+    def fetch_statement_factice(ticker, nom_attribut):
+        return StatementFactice()
+
+    class InfoFactice(dict):
+        pass
+
+    class TickerFondamentauxFactice:
+        quarterly_financials = StatementFactice()
+        info = InfoFactice(sharesOutstanding=1_000_000.0, beta=1.0, sector="Technology")
+
+    date_cible = pd.Timestamp("2026-06-01", tz="UTC")
+    resultat = analyste_backtest.score_point_in_temps(
+        "TEST.PA", "Entreprise Test", date_cible, "CAC40",
+        historique_source=historique_factice, actus_source=actus_factices,
+        fetch_statement=fetch_statement_factice,
+        ticker_fondamentaux_source=lambda t: TickerFondamentauxFactice())
+
+    assert resultat is not None
+    assert len(resultat["factors"]) == 7
+    assert "score_raw" in resultat
+    assert "stage_label" in resultat
+    assert "entry_price" in resultat
+    assert resultat["actus"] == []

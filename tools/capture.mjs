@@ -32,7 +32,7 @@ const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.json': 'applic
 function args() {
   const a = process.argv.slice(2);
   const o = { path: '', width: 1440, height: 900, theme: 'dark', safeTop: 0, safeBottom: 0,
-    evalFile: null, eval: null, wait: 2500, after: 800, out: 'capture.png' };
+    evalFile: null, eval: null, wait: 2500, after: 800, reducedMotion: 'off', out: 'capture.png' };
   for (let i = 0; i < a.length; i += 2) {
     const k = a[i].replace(/^--/, '').replace(/-(\w)/g, (_, c) => c.toUpperCase());
     o[k] = ['width', 'height', 'safeTop', 'safeBottom', 'wait', 'after'].includes(k) ? Number(a[i + 1]) : a[i + 1];
@@ -95,6 +95,9 @@ async function main() {
     const mobile = o.width < 1024;
     await send('Emulation.setDeviceMetricsOverride', { width: o.width, height: o.height, deviceScaleFactor: 1, mobile });
     if (mobile) await send('Emulation.setTouchEmulationEnabled', { enabled: true, maxTouchPoints: 5 });
+    if (o.reducedMotion === 'on') {
+      await send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: 'reduce' }] });
+    }
     const preScript = `
       try { localStorage.setItem('theme', ${JSON.stringify(o.theme)}); } catch (e) {}
       document.addEventListener('DOMContentLoaded', () => {
@@ -116,8 +119,10 @@ async function main() {
     if (o.evalFile) scripts.push(fs.readFileSync(o.evalFile, 'utf8'));
     if (o.eval) scripts.push(o.eval);
     for (const s of scripts) {
-      const r = await send('Runtime.evaluate', { expression: `(async () => { ${s} })()`, awaitPromise: true });
+      const r = await send('Runtime.evaluate', { expression: `(async () => { ${s} })()`, awaitPromise: true, returnByValue: true });
       if (r.exceptionDetails) console.error('eval:', r.exceptionDetails.exception?.description || r.exceptionDetails.text);
+      // Un `return` dans --eval sert de vérification : sa valeur est affichée.
+      else if (r.result && r.result.value !== undefined) console.log('eval →', JSON.stringify(r.result.value));
     }
     if (scripts.length) await sleep(o.after);
     const shot = await send('Page.captureScreenshot', { format: 'png' });

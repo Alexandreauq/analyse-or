@@ -356,7 +356,6 @@ def score_point_in_temps(
     except KeyError:
         ratios["quarterly_yoy_growth_ca"] = None
 
-    actus = actus_source(ticker, name, date_cible)
     market_cap = current_price * shares_outstanding if shares_outstanding else None
     wacc = indices_score.estimate_wacc(
         risk_free_rate, beta, market_cap, ratios.get("total_debt"), ratios.get("tax_rate"),
@@ -364,6 +363,32 @@ def score_point_in_temps(
     cost_of_capital = wacc if wacc is not None else indices_score.COST_OF_CAPITAL_PROXY
     cost_of_equity = indices_score.estimate_cost_of_equity(risk_free_rate, beta, market_cap, fx_rate_to_usd)
     cost_of_equity_for_roe = cost_of_equity if cost_of_equity is not None else cost_of_capital
+    # valuation_targets est calcule ICI, AVANT actus_source -- il ne depend
+    # jamais des actus (ratios/market_cap/wacc/cost_of_capital/
+    # cost_of_equity ci-dessus), donc avancer son calcul permet au
+    # pre-check near_entry/stage_label juste en dessous de decider s'il
+    # faut fetcher les actus du tout, sans changer sa valeur.
+    valuation_targets = indices_score.estimate_valuation_targets(ratios, cost_of_capital, cost_of_equity, risk_free_rate)
+
+    entry_price = valuation_targets["entry_price"]
+    pres_de_lentree = (
+        current_price is not None and entry_price is not None and entry_price > 0
+        and current_price <= entry_price
+        and (entry_price - current_price) / entry_price * 100 < indices_score.NEAR_ENTRY_PCT
+    )
+    if pres_de_lentree and weinstein["stage_label"] != "Déclin":
+        actus = actus_source(ticker, name, date_cible)
+    else:
+        # Optimisation de cout (demande explicite utilisateur, 2026-10-24) :
+        # near_entry et stage_label ne dependent jamais des actus -- si l'un
+        # des deux echoue, la condition "entree" de compute_company_alerts
+        # (near_entry AND stage_label != "Declin" AND score_favorable, un ET
+        # logique) est deja fausse quel que soit le facteur actualite, donc
+        # sauter le fetch GDELT+Haiku ici ne peut jamais changer si ce signal
+        # est retenu ou rejete -- uniquement une economie de cout/temps sur
+        # les tentatives qui seraient rejetees de toute facon (~98% d'entre
+        # elles au taux "entree" actuel mesure dans docs/indices.json).
+        actus = []
 
     if is_financial:
         factors = [
@@ -406,7 +431,6 @@ def score_point_in_temps(
             _score_actualite_recente_point_in_temps(actus),
         ]
     composite = indices_score.compute_composite(factors)
-    valuation_targets = indices_score.estimate_valuation_targets(ratios, cost_of_capital, cost_of_equity, risk_free_rate)
 
     # FIX 8 (revue finale) : rendement 5j/20j + ratio volume 5j vs 20j,
     # calcules sur l'historique deja tronque point-in-temps (`closes`,

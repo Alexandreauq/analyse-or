@@ -1686,7 +1686,7 @@
   <a href="#home" class="top-bar-wordmark" aria-label="AI Investment — accueil"><svg class="brand-mark" viewBox="0 0 256 256" aria-hidden="true"><use href="#logo-mark"/></svg><span class="brand-text">AI Investment</span></a>
   <button class="nav-item" data-route="or">
     <svg class="nav-icon"><use href="#icon-or"/></svg>
-    <span>Or</span>
+    <span>Commodités</span>
   </button>
   <button class="nav-item" data-route="indices">
     <svg class="nav-icon"><use href="#icon-indices"/></svg>
@@ -1709,7 +1709,7 @@
   </button>
   <button class="nav-item" data-route="or" type="button">
     <span class="nav-ico"><svg class="nav-icon"><use href="#icon-or"/></svg></span>
-    <span>Or</span>
+    <span>Commodités</span>
   </button>
   <button class="nav-item nav-item-ia" id="bottomNavIa" type="button" aria-label="Assistant IA">
     <span class="nav-orb" aria-hidden="true"></span>
@@ -1786,12 +1786,15 @@
   <header>
     <button class="screen-theme-toggle" type="button" aria-label="Basculer mode jour/nuit"><svg class="nav-icon theme-icon"><use href="#icon-sun"/></svg></button>
     <div class="eyebrow">Analyse — phase 1</div>
-    <h1>Or</h1>
+    <h1>Commodités</h1>
     <p class="updated" id="updated"></p>
   </header>
 
   <div class="or-tabbar" role="tablist">
-    <button class="or-tab-btn" id="orTabLongTerme" role="tab" aria-selected="true" type="button">Long terme</button>
+    <button class="or-tab-btn" id="commodityTabOr" data-commodity="or" role="tab" aria-selected="true" type="button">Or</button>
+    <button class="or-tab-btn" id="commodityTabArgent" data-commodity="argent" role="tab" aria-selected="false" type="button">Argent</button>
+    <button class="or-tab-btn" id="commodityTabPetrole" data-commodity="petrole" role="tab" aria-selected="false" type="button">Pétrole</button>
+    <button class="or-tab-btn" id="commodityTabGaz" data-commodity="gaz" role="tab" aria-selected="false" type="button">Gaz</button>
   </div>
 
   <main id="content">
@@ -3574,11 +3577,22 @@ function loadIndexQuoteWidget(indexKey, containerId) {
   container.appendChild(script);
 }
 
-async function loadScore() {
+const COMMODITY_SCORE_FILES = {
+  or: 'score.json',
+  argent: 'score_argent.json',
+  petrole: 'score_petrole.json',
+  gaz: 'score_gaz.json',
+};
+let activeCommodity = 'or';
+
+async function loadScore(commodity) {
+  commodity = commodity || activeCommodity;
   const content = document.getElementById('content');
+  content.innerHTML = `<div class="skeleton"><div class="skeleton-line"></div><div class="skeleton-line"></div><div class="skeleton-line"></div><div class="skeleton-line"></div></div>`;
   try {
-    const res = await fetch('score.json?t=' + Date.now());
-    if (!res.ok) throw new Error('score.json introuvable');
+    const file = COMMODITY_SCORE_FILES[commodity] || COMMODITY_SCORE_FILES.or;
+    const res = await fetch(file + '?t=' + Date.now());
+    if (!res.ok) throw new Error(file + ' introuvable');
     const data = await res.json();
     render(data);
   } catch (e) {
@@ -3656,8 +3670,9 @@ function render(data) {
   const factorsHtml = renderFactorRows(data.factors);
 
   const t = data.technical || {};
-  const spotStr = t.spot ? `${t.spot.toLocaleString('fr-FR', {maximumFractionDigits:0})} $ / oz` : 'indisponible';
-  const ma200Str = t.ma200 ? `${t.ma200.toLocaleString('fr-FR', {maximumFractionDigits:0})} $ / oz` : 'indisponible';
+  const unite = t.unite || '$ / oz';
+  const spotStr = t.spot ? `${t.spot.toLocaleString('fr-FR', {maximumFractionDigits:0})} ${unite}` : 'indisponible';
+  const ma200Str = t.ma200 ? `${t.ma200.toLocaleString('fr-FR', {maximumFractionDigits:0})} ${unite}` : 'indisponible';
 
   const calendarHtml = (data.calendar || []).map(c => `
     <div class="cal-row">
@@ -3714,7 +3729,7 @@ function render(data) {
         Chaque facteur est noté de -10 à +10 selon sa propre méthode (niveau,
         momentum, ou lecture qualitative pour la Fed), puis pondéré par son
         poids ci-dessous pour former le score composite. Barre à droite
-        (doré) = favorable à l'or, à gauche (rouge) = défavorable — plus
+        (doré) = favorable, à gauche (rouge) = défavorable — plus
         elle s'écarte du centre, plus le signal est marqué.
         <br><br>
         <strong>Lecture du score composite :</strong> &gt; +50 très favorable
@@ -6236,9 +6251,18 @@ function showTabView(el) {
   el.classList.add('tab-view-enter');
 }
 
-document.getElementById('orTabLongTerme').addEventListener('click', () => {
-  document.getElementById('orTabLongTerme').setAttribute('aria-selected', 'true');
-  showTabView(document.getElementById('content'));
+['or', 'argent', 'petrole', 'gaz'].forEach(key => {
+  const btnId = 'commodityTab' + key.charAt(0).toUpperCase() + key.slice(1);
+  document.getElementById(btnId).addEventListener('click', () => {
+    if (activeCommodity === key) return;
+    activeCommodity = key;
+    ['or', 'argent', 'petrole', 'gaz'].forEach(k => {
+      const id = 'commodityTab' + k.charAt(0).toUpperCase() + k.slice(1);
+      document.getElementById(id).setAttribute('aria-selected', String(k === key));
+    });
+    showTabView(document.getElementById('content'));
+    loadScore(key);
+  });
 });
 
 document.getElementById('portefeuilleTabActions').addEventListener('click', () => {

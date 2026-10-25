@@ -69,11 +69,23 @@ jobs:
           SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
           DAILY_SNAPSHOT: ${{ steps.daily_slot.outputs.is_daily }}
 
+      - name: Calculer le score des autres commodités (argent, pétrole, gaz)
+        run: |
+          python3 commodity_score.py argent
+          python3 commodity_score.py petrole
+          python3 commodity_score.py gaz
+        env:
+          FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
+          DAILY_SNAPSHOT: ${{ steps.daily_slot.outputs.is_daily }}
+
       - name: Publier les données mises à jour sur le site
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add docs/score.json score.json score_history.json dashboard.html
+          git add docs/score.json score.json score_history.json dashboard.html \
+                  docs/score_argent.json score_argent.json score_history_argent.json \
+                  docs/score_petrole.json score_petrole.json score_history_petrole.json \
+                  docs/score_gaz.json score_gaz.json score_history_gaz.json
           git diff --staged --quiet || git commit -m "Mise à jour du score"
           git pull --rebase --autostash
           git push

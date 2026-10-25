@@ -36,6 +36,8 @@ from datetime import datetime, timedelta
 
 import requests
 
+from commodity_news import build_news_and_analysis_section
+
 try:
     import yfinance as yf
 except ImportError:
@@ -742,6 +744,21 @@ def send_email(payload, dashboard_path=OUTPUT_HTML_PATH):
 # 12. Exécution
 # ---------------------------------------------------------------------------
 
+def load_previous_payload(path: str) -> dict:
+    """Lit le payload JSON écrit lors d'un run précédent (pour le
+    carry-forward actus/analyse) — {} si le fichier n'existe pas ou est
+    invalide, jamais d'exception. Réutilisée telle quelle par
+    commodity_score.py (import direct, jamais dupliquée)."""
+    if not os.path.exists(path):
+        return {}
+    try:
+        with open(path, encoding="utf-8") as fh:
+            data = json.load(fh)
+        return data if isinstance(data, dict) else {}
+    except Exception:
+        return {}
+
+
 def main():
     # Le workflow tourne toutes les heures pour rafraîchir le site en quasi
     # temps réel, mais un seul de ces runs par jour doit compter comme le
@@ -749,6 +766,7 @@ def main():
     # partirait à chaque run et l'historique gonflerait sans distinguer
     # les franchissements de seuil d'un jour à l'autre de simple bruit intrajournalier.
     daily_snapshot = os.environ.get("DAILY_SNAPSHOT", "true").lower() != "false"
+    previous_payload = load_previous_payload(OUTPUT_JSON_PATH)
 
     api_key = os.environ.get("FRED_API_KEY")
     if not api_key:
@@ -805,6 +823,10 @@ def main():
 
     ecart_pct_ma200 = (spot - ma200) / ma200 * 100 if spot and ma200 else None
 
+    news, analysis_html, news_classifications = build_news_and_analysis_section(
+        "l'or", "cours de l'or", factors, daily_snapshot, previous_payload,
+    )
+
     history = load_history()
     alerts = compute_alerts(composite, history, cftc_percentile, ecart_pct_ma200, hours_to_next_fomc)
 
@@ -833,6 +855,9 @@ def main():
         "technical": {"note": technical_note, "spot": spot, "ma200": ma200},
         "calendar": calendar,
         "alerts": alerts,
+        "news": news,
+        "analysis_html": analysis_html,
+        "news_classifications": news_classifications,
     }
 
     with open(OUTPUT_JSON_PATH, "w", encoding="utf-8") as fh:

@@ -78,30 +78,51 @@ NEWS_TIMEOUT_SECONDS = 25
 _news_cache: dict = {}
 
 
-def _appel_actualites(url, params, headers, ttl_seconds, cache_key, *, http_get, now_fn, cache):
+def _appel_actualites(
+    url, params, headers, ttl_seconds, cache_key, *, http_get, now_fn, cache,
+    sleep_fn=time.sleep, tentatives=2,
+):
     """Appel GET mis en cache, commun aux deux sources d'actualites. Ne leve
     jamais. Seul le nom de la classe d'exception remonte : le texte d'une
     exception peut contenir l'URL, et un token dans l'URL ne doit jamais
-    atteindre Claude. Une erreur n'est jamais mise en cache."""
+    atteindre Claude. Une erreur n'est jamais mise en cache.
+
+    `tentatives=2` (une reprise apres un court delai) : constate en
+    production, `assistant-ia-api.service` partage l'IP du VPS avec
+    gold_bot/ibkr_bot/la reconstruction quotidienne des indices, qui
+    interrogent tous GDELT independamment -- une seule requete tombant
+    dans la fenetre de 5 secondes documentee par GDELT (voir
+    fetch_gdelt_articles) suffit a faire echouer actualites_marche cote
+    assistant, sans aucune coordination entre ces processus. Une reprise
+    apres `sleep_fn` absorbe cette collision transitoire sans rien
+    changer au comportement en cas de panne reelle (la 2e tentative
+    echoue alors aussi, meme message d'erreur qu'avant)."""
     if cache is None:
         cache = _news_cache
     maintenant = now_fn()
     entree = cache.get(cache_key)
     if entree is not None and (maintenant - entree[0]) < ttl_seconds:
         return entree[1]
-    try:
-        reponse = http_get(url, params=params, headers=headers, timeout=NEWS_TIMEOUT_SECONDS)
-        reponse.raise_for_status()
-        donnees = reponse.json()
-    except Exception as e:
-        return {"erreur": f"actualites indisponibles ({type(e).__name__})"}
-    cache[cache_key] = (maintenant, donnees)
-    return donnees
+    derniere_erreur: Exception | None = None
+    for tentative in range(tentatives):
+        try:
+            reponse = http_get(url, params=params, headers=headers, timeout=NEWS_TIMEOUT_SECONDS)
+            reponse.raise_for_status()
+            donnees = reponse.json()
+        except Exception as e:
+            derniere_erreur = e
+            if tentative < tentatives - 1:
+                sleep_fn(5)
+            continue
+        cache[cache_key] = (maintenant, donnees)
+        return donnees
+    return {"erreur": f"actualites indisponibles ({type(derniere_erreur).__name__})"}
 
 
 def fetch_finnhub_company_news(
     symbole: str, debut_iso: str, fin_iso: str,
     *, http_get=requests.get, now_fn=time.time, cache: dict | None = None,
+    sleep_fn=time.sleep,
 ) -> dict | list:
     """Actualites Finnhub rattachees au symbole (liste) ou {"erreur": str}.
     Le jeton part dans l'en-tete X-Finnhub-Token, jamais dans l'URL."""
@@ -111,13 +132,13 @@ def fetch_finnhub_company_news(
     return _appel_actualites(
         FINNHUB_COMPANY_NEWS_URL, {"symbol": symbole, "from": debut_iso, "to": fin_iso},
         {"X-Finnhub-Token": token}, FINNHUB_TTL_SECONDS, f"finnhub:{symbole}:{debut_iso}",
-        http_get=http_get, now_fn=now_fn, cache=cache)
+        http_get=http_get, now_fn=now_fn, cache=cache, sleep_fn=sleep_fn)
 
 
 def fetch_gdelt_articles(
     requete: str, debut: datetime, ttl_seconds: int, cache_key: str,
     *, fin: datetime | None = None, http_get=requests.get, now_fn=time.time,
-    cache: dict | None = None,
+    cache: dict | None = None, sleep_fn=time.sleep,
 ) -> dict:
     """Articles GDELT (`{"articles": [...]}`) ou {"erreur": str}. Source sans
     cle. GDELT limite a une requete toutes les 5 secondes : un refus arrive
@@ -138,4 +159,4 @@ def fetch_gdelt_articles(
         params["enddatetime"] = fin.strftime("%Y%m%d%H%M%S")
     return _appel_actualites(
         GDELT_DOC_URL, params, None, ttl_seconds, cache_key,
-        http_get=http_get, now_fn=now_fn, cache=cache)
+        http_get=http_get, now_fn=now_fn, cache=cache, sleep_fn=sleep_fn)

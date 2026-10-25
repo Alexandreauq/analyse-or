@@ -3577,6 +3577,74 @@ function loadIndexQuoteWidget(indexKey, containerId) {
   container.appendChild(script);
 }
 
+// Symbole TradingView par commodité — mêmes réserves que INDEX_TV_SYMBOL_BY_KEY
+// juste au-dessus (un symbole natif peut s'avérer "réservé à TradingView" une
+// fois embarqué, même si sa page publique s'affiche normalement). OANDA:XAUUSD
+// est déjà utilisé avec succès ailleurs sur ce site (voir loadBotTvChart, le
+// graphique TradingView du Bot Or dans l'onglet Portefeuille), donc son
+// équivalent OANDA:XAGUSD (argent) est le choix le plus sûr par analogie.
+// Pétrole/gaz utilisent les symboles CFD "TVC" (compilés par TradingView,
+// même famille que les symboles qui ont déjà remplacé des natifs réservés
+// pour les indices) plutôt que des symboles natifs NYMEX/COMEX.
+const COMMODITY_TV_SYMBOL_BY_KEY = {
+  or: 'OANDA:XAUUSD',
+  argent: 'OANDA:XAGUSD',
+  petrole: 'TVC:USOIL',
+  // TVC:NATURALGAS testé en direct le 2026-10-25 : "Symbole invalide" —
+  // CAPITALCOM:NATURALGAS fonctionne (vérifié, prix cohérent avec le spot
+  // calculé par commodity_score.py), même leçon que INDEX_TV_SYMBOL_BY_KEY
+  // plus haut (un symbole plausible peut s'avérer indisponible, à tester en
+  // direct, jamais supposé).
+  gaz: 'CAPITALCOM:NATURALGAS',
+};
+
+function loadCommodityQuoteWidget(commodityKey) {
+  // Reconstruit à chaque rendu (pas un chargement paresseux unique comme
+  // loadBotTvChart) : le conteneur est détruit et recréé par render() à
+  // chaque changement d'onglet Or/Argent/Pétrole/Gaz, donc le widget doit
+  // l'être aussi. Même mécanisme d'injection différée que
+  // loadIndexQuoteWidget (un <script> posé via innerHTML ne s'exécute
+  // jamais tout seul).
+  const container = document.getElementById('commodityQuoteWidget');
+  if (!container) return;
+  const tvSymbol = COMMODITY_TV_SYMBOL_BY_KEY[commodityKey];
+  if (!tvSymbol) return;
+  const script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-symbol-overview.js';
+  script.async = true;
+  script.textContent = JSON.stringify({
+    symbols: [[tvSymbol + '|1D']],
+    chartOnly: false,
+    width: '100%',
+    height: '100%',
+    locale: 'fr',
+    colorTheme: isLightTheme() ? 'light' : 'dark',
+    autosize: true,
+    showVolume: false,
+    showMA: false,
+    hideDateRanges: false,
+    hideMarketStatus: false,
+    hideSymbolLogo: false,
+    scalePosition: 'right',
+    scaleMode: 'Normal',
+    fontFamily: '-apple-system, BlinkMacSystemFont, Trebuchet MS, Roboto, Ubuntu, sans-serif',
+    fontSize: '10',
+    noTimeScale: false,
+    valuesTracking: '1',
+    changeMode: 'price-and-percent',
+    chartType: 'area',
+    maLineColor: '#c6a15b',
+    maLineWidth: 1,
+    maLength: 9,
+    headerFontSize: 'medium',
+    lineWidth: 2,
+    lineType: 0,
+    dateRanges: ['1d|1', '1m|30', '3m|60', '12m|1D', '60m|1W', 'all|1M'],
+  });
+  container.appendChild(script);
+}
+
 const COMMODITY_SCORE_FILES = {
   or: 'score.json',
   argent: 'score_argent.json',
@@ -3704,6 +3772,11 @@ function render(data) {
     </section>
     <div class="divider"></div>
 
+    <div class="panel" style="margin-bottom:16px;">
+      <h2>Cours</h2>
+      <div class="scalp-chart-box" id="commodityQuoteWidget"></div>
+    </div>
+
     <div class="btn-row">
       <button class="toggle-btn" id="toggleActu" type="button" aria-expanded="false">
         Actu <span class="chevron">▾</span>
@@ -3758,6 +3831,8 @@ function render(data) {
   // ≥1024px : les deux sections sont affichées côte à côte en permanence
   // (voir .or-columns), pas besoin d'attendre un clic pour révéler les barres.
   if (matchMedia('(min-width: 1024px)').matches) animateFactorBars();
+
+  loadCommodityQuoteWidget(activeCommodity);
 }
 
 const SLIDING_PANES = ['home', 'or', 'indices', 'portefeuille'];

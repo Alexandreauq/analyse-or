@@ -3578,20 +3578,25 @@ const REAL_PRICE_CHART_GRIDLINE_COUNT = 5;
 
 function renderRealPriceChartInto(container, company, pairs) {
   const timeframe = realPriceChartTimeframe;
-  const active = REAL_PRICE_CHART_TIMEFRAMES.find((t) => t.key === timeframe) || REAL_PRICE_CHART_TIMEFRAMES[2];
-  const sliced = sliceRealPriceChartByMonths(pairs, active.months);
+  const active = REAL_PRICE_CHART_TIMEFRAMES.find((t) => t.key === timeframe)
+    || REAL_PRICE_CHART_TIMEFRAMES.find((t) => t.key === '1a');
+  const sliced = active.days != null
+    ? sliceRealPriceChartByDays(pairs, active.days)
+    : sliceRealPriceChartByMonths(pairs, active.months);
   const values = sliced.map((p) => p[1]);
   const { line, area } = buildRealPriceChartSvgPaths(values, REAL_PRICE_CHART_W, REAL_PRICE_CHART_H, REAL_PRICE_CHART_PAD);
   const scale = buildRealPriceChartScale(values, REAL_PRICE_CHART_W, REAL_PRICE_CHART_H, REAL_PRICE_CHART_PAD);
   const gridlines = buildRealPriceChartGridlines(scale.min, scale.max, REAL_PRICE_CHART_GRIDLINE_COUNT);
 
-  // Variation la plus récente (derniers points de la série COMPLETE, pas
-  // de la fenêtre affichée) — même donnée que .index-price-fallback,
-  // avec le sens de la variation en plus.
+  // Variation sur la fenêtre AFFICHÉE (premier point visible -> dernier
+  // point visible), pas toujours "hier vs aujourd'hui" — demande
+  // explicite de l'utilisateur : "1 J" montre hier->aujourd'hui, mais
+  // "6 M" doit montrer la variation sur 6 mois, pas la variation
+  // quotidienne la plus récente.
   const lastPair = pairs[pairs.length - 1];
-  const prevPair = pairs[pairs.length - 2];
-  const diff = lastPair[1] - prevPair[1];
-  const pct = (diff / prevPair[1]) * 100;
+  const windowFirstPair = sliced[0];
+  const diff = lastPair[1] - windowFirstPair[1];
+  const pct = (diff / windowFirstPair[1]) * 100;
   const up = diff >= 0;
   const diffFormatted = formatPriceForIndex(Math.abs(diff), company.index);
   const changeText = `${up ? '+' : '−'}${diffFormatted} (${up ? '+' : '−'}${Math.abs(pct).toLocaleString('fr-FR', {maximumFractionDigits:2})} %)`;

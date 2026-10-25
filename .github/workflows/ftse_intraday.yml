@@ -1,0 +1,69 @@
+name: Collecte intrajournalière FTSE
+
+# Debut de chantier (2026-10-25, voir ftse_intraday_collector.py) : accumule
+# un historique de prix a grain fin (pas seulement quotidien) pour les 99
+# entreprises du FTSE, en vue d'echelles de graphique 10 min/1h/4h sur le
+# site -- PAS ENCORE exposees cote UI, le temps que ce fichier accumule
+# suffisamment de points pour qu'elles aient un sens (meme logique que le
+# chantier Nikkei/Hang Seng, docs/nikkei_hangseng_price_history.json).
+#
+# Cron horaire plutot que toutes les ~10 minutes directement : GitHub
+# n'honore pas de facon fiable les cron plus frequents qu'environ une heure
+# en pratique (meme constat deja fait pour .github/workflows/daily.yml et
+# scalping_tracker.yml) -- chaque declenchement horaire lance donc sa
+# propre boucle interne de ~55 minutes, qui collecte toutes les ~10
+# minutes. Fenetre 07h-16h59 UTC, lun-ven : couvre les horaires reels du
+# LSE (08h00-16h30 heure de Londres) quelle que soit la saison (GMT ou
+# BST) -- voir is_lse_likely_open dans ftse_intraday_collector.py, qui
+# revalide la meme fenetre cote Python (filet de securite si ce workflow
+# est declenche manuellement hors heures).
+on:
+  schedule:
+    - cron: "0 7-16 * * 1-5"
+  workflow_dispatch: {}
+
+concurrency:
+  group: ftse-intraday
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 58
+    steps:
+      - name: Récupérer le dépôt
+        uses: actions/checkout@v4
+
+      - name: Installer Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Installer les dépendances
+        run: pip install -r requirements.txt
+
+      - name: Boucle de collecte (toutes les ~10 min pendant ~55 min)
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          END=$((SECONDS + 55 * 60))
+          while [ "$SECONDS" -lt "$END" ]; do
+            if ! git pull --rebase --autostash; then
+              echo "::warning::git pull --rebase a échoué (probable conflit), abandon du rebase — on retentera au cycle suivant"
+              git rebase --abort 2>/dev/null || true
+            fi
+            python3 ftse_intraday_collector.py || echo "::warning::collecte FTSE intrajournalière en échec pour ce cycle, on continue"
+            if [ -f docs/ftse_intraday_history.json ]; then
+              git add docs/ftse_intraday_history.json
+              if ! git diff --staged --quiet; then
+                git commit -m "Mise a jour intrajournaliere FTSE" || echo "::warning::échec du commit local, on continue"
+              fi
+            fi
+            if ! git push; then
+              echo "::warning::git push a échoué (probablement transitoire), retenté au cycle suivant via pull --rebase"
+            fi
+            sleep 600
+          done

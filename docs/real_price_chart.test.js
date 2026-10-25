@@ -9,6 +9,8 @@ const {
   formatRealPriceChartMonthLabel,
   sliceRealPriceChartByMonths,
   buildRealPriceChartSvgPaths,
+  buildRealPriceChartGridlines,
+  buildRealPriceChartScale,
 } = require('./real_price_chart.js');
 
 function test_formatRealPriceChartMonthLabel_formats_french_short_months() {
@@ -67,6 +69,30 @@ function test_REAL_PRICE_CHART_TIMEFRAMES_has_the_five_expected_options() {
   console.log('OK: test_REAL_PRICE_CHART_TIMEFRAMES_has_the_five_expected_options');
 }
 
+function test_buildRealPriceChartGridlines_returns_evenly_spaced_levels_from_max_to_min() {
+  assert.deepStrictEqual(buildRealPriceChartGridlines(0, 100, 5), [100, 75, 50, 25, 0]);
+  assert.deepStrictEqual(buildRealPriceChartGridlines(10, 10, 3), [10, 10, 10]);
+  console.log('OK: test_buildRealPriceChartGridlines_returns_evenly_spaced_levels_from_max_to_min');
+}
+
+function test_buildRealPriceChartScale_maps_index_and_value_to_pixels() {
+  const scale = buildRealPriceChartScale([10, 20, 10], 100, 50, 0);
+  assert.strictEqual(scale.min, 10);
+  assert.strictEqual(scale.max, 20);
+  assert.strictEqual(scale.x(0), 0);
+  assert.strictEqual(scale.x(2), 100);
+  assert.strictEqual(scale.y(20), 0);
+  assert.strictEqual(scale.y(10), 50);
+  console.log('OK: test_buildRealPriceChartScale_maps_index_and_value_to_pixels');
+}
+
+function test_buildRealPriceChartScale_handles_a_single_point_without_dividing_by_zero() {
+  const scale = buildRealPriceChartScale([42], 100, 50, 0);
+  assert.strictEqual(scale.x(0), 0);
+  assert.ok(!Number.isNaN(scale.y(42)));
+  console.log('OK: test_buildRealPriceChartScale_handles_a_single_point_without_dividing_by_zero');
+}
+
 function main() {
   test_formatRealPriceChartMonthLabel_formats_french_short_months();
   test_sliceRealPriceChartByMonths_keeps_only_the_recent_window();
@@ -75,6 +101,9 @@ function main() {
   test_buildRealPriceChartSvgPaths_scales_to_the_viewbox();
   test_buildRealPriceChartSvgPaths_handles_a_flat_series_without_dividing_by_zero();
   test_REAL_PRICE_CHART_TIMEFRAMES_has_the_five_expected_options();
+  test_buildRealPriceChartGridlines_returns_evenly_spaced_levels_from_max_to_min();
+  test_buildRealPriceChartScale_maps_index_and_value_to_pixels();
+  test_buildRealPriceChartScale_handles_a_single_point_without_dividing_by_zero();
   console.log('Tous les tests real_price_chart.test.js sont passés.');
 }
 

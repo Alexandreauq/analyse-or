@@ -15,6 +15,7 @@ détail des facteurs retenus par commodité et la découverte de terrain CFTC
 (dataset Legacy vs Disaggregated, renommage des contrats pétrole/gaz en 2022).
 """
 
+import json
 import os
 import sys
 from datetime import datetime, timedelta
@@ -205,3 +206,209 @@ def factor_dynamique_recente(spot: float | None, ma200: float | None, weight: fl
     pct_ecart = (spot - ma200) / ma200 * 100
     score = max(-10.0, min(10.0, (pct_ecart / 5.0) * 10.0))
     return FactorResult("Dynamique récente", score, weight, f"{pct_ecart:+.1f}% vs MM200")
+
+
+# ---------------------------------------------------------------------------
+# 6. Technique : spot + MM200, générique par ticker
+# ---------------------------------------------------------------------------
+
+def get_spot_and_ma200(ticker: str) -> tuple[float, float]:
+    if yf is None:
+        raise RuntimeError("yfinance n'est pas installé (pip install yfinance)")
+    hist = yf.Ticker(ticker).history(period="1y")["Close"]
+    spot = hist.iloc[-1]
+    ma200 = hist.tail(200).mean()
+    return spot, ma200
+
+
+# ---------------------------------------------------------------------------
+# 7. Config par commodité
+# ---------------------------------------------------------------------------
+
+COMMODITY_CONFIGS = {
+    "argent": {
+        "label": "Argent",
+        "ticker": "SI=F",
+        "unite": "$ / oz",
+    },
+    "petrole": {
+        "label": "Pétrole (WTI)",
+        "ticker": "CL=F",
+        "unite": "$ / baril",
+    },
+    "gaz": {
+        "label": "Gaz naturel",
+        "ticker": "NG=F",
+        "unite": "$ / MMBtu",
+    },
+}
+
+_EIA_PLACEHOLDER = FactorResult(
+    "Stocks EIA", 0.0, 0.0,
+    "indisponible — nécessite une clé API EIA (gratuite sur eia.gov), pas encore configurée",
+)
+
+
+def build_factors(commodity_key: str, api_key: str, *, spot: float | None = None,
+                   ma200: float | None = None) -> tuple[list[FactorResult], float | None]:
+    """Construit la liste de facteurs (déjà renormalisée) et le percentile
+    CFTC (pour la logique d'alerte) pour une commodité donnée. spot/ma200
+    sont fournis par l'appelant (déjà récupérés avant, voir run_commodity)
+    pour alimenter le facteur "Dynamique récente" — None si le repère
+    technique n'a pas pu être récupéré (le facteur devient alors neutre,
+    jamais une exception)."""
+    if commodity_key == "argent":
+        cftc_factor, cftc_percentile = factor_positionnement_cftc_generic(
+            "Positionnement CFTC", 0.15, CFTC_LEGACY_URL,
+            "SILVER - COMMODITY EXCHANGE INC.",
+            "noncomm_positions_long_all", "noncomm_positions_short_all",
+        )
+        factors = [
+            factor_taux_reels(api_key),
+            factor_dollar(),
+            cftc_factor,
+            factor_ratio_or_argent(0.25),
+            factor_dynamique_recente(spot, ma200, 0.10),
+        ]
+        return renormalize_weights(factors), cftc_percentile
+
+    if commodity_key == "petrole":
+        cftc_factor, cftc_percentile = factor_positionnement_cftc_generic(
+            "Positionnement CFTC", 0.20, CFTC_DISAGGREGATED_URL,
+            "WTI-PHYSICAL - NEW YORK MERCANTILE EXCHANGE",
+            "m_money_positions_long_all", "m_money_positions_short_all",
+        )
+        factors = [
+            factor_dollar(),
+            cftc_factor,
+            factor_spread_wti_brent(0.15),
+            factor_dynamique_recente(spot, ma200, 0.20),
+            _EIA_PLACEHOLDER,
+        ]
+        return renormalize_weights(factors), cftc_percentile
+
+    if commodity_key == "gaz":
+        cftc_factor, cftc_percentile = factor_positionnement_cftc_generic(
+            "Positionnement CFTC", 0.20, CFTC_DISAGGREGATED_URL,
+            "NAT GAS NYME - NEW YORK MERCANTILE EXCHANGE",
+            "m_money_positions_long_all", "m_money_positions_short_all",
+        )
+        dollar_factor = factor_dollar()
+        factors = [
+            cftc_factor,
+            factor_saisonnalite_gaz(api_key, 0.25),
+            factor_dynamique_recente(spot, ma200, 0.20),
+            # factor_dollar() renvoie un poids fixe (0.15, celui de l'or) ;
+            # on force ici le poids voulu pour le gaz (0.10) avant renormalisation.
+            FactorResult(dollar_factor.name, dollar_factor.score, 0.10, dollar_factor.raw_value),
+            _EIA_PLACEHOLDER,
+        ]
+        return renormalize_weights(factors), cftc_percentile
+
+    raise ValueError(f"Commodité inconnue : {commodity_key!r} (attendu : {list(COMMODITY_CONFIGS)})")
+
+
+# ---------------------------------------------------------------------------
+# 8. Orchestration, I/O, CLI — même pattern que gold_score.main()
+# ---------------------------------------------------------------------------
+
+OUTPUT_DIR = os.path.dirname(os.path.abspath(__file__))
+DOCS_DIR = os.path.join(OUTPUT_DIR, "docs")
+
+
+def _history_path(commodity_key: str) -> str:
+    return os.path.join(OUTPUT_DIR, f"score_history_{commodity_key}.json")
+
+
+def load_history(commodity_key: str) -> list:
+    path = _history_path(commodity_key)
+    if not os.path.exists(path):
+        return []
+    with open(path, encoding="utf-8") as fh:
+        try:
+            return json.load(fh)
+        except json.JSONDecodeError:
+            return []
+
+
+def append_history(commodity_key: str, entry: dict, max_entries: int = 730) -> list:
+    history = load_history(commodity_key)
+    history.append(entry)
+    history = history[-max_entries:]
+    with open(_history_path(commodity_key), "w", encoding="utf-8") as fh:
+        json.dump(history, fh, ensure_ascii=False, indent=2)
+    return history
+
+
+def run_commodity(commodity_key: str, *, api_key: str | None = None, daily_snapshot: bool | None = None) -> dict:
+    api_key = api_key or os.environ.get("FRED_API_KEY")
+    if not api_key:
+        raise RuntimeError("FRED_API_KEY absent (variable d'environnement ou paramètre api_key).")
+    if daily_snapshot is None:
+        daily_snapshot = os.environ.get("DAILY_SNAPSHOT", "true").lower() != "false"
+
+    cfg = COMMODITY_CONFIGS[commodity_key]
+
+    # Le repère technique (spot/MM200) est récupéré AVANT build_factors, pour
+    # alimenter le facteur "Dynamique récente" avec de vraies valeurs plutôt
+    # qu'un placeholder à brancher après coup — spot/ma200 restent None (et
+    # le facteur devient neutre, jamais une exception) si ce fetch échoue.
+    spot = ma200 = None
+    technical_note = "Repère technique indisponible"
+    try:
+        spot, ma200 = get_spot_and_ma200(cfg["ticker"])
+        technical_note = check_technical_trigger(spot, ma200)
+    except Exception as e:
+        technical_note = f"Repère technique indisponible : {e}"
+
+    factors, cftc_percentile = build_factors(commodity_key, api_key, spot=spot, ma200=ma200)
+    composite = compute_composite(factors)
+
+    calendar = build_macro_calendar(api_key)
+
+    from gold_score import interpret  # import tardif : pure fonction, pas de cycle
+    payload = {
+        "date": datetime.today().strftime("%Y-%m-%d"),
+        "commodity": commodity_key,
+        "label": cfg["label"],
+        "composite_score": composite,
+        "interpretation": interpret(composite),
+        "cftc_percentile": cftc_percentile,
+        "factors": [
+            {"name": f.name, "score": f.score, "weight": f.weight, "raw_value": f.raw_value}
+            for f in factors
+        ],
+        "technical": {"note": technical_note, "spot": spot, "ma200": ma200, "unite": cfg["unite"]},
+        "calendar": calendar,
+        "alerts": [],
+    }
+
+    if daily_snapshot:
+        append_history(commodity_key, {
+            "date": payload["date"], "composite": composite, "cftc_percentile": cftc_percentile,
+        })
+
+    root_path = os.path.join(OUTPUT_DIR, f"score_{commodity_key}.json")
+    with open(root_path, "w", encoding="utf-8") as fh:
+        json.dump(payload, fh, ensure_ascii=False, indent=2)
+
+    os.makedirs(DOCS_DIR, exist_ok=True)
+    docs_path = os.path.join(DOCS_DIR, f"score_{commodity_key}.json")
+    with open(docs_path, "w", encoding="utf-8") as fh:
+        json.dump(payload, fh, ensure_ascii=False, indent=2)
+
+    return payload
+
+
+def main(argv=None):
+    argv = argv if argv is not None else sys.argv[1:]
+    if not argv or argv[0] not in COMMODITY_CONFIGS:
+        print(f"Usage : python3 commodity_score.py <{'|'.join(COMMODITY_CONFIGS)}>")
+        sys.exit(1)
+    commodity_key = argv[0]
+    payload = run_commodity(commodity_key)
+    print(f"{COMMODITY_CONFIGS[commodity_key]['label']} — composite {payload['composite_score']:+.1f} — {payload['interpretation']}")
+
+
+if __name__ == "__main__":
+    main()

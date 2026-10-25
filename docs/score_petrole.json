@@ -22,13 +22,13 @@
       "name": "Spread WTI-Brent",
       "score": -10,
       "weight": 0.19999999999999998,
-      "raw_value": "+8.43 $/baril (il y a ~2 mois : +6.37 $/baril)"
+      "raw_value": "+8.56 $/baril (il y a ~2 mois : +6.37 $/baril)"
     },
     {
       "name": "Dynamique récente",
       "score": 10.0,
       "weight": 0.26666666666666666,
-      "raw_value": "+21.1% vs MM200"
+      "raw_value": "+19.2% vs MM200"
     },
     {
       "name": "Stocks EIA",
@@ -38,9 +38,9 @@
     }
   ],
   "technical": {
-    "note": "Cours au-dessus de la MM200 (+21.1%) — tendance haussière",
-    "spot": 103.2699966430664,
-    "ma200": 85.28690002441407,
+    "note": "Cours au-dessus de la MM200 (+19.2%) — tendance haussière",
+    "spot": 101.94999694824219,
+    "ma200": 85.50785001754761,
     "unite": "$ / baril"
   },
   "calendar": [

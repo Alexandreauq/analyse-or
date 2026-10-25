@@ -2,7 +2,7 @@
   "date": "2026-10-25",
   "commodity": "argent",
   "label": "Argent",
-  "composite_score": -34.0,
+  "composite_score": -34.1,
   "interpretation": "Défavorable — pas d'entrée même sur signal technique",
   "cftc_percentile": 3.8461538461538463,
   "factors": [
@@ -26,21 +26,21 @@
     },
     {
       "name": "Ratio or/argent",
-      "score": -4.977876106194691,
+      "score": -5.005524861878453,
       "weight": 0.25,
-      "raw_value": "74.3 — 25e percentile (3 ans)"
+      "raw_value": "74.0 — 25e percentile (3 ans)"
     },
     {
       "name": "Dynamique récente",
       "score": -10.0,
       "weight": 0.1,
-      "raw_value": "-24.7% vs MM200"
+      "raw_value": "-24.2% vs MM200"
     }
   ],
   "technical": {
-    "note": "Cours en-dessous de la MM200 (-24.7%) — tendance baissière",
-    "spot": 53.94900131225586,
-    "ma200": 71.64208992004394,
+    "note": "Cours en-dessous de la MM200 (-24.2%) — tendance baissière",
+    "spot": 54.23500061035156,
+    "ma200": 71.53849489212035,
     "unite": "$ / oz"
   },
   "calendar": [

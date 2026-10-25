@@ -263,9 +263,12 @@ def build_factors(commodity_key: str, api_key: str, *, spot: float | None = None
             "SILVER - COMMODITY EXCHANGE INC.",
             "noncomm_positions_long_all", "noncomm_positions_short_all",
         )
+        dollar_factor = factor_dollar()
         factors = [
             factor_taux_reels(api_key),
-            factor_dollar(),
+            # factor_dollar() renvoie un poids fixe (0.15, celui de l'or) ;
+            # on force ici le poids voulu pour l'argent (0.20, spec) avant renormalisation.
+            FactorResult(dollar_factor.name, dollar_factor.score, 0.20, dollar_factor.raw_value),
             cftc_factor,
             factor_ratio_or_argent(0.25),
             factor_dynamique_recente(spot, ma200, 0.10),
@@ -278,8 +281,11 @@ def build_factors(commodity_key: str, api_key: str, *, spot: float | None = None
             "WTI-PHYSICAL - NEW YORK MERCANTILE EXCHANGE",
             "m_money_positions_long_all", "m_money_positions_short_all",
         )
+        dollar_factor = factor_dollar()
         factors = [
-            factor_dollar(),
+            # factor_dollar() renvoie un poids fixe (0.15, celui de l'or) ;
+            # on force ici le poids voulu pour le pétrole (0.20, spec) avant renormalisation.
+            FactorResult(dollar_factor.name, dollar_factor.score, 0.20, dollar_factor.raw_value),
             cftc_factor,
             factor_spread_wti_brent(0.15),
             factor_dynamique_recente(spot, ma200, 0.20),

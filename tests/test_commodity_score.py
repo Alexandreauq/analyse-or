@@ -185,6 +185,29 @@ def test_build_factors_petrole_includes_eia_placeholder_renormalized():
     assert sum(f.weight for f in factors) == pytest.approx(1.0)
 
 
+def test_build_factors_gaz_includes_eia_placeholder_and_reweighted_dollar():
+    with patch("commodity_score.factor_positionnement_cftc_generic", return_value=(FactorResult("Positionnement CFTC", 1.0, 0.20, "x"), 50.0)), \
+         patch("commodity_score.factor_saisonnalite_gaz", return_value=FactorResult("Saisonnalité (Henry Hub)", 1.0, 0.25, "x")), \
+         patch("commodity_score.factor_dollar", return_value=FactorResult("Dollar (DXY)", 1.0, 0.15, "x")):
+        factors, cftc_percentile = build_factors("gaz", api_key="fake-key", spot=105.0, ma200=100.0)
+    names = [f.name for f in factors]
+    assert cftc_percentile == 50.0
+    eia_factor = next(f for f in factors if f.name == "Stocks EIA")
+    assert eia_factor.score == 0.0
+    assert eia_factor.weight == 0.0
+    assert "indisponible" in eia_factor.raw_value.lower()
+    assert "Dynamique récente" in names
+    dyn = next(f for f in factors if f.name == "Dynamique récente")
+    assert dyn.score > 0  # spot > ma200 ci-dessus
+    assert sum(f.weight for f in factors) == pytest.approx(1.0)
+    # Le mock de factor_dollar renvoie un poids 0.15 (celui de l'or) ; build_factors
+    # doit le forcer à 0.10 (poids gaz) AVANT renormalisation, pas garder le 0.15 du mock.
+    # Poids actifs avant renorm : 0.20 (cftc) + 0.25 (saisonnalite) + 0.20 (dynamique)
+    # + 0.10 (dollar forcé) = 0.75 -> scale 1/0.75 -> dollar final = 0.10/0.75.
+    dollar_out = next(f for f in factors if f.name == "Dollar (DXY)")
+    assert dollar_out.weight == pytest.approx(0.10 / 0.75)
+
+
 def test_run_commodity_writes_json_payload_with_expected_shape(tmp_path, monkeypatch):
     monkeypatch.setattr("commodity_score.OUTPUT_DIR", str(tmp_path))
     monkeypatch.setattr("commodity_score.DOCS_DIR", str(tmp_path / "docs"))

@@ -16,6 +16,7 @@ détail des facteurs retenus par commodité et la découverte de terrain CFTC
 """
 
 import json
+import math
 import os
 import sys
 from datetime import datetime, timedelta
@@ -96,8 +97,11 @@ def _fetch_gold_silver_ratio_history(lookback_days: int = 1095):
     le test)."""
     if yf is None:
         raise RuntimeError("yfinance n'est pas installé (pip install yfinance)")
-    gold = yf.Ticker("GC=F").history(period=f"{lookback_days}d")["Close"]
-    silver = yf.Ticker("SI=F").history(period=f"{lookback_days}d")["Close"]
+    # .dropna() au point d'extraction yfinance : convention du dépôt (voir
+    # indices_score.py) pour qu'une valeur manquante/NaN de la série ne se
+    # propage jamais jusqu'au JSON publié (incident du 2026-09-19).
+    gold = yf.Ticker("GC=F").history(period=f"{lookback_days}d")["Close"].dropna()
+    silver = yf.Ticker("SI=F").history(period=f"{lookback_days}d")["Close"].dropna()
     df = gold.to_frame("gold").join(silver.to_frame("silver"), how="inner")
     ratios = (df["gold"] / df["silver"]).tolist()
     return ratios, ratios[-1]
@@ -125,8 +129,9 @@ def _fetch_wti_brent_spread_series(lookback_days: int = 60):
     (en $/baril, normalement positif — Brent cote en général au-dessus du WTI)."""
     if yf is None:
         raise RuntimeError("yfinance n'est pas installé (pip install yfinance)")
-    wti = yf.Ticker("CL=F").history(period=f"{lookback_days}d")["Close"]
-    brent = yf.Ticker("BZ=F").history(period=f"{lookback_days}d")["Close"]
+    # .dropna() — même convention que ci-dessus.
+    wti = yf.Ticker("CL=F").history(period=f"{lookback_days}d")["Close"].dropna()
+    brent = yf.Ticker("BZ=F").history(period=f"{lookback_days}d")["Close"].dropna()
     df = wti.to_frame("wti").join(brent.to_frame("brent"), how="inner")
     spread = df["brent"] - df["wti"]
     return float(spread.iloc[-1]), float(spread.iloc[0])
@@ -153,14 +158,27 @@ def _fetch_gaz_seasonal_deviation(api_key: str, lookback_days: int = 1825):
     calendaire sur les années précédentes disponibles) à partir de la série
     FRED DHHNGSP. Isolé dans sa propre fonction pour rester simple à mocker."""
     obs = fetch_fred_series("DHHNGSP", api_key, lookback_days=lookback_days)
-    by_month = {}
-    for o in obs:
-        month = int(o["date"].split("-")[1])
-        by_month.setdefault(month, []).append(float(o["value"]))
     current_price = float(obs[-1]["value"])
     current_month = int(obs[-1]["date"].split("-")[1])
-    history_this_month = by_month.get(current_month, [current_price])
+    # Exclut l'observation la plus récente (obs[-1], "aujourd'hui") du calcul
+    # de la moyenne saisonnière : la moyenne doit représenter "ce que fait
+    # normalement ce mois les années précédentes" (docstring/spec), jamais
+    # inclure la lecture du jour elle-même — sinon le prix du jour se compare
+    # partiellement à lui-même, diluant l'écart réel d'environ 15-20% selon
+    # la profondeur d'historique disponible pour ce mois (bug trouvé en
+    # revue finale, voir docs/superpowers/plans/2026-10-25-commodites-score-plan.md).
+    history_this_month = [
+        float(o["value"]) for o in obs[:-1]
+        if int(o["date"].split("-")[1]) == current_month
+    ]
+    if not history_this_month:
+        history_this_month = [current_price]
     seasonal_average = sum(history_this_month) / len(history_this_month)
+    if not math.isfinite(current_price) or not math.isfinite(seasonal_average):
+        raise ValueError(
+            "Valeur FRED non-finie pour DHHNGSP (donnée corrompue) — "
+            f"current={current_price!r} seasonal_average={seasonal_average!r}"
+        )
     return current_price, seasonal_average
 
 
@@ -201,7 +219,17 @@ def factor_dynamique_recente(spot: float | None, ma200: float | None, weight: fl
     prix n'ont pas le même ordre de grandeur — or ~2600$, argent ~30$,
     pétrole ~70$, gaz ~3$). Un écart de 5% au-dessus/en-dessous de la MM200
     sature le score à +-10."""
-    if spot is None or ma200 is None or ma200 == 0:
+    # Un spot/ma200 non-finite (NaN, +-inf) doit être traité exactement comme
+    # None, pas laissé se propager : avec l'ordre d'arguments ci-dessous,
+    # min(10.0, nan) renvoie 10.0 (pas nan — vérifié expérimentalement, voir
+    # le rapport de fix), donc sans cette garde un repère technique corrompu
+    # produirait silencieusement un score +10 (signal maximalement favorable)
+    # au lieu de rester neutre.
+    if (
+        spot is None or ma200 is None
+        or not math.isfinite(spot) or not math.isfinite(ma200)
+        or ma200 == 0
+    ):
         return FactorResult("Dynamique récente", 0.0, weight, "repère technique indisponible")
     pct_ecart = (spot - ma200) / ma200 * 100
     score = max(-10.0, min(10.0, (pct_ecart / 5.0) * 10.0))
@@ -215,7 +243,8 @@ def factor_dynamique_recente(spot: float | None, ma200: float | None, weight: fl
 def get_spot_and_ma200(ticker: str) -> tuple[float, float]:
     if yf is None:
         raise RuntimeError("yfinance n'est pas installé (pip install yfinance)")
-    hist = yf.Ticker(ticker).history(period="1y")["Close"]
+    # .dropna() — même convention que les autres pulls yfinance ci-dessus.
+    hist = yf.Ticker(ticker).history(period="1y")["Close"].dropna()
     spot = hist.iloc[-1]
     ma200 = hist.tail(200).mean()
     return spot, ma200
@@ -342,7 +371,7 @@ def append_history(commodity_key: str, entry: dict, max_entries: int = 730) -> l
     history.append(entry)
     history = history[-max_entries:]
     with open(_history_path(commodity_key), "w", encoding="utf-8") as fh:
-        json.dump(history, fh, ensure_ascii=False, indent=2)
+        json.dump(history, fh, ensure_ascii=False, allow_nan=False, indent=2)
     return history
 
 
@@ -396,12 +425,12 @@ def run_commodity(commodity_key: str, *, api_key: str | None = None, daily_snaps
 
     root_path = os.path.join(OUTPUT_DIR, f"score_{commodity_key}.json")
     with open(root_path, "w", encoding="utf-8") as fh:
-        json.dump(payload, fh, ensure_ascii=False, indent=2)
+        json.dump(payload, fh, ensure_ascii=False, allow_nan=False, indent=2)
 
     os.makedirs(DOCS_DIR, exist_ok=True)
     docs_path = os.path.join(DOCS_DIR, f"score_{commodity_key}.json")
     with open(docs_path, "w", encoding="utf-8") as fh:
-        json.dump(payload, fh, ensure_ascii=False, indent=2)
+        json.dump(payload, fh, ensure_ascii=False, allow_nan=False, indent=2)
 
     return payload
 

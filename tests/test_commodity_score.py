@@ -1,5 +1,7 @@
 import json
+import math
 
+import pandas as pd
 import pytest
 from unittest.mock import patch, MagicMock
 
@@ -14,6 +16,9 @@ from commodity_score import (
     COMMODITY_CONFIGS,
     build_factors,
     run_commodity,
+    _fetch_gaz_seasonal_deviation,
+    _fetch_gold_silver_ratio_history,
+    _fetch_wti_brent_spread_series,
 )
 from gold_score import FactorResult
 
@@ -60,6 +65,97 @@ def test_factor_positionnement_cftc_generic_extreme_percentile_gives_negative_sc
     assert result.score == -10.0
     assert result.weight == 0.20
     assert result.name == "Positionnement CFTC"
+
+
+def _fake_ticker_factory(series_by_symbol):
+    """Fabrique un side_effect pour yf.Ticker(symbol) qui renvoie, pour
+    .history(...)["Close"], la pandas Series injectée correspondant au
+    symbole -- permet d'exercer le vrai calcul pandas (to_frame/join/
+    division/dropna) avec des données de test, sans réseau."""
+    def _ticker(symbol):
+        t = MagicMock()
+        t.history.return_value = {"Close": series_by_symbol[symbol]}
+        return t
+    return _ticker
+
+
+def test_fetch_gold_silver_ratio_history_computes_ratio_and_current():
+    dates = pd.date_range("2024-01-01", periods=3, freq="D")
+    gold = pd.Series([2000.0, 2010.0, 2020.0], index=dates)
+    silver = pd.Series([25.0, 25.0, 20.2], index=dates)
+    with patch("commodity_score.yf") as mock_yf:
+        mock_yf.Ticker.side_effect = _fake_ticker_factory({"GC=F": gold, "SI=F": silver})
+        history, current = _fetch_gold_silver_ratio_history()
+    assert current == pytest.approx(2020.0 / 20.2)
+    assert history[0] == pytest.approx(2000.0 / 25.0)
+    assert history[-1] == pytest.approx(2020.0 / 20.2)
+
+
+def test_fetch_gold_silver_ratio_history_drops_nan_rows():
+    # Une ligne NaN côté or (ex. jour férié US non aligné avec l'argent) ne
+    # doit jamais se retrouver dans l'historique de ratios -- .dropna()
+    # appliqué avant le join doit l'exclure proprement.
+    dates = pd.date_range("2024-01-01", periods=3, freq="D")
+    gold = pd.Series([2000.0, float("nan"), 2020.0], index=dates)
+    silver = pd.Series([25.0, 25.0, 20.2], index=dates)
+    with patch("commodity_score.yf") as mock_yf:
+        mock_yf.Ticker.side_effect = _fake_ticker_factory({"GC=F": gold, "SI=F": silver})
+        history, current = _fetch_gold_silver_ratio_history()
+    assert len(history) == 2
+    assert all(math.isfinite(h) for h in history)
+    assert current == pytest.approx(2020.0 / 20.2)
+
+
+def test_fetch_wti_brent_spread_series_returns_current_and_past():
+    dates = pd.date_range("2024-01-01", periods=3, freq="D")
+    wti = pd.Series([70.0, 71.0, 72.0], index=dates)
+    brent = pd.Series([75.0, 74.0, 73.0], index=dates)
+    with patch("commodity_score.yf") as mock_yf:
+        mock_yf.Ticker.side_effect = _fake_ticker_factory({"CL=F": wti, "BZ=F": brent})
+        current, past = _fetch_wti_brent_spread_series()
+    assert current == pytest.approx(73.0 - 72.0)
+    assert past == pytest.approx(75.0 - 70.0)
+
+
+def test_fetch_wti_brent_spread_series_drops_nan_rows():
+    dates = pd.date_range("2024-01-01", periods=3, freq="D")
+    wti = pd.Series([70.0, float("nan"), 72.0], index=dates)
+    brent = pd.Series([75.0, 74.0, 73.0], index=dates)
+    with patch("commodity_score.yf") as mock_yf:
+        mock_yf.Ticker.side_effect = _fake_ticker_factory({"CL=F": wti, "BZ=F": brent})
+        current, past = _fetch_wti_brent_spread_series()
+    assert math.isfinite(current)
+    assert math.isfinite(past)
+
+
+def test_fetch_gaz_seasonal_deviation_excludes_current_observation_from_average():
+    # Reproduit le bug de dilution trouvé en revue finale : 3 lectures de
+    # janvier des années précédentes (2.00/2.20/2.40, moyenne 2.20) + une
+    # lecture "aujourd'hui" en janvier à 10.00 (outlier). Avant le fix, cette
+    # dernière entrait dans la moyenne saisonnière (moyenne -> 4.15) ; après
+    # le fix, elle doit en être exclue (moyenne -> 2.20). Ce test échoue
+    # contre le code pré-fix (4.15 != 2.20).
+    obs = [
+        {"date": "2023-01-15", "value": "2.00"},
+        {"date": "2024-01-15", "value": "2.20"},
+        {"date": "2025-01-15", "value": "2.40"},
+        {"date": "2026-01-20", "value": "10.00"},
+    ]
+    with patch("commodity_score.fetch_fred_series", return_value=obs):
+        current, seasonal_average = _fetch_gaz_seasonal_deviation("fake-key")
+    assert current == pytest.approx(10.00)
+    assert seasonal_average == pytest.approx(2.20)
+
+
+def test_fetch_gaz_seasonal_deviation_falls_back_to_current_when_no_prior_history():
+    # Aucune observation antérieure pour ce mois calendaire -> la moyenne
+    # saisonnière retombe sur le prix actuel (écart neutre), pas une
+    # division par zéro ni une exception.
+    obs = [{"date": "2026-03-01", "value": "3.50"}]
+    with patch("commodity_score.fetch_fred_series", return_value=obs):
+        current, seasonal_average = _fetch_gaz_seasonal_deviation("fake-key")
+    assert current == pytest.approx(3.50)
+    assert seasonal_average == pytest.approx(3.50)
 
 
 def test_factor_ratio_or_argent_high_ratio_is_favorable_to_silver():
@@ -140,6 +236,22 @@ def test_factor_dynamique_recente_neutral_when_technical_data_missing():
     assert result.weight == 0.20
 
 
+def test_factor_dynamique_recente_neutral_when_spot_is_nan():
+    # Garde anti-NaN (revue finale) : un spot non-finite doit être traité
+    # comme None, pas laissé propager jusqu'à min(10, nan)/max(-10, ...).
+    from commodity_score import factor_dynamique_recente
+    result = factor_dynamique_recente(spot=float("nan"), ma200=100.0, weight=0.20)
+    assert result.score == 0.0
+    assert result.weight == 0.20
+
+
+def test_factor_dynamique_recente_neutral_when_ma200_is_inf():
+    from commodity_score import factor_dynamique_recente
+    result = factor_dynamique_recente(spot=100.0, ma200=float("inf"), weight=0.20)
+    assert result.score == 0.0
+    assert result.weight == 0.20
+
+
 def test_commodity_configs_cover_argent_petrole_gaz():
     assert set(COMMODITY_CONFIGS.keys()) == {"argent", "petrole", "gaz"}
     for key, cfg in COMMODITY_CONFIGS.items():
@@ -148,6 +260,9 @@ def test_commodity_configs_cover_argent_petrole_gaz():
 
 def test_get_spot_and_ma200_uses_given_ticker():
     hist_mock = MagicMock()
+    # .dropna() est maintenant appelé avant usage (garde anti-NaN) -- no-op
+    # ici puisque le mock ne contient pas de NaN, il rechaîne sur lui-même.
+    hist_mock.dropna.return_value = hist_mock
     hist_mock.tail.return_value.mean.return_value = 50.0
     hist_mock.iloc = [None] * 199 + [55.0]
     with patch("commodity_score.yf") as mock_yf:
@@ -157,8 +272,12 @@ def test_get_spot_and_ma200_uses_given_ticker():
 
 
 def test_build_factors_argent_includes_ratio_or_argent_and_no_eia_placeholder():
+    # factor_dollar() mocké avec le poids réel de l'or (0.15) -- pas déjà
+    # 0.20 -- pour que ce test échoue si le code cesse de forcer le poids
+    # argent (0.20) et se contente de garder celui du mock (régression
+    # possible sinon passée inaperçue, voir revue finale).
     with patch("commodity_score.factor_taux_reels", return_value=FactorResult("Taux réels US 10 ans", 1.0, 0.30, "x")), \
-         patch("commodity_score.factor_dollar", return_value=FactorResult("Dollar (DXY)", 1.0, 0.20, "x")), \
+         patch("commodity_score.factor_dollar", return_value=FactorResult("Dollar (DXY)", 1.0, 0.15, "x")), \
          patch("commodity_score.factor_positionnement_cftc_generic", return_value=(FactorResult("Positionnement CFTC", 1.0, 0.15, "x"), 50.0)), \
          patch("commodity_score.factor_ratio_or_argent", return_value=FactorResult("Ratio or/argent", 1.0, 0.25, "x")):
         factors, cftc_percentile = build_factors("argent", api_key="fake-key", spot=105.0, ma200=100.0)
@@ -169,10 +288,18 @@ def test_build_factors_argent_includes_ratio_or_argent_and_no_eia_placeholder():
     assert cftc_percentile == 50.0
     dyn = next(f for f in factors if f.name == "Dynamique récente")
     assert dyn.score > 0  # spot > ma200 ci-dessus
+    # Poids actifs avant renorm : 0.30 (taux) + 0.20 (dollar forcé) + 0.15
+    # (cftc) + 0.25 (ratio) + 0.10 (dynamique) = 1.0 -> renormalize_weights
+    # est un no-op, le poids forcé (0.20) doit donc ressortir tel quel.
+    dollar_out = next(f for f in factors if f.name == "Dollar (DXY)")
+    assert dollar_out.weight == pytest.approx(0.20)
 
 
 def test_build_factors_petrole_includes_eia_placeholder_renormalized():
-    with patch("commodity_score.factor_dollar", return_value=FactorResult("Dollar (DXY)", 1.0, 0.20, "x")), \
+    # Même raisonnement que pour l'argent ci-dessus : factor_dollar() mocké
+    # avec le poids réel de l'or (0.15), pas déjà 0.20, pour que ce test
+    # échoue si le code cesse de forcer le poids pétrole (0.20).
+    with patch("commodity_score.factor_dollar", return_value=FactorResult("Dollar (DXY)", 1.0, 0.15, "x")), \
          patch("commodity_score.factor_positionnement_cftc_generic", return_value=(FactorResult("Positionnement CFTC", 1.0, 0.20, "x"), 50.0)), \
          patch("commodity_score.factor_spread_wti_brent", return_value=FactorResult("Spread WTI-Brent", 1.0, 0.15, "x")):
         factors, _ = build_factors("petrole", api_key="fake-key", spot=None, ma200=None)
@@ -183,6 +310,11 @@ def test_build_factors_petrole_includes_eia_placeholder_renormalized():
     dyn = next(f for f in factors if f.name == "Dynamique récente")
     assert dyn.score == 0.0  # spot/ma200 absents ici -> neutre, pas une erreur
     assert sum(f.weight for f in factors) == pytest.approx(1.0)
+    # Poids actifs avant renorm : 0.20 (dollar forcé) + 0.20 (cftc) + 0.15
+    # (spread) + 0.20 (dynamique) = 0.75 -> scale 1/0.75 -> dollar final =
+    # 0.20/0.75 (même pattern que le test gaz pour le même bug).
+    dollar_out = next(f for f in factors if f.name == "Dollar (DXY)")
+    assert dollar_out.weight == pytest.approx(0.20 / 0.75)
 
 
 def test_build_factors_gaz_includes_eia_placeholder_and_reweighted_dollar():

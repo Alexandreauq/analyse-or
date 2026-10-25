@@ -70,10 +70,24 @@ jobs:
           DAILY_SNAPSHOT: ${{ steps.daily_slot.outputs.is_daily }}
 
       - name: Calculer le score des autres commodités (argent, pétrole, gaz)
+        # Chaque commodité est isolée par son propre "|| echo ::warning" :
+        # aucune des 3 n'a jamais tourné contre les réseaux réels (CFTC,
+        # FRED, yfinance), et ce shell tourne sous bash -e (défaut GitHub
+        # Actions). Sans cette isolation, l'échec d'une seule commande fait
+        # avorter tout le step (set -e) et donc tout le reste du job — y
+        # compris le step "Publier" suivant, qui est celui qui pousse
+        # réellement score.json/score_history.json DE L'OR. Résultat observé
+        # si on laissait ça tel quel : score_history.json (or) ne reçoit
+        # jamais l'entrée du jour, donc le run horaire suivant recalcule
+        # is_daily=true à nouveau et renvoie l'email quotidien de l'or à
+        # chaque heure tant qu'une commodité échoue. continue-on-error au
+        # niveau du step ne suffirait pas : ça ne protège que le step
+        # suivant, pas les lignes après la ligne qui a échoué DANS ce step
+        # (set -e stopperait quand même avant petrole/gaz).
         run: |
-          python3 commodity_score.py argent
-          python3 commodity_score.py petrole
-          python3 commodity_score.py gaz
+          python3 commodity_score.py argent || echo "::warning::commodity_score.py argent a échoué — n'affecte pas le score or, voir les logs ci-dessus"
+          python3 commodity_score.py petrole || echo "::warning::commodity_score.py petrole a échoué — n'affecte pas le score or, voir les logs ci-dessus"
+          python3 commodity_score.py gaz || echo "::warning::commodity_score.py gaz a échoué — n'affecte pas le score or, voir les logs ci-dessus"
         env:
           FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
           DAILY_SNAPSHOT: ${{ steps.daily_slot.outputs.is_daily }}
@@ -82,10 +96,24 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add docs/score.json score.json score_history.json dashboard.html \
-                  docs/score_argent.json score_argent.json score_history_argent.json \
-                  docs/score_petrole.json score_petrole.json score_history_petrole.json \
-                  docs/score_gaz.json score_gaz.json score_history_gaz.json
+          # N'ajoute que les fichiers qui existent réellement : un premier
+          # run, ou un run où une commodité a échoué juste au-dessus (voir le
+          # step précédent), ne produit pas ses fichiers score_<commodité>*.json
+          # -- un `git add` qui lui est passé en dur ferait échouer `git add`
+          # (fichier introuvable) et donc tout ce step sous bash -e, ce qui
+          # bloquerait la publication du score or exactement comme le
+          # problème que le step précédent corrige. Le `if` (pas un `[ -e ] &&`)
+          # est volontaire : une condition de test dans un `if` ne déclenche
+          # jamais `set -e` même si elle est fausse, alors qu'un `&&` en tête
+          # de ligne le ferait.
+          for f in docs/score.json score.json score_history.json dashboard.html \
+                   docs/score_argent.json score_argent.json score_history_argent.json \
+                   docs/score_petrole.json score_petrole.json score_history_petrole.json \
+                   docs/score_gaz.json score_gaz.json score_history_gaz.json; do
+            if [ -e "$f" ]; then
+              git add "$f"
+            fi
+          done
           git diff --staged --quiet || git commit -m "Mise à jour du score"
           git pull --rebase --autostash
           git push

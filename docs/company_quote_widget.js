@@ -17,18 +17,20 @@
 // company.current_price, indépendant de TradingView) plutôt que de tenter
 // un widget qui échouera systématiquement.
 //
-// FTSE retiré le 2026-10-25 (après y avoir été brièvement ajouté le même
-// jour) : le widget LEGER "symbol-overview" n'a pas les droits de données
-// pour les actions du FTSE (confirmé par l'utilisateur, généralisé sur
-// toutes les valeurs), mais index.html est passé au widget TradingView
-// COMPLET pour le panneau "Cours en direct" des fiches entreprise (même
-// moteur que tradingview.com, qui affiche bien ces valeurs -- vérifié
-// directement que "LSE:ADM" résout vers Admiral Group, donc ce n'est pas
-// un problème de symbole). FTSE doit donc de nouveau résoudre un vrai
-// symbole ici pour que ce nouveau widget ait une chance de charger de
-// vraies données -- à repasser dans ce Set si le widget complet échoue
-// lui aussi en pratique.
-const NO_RELIABLE_COMPANY_TV_DATA = new Set(['HANGSENG', 'NIKKEI225']);
+// FTSE ajouté le 2026-10-25 : confirmé par l'utilisateur sur Admiral
+// Group (ADM.L) puis généralisé après confirmation que TOUTES les
+// entreprises du FTSE sont concernées (pas une collision avec le ticker
+// NYSE "ADM" d'Archer-Daniels-Midland -- vérifié directement sur
+// tradingview.com que "LSE:ADM" résout bien vers Admiral Group, donc le
+// symbole lui-même n'est pas ambigu ; c'est la donnée LSE par action qui
+// n'est simplement pas couverte par l'offre gratuite de widget, même
+// limitation que Hang Seng/Nikkei 225). La table d'override EPIC
+// ci-dessous (TV_TICKER_OVERRIDE_BY_YAHOO_TICKER) devient de fait
+// inatteignable pour le FTSE via cette fonction -- conservée telle
+// quelle (données toujours correctes si cette limitation est un jour
+// levée, ou si un autre indice mélangeant les places l'atteint via le
+// repli par suffixe Yahoo ci-dessous).
+const NO_RELIABLE_COMPANY_TV_DATA = new Set(['HANGSENG', 'NIKKEI225', 'FTSE']);
 
 // Préfixe d'échange TradingView par indice — dérivé du suffixe Yahoo
 // Finance pour CAC40 (.PA → Euronext Paris) et DAX (.DE → Xetra), vérifié

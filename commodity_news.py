@@ -269,7 +269,12 @@ def build_news_and_analysis_section(
     if not daily_snapshot:
         return previous_news, previous_analysis_html, previous_news_classifications
 
-    news = fetch_commodity_news(news_query, subject_label, previous_news_classifications)
+    try:
+        news = fetch_commodity_news(news_query, subject_label, previous_news_classifications)
+    except Exception as e:
+        print(f"Erreur récupération actus commodité pour {subject_label} : {e}")
+        return previous_news, previous_analysis_html, previous_news_classifications
+
     news_classifications = {
         n["link"]: {"summary": n.get("summary"), "sentiment": n.get("sentiment"), "importance": n.get("importance")}
         for n in news if n.get("link")

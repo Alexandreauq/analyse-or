@@ -3476,62 +3476,51 @@ function renderScalpTracking(data) {
   panel.innerHTML = banner + summary + `<div class="tracking-rows">${rowsHtml}</div>`;
 }
 
-let tvJsLoadingPromise = null;
-
-function ensureTvJsLoaded() {
-  // tv.js (la bibliotheque complete TradingView.widget, deja utilisee pour
-  // l'or -- voir loadScalpChart) est partagee entre tous les widgets
-  // "cours en direct" de la page (or + fiches entreprise) : un seul
-  // <script> charge, quel que soit le nombre de widgets instancies apres.
-  if (typeof TradingView !== 'undefined') return Promise.resolve();
-  if (tvJsLoadingPromise) return tvJsLoadingPromise;
-  tvJsLoadingPromise = new Promise((resolve) => {
-    const script = document.createElement('script');
-    script.src = 'https://s3.tradingview.com/tv.js';
-    script.onload = resolve;
-    document.body.appendChild(script);
-  });
-  return tvJsLoadingPromise;
-}
-
 function loadSideQuoteWidget(tvSymbol) {
-  // Widget TradingView COMPLET (meme moteur que loadScalpChart/l'or), pas
-  // le widget leger "symbol-overview" utilise avant le 2026-10-25 : celui-ci
-  // s'est revele sans droits de donnees pour les actions individuelles du
-  // FTSE (voir NO_RELIABLE_COMPANY_TV_DATA, docs/company_quote_widget.js),
-  // alors que tradingview.com lui-meme affiche ces valeurs correctement --
-  // le widget complet, qui partage le meme moteur que le site, a de
-  // meilleures chances de donnees. Le conteneur #tv-side-widget est recree
-  // a chaque appel de renderCompanyDetail (tout le innerHTML est remplace),
-  // donc pas de widget duplique ni de nettoyage a faire d'un rendu a
-  // l'autre. Prend le symbole deja resolu par resolveCompanyTvSymbol
-  // (docs/company_quote_widget.js) -- l'appelant a la responsabilite de ne
-  // pas appeler cette fonction du tout quand ce symbole est `null` (voir
-  // renderCompanyDetail).
+  // Widget TradingView compact (cours + mini-graphique), injecté après coup
+  // car un <script> posé via innerHTML ne s'exécute jamais tout seul dans
+  // un navigateur. Le conteneur #tv-side-widget est recréé à chaque appel
+  // de renderCompanyDetail (tout le innerHTML est remplacé), donc pas de
+  // widget dupliqué ni de nettoyage à faire d'un rendu à l'autre. Prend le
+  // symbole déjà résolu par resolveCompanyTvSymbol (docs/company_quote_
+  // widget.js) — l'appelant a la responsabilité de ne pas appeler cette
+  // fonction du tout quand ce symbole est `null` (voir renderCompanyDetail).
   const container = document.getElementById('tv-side-widget');
   if (!tvSymbol || !container) return;
-  ensureTvJsLoaded().then(() => {
-    // Re-verifie apres le chargement asynchrone : l'utilisateur a pu
-    // changer d'entreprise (donc de conteneur, recree entre-temps) avant
-    // que tv.js ait fini de charger.
-    if (!document.getElementById('tv-side-widget')) return;
-    new TradingView.widget({
-      autosize: true,
-      symbol: tvSymbol,
-      interval: 'D',
-      timezone: 'Etc/UTC',
-      theme: isLightTheme() ? 'light' : 'dark',
-      style: '3',
-      locale: 'fr',
-      toolbar_bg: isLightTheme() ? '#f3e4c2' : '#1e2740',
-      enable_publishing: false,
-      allow_symbol_change: false,
-      hide_top_toolbar: true,
-      hide_legend: true,
-      save_image: false,
-      container_id: 'tv-side-widget',
-    });
+  const script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-symbol-overview.js';
+  script.async = true;
+  script.textContent = JSON.stringify({
+    symbols: [[tvSymbol + '|1D']],
+    chartOnly: false,
+    width: '100%',
+    height: '260',
+    locale: 'fr',
+    colorTheme: isLightTheme() ? 'light' : 'dark',
+    autosize: false,
+    showVolume: false,
+    showMA: false,
+    hideDateRanges: false,
+    hideMarketStatus: false,
+    hideSymbolLogo: false,
+    scalePosition: 'right',
+    scaleMode: 'Normal',
+    fontFamily: '-apple-system, BlinkMacSystemFont, Trebuchet MS, Roboto, Ubuntu, sans-serif',
+    fontSize: '10',
+    noTimeScale: false,
+    valuesTracking: '1',
+    changeMode: 'price-and-percent',
+    chartType: 'area',
+    maLineColor: '#b99a68',
+    maLineWidth: 1,
+    maLength: 9,
+    headerFontSize: 'medium',
+    lineWidth: 2,
+    lineType: 0,
+    dateRanges: ['1d|1', '1m|30', '3m|60', '12m|1D', '60m|1W', 'all|1M'],
   });
+  container.appendChild(script);
 }
 
 // Symbole TradingView par indice — INDEX_TV_SYMBOL_BY_KEY, pas une seule
@@ -5754,7 +5743,7 @@ function renderCompanyDetail(company) {
         <h2>Cours en direct</h2>
         ${tvSymbol ? `
         <div class="tradingview-widget-container">
-          <div class="tradingview-widget-container__widget" id="tv-side-widget" style="height:320px;"></div>
+          <div class="tradingview-widget-container__widget" id="tv-side-widget"></div>
         </div>
         <p class="scalp-note">Temps réel via TradingView (${company.ticker}).</p>
         ` : `

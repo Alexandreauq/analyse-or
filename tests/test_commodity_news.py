@@ -176,6 +176,25 @@ def test_build_news_and_analysis_section_carries_forward_analysis_on_generation_
     assert analysis_html == "<p>ancienne analyse valide</p>"
 
 
+def test_build_news_and_analysis_section_falls_back_to_previous_on_fetch_error(capsys):
+    previous_payload = {
+        "news": [{"title": "ancien"}],
+        "analysis_html": "<p>ancienne analyse</p>",
+        "news_classifications": {"https://x/1": {"summary": "s", "sentiment": 0, "importance": "mineure"}},
+    }
+    with patch("commodity_news.fetch_commodity_news", side_effect=Exception("rss down")) as mock_fetch, \
+         patch("commodity_news.generate_commodity_analysis") as mock_generate:
+        news, analysis_html, classifications = build_news_and_analysis_section(
+            "l'or", "cours de l'or", [], daily_snapshot=True, previous_payload=previous_payload,
+        )
+    mock_fetch.assert_called_once()
+    mock_generate.assert_not_called()
+    assert news == previous_payload["news"]
+    assert analysis_html == previous_payload["analysis_html"]
+    assert classifications == previous_payload["news_classifications"]
+    assert "l'or" in capsys.readouterr().out
+
+
 def test_build_news_and_analysis_section_passes_previous_classifications_to_fetch():
     previous_payload = {"news_classifications": {"https://x/1": {"summary": "s", "sentiment": 0, "importance": "mineure"}}}
     with patch("commodity_news.fetch_commodity_news", return_value=[]) as mock_fetch, \

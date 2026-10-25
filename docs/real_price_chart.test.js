@@ -8,6 +8,7 @@ const {
   REAL_PRICE_CHART_TIMEFRAMES,
   formatRealPriceChartMonthLabel,
   sliceRealPriceChartByMonths,
+  sliceRealPriceChartByDays,
   buildRealPriceChartSvgPaths,
   buildRealPriceChartGridlines,
   buildRealPriceChartScale,
@@ -61,12 +62,32 @@ function test_buildRealPriceChartSvgPaths_handles_a_flat_series_without_dividing
   console.log('OK: test_buildRealPriceChartSvgPaths_handles_a_flat_series_without_dividing_by_zero');
 }
 
-function test_REAL_PRICE_CHART_TIMEFRAMES_has_the_five_expected_options() {
+function test_REAL_PRICE_CHART_TIMEFRAMES_has_the_six_expected_options() {
   assert.deepStrictEqual(
     REAL_PRICE_CHART_TIMEFRAMES.map((t) => t.key),
-    ['3m', '6m', '1a', '3a', 'all'],
+    ['1j', '3m', '6m', '1a', '3a', 'all'],
   );
-  console.log('OK: test_REAL_PRICE_CHART_TIMEFRAMES_has_the_five_expected_options');
+  console.log('OK: test_REAL_PRICE_CHART_TIMEFRAMES_has_the_six_expected_options');
+}
+
+function test_sliceRealPriceChartByDays_keeps_only_the_last_day() {
+  const pairs = [
+    ['2026-10-20', 10], ['2026-10-23', 11], ['2026-10-24', 12], ['2026-10-25', 13],
+  ];
+  const sliced = sliceRealPriceChartByDays(pairs, 1);
+  // 1 jour avant 2026-10-25 -> coupure 2026-10-24 : seuls 2026-10-24 et
+  // 2026-10-25 sont >= a cette coupure.
+  assert.deepStrictEqual(sliced, [['2026-10-24', 12], ['2026-10-25', 13]]);
+  console.log('OK: test_sliceRealPriceChartByDays_keeps_only_the_last_day');
+}
+
+function test_sliceRealPriceChartByDays_falls_back_to_last_two_points_across_a_weekend() {
+  // Lundi : "1 jour avant" tombe un dimanche, sans donnee de marche --
+  // doit quand meme renvoyer les 2 derniers points reels (vendredi + lundi).
+  const pairs = [['2026-10-16', 10], ['2026-10-19', 11]]; // vendredi, lundi
+  const sliced = sliceRealPriceChartByDays(pairs, 1);
+  assert.deepStrictEqual(sliced, pairs);
+  console.log('OK: test_sliceRealPriceChartByDays_falls_back_to_last_two_points_across_a_weekend');
 }
 
 function test_buildRealPriceChartGridlines_returns_evenly_spaced_levels_from_max_to_min() {
@@ -100,7 +121,9 @@ function main() {
   test_sliceRealPriceChartByMonths_falls_back_to_last_two_points_when_window_too_narrow();
   test_buildRealPriceChartSvgPaths_scales_to_the_viewbox();
   test_buildRealPriceChartSvgPaths_handles_a_flat_series_without_dividing_by_zero();
-  test_REAL_PRICE_CHART_TIMEFRAMES_has_the_five_expected_options();
+  test_REAL_PRICE_CHART_TIMEFRAMES_has_the_six_expected_options();
+  test_sliceRealPriceChartByDays_keeps_only_the_last_day();
+  test_sliceRealPriceChartByDays_falls_back_to_last_two_points_across_a_weekend();
   test_buildRealPriceChartGridlines_returns_evenly_spaced_levels_from_max_to_min();
   test_buildRealPriceChartScale_maps_index_and_value_to_pixels();
   test_buildRealPriceChartScale_handles_a_single_point_without_dividing_by_zero();

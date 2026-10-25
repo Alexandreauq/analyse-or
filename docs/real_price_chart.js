@@ -8,6 +8,7 @@
 // sans navigateur -- voir docs/real_price_chart.test.js.
 
 const REAL_PRICE_CHART_TIMEFRAMES = [
+  { key: '1j', label: '1 J', days: 1 },
   { key: '3m', label: '3 M', months: 3 },
   { key: '6m', label: '6 M', months: 6 },
   { key: '1a', label: '1 A', months: 12 },
@@ -37,6 +38,23 @@ function sliceRealPriceChartByMonths(pairs, months) {
   const lastDate = new Date(pairs[pairs.length - 1][0]);
   const cutoff = new Date(lastDate);
   cutoff.setMonth(cutoff.getMonth() - months);
+  const cutoffIso = cutoff.toISOString().slice(0, 10);
+  const sliced = pairs.filter((p) => p[0] >= cutoffIso);
+  return sliced.length >= 2 ? sliced : pairs.slice(-2);
+}
+
+/**
+ * Comme sliceRealPriceChartByMonths, mais pour une fenetre en JOURS
+ * calendaires (utilisé pour "1 J" -- "setMonth" n'a pas de sens pour une
+ * fenetre d'un seul jour, d'où une fonction dédiée plutôt qu'un cas
+ * particulier dans sliceRealPriceChartByMonths). Même repli sur les 2
+ * derniers points si la fenêtre est trop étroite (ex. lundi vs vendredi
+ * précédent, un jour calendaire "1" ne retrouve ni samedi ni dimanche).
+ */
+function sliceRealPriceChartByDays(pairs, days) {
+  const lastDate = new Date(pairs[pairs.length - 1][0]);
+  const cutoff = new Date(lastDate);
+  cutoff.setDate(cutoff.getDate() - days);
   const cutoffIso = cutoff.toISOString().slice(0, 10);
   const sliced = pairs.filter((p) => p[0] >= cutoffIso);
   return sliced.length >= 2 ? sliced : pairs.slice(-2);
@@ -100,6 +118,7 @@ if (typeof module !== 'undefined' && module.exports) {
     REAL_PRICE_CHART_TIMEFRAMES,
     formatRealPriceChartMonthLabel,
     sliceRealPriceChartByMonths,
+    sliceRealPriceChartByDays,
     buildRealPriceChartSvgPaths,
     buildRealPriceChartGridlines,
     buildRealPriceChartScale,

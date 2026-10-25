@@ -68,6 +68,7 @@ jobs:
           SMTP_USER: ${{ secrets.SMTP_USER }}
           SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
           DAILY_SNAPSHOT: ${{ steps.daily_slot.outputs.is_daily }}
+          ANTHROPIC_API_KEY: ${{ secrets.CLAUDE_API_KEY }}
 
       - name: Calculer le score des autres commodités (argent, pétrole, gaz)
         # Chaque commodité est isolée par son propre "|| echo ::warning" :
@@ -91,6 +92,7 @@ jobs:
         env:
           FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
           DAILY_SNAPSHOT: ${{ steps.daily_slot.outputs.is_daily }}
+          ANTHROPIC_API_KEY: ${{ secrets.CLAUDE_API_KEY }}
 
       - name: Publier les données mises à jour sur le site
         run: |

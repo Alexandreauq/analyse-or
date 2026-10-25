@@ -172,12 +172,44 @@ def test_fetch_gdelt_treats_the_rate_limit_text_as_an_error_and_never_caches_it(
             raise ValueError("Please limit requests to one every 5 seconds")
 
     cache = {}
+    dodo = []
     resultat = data_sources.fetch_gdelt_articles(
         "q", datetime(2026, 10, 1, tzinfo=timezone.utc), 3600, "marche",
-        http_get=lambda *a, **k: _TexteBrut(), cache=cache)
+        http_get=lambda *a, **k: _TexteBrut(), cache=cache, sleep_fn=dodo.append)
 
     assert resultat["erreur"].startswith("actualites indisponibles (")
     assert cache == {}
+    # 2 tentatives (defaut) -> 1 reprise entre les deux, donc 1 appel a sleep_fn.
+    assert dodo == [5]
+
+
+def test_fetch_gdelt_retries_once_after_a_transient_refusal_then_succeeds():
+    """FIX (revue 2026-10-25) : actualites_marche echouait en production
+    des qu'une autre requete GDELT (gold_bot/ibkr_bot/l'Analyste/l'indices
+    rebuild, tous sur la meme IP VPS) tombait dans la fenetre de 5
+    secondes documentee par GDELT -- aucune reprise n'existait avant ce
+    correctif, la 1ere collision suffisait a faire remonter l'erreur
+    jusqu'a l'utilisateur."""
+    class _TexteBrut(_FakeResponse):
+        def json(self):
+            raise ValueError("Please limit requests to one every 5 seconds")
+
+    appels = []
+    dodo = []
+
+    def http_get_factice(*a, **k):
+        appels.append(1)
+        if len(appels) == 1:
+            return _TexteBrut()
+        return _FakeResponse(json_data={"articles": ["ok"]})
+
+    resultat = data_sources.fetch_gdelt_articles(
+        "q", datetime(2026, 10, 1, tzinfo=timezone.utc), 3600, "marche",
+        http_get=http_get_factice, cache={}, sleep_fn=dodo.append)
+
+    assert len(appels) == 2
+    assert dodo == [5]
+    assert resultat == {"articles": ["ok"]}
 
 
 def test_fetch_news_error_never_leaks_the_finnhub_token(monkeypatch):
@@ -187,7 +219,7 @@ def test_fetch_news_error_never_leaks_the_finnhub_token(monkeypatch):
         raise RuntimeError("HTTP 429 pour https://finnhub.io/api/v1/company-news?token=secret-finnhub")
 
     resultat = data_sources.fetch_finnhub_company_news(
-        "AAPL", "2026-10-01", "2026-10-03", http_get=fake_get, cache={})
+        "AAPL", "2026-10-01", "2026-10-03", http_get=fake_get, cache={}, sleep_fn=lambda s: None)
 
     assert "secret-finnhub" not in resultat["erreur"]
     assert resultat["erreur"] == "actualites indisponibles (RuntimeError)"

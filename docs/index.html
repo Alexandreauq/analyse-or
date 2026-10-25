@@ -3594,6 +3594,11 @@ async function loadScore(commodity) {
     const res = await fetch(file + '?t=' + Date.now());
     if (!res.ok) throw new Error(file + ' introuvable');
     const data = await res.json();
+    // Garde anti-course : si l'utilisateur a changé d'onglet pendant l'attente
+    // (ex. clic Argent puis immédiatement Pétrole), cette réponse correspond à
+    // un onglet qui n'est plus actif -- l'ignorer plutôt que d'écraser
+    // l'affichage de l'onglet désormais actif avec des données obsolètes.
+    if (commodity !== activeCommodity) return;
     render(data);
   } catch (e) {
     content.innerHTML = `<div class="empty">Données indisponibles pour l'instant.<br>${e.message}</div>`;
@@ -3671,8 +3676,11 @@ function render(data) {
 
   const t = data.technical || {};
   const unite = t.unite || '$ / oz';
-  const spotStr = t.spot ? `${t.spot.toLocaleString('fr-FR', {maximumFractionDigits:0})} ${unite}` : 'indisponible';
-  const ma200Str = t.ma200 ? `${t.ma200.toLocaleString('fr-FR', {maximumFractionDigits:0})} ${unite}` : 'indisponible';
+  // Décimales selon l'ordre de grandeur : or/pétrole (centaines/milliers)
+  // restent à 0 décimale, argent/gaz (dizaines/unités) ont besoin de 2
+  // décimales pour rester lisibles (sinon le gaz ~3 $/MMBtu s'affiche "3 $").
+  const spotStr = t.spot ? `${t.spot.toLocaleString('fr-FR', {maximumFractionDigits: t.spot < 100 ? 2 : 0})} ${unite}` : 'indisponible';
+  const ma200Str = t.ma200 ? `${t.ma200.toLocaleString('fr-FR', {maximumFractionDigits: t.ma200 < 100 ? 2 : 0})} ${unite}` : 'indisponible';
 
   const calendarHtml = (data.calendar || []).map(c => `
     <div class="cal-row">

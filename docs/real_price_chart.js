@@ -60,11 +60,48 @@ function buildRealPriceChartSvgPaths(values, width, height, pad) {
   return { line, area };
 }
 
+/**
+ * `count` niveaux de prix également espacés entre `min` et `max`
+ * inclus, du plus haut au plus bas (ordre d'affichage naturel pour un
+ * axe des prix : le plus haut en haut). `count` doit être >= 2.
+ */
+function buildRealPriceChartGridlines(min, max, count) {
+  const span = max - min;
+  const levels = [];
+  for (let i = 0; i < count; i++) {
+    levels.push(max - (span * i) / (count - 1));
+  }
+  return levels;
+}
+
+/**
+ * Mise à l'échelle réutilisable (séparée de buildRealPriceChartSvgPaths,
+ * qui construit directement des chemins SVG) : `x(i)` donne la position
+ * horizontale du i-ème point, `y(valeur)` la position verticale d'un
+ * prix donné — utilisé par le curseur interactif (index.html) pour
+ * repositionner ses propres éléments SVG sans reconstruire tout le
+ * graphique à chaque mouvement de souris.
+ */
+function buildRealPriceChartScale(values, width, height, pad) {
+  const min = Math.min(...values);
+  const max = Math.max(...values);
+  const span = (max - min) || 1;
+  const n = values.length;
+  return {
+    min,
+    max,
+    x: (i) => (n > 1 ? (i / (n - 1)) * width : 0),
+    y: (v) => pad + (1 - (v - min) / span) * (height - pad * 2),
+  };
+}
+
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
     REAL_PRICE_CHART_TIMEFRAMES,
     formatRealPriceChartMonthLabel,
     sliceRealPriceChartByMonths,
     buildRealPriceChartSvgPaths,
+    buildRealPriceChartGridlines,
+    buildRealPriceChartScale,
   };
 }

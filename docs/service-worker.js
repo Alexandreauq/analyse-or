@@ -1,18 +1,16 @@
 // Service worker minimal : met en cache la coquille de l'app pour qu'elle
 // s'ouvre instantanément, sans bloquer les mises à jour de score.json qui
 // doit toujours être rechargé depuis le réseau (données du jour).
-const CACHE_NAME = "analyse-or-shell-v92";
-// index.html charge chart_patterns.js/scalping.js/portfolio.js à la demande
-// (premier clic sur chaque onglet) — les précacher ici garantit qu'ils sont
-// disponibles hors-ligne dès la première ouverture de l'app, pas seulement
-// après une première visite en ligne de chaque onglet. company_quote_widget.js
-// est chargé en amont (dès index.html, pas à la demande) mais précaché ici
-// pour la même raison : disponible hors-ligne dès la première ouverture.
+const CACHE_NAME = "analyse-or-shell-v93";
+// index.html charge portfolio.js à la demande (premier clic sur l'onglet
+// Portefeuille) — le précacher ici garantit qu'il est disponible hors-ligne
+// dès la première ouverture de l'app, pas seulement après une première
+// visite en ligne de cet onglet. company_quote_widget.js est chargé en
+// amont (dès index.html, pas à la demande) mais précaché ici pour la même
+// raison : disponible hors-ligne dès la première ouverture.
 const SHELL_FILES = [
   "./index.html",
   "./manifest.json",
-  "./chart_patterns.js",
-  "./scalping.js",
   "./portfolio.js",
   "./company_quote_widget.js",
   "./answer_reveal.js",

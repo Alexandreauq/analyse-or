@@ -1571,7 +1571,16 @@
   /* Repli de graphique auto-hébergé (voir docs/real_price_chart.js,
      loadRealPriceChart) — remplace .index-price-fallback quand un
      historique réel existe pour le ticker (FTSE au 2026-10-25). */
+  .real-price-chart-header { display: flex; align-items: baseline; gap: 10px; padding: 14px 0 10px; }
+  .real-price-chart-price { font-family: 'Newsreader', serif; font-weight: 400; font-size: var(--text-2xl); }
+  .real-price-chart-change { font-size: var(--text-sm); font-weight: 600; }
   .real-price-chart-box { background: var(--panel); border-radius: 12px; padding: 16px 16px 10px; }
+  .real-price-chart-plot { display: flex; align-items: stretch; gap: 8px; }
+  .real-price-chart-yaxis {
+    flex: 0 0 auto; display: flex; flex-direction: column; justify-content: space-between;
+    font-size: var(--text-2xs); color: var(--text-faint); white-space: nowrap; padding: 2px 0;
+  }
+  .real-price-chart-plot svg { flex: 1 1 auto; min-width: 0; }
   .real-price-chart-range { display: flex; justify-content: space-between; font-size: var(--text-2xs); color: var(--text-faint); margin-top: 6px; }
   .real-price-chart-buttons { display: flex; gap: 6px; padding-top: 10px; }
   .real-price-chart-btn {
@@ -3561,22 +3570,45 @@ function renderRealPriceChartInto(container, company, pairs) {
   const sliced = sliceRealPriceChartByMonths(pairs, active.months);
   const values = sliced.map((p) => p[1]);
   const { line, area } = buildRealPriceChartSvgPaths(values, 360, 150, 4);
+  const min = Math.min(...values), max = Math.max(...values);
+
+  // Variation la plus récente (derniers points de la série COMPLETE, pas
+  // de la fenêtre affichée) — même donnée que .index-price-fallback,
+  // avec le sens de la variation en plus.
+  const lastPair = pairs[pairs.length - 1];
+  const prevPair = pairs[pairs.length - 2];
+  const diff = lastPair[1] - prevPair[1];
+  const pct = (diff / prevPair[1]) * 100;
+  const up = diff >= 0;
+  const diffFormatted = formatPriceForIndex(Math.abs(diff), company.index);
+  const changeText = `${up ? '+' : '−'}${diffFormatted} (${up ? '+' : '−'}${Math.abs(pct).toLocaleString('fr-FR', {maximumFractionDigits:2})} %)`;
+
   const buttonsHtml = REAL_PRICE_CHART_TIMEFRAMES.map((t) => {
     const isActive = t.key === timeframe;
     return `<button type="button" class="real-price-chart-btn${isActive ? ' active' : ''}" data-timeframe="${t.key}">${t.label}</button>`;
   }).join('');
   container.innerHTML = `
+    <div class="real-price-chart-header">
+      <div class="real-price-chart-price">${formatPriceForIndex(lastPair[1], company.index)}</div>
+      <div class="real-price-chart-change" style="color:${up ? 'var(--green-300)' : 'var(--rust-300)'}">${changeText}</div>
+    </div>
     <div class="real-price-chart-box">
-      <svg viewBox="0 0 360 150" width="100%" height="150" preserveAspectRatio="none" role="img" aria-label="Historique du cours de ${company.name}">
-        <defs>
-          <linearGradient id="real-price-chart-fill" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" style="stop-color:var(--accent);stop-opacity:0.35"></stop>
-            <stop offset="100%" style="stop-color:var(--accent);stop-opacity:0"></stop>
-          </linearGradient>
-        </defs>
-        <path d="${area}" fill="url(#real-price-chart-fill)"></path>
-        <path d="${line}" fill="none" style="stroke:var(--accent)" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"></path>
-      </svg>
+      <div class="real-price-chart-plot">
+        <div class="real-price-chart-yaxis">
+          <span>${formatPriceForIndex(max, company.index)}</span>
+          <span>${formatPriceForIndex(min, company.index)}</span>
+        </div>
+        <svg viewBox="0 0 360 150" width="100%" height="150" preserveAspectRatio="none" role="img" aria-label="Historique du cours de ${company.name}">
+          <defs>
+            <linearGradient id="real-price-chart-fill" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" style="stop-color:var(--accent);stop-opacity:0.35"></stop>
+              <stop offset="100%" style="stop-color:var(--accent);stop-opacity:0"></stop>
+            </linearGradient>
+          </defs>
+          <path d="${area}" fill="url(#real-price-chart-fill)"></path>
+          <path d="${line}" fill="none" style="stroke:var(--accent)" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"></path>
+        </svg>
+      </div>
       <div class="real-price-chart-range">
         <span>${formatRealPriceChartMonthLabel(sliced[0][0])}</span>
         <span>${formatRealPriceChartMonthLabel(sliced[sliced.length - 1][0])}</span>

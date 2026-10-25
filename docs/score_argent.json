@@ -1,0 +1,89 @@
+{
+  "date": "2026-10-25",
+  "commodity": "argent",
+  "label": "Argent",
+  "composite_score": -34.0,
+  "interpretation": "Défavorable — pas d'entrée même sur signal technique",
+  "cftc_percentile": 3.8461538461538463,
+  "factors": [
+    {
+      "name": "Taux réels US 10 ans",
+      "score": -1.800000000000006,
+      "weight": 0.3,
+      "raw_value": "2.64% (il y a ~45j : 2.55%)"
+    },
+    {
+      "name": "Dollar (DXY)",
+      "score": -10,
+      "weight": 0.2,
+      "raw_value": "101.81 (il y a 2 mois : 98.92)"
+    },
+    {
+      "name": "Positionnement CFTC",
+      "score": 9.23076923076923,
+      "weight": 0.15,
+      "raw_value": "4e percentile (3 ans) — position nette 19,795 contrats"
+    },
+    {
+      "name": "Ratio or/argent",
+      "score": -4.977876106194691,
+      "weight": 0.25,
+      "raw_value": "74.3 — 25e percentile (3 ans)"
+    },
+    {
+      "name": "Dynamique récente",
+      "score": -10.0,
+      "weight": 0.1,
+      "raw_value": "-24.7% vs MM200"
+    }
+  ],
+  "technical": {
+    "note": "Cours en-dessous de la MM200 (-24.7%) — tendance baissière",
+    "spot": 53.94900131225586,
+    "ma200": 71.64208992004394,
+    "unite": "$ / oz"
+  },
+  "calendar": [
+    {
+      "date": "27/10–28/10/2026",
+      "label": "Réunion FOMC",
+      "kind": "Fed"
+    },
+    {
+      "date": "29/10/2026",
+      "label": "PCE (dépenses de consommation des ménages)",
+      "kind": "Donnée"
+    },
+    {
+      "date": "29/10/2026",
+      "label": "Inscriptions chômage (hebdo)",
+      "kind": "Donnée"
+    },
+    {
+      "date": "29/10/2026",
+      "label": "PIB (GDP)",
+      "kind": "Donnée"
+    },
+    {
+      "date": "06/11/2026",
+      "label": "Emploi US (NFP + chômage)",
+      "kind": "Donnée"
+    },
+    {
+      "date": "10/11/2026",
+      "label": "CPI (Indice des prix à la consommation)",
+      "kind": "Donnée"
+    },
+    {
+      "date": "13/11/2026",
+      "label": "PPI (prix à la production)",
+      "kind": "Donnée"
+    },
+    {
+      "date": "17/11/2026",
+      "label": "Ventes au détail",
+      "kind": "Donnée"
+    }
+  ],
+  "alerts": []
+}

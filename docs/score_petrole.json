@@ -1,0 +1,89 @@
+{
+  "date": "2026-10-25",
+  "commodity": "petrole",
+  "label": "Pétrole (WTI)",
+  "composite_score": -0.5,
+  "interpretation": "Neutre — pas d'action",
+  "cftc_percentile": 13.461538461538462,
+  "factors": [
+    {
+      "name": "Dollar (DXY)",
+      "score": -10,
+      "weight": 0.26666666666666666,
+      "raw_value": "101.81 (il y a 2 mois : 98.92)"
+    },
+    {
+      "name": "Positionnement CFTC",
+      "score": 7.307692307692308,
+      "weight": 0.26666666666666666,
+      "raw_value": "13e percentile (3 ans) — position nette 36,187 contrats"
+    },
+    {
+      "name": "Spread WTI-Brent",
+      "score": -10,
+      "weight": 0.19999999999999998,
+      "raw_value": "+8.43 $/baril (il y a ~2 mois : +6.37 $/baril)"
+    },
+    {
+      "name": "Dynamique récente",
+      "score": 10.0,
+      "weight": 0.26666666666666666,
+      "raw_value": "+21.1% vs MM200"
+    },
+    {
+      "name": "Stocks EIA",
+      "score": 0.0,
+      "weight": 0.0,
+      "raw_value": "indisponible — nécessite une clé API EIA (gratuite sur eia.gov), pas encore configurée"
+    }
+  ],
+  "technical": {
+    "note": "Cours au-dessus de la MM200 (+21.1%) — tendance haussière",
+    "spot": 103.2699966430664,
+    "ma200": 85.28690002441407,
+    "unite": "$ / baril"
+  },
+  "calendar": [
+    {
+      "date": "27/10–28/10/2026",
+      "label": "Réunion FOMC",
+      "kind": "Fed"
+    },
+    {
+      "date": "29/10/2026",
+      "label": "PCE (dépenses de consommation des ménages)",
+      "kind": "Donnée"
+    },
+    {
+      "date": "29/10/2026",
+      "label": "Inscriptions chômage (hebdo)",
+      "kind": "Donnée"
+    },
+    {
+      "date": "29/10/2026",
+      "label": "PIB (GDP)",
+      "kind": "Donnée"
+    },
+    {
+      "date": "06/11/2026",
+      "label": "Emploi US (NFP + chômage)",
+      "kind": "Donnée"
+    },
+    {
+      "date": "10/11/2026",
+      "label": "CPI (Indice des prix à la consommation)",
+      "kind": "Donnée"
+    },
+    {
+      "date": "13/11/2026",
+      "label": "PPI (prix à la production)",
+      "kind": "Donnée"
+    },
+    {
+      "date": "17/11/2026",
+      "label": "Ventes au détail",
+      "kind": "Donnée"
+    }
+  ],
+  "alerts": []
+}

@@ -1,0 +1,89 @@
+{
+  "date": "2026-10-25",
+  "commodity": "gaz",
+  "label": "Gaz naturel",
+  "composite_score": -20.4,
+  "interpretation": "Défavorable — pas d'entrée même sur signal technique",
+  "cftc_percentile": 1.282051282051282,
+  "factors": [
+    {
+      "name": "Positionnement CFTC",
+      "score": 9.743589743589743,
+      "weight": 0.26666666666666666,
+      "raw_value": "1e percentile (3 ans) — position nette -157,409 contrats"
+    },
+    {
+      "name": "Saisonnalité (Henry Hub)",
+      "score": -8.058252427184467,
+      "weight": 0.3333333333333333,
+      "raw_value": "3.10 $/MMBtu (moyenne saisonnière du mois : 3.50 $/MMBtu)"
+    },
+    {
+      "name": "Dynamique récente",
+      "score": -2.336643376115513,
+      "weight": 0.26666666666666666,
+      "raw_value": "-1.2% vs MM200"
+    },
+    {
+      "name": "Dollar (DXY)",
+      "score": -10,
+      "weight": 0.13333333333333333,
+      "raw_value": "101.81 (il y a 2 mois : 98.92)"
+    },
+    {
+      "name": "Stocks EIA",
+      "score": 0.0,
+      "weight": 0.0,
+      "raw_value": "indisponible — nécessite une clé API EIA (gratuite sur eia.gov), pas encore configurée"
+    }
+  ],
+  "technical": {
+    "note": "Cours en-dessous de la MM200 (-1.2%) — tendance baissière",
+    "spot": 3.049999952316284,
+    "ma200": 3.0860550022125244,
+    "unite": "$ / MMBtu"
+  },
+  "calendar": [
+    {
+      "date": "27/10–28/10/2026",
+      "label": "Réunion FOMC",
+      "kind": "Fed"
+    },
+    {
+      "date": "29/10/2026",
+      "label": "PCE (dépenses de consommation des ménages)",
+      "kind": "Donnée"
+    },
+    {
+      "date": "29/10/2026",
+      "label": "Inscriptions chômage (hebdo)",
+      "kind": "Donnée"
+    },
+    {
+      "date": "29/10/2026",
+      "label": "PIB (GDP)",
+      "kind": "Donnée"
+    },
+    {
+      "date": "06/11/2026",
+      "label": "Emploi US (NFP + chômage)",
+      "kind": "Donnée"
+    },
+    {
+      "date": "10/11/2026",
+      "label": "CPI (Indice des prix à la consommation)",
+      "kind": "Donnée"
+    },
+    {
+      "date": "13/11/2026",
+      "label": "PPI (prix à la production)",
+      "kind": "Donnée"
+    },
+    {
+      "date": "17/11/2026",
+      "label": "Ventes au détail",
+      "kind": "Donnée"
+    }
+  ],
+  "alerts": []
+}

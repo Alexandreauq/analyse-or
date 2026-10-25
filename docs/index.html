@@ -205,7 +205,7 @@
     .home, #or, #indices, #portefeuille { border: 16px solid var(--bg); }
     /* Haut : sous la barre d'état / l'encoche ; bas : la barre d'onglets
        fixe (box-sizing:border-box rétrécit aussi la zone de scroll interne
-       des écrans en 100%/100svh comme #or.suivi-active ou #portefeuille). */
+       des écrans en 100%/100svh comme #portefeuille). */
     .home, #or, #indices, #portefeuille {
       padding-top: var(--safe-top); padding-bottom: var(--bottomnav-h);
     }
@@ -899,37 +899,6 @@
   }
   .tracking-banner { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; margin-bottom: 16px; font-size: 12px; color: var(--muted); flex-shrink: 0; }
 
-  /* Onglet Suivi : la liste des positions peut être longue — on l'empêche
-     de faire défiler toute la page (voir #or.suivi-active, toggle JS sur
-     les handlers d'onglet Or) en la capant au bas de la fenêtre avec son
-     propre scroll interne, même style de scrollbar que le carrousel
-     Portefeuille. */
-  #or.suivi-active { overflow-y: hidden; }
-  /* 100svh (small viewport height) plutôt que s'appuyer sur inset:0/bottom:0 :
-     sur iOS Safari la barre d'outils (recherche) rétractable fait que la
-     hauteur "réelle" varie ; svh correspond à la hauteur quand la barre est
-     affichée, donc le contenu s'arrête toujours au-dessus au lieu de passer
-     dessous. */
-  @media (max-width: 1023px) {
-    #or.suivi-active { height: 100svh; bottom: auto; }
-  }
-  #or.suivi-active .app { height: 100%; display: flex; flex-direction: column; }
-  #or.suivi-active header, #or.suivi-active .or-tabbar { flex-shrink: 0; }
-  #or.suivi-active #orSuiviView, #or.suivi-active #scalpTrackingPanel {
-    flex: 1; min-height: 0; display: flex; flex-direction: column; padding-bottom: 20px;
-  }
-  #or.suivi-active .tracking-rows {
-    flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; padding-right: 14px;
-    scrollbar-width: thin; scrollbar-color: var(--muted) transparent;
-  }
-  #or.suivi-active .tracking-rows::-webkit-scrollbar { width: 12px; }
-  #or.suivi-active .tracking-rows::-webkit-scrollbar-track { background: transparent; }
-  #or.suivi-active .tracking-rows::-webkit-scrollbar-thumb {
-    background: var(--muted); border-radius: var(--radius-pill);
-    border: 3px solid transparent; background-clip: padding-box;
-  }
-  #or.suivi-active .tracking-rows::-webkit-scrollbar-thumb:hover { background: var(--accent); }
-
   .company-layout { display: block; }
   .company-main { min-width: 0; }
   .company-side { margin-top: 24px; }
@@ -1386,15 +1355,14 @@
     .signal-cards { display: block; }
   }
 
-  /* #indices.suivi-signaux-active : page verrouillée (comme
-     #or.suivi-active) — .app prend toute la hauteur disponible, seul le
-     tableau (desktop) ou les cartes (mobile) défilent en interne avec leur
-     scrollbar stylisée, la fenêtre elle-même ne défile jamais. */
+  /* #indices.suivi-signaux-active : page verrouillée — .app prend toute la
+     hauteur disponible, seul le tableau (desktop) ou les cartes (mobile)
+     défilent en interne avec leur scrollbar stylisée, la fenêtre elle-même
+     ne défile jamais. */
   #indices.suivi-signaux-active { overflow-y: hidden; }
   #indices.suivi-signaux-active .app { height: 100%; display: flex; flex-direction: column; }
   /* #indicesContent (<main>) est entre .app et .signal-tracking-layout —
      sans cette règle, il n'est pas lui-même un enfant flexible de .app
-     (contrairement à #orSuiviView/#scalpTrackingPanel côté #or.suivi-active)
      et grandit à la taille de son contenu au lieu de se limiter à l'espace
      restant, ce qui pousse tout le reste hors de vue derrière
      overflow-y:hidden — aucun scroll interne ne peut alors se déclencher. */
@@ -1824,39 +1792,6 @@
 
   <div class="or-tabbar" role="tablist">
     <button class="or-tab-btn" id="orTabLongTerme" role="tab" aria-selected="true" type="button">Long terme</button>
-    <button class="or-tab-btn" id="orTabScalping" role="tab" aria-selected="false" type="button">Scalping</button>
-    <button class="or-tab-btn" id="orTabSuivi" role="tab" aria-selected="false" type="button">Suivi</button>
-  </div>
-
-  <div id="orScalpingView" hidden>
-    <div style="background:var(--bg-2);border:1px solid var(--border);border-radius:var(--radius-md);padding:12px 16px;margin-bottom:16px;color:var(--muted);font-size:var(--text-sm);">
-      <strong style="color:var(--text);">Bot en pause.</strong> Aucune variante de
-      stratégie agressive n'a montré d'avantage statistique fiable lors du
-      backtest de validation — le trading automatique est arrêté depuis le
-      5 octobre 2026. Ce graphique et les signaux ci-dessous restent affichés
-      à titre d'observation, mais aucun ordre n'est envoyé.
-    </div>
-    <div class="scalp-panel">
-      <div class="scalp-panel-head">
-        <h2>Graphique temps réel</h2>
-        <button class="scalp-expand-btn" id="scalpExpandBtn" type="button">Agrandir</button>
-      </div>
-      <div class="scalp-chart-box" id="scalpChartBox">
-        <div id="tv-scalping-chart" style="height:100%;"></div>
-      </div>
-      <p class="scalp-note">Or spot (OANDA:XAUUSD), bougies 1 minute — widget
-        TradingView, outils de dessin et indicateurs disponibles. Ce
-        graphique n'affecte pas le score macro de l'onglet Long terme.</p>
-    </div>
-    <div class="scalp-signal-panel" id="scalpSignalPanel">
-      <div class="empty">Chargement…</div>
-    </div>
-  </div>
-
-  <div id="orSuiviView" hidden>
-    <div class="scalp-signal-panel" id="scalpTrackingPanel">
-      <div class="empty">Chargement…</div>
-    </div>
   </div>
 
   <main id="content">
@@ -1961,12 +1896,11 @@
   </div>
 </div>
 
-<!-- Chargé en amont (pas en différé comme scalping.js/portfolio.js/
-     chart_patterns.js) : resolveCompanyTvSymbol est nécessaire dès la
-     première fiche entreprise consultée, un chemin courant, pas une
-     fonctionnalité annexe — et le fichier est minuscule (tables de
-     correspondance + une fonction pure), contrairement à ces trois autres
-     modules qui portent un vrai moteur logique. -->
+<!-- Chargé en amont (pas en différé comme portfolio.js) : resolveCompanyTvSymbol
+     est nécessaire dès la première fiche entreprise consultée, un chemin
+     courant, pas une fonctionnalité annexe — et le fichier est minuscule
+     (tables de correspondance + une fonction pure), contrairement à ce
+     module qui porte un vrai moteur logique. -->
 <script src="company_quote_widget.js"></script>
 <!-- Repli de graphique auto-hébergé pour les entreprises sans widget
      TradingView gratuit (FTSE) -- même raison de chargement anticipé que
@@ -2019,72 +1953,12 @@ function isLightTheme() {
 }
 
 let scoreLoaded = false;
-let scalpChartLoaded = false;
-
-function loadScalpChart() {
-  // Chargé une seule fois, à la demande (pas au chargement de la page) :
-  // évite d'initialiser le widget TradingView pendant que l'onglet Scalping
-  // est encore `hidden` (dimensions nulles) et évite de charger le script
-  // externe pour un visiteur qui ne visite jamais cet onglet.
-  if (scalpChartLoaded) return;
-  scalpChartLoaded = true;
-  const script = document.createElement('script');
-  script.src = 'https://s3.tradingview.com/tv.js';
-  script.onload = () => {
-    new TradingView.widget({
-      autosize: true,
-      symbol: 'OANDA:XAUUSD',
-      interval: '1',
-      timezone: 'Etc/UTC',
-      theme: isLightTheme() ? 'light' : 'dark',
-      style: '1',
-      locale: 'fr',
-      toolbar_bg: isLightTheme() ? '#f3e4c2' : '#1e2740',
-      enable_publishing: false,
-      allow_symbol_change: false,
-      withdateranges: true,
-      container_id: 'tv-scalping-chart',
-    });
-  };
-  document.body.appendChild(script);
-}
-
-const TWELVE_DATA_API_KEY = '2983c5231e5c459fafb4376e4ccf183f';
-
-let scalpingJsLoaded = false;
-let scalpingPollTimer = null;
-let scalpRefreshInFlight = false;
-
-function loadScalpingModule() {
-  // Charge docs/chart_patterns.js puis docs/scalping.js à la demande
-  // (premier clic sur l'onglet Scalping), même logique paresseuse que
-  // loadScalpChart/loadIndices. chart_patterns.js en premier (ordre de
-  // dépendance conceptuelle — computeSignal, dans scalping.js, appelle
-  // detectChartPatterns) ; l'ordre d'exécution n'a pas d'importance
-  // stricte ici (aucune des deux fonctions n'est appelée avant que les
-  // deux scripts aient fini de charger), mais garder cet ordre de
-  // lecture évite toute confusion.
-  return new Promise((resolve, reject) => {
-    if (scalpingJsLoaded) { resolve(); return; }
-    const chartPatternsScript = document.createElement('script');
-    chartPatternsScript.src = 'chart_patterns.js';
-    chartPatternsScript.onload = () => {
-      const scalpingScript = document.createElement('script');
-      scalpingScript.src = 'scalping.js';
-      scalpingScript.onload = () => { scalpingJsLoaded = true; resolve(); };
-      scalpingScript.onerror = () => reject(new Error('scalping.js n\'a pas pu être chargé'));
-      document.body.appendChild(scalpingScript);
-    };
-    chartPatternsScript.onerror = () => reject(new Error('chart_patterns.js n\'a pas pu être chargé'));
-    document.body.appendChild(chartPatternsScript);
-  });
-}
 
 let portfolioJsLoaded = false;
 
 function loadPortfolioModule() {
   // Charge docs/portfolio.js à la demande (premier passage sur l'onglet
-  // Portefeuille), même logique paresseuse que loadScalpingModule.
+  // Portefeuille), chargement paresseux au premier besoin.
   return new Promise((resolve, reject) => {
     if (portfolioJsLoaded) { resolve(); return; }
     const script = document.createElement('script');
@@ -3148,7 +3022,7 @@ let botTvChartLoaded = false;
 
 function loadBotTvChart() {
   // Widget TradingView en lecture seule (cours réel, plus lisible que
-  // notre graphique maison) — mêmes conventions que loadScalpChart :
+  // notre graphique maison) — même principe de chargement paresseux :
   // chargé une seule fois, à la demande, jamais avant que l'onglet ne
   // soit visible. Ne peut pas superposer les positions/décisions du
   // bot (iframe cross-origin, hors de portée de notre JS) — celles-ci
@@ -3413,124 +3287,6 @@ function wirePortfolioPositionActions(companiesByTicker) {
       });
     });
   });
-}
-
-function renderScalpSignal(signal) {
-  const panel = document.getElementById('scalpSignalPanel');
-  const statusLabel = { achat: 'Achat', vente: 'Vente', neutre: 'Neutre — en attente de confluence' }[signal.status];
-  const priceRows = signal.status === 'neutre' ? '' : `
-    <div class="price-row"><span class="price-label">Entrée</span><span class="price-value">${formatPriceUsd(signal.entry)}</span></div>
-    <div class="price-row"><span class="price-label">Stop-loss</span><span class="price-value" style="color:var(--rust)">${formatPriceUsd(signal.stopLoss)}</span></div>
-    <div class="price-row"><span class="price-label">TP</span><span class="price-value" style="color:var(--gold)">${formatPriceUsd(signal.takeProfit)}</span></div>
-  `;
-  panel.innerHTML = `
-    <span class="scalp-signal-status ${signal.status}">${statusLabel}</span>
-    <div class="price-panel">
-      <div class="price-row"><span class="price-label">Cours actuel</span><span class="price-value">${formatPriceUsd(signal.price)}</span></div>
-      ${priceRows}
-      <p class="price-disclaimer">Signal probabiliste basé sur tendance/S-R/indicateurs/chandeliers sur bougies 1min — pas un conseil d'investissement.</p>
-    </div>
-  `;
-}
-
-const SCALP_STALE_THRESHOLD_MS = 5 * 60 * 1000; // 5 minutes
-
-async function refreshScalpSignal() {
-  if (scalpRefreshInFlight) return;
-  scalpRefreshInFlight = true;
-  const panel = document.getElementById('scalpSignalPanel');
-  try {
-    const candles = await fetchGoldCandles(TWELVE_DATA_API_KEY);
-    const lastCandleTime = new Date(candles[candles.length - 1].time.replace(' ', 'T') + 'Z');
-    const ageMs = Date.now() - lastCandleTime.getTime();
-    if (!Number.isFinite(ageMs) || ageMs > SCALP_STALE_THRESHOLD_MS) {
-      // Marché fermé (week-end) ou API en retard — le cours de l'or spot
-      // (forex) est fermé du vendredi soir au dimanche soir UTC. Plutôt
-      // que d'afficher un signal calculé sur une donnée périmée comme
-      // s'il était en direct, on le dit explicitement (cf. spec, section
-      // "Risques connus").
-      panel.innerHTML = `<div class="empty">Dernière donnée disponible : il y a ${Math.round(ageMs / 60000)} min — marché probablement fermé (week-end) ou API en retard. Pas de signal affiché sur une donnée aussi ancienne.</div>`;
-      return;
-    }
-    const signal = computeSignal(candles);
-    renderScalpSignal(signal);
-  } catch (e) {
-    panel.innerHTML = `<div class="empty">Scalping indisponible pour l'instant.<br>${e.message}</div>`;
-  } finally {
-    scalpRefreshInFlight = false;
-  }
-}
-
-function startScalpingPolling() {
-  refreshScalpSignal();
-  if (scalpingPollTimer) return;
-  scalpingPollTimer = setInterval(() => {
-    if (document.visibilityState === 'visible') refreshScalpSignal();
-  }, 60000);
-}
-
-function stopScalpingPolling() {
-  if (scalpingPollTimer) { clearInterval(scalpingPollTimer); scalpingPollTimer = null; }
-}
-
-let scalpTrackingLoaded = false;
-
-async function loadScalpTracking() {
-  const panel = document.getElementById('scalpTrackingPanel');
-  try {
-    const res = await fetch(`scalping_tracking.json?t=${Date.now()}`);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
-    scalpTrackingLoaded = true;
-    renderScalpTracking(data);
-  } catch (e) {
-    panel.innerHTML = `<div class="empty">Suivi indisponible pour l'instant.<br>${e.message}</div>`;
-  }
-}
-
-const SCALP_CLOSE_REASON_LABELS = {
-  tp_hit: 'TP touché',
-  sl_hit: 'SL touché',
-  max_duration: 'Durée max (2h)',
-  trial_end: "Fin d'essai",
-};
-
-function renderScalpTracking(data) {
-  const panel = document.getElementById('scalpTrackingPanel');
-  const closed = data.positions.filter(p => p.status === 'closed');
-  const wins = closed.filter(p => p.return_usd > 0).length;
-  const winRate = closed.length ? (wins / closed.length * 100) : null;
-  const avgPct = closed.length ? (closed.reduce((s, p) => s + p.return_pct, 0) / closed.length) : null;
-  const totalUsd = closed.reduce((s, p) => s + p.return_usd, 0);
-
-  const banner = data.trial_ended
-    ? `<div class="tracking-banner">Essai terminé.</div>`
-    : (data.trial_start
-        ? `<div class="tracking-banner">Essai en cours depuis le ${new Date(data.trial_start).toLocaleString('fr-FR')}.</div>`
-        : `<div class="tracking-banner">Essai pas encore démarré.</div>`);
-
-  const summary = `
-    <div class="tracking-summary">
-      <div class="tracking-stat"><div class="tracking-stat-value">${closed.length}</div><div class="tracking-stat-label">Positions clôturées</div></div>
-      <div class="tracking-stat"><div class="tracking-stat-value">${winRate != null ? winRate.toFixed(0) + '%' : '—'}</div><div class="tracking-stat-label">Taux de réussite</div></div>
-      <div class="tracking-stat"><div class="tracking-stat-value">${avgPct != null ? formatPctPrecise(avgPct) : '—'}</div><div class="tracking-stat-label">Rendement moyen</div></div>
-      <div class="tracking-stat"><div class="tracking-stat-value">${formatPriceUsd(totalUsd)}</div><div class="tracking-stat-label">Cumulé</div></div>
-    </div>
-  `;
-
-  const rows = data.positions.slice().reverse().map(p => {
-    const label = p.status === 'open' ? 'En cours' : (SCALP_CLOSE_REASON_LABELS[p.close_reason] || p.close_reason);
-    const resultText = p.status === 'open' ? '—' : `${formatPriceUsd(p.return_usd)} (${formatPctPrecise(p.return_pct)})`;
-    const signClass = p.status === 'open' ? 'open' : (p.return_usd > 0 ? 'positive' : (p.return_usd < 0 ? 'negative' : ''));
-    return `<div class="tracking-row ${signClass}">
-      <span class="tracking-row-order">${p.direction === 'achat' ? 'Achat' : 'Vente'} — ${new Date(p.entry_time).toLocaleString('fr-FR')}</span>
-      <span class="tracking-row-reason">${label}</span>
-      <span class="tracking-row-value">${resultText}</span>
-    </div>`;
-  }).join('');
-
-  const rowsHtml = rows || '<div class="empty">Aucune position pour l\'instant.</div>';
-  panel.innerHTML = banner + summary + `<div class="tracking-rows">${rowsHtml}</div>`;
 }
 
 function loadSideQuoteWidget(tvSymbol) {
@@ -6432,15 +6188,9 @@ function renderRoute(animate) {
     if (id === route.screen) showPane(id, animate);
     else hidePane(id, animate);
   });
-  if (route.screen !== 'or') {
-    stopScalpingPolling();
-  }
   if (route.screen === 'or' && !scoreLoaded) {
     scoreLoaded = true;
     loadScore();
-  }
-  if (route.screen === 'or' && scalpingJsLoaded && !document.getElementById('orScalpingView').hidden) {
-    startScalpingPolling();
   }
   if (route.screen === 'indices') {
     loadIndices(route.ticker, route.view, route.tickers);
@@ -6488,37 +6238,7 @@ function showTabView(el) {
 
 document.getElementById('orTabLongTerme').addEventListener('click', () => {
   document.getElementById('orTabLongTerme').setAttribute('aria-selected', 'true');
-  document.getElementById('orTabScalping').setAttribute('aria-selected', 'false');
-  document.getElementById('orTabSuivi').setAttribute('aria-selected', 'false');
-  document.getElementById('orScalpingView').hidden = true;
-  document.getElementById('orSuiviView').hidden = true;
-  document.getElementById('or').classList.remove('suivi-active');
   showTabView(document.getElementById('content'));
-  stopScalpingPolling();
-});
-document.getElementById('orTabScalping').addEventListener('click', () => {
-  document.getElementById('orTabScalping').setAttribute('aria-selected', 'true');
-  document.getElementById('orTabLongTerme').setAttribute('aria-selected', 'false');
-  document.getElementById('orTabSuivi').setAttribute('aria-selected', 'false');
-  document.getElementById('content').hidden = true;
-  document.getElementById('orSuiviView').hidden = true;
-  document.getElementById('or').classList.remove('suivi-active');
-  showTabView(document.getElementById('orScalpingView'));
-  loadScalpChart();
-  loadScalpingModule().then(startScalpingPolling).catch(e => {
-    document.getElementById('scalpSignalPanel').innerHTML = `<div class="empty">${e.message}</div>`;
-  });
-});
-document.getElementById('orTabSuivi').addEventListener('click', () => {
-  document.getElementById('orTabSuivi').setAttribute('aria-selected', 'true');
-  document.getElementById('orTabLongTerme').setAttribute('aria-selected', 'false');
-  document.getElementById('orTabScalping').setAttribute('aria-selected', 'false');
-  document.getElementById('content').hidden = true;
-  document.getElementById('orScalpingView').hidden = true;
-  document.getElementById('or').classList.add('suivi-active');
-  showTabView(document.getElementById('orSuiviView'));
-  stopScalpingPolling();
-  loadScalpTracking();
 });
 
 document.getElementById('portefeuilleTabActions').addEventListener('click', () => {
@@ -6577,12 +6297,6 @@ renderRoute(false);
 // (window.AssistantIA, défini par assistant_bubble.js, chargé en différé).
 document.getElementById('bottomNavIa').addEventListener('click', () => {
   if (window.AssistantIA) window.AssistantIA.toggle();
-});
-
-document.getElementById('scalpExpandBtn').addEventListener('click', (e) => {
-  const box = document.getElementById('scalpChartBox');
-  const expanded = box.classList.toggle('expanded');
-  e.currentTarget.textContent = expanded ? 'Réduire' : 'Agrandir';
 });
 
 // Bascule jour/nuit : persistée (localStorage), un bouton dans la barre

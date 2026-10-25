@@ -2,21 +2,35 @@
 // Résolution du symbole TradingView pour le mini-widget "Cours en direct"
 // d'une fiche entreprise (voir loadSideQuoteWidget dans index.html).
 //
-// NO_RELIABLE_COMPANY_TV_DATA (Hang Seng, Nikkei 225) : constaté en
+// NO_RELIABLE_COMPANY_TV_DATA (Hang Seng, Nikkei 225, FTSE) : constaté en
 // production le 2026-09-17 — le widget gratuit TradingView affiche "Ce
 // symbole est uniquement disponible sur TradingView" pour TOUTES les
-// entreprises de ces deux places, pas seulement certaines (confirmé sur
+// entreprises de ces places, pas seulement certaines (confirmé sur
 // NetEase/9999.HK, puis généralisé après confirmation utilisateur sur une
 // entreprise japonaise). Même limitation de licence de données déjà
 // rencontrée et corrigée au niveau de l'INDICE lui-même (voir
 // INDEX_TV_SYMBOL_BY_KEY dans index.html, qui bascule Nikkei/Hang Seng sur
 // un CFD Vantage) — mais un CFD d'indice n'a pas d'équivalent par action
 // individuelle chez Vantage, donc pas de symbole de repli possible ici :
-// resolveCompanyTvSymbol renvoie null pour ces deux indices, et l'appelant
+// resolveCompanyTvSymbol renvoie null pour ces indices, et l'appelant
 // doit afficher un repli (cours réel déjà disponible localement via
 // company.current_price, indépendant de TradingView) plutôt que de tenter
 // un widget qui échouera systématiquement.
-const NO_RELIABLE_COMPANY_TV_DATA = new Set(['HANGSENG', 'NIKKEI225']);
+//
+// FTSE ajouté le 2026-10-25 : confirmé par l'utilisateur sur Admiral
+// Group (ADM.L) puis généralisé après confirmation que TOUTES les
+// entreprises du FTSE sont concernées (pas une collision avec le ticker
+// NYSE "ADM" d'Archer-Daniels-Midland -- vérifié directement sur
+// tradingview.com que "LSE:ADM" résout bien vers Admiral Group, donc le
+// symbole lui-même n'est pas ambigu ; c'est la donnée LSE par action qui
+// n'est simplement pas couverte par l'offre gratuite de widget, même
+// limitation que Hang Seng/Nikkei 225). La table d'override EPIC
+// ci-dessous (TV_TICKER_OVERRIDE_BY_YAHOO_TICKER) devient de fait
+// inatteignable pour le FTSE via cette fonction -- conservée telle
+// quelle (données toujours correctes si cette limitation est un jour
+// levée, ou si un autre indice mélangeant les places l'atteint via le
+// repli par suffixe Yahoo ci-dessous).
+const NO_RELIABLE_COMPANY_TV_DATA = new Set(['HANGSENG', 'NIKKEI225', 'FTSE']);
 
 // Préfixe d'échange TradingView par indice — dérivé du suffixe Yahoo
 // Finance pour CAC40 (.PA → Euronext Paris) et DAX (.DE → Xetra), vérifié

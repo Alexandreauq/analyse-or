@@ -3750,6 +3750,13 @@ function render(data) {
   const spotStr = t.spot ? `${t.spot.toLocaleString('fr-FR', {maximumFractionDigits: t.spot < 100 ? 2 : 0})} ${unite}` : 'indisponible';
   const ma200Str = t.ma200 ? `${t.ma200.toLocaleString('fr-FR', {maximumFractionDigits: t.ma200 < 100 ? 2 : 0})} ${unite}` : 'indisponible';
 
+  const newsHtml = (data.news || []).map(n => `
+    <div class="news-item">
+      <a class="news-title" href="${n.link}" target="_blank" rel="noopener">${n.title}</a>
+      <div class="news-meta">${[n.source, n.date].filter(Boolean).join(' · ')}</div>
+      ${n.summary ? `<p class="news-summary">${n.summary}</p>` : ''}
+    </div>`).join('');
+
   const calendarHtml = (data.calendar || []).map(c => `
     <div class="cal-row">
       <div class="cal-left">
@@ -3783,6 +3790,9 @@ function render(data) {
       </button>
       <button class="toggle-btn" id="toggleDetail" type="button" aria-expanded="false">
         Détail du calcul <span class="chevron">▾</span>
+      </button>
+      <button class="toggle-btn" id="toggleActus" type="button" aria-expanded="false">
+        Actualités <span class="chevron">▾</span>
       </button>
     </div>
 
@@ -3818,12 +3828,19 @@ function render(data) {
       </div>
       ${factorsHtml}
     </div>
+
+    <div class="section-wrap" id="actusWrap">
+      <h2>Actualités</h2>
+      <div class="ai-analysis">${data.analysis_html || '<p>Analyse non disponible pour le moment.</p>'}</div>
+      ${newsHtml || '<p class="hero-sub">Aucune actualité récente.</p>'}
+    </div>
     </div>
   `;
 
   wireAccordionGroup([
     ['toggleActu', 'actuWrap'],
     ['toggleDetail', 'detailWrap'],
+    ['toggleActus', 'actusWrap'],
   ], (key, wrap) => {
     if (wrap.id === 'detailWrap') animateFactorBars();
   });

@@ -1568,6 +1568,19 @@
   }
   .index-price-fallback-empty { color: var(--muted); font-size: var(--text-sm); padding: 10px 0; margin: 0; }
 
+  /* Repli de graphique auto-hébergé (voir docs/real_price_chart.js,
+     loadRealPriceChart) — remplace .index-price-fallback quand un
+     historique réel existe pour le ticker (FTSE au 2026-10-25). */
+  .real-price-chart-box { background: var(--panel); border-radius: 12px; padding: 16px 16px 10px; }
+  .real-price-chart-range { display: flex; justify-content: space-between; font-size: var(--text-2xs); color: var(--text-faint); margin-top: 6px; }
+  .real-price-chart-buttons { display: flex; gap: 6px; padding-top: 10px; }
+  .real-price-chart-btn {
+    flex: 1; padding: 6px 0; border-radius: 8px; font-size: var(--text-2xs); font-weight: 600;
+    cursor: pointer; border: 1px solid var(--border); background: transparent; color: var(--muted);
+    font-family: inherit;
+  }
+  .real-price-chart-btn.active { border-color: var(--accent); background: var(--accent); color: var(--bg-0); }
+
   .index-card-body {
     padding: 0 18px; max-height: 0; overflow: hidden; opacity: 0;
     border-top: 1px solid transparent;
@@ -1915,6 +1928,10 @@
      correspondance + une fonction pure), contrairement à ces trois autres
      modules qui portent un vrai moteur logique. -->
 <script src="company_quote_widget.js"></script>
+<!-- Repli de graphique auto-hébergé pour les entreprises sans widget
+     TradingView gratuit (FTSE) -- même raison de chargement anticipé que
+     company_quote_widget.js juste au-dessus. -->
+<script src="real_price_chart.js"></script>
 <!-- Accueil + agent IA : rédaction mot par mot, infos du jour, textes de
      guidage (logique pure, testée sous Node — voir docs/*.test.js). -->
 <script src="answer_reveal.js"></script>
@@ -3521,6 +3538,79 @@ function loadSideQuoteWidget(tvSymbol) {
     dateRanges: ['1d|1', '1m|30', '3m|60', '12m|1D', '60m|1W', 'all|1M'],
   });
   container.appendChild(script);
+}
+
+let realPriceChartTimeframe = '1a';
+
+async function ensurePriceHistoryLoaded() {
+  // Même fichier et même variable globale que l'onglet Portefeuille
+  // (loadPortfolioScreen) — si l'utilisateur a déjà visité cet onglet,
+  // réutilise le cache au lieu de refetcher ~plusieurs Mo une seconde fois.
+  if (priceHistoryData !== null) return;
+  try {
+    const res = await fetch('price_history.json?t=' + Date.now());
+    priceHistoryData = res.ok ? await res.json() : [];
+  } catch (e) {
+    priceHistoryData = [];
+  }
+}
+
+function renderRealPriceChartInto(container, company, pairs) {
+  const timeframe = realPriceChartTimeframe;
+  const active = REAL_PRICE_CHART_TIMEFRAMES.find((t) => t.key === timeframe) || REAL_PRICE_CHART_TIMEFRAMES[2];
+  const sliced = sliceRealPriceChartByMonths(pairs, active.months);
+  const values = sliced.map((p) => p[1]);
+  const { line, area } = buildRealPriceChartSvgPaths(values, 360, 150, 4);
+  const buttonsHtml = REAL_PRICE_CHART_TIMEFRAMES.map((t) => {
+    const isActive = t.key === timeframe;
+    return `<button type="button" class="real-price-chart-btn${isActive ? ' active' : ''}" data-timeframe="${t.key}">${t.label}</button>`;
+  }).join('');
+  container.innerHTML = `
+    <div class="real-price-chart-box">
+      <svg viewBox="0 0 360 150" width="100%" height="150" preserveAspectRatio="none" role="img" aria-label="Historique du cours de ${company.name}">
+        <defs>
+          <linearGradient id="real-price-chart-fill" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" style="stop-color:var(--accent);stop-opacity:0.35"></stop>
+            <stop offset="100%" style="stop-color:var(--accent);stop-opacity:0"></stop>
+          </linearGradient>
+        </defs>
+        <path d="${area}" fill="url(#real-price-chart-fill)"></path>
+        <path d="${line}" fill="none" style="stroke:var(--accent)" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"></path>
+      </svg>
+      <div class="real-price-chart-range">
+        <span>${formatRealPriceChartMonthLabel(sliced[0][0])}</span>
+        <span>${formatRealPriceChartMonthLabel(sliced[sliced.length - 1][0])}</span>
+      </div>
+      <div class="real-price-chart-buttons">${buttonsHtml}</div>
+    </div>
+  `;
+  container.querySelectorAll('.real-price-chart-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      realPriceChartTimeframe = btn.dataset.timeframe;
+      renderRealPriceChartInto(container, company, pairs);
+    });
+  });
+}
+
+async function loadRealPriceChart(company) {
+  // Repli auto-hébergé (données réelles déjà accumulées par le site, voir
+  // docs/real_price_chart.js) quand aucun widget TradingView gratuit n'est
+  // disponible pour cette place (FTSE au 2026-10-25) — maquette validée
+  // par l'utilisateur avant implémentation, mêmes fonctions.
+  await ensurePriceHistoryLoaded();
+  const container = document.getElementById('real-price-chart');
+  if (!container) return; // l'utilisateur a changé de fiche entre-temps
+  const pairs = priceHistoryData
+    .filter((e) => e.ticker === company.ticker)
+    .map((e) => [e.date, e.price])
+    .sort((a, b) => (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0));
+  if (pairs.length < 2) return; // pas assez d'historique, garde le repli statique du template
+  realPriceChartTimeframe = '1a';
+  renderRealPriceChartInto(container, company, pairs);
+  const note = document.getElementById('real-price-chart-note');
+  if (note) {
+    note.textContent = 'Donnée réelle (historique interne du site, pas un flux TradingView) — aucun widget temps réel disponible pour cette place sur l\'offre gratuite TradingView.';
+  }
 }
 
 // Symbole TradingView par indice — INDEX_TV_SYMBOL_BY_KEY, pas une seule
@@ -5747,14 +5837,15 @@ function renderCompanyDetail(company) {
         </div>
         <p class="scalp-note">Temps réel via TradingView (${company.ticker}).</p>
         ` : `
-        <div class="index-price-fallback">${formatPriceForIndex(company.current_price, company.index)}</div>
-        <p class="scalp-note">Cours au dernier calcul du score (${company.ticker}) — pas de widget temps réel disponible pour cette place sur l'offre gratuite TradingView.</p>
+        <div id="real-price-chart"><div class="index-price-fallback">${formatPriceForIndex(company.current_price, company.index)}</div></div>
+        <p class="scalp-note" id="real-price-chart-note">Cours au dernier calcul du score (${company.ticker}) — pas de widget temps réel disponible pour cette place sur l'offre gratuite TradingView.</p>
         `}
       </div>
     </div>
   `;
 
   if (tvSymbol) loadSideQuoteWidget(tvSymbol);
+  else loadRealPriceChart(company);
 
   // Le marqueur part du centre (position de repos posée dans le template)
   // et glisse vers sa vraie position au premier rendu, plutôt que d'apparaître statique.

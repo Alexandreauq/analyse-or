@@ -14,7 +14,7 @@
       "name": "Dollar (DXY)",
       "score": -10,
       "weight": 0.15,
-      "raw_value": "101.87 (il y a 2 mois : 99.17)"
+      "raw_value": "101.88 (il y a 2 mois : 99.17)"
     },
     {
       "name": "Anticipations d'inflation",
@@ -49,8 +49,8 @@
   ],
   "technical": {
     "note": "Cours en-dessous de la MM200 (-11.0%) — tendance baissière",
-    "spot": 4030.10009765625,
-    "ma200": 4530.745499267578
+    "spot": 4033.10009765625,
+    "ma200": 4530.760499267578
   },
   "calendar": [
     {
@@ -113,6 +113,15 @@
       "importance": "mineure"
     },
     {
+      "title": "Cours de l’or en Inde aujourd’hui : l’or progresse, selon les données de FXStreet - www.tmgm.com",
+      "date": "2026-10-26",
+      "link": "https://news.google.com/rss/articles/CBMixAFBVV95cUxNRUNxQ1MyWFZvcGpwaGhpQTdzTVVRQ1FGTFFjYkZXaXNoZXZzeUdVeDdFQ0xZcGcwX293aHN5VWxqZm9fWjk3MWpwcjdtLV9TYWdxLVdMYmJxc1dHZm56Zk5tM09yTFM0ODh1S2lpZVVMaHZXWU5BMW1fUWRsWjliMUlVYVVPZkpRZ3NGWWp6N2E5TlZFLTV5bjlkTFdMenlyYjV2U2lMVGVvMldSQUxXaDBqTTlOWXYwelp6bnI1V3NNb3Z4?oc=5",
+      "source": "www.tmgm.com",
+      "summary": "Cet article suggère que le prix de l'or connaîtrait une phase de hausse sur le marché indien selon les données de FXStreet.",
+      "sentiment": 1,
+      "importance": "mineure"
+    },
+    {
       "title": "Or vs argent : quelles perspectives pour 2027 ? - Le Comptoir National de l'Or",
       "date": "2026-10-21",
       "link": "https://news.google.com/rss/articles/CBMihwFBVV95cUxOd1ZnSXdQV2lfWGRPMGJveWZBLU15aldGZEs3R0VoTU94UVlFLVdCd294eFljTmczSHA0QktyZ2FhLUxEeWZwaXgyclNmRzRBVkJ4czFFZVZ2dmRlS0VmeXg1anFMVXI1cGNzQjh6R241YUhickl4aEowbWFEbWM2TjVQQXhXMHfSAYwBQVVfeXFMT2dPd0VjdHVkTGVscXprUFU4RWFIdHVOaTdvYzFHdXh5UFZsQnpxc2Q4emZkOWVXUDc5RWJPUGdzQXBsMkx3RURjT0laQUZCMnM0R2NUQ2VmdjVmNzI4OGNSRkpBS3h6a2x2THBITVhlMDdPelJyRUxMMnhMSUxCcHdpekxLTUdGWnJWNWw?oc=5",
@@ -131,15 +140,6 @@
       "importance": "notable"
     },
     {
-      "title": "Cours de l'or aujourd'hui (26 octobre) : Les cours mondiaux de l'or sont inférieurs aux seuils de sécurité. - Vietnam.vn",
-      "date": "2026-10-26",
-      "link": "https://news.google.com/rss/articles/CBMiigFBVV95cUxNaF9uSk8yT3g3VXoyMjRWbHlwTzZMN1ozUEoxSXlJcWR3QWxQbWlDMENNQ0djVGJQZVNJblVLeWtMdWN5T2FWUk96R3RDUzhnQmJjdjh2eUxKLXNTOHpkVmpRVVU2RVdBWDZRYWFqNWdobkxSQ0doR1BtazdrWTlELWdjakV5XzJSOUE?oc=5",
-      "source": "Vietnam.vn",
-      "summary": "Cet article suggère que les prix de l'or cotés mondialement seraient actuellement en dessous de certains niveaux de référence considérés comme des seuils de sécurité.",
-      "sentiment": -1,
-      "importance": "mineure"
-    },
-    {
       "title": "Faut-il vendre son or maintenant ? Ce que cache la récente chute des cours - La Tribune",
       "date": "2026-09-29",
       "link": "https://news.google.com/rss/articles/CBMi7AFBVV95cUxNb19MS3QxY3lySnlzbXQzNklTVHNzT1hKZVlXWWtHbmk3RERsZUNtVjZHNU9nbzZNbm0xVkJOOWYtQXR6M3p1LWxfQ1Bza21ZRG9ocktyMnJtLWh0bURhalFNa2JRVzJoX0dVZXkwLUdXX0FpV1pMX052M1dzTmNPQVp0akZIaEJ1czY2MHVNc3hzR1BMUWxIbmFLQXlGMEZCUmRQUkxVRUd1bExGOWlCY3RURFN3NFVqQ3NIMGZZTVBfTEVBSlhScXFrblA1cDIyWkYxRlNWckUxb3RHNnFHOVlTdkpFb2hkaDd6Qg?oc=5",
@@ -149,10 +149,15 @@
       "importance": "mineure"
     }
   ],
-  "analysis_html": "<h3>Contexte récent</h3><p>L'or évolue dans une phase de consolidation après un repli qui l'a ramené à proximité de ses plus bas niveaux des trois derniers mois, dans l'attente d'une réunion de la Réserve fédérale. Le score composite agrégé ressort autour de <strong>-0,1</strong>, soit une configuration macro globalement neutre à très légèrement défavorable : les vents contraires issus du dollar et des taux réels sont presque intégralement compensés par le ton de la Fed, les flux et la demande officielle. Autrement dit, le marché se trouve dans un équilibre instable, sans impulsion directionnelle claire côté fondamentaux.</p><h3>Facteurs déterminants</h3><ul><li><strong>Dollar (DXY) : score -10,0, poids 15 %</strong> — c'est de loin le principal frein du composite. Le passage de 99,17 à 101,87 en deux mois constitue une appréciation marquée du billet vert, qui renchérit mécaniquement l'or pour les détenteurs d'autres devises et pèse directement sur la demande. À lui seul, ce facteur retire environ 1,5 point au score.</li><li><strong>Ton de la Fed : score +5,0, poids 15 %</strong> — principal contrepoids. Une orientation perçue comme accommodante soutient le métal en réduisant le coût d'opportunité de sa détention, et explique une large part de la résilience du score malgré la fermeté du dollar.</li><li><strong>Achats de banques centrales : score +7,0, poids 5 %</strong> — le score individuel le plus élevé, mais pénalisé par une pondération faible. Il traduit une demande structurelle de fond qui amortit les phases de correction sans suffire à inverser la tendance de court terme.</li><li><strong>Taux réels US 10 ans : score -0,8, poids 30 %</strong> — facteur le plus lourdement pondéré, mais quasi neutre dans son signal : la hausse de 2,60 % à 2,64 % est marginale. Sa contribution négative reste modeste (environ -0,24 point), alors qu'un mouvement plus ample des taux réels constituerait le vrai levier de réévaluation du composite.</li><li><strong>Anticipations d'inflation : score -0,7, poids 15 %</strong> — léger repli de 2,36 % à 2,34 %, qui affaiblit à la marge l'argument de couverture inflationniste sans constituer un facteur de rupture.</li><li><strong>Flux ETF (+3,0) et positionnement CFTC (+3,1)</strong> — tous deux modérément positifs. Le positionnement net de 199 865 contrats se situe au 35<sup></sup> percentile sur trois ans, soit un niveau relativement bas : le marché à terme n'est pas en situation de saturation acheteuse, ce qui limite le risque de liquidations forcées et laisse de la marge de reconstitution.</li></ul><h3>Actualités à retenir</h3><ul><li><strong>Stabilisation près d'un plus bas de trois mois avant la réunion de la Fed (notable)</strong> — c'est l'élément le plus cohérent avec la lecture du score. L'attentisme pré-FOMC explique l'absence de direction : les opérateurs arbitrent entre un ton de banque centrale noté favorablement (+5) et un dollar nettement raffermi (-10). La réunion constitue le catalyseur susceptible de trancher entre ces deux forces opposées.</li><li><strong>Remontée des actions aurifères et débat sur la portée de la baisse récente (mineures)</strong> — ces publications reflètent un sentiment de marché qui se stabilise après correction, en ligne avec le positionnement CFTC peu étiré et des flux ETF encore légèrement positifs. Elles ne modifient toutefois aucun des facteurs macro du composite.</li><li>Les autres articles (comparaison or/argent à horizon 2027, niveaux de référence sur les cours mondiaux) relèvent du commentaire de marché et n'apportent pas d'information fondamentale nouvelle sur les taux réels, le dollar ou la demande officielle.</li></ul><h3>Synthèse</h3><p>Le composite proche de zéro décrit un marché en équilibre : la fermeté du dollar, seul facteur à signal extrême, est neutralisée par un ton de Fed perçu comme favorable, des achats de banques centrales soutenus et des flux ETF orientés positivement. Les deux facteurs les plus pondérés — taux réels et anticipations d'inflation — sont quasi inertes et n'impriment pas de direction, ce qui laisse le dollar et la communication de la Fed comme variables dominantes à court terme. Le positionnement spéculatif modéré (35<sup></sup> percentile) et la consolidation près d'un plus bas de trois mois décrivent un marché assaini plutôt qu'un marché sous tension, en attente d'un catalyseur macro pour réorienter le score.</p>",
+  "analysis_html": "<h3>Contexte récent</h3><p>L'or évolue à proximité d'un plus bas de trois mois, dans une phase de consolidation marquée par une légère reprise technique après une correction. Le score composite agrégé ressort autour de <strong>-0,14</strong>, soit un équilibre quasi neutre mais légèrement orienté à la baisse, le poids des facteurs financiers (dollar, taux réels) compensant presque intégralement le soutien institutionnel (Fed, banques centrales, flux).</p><p>Le marché est donc dans une configuration d'attente, où aucune force directionnelle ne domine nettement, la prochaine réunion de la Réserve fédérale faisant figure de catalyseur attendu.</p><h3>Facteurs déterminants</h3><ul><li><strong>Dollar (DXY) : score -10,0, poids 15%</strong> — C'est de loin le principal contributeur négatif (environ -1,5 point de contribution). L'indice est passé de 99,17 à 101,88 en deux mois, soit une appréciation d'environ 2,7%, qui renchérit mécaniquement l'or pour les détenteurs de devises non-dollar et pèse directement sur les cours.</li><li><strong>Ton de la Fed : score +5,0, poids 15%</strong> — Deuxième contribution en valeur absolue (+0,75), à l'opposé du dollar. Ce paramètre, saisi manuellement, traduit une orientation perçue comme accommodante, qui constitue le principal contrepoids haussier du modèle.</li><li><strong>Taux réels US 10 ans : score -0,8, poids 30%</strong> — Malgré le poids le plus élevé de la grille, l'impact reste limité (-0,24) car la variation est marginale : 2,64% contre 2,60% il y a environ 45 jours. Le coût d'opportunité de détenir un actif sans rendement se dégrade donc très légèrement, sans rupture.</li><li><strong>Achats banques centrales : score +7,0, poids 5%</strong> — Score le plus élevé de la grille, mais son faible poids limite sa contribution à +0,35. Il traduit une demande structurelle de fond, peu sensible aux mouvements de court terme.</li><li><strong>Flux ETF (+3,0, poids 10%) et positionnement CFTC (+3,1, poids 10%)</strong> — Deux contributions positives modérées (+0,30 et +0,31). Le positionnement net de 199 865 contrats au 35<strong>e</strong> percentile sur trois ans indique un marché à terme relativement peu encombré, ce qui réduit le risque de liquidation forcée.</li><li><strong>Anticipations d'inflation : score -0,7, poids 15%</strong> — Contribution quasi nulle (-0,11), avec un reflux marginal de 2,36% à 2,34%, cohérent avec un environnement d'inflation anticipée stabilisée.</li></ul><h3>Actualités à retenir</h3><ul><li><strong>[Notable] « L'or se stabilise près d'un plus bas de 3 mois avant la réunion de la Fed » (Investing.com France)</strong> — C'est l'actualité la plus cohérente avec la lecture du score. Elle illustre la tension entre un dollar ferme (score -10) qui a entraîné la correction vers ces plus bas, et un ton de la Fed perçu comme favorable (score +5) qui empêche la poursuite de la baisse. La stabilisation observée correspond précisément à un score composite proche de zéro.</li><li><strong>Actualités mineures</strong> — La remontée des actions aurifères, la progression des cours sur le marché indien et le questionnement de La Tribune sur la récente chute des cours sont cohérents avec une phase de rebond technique après correction, sans modifier la structure des facteurs macro. L'analyse comparative or/argent à horizon 2027 relève d'une perspective de long terme, sans incidence sur le score actuel.</li></ul><h3>Synthèse</h3><p>Le score composite proche de la neutralité (-0,14) reflète un marché partagé : la vigueur du dollar constitue le frein dominant et explique à elle seule l'essentiel de la contribution négative, tandis que les taux réels et les anticipations d'inflation n'apportent qu'un vent contraire marginal. Face à cela, le bloc « demande et politique monétaire » — ton de la Fed, achats de banques centrales, flux ETF et positionnement spéculatif modéré — fournit un soutien suffisant pour expliquer la stabilisation des cours près de leurs plus bas de trois mois plutôt qu'une poursuite de la baisse.</p><p>La configuration actuelle est donc celle d'un équilibre instable, où la trajectoire du dollar et la communication de la Fed apparaissent comme les deux variables susceptibles de faire basculer le score d'un côté ou de l'autre. Cette analyse est purement descriptive et ne constitue ni un conseil en investissement ni une recommandation.</p>",
   "news_classifications": {
     "https://news.google.com/rss/articles/CBMigwJBVV95cUxNWDVsaThrdHJaQ1FTVUZ2RHRwcjQwTnNuZkhBUnBrdXgxR1JqUmdXcjkwLXN6NVdNWHJhWlIwd1lyTlZPcl83cnFYeENOZHV4U0hralVzWUcyTUdiWEhFbXVQZHFyUWl2dXBhLWJ0S241Rk1GbWt5Y1UzbW5MX19sMzlaamk5RWxsYVc5d19VcGROU3RpNGY2bmVteHF6Q3JYT0VVV3dMLWNybWU3cjhDVWpDdUY3eFNTbmNMdVktRXVyWlI1X2dTWmstSkJPaVVzdU5MTWZzMmpydDlaSjBLbEtuN0hrWjZ1SG9GN2lJX0VpZUViTkhBN3o5TnVmOGFJUEpR0gGIAkFVX3lxTFByMGdiZ1d1VjBOSW9FcWZaZlU4OVNQX1VJNHZxNXdzakM3dGVTQ1FwYV9Qa1NjOTVrLVhkREY0Z0RPdHRkdWpuVTdQTm1ianFzOWM4NXB2bWNfWE5nTW16OEROaFo2d2duNEhzVlNvbnhEOG5jcS1kdDFkbFlxbXFpdFJXRldZbVlQUm80bjdqZ2U3YkI0aDAyUjNaQnFNcmJKZm54TWJDb2VmVW82VXpzZE13VEMzUmc2T0ZibkxZVHRMRlhFNmtHOXBaNWh3LVBRLW5ZMW95RmhEUGE1ZUpQN0RQaFVTWFAwdmNsWlY1dFUtMjc3elhyR21BdGxwMUpFdGNjLXNhdw?oc=5": {
       "summary": "Cet article suggère qu'une légère remontée des cours de l'or s'accompagne d'une progression des valorisations boursières des producteurs aurifères, ce qui pourrait indiquer une amélioration du sentiment du marché envers ce secteur.",
+      "sentiment": 1,
+      "importance": "mineure"
+    },
+    "https://news.google.com/rss/articles/CBMixAFBVV95cUxNRUNxQ1MyWFZvcGpwaGhpQTdzTVVRQ1FGTFFjYkZXaXNoZXZzeUdVeDdFQ0xZcGcwX293aHN5VWxqZm9fWjk3MWpwcjdtLV9TYWdxLVdMYmJxc1dHZm56Zk5tM09yTFM0ODh1S2lpZVVMaHZXWU5BMW1fUWRsWjliMUlVYVVPZkpRZ3NGWWp6N2E5TlZFLTV5bjlkTFdMenlyYjV2U2lMVGVvMldSQUxXaDBqTTlOWXYwelp6bnI1V3NNb3Z4?oc=5": {
+      "summary": "Cet article suggère que le prix de l'or connaîtrait une phase de hausse sur le marché indien selon les données de FXStreet.",
       "sentiment": 1,
       "importance": "mineure"
     },
@@ -165,11 +170,6 @@
       "summary": "Cet article suggère que le prix de l'or connaît une phase de consolidation à proximité de ses plus faibles niveaux des trois derniers mois, dans l'attente d'une réunion décisive de la Réserve fédérale américaine.",
       "sentiment": 0,
       "importance": "notable"
-    },
-    "https://news.google.com/rss/articles/CBMiigFBVV95cUxNaF9uSk8yT3g3VXoyMjRWbHlwTzZMN1ozUEoxSXlJcWR3QWxQbWlDMENNQ0djVGJQZVNJblVLeWtMdWN5T2FWUk96R3RDUzhnQmJjdjh2eUxKLXNTOHpkVmpRVVU2RVdBWDZRYWFqNWdobkxSQ0doR1BtazdrWTlELWdjakV5XzJSOUE?oc=5": {
-      "summary": "Cet article suggère que les prix de l'or cotés mondialement seraient actuellement en dessous de certains niveaux de référence considérés comme des seuils de sécurité.",
-      "sentiment": -1,
-      "importance": "mineure"
     },
     "https://news.google.com/rss/articles/CBMi7AFBVV95cUxNb19MS3QxY3lySnlzbXQzNklTVHNzT1hKZVlXWWtHbmk3RERsZUNtVjZHNU9nbzZNbm0xVkJOOWYtQXR6M3p1LWxfQ1Bza21ZRG9ocktyMnJtLWh0bURhalFNa2JRVzJoX0dVZXkwLUdXX0FpV1pMX052M1dzTmNPQVp0akZIaEJ1czY2MHVNc3hzR1BMUWxIbmFLQXlGMEZCUmRQUkxVRUd1bExGOWlCY3RURFN3NFVqQ3NIMGZZTVBfTEVBSlhScXFrblA1cDIyWkYxRlNWckUxb3RHNnFHOVlTdkpFb2hkaDd6Qg?oc=5": {
       "summary": "Cet article suggère qu'une baisse récente des cours de l'or masquerait des enjeux ou des signaux sous-jacents pertinents pour décider de la vente, invitant à une analyse plus nuancée que la simple réaction au mouvement de prix observable.",

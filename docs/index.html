@@ -939,6 +939,10 @@
     .app:has(.or-columns) { max-width: 1040px; }
     #or .btn-row { display: none; }
     .or-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: start; }
+    /* 3e panneau (Actualités, ajouté après Actu/Détail du calcul) : pleine
+       largeur plutôt que de laisser une cellule vide à côté sur la grille
+       à 2 colonnes pensée pour les 2 panneaux d'origine. */
+    #actusWrap { grid-column: 1 / -1; }
     .or-columns .section-wrap {
       max-height: none; opacity: 1; padding: 20px; margin: 0;
       background: var(--bg-2); border: 1px solid var(--border); border-left: 3px solid var(--gold);

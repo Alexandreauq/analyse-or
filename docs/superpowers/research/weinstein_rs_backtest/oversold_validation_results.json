@@ -1,0 +1,172 @@
+{
+  "global_exact": {
+    "n": 79293,
+    "rendement_moyen_pct": 1.6960393000498524,
+    "rendement_median_pct": 1.2640343226440924,
+    "taux_reussite_pct": 55.98980994539241
+  },
+  "global_approx_reference": {
+    "n": 61737,
+    "rendement_moyen_pct": 1.9179840129,
+    "rendement_median_pct": 1.424144569,
+    "taux_reussite_pct": 56.4863857978
+  },
+  "per_window": [
+    {
+      "n": 7039,
+      "rendement_moyen_pct": 2.890375346035036,
+      "rendement_median_pct": 2.3442328849236143,
+      "taux_reussite_pct": 63.688023867026565,
+      "debut": "2020-10-26",
+      "fin": "2021-10-26"
+    },
+    {
+      "n": 18743,
+      "rendement_moyen_pct": 0.9286379682882985,
+      "rendement_median_pct": 0.8590548011438884,
+      "taux_reussite_pct": 53.3052339540095,
+      "debut": "2021-10-26",
+      "fin": "2022-10-26"
+    },
+    {
+      "n": 13584,
+      "rendement_moyen_pct": 1.6205851257566597,
+      "rendement_median_pct": 1.1023613727783825,
+      "taux_reussite_pct": 55.86719670200235,
+      "debut": "2022-10-26",
+      "fin": "2023-10-26"
+    },
+    {
+      "n": 11008,
+      "rendement_moyen_pct": 2.341458245805453,
+      "rendement_median_pct": 1.8108789297747956,
+      "taux_reussite_pct": 58.35755813953488,
+      "debut": "2023-10-26",
+      "fin": "2024-10-26"
+    },
+    {
+      "n": 14103,
+      "rendement_moyen_pct": 2.1607227178795294,
+      "rendement_median_pct": 1.3983572012108096,
+      "taux_reussite_pct": 56.39225696660285,
+      "debut": "2024-10-26",
+      "fin": "2025-10-26"
+    },
+    {
+      "n": 14770,
+      "rendement_moyen_pct": 1.251561104273855,
+      "rendement_median_pct": 0.7425124741117675,
+      "taux_reussite_pct": 53.865944482058225,
+      "debut": "2025-10-26",
+      "fin": "2026-10-26"
+    }
+  ],
+  "n_fenetres_positives": 6,
+  "sensitivity": [
+    {
+      "n": 28842,
+      "rendement_moyen_pct": 1.6775390280961753,
+      "rendement_median_pct": 1.118382459795631,
+      "taux_reussite_pct": 56.10567921780737,
+      "seuil_rsi": 25.0,
+      "horizon_j": 15
+    },
+    {
+      "n": 28842,
+      "rendement_moyen_pct": 1.942873729373995,
+      "rendement_median_pct": 1.3160325172107639,
+      "taux_reussite_pct": 56.11261354968449,
+      "seuil_rsi": 25.0,
+      "horizon_j": 20
+    },
+    {
+      "n": 28842,
+      "rendement_moyen_pct": 2.3034745453138683,
+      "rendement_median_pct": 1.412123900734919,
+      "taux_reussite_pct": 55.752028292074066,
+      "seuil_rsi": 25.0,
+      "horizon_j": 25
+    },
+    {
+      "n": 79293,
+      "rendement_moyen_pct": 1.394847289803556,
+      "rendement_median_pct": 1.0311992174062317,
+      "taux_reussite_pct": 55.921708095292146,
+      "seuil_rsi": 30.0,
+      "horizon_j": 15
+    },
+    {
+      "n": 79293,
+      "rendement_moyen_pct": 1.6960393000498524,
+      "rendement_median_pct": 1.2640343226440924,
+      "taux_reussite_pct": 55.98980994539241,
+      "seuil_rsi": 30.0,
+      "horizon_j": 20
+    },
+    {
+      "n": 79293,
+      "rendement_moyen_pct": 1.9980745002803413,
+      "rendement_median_pct": 1.339350903932635,
+      "taux_reussite_pct": 55.69091849217459,
+      "seuil_rsi": 30.0,
+      "horizon_j": 25
+    },
+    {
+      "n": 180039,
+      "rendement_moyen_pct": 1.161836446280161,
+      "rendement_median_pct": 0.8264868300064679,
+      "taux_reussite_pct": 54.87588800204401,
+      "seuil_rsi": 35.0,
+      "horizon_j": 15
+    },
+    {
+      "n": 180039,
+      "rendement_moyen_pct": 1.5475919893050274,
+      "rendement_median_pct": 1.033464025685638,
+      "taux_reussite_pct": 55.085287076688935,
+      "seuil_rsi": 35.0,
+      "horizon_j": 20
+    },
+    {
+      "n": 180039,
+      "rendement_moyen_pct": 1.7320311226492522,
+      "rendement_median_pct": 1.1196795873591352,
+      "taux_reussite_pct": 54.820344480918024,
+      "seuil_rsi": 35.0,
+      "horizon_j": 25
+    }
+  ],
+  "chevauchement_stage_weinstein": {
+    "Achat": 5509,
+    "Declin": 41528,
+    "Neutre": 32248,
+    "hors_univers_ou_manquant": 8
+  },
+  "n_total_oversold_signals": 79293,
+  "performance_par_regime_weinstein": {
+    "Neutre": {
+      "n": 32248,
+      "rendement_moyen_pct": 1.6708355173461866,
+      "rendement_median_pct": 1.2832177732665544,
+      "taux_reussite_pct": 56.80042173158025
+    },
+    "Declin": {
+      "n": 41528,
+      "rendement_moyen_pct": 1.5146635539164683,
+      "rendement_median_pct": 1.0740013455352253,
+      "taux_reussite_pct": 54.50539395106916
+    },
+    "Achat": {
+      "n": 5509,
+      "rendement_moyen_pct": 3.2137216170684337,
+      "rendement_median_pct": 2.2949357274658526,
+      "taux_reussite_pct": 62.515883100381195
+    },
+    "hors_univers_ou_manquant": {
+      "n": 8,
+      "rendement_moyen_pct": -0.3,
+      "rendement_median_pct": -0.3,
+      "taux_reussite_pct": 0.0
+    }
+  }
+}

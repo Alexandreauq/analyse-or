@@ -143,6 +143,73 @@ def test_resolve_conid_refuses_when_no_candidate_is_on_the_expected_exchange():
     assert "aucun candidat" in result["detail"]
 
 
+def test_resolve_conid_retries_with_a_trailing_dot_for_lse_tickers_when_bare_symbol_fails():
+    # Bug reel observe en production le 2026-10-26 : le symbole IBKR reel
+    # de Smith & Nephew au LSE est "SN." (point final, convention des
+    # codes courts LSE pour eviter les collisions) -- "SN" seul ne renvoie
+    # rien. Verifie en direct contre le Gateway reel : RR./BP./SN. ont ce
+    # point, III/DGE n'en ont pas -- pas de regle universelle, d'ou la
+    # necessite d'une retentative plutot qu'une table figee.
+    search = _search_fn({"SN.": [_candidat(909254, "SN.", "LSE")]})
+    info = _info_fn({"909254": {"conid": 909254, "symbol": "SN.", "currency": "GBP",
+                                "listingExchange": "LSE"}})
+
+    result = contracts.resolve_conid("SN.L", search, info, {}, today="2026-10-26")
+
+    assert result["conid"] == 909254
+    assert result["motif"] is None
+    assert search.appels == ["SN", "SN."]
+
+
+def test_resolve_conid_does_not_retry_with_a_dot_for_non_lse_tickers():
+    search = _search_fn({})  # aucune reponse, meme pour "MC."
+    info = _info_fn({})
+
+    result = contracts.resolve_conid("MC.PA", search, info, {}, today="2026-10-26")
+
+    assert result["motif"] == "contrat_non_resolu"
+    assert search.appels == ["MC"]  # jamais de tentative "MC."
+
+
+def test_resolve_conid_does_not_retry_when_the_bare_symbol_already_resolves():
+    search = _search_fn({"III": [_candidat(8675, "III", "LSE")]})
+    info = _info_fn({"8675": {"conid": 8675, "symbol": "III", "currency": "GBP",
+                              "listingExchange": "LSE"}})
+
+    result = contracts.resolve_conid("III.L", search, info, {}, today="2026-10-26")
+
+    assert result["motif"] is None
+    assert search.appels == ["III"]  # pas de tentative "III." inutile
+
+
+def test_resolve_conid_refuses_when_both_bare_and_dotted_lse_symbols_fail():
+    search = _search_fn({})
+    info = _info_fn({})
+
+    result = contracts.resolve_conid("SN.L", search, info, {}, today="2026-10-26")
+
+    assert result["conid"] is None
+    assert result["motif"] == "contrat_non_resolu"
+    assert search.appels == ["SN", "SN."]
+
+
+def test_resolve_conid_does_not_retry_after_an_ambiguous_bare_symbol_result():
+    # L'ambiguite (plusieurs candidats valides trouves) est un refus
+    # definitif, pas un "non trouve" -- retenter avec un point ne
+    # resoudrait rien, juste du bruit de requete en plus.
+    search = _search_fn({"RR": [_candidat(1, "RR", "LSE"), _candidat(2, "RR", "LSE")]})
+    info = _info_fn({
+        "1": {"conid": 1, "symbol": "RR", "currency": "GBP", "listingExchange": "LSE"},
+        "2": {"conid": 2, "symbol": "RR", "currency": "GBP", "listingExchange": "LSE"},
+    })
+
+    result = contracts.resolve_conid("RR.L", search, info, {}, today="2026-10-26")
+
+    assert result["motif"] == "contrat_non_resolu"
+    assert "ambigu" in result["detail"]
+    assert search.appels == ["RR"]
+
+
 def test_resolve_conid_refuses_when_the_currency_does_not_match():
     search = _search_fn({"MC": [_candidat(4901, "MC", "SBF")]})
     info = _info_fn({"4901": {"conid": 4901, "symbol": "MC", "currency": "USD",

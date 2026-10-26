@@ -149,59 +149,76 @@ def resolve_conid(ticker: str, search_fn, info_fn,
     if venue is None:
         return _refus(ticker, f"suffixe hors perimetre pour {ticker}")
 
-    symbole, _ = split_ticker(ticker)
-    try:
-        candidats = search_fn(symbole)
-    except Exception as exc:
-        return _refus(ticker, f"recherche impossible : {exc}")
-    # Un search_fn injecte peut renvoyer None (au lieu de la liste vide
-    # documentee) sans que ce module plante pour autant.
-    candidats = candidats if isinstance(candidats, list) else []
+    symbole, suffixe = split_ticker(ticker)
+    # Convention LSE (verifiee en direct le 2026-10-26 contre le Gateway
+    # reel, bug de production sur SN.L -> Smith & Nephew) : le symbole
+    # IBKR reel de certains codes courts porte un point final absent du
+    # ticker yfinance -- RR./BP./SN. en ont besoin, III/DGE non. Pas de
+    # regle universelle (donc pas de table figee) : on tente d'abord le
+    # symbole nu (cas majoritaire), et seulement pour les tickers LSE, on
+    # retente avec un point final UNIQUEMENT si la premiere tentative ne
+    # retient aucun candidat (un refus pour ambiguite, lui, est definitif
+    # -- retenter n'y changerait rien).
+    variantes = [symbole, symbole + "."] if suffixe == ".L" else [symbole]
 
-    # Filtre 1 : meme symbole, une section action, bourse attendue.
-    retenus = [
-        c for c in candidats
-        if isinstance(c, dict)
-        and c.get("symbol") == symbole
-        and _a_une_section_action(c)
-        and c.get("description") in venue["exchanges"]
-    ]
-
-    # Filtre 2 : devise attendue ET bourse de cotation confirmee,
-    # contrat par contrat. listingExchange (renvoye par contract_info)
-    # existe precisement pour ce controle croise : la bourse annoncee
-    # par la recherche (description) et celle confirmee par la fiche
-    # detaillee (listingExchange) doivent s'accorder, sinon rien ne
-    # garantit que la fiche detaillee decrit bien le contrat filtre plus
-    # haut. Repli sur `description` quand listingExchange est absent,
-    # pour rester compatible avec des fixtures qui ne le renseignent pas.
-    confirmes = []
-    for candidat in retenus:
-        candidat_conid = candidat.get("conid")
-        if candidat_conid is None:
-            continue
+    dernier_refus = None
+    for variante in variantes:
         try:
-            details = info_fn(candidat_conid)
+            candidats = search_fn(variante)
         except Exception as exc:
-            return _refus(ticker, f"details indisponibles : {exc}")
-        if not isinstance(details, dict):
-            continue
-        exchange_confirme = details.get("listingExchange", candidat.get("description"))
-        if (details.get("currency") in venue["currencies"]
-                and exchange_confirme in venue["exchanges"]):
-            confirmes.append((candidat, details))
+            return _refus(ticker, f"recherche impossible : {exc}")
+        # Un search_fn injecte peut renvoyer None (au lieu de la liste vide
+        # documentee) sans que ce module plante pour autant.
+        candidats = candidats if isinstance(candidats, list) else []
 
-    # Filtre 3 : unicite. Zero ou plusieurs -> on refuse.
-    if not confirmes:
-        return _refus(
+        # Filtre 1 : meme symbole, une section action, bourse attendue.
+        retenus = [
+            c for c in candidats
+            if isinstance(c, dict)
+            and c.get("symbol") == variante
+            and _a_une_section_action(c)
+            and c.get("description") in venue["exchanges"]
+        ]
+
+        # Filtre 2 : devise attendue ET bourse de cotation confirmee,
+        # contrat par contrat. listingExchange (renvoye par contract_info)
+        # existe precisement pour ce controle croise : la bourse annoncee
+        # par la recherche (description) et celle confirmee par la fiche
+        # detaillee (listingExchange) doivent s'accorder, sinon rien ne
+        # garantit que la fiche detaillee decrit bien le contrat filtre plus
+        # haut. Repli sur `description` quand listingExchange est absent,
+        # pour rester compatible avec des fixtures qui ne le renseignent pas.
+        confirmes = []
+        for candidat in retenus:
+            candidat_conid = candidat.get("conid")
+            if candidat_conid is None:
+                continue
+            try:
+                details = info_fn(candidat_conid)
+            except Exception as exc:
+                return _refus(ticker, f"details indisponibles : {exc}")
+            if not isinstance(details, dict):
+                continue
+            exchange_confirme = details.get("listingExchange", candidat.get("description"))
+            if (details.get("currency") in venue["currencies"]
+                    and exchange_confirme in venue["exchanges"]):
+                confirmes.append((candidat, details))
+
+        # Filtre 3 : unicite. Plusieurs -> refus definitif, jamais de
+        # retentative (l'ambiguite ne serait pas resolue par un point).
+        if len(confirmes) > 1:
+            conids = ", ".join(str(c.get("conid")) for c, _ in confirmes)
+            return _refus(ticker, f"ambigu : {len(confirmes)} contrats retenus ({conids})")
+        if confirmes:
+            break
+        dernier_refus = _refus(
             ticker,
             f"aucun candidat sur {'/'.join(venue['exchanges'])} "
-            f"en {'/'.join(venue['currencies'])} pour {symbole} "
+            f"en {'/'.join(venue['currencies'])} pour {variante} "
             f"({len(candidats)} resultat(s) bruts)",
         )
-    if len(confirmes) > 1:
-        conids = ", ".join(str(c.get("conid")) for c, _ in confirmes)
-        return _refus(ticker, f"ambigu : {len(confirmes)} contrats retenus ({conids})")
+    else:
+        return dernier_refus
 
     candidat, details = confirmes[0]
     try:

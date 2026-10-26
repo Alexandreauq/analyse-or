@@ -1,0 +1,3521 @@
+{
+  "methode": "backtest_retroactif",
+  "paris": [
+    {
+      "ticker": "NWG.L",
+      "name": "NatWest Group",
+      "index": "FTSE",
+      "date_cible": "2026-04-29",
+      "score_raw": 37.4,
+      "factors": [
+        {
+          "name": "Rentabilité / création de valeur",
+          "score": 2.8940098296517136,
+          "weight": 0.24,
+          "raw_value": "ROE 13.7% vs coût des capitaux propres 9.3% (profil financier)"
+        },
+        {
+          "name": "Structure financière / solvabilité",
+          "score": 9.74419438912626,
+          "weight": 0.2,
+          "raw_value": "Capitaux propres/actif total 6.0% (seuil confort 6%, vigilance sous 3%) — profil financier"
+        },
+        {
+          "name": "Croissance",
+          "score": 4.846993488076462,
+          "weight": 0.16,
+          "raw_value": "CAGR CA +5.4%/an, CAGR résultat net +14.0%/an (CAGR lissé, profil financier)"
+        },
+        {
+          "name": "Génération de cash",
+          "score": 1.032069970845481,
+          "weight": 0.12,
+          "raw_value": "OCF/résultat net 121% (profil financier, signal volatil)"
+        },
+        {
+          "name": "Valorisation relative",
+          "score": -2.0,
+          "weight": 0.08,
+          "raw_value": "PER 7.8x (moy. 5 ans 6.0x) — P/B 1.1x (moy. 5 ans 0.7x) — profil financier"
+        },
+        {
+          "name": "Dynamique récente",
+          "score": 3.563970440174305,
+          "weight": 0.1,
+          "raw_value": "Cours -0.5% vs MM200 — CA dernier trim. +12.8% vs an dernier (tendance 5 ans +5.4%)"
+        },
+        {
+          "name": "Actualité récente",
+          "score": 0.0,
+          "weight": 0.1,
+          "raw_value": "Aucune actualité récente exploitable"
+        }
+      ],
+      "current_price": 5.775029907226562,
+      "ma200": 5.804913090515137,
+      "ecart_pct_ma200": -0.5147912263734261,
+      "stage": 3,
+      "stage_label": "Neutre",
+      "volume_confirme": false,
+      "sector": "Financial Services",
+      "is_financial": true,
+      "is_trust": false,
+      "fair_value": 7.888441464582916,
+      "entry_price": 5.864009517452425,
+      "exit_price": 8.28351601491049,
+      "actus": [],
+      "fondamentaux_degrades": false,
+      "rendement_5j_pct": -3.9893621069351988,
+      "rendement_20j_pct": 7.002591319881329,
+      "volume_ratio_5j_vs_20j": 0.8468601844524151,
+      "score": 37.4,
+      "appel": "neutre",
+      "confiance": "moyenne",
+      "dimension_dominante": "technique",
+      "raison": "La phase technique de Weinstein est neutre, le score fondamental est mitigé à 37.4, et l'absence d'actualité récente exploitable combinée à un ratio de volume inférieur à 1 ne permet pas de justifier un biais directionnel clair.",
+      "methode": "backtest_retroactif",
+      "date_resolution": "2026-05-29",
+      "return_pct": 3.7742465526412654,
+      "index_return_pct": 0.7403608068095502,
+      "alpha_pct": 3.033885745831715
+    },
+    {
+      "ticker": "FCIT.L",
+      "name": "F&C Investment Trust",
+      "index": "FTSE",
+      "date_cible": "2025-11-22",
+      "score_raw": 13.8,
+      "factors": [
+        {
+          "name": "Rentabilité / création de valeur",
+          "score": 1.8492427133491975,
+          "weight": 0.24,
+          "raw_value": "ROE 10.8% vs coût des capitaux propres 8.0% (profil financier)"
+        },
+        {
+          "name": "Structure financière / solvabilité",
+          "score": 1.9518655268273033,
+          "weight": 0.2,
+          "raw_value": "Dette nette/capitaux propres 8.0% (seuil confort 10%, vigilance au-delà de 40%) — profil trust"
+        },
+        {
+          "name": "Croissance",
+          "score": 0.0,
+          "weight": 0.16,
+          "raw_value": "CAGR CA +0.0%/an, CAGR résultat net +0.0%/an (CAGR lissé, profil financier)"
+        },
+        {
+          "name": "Génération de cash",
+          "score": 0.0,
+          "weight": 0.12,
+          "raw_value": "Non applicable pour ce profil (trust d'investissement) — la génération de cash dépend des cessions de portefeuille, pas d'un cycle d'exploitation"
+        },
+        {
+          "name": "Valorisation relative",
+          "score": 3.2309795411892126,
+          "weight": 0.08,
+          "raw_value": "P/B 0.90x vs NAV — décote de 10% sur la NAV"
+        },
+        {
+          "name": "Dynamique récente",
+          "score": 2.868226410573186,
+          "weight": 0.1,
+          "raw_value": "Cours +5.7% vs MM200"
+        },
+        {
+          "name": "Actualité récente",
+          "score": 0.0,
+          "weight": 0.1,
+          "raw_value": "Aucune actualité récente exploitable"
+        }
+      ],
+      "current_price": 3.0046151733398436,
+      "ma200": 2.841607688903809,
+      "ecart_pct_ma200": 5.736452821146371,
+      "stage": 2,
+      "stage_label": "Achat",
+      "volume_confirme": true,
+      "sector": null,
+      "is_financial": false,
+      "is_trust": true,
+      "fair_value": 4.480728716960343,
+      "entry_price": 3.0501867020515374,
+      "exit_price": 4.67856608603002,
+      "actus": [],
+      "fondamentaux_degrades": false,
+      "rendement_5j_pct": -1.7170992381957482,
+      "rendement_20j_pct": -0.578994351126856,
+      "volume_ratio_5j_vs_20j": 1.1378734816419256,
+      "score": 13.8,
+      "appel": "haussier",
+      "confiance": "moyenne",
+      "dimension_dominante": "technique",
+      "raison": "La phase technique de Weinstein est en mode Achat, ce qui constitue le signal principal malgre un court terme legerement negatif et l'absence d'actualite recente.",
+      "methode": "backtest_retroactif",
+      "date_resolution": "2025-12-22",
+      "return_pct": 3.161406458549746,
+      "index_return_pct": 3.4204408734755956,
+      "alpha_pct": -0.25903441492584944
+    },
+    {
+      "ticker": "BGEO.L",
+      "name": "Lion Finance Group",
+      "index": "FTSE",
+      "date_cible": "2026-02-20",
+      "score_raw": 59.0,
+      "factors": [
+        {
+          "name": "Rentabilité / création de valeur",
+          "score": 10.0,
+          "weight": 0.24,
+          "raw_value": "ROE 25.7% vs coût des capitaux propres 10.3% (profil financier)"
+        },
+        {
+          "name": "Structure financière / solvabilité",
+          "score": 10.0,
+          "weight": 0.2,
+          "raw_value": "Capitaux propres/actif total 13.8% (seuil confort 6%, vigilance sous 3%) — profil financier"
+        },
+        {
+          "name": "Croissance",
+          "score": 10.0,
+          "weight": 0.16,
+          "raw_value": "CAGR CA +31.7%/an, CAGR résultat net +28.0%/an (CAGR lissé, profil financier)"
+        },
+        {
+          "name": "Génération de cash",
+          "score": 0.47741551610143595,
+          "weight": 0.12,
+          "raw_value": "OCF/résultat net 99% (profil financier, signal volatil)"
+        },
+        {
+          "name": "Valorisation relative",
+          "score": -2.0,
+          "weight": 0.08,
+          "raw_value": "PER 6.9x (moy. 5 ans 4.2x) — P/B 1.8x (moy. 5 ans 1.2x) — profil financier"
+        },
+        {
+          "name": "Dynamique récente",
+          "score": 0.0,
+          "weight": 0.1,
+          "raw_value": "Cours +25.3% vs MM200 — CA dernier trim. +20.8% vs an dernier (tendance 5 ans +31.7%)"
+        },
+        {
+          "name": "Actualité récente",
+          "score": 0.0,
+          "weight": 0.1,
+          "raw_value": "Aucune actualité récente exploitable"
+        }
+      ],
+      "current_price": 100.078486328125,
+      "ma200": 79.84277883300781,
+      "ecart_pct_ma200": 25.344442905025165,
+      "stage": 2,
+      "stage_label": "Achat",
+      "volume_confirme": false,
+      "sector": "Financial Services",
+      "is_financial": true,
+      "is_trust": false,
+      "fair_value": 140.6466924714396,
+      "entry_price": 101.0220042739131,
+      "exit_price": 137.20054820934533,
+      "actus": [],
+      "fondamentaux_degrades": false,
+      "rendement_5j_pct": 3.2491008555096,
+      "rendement_20j_pct": 2.2994534166326743,
+      "volume_ratio_5j_vs_20j": 0.5169897636130754,
+      "score": 59.0,
+      "appel": "haussier",
+      "confiance": "moyenne",
+      "dimension_dominante": "technique",
+      "raison": "La phase technique de Weinstein est en position d'achat avec un prix actuel proche du repere d'entree et des rendements a court terme positifs (+3.2% sur 5j et +2.3% sur 20j). Bien que le ratio de volume soit faible (0.52) et qu'aucune actualite ne soit disponible, la configuration technique et la dynamique sectorielle (Financial Services) soutiennent cet avis haussier.",
+      "methode": "backtest_retroactif",
+      "date_resolution": "2026-03-22",
+      "return_pct": -7.39260601810864,
+      "index_return_pct": -6.895641335160441,
+      "alpha_pct": -0.4969646829481986
+    },
+    {
+      "ticker": "TTE.PA",
+      "name": "TotalEnergies",
+      "index": "CAC40",
+      "date_cible": "2025-11-30",
+      "score_raw": 15.7,
+      "factors": [
+        {
+          "name": "Rentabilité / création de valeur",
+          "score": 5.3610968138609465,
+          "weight": 0.24,
+          "raw_value": "ROCE 12.4% vs coût du capital 4.4% (ROE 11.4%)"
+        },
+        {
+          "name": "Structure financière / solvabilité",
+          "score": 7.798902852436593,
+          "weight": 0.2,
+          "raw_value": "Dette nette/EBITDA 0.9x (seuil confort 2.1x, profil cyclique) — ICR 9.8x"
+        },
+        {
+          "name": "Croissance",
+          "score": -6.380531228602171,
+          "weight": 0.16,
+          "raw_value": "CAGR CA -11.5%/an, CAGR EBITDA -14.1%/an (CAGR lissé)"
+        },
+        {
+          "name": "Génération de cash",
+          "score": -4.651773305193801,
+          "weight": 0.12,
+          "raw_value": "Conversion FCF/EBITDA 27%"
+        },
+        {
+          "name": "Valorisation relative",
+          "score": -5.0,
+          "weight": 0.08,
+          "raw_value": "EV/EBITDA 4.4x (moy. 5 ans 3.3x) — PER 10.2x (moy. 5 ans 7.3x)"
+        },
+        {
+          "name": "Dynamique récente",
+          "score": 7.041894986018493,
+          "weight": 0.1,
+          "raw_value": "Cours +8.2% vs MM200 — CA dernier trim. +27.8% vs an dernier (tendance 5 ans -11.5%)"
+        },
+        {
+          "name": "Actualité récente",
+          "score": 0.0,
+          "weight": 0.1,
+          "raw_value": "Ton moyen pondéré des 5 actualités point-in-temps : +0.00"
+        }
+      ],
+      "current_price": 54.044857025146484,
+      "ma200": 49.96400682449341,
+      "ecart_pct_ma200": 8.167579944073971,
+      "stage": 2,
+      "stage_label": "Achat",
+      "volume_confirme": false,
+      "sector": "Energy",
+      "is_financial": false,
+      "is_trust": false,
+      "fair_value": 65.24065092043652,
+      "entry_price": 54.23959887867713,
+      "exit_price": 66.52389685796727,
+      "actus": [
+        {
+          "date": "2025-11-27",
+          "sentiment": 0,
+          "importance": "mineure",
+          "titre": "Africa : TotalEnergies - French Court Ruling Over False Climate Claims Could Boost African Cases Against Polluters",
+          "resume": "",
+          "url": "https://allafrica.com/stories/202511270432.html"
+        },
+        {
+          "date": "2025-11-26",
+          "sentiment": 0,
+          "importance": "mineure",
+          "titre": "Pinpoint Asset Management Singapore Pte . Ltd . Takes $1 . 90 Million Position in TotalEnergies SE Sponsored ADR $TTE",
+          "resume": "",
+          "url": "https://www.themarketsdaily.com/2025/11/26/pinpoint-asset-management-singapore-pte-ltd-takes-1-90-million-position-in-totalenergies-se-sponsored-adr-tte.html"
+        },
+        {
+          "date": "2025-11-25",
+          "sentiment": 0,
+          "importance": "mineure",
+          "titre": "Nigeria : TotalEnergies completes the divestment of its non - operated interest in the Bonga field",
+          "resume": "",
+          "url": "https://www.energy-pedia.com/news/nigeria/nigeria--totalenergies-completes-the-divestment-of-its-non-operated-interest-in-the-bonga-field-202079"
+        },
+        {
+          "date": "2025-11-25",
+          "sentiment": 0,
+          "importance": "mineure",
+          "titre": "TotalEnergies SE : Nigeria : TotalEnergies Completes the Divestment of its Non - Operated Interest in the Bonga Field",
+          "resume": "",
+          "url": "https://www.finanznachrichten.de/nachrichten-2025-11/67065062-totalenergies-se-nigeria-totalenergies-completes-the-divestment-of-its-non-operated-interest-in-the-bonga-field-004.htm"
+        },
+        {
+          "date": "2025-11-24",
+          "sentiment": 0,
+          "importance": "mineure",
+          "titre": "Adani Green Energy shares in focus as TotalEnergies considers Rs 10 , 200 crore stake sale",
+          "resume": "",
+          "url": "https://economictimes.indiatimes.com/markets/stocks/news/adani-green-energy-shares-in-focus-as-totalenergies-considers-rs-10200-crore-stake-sale/articleshow/125530389.cms"
+        }
+      ],
+      "fondamentaux_degrades": false,
+      "rendement_5j_pct": 1.4829256608157109,
+      "rendement_20j_pct": 5.282653221830727,
+      "volume_ratio_5j_vs_20j": 1.2279913591270069,
+      "score": 15.7,
+      "appel": "haussier",
+      "confiance": "moyenne",
+      "dimension_dominante": "technique",
+      "raison": "La phase technique de Weinstein est en position d'Achat, soutenue par des performances a court terme positives (+1.5% sur 5j et +5.3% sur 20j) ainsi qu'un ratio de volume favorable (1.23). Les actualites recentes restent mineures et n'inversent pas cette dynamique technique favorable malgre un score fondamental modere.",
+      "methode": "backtest_retroactif",
+      "date_resolution": "2025-12-30",
+      "return_pct": -0.7042156592519446,
+      "index_return_pct": 0.5594184899469863,
+      "alpha_pct": -1.263634149198931
+    },
+    {
+      "ticker": "UNI.MI",
+      "name": "Unipol",
+      "index": "FTSEMIB",
+      "date_cible": "2026-02-04",
+      "score_raw": 55.7,
+      "factors": [
+        {
+          "name": "Rentabilité / création de valeur",
+          "score": 4.1668282744682905,
+          "weight": 0.24,
+          "raw_value": "ROE 14.3% vs coût des capitaux propres 8.0% (profil financier)"
+        },
+        {
+          "name": "Structure financière / solvabilité",
+          "score": 10.0,
+          "weight": 0.2,
+          "raw_value": "Capitaux propres/actif total 11.5% (seuil confort 6%, vigilance sous 3%) — profil financier"
+        },
+        {
+          "name": "Croissance",
+          "score": 10.0,
+          "weight": 0.16,
+          "raw_value": "CAGR CA +10.4%/an, CAGR résultat net +34.5%/an (CAGR lissé, profil financier)"
+        },
+        {
+          "name": "Génération de cash",
+          "score": 5.7479757085020236,
+          "weight": 0.12,
+          "raw_value": "OCF/résultat net 310% (profil financier, signal volatil)"
+        },
+        {
+          "name": "Valorisation relative",
+          "score": -2.0,
+          "weight": 0.08,
+          "raw_value": "PER 9.3x (moy. 5 ans 6.2x) — P/B 1.3x (moy. 5 ans 0.7x) — profil financier"
+        },
+        {
+          "name": "Dynamique récente",
+          "score": 4.404584666913721,
+          "weight": 0.1,
+          "raw_value": "Cours +8.8% vs MM200"
+        },
+        {
+          "name": "Actualité récente",
+          "score": 0.0,
+          "weight": 0.1,
+          "raw_value": "Aucune actualité récente exploitable"
+        }
+      ],
+      "current_price": 18.58876609802246,
+      "ma200": 17.08382318496704,
+      "ecart_pct_ma200": 8.809169333827443,
+      "stage": 2,
+      "stage_label": "Achat",
+      "volume_confirme": false,
+      "sector": "Financial Services",
+      "is_financial": true,
+      "is_trust": false,
+      "fair_value": 25.07815924141568,
+      "entry_price": 19.361978406656245,
+      "exit_price": 24.965699271845537,
+      "actus": [],
+      "fondamentaux_degrades": false,
+      "rendement_5j_pct": 5.022823324867957,
+      "rendement_20j_pct": -4.354209870689956,
+      "volume_ratio_5j_vs_20j": 1.1122377678050883,
+      "score": 55.7,
+      "appel": "haussier",
+      "confiance": "moyenne",
+      "dimension_dominante": "technique",
+      "raison": "La phase technique de Weinstein est en mode Achat, soutenue par une performance à court terme positive (+5.0% sur 5 jours) malgré un léger recul sur 20 jours, et un ratio de volume supérieur à 1 (1.11), ce qui indique un intérêt acheteur naissant malgré l'absence d'actualité récente.",
+      "methode": "backtest_retroactif",
+      "date_resolution": "2026-03-06",
+      "return_pct": -2.199475941955703,
+      "index_return_pct": -4.887874022532905,
+      "alpha_pct": 2.6883980805772025
+    },
+    {
+      "ticker": "VRTX",
+      "name": "Vertex Pharmaceuticals",
+      "index": "NASDAQ",
+      "date_cible": "2026-01-18",
+      "score_raw": 50.3,
+      "factors": [
+        {
+          "name": "Rentabilité / création de valeur",
+          "score": 10.0,
+          "weight": 0.24,
+          "raw_value": "ROCE 25.4% vs coût du capital 6.3% (ROE 21.2%)"
+        },
+        {
+          "name": "Structure financière / solvabilité",
+          "score": 10.0,
+          "weight": 0.2,
+          "raw_value": "Dette nette/EBITDA -0.6x (seuil confort 3.9x, profil defensif) — ICR 152.9x"
+        },
+        {
+          "name": "Croissance",
+          "score": -4.66776115711064,
+          "weight": 0.16,
+          "raw_value": "CAGR CA +8.8%/an, CAGR EBITDA -15.5%/an (CAGR lissé)"
+        },
+        {
+          "name": "Génération de cash",
+          "score": 3.1261944393070706,
+          "weight": 0.12,
+          "raw_value": "Conversion FCF/EBITDA 66%"
+        },
+        {
+          "name": "Valorisation relative",
+          "score": 10.0,
+          "weight": 0.08,
+          "raw_value": "EV/EBITDA 22.3x (moy. 5 ans 65.2x) — PER 28.3x (moy. 5 ans -27.9x)"
+        },
+        {
+          "name": "Dynamique récente",
+          "score": 2.0474421022904585,
+          "weight": 0.1,
+          "raw_value": "Cours +0.9% vs MM200 — CA dernier trim. +12.5% vs an dernier (tendance 5 ans +8.8%)"
+        },
+        {
+          "name": "Actualité récente",
+          "score": 0.0,
+          "weight": 0.1,
+          "raw_value": "Aucune actualité récente exploitable"
+        }
+      ],
+      "current_price": 441.3599853515625,
+      "ma200": 437.25669860839844,
+      "ecart_pct_ma200": 0.9384159822417983,
+      "stage": 3,
+      "stage_label": "Neutre",
+      "volume_confirme": false,
+      "sector": "Healthcare",
+      "is_financial": false,
+      "is_trust": false,
+      "fair_value": 530.8262394553751,
+      "entry_price": 445.76823360142015,
+      "exit_price": 547.2550044501463,
+      "actus": [],
+      "fondamentaux_degrades": false,
+      "rendement_5j_pct": -4.850601627762115,
+      "rendement_20j_pct": -1.8152704799655066,
+      "volume_ratio_5j_vs_20j": 1.0499265466808507,
+      "score": 50.3,
+      "appel": "neutre",
+      "confiance": "moyenne",
+      "dimension_dominante": "technique",
+      "raison": "La phase technique de Weinstein est neutre, le score fondamental est median (50.3) et il n'y a aucune actualite recente exploitable. Le prix actuel (441.36) est proche du repere d'entree (445.77) avec des rendements a court terme legerement negatifs (-4.9% sur 5j et -1.8% sur 20j) et un ratio de volume stable (1.05), ce qui ne donne pas de signal directionnel clair.",
+      "methode": "backtest_retroactif",
+      "date_resolution": "2026-02-17",
+      "return_pct": 8.147549203857373,
+      "index_return_pct": -3.9846659601258487,
+      "alpha_pct": 12.132215163983222
+    },
+    {
+      "ticker": "HLN.L",
+      "name": "Haleon",
+      "index": "FTSE",
+      "date_cible": "2026-02-04",
+      "score_raw": 32.1,
+      "factors": [
+        {
+          "name": "Rentabilité / création de valeur",
+          "score": 1.24524507830331,
+          "weight": 0.24,
+          "raw_value": "ROCE 8.2% vs coût du capital 6.3% (ROE 10.1%)"
+        },
+        {
+          "name": "Structure financière / solvabilité",
+          "score": 6.715724522650021,
+          "weight": 0.2,
+          "raw_value": "Dette nette/EBITDA 2.6x (seuil confort 3.9x, profil defensif) — ICR 7.2x"
+        },
+        {
+          "name": "Croissance",
+          "score": 2.1870382594592286,
+          "weight": 0.16,
+          "raw_value": "CAGR CA +0.8%/an, CAGR EBITDA +7.9%/an (CAGR lissé)"
+        },
+        {
+          "name": "Génération de cash",
+          "score": 5.53690101434068,
+          "weight": 0.12,
+          "raw_value": "Conversion FCF/EBITDA 78%"
+        },
+        {
+          "name": "Valorisation relative",
+          "score": 4.306592593428649,
+          "weight": 0.08,
+          "raw_value": "EV/EBITDA 14.4x (moy. 5 ans 15.8x) — PER 20.3x (moy. 5 ans 24.3x)"
+        },
+        {
+          "name": "Dynamique récente",
+          "score": 2.1313393576954076,
+          "weight": 0.1,
+          "raw_value": "Cours +4.3% vs MM200"
+        },
+        {
+          "name": "Actualité récente",
+          "score": 0.0,
+          "weight": 0.1,
+          "raw_value": "Ton moyen pondéré des 2 actualités point-in-temps : +0.00"
+        }
+      ],
+      "current_price": 3.8432330322265624,
+      "ma200": 3.6861061691284176,
+      "ecart_pct_ma200": 4.262678715390815,
+      "stage": 3,
+      "stage_label": "Neutre",
+      "volume_confirme": false,
+      "sector": "Healthcare",
+      "is_financial": false,
+      "is_trust": false,
+      "fair_value": 4.72408574228536,
+      "entry_price": 3.909712098697291,
+      "exit_price": 4.802630268496516,
+      "actus": [
+        {
+          "date": "2026-01-22",
+          "sentiment": 0,
+          "importance": "mineure",
+          "titre": "Haleon ( LON : HLN ) Given New GBX 335 Price Target at Deutsche Bank Aktiengesellschaft",
+          "resume": "",
+          "url": "https://www.themarketsdaily.com/2026/01/22/haleon-lonhln-given-new-gbx-335-price-target-at-deutsche-bank-aktiengesellschaft.html"
+        },
+        {
+          "date": "2026-01-21",
+          "sentiment": 0,
+          "importance": "mineure",
+          "titre": "Haleon poised to deliver solid margin growth despite weaker cold season",
+          "resume": "",
+          "url": "https://www.proactiveinvestors.co.uk/companies/news/1086029/haleon-poised-to-deliver-solid-margin-growth-despite-weaker-cold-season-1086029.html"
+        }
+      ],
+      "fondamentaux_degrades": false,
+      "rendement_5j_pct": 2.071159697541742,
+      "rendement_20j_pct": 2.098269020277844,
+      "volume_ratio_5j_vs_20j": 1.1791556442601636,
+      "score": 32.1,
+      "appel": "neutre",
+      "confiance": "moyenne",
+      "dimension_dominante": "technique",
+      "raison": "La phase technique de Weinstein est neutre, avec un score fondamental composite faible à 32.1. Le prix actuel (3.84) est proche du repère d'entrée (3.91), et les actualités récentes montrent des signaux mixtes (objectif de cours inférieur de Deutsche Bank à 335 GBX compensé par une croissance solide des marges). Les volumes et les rendements à court terme sont stables.",
+      "methode": "backtest_retroactif",
+      "date_resolution": "2026-03-06",
+      "return_pct": -1.9250794814406658,
+      "index_return_pct": -0.28890898159939027,
+      "alpha_pct": -1.6361704998412754
+    },
+    {
+      "ticker": "HNR1.DE",
+      "name": "Hannover Rück",
+      "index": "DAX",
+      "date_cible": "2026-03-16",
+      "score_raw": 72.5,
+      "factors": [
+        {
+          "name": "Rentabilité / création de valeur",
+          "score": 9.892792352414912,
+          "weight": 0.24,
+          "raw_value": "ROE 20.4% vs coût des capitaux propres 5.6% (profil financier)"
+        },
+        {
+          "name": "Structure financière / solvabilité",
+          "score": 10.0,
+          "weight": 0.2,
+          "raw_value": "Capitaux propres/actif total 18.1% (seuil confort 6%, vigilance sous 3%) — profil financier"
+        },
+        {
+          "name": "Croissance",
+          "score": 10.0,
+          "weight": 0.16,
+          "raw_value": "CAGR CA +2.6%/an, CAGR résultat net +47.1%/an (CAGR lissé, profil financier)"
+        },
+        {
+          "name": "Génération de cash",
+          "score": 3.382263865228089,
+          "weight": 0.12,
+          "raw_value": "OCF/résultat net 215% (profil financier, signal volatil)"
+        },
+        {
+          "name": "Valorisation relative",
+          "score": 3.9709954601718827,
+          "weight": 0.08,
+          "raw_value": "PER 11.4x (moy. 5 ans 15.1x) — P/B 2.3x (moy. 5 ans 2.3x) — profil financier"
+        },
+        {
+          "name": "Dynamique récente",
+          "score": 5.4959618757673505,
+          "weight": 0.1,
+          "raw_value": "Cours +2.0% vs MM200 — CA dernier trim. +29.5% vs an dernier (tendance 5 ans +2.6%)"
+        },
+        {
+          "name": "Actualité récente",
+          "score": 0.0,
+          "weight": 0.1,
+          "raw_value": "Aucune actualité récente exploitable"
+        }
+      ],
+      "current_price": 248.66160583496094,
+      "ma200": 243.82449958801269,
+      "ecart_pct_ma200": 1.9838475030694014,
+      "stage": 3,
+      "stage_label": "Neutre",
+      "volume_confirme": false,
+      "sector": "Financial Services",
+      "is_financial": true,
+      "is_trust": false,
+      "fair_value": 321.6170958092586,
+      "entry_price": 260.41343035554684,
+      "exit_price": 320.84721970633626,
+      "actus": [],
+      "fondamentaux_degrades": false,
+      "rendement_5j_pct": 4.983923492444911,
+      "rendement_20j_pct": 5.920518632219446,
+      "volume_ratio_5j_vs_20j": 1.1489100708488296,
+      "score": 72.5,
+      "appel": "neutre",
+      "confiance": "moyenne",
+      "dimension_dominante": "technique",
+      "raison": "Le score fondamental composite est solide a 72.5 et le rendement a court terme est positif, mais la phase technique de Weinstein est neutre et le prix actuel (248.66) se situe sous le repere d'entree (260.41), suggerant d'attendre un signal technique plus clair malgre une dynamique de volume correcte.",
+      "methode": "backtest_retroactif",
+      "date_resolution": "2026-04-15",
+      "return_pct": 5.1301686083461835,
+      "index_return_pct": 2.6417133110737416,
+      "alpha_pct": 2.488455297272442
+    },
+    {
+      "ticker": "SAN.PA",
+      "name": "Sanofi",
+      "index": "CAC40",
+      "date_cible": "2026-03-05",
+      "score_raw": 23.8,
+      "factors": [
+        {
+          "name": "Rentabilité / création de valeur",
+          "score": 0.9705213246271633,
+          "weight": 0.24,
+          "raw_value": "ROCE 6.7% vs coût du capital 5.3% (ROE 10.9%)"
+        },
+        {
+          "name": "Structure financière / solvabilité",
+          "score": 8.698120534806167,
+          "weight": 0.2,
+          "raw_value": "Dette nette/EBITDA 1.0x (seuil confort 3.9x, profil defensif) — ICR 10.9x"
+        },
+        {
+          "name": "Croissance",
+          "score": -3.171364396868751,
+          "weight": 0.16,
+          "raw_value": "CAGR CA +3.9%/an, CAGR EBITDA -4.6%/an (CAGR lissé)"
+        },
+        {
+          "name": "Génération de cash",
+          "score": 1.558618479044796,
+          "weight": 0.12,
+          "raw_value": "Conversion FCF/EBITDA 58%"
+        },
+        {
+          "name": "Valorisation relative",
+          "score": 4.39515686868984,
+          "weight": 0.08,
+          "raw_value": "EV/EBITDA 8.2x (moy. 5 ans 8.7x) — PER 11.5x (moy. 5 ans 14.5x)"
+        },
+        {
+          "name": "Dynamique récente",
+          "score": 3.7261744623094044,
+          "weight": 0.1,
+          "raw_value": "Cours -5.1% vs MM200 — CA dernier trim. +14.6% vs an dernier (tendance 5 ans +3.9%)"
+        },
+        {
+          "name": "Actualité récente",
+          "score": 0.0,
+          "weight": 0.1,
+          "raw_value": "Ton moyen pondéré des 5 actualités point-in-temps : +0.00"
+        }
+      ],
+      "current_price": 75.0348129272461,
+      "ma200": 79.0633283996582,
+      "ecart_pct_ma200": -5.095302150762382,
+      "stage": 1,
+      "stage_label": "Neutre",
+      "volume_confirme": false,
+      "sector": "Healthcare",
+      "is_financial": false,
+      "is_trust": false,
+      "fair_value": 94.28022049584146,
+      "entry_price": 78.09006460840718,
+      "exit_price": 96.18526410276631,
+      "actus": [
+        {
+          "date": "2026-03-04",
+          "sentiment": 0,
+          "importance": "mineure",
+          "titre": "Sanofi $SNY Position Lifted by Managed Asset Portfolios LLC",
+          "resume": "",
+          "url": "https://www.tickerreport.com/banking-finance/13366958/sanofi-sny-position-lifted-by-managed-asset-portfolios-llc.html"
+        },
+        {
+          "date": "2026-03-04",
+          "sentiment": 0,
+          "importance": "mineure",
+          "titre": "Sanofi acquiert les droits exclusifs mondiaux dun anticancéreux auprès de Sino Biopharmaceutical",
+          "resume": "",
+          "url": "https://www.zonebourse.com/actualite-bourse/sanofi-acquiert-les-droits-exclusifs-mondiaux-d-un-anticancereux-aupres-de-sino-biopharmaceutical-ce7e5cd3da8dff27"
+        },
+        {
+          "date": "2026-03-03",
+          "sentiment": 0,
+          "importance": "mineure",
+          "titre": "Une filiale de Sino Biopharm cède les droits dun médicament contre le cancer du sang à Sanofi pour un montant pouvant atteindre 1 , 53 milliard de dollars",
+          "resume": "",
+          "url": "https://www.zonebourse.com/actualite-bourse/une-filiale-de-sino-biopharm-cede-les-droits-d-un-medicament-contre-le-cancer-du-sang-a-sanofi-pour-ce7e5cd2d081f720"
+        },
+        {
+          "date": "2026-03-03",
+          "sentiment": 0,
+          "importance": "mineure",
+          "titre": "Ignacio Sáez ‑ Torres asume la dirección general de Farma para AL en Sanofi",
+          "resume": "",
+          "url": "https://mundoejecutivo.com.mx/actualidad/ignacio-saez-torres-asume-la-direccion-general-de-farma-para-al-en-sanofi/"
+        },
+        {
+          "date": "2026-03-02",
+          "sentiment": 0,
+          "importance": "mineure",
+          "titre": "London & Capital Asset Management Ltd Cuts Position in Sanofi $SNY",
+          "resume": "",
+          "url": "https://www.tickerreport.com/banking-finance/13364343/london-capital-asset-management-ltd-cuts-position-in-sanofi-sny.html"
+        }
+      ],
+      "fondamentaux_degrades": false,
+      "rendement_5j_pct": -1.930935785810375,
+      "rendement_20j_pct": -3.189139896993251,
+      "volume_ratio_5j_vs_20j": 0.9942566326343765,
+      "score": 23.8,
+      "appel": "neutre",
+      "confiance": "moyenne",
+      "dimension_dominante": "technique",
+      "raison": "La phase technique de Weinstein est neutre, le score fondamental composite est faible à 23.8 et le prix actuel (75.03) est sous le repere d'entree avec des rendements à court terme négatifs (-1.9% sur 5j et -3.2% sur 20j), malgré quelques actualités positives d'acquisitions de droits.",
+      "methode": "backtest_retroactif",
+      "date_resolution": "2026-04-04",
+      "return_pct": 1.6155525953681775,
+      "index_return_pct": -3.1708901581353017,
+      "alpha_pct": 4.786442753503479
+    },
+    {
+      "ticker": "MRVL",
+      "name": "Marvell Technology",
+      "index": "NASDAQ",
+      "date_cible": "2026-02-04",
+      "score_raw": 37.6,
+      "factors": [
+        {
+          "name": "Rentabilité / création de valeur",
+          "score": 1.2531777874144023,
+          "weight": 0.24,
+          "raw_value": "ROCE 17.3% vs coût du capital 15.4% (ROE 18.7%)"
+        },
+        {
+          "name": "Structure financière / solvabilité",
+          "score": 8.871620104934347,
+          "weight": 0.2,
+          "raw_value": "Dette nette/EBITDA 0.5x (seuil confort 2.1x, profil cyclique) — ICR 16.0x"
+        },
+        {
+          "name": "Croissance",
+          "score": 5.500235139449384,
+          "weight": 0.16,
+          "raw_value": "CAGR CA +5.7%/an, CAGR EBITDA +16.3%/an (CAGR lissé)"
+        },
+        {
+          "name": "Génération de cash",
+          "score": -3.8680118066875186,
+          "weight": 0.12,
+          "raw_value": "Conversion FCF/EBITDA 31%"
+        },
+        {
+          "name": "Valorisation relative",
+          "score": 10.0,
+          "weight": 0.08,
+          "raw_value": "EV/EBITDA 15.1x (moy. 5 ans 67.5x) — PER 24.8x (moy. 5 ans -94.6x)"
+        },
+        {
+          "name": "Dynamique récente",
+          "score": 4.649204344318017,
+          "weight": 0.1,
+          "raw_value": "Cours -1.4% vs MM200 — CA dernier trim. +36.5% vs an dernier (tendance 5 ans +5.7%)"
+        },
+        {
+          "name": "Actualité récente",
+          "score": 0.0,
+          "weight": 0.1,
+          "raw_value": "Aucune actualité récente exploitable"
+        }
+      ],
+      "current_price": 75.46709442138672,
+      "ma200": 76.54110591888428,
+      "ecart_pct_ma200": -1.4031826227279327,
+      "stage": 1,
+      "stage_label": "Neutre",
+      "volume_confirme": false,
+      "sector": "Technology",
+      "is_financial": false,
+      "is_trust": false,
+      "fair_value": 138.61704341602822,
+      "entry_price": 75.98748558728832,
+      "exit_price": 149.84632101233365,
+      "actus": [],
+      "fondamentaux_degrades": false,
+      "rendement_5j_pct": -8.911127870923659,
+      "rendement_20j_pct": -16.220376926117567,
+      "volume_ratio_5j_vs_20j": 1.0113200938335691,
+      "score": 37.6,
+      "appel": "neutre",
+      "confiance": "moyenne",
+      "dimension_dominante": "technique",
+      "raison": "La phase technique de Weinstein est neutre et l'action montre des rendements a court terme recents negatifs (-8.9% sur 5j et -16.2% sur 20j), bien que le volume se maintienne (ratio de 1.01) et que le score fondamental soit de 37.6 sans actualite recente exploitable.",
+      "methode": "backtest_retroactif",
+      "date_resolution": "2026-03-06",
+      "return_pct": 18.572937929397433,
+      "index_return_pct": -3.730392166331826,
+      "alpha_pct": 22.303330095729258
+    },
+    {
+      "ticker": "TTE.PA",
+      "name": "TotalEnergies",
+      "index": "CAC40",
+      "date_cible": "2025-11-29",
+      "score_raw": 15.7,
+      "factors": [
+        {
+          "name": "Rentabilité / création de valeur",
+          "score": 5.361124637295466,
+          "weight": 0.24,
+          "raw_value": "ROCE 12.4% vs coût du capital 4.4% (ROE 11.4%)"
+        },
+        {
+          "name": "Structure financière / solvabilité",
+          "score": 7.798902852436594,
+          "weight": 0.2,
+          "raw_value": "Dette nette/EBITDA 0.9x (seuil confort 2.1x, profil cyclique) — ICR 9.8x"
+        },
+        {
+          "name": "Croissance",
+          "score": -6.380531228602173,
+          "weight": 0.16,
+          "raw_value": "CAGR CA -11.5%/an, CAGR EBITDA -14.1%/an (CAGR lissé)"
+        },
+        {
+          "name": "Génération de cash",
+          "score": -4.651773305193802,
+          "weight": 0.12,
+          "raw_value": "Conversion FCF/EBITDA 27%"
+        },
+        {
+          "name": "Valorisation relative",
+          "score": -5.0,
+          "weight": 0.08,
+          "raw_value": "EV/EBITDA 4.4x (moy. 5 ans 3.3x) — PER 10.1x (moy. 5 ans 7.3x)"
+        },
+        {
+          "name": "Dynamique récente",
+          "score": 7.0418968947411456,
+          "weight": 0.1,
+          "raw_value": "Cours +8.2% vs MM200 — CA dernier trim. +27.8% vs an dernier (tendance 5 ans -11.5%)"
+        },
+        {
+          "name": "Actualité récente",
+          "score": 0.0,
+          "weight": 0.1,
+          "raw_value": "Aucune actualité récente exploitable"
+        }
+      ],
+      "current_price": 54.04486083984375,
+      "ma200": 49.96400682449341,
+      "ecart_pct_ma200": 8.167587578964582,
+      "stage": 2,
+      "stage_label": "Achat",
+      "volume_confirme": false,
+      "sector": "Energy",
+      "is_financial": false,
+      "is_trust": false,
+      "fair_value": 65.24674275749632,
+      "entry_price": 54.24218933993902,
+      "exit_price": 66.52740109478813,
+      "actus": [],
+      "fondamentaux_degrades": false,
+      "rendement_5j_pct": 1.4829400931627856,
+      "rendement_20j_pct": 5.2826606530919324,
+      "volume_ratio_5j_vs_20j": 1.2279913591270069,
+      "score": 15.7,
+      "appel": "haussier",
+      "confiance": "moyenne",
+      "dimension_dominante": "technique",
+      "raison": "La phase technique de Weinstein est en Achat, soutenue par des rendements positifs a court et moyen terme (+1.5% sur 5j et +5.3% sur 20j) ainsi qu'un ratio de volume favorable de 1.23, malgré l'absence d'actualite recente et un score fondamental modeste.",
+      "methode": "backtest_retroactif",
+      "date_resolution": "2025-12-29",
+      "return_pct": -1.4964705224677035,
+      "index_return_pct": -0.1316056027810723,
+      "alpha_pct": -1.3648649196866312
+    },
+    {
+      "ticker": "HLN.L",
+      "name": "Haleon",
+      "index": "FTSE",
+      "date_cible": "2025-12-22",
+      "score_raw": 31.0,
+      "factors": [
+        {
+          "name": "Rentabilité / création de valeur",
+          "score": 1.2573923066523567,
+          "weight": 0.24,
+          "raw_value": "ROCE 8.2% vs coût du capital 6.3% (ROE 10.1%)"
+        },
+        {
+          "name": "Structure financière / solvabilité",
+          "score": 6.715724522650021,
+          "weight": 0.2,
+          "raw_value": "Dette nette/EBITDA 2.6x (seuil confort 3.9x, profil defensif) — ICR 7.2x"
+        },
+        {
+          "name": "Croissance",
+          "score": 2.1870382594592286,
+          "weight": 0.16,
+          "raw_value": "CAGR CA +0.8%/an, CAGR EBITDA +7.9%/an (CAGR lissé)"
+        },
+        {
+          "name": "Génération de cash",
+          "score": 5.53690101434068,
+          "weight": 0.12,
+          "raw_value": "Conversion FCF/EBITDA 78%"
+        },
+        {
+          "name": "Valorisation relative",
+          "score": 4.878080679241096,
+          "weight": 0.08,
+          "raw_value": "EV/EBITDA 14.1x (moy. 5 ans 15.7x) — PER 19.7x (moy. 5 ans 24.2x)"
+        },
+        {
+          "name": "Dynamique récente",
+          "score": 0.4608639943805328,
+          "weight": 0.1,
+          "raw_value": "Cours +0.9% vs MM200"
+        },
+        {
+          "name": "Actualité récente",
+          "score": 0.0,
+          "weight": 0.1,
+          "raw_value": "Ton moyen pondéré des 1 actualités point-in-temps : +0.00"
+        }
+      ],
+      "current_price": 3.7372540283203124,
+      "ma200": 3.703121322631836,
+      "ecart_pct_ma200": 0.9217279887610657,
+      "stage": 3,
+      "stage_label": "Neutre",
+      "volume_confirme": false,
+      "sector": "Healthcare",
+      "is_financial": false,
+      "is_trust": false,
+      "fair_value": 4.724084839562528,
+      "entry_price": 3.8720964827631708,
+      "exit_price": 4.765865274829142,
+      "actus": [
+        {
+          "date": "2025-12-10",
+          "sentiment": 0,
+          "importance": "mineure",
+          "titre": "MVM benefits specific groups , targeted use needed , says Haleon , NUS - funded review",
+          "resume": "",
+          "url": "https://www.nutraingredients.com/Article/2025/12/10/mvm-benefits-specific-groups-targeted-use-needed-says-haleon-nus-funded-review/"
+        }
+      ],
+      "fondamentaux_degrades": false,
+      "rendement_5j_pct": 4.26777045692267,
+      "rendement_20j_pct": -0.9013948877717228,
+      "volume_ratio_5j_vs_20j": 1.2168915457596947,
+      "score": 31.0,
+      "appel": "neutre",
+      "confiance": "moyenne",
+      "dimension_dominante": "technique",
+      "raison": "La phase technique de Weinstein est neutre, avec un prix actuel (3.74) legerement sous le repere d'entree (3.87). Le score fondamental est faible (31.0), le rendement a 20 jours est negatif (-0.9%) malgre une legere reprise recente a 5 jours (+4.3%), et l'actualite du 2025-12-10 est mineure. L'ensemble ne montre pas de signal directionnel clair.",
+      "methode": "backtest_retroactif",
+      "date_resolution": "2026-01-21",
+      "return_pct": 0.9095939208739631,
+      "index_return_pct": 2.4319438362622443,
+      "alpha_pct": -1.5223499153882813
+    },
+    {
+      "ticker": "FCIT.L",
+      "name": "F&C Investment Trust",
+      "index": "FTSE",
+      "date_cible": "2026-04-06",
+      "score_raw": 11.5,
+      "factors": [
+        {
+          "name": "Rentabilité / création de valeur",
+          "score": 1.8492427133491975,
+          "weight": 0.24,
+          "raw_value": "ROE 10.8% vs coût des capitaux propres 8.0% (profil financier)"
+        },
+        {
+          "name": "Structure financière / solvabilité",
+          "score": 1.9518655268273033,
+          "weight": 0.2,
+          "raw_value": "Dette nette/capitaux propres 8.0% (seuil confort 10%, vigilance au-delà de 40%) — profil trust"
+        },
+        {
+          "name": "Croissance",
+          "score": 0.0,
+          "weight": 0.16,
+          "raw_value": "CAGR CA +0.0%/an, CAGR résultat net +0.0%/an (CAGR lissé, profil financier)"
+        },
+        {
+          "name": "Génération de cash",
+          "score": 0.0,
+          "weight": 0.12,
+          "raw_value": "Non applicable pour ce profil (trust d'investissement) — la génération de cash dépend des cessions de portefeuille, pas d'un cycle d'exploitation"
+        },
+        {
+          "name": "Valorisation relative",
+          "score": 2.3284705533911336,
+          "weight": 0.08,
+          "raw_value": "P/B 0.93x vs NAV — décote de 7% sur la NAV"
+        },
+        {
+          "name": "Dynamique récente",
+          "score": 1.3175002743638184,
+          "weight": 0.1,
+          "raw_value": "Cours +2.6% vs MM200"
+        },
+        {
+          "name": "Actualité récente",
+          "score": 0.0,
+          "weight": 0.1,
+          "raw_value": "Aucune actualité récente exploitable"
+        }
+      ],
+      "current_price": 3.0946975708007813,
+      "ma200": 3.015245826721191,
+      "ecart_pct_ma200": 2.635000548727637,
+      "stage": 2,
+      "stage_label": "Achat",
+      "volume_confirme": false,
+      "sector": null,
+      "is_financial": false,
+      "is_trust": true,
+      "fair_value": 4.480728716960343,
+      "entry_price": 3.1056723683265615,
+      "exit_price": 4.751415566086783,
+      "actus": [],
+      "fondamentaux_degrades": false,
+      "rendement_5j_pct": 2.229558357678383,
+      "rendement_20j_pct": -0.16129622978554656,
+      "volume_ratio_5j_vs_20j": 0.8084930693983288,
+      "score": 11.5,
+      "appel": "haussier",
+      "confiance": "moyenne",
+      "dimension_dominante": "technique",
+      "raison": "La phase technique de Weinstein est en position d'achat avec un prix actuel de 3.09 proche du repère d'entrée de 3.11, malgré un volume récent légèrement inférieur à la moyenne (0.81) et l'absence d'actualité récente.",
+      "methode": "backtest_retroactif",
+      "date_resolution": "2026-05-06",
+      "return_pct": 6.385591534316404,
+      "index_return_pct": 0.023000399278696997,
+      "alpha_pct": 6.362591135037707
+    },
+    {
+      "ticker": "ALC.SW",
+      "name": "Alcon",
+      "index": "SMI",
+      "date_cible": "2026-03-03",
+      "score_raw": 35.6,
+      "factors": [
+        {
+          "name": "Rentabilité / création de valeur",
+          "score": -0.04665920952824484,
+          "weight": 0.24,
+          "raw_value": "ROCE 4.5% vs coût du capital 4.5% (ROE 4.4%)"
+        },
+        {
+          "name": "Structure financière / solvabilité",
+          "score": 8.236288843921301,
+          "weight": 0.2,
+          "raw_value": "Dette nette/EBITDA 1.4x (seuil confort 3.9x, profil defensif) — ICR 6.7x"
+        },
+        {
+          "name": "Croissance",
+          "score": 5.549786525035511,
+          "weight": 0.16,
+          "raw_value": "CAGR CA +5.7%/an, CAGR EBITDA +16.5%/an (CAGR lissé)"
+        },
+        {
+          "name": "Génération de cash",
+          "score": 1.915524268247499,
+          "weight": 0.12,
+          "raw_value": "Conversion FCF/EBITDA 60%"
+        },
+        {
+          "name": "Valorisation relative",
+          "score": 8.045726144445856,
+          "weight": 0.08,
+          "raw_value": "EV/EBITDA 15.4x (moy. 5 ans 18.9x) — PER 38.7x (moy. 5 ans 57.5x)"
+        },
+        {
+          "name": "Dynamique récente",
+          "score": 1.5838094426350557,
+          "weight": 0.1,
+          "raw_value": "Cours +0.3% vs MM200 — CA dernier trim. +8.7% vs an dernier (tendance 5 ans +5.7%)"
+        },
+        {
+          "name": "Actualité récente",
+          "score": 0.0,
+          "weight": 0.1,
+          "raw_value": "Aucune actualité récente exploitable"
+        }
+      ],
+      "current_price": 65.02412414550781,
+      "ma200": 64.8325616645813,
+      "ecart_pct_ma200": 0.29547263906920307,
+      "stage": 1,
+      "stage_label": "Neutre",
+      "volume_confirme": false,
+      "sector": "Healthcare",
+      "is_financial": false,
+      "is_trust": false,
+      "fair_value": 87.21039524790208,
+      "entry_price": 66.5961023440926,
+      "exit_price": 90.29737040593427,
+      "actus": [],
+      "fondamentaux_degrades": false,
+      "rendement_5j_pct": 2.4458975745607323,
+      "rendement_20j_pct": 5.455124071991933,
+      "volume_ratio_5j_vs_20j": 1.1966125094736408,
+      "score": 35.6,
+      "appel": "neutre",
+      "confiance": "faible",
+      "dimension_dominante": "technique",
+      "raison": "La phase technique de Weinstein est neutre, le score fondamental composite est faible à 35.6, et il n'y a aucune actualité récente exploitable. Seuls de légers gains à court terme et un ratio de volume supérieur à 1 sont observés, ce qui ne suffit pas à justifier un appel directionnel fort.",
+      "methode": "backtest_retroactif",
+      "date_resolution": "2026-04-02",
+      "return_pct": -7.682877378226653,
+      "index_return_pct": -6.159633853113465,
+      "alpha_pct": -1.5232435251131884
+    },
+    {
+      "ticker": "UBSG.SW",
+      "name": "UBS Group",
+      "index": "SMI",
+      "date_cible": "2025-11-21",
+      "score_raw": 23.9,
+      "factors": [
+        {
+          "name": "Rentabilité / création de valeur",
+          "score": 2.4964159267511334,
+          "weight": 0.24,
+          "raw_value": "ROE 8.6% vs coût des capitaux propres 4.9% (profil financier)"
+        },
+        {
+          "name": "Structure financière / solvabilité",
+          "score": 7.183749251125395,
+          "weight": 0.2,
+          "raw_value": "Capitaux propres/actif total 5.6% (seuil confort 6%, vigilance sous 3%) — profil financier"
+        },
+        {
+          "name": "Croissance",
+          "score": -1.4737032998039665,
+          "weight": 0.16,
+          "raw_value": "CAGR CA +11.7%/an, CAGR résultat net -5.6%/an (CAGR lissé, profil financier)"
+        },
+        {
+          "name": "Génération de cash",
+          "score": 5.033281833397709,
+          "weight": 0.12,
+          "raw_value": "OCF/résultat net 281% (profil financier, signal volatil)"
+        },
+        {
+          "name": "Valorisation relative",
+          "score": -4.383214676035205,
+          "weight": 0.08,
+          "raw_value": "PER 14.0x (moy. 5 ans 10.8x) — P/B 1.2x (moy. 5 ans 1.1x) — profil financier"
+        },
+        {
+          "name": "Dynamique récente",
+          "score": 3.4108942647563807,
+          "weight": 0.1,
+          "raw_value": "Cours +5.1% vs MM200 — CA dernier trim. +15.9% vs an dernier (tendance 5 ans +11.7%)"
+        },
+        {
+          "name": "Actualité récente",
+          "score": 0.0,
+          "weight": 0.1,
+          "raw_value": "Ton moyen pondéré des 4 actualités point-in-temps : +0.00"
+        }
+      ],
+      "current_price": 29.380645751953125,
+      "ma200": 27.946549673080444,
+      "ecart_pct_ma200": 5.131567566117388,
+      "stage": 2,
+      "stage_label": "Achat",
+      "volume_confirme": false,
+      "sector": "Financial Services",
+      "is_financial": true,
+      "is_trust": false,
+      "fair_value": 43.16455439037115,
+      "entry_price": 30.557483960737954,
+      "exit_price": 44.01862215891653,
+      "actus": [
+        {
+          "date": "2025-11-19",
+          "sentiment": 0,
+          "importance": "mineure",
+          "titre": "Pinnacle Wealth Planning Services Inc . Has $424 , 000 Stock Holdings in UBS Group AG $UBS",
+          "resume": "",
+          "url": "https://www.themarketsdaily.com/2025/11/19/pinnacle-wealth-planning-services-inc-has-424000-stock-holdings-in-ubs-group-ag-ubs.html"
+        },
+        {
+          "date": "2025-11-13",
+          "sentiment": 0,
+          "importance": "mineure",
+          "titre": "UBS Group AG ( UBS ) Gets Downgraded to Neutral from Outperform by BNP Paribas Exane",
+          "resume": "",
+          "url": "https://finance.yahoo.com/news/ubs-group-ag-ubs-gets-025521498.html"
+        },
+        {
+          "date": "2025-11-12",
+          "sentiment": 0,
+          "importance": "mineure",
+          "titre": "M & G PLC Grows Position in UBS Group AG $UBS",
+          "resume": "",
+          "url": "https://www.themarketsdaily.com/2025/11/12/mg-plc-grows-position-in-ubs-group-ag-ubs.html"
+        },
+        {
+          "date": "2025-11-08",
+          "sentiment": 0,
+          "importance": "mineure",
+          "titre": "UBS Group ( NYSE : UBS ) Downgraded to Moderate Sell Rating by Keefe , Bruyette & Woods",
+          "resume": "",
+          "url": "https://www.dailypolitical.com/2025/11/08/ubs-group-nyseubs-downgraded-to-moderate-sell-rating-by-keefe-bruyette-woods.html"
+        }
+      ],
+      "fondamentaux_degrades": false,
+      "rendement_5j_pct": -3.1269882606581776,
+      "rendement_20j_pct": -0.13157234462644254,
+      "volume_ratio_5j_vs_20j": 1.0670001384985988,
+      "score": 23.9,
+      "appel": "neutre",
+      "confiance": "moyenne",
+      "dimension_dominante": "actualite",
+      "raison": "Malgré une phase technique favorable à l'achat et un volume stable, les récentes actualités montrent des dégradations de notation de la part de BNP Paribas Exane et de Keefe, Bruyette & Woods, contrebalancées par des mouvements mineurs d'institutionnels, ce qui incite à la neutralité à court terme.",
+      "methode": "backtest_retroactif",
+      "date_resolution": "2025-12-21",
+      "return_pct": 21.146240697173187,
+      "index_return_pct": 4.947760811137073,
+      "alpha_pct": 16.198479886036115
+    },
+    {
+      "ticker": "ALC.SW",
+      "name": "Alcon",
+      "index": "SMI",
+      "date_cible": "2026-04-18",
+      "score_raw": 35.8,
+      "factors": [
+        {
+          "name": "Rentabilité / création de valeur",
+          "score": -0.04438188767491861,
+          "weight": 0.24,
+          "raw_value": "ROCE 4.5% vs coût du capital 4.5% (ROE 4.4%)"
+        },
+        {
+          "name": "Structure financière / solvabilité",
+          "score": 8.236288843921301,
+          "weight": 0.2,
+          "raw_value": "Dette nette/EBITDA 1.4x (seuil confort 3.9x, profil defensif) — ICR 6.7x"
+        },
+        {
+          "name": "Croissance",
+          "score": 5.549786525035511,
+          "weight": 0.16,
+          "raw_value": "CAGR CA +5.7%/an, CAGR EBITDA +16.5%/an (CAGR lissé)"
+        },
+        {
+          "name": "Génération de cash",
+          "score": 1.915524268247499,
+          "weight": 0.12,
+          "raw_value": "Conversion FCF/EBITDA 60%"
+        },
+        {
+          "name": "Valorisation relative",
+          "score": 8.264198146093042,
+          "weight": 0.08,
+          "raw_value": "EV/EBITDA 15.1x (moy. 5 ans 18.8x) — PER 37.9x (moy. 5 ans 57.3x)"
+        },
+        {
+          "name": "Dynamique récente",
+          "score": 1.6561761122573873,
+          "weight": 0.1,
+          "raw_value": "Cours +0.6% vs MM200 — CA dernier trim. +8.7% vs an dernier (tendance 5 ans +5.7%)"
+        },
+        {
+          "name": "Actualité récente",
+          "score": 0.0,
+          "weight": 0.1,
+          "raw_value": "Aucune actualité récente exploitable"
+        }
+      ],
+      "current_price": 63.591094970703125,
+      "ma200": 63.22128879547119,
+      "ecart_pct_ma200": 0.5849393175585293,
+      "stage": 1,
+      "stage_label": "Neutre",
+      "volume_confirme": false,
+      "sector": "Healthcare",
+      "is_financial": false,
+      "is_trust": false,
+      "fair_value": 87.09958648390543,
+      "entry_price": 65.81396998730298,
+      "exit_price": 89.37412549004878,
+      "actus": [],
+      "fondamentaux_degrades": false,
+      "rendement_5j_pct": 3.733775830575296,
+      "rendement_20j_pct": 6.6777964660967,
+      "volume_ratio_5j_vs_20j": 0.9339301142757915,
+      "score": 35.8,
+      "appel": "neutre",
+      "confiance": "moyenne",
+      "dimension_dominante": "technique",
+      "raison": "La phase technique de Weinstein est neutre et le score fondamental composite est faible (35.8), malgré un léger rebond récent à court terme (+3.7% sur 5j) et un prix actuel (63.59) proche du repère d'entrée (65.81). En l'absence d'actualité récente et avec un ratio de volume stable (0.93), la prudence est de mise.",
+      "methode": "backtest_retroactif",
+      "date_resolution": "2026-05-18",
+      "return_pct": -19.13962451403789,
+      "index_return_pct": -1.3854428709194826,
+      "alpha_pct": -17.754181643118407
+    },
+    {
+      "ticker": "UNI.MC",
+      "name": "Unicaja Banco",
+      "index": "IBEX35",
+      "date_cible": "2026-04-06",
+      "score_raw": 25.5,
+      "factors": [
+        {
+          "name": "Rentabilité / création de valeur",
+          "score": 0.5385354012656798,
+          "weight": 0.24,
+          "raw_value": "ROE 8.9% vs coût des capitaux propres 8.1% (profil financier)"
+        },
+        {
+          "name": "Structure financière / solvabilité",
+          "score": 10.0,
+          "weight": 0.2,
+          "raw_value": "Capitaux propres/actif total 7.2% (seuil confort 6%, vigilance sous 3%) — profil financier"
+        },
+        {
+          "name": "Croissance",
+          "score": 9.032527121278061,
+          "weight": 0.16,
+          "raw_value": "CAGR CA +6.6%/an, CAGR résultat net +29.5%/an (CAGR lissé, profil financier)"
+        },
+        {
+          "name": "Génération de cash",
+          "score": -7.616112601129743,
+          "weight": 0.12,
+          "raw_value": "OCF/résultat net -225% (profil financier, signal volatil)"
+        },
+        {
+          "name": "Valorisation relative",
+          "score": -2.0,
+          "weight": 0.08,
+          "raw_value": "PER 9.8x (moy. 5 ans 7.2x) — P/B 0.9x (moy. 5 ans 0.5x) — profil financier"
+        },
+        {
+          "name": "Dynamique récente",
+          "score": 0.5341300569592256,
+          "weight": 0.1,
+          "raw_value": "Cours +5.4% vs MM200 — CA dernier trim. +5.0% vs an dernier (tendance 5 ans +6.6%)"
+        },
+        {
+          "name": "Actualité récente",
+          "score": 0.0,
+          "weight": 0.1,
+          "raw_value": "Aucune actualité récente exploitable"
+        }
+      ],
+      "current_price": 2.4208784103393555,
+      "ma200": 2.2965240627527237,
+      "ecart_pct_ma200": 5.414894169999451,
+      "stage": 2,
+      "stage_label": "Achat",
+      "volume_confirme": false,
+      "sector": "Financial Services",
+      "is_financial": true,
+      "is_trust": false,
+      "fair_value": 3.0262033399923753,
+      "entry_price": 2.4810313312181087,
+      "exit_price": 3.0497880353546005,
+      "actus": [],
+      "fondamentaux_degrades": false,
+      "rendement_5j_pct": 3.0424407314928463,
+      "rendement_20j_pct": 1.6587641900923478,
+      "volume_ratio_5j_vs_20j": 0.7532796607106949,
+      "score": 25.5,
+      "appel": "haussier",
+      "confiance": "moyenne",
+      "dimension_dominante": "technique",
+      "raison": "La phase technique de Weinstein indique un signal d'achat avec un prix actuel de 2.42 proche du repere d'entree de 2.48, soutenue par des performances positives a court terme malgre un volume 5j/20j modere et en l'absence d'actualites recentes.",
+      "methode": "backtest_retroactif",
+      "date_resolution": "2026-05-06",
+      "return_pct": 10.416332640660238,
+      "index_return_pct": 3.1237383353909345,
+      "alpha_pct": 7.292594305269304
+    },
+    {
+      "ticker": "STAN.L",
+      "name": "Standard Chartered",
+      "index": "FTSE",
+      "date_cible": "2026-03-18",
+      "score_raw": 41.1,
+      "factors": [
+        {
+          "name": "Rentabilité / création de valeur",
+          "score": 0.5590090217598854,
+          "weight": 0.24,
+          "raw_value": "ROE 9.4% vs coût des capitaux propres 8.6% (profil financier)"
+        },
+        {
+          "name": "Structure financière / solvabilité",
+          "score": 9.220034313272567,
+          "weight": 0.2,
+          "raw_value": "Capitaux propres/actif total 5.9% (seuil confort 6%, vigilance sous 3%) — profil financier"
+        },
+        {
+          "name": "Croissance",
+          "score": 7.3032759674499514,
+          "weight": 0.16,
+          "raw_value": "CAGR CA +9.9%/an, CAGR résultat net +19.3%/an (CAGR lissé, profil financier)"
+        },
+        {
+          "name": "Génération de cash",
+          "score": 10.0,
+          "weight": 0.12,
+          "raw_value": "OCF/résultat net 725% (profil financier, signal volatil)"
+        },
+        {
+          "name": "Valorisation relative",
+          "score": -2.0,
+          "weight": 0.08,
+          "raw_value": "PER 9.1x (moy. 5 ans 7.0x) — P/B 0.9x (moy. 5 ans 0.5x) — profil financier"
+        },
+        {
+          "name": "Dynamique récente",
+          "score": -0.7756182686211401,
+          "weight": 0.1,
+          "raw_value": "Cours +4.7% vs MM200 — CA dernier trim. +6.0% vs an dernier (tendance 5 ans +9.9%)"
+        },
+        {
+          "name": "Actualité récente",
+          "score": 0.0,
+          "weight": 0.1,
+          "raw_value": "Aucune actualité récente exploitable"
+        }
+      ],
+      "current_price": 16.02870361328125,
+      "ma200": 15.310956890869141,
+      "ecart_pct_ma200": 4.687797944491287,
+      "stage": 3,
+      "stage_label": "Neutre",
+      "volume_confirme": true,
+      "sector": "Financial Services",
+      "is_financial": true,
+      "is_trust": false,
+      "fair_value": 20.515972947825468,
+      "entry_price": 16.45004602480799,
+      "exit_price": 20.777200728651643,
+      "actus": [],
+      "fondamentaux_degrades": false,
+      "rendement_5j_pct": -4.836789473680379,
+      "rendement_20j_pct": -9.227281352820173,
+      "volume_ratio_5j_vs_20j": 1.3098458443216907,
+      "score": 41.1,
+      "appel": "neutre",
+      "confiance": "moyenne",
+      "dimension_dominante": "technique",
+      "raison": "La phase technique de Weinstein est neutre, le prix actuel (16.03) est proche du repere d'entree (16.45) et le score fondamental composite est de 41.1, ce qui ne fournit pas de signal clair pour une orientation haussiere ou baissiere malgre un leger recul a court terme.",
+      "methode": "backtest_retroactif",
+      "date_resolution": "2026-04-17",
+      "return_pct": 14.159656512204883,
+      "index_return_pct": 2.537583239575094,
+      "alpha_pct": 11.62207327262979
+    },
+    {
+      "ticker": "LOG.MC",
+      "name": "Logista",
+      "index": "IBEX35",
+      "date_cible": "2026-01-18",
+      "score_raw": 60.9,
+      "factors": [
+        {
+          "name": "Rentabilité / création de valeur",
+          "score": 10.0,
+          "weight": 0.24,
+          "raw_value": "ROCE 42.0% vs coût du capital 7.8% (ROE 48.1%)"
+        },
+        {
+          "name": "Structure financière / solvabilité",
+          "score": 9.698515271962176,
+          "weight": 0.2,
+          "raw_value": "Dette nette/EBITDA 0.2x (seuil confort 3.0x, profil standard) — ICR 51.4x"
+        },
+        {
+          "name": "Croissance",
+          "score": 6.655556961223419,
+          "weight": 0.16,
+          "raw_value": "CAGR CA +6.4%/an, CAGR EBITDA +20.2%/an (CAGR lissé)"
+        },
+        {
+          "name": "Génération de cash",
+          "score": 1.8120449988448442,
+          "weight": 0.12,
+          "raw_value": "Conversion FCF/EBITDA 59%"
+        },
+        {
+          "name": "Valorisation relative",
+          "score": -2.0,
+          "weight": 0.08,
+          "raw_value": "EV/EBITDA 6.8x (moy. 5 ans 5.4x) — PER 12.6x (moy. 5 ans 10.6x)"
+        },
+        {
+          "name": "Dynamique récente",
+          "score": 6.2591547837579995,
+          "weight": 0.1,
+          "raw_value": "Cours +9.9% vs MM200 — CA dernier trim. +14.0% vs an dernier (tendance 5 ans +6.4%)"
+        },
+        {
+          "name": "Actualité récente",
+          "score": 0.0,
+          "weight": 0.1,
+          "raw_value": "Aucune actualité récente exploitable"
+        }
+      ],
+      "current_price": 29.489534378051758,
+      "ma200": 26.827187662124633,
+      "ecart_pct_ma200": 9.92406192351612,
+      "stage": 2,
+      "stage_label": "Achat",
+      "volume_confirme": false,
+      "sector": "Industrials",
+      "is_financial": false,
+      "is_trust": false,
+      "fair_value": 35.980795506182375,
+      "entry_price": 29.703811939662497,
+      "exit_price": 36.44229064869609,
+      "actus": [],
+      "fondamentaux_degrades": false,
+      "rendement_5j_pct": 1.2903190725085223,
+      "rendement_20j_pct": 9.10353864042011,
+      "volume_ratio_5j_vs_20j": 0.9825247380238499,
+      "score": 60.9,
+      "appel": "haussier",
+      "confiance": "moyenne",
+      "dimension_dominante": "technique",
+      "raison": "La phase technique de Weinstein est en mode Achat, soutenue par des rendements a court terme positifs (+1.3% sur 5j et +9.1% sur 20j). Le prix actuel (29.49) est proche du repere d'entree (29.70) malgre une absence d'actualite recente et un ratio de volume neutre (0.98).",
+      "methode": "backtest_retroactif",
+      "date_resolution": "2026-02-17",
+      "return_pct": 5.859876286211333,
+      "index_return_pct": 1.3805057597716626,
+      "alpha_pct": 4.47937052643967
+    },
+    {
+      "ticker": "HLN.L",
+      "name": "Haleon",
+      "index": "FTSE",
+      "date_cible": "2026-01-25",
+      "score_raw": 31.7,
+      "factors": [
+        {
+          "name": "Rentabilité / création de valeur",
+          "score": 1.2504502694503508,
+          "weight": 0.24,
+          "raw_value": "ROCE 8.2% vs coût du capital 6.3% (ROE 10.1%)"
+        },
+        {
+          "name": "Structure financière / solvabilité",
+          "score": 6.715724522650021,
+          "weight": 0.2,
+          "raw_value": "Dette nette/EBITDA 2.6x (seuil confort 3.9x, profil defensif) — ICR 7.2x"
+        },
+        {
+          "name": "Croissance",
+          "score": 2.1870382594592286,
+          "weight": 0.16,
+          "raw_value": "CAGR CA +0.8%/an, CAGR EBITDA +7.9%/an (CAGR lissé)"
+        },
+        {
+          "name": "Génération de cash",
+          "score": 5.53690101434068,
+          "weight": 0.12,
+          "raw_value": "Conversion FCF/EBITDA 78%"
+        },
+        {
+          "name": "Valorisation relative",
+          "score": 4.553828571089787,
+          "weight": 0.08,
+          "raw_value": "EV/EBITDA 14.2x (moy. 5 ans 15.8x) — PER 20.0x (moy. 5 ans 24.3x)"
+        },
+        {
+          "name": "Dynamique récente",
+          "score": 1.5256501867811625,
+          "weight": 0.1,
+          "raw_value": "Cours +3.1% vs MM200"
+        },
+        {
+          "name": "Actualité récente",
+          "score": 0.0,
+          "weight": 0.1,
+          "raw_value": "Aucune actualité récente exploitable"
+        }
+      ],
+      "current_price": 3.7972421264648437,
+      "ma200": 3.6848075790405272,
+      "ecart_pct_ma200": 3.051300373562325,
+      "stage": 3,
+      "stage_label": "Neutre",
+      "volume_confirme": false,
+      "sector": "Healthcare",
+      "is_financial": false,
+      "is_trust": false,
+      "fair_value": 4.724025405321197,
+      "entry_price": 3.8922775420658913,
+      "exit_price": 4.785121731816098,
+      "actus": [],
+      "fondamentaux_degrades": false,
+      "rendement_5j_pct": 4.369321425944208,
+      "rendement_20j_pct": 2.069325717373819,
+      "volume_ratio_5j_vs_20j": 1.1099418798841967,
+      "score": 31.7,
+      "appel": "neutre",
+      "confiance": "moyenne",
+      "dimension_dominante": "technique",
+      "raison": "La phase technique de Weinstein est neutre et le prix actuel (3.80) est légèrement sous le repère d'entrée (3.89), malgré de faibles hausses récentes et un score fondamental composite faible (31.7). L'absence d'actualités exploitables oriente vers une posture d'attente.",
+      "methode": "backtest_retroactif",
+      "date_resolution": "2026-02-24",
+      "return_pct": 6.819387882296304,
+      "index_return_pct": 5.296046671355933,
+      "alpha_pct": 1.5233412109403712
+    },
+    {
+      "ticker": "HNR1.DE",
+      "name": "Hannover Rück",
+      "index": "DAX",
+      "date_cible": "2025-12-30",
+      "score_raw": 72.2,
+      "factors": [
+        {
+          "name": "Rentabilité / création de valeur",
+          "score": 9.892792352414912,
+          "weight": 0.24,
+          "raw_value": "ROE 20.4% vs coût des capitaux propres 5.6% (profil financier)"
+        },
+        {
+          "name": "Structure financière / solvabilité",
+          "score": 10.0,
+          "weight": 0.2,
+          "raw_value": "Capitaux propres/actif total 18.1% (seuil confort 6%, vigilance sous 3%) — profil financier"
+        },
+        {
+          "name": "Croissance",
+          "score": 10.0,
+          "weight": 0.16,
+          "raw_value": "CAGR CA +2.6%/an, CAGR résultat net +47.1%/an (CAGR lissé, profil financier)"
+        },
+        {
+          "name": "Génération de cash",
+          "score": 3.382263865228089,
+          "weight": 0.12,
+          "raw_value": "OCF/résultat net 215% (profil financier, signal volatil)"
+        },
+        {
+          "name": "Valorisation relative",
+          "score": 3.656983335230832,
+          "weight": 0.08,
+          "raw_value": "PER 11.6x (moy. 5 ans 15.2x) — P/B 2.4x (moy. 5 ans 2.3x) — profil financier"
+        },
+        {
+          "name": "Dynamique récente",
+          "score": 5.440632484576139,
+          "weight": 0.1,
+          "raw_value": "Cours +1.8% vs MM200 — CA dernier trim. +29.5% vs an dernier (tendance 5 ans +2.6%)"
+        },
+        {
+          "name": "Actualité récente",
+          "score": 0.0,
+          "weight": 0.1,
+          "raw_value": "Aucune actualité récente exploitable"
+        }
+      ],
+      "current_price": 253.80238342285156,
+      "ma200": 249.40651885986327,
+      "ecart_pct_ma200": 1.7625299383045578,
+      "stage": 3,
+      "stage_label": "Neutre",
+      "volume_confirme": false,
+      "sector": "Financial Services",
+      "is_financial": true,
+      "is_trust": false,
+      "fair_value": 321.6170958092586,
+      "entry_price": 263.03897435998715,
+      "exit_price": 323.75186467436913,
+      "actus": [],
+      "fondamentaux_degrades": false,
+      "rendement_5j_pct": 2.696452923085738,
+      "rendement_20j_pct": 3.4937911290181076,
+      "volume_ratio_5j_vs_20j": 1.095447020799784,
+      "score": 72.2,
+      "appel": "neutre",
+      "confiance": "moyenne",
+      "dimension_dominante": "technique",
+      "raison": "La phase technique de Weinstein est neutre, le prix actuel (253.80) est en dessous du repere d'entree (263.04), et aucune actualite recente n'est disponible pour soutenir un mouvement directionnel fort malgre un score fondamental solide.",
+      "methode": "backtest_retroactif",
+      "date_resolution": "2026-01-29",
+      "return_pct": -10.802700359455939,
+      "index_return_pct": -0.17107305370413786,
+      "alpha_pct": -10.6316273057518
+    },
+    {
+      "ticker": "HEN3.DE",
+      "name": "Henkel",
+      "index": "DAX",
+      "date_cible": "2026-01-20",
+      "score_raw": 33.3,
+      "factors": [
+        {
+          "name": "Rentabilité / création de valeur",
+          "score": 1.8407086554797611,
+          "weight": 0.24,
+          "raw_value": "ROCE 10.0% vs coût du capital 7.2% (ROE 9.9%)"
+        },
+        {
+          "name": "Structure financière / solvabilité",
+          "score": 9.636091035466567,
+          "weight": 0.2,
+          "raw_value": "Dette nette/EBITDA 0.3x (seuil confort 3.9x, profil defensif) — ICR 24.5x"
+        },
+        {
+          "name": "Croissance",
+          "score": 2.1949863975451844,
+          "weight": 0.16,
+          "raw_value": "CAGR CA -2.1%/an, CAGR EBITDA +10.8%/an (CAGR lissé)"
+        },
+        {
+          "name": "Génération de cash",
+          "score": 0.456996877661085,
+          "weight": 0.12,
+          "raw_value": "Conversion FCF/EBITDA 52%"
+        },
+        {
+          "name": "Valorisation relative",
+          "score": 4.830270778125671,
+          "weight": 0.08,
+          "raw_value": "EV/EBITDA 8.3x (moy. 5 ans 9.2x) — PER 13.9x (moy. 5 ans 17.3x)"
+        },
+        {
+          "name": "Dynamique récente",
+          "score": 1.6962146444444266,
+          "weight": 0.1,
+          "raw_value": "Cours +3.4% vs MM200"
+        },
+        {
+          "name": "Actualité récente",
+          "score": 0.0,
+          "weight": 0.1,
+          "raw_value": "Aucune actualité récente exploitable"
+        }
+      ],
+      "current_price": 69.76947021484375,
+      "ma200": 67.48025043487549,
+      "ecart_pct_ma200": 3.3924292888888528,
+      "stage": 2,
+      "stage_label": "Achat",
+      "volume_confirme": false,
+      "sector": "Consumer Defensive",
+      "is_financial": false,
+      "is_trust": false,
+      "fair_value": 91.43685504233855,
+      "entry_price": 72.41686588043706,
+      "exit_price": 92.10401685680199,
+      "actus": [],
+      "fondamentaux_degrades": false,
+      "rendement_5j_pct": 0.8955994549657146,
+      "rendement_20j_pct": 2.999998873679812,
+      "volume_ratio_5j_vs_20j": 1.009862106233865,
+      "score": 33.3,
+      "appel": "haussier",
+      "confiance": "moyenne",
+      "dimension_dominante": "technique",
+      "raison": "La phase technique de Weinstein est en mode Achat, soutenue par des performances a court terme positives (+0.9% sur 5j et +3.0% sur 20j) et des volumes stables (ratio 1.01), malgre un score fondamental faible de 33.3 et l'absence d'actualites recentes.",
+      "methode": "backtest_retroactif",
+      "date_resolution": "2026-02-19",
+      "return_pct": 13.980586176398802,
+      "index_return_pct": 0.3385935358676032,
+      "alpha_pct": 13.641992640531198
+    },
+    {
+      "ticker": "BARC.L",
+      "name": "Barclays",
+      "index": "FTSE",
+      "date_cible": "2026-03-28",
+      "score_raw": 9.1,
+      "factors": [
+        {
+          "name": "Rentabilité / création de valeur",
+          "score": -0.3677965168500812,
+          "weight": 0.24,
+          "raw_value": "ROE 9.2% vs coût des capitaux propres 9.8% (profil financier)"
+        },
+        {
+          "name": "Structure financière / solvabilité",
+          "score": 3.5819034882930243,
+          "weight": 0.2,
+          "raw_value": "Capitaux propres/actif total 5.0% (seuil confort 6%, vigilance sous 3%) — profil financier"
+        },
+        {
+          "name": "Croissance",
+          "score": 1.9498542167959931,
+          "weight": 0.16,
+          "raw_value": "CAGR CA +3.4%/an, CAGR résultat net +4.4%/an (CAGR lissé, profil financier)"
+        },
+        {
+          "name": "Génération de cash",
+          "score": 4.531999442275516,
+          "weight": 0.12,
+          "raw_value": "OCF/résultat net 261% (profil financier, signal volatil)"
+        },
+        {
+          "name": "Valorisation relative",
+          "score": -5.0,
+          "weight": 0.08,
+          "raw_value": "PER 7.1x (moy. 5 ans 5.1x) — P/B 0.7x (moy. 5 ans 0.4x) — profil financier"
+        },
+        {
+          "name": "Dynamique récente",
+          "score": -1.7351556614172363,
+          "weight": 0.1,
+          "raw_value": "Cours -5.6% vs MM200 — CA dernier trim. +2.8% vs an dernier (tendance 5 ans +3.4%)"
+        },
+        {
+          "name": "Actualité récente",
+          "score": 0.0,
+          "weight": 0.1,
+          "raw_value": "Ton moyen pondéré des 5 actualités point-in-temps : +0.00"
+        }
+      ],
+      "current_price": 3.821572570800781,
+      "ma200": 4.048529098510742,
+      "ecart_pct_ma200": -5.60590086393222,
+      "stage": 3,
+      "stage_label": "Neutre",
+      "volume_confirme": true,
+      "sector": "Financial Services",
+      "is_financial": true,
+      "is_trust": false,
+      "fair_value": 5.505245305540296,
+      "entry_price": 3.9436156671113576,
+      "exit_price": 5.806738077482283,
+      "actus": [
+        {
+          "date": "2026-03-27",
+          "sentiment": 0,
+          "importance": "mineure",
+          "titre": "Barclays just made a surprising call on the S & P 500",
+          "resume": "",
+          "url": "https://finance.yahoo.com/markets/stocks/articles/barclays-just-made-surprising-call-233700274.html"
+        },
+        {
+          "date": "2026-03-25",
+          "sentiment": 0,
+          "importance": "mineure",
+          "titre": "Barclays pulls back on asset - based lending after MFS , Tricolor",
+          "resume": "",
+          "url": "https://www.businesstimes.com.sg/companies-markets/banking-finance/barclays-pulls-back-asset-based-lending-after-mfs-tricolor"
+        },
+        {
+          "date": "2026-03-25",
+          "sentiment": 0,
+          "importance": "mineure",
+          "titre": "Richemont - Aktie erhält von Barclays Capital Bewertung : Overweight",
+          "resume": "",
+          "url": "https://www.finanzen.ch/nachrichten/aktien/richemont-aktie-erhaelt-von-barclays-capital-bewertung-overweight-1035962256"
+        },
+        {
+          "date": "2026-03-24",
+          "sentiment": 0,
+          "importance": "mineure",
+          "titre": "Why protestors are gathering outside Barclays bank , Newport",
+          "resume": "",
+          "url": "https://www.southwalesargus.co.uk/news/25965372.protestors-gathering-outside-barclays-bank-newport/"
+        },
+        {
+          "date": "2026-03-24",
+          "sentiment": 0,
+          "importance": "mineure",
+          "titre": "Down 25 %, are Barclays shares simply too cheap to ignore ?",
+          "resume": "",
+          "url": "https://www.fool.co.uk/2026/03/24/down-25-are-barclays-shares-simply-too-cheap-to-ignore/"
+        }
+      ],
+      "fondamentaux_degrades": false,
+      "rendement_5j_pct": 2.2198533555624755,
+      "rendement_20j_pct": -15.601190753403133,
+      "volume_ratio_5j_vs_20j": 1.2821946037581675,
+      "score": 9.1,
+      "appel": "neutre",
+      "confiance": "moyenne",
+      "dimension_dominante": "technique",
+      "raison": "La phase technique de Weinstein est neutre, avec un prix actuel de 3.82 en dessous du repere d'entree de 3.94 et une performance recente marquee par une baisse de 15.6% sur 20 jours, malgre un rebond a court terme de 2.2% sur 5 jours et un score fondamental eleve a 9.1.",
+      "methode": "backtest_retroactif",
+      "date_resolution": "2026-04-27",
+      "return_pct": 11.82626129274687,
+      "index_return_pct": 3.5485603556437595,
+      "alpha_pct": 8.277700937103111
+    },
+    {
+      "ticker": "LOG.MC",
+      "name": "Logista",
+      "index": "IBEX35",
+      "date_cible": "2026-01-18",
+      "score_raw": 60.9,
+      "factors": [
+        {
+          "name": "Rentabilité / création de valeur",
+          "score": 10.0,
+          "weight": 0.24,
+          "raw_value": "ROCE 42.0% vs coût du capital 7.8% (ROE 48.1%)"
+        },
+        {
+          "name": "Structure financière / solvabilité",
+          "score": 9.698515271962176,
+          "weight": 0.2,
+          "raw_value": "Dette nette/EBITDA 0.2x (seuil confort 3.0x, profil standard) — ICR 51.4x"
+        },
+        {
+          "name": "Croissance",
+          "score": 6.655556961223419,
+          "weight": 0.16,
+          "raw_value": "CAGR CA +6.4%/an, CAGR EBITDA +20.2%/an (CAGR lissé)"
+        },
+        {
+          "name": "Génération de cash",
+          "score": 1.8120449988448442,
+          "weight": 0.12,
+          "raw_value": "Conversion FCF/EBITDA 59%"
+        },
+        {
+          "name": "Valorisation relative",
+          "score": -2.0,
+          "weight": 0.08,
+          "raw_value": "EV/EBITDA 6.8x (moy. 5 ans 5.4x) — PER 12.6x (moy. 5 ans 10.6x)"
+        },
+        {
+          "name": "Dynamique récente",
+          "score": 6.259154813065511,
+          "weight": 0.1,
+          "raw_value": "Cours +9.9% vs MM200 — CA dernier trim. +14.0% vs an dernier (tendance 5 ans +6.4%)"
+        },
+        {
+          "name": "Actualité récente",
+          "score": 0.0,
+          "weight": 0.1,
+          "raw_value": "Aucune actualité récente exploitable"
+        }
+      ],
+      "current_price": 29.489534378051758,
+      "ma200": 26.827187633514406,
+      "ecart_pct_ma200": 9.924062040746163,
+      "stage": 2,
+      "stage_label": "Achat",
+      "volume_confirme": false,
+      "sector": "Industrials",
+      "is_financial": false,
+      "is_trust": false,
+      "fair_value": 35.980795884270876,
+      "entry_price": 29.70381209677383,
+      "exit_price": 36.442290861090186,
+      "actus": [],
+      "fondamentaux_degrades": false,
+      "rendement_5j_pct": 1.2903190725085223,
+      "rendement_20j_pct": 9.10353864042011,
+      "volume_ratio_5j_vs_20j": 0.9825247380238499,
+      "score": 60.9,
+      "appel": "haussier",
+      "confiance": "moyenne",
+      "dimension_dominante": "technique",
+      "raison": "La phase technique de Weinstein est en mode Achat, soutenue par des performances a court et moyen termes positives (+1.3% sur 5j et +9.1% sur 20j). Le prix actuel de 29.49 est proche du repere d'entree de 29.70, et malgre l'absence d'actualite recente, la dynamique de prix et le score fondamental composite de 60.9 orientent l'analyse vers un biais positif, avec un volume stable (ratio 5j/20j a 0.98).",
+      "methode": "backtest_retroactif",
+      "date_resolution": "2026-02-17",
+      "return_pct": 5.859876286211333,
+      "index_return_pct": 1.3805057597716626,
+      "alpha_pct": 4.47937052643967
+    },
+    {
+      "ticker": "HLN.L",
+      "name": "Haleon",
+      "index": "FTSE",
+      "date_cible": "2025-11-29",
+      "score_raw": 30.4,
+      "factors": [
+        {
+          "name": "Rentabilité / création de valeur",
+          "score": 1.2608113499818234,
+          "weight": 0.24,
+          "raw_value": "ROCE 8.2% vs coût du capital 6.3% (ROE 10.1%)"
+        },
+        {
+          "name": "Structure financière / solvabilité",
+          "score": 6.715724522650021,
+          "weight": 0.2,
+          "raw_value": "Dette nette/EBITDA 2.6x (seuil confort 3.9x, profil defensif) — ICR 7.2x"
+        },
+        {
+          "name": "Croissance",
+          "score": 2.1870382594592286,
+          "weight": 0.16,
+          "raw_value": "CAGR CA +0.8%/an, CAGR EBITDA +7.9%/an (CAGR lissé)"
+        },
+        {
+          "name": "Génération de cash",
+          "score": 5.53690101434068,
+          "weight": 0.12,
+          "raw_value": "Conversion FCF/EBITDA 78%"
+        },
+        {
+          "name": "Valorisation relative",
+          "score": 5.035524390208999,
+          "weight": 0.08,
+          "raw_value": "EV/EBITDA 14.0x (moy. 5 ans 15.7x) — PER 19.6x (moy. 5 ans 24.2x)"
+        },
+        {
+          "name": "Dynamique récente",
+          "score": -0.2545786658454524,
+          "weight": 0.1,
+          "raw_value": "Cours -0.5% vs MM200"
+        },
+        {
+          "name": "Actualité récente",
+          "score": 0.0,
+          "weight": 0.1,
+          "raw_value": "Aucune actualité récente exploitable"
+        }
+      ],
+      "current_price": 3.7082598876953123,
+      "ma200": 3.727237390136718,
+      "ecart_pct_ma200": -0.5091573316909048,
+      "stage": 1,
+      "stage_label": "Neutre",
+      "volume_confirme": false,
+      "sector": "Healthcare",
+      "is_financial": false,
+      "is_trust": false,
+      "fair_value": 4.7241716328306795,
+      "entry_price": 3.864275075605871,
+      "exit_price": 4.759262690037309,
+      "actus": [],
+      "fondamentaux_degrades": false,
+      "rendement_5j_pct": -1.670215757477675,
+      "rendement_20j_pct": 4.7444175134304984,
+      "volume_ratio_5j_vs_20j": 1.0598829205502247,
+      "score": 30.4,
+      "appel": "neutre",
+      "confiance": "moyenne",
+      "dimension_dominante": "technique",
+      "raison": "La phase technique de Weinstein est neutre, le prix actuel (3.71) est sous le repere d'entree (3.86), et il n'y a aucune actualite recente exploitable. Les rendements a court terme montrent une legere hesitation (-1.7% sur 5j malgre +4.7% sur 20j) avec un ratio de volume neutre (1.06).",
+      "methode": "backtest_retroactif",
+      "date_resolution": "2025-12-29",
+      "return_pct": 0.5661980116245061,
+      "index_return_pct": 1.5019803508049998,
+      "alpha_pct": -0.9357823391804937
+    },
+    {
+      "ticker": "SHEL.L",
+      "name": "Shell plc",
+      "index": "FTSE",
+      "date_cible": "2025-11-27",
+      "score_raw": 12.0,
+      "factors": [
+        {
+          "name": "Rentabilité / création de valeur",
+          "score": 3.59137182507423,
+          "weight": 0.24,
+          "raw_value": "ROCE 9.5% vs coût du capital 4.2% (ROE 10.2%)"
+        },
+        {
+          "name": "Structure financière / solvabilité",
+          "score": 6.55562153807495,
+          "weight": 0.2,
+          "raw_value": "Dette nette/EBITDA 0.8x (seuil confort 2.1x, profil cyclique) — ICR 7.3x"
+        },
+        {
+          "name": "Croissance",
+          "score": -6.285275165459931,
+          "weight": 0.16,
+          "raw_value": "CAGR CA -10.3%/an, CAGR EBITDA -14.9%/an (CAGR lissé)"
+        },
+        {
+          "name": "Génération de cash",
+          "score": -1.5586615840745452,
+          "weight": 0.12,
+          "raw_value": "Conversion FCF/EBITDA 42%"
+        },
+        {
+          "name": "Valorisation relative",
+          "score": -5.0,
+          "weight": 0.08,
+          "raw_value": "EV/EBITDA 4.5x (moy. 5 ans 3.7x) — PER 11.8x (moy. 5 ans 9.4x)"
+        },
+        {
+          "name": "Dynamique récente",
+          "score": 6.212478939633633,
+          "weight": 0.1,
+          "raw_value": "Cours +4.8% vs MM200 — CA dernier trim. +44.7% vs an dernier (tendance 5 ans -10.3%)"
+        },
+        {
+          "name": "Actualité récente",
+          "score": 0.0,
+          "weight": 0.1,
+          "raw_value": "Aucune actualité récente exploitable"
+        }
+      ],
+      "current_price": 27.65748046875,
+      "ma200": 26.37816184082031,
+      "ecart_pct_ma200": 4.849915758534532,
+      "stage": 2,
+      "stage_label": "Achat",
+      "volume_confirme": true,
+      "sector": "Energy",
+      "is_financial": false,
+      "is_trust": false,
+      "fair_value": 43.921331226369766,
+      "entry_price": 29.041291335113208,
+      "exit_price": 44.855506887106166,
+      "actus": [],
+      "fondamentaux_degrades": false,
+      "rendement_5j_pct": -0.9842399934551832,
+      "rendement_20j_pct": -3.7817655532302443,
+      "volume_ratio_5j_vs_20j": 1.1465092481507435,
+      "score": 12.0,
+      "appel": "haussier",
+      "confiance": "moyenne",
+      "dimension_dominante": "technique",
+      "raison": "La phase technique de Weinstein est indiquee a l'achat, malgre un leger repli a court terme du prix et des rendements negatifs sur 5 et 20 jours. Le volume est superieur a la moyenne (ratio 1.15) et le secteur de l'energie soutient la configuration, bien qu'aucune actualite recente ne soit disponible.",
+      "methode": "backtest_retroactif",
+      "date_resolution": "2025-12-27",
+      "return_pct": -2.186873041665514,
+      "index_return_pct": 1.8046596813163138,
+      "alpha_pct": -3.9915327229818276
+    },
+    {
+      "ticker": "HSX.L",
+      "name": "Hiscox",
+      "index": "FTSE",
+      "date_cible": "2026-01-10",
+      "score_raw": 49.3,
+      "factors": [
+        {
+          "name": "Rentabilité / création de valeur",
+          "score": 4.489313827235567,
+          "weight": 0.24,
+          "raw_value": "ROE 15.3% vs coût des capitaux propres 8.6% (profil financier)"
+        },
+        {
+          "name": "Structure financière / solvabilité",
+          "score": 10.0,
+          "weight": 0.2,
+          "raw_value": "Capitaux propres/actif total 32.4% (seuil confort 6%, vigilance sous 3%) — profil financier"
+        },
+        {
+          "name": "Croissance",
+          "score": 10.0,
+          "weight": 0.16,
+          "raw_value": "CAGR CA +10.2%/an, CAGR résultat net +34.3%/an (CAGR lissé, profil financier)"
+        },
+        {
+          "name": "Génération de cash",
+          "score": -1.6987253765932793,
+          "weight": 0.12,
+          "raw_value": "OCF/résultat net 12% (profil financier, signal volatil)"
+        },
+        {
+          "name": "Valorisation relative",
+          "score": 0.7985415712374844,
+          "weight": 0.08,
+          "raw_value": "PER 9.7x (moy. 5 ans 10.3x) — P/B 1.5x (moy. 5 ans 1.5x) — profil financier"
+        },
+        {
+          "name": "Dynamique récente",
+          "score": 3.942401145808712,
+          "weight": 0.1,
+          "raw_value": "Cours +7.9% vs MM200"
+        },
+        {
+          "name": "Actualité récente",
+          "score": 0.0,
+          "weight": 0.1,
+          "raw_value": "Ton moyen pondéré des 4 actualités point-in-temps : +0.00"
+        }
+      ],
+      "current_price": 13.94669677734375,
+      "ma200": 12.927397076416016,
+      "ecart_pct_ma200": 7.884802291617424,
+      "stage": 2,
+      "stage_label": "Achat",
+      "volume_confirme": false,
+      "sector": "Financial Services",
+      "is_financial": true,
+      "is_trust": false,
+      "fair_value": 16.715824811638825,
+      "entry_price": 13.95016147100241,
+      "exit_price": 17.103905046569032,
+      "actus": [
+        {
+          "date": "2026-01-02",
+          "sentiment": 0,
+          "importance": "mineure",
+          "titre": "Hiscox Ltd - Total Voting Rights | Company Announcement",
+          "resume": "",
+          "url": "https://www.investegate.co.uk/announcement/rns/hiscox-limited-di---hsx/hiscox-ltd-total-voting-rights/9330770"
+        },
+        {
+          "date": "2025-12-31",
+          "sentiment": 0,
+          "importance": "mineure",
+          "titre": "Hiscox Ltd ( OTCMKTS : HCXLF ) Sees Significant Growth in Short Interest",
+          "resume": "",
+          "url": "https://www.tickerreport.com/banking-finance/13304946/hiscox-ltd-otcmktshcxlf-sees-significant-growth-in-short-interest.html"
+        },
+        {
+          "date": "2025-12-29",
+          "sentiment": 0,
+          "importance": "mineure",
+          "titre": "Athletes Win National Titles At Hiscox Squash",
+          "resume": "",
+          "url": "https://bernews.com/2025/12/athletes-win-national-titles-at-hiscox-squash/"
+        },
+        {
+          "date": "2025-12-29",
+          "sentiment": 0,
+          "importance": "mineure",
+          "titre": "Strategic portfolio management & capital allocation are key to navigate cycle : Hiscox Re & ILS",
+          "resume": "",
+          "url": "https://www.artemis.bm/news/strategic-portfolio-management-capital-allocation-are-key-to-navigate-cycle-hiscox-re-ils/"
+        }
+      ],
+      "fondamentaux_degrades": false,
+      "rendement_5j_pct": -0.21459941544346023,
+      "rendement_20j_pct": 6.083651990649152,
+      "volume_ratio_5j_vs_20j": 0.6862181938835284,
+      "score": 49.3,
+      "appel": "haussier",
+      "confiance": "moyenne",
+      "dimension_dominante": "technique",
+      "raison": "L'action est en phase technique d'achat selon la méthode de Weinstein, soutenue par une performance positive à 20 jours (+6,1%), malgré un essoufflement à court terme (-0,2% sur 5j) et un volume plus faible (0,69). Les actualités récentes restent mineures et neutres.",
+      "methode": "backtest_retroactif",
+      "date_resolution": "2026-02-09",
+      "return_pct": 7.8136238927263335,
+      "index_return_pct": 2.5838116669351314,
+      "alpha_pct": 5.229812225791202
+    },
+    {
+      "ticker": "SHEL.L",
+      "name": "Shell plc",
+      "index": "FTSE",
+      "date_cible": "2026-01-04",
+      "score_raw": 11.8,
+      "factors": [
+        {
+          "name": "Rentabilité / création de valeur",
+          "score": 3.5915261011385273,
+          "weight": 0.24,
+          "raw_value": "ROCE 9.5% vs coût du capital 4.2% (ROE 10.2%)"
+        },
+        {
+          "name": "Structure financière / solvabilité",
+          "score": 6.55562153807495,
+          "weight": 0.2,
+          "raw_value": "Dette nette/EBITDA 0.8x (seuil confort 2.1x, profil cyclique) — ICR 7.3x"
+        },
+        {
+          "name": "Croissance",
+          "score": -6.285275165459931,
+          "weight": 0.16,
+          "raw_value": "CAGR CA -10.3%/an, CAGR EBITDA -14.9%/an (CAGR lissé)"
+        },
+        {
+          "name": "Génération de cash",
+          "score": -1.5586615840745452,
+          "weight": 0.12,
+          "raw_value": "Conversion FCF/EBITDA 42%"
+        },
+        {
+          "name": "Valorisation relative",
+          "score": -5.0,
+          "weight": 0.08,
+          "raw_value": "EV/EBITDA 4.5x (moy. 5 ans 3.7x) — PER 11.7x (moy. 5 ans 9.4x)"
+        },
+        {
+          "name": "Dynamique récente",
+          "score": 6.025926430890685,
+          "weight": 0.1,
+          "raw_value": "Cours +4.1% vs MM200 — CA dernier trim. +44.7% vs an dernier (tendance 5 ans -10.3%)"
+        },
+        {
+          "name": "Actualité récente",
+          "score": 0.0,
+          "weight": 0.1,
+          "raw_value": "Aucune actualité récente exploitable"
+        }
+      ],
+      "current_price": 27.58749755859375,
+      "ma200": 26.50001492919922,
+      "ecart_pct_ma200": 4.10370572356274,
+      "stage": 2,
+      "stage_label": "Achat",
+      "volume_confirme": false,
+      "sector": "Energy",
+      "is_financial": false,
+      "is_trust": false,
+      "fair_value": 43.91671421221219,
+      "entry_price": 29.028663424896827,
+      "exit_price": 44.85367918148041,
+      "actus": [],
+      "fondamentaux_degrades": false,
+      "rendement_5j_pct": 2.128053593227926,
+      "rendement_20j_pct": -1.039996875271486,
+      "volume_ratio_5j_vs_20j": 0.48577021229816975,
+      "score": 11.8,
+      "appel": "haussier",
+      "confiance": "moyenne",
+      "dimension_dominante": "technique",
+      "raison": "La phase technique de Weinstein est en mode Achat, ce qui constitue le signal principal malgre un score fondamental faible et des volumes actuels inferieurs a la moyenne.",
+      "methode": "backtest_retroactif",
+      "date_resolution": "2026-02-03",
+      "return_pct": 1.087157082503566,
+      "index_return_pct": 3.652862641004459,
+      "alpha_pct": -2.565705558500893
+    },
+    {
+      "ticker": "SNDK",
+      "name": "Sandisk",
+      "index": "NASDAQ",
+      "date_cible": "2025-11-22",
+      "score_raw": 82.0,
+      "factors": [
+        {
+          "name": "Rentabilité / création de valeur",
+          "score": 10.0,
+          "weight": 0.24,
+          "raw_value": "ROCE 103.3% vs coût du capital 8.0% (ROE 72.7%)"
+        },
+        {
+          "name": "Structure financière / solvabilité",
+          "score": 10.0,
+          "weight": 0.2,
+          "raw_value": "Dette nette/EBITDA -0.3x (seuil confort 2.1x, profil cyclique) — ICR 616.3x"
+        },
+        {
+          "name": "Croissance",
+          "score": 7.0,
+          "weight": 0.16,
+          "raw_value": "CAGR CA +47.1%/an, CAGR EBITDA +0.0%/an (CAGR lissé)"
+        },
+        {
+          "name": "Génération de cash",
+          "score": 7.36384923332578,
+          "weight": 0.12,
+          "raw_value": "Conversion FCF/EBITDA 87%"
+        },
+        {
+          "name": "Valorisation relative",
+          "score": 10.0,
+          "weight": 0.08,
+          "raw_value": "EV/EBITDA 1.8x (moy. 5 ans -1.9x) — PER 2.5x (moy. 5 ans -0.7x)"
+        },
+        {
+          "name": "Dynamique récente",
+          "score": 10.0,
+          "weight": 0.1,
+          "raw_value": "CA dernier trim. +371.6% vs an dernier (tendance 5 ans +47.1%)"
+        },
+        {
+          "name": "Actualité récente",
+          "score": 0.0,
+          "weight": 0.1,
+          "raw_value": "Ton moyen pondéré des 5 actualités point-in-temps : +0.00"
+        }
+      ],
+      "current_price": 200.27000427246094,
+      "ma200": null,
+      "ecart_pct_ma200": null,
+      "stage": 2,
+      "stage_label": "Achat",
+      "volume_confirme": true,
+      "sector": "Technology",
+      "is_financial": false,
+      "is_trust": false,
+      "fair_value": 287.2846337853571,
+      "entry_price": 201.09924364974995,
+      "exit_price": 373.4700239209642,
+      "actus": [
+        {
+          "date": "2025-11-21",
+          "sentiment": 0,
+          "importance": "mineure",
+          "titre": "SanDisk Unusual Options Activity For November 21 - SanDisk ( NASDAQ : SNDK )",
+          "resume": "",
+          "url": "https://www.benzinga.com/insights/options/25/11/49003239/sandisk-unusual-options-activity-for-november-21"
+        },
+        {
+          "date": "2025-11-20",
+          "sentiment": 0,
+          "importance": "mineure",
+          "titre": "SanDisk Unusual Options Activity - SanDisk ( NASDAQ : SNDK )",
+          "resume": "",
+          "url": "https://www.benzinga.com/insights/options/25/11/48986733/sandisk-unusual-options-activity"
+        },
+        {
+          "date": "2025-11-20",
+          "sentiment": 0,
+          "importance": "mineure",
+          "titre": "AI winner Sandisk gets a new Street - high target at Bank of America",
+          "resume": "",
+          "url": "https://finance.yahoo.com/news/ai-winner-sandisk-gets-street-131243055.html"
+        },
+        {
+          "date": "2025-11-19",
+          "sentiment": 0,
+          "importance": "mineure",
+          "titre": "SanDisk Extreme Fit USB - C Flash Drive review : Leave - in storage",
+          "resume": "",
+          "url": "https://www.cultofmac.com/reviews/sandisk-extreme-fit-usb-c-flash-drive-review-ssd-leave-in"
+        },
+        {
+          "date": "2025-11-18",
+          "sentiment": 0,
+          "importance": "mineure",
+          "titre": "Sandisk launches Creator Series storage for digital professionals",
+          "resume": "",
+          "url": "https://channellife.com.au/story/sandisk-launches-creator-series-storage-for-digital-professionals"
+        }
+      ],
+      "fondamentaux_degrades": false,
+      "rendement_5j_pct": -21.203178554125294,
+      "rendement_20j_pct": 7.579501682843748,
+      "volume_ratio_5j_vs_20j": 1.2805542470839006,
+      "score": 82.0,
+      "appel": "haussier",
+      "confiance": "elevee",
+      "dimension_dominante": "fondamentale_et_technique",
+      "raison": "Le score fondamental composite est excellent (82.0), la phase technique de Weinstein est en 'Achat' avec un prix actuel proche du repere d'entree (200.27 vs 201.10), et les actualites recentes signalent un nouvel objectif record par Bank of America liee au statut de gagnant de l'IA, malgre un repli a court terme (-21.2% sur 5j) associe a un volume superieur a la moyenne (1.28) temoignant d'une activite anormale sur les options.",
+      "methode": "backtest_retroactif",
+      "date_resolution": "2025-12-22",
+      "return_pct": 20.3625095667432,
+      "index_return_pct": 5.188999437644431,
+      "alpha_pct": 15.17351012909877
+    },
+    {
+      "ticker": "ALC.SW",
+      "name": "Alcon",
+      "index": "SMI",
+      "date_cible": "2026-04-17",
+      "score_raw": 35.5,
+      "factors": [
+        {
+          "name": "Rentabilité / création de valeur",
+          "score": -0.04277051155560585,
+          "weight": 0.24,
+          "raw_value": "ROCE 4.5% vs coût du capital 4.5% (ROE 4.4%)"
+        },
+        {
+          "name": "Structure financière / solvabilité",
+          "score": 8.236288843921301,
+          "weight": 0.2,
+          "raw_value": "Dette nette/EBITDA 1.4x (seuil confort 3.9x, profil defensif) — ICR 6.7x"
+        },
+        {
+          "name": "Croissance",
+          "score": 5.549786525035511,
+          "weight": 0.16,
+          "raw_value": "CAGR CA +5.7%/an, CAGR EBITDA +16.5%/an (CAGR lissé)"
+        },
+        {
+          "name": "Génération de cash",
+          "score": 1.915524268247499,
+          "weight": 0.12,
+          "raw_value": "Conversion FCF/EBITDA 60%"
+        },
+        {
+          "name": "Valorisation relative",
+          "score": 8.413913569351097,
+          "weight": 0.08,
+          "raw_value": "EV/EBITDA 14.9x (moy. 5 ans 18.8x) — PER 37.3x (moy. 5 ans 57.1x)"
+        },
+        {
+          "name": "Dynamique récente",
+          "score": 1.2582493940258042,
+          "weight": 0.1,
+          "raw_value": "Cours -1.0% vs MM200 — CA dernier trim. +8.7% vs an dernier (tendance 5 ans +5.7%)"
+        },
+        {
+          "name": "Actualité récente",
+          "score": 0.0,
+          "weight": 0.1,
+          "raw_value": "Ton moyen pondéré des 4 actualités point-in-temps : +0.00"
+        }
+      ],
+      "current_price": 62.61582946777344,
+      "ma200": 63.252636489868166,
+      "ecart_pct_ma200": -1.0067675553678033,
+      "stage": 1,
+      "stage_label": "Neutre",
+      "volume_confirme": false,
+      "sector": "Healthcare",
+      "is_financial": false,
+      "is_trust": false,
+      "fair_value": 87.03010086818078,
+      "entry_price": 65.42498806119406,
+      "exit_price": 88.97228543944826,
+      "actus": [
+        {
+          "date": "2026-04-13",
+          "sentiment": 0,
+          "importance": "mineure",
+          "titre": "Alcons Audio Ships The CRMS - LFE18sl mkII Reference Subwoofer",
+          "resume": "",
+          "url": "https://www.etnow.com/news/2026/4/alcons-audio-ships-the-crms-lfe18sl-mkii-reference-subwoofer"
+        },
+        {
+          "date": "2026-04-12",
+          "sentiment": 0,
+          "importance": "mineure",
+          "titre": "Alcon Expands Lesage , West Virginia , Production Operations",
+          "resume": "",
+          "url": "https://www.areadevelopment.com/newsItems/4-12-2026/alcon-lesage-west-virginia.shtml"
+        },
+        {
+          "date": "2026-04-09",
+          "sentiment": 0,
+          "importance": "mineure",
+          "titre": "Mexican Gold Mining Corp .: Mexican Gold Mining Corp . and Alcon Silver Corp . Announce Arrangement Agreement to Create a Diversified Precious Metals Exploration Company",
+          "resume": "",
+          "url": "https://www.finanznachrichten.de/nachrichten-2026-04/68152773-mexican-gold-mining-corp-mexican-gold-mining-corp-and-alcon-silver-corp-announce-arrangement-agreement-to-create-a-diversified-precious-metals-exp-296.htm"
+        },
+        {
+          "date": "2026-04-05",
+          "sentiment": 0,
+          "importance": "mineure",
+          "titre": "Garfield Movie Raises a Bigger Question for Alcon IP Strategy",
+          "resume": "",
+          "url": "https://www.el-balad.com/16902918"
+        }
+      ],
+      "fondamentaux_degrades": false,
+      "rendement_5j_pct": 3.147538869716814,
+      "rendement_20j_pct": 2.8104576473400154,
+      "volume_ratio_5j_vs_20j": 0.8905736045342831,
+      "score": 35.5,
+      "appel": "neutre",
+      "confiance": "moyenne",
+      "dimension_dominante": "technique",
+      "raison": "La phase technique de Weinstein est neutre, le score fondamental composite est faible à 35.5, et le prix actuel (62.62) est inférieur au repère d'entrée (65.42). Le ratio de volume (0.89) indique un manque de soutien acheteur malgré de légères hausses récentes à court terme, et les actualités récentes n'ont qu'un impact mineur.",
+      "methode": "backtest_retroactif",
+      "date_resolution": "2026-05-17",
+      "return_pct": -17.88019322588435,
+      "index_return_pct": 0.5126349529991343,
+      "alpha_pct": -18.392828178883487
+    },
+    {
+      "ticker": "LOG.MC",
+      "name": "Logista",
+      "index": "IBEX35",
+      "date_cible": "2026-01-15",
+      "score_raw": 60.5,
+      "factors": [
+        {
+          "name": "Rentabilité / création de valeur",
+          "score": 10.0,
+          "weight": 0.24,
+          "raw_value": "ROCE 42.0% vs coût du capital 7.8% (ROE 48.1%)"
+        },
+        {
+          "name": "Structure financière / solvabilité",
+          "score": 9.698515271962176,
+          "weight": 0.2,
+          "raw_value": "Dette nette/EBITDA 0.2x (seuil confort 3.0x, profil standard) — ICR 51.4x"
+        },
+        {
+          "name": "Croissance",
+          "score": 6.655556961223419,
+          "weight": 0.16,
+          "raw_value": "CAGR CA +6.4%/an, CAGR EBITDA +20.2%/an (CAGR lissé)"
+        },
+        {
+          "name": "Génération de cash",
+          "score": 1.8120449988448442,
+          "weight": 0.12,
+          "raw_value": "Conversion FCF/EBITDA 59%"
+        },
+        {
+          "name": "Valorisation relative",
+          "score": -2.0,
+          "weight": 0.08,
+          "raw_value": "EV/EBITDA 6.7x (moy. 5 ans 5.4x) — PER 12.5x (moy. 5 ans 10.5x)"
+        },
+        {
+          "name": "Dynamique récente",
+          "score": 5.896209454172193,
+          "weight": 0.1,
+          "raw_value": "Cours +8.5% vs MM200 — CA dernier trim. +14.0% vs an dernier (tendance 5 ans +6.4%)"
+        },
+        {
+          "name": "Actualité récente",
+          "score": 0.0,
+          "weight": 0.1,
+          "raw_value": "Aucune actualité récente exploitable"
+        }
+      ],
+      "current_price": 29.076303482055664,
+      "ma200": 26.805284557342528,
+      "ecart_pct_ma200": 8.472280605172894,
+      "stage": 2,
+      "stage_label": "Achat",
+      "volume_confirme": false,
+      "sector": "Industrials",
+      "is_financial": false,
+      "is_trust": false,
+      "fair_value": 35.958629112153,
+      "entry_price": 29.536691748103713,
+      "exit_price": 36.27075034279379,
+      "actus": [],
+      "fondamentaux_degrades": false,
+      "rendement_5j_pct": 1.6414943616761597,
+      "rendement_20j_pct": 8.631575631894378,
+      "volume_ratio_5j_vs_20j": 0.8434554791008472,
+      "score": 60.5,
+      "appel": "haussier",
+      "confiance": "moyenne",
+      "dimension_dominante": "technique",
+      "raison": "La phase technique de Weinstein est en mode Achat, soutenue par un bon momentum à court et moyen terme (+1.6% sur 5j et +8.6% sur 20j), malgré un volume de 5j légèrement inférieur à la moyenne 20j (0.84) et l'absence d'actualité récente.",
+      "methode": "backtest_retroactif",
+      "date_resolution": "2026-02-14",
+      "return_pct": 6.912138045573192,
+      "index_return_pct": 0.8606655174644087,
+      "alpha_pct": 6.051472528108784
+    },
+    {
+      "ticker": "SHEL.L",
+      "name": "Shell plc",
+      "index": "FTSE",
+      "date_cible": "2025-12-01",
+      "score_raw": 12.2,
+      "factors": [
+        {
+          "name": "Rentabilité / création de valeur",
+          "score": 3.5910151563561863,
+          "weight": 0.24,
+          "raw_value": "ROCE 9.5% vs coût du capital 4.2% (ROE 10.2%)"
+        },
+        {
+          "name": "Structure financière / solvabilité",
+          "score": 6.55562153807495,
+          "weight": 0.2,
+          "raw_value": "Dette nette/EBITDA 0.8x (seuil confort 2.1x, profil cyclique) — ICR 7.3x"
+        },
+        {
+          "name": "Croissance",
+          "score": -6.285275165459931,
+          "weight": 0.16,
+          "raw_value": "CAGR CA -10.3%/an, CAGR EBITDA -14.9%/an (CAGR lissé)"
+        },
+        {
+          "name": "Génération de cash",
+          "score": -1.5586615840745437,
+          "weight": 0.12,
+          "raw_value": "Conversion FCF/EBITDA 42%"
+        },
+        {
+          "name": "Valorisation relative",
+          "score": -5.0,
+          "weight": 0.08,
+          "raw_value": "EV/EBITDA 4.5x (moy. 5 ans 3.7x) — PER 11.8x (moy. 5 ans 9.4x)"
+        },
+        {
+          "name": "Dynamique récente",
+          "score": 6.36293304082284,
+          "weight": 0.1,
+          "raw_value": "Cours +5.5% vs MM200 — CA dernier trim. +44.7% vs an dernier (tendance 5 ans -10.3%)"
+        },
+        {
+          "name": "Actualité récente",
+          "score": 0.0,
+          "weight": 0.1,
+          "raw_value": "Aucune actualité récente exploitable"
+        }
+      ],
+      "current_price": 27.82743408203125,
+      "ma200": 26.388788037109375,
+      "ecart_pct_ma200": 5.45173216329136,
+      "stage": 2,
+      "stage_label": "Achat",
+      "volume_confirme": false,
+      "sector": "Energy",
+      "is_financial": false,
+      "is_trust": false,
+      "fair_value": 43.94212930790248,
+      "entry_price": 29.113631543166257,
+      "exit_price": 44.93514913924794,
+      "actus": [],
+      "fondamentaux_degrades": false,
+      "rendement_5j_pct": -0.05385707216926435,
+      "rendement_20j_pct": -2.2385579417576675,
+      "volume_ratio_5j_vs_20j": 1.03303588026398,
+      "score": 12.2,
+      "appel": "haussier",
+      "confiance": "moyenne",
+      "dimension_dominante": "technique",
+      "raison": "La phase technique de Weinstein est en mode Achat, ce qui constitue le signal principal malgre un score fondamental modere et des performances a court terme legerement negatives.",
+      "methode": "backtest_retroactif",
+      "date_resolution": "2025-12-31",
+      "return_pct": -1.5627932227753,
+      "index_return_pct": 2.1696454979167736,
+      "alpha_pct": -3.7324387206920737
+    },
+    {
+      "ticker": "TSCO.L",
+      "name": "Tesco",
+      "index": "FTSE",
+      "date_cible": "2026-04-04",
+      "score_raw": 26.8,
+      "factors": [
+        {
+          "name": "Rentabilité / création de valeur",
+          "score": 1.8926629402052153,
+          "weight": 0.24,
+          "raw_value": "ROCE 9.8% vs coût du capital 6.9% (ROE 15.6%)"
+        },
+        {
+          "name": "Structure financière / solvabilité",
+          "score": 5.859097389222044,
+          "weight": 0.2,
+          "raw_value": "Dette nette/EBITDA 2.5x (seuil confort 3.9x, profil defensif) — ICR 4.2x"
+        },
+        {
+          "name": "Croissance",
+          "score": 4.554408042766273,
+          "weight": 0.16,
+          "raw_value": "CAGR CA +3.2%/an, CAGR EBITDA +15.0%/an (CAGR lissé)"
+        },
+        {
+          "name": "Génération de cash",
+          "score": -1.1357340720221614,
+          "weight": 0.12,
+          "raw_value": "Conversion FCF/EBITDA 44%"
+        },
+        {
+          "name": "Valorisation relative",
+          "score": -0.634449090492888,
+          "weight": 0.08,
+          "raw_value": "EV/EBITDA 8.5x (moy. 5 ans 7.8x) — PER 17.0x (moy. 5 ans 16.9x)"
+        },
+        {
+          "name": "Dynamique récente",
+          "score": 5.072928308043631,
+          "weight": 0.1,
+          "raw_value": "Cours +10.1% vs MM200"
+        },
+        {
+          "name": "Actualité récente",
+          "score": 0.0,
+          "weight": 0.1,
+          "raw_value": "Ton moyen pondéré des 5 actualités point-in-temps : +0.00"
+        }
+      ],
+      "current_price": 4.8685107421875,
+      "ma200": 4.420057995605468,
+      "ecart_pct_ma200": 10.145856616087261,
+      "stage": 2,
+      "stage_label": "Achat",
+      "volume_confirme": false,
+      "sector": "Consumer Defensive",
+      "is_financial": false,
+      "is_trust": false,
+      "fair_value": 6.501775505410802,
+      "entry_price": 5.087813719650947,
+      "exit_price": 6.41567256005795,
+      "actus": [
+        {
+          "date": "2026-03-30",
+          "sentiment": 0,
+          "importance": "mineure",
+          "titre": "Passionate producers get a helping hand from Tesco",
+          "resume": "",
+          "url": "https://www.echolive.ie/sponsored/arid-41819126.html"
+        },
+        {
+          "date": "2026-03-28",
+          "sentiment": 0,
+          "importance": "mineure",
+          "titre": "Tesco shoppers in Hull urged to donate bags of food during  tough  Easter holidays",
+          "resume": "",
+          "url": "https://www.hulldailymail.co.uk/news/hull-east-yorkshire-news/tesco-shoppers-hull-urged-donate-10884117"
+        },
+        {
+          "date": "2026-03-28",
+          "sentiment": 0,
+          "importance": "mineure",
+          "titre": "How Tesco shoppers near Bracknell can help this Easter",
+          "resume": "",
+          "url": "https://www.bracknellnews.co.uk/news/25970416.tesco-shoppers-near-bracknell-can-help-easter/"
+        },
+        {
+          "date": "2026-03-27",
+          "sentiment": 0,
+          "importance": "mineure",
+          "titre": "Tesco introduces new £13 . 28 rule across united kingdom supermarkets from Sunday",
+          "resume": "",
+          "url": "https://www.express.co.uk/news/uk/2187263/tesco-introduces-new-1328-rule"
+        },
+        {
+          "date": "2026-03-27",
+          "sentiment": 0,
+          "importance": "mineure",
+          "titre": "£942 warning for Tesco and Sainsbury customers without a Clubcard or Nectar",
+          "resume": "",
+          "url": "https://www.birminghammail.co.uk/whats-on/shopping/942-warning-tesco-sainsburys-customers-33669450"
+        }
+      ],
+      "fondamentaux_degrades": false,
+      "rendement_5j_pct": 7.009444561121793,
+      "rendement_20j_pct": 3.7715798390705246,
+      "volume_ratio_5j_vs_20j": 1.1344888942434477,
+      "score": 26.8,
+      "appel": "haussier",
+      "confiance": "moyenne",
+      "dimension_dominante": "technique",
+      "raison": "La phase technique de Weinstein est en position d'Achat, soutenue par un rendement positif sur 5 et 20 jours (+7.0% et +3.8%) ainsi qu'un ratio de volume favorable (1.13), ce qui l'emporte sur des actualites mineures.",
+      "methode": "backtest_retroactif",
+      "date_resolution": "2026-05-04",
+      "return_pct": -3.767973895540023,
+      "index_return_pct": -2.081199269639071,
+      "alpha_pct": -1.6867746259009522
+    },
+    {
+      "ticker": "UNI.MC",
+      "name": "Unicaja Banco",
+      "index": "IBEX35",
+      "date_cible": "2026-03-20",
+      "score_raw": 25.2,
+      "factors": [
+        {
+          "name": "Rentabilité / création de valeur",
+          "score": 0.5385354012656798,
+          "weight": 0.24,
+          "raw_value": "ROE 8.9% vs coût des capitaux propres 8.1% (profil financier)"
+        },
+        {
+          "name": "Structure financière / solvabilité",
+          "score": 10.0,
+          "weight": 0.2,
+          "raw_value": "Capitaux propres/actif total 7.2% (seuil confort 6%, vigilance sous 3%) — profil financier"
+        },
+        {
+          "name": "Croissance",
+          "score": 9.032527121278061,
+          "weight": 0.16,
+          "raw_value": "CAGR CA +6.6%/an, CAGR résultat net +29.5%/an (CAGR lissé, profil financier)"
+        },
+        {
+          "name": "Génération de cash",
+          "score": -7.616112601129743,
+          "weight": 0.12,
+          "raw_value": "OCF/résultat net -225% (profil financier, signal volatil)"
+        },
+        {
+          "name": "Valorisation relative",
+          "score": -2.0,
+          "weight": 0.08,
+          "raw_value": "PER 9.6x (moy. 5 ans 7.2x) — P/B 0.9x (moy. 5 ans 0.5x) — profil financier"
+        },
+        {
+          "name": "Dynamique récente",
+          "score": 0.2431661960557019,
+          "weight": 0.1,
+          "raw_value": "Cours +4.3% vs MM200 — CA dernier trim. +5.0% vs an dernier (tendance 5 ans +6.6%)"
+        },
+        {
+          "name": "Actualité récente",
+          "score": 0.0,
+          "weight": 0.1,
+          "raw_value": "Aucune actualité récente exploitable"
+        }
+      ],
+      "current_price": 2.3606855869293213,
+      "ma200": 2.264424043893814,
+      "ecart_pct_ma200": 4.251038726385357,
+      "stage": 3,
+      "stage_label": "Neutre",
+      "volume_confirme": false,
+      "sector": "Financial Services",
+      "is_financial": true,
+      "is_trust": false,
+      "fair_value": 3.0262033399923753,
+      "entry_price": 2.454446520081982,
+      "exit_price": 3.0215982232755287,
+      "actus": [],
+      "fondamentaux_degrades": false,
+      "rendement_5j_pct": 1.7017791743257225,
+      "rendement_20j_pct": -6.830000462959653,
+      "volume_ratio_5j_vs_20j": 0.9302231253908597,
+      "score": 25.2,
+      "appel": "neutre",
+      "confiance": "moyenne",
+      "dimension_dominante": "technique",
+      "raison": "La phase technique de Weinstein est actuellement neutre, confirmée par des performances récentes mitigées (+1.7% sur 5 jours mais -6.8% sur 20 jours) et un ratio de volume de 0.93 proche de 1, ne montrant pas de signal directionnel fort. Le score fondamental composite est faible à 25.2 et aucune actualité récente n'est disponible pour inverser la tendance.",
+      "methode": "backtest_retroactif",
+      "date_resolution": "2026-04-19",
+      "return_pct": 13.705187925828513,
+      "index_return_pct": 8.014953174285836,
+      "alpha_pct": 5.690234751542677
+    },
+    {
+      "ticker": "HO.PA",
+      "name": "Thales",
+      "index": "CAC40",
+      "date_cible": "2026-03-22",
+      "score_raw": 52.5,
+      "factors": [
+        {
+          "name": "Rentabilité / création de valeur",
+          "score": 9.245694572979321,
+          "weight": 0.24,
+          "raw_value": "ROCE 18.9% vs coût du capital 5.0% (ROE 21.0%)"
+        },
+        {
+          "name": "Structure financière / solvabilité",
+          "score": 9.177781034735453,
+          "weight": 0.2,
+          "raw_value": "Dette nette/EBITDA 0.5x (seuil confort 3.0x, profil standard) — ICR 8.1x"
+        },
+        {
+          "name": "Croissance",
+          "score": 4.902172884005468,
+          "weight": 0.16,
+          "raw_value": "CAGR CA +8.9%/an, CAGR EBITDA +10.7%/an (CAGR lissé)"
+        },
+        {
+          "name": "Génération de cash",
+          "score": 5.037959841711856,
+          "weight": 0.12,
+          "raw_value": "Conversion FCF/EBITDA 75%"
+        },
+        {
+          "name": "Valorisation relative",
+          "score": -2.0,
+          "weight": 0.08,
+          "raw_value": "EV/EBITDA 14.9x (moy. 5 ans 12.0x) — PER 29.3x (moy. 5 ans 23.7x)"
+        },
+        {
+          "name": "Dynamique récente",
+          "score": -0.3607970641398749,
+          "weight": 0.1,
+          "raw_value": "Cours -0.7% vs MM200"
+        },
+        {
+          "name": "Actualité récente",
+          "score": 0.0,
+          "weight": 0.1,
+          "raw_value": "Ton moyen pondéré des 5 actualités point-in-temps : +0.00"
+        }
+      ],
+      "current_price": 239.04209899902344,
+      "ma200": 240.7795500946045,
+      "ecart_pct_ma200": -0.7215941282797498,
+      "stage": 1,
+      "stage_label": "Neutre",
+      "volume_confirme": true,
+      "sector": "Industrials",
+      "is_financial": false,
+      "is_trust": false,
+      "fair_value": 282.1595926088078,
+      "entry_price": 239.6560577452027,
+      "exit_price": 294.0189741412541,
+      "actus": [
+        {
+          "date": "2026-03-17",
+          "sentiment": 0,
+          "importance": "mineure",
+          "titre": "Radio management system to be supplied for military trainer aircraft in Europe by Thales",
+          "resume": "",
+          "url": "https://militaryembedded.com/comms/radio/radio-management-system-to-be-supplied-for-military-trainer-aircraft-in-europe-by-thales"
+        },
+        {
+          "date": "2026-03-17",
+          "sentiment": 0,
+          "importance": "mineure",
+          "titre": "Thales radio management system selected by Pilatus for a PC - 7 military aircraft fleet operated in Europe",
+          "resume": "",
+          "url": "https://www.webwire.com/ViewPressRel.asp?aId=352093"
+        },
+        {
+          "date": "2026-03-17",
+          "sentiment": 0,
+          "importance": "mineure",
+          "titre": "Thales Radio Management System Selected by Pilatus for A PC - 7 Military Aircraft Fleet Operated in Europe - Aviation / Aerospace / Drone / eVTOL - Thales Group",
+          "resume": "",
+          "url": "https://www.newswiretoday.com/news/185845/Thaless-Radio-Management-System-Selected-by-Pilatus-for-A-PC-7-Military-Aircraft-Fleet-Operated-in-Europe/"
+        },
+        {
+          "date": "2026-03-16",
+          "sentiment": 0,
+          "importance": "mineure",
+          "titre": "Thales choisi pour équiper les avions dentraînement Pilatus PC - 7",
+          "resume": "",
+          "url": "https://www.zonebourse.com/actualite-bourse/thales-choisi-pour-equiper-les-avions-d-entrainement-pilatus-pc-7-ce7e5edadb80ff23"
+        },
+        {
+          "date": "2026-03-13",
+          "sentiment": 0,
+          "importance": "mineure",
+          "titre": "THALES : Fin dune longue consolidation en canal",
+          "resume": "",
+          "url": "https://www.tradingsat.com/thales-FR0000121329/conseils/thales-fin-d-une-longue-consolidation-en-canal-1158448.html"
+        }
+      ],
+      "fondamentaux_degrades": false,
+      "rendement_5j_pct": -4.531130156299495,
+      "rendement_20j_pct": -8.358544800989591,
+      "volume_ratio_5j_vs_20j": 1.133391339340699,
+      "score": 52.5,
+      "appel": "neutre",
+      "confiance": "moyenne",
+      "dimension_dominante": "technique",
+      "raison": "La phase technique de Weinstein est neutre, le prix actuel est proche du repere d'entree mais les rendements a court terme sont negatifs (-4.5% sur 5j et -8.4% sur 20j). Le score fondamental composite est median (52.5) et les actualites recentes se limitent a des contrats mineurs, sans elenment suffisant pour enclencher une dynamique haussiere malgre une legere hausse du ratio de volume (1.13).",
+      "methode": "backtest_retroactif",
+      "date_resolution": "2026-04-21",
+      "return_pct": 2.2286419841664644,
+      "index_return_pct": 7.437097073161099,
+      "alpha_pct": -5.208455088994635
+    },
+    {
+      "ticker": "REGN",
+      "name": "Regeneron Pharmaceuticals",
+      "index": "NASDAQ",
+      "date_cible": "2025-11-06",
+      "score_raw": 53.5,
+      "factors": [
+        {
+          "name": "Rentabilité / création de valeur",
+          "score": 6.117296809940939,
+          "weight": 0.24,
+          "raw_value": "ROCE 14.7% vs coût du capital 5.6% (ROE 14.4%)"
+        },
+        {
+          "name": "Structure financière / solvabilité",
+          "score": 10.0,
+          "weight": 0.2,
+          "raw_value": "Dette nette/EBITDA -0.1x (seuil confort 3.9x, profil defensif) — ICR 120.4x"
+        },
+        {
+          "name": "Croissance",
+          "score": 1.8413181405003587,
+          "weight": 0.16,
+          "raw_value": "CAGR CA +5.4%/an, CAGR EBITDA +1.9%/an (CAGR lissé)"
+        },
+        {
+          "name": "Génération de cash",
+          "score": 2.942834553642021,
+          "weight": 0.12,
+          "raw_value": "Conversion FCF/EBITDA 65%"
+        },
+        {
+          "name": "Valorisation relative",
+          "score": 6.5673005730409555,
+          "weight": 0.08,
+          "raw_value": "EV/EBITDA 11.1x (moy. 5 ans 14.2x) — PER 14.4x (moy. 5 ans 17.4x)"
+        },
+        {
+          "name": "Dynamique récente",
+          "score": 7.0941493259160815,
+          "weight": 0.1,
+          "raw_value": "Cours +8.4% vs MM200 — CA dernier trim. +16.7% vs an dernier (tendance 5 ans +5.4%)"
+        },
+        {
+          "name": "Actualité récente",
+          "score": 0.0,
+          "weight": 0.1,
+          "raw_value": "Aucune actualité récente exploitable"
+        }
+      ],
+      "current_price": 640.9035034179688,
+      "ma200": 591.3670657348633,
+      "ecart_pct_ma200": 8.376597303664328,
+      "stage": 3,
+      "stage_label": "Neutre",
+      "volume_confirme": false,
+      "sector": "Healthcare",
+      "is_financial": false,
+      "is_trust": false,
+      "fair_value": 794.0317454100368,
+      "entry_price": 651.7231887978618,
+      "exit_price": 800.3963038961106,
+      "actus": [],
+      "fondamentaux_degrades": false,
+      "rendement_5j_pct": -1.3355722380327406,
+      "rendement_20j_pct": 14.246442039740181,
+      "volume_ratio_5j_vs_20j": 0.873008688033876,
+      "score": 53.5,
+      "appel": "neutre",
+      "confiance": "moyenne",
+      "dimension_dominante": "technique",
+      "raison": "La phase technique de Weinstein est qualifiee de neutre, avec un prix actuel de 640.90 proche du repere d'entree de 651.72. Le score fondamental composite est median a 53.5. Bien que le rendement sur 20j soit positif (+14.2%), le rendement sur 5j est en leger repli (-1.3%) et le ratio de volume 5j/20j a 0.87 temoigne d'un essoufflement a court terme, en l'absence de toute actualite recente.",
+      "methode": "backtest_retroactif",
+      "date_resolution": "2025-12-06",
+      "return_pct": 9.306548610774488,
+      "index_return_pct": 0.19617021354403105,
+      "alpha_pct": 9.110378397230457
+    },
+    {
+      "ticker": "HLN.L",
+      "name": "Haleon",
+      "index": "FTSE",
+      "date_cible": "2025-12-25",
+      "score_raw": 30.9,
+      "factors": [
+        {
+          "name": "Rentabilité / création de valeur",
+          "score": 1.2591555061587147,
+          "weight": 0.24,
+          "raw_value": "ROCE 8.2% vs coût du capital 6.3% (ROE 10.1%)"
+        },
+        {
+          "name": "Structure financière / solvabilité",
+          "score": 6.715724522650021,
+          "weight": 0.2,
+          "raw_value": "Dette nette/EBITDA 2.6x (seuil confort 3.9x, profil defensif) — ICR 7.2x"
+        },
+        {
+          "name": "Croissance",
+          "score": 2.1870382594592286,
+          "weight": 0.16,
+          "raw_value": "CAGR CA +0.8%/an, CAGR EBITDA +7.9%/an (CAGR lissé)"
+        },
+        {
+          "name": "Génération de cash",
+          "score": 5.53690101434068,
+          "weight": 0.12,
+          "raw_value": "Conversion FCF/EBITDA 78%"
+        },
+        {
+          "name": "Valorisation relative",
+          "score": 4.959457616920391,
+          "weight": 0.08,
+          "raw_value": "EV/EBITDA 14.0x (moy. 5 ans 15.7x) — PER 19.6x (moy. 5 ans 24.2x)"
+        },
+        {
+          "name": "Dynamique récente",
+          "score": 0.3050839481832013,
+          "weight": 0.1,
+          "raw_value": "Cours +0.6% vs MM200"
+        },
+        {
+          "name": "Actualité récente",
+          "score": 0.0,
+          "weight": 0.1,
+          "raw_value": "Aucune actualité récente exploitable"
+        }
+      ],
+      "current_price": 3.722257080078125,
+      "ma200": 3.699682803344727,
+      "ecart_pct_ma200": 0.6101678963664026,
+      "stage": 3,
+      "stage_label": "Neutre",
+      "volume_confirme": false,
+      "sector": "Healthcare",
+      "is_financial": false,
+      "is_trust": false,
+      "fair_value": 4.7241248992243206,
+      "entry_price": 3.8660598376177235,
+      "exit_price": 4.759662712668609,
+      "actus": [],
+      "fondamentaux_degrades": false,
+      "rendement_5j_pct": 0.8123444888124488,
+      "rendement_20j_pct": 0.4045291592408582,
+      "volume_ratio_5j_vs_20j": 1.1543354743414749,
+      "score": 30.9,
+      "appel": "neutre",
+      "confiance": "moyenne",
+      "dimension_dominante": "technique",
+      "raison": "La phase technique de Weinstein est neutre, le score fondamental est faible a 30.9, et le prix actuel (3.72) se trouve sous le repere d'entree (3.87). En l'absence d'actualite recente et avec des performances a court terme tres modestes (+0.8% sur 5j, +0.4% sur 20j), aucune tendance directionnelle claire ne se dégage.",
+      "methode": "backtest_retroactif",
+      "date_resolution": "2026-01-24",
+      "return_pct": 1.3161579825748644,
+      "index_return_pct": 2.8184443839618853,
+      "alpha_pct": -1.502286401387021
+    },
+    {
+      "ticker": "UNI.MC",
+      "name": "Unicaja Banco",
+      "index": "IBEX35",
+      "date_cible": "2026-02-17",
+      "score_raw": 27.4,
+      "factors": [
+        {
+          "name": "Rentabilité / création de valeur",
+          "score": 0.5385354012656798,
+          "weight": 0.24,
+          "raw_value": "ROE 8.9% vs coût des capitaux propres 8.1% (profil financier)"
+        },
+        {
+          "name": "Structure financière / solvabilité",
+          "score": 10.0,
+          "weight": 0.2,
+          "raw_value": "Capitaux propres/actif total 7.2% (seuil confort 6%, vigilance sous 3%) — profil financier"
+        },
+        {
+          "name": "Croissance",
+          "score": 9.032527121278061,
+          "weight": 0.16,
+          "raw_value": "CAGR CA +6.6%/an, CAGR résultat net +29.5%/an (CAGR lissé, profil financier)"
+        },
+        {
+          "name": "Génération de cash",
+          "score": -7.616112601129743,
+          "weight": 0.12,
+          "raw_value": "OCF/résultat net -225% (profil financier, signal volatil)"
+        },
+        {
+          "name": "Valorisation relative",
+          "score": -2.0,
+          "weight": 0.08,
+          "raw_value": "PER 10.0x (moy. 5 ans 7.3x) — P/B 0.9x (moy. 5 ans 0.5x) — profil financier"
+        },
+        {
+          "name": "Dynamique récente",
+          "score": 2.357984709969927,
+          "weight": 0.1,
+          "raw_value": "Cours +12.7% vs MM200 — CA dernier trim. +5.0% vs an dernier (tendance 5 ans +6.6%)"
+        },
+        {
+          "name": "Actualité récente",
+          "score": 0.0,
+          "weight": 0.1,
+          "raw_value": "Aucune actualité récente exploitable"
+        }
+      ],
+      "current_price": 2.4622609615325928,
+      "ma200": 2.184592430591583,
+      "ecart_pct_ma200": 12.710312782042257,
+      "stage": 2,
+      "stage_label": "Achat",
+      "volume_confirme": false,
+      "sector": "Financial Services",
+      "is_financial": true,
+      "is_trust": false,
+      "fair_value": 3.0262033399923753,
+      "entry_price": 2.4825583338954296,
+      "exit_price": 3.045718456423865,
+      "actus": [],
+      "fondamentaux_degrades": false,
+      "rendement_5j_pct": -6.89900377372234,
+      "rendement_20j_pct": -7.491163153082647,
+      "volume_ratio_5j_vs_20j": 0.9343289262115162,
+      "score": 27.4,
+      "appel": "haussier",
+      "confiance": "moyenne",
+      "dimension_dominante": "technique",
+      "raison": "Malgré un repli récent à court terme et un score fondamental faible, la phase technique de Weinstein est positionnée à l'achat, proche du repère d'entrée de 2.48, ce qui constitue le signal directeur de l'analyse en l'absence d'actualité récente.",
+      "methode": "backtest_retroactif",
+      "date_resolution": "2026-03-19",
+      "return_pct": -4.125288756560052,
+      "index_return_pct": -5.278460384216719,
+      "alpha_pct": 1.1531716276566666
+    },
+    {
+      "ticker": "ALC.SW",
+      "name": "Alcon",
+      "index": "SMI",
+      "date_cible": "2026-03-06",
+      "score_raw": 35.4,
+      "factors": [
+        {
+          "name": "Rentabilité / création de valeur",
+          "score": -0.04515299936951559,
+          "weight": 0.24,
+          "raw_value": "ROCE 4.5% vs coût du capital 4.5% (ROE 4.4%)"
+        },
+        {
+          "name": "Structure financière / solvabilité",
+          "score": 8.236288843921301,
+          "weight": 0.2,
+          "raw_value": "Dette nette/EBITDA 1.4x (seuil confort 3.9x, profil defensif) — ICR 6.7x"
+        },
+        {
+          "name": "Croissance",
+          "score": 5.549786525035511,
+          "weight": 0.16,
+          "raw_value": "CAGR CA +5.7%/an, CAGR EBITDA +16.5%/an (CAGR lissé)"
+        },
+        {
+          "name": "Génération de cash",
+          "score": 1.915524268247499,
+          "weight": 0.12,
+          "raw_value": "Conversion FCF/EBITDA 60%"
+        },
+        {
+          "name": "Valorisation relative",
+          "score": 8.191173237600092,
+          "weight": 0.08,
+          "raw_value": "EV/EBITDA 15.2x (moy. 5 ans 18.8x) — PER 38.2x (moy. 5 ans 57.3x)"
+        },
+        {
+          "name": "Dynamique récente",
+          "score": 1.267822984612473,
+          "weight": 0.1,
+          "raw_value": "Cours -1.0% vs MM200 — CA dernier trim. +8.7% vs an dernier (tendance 5 ans +5.7%)"
+        },
+        {
+          "name": "Actualité récente",
+          "score": 0.0,
+          "weight": 0.1,
+          "raw_value": "Aucune actualité récente exploitable"
+        }
+      ],
+      "current_price": 64.06877136230469,
+      "ma200": 64.6953282737732,
+      "ecart_pct_ma200": -0.9684731930211283,
+      "stage": 1,
+      "stage_label": "Neutre",
+      "volume_confirme": false,
+      "sector": "Healthcare",
+      "is_financial": false,
+      "is_trust": false,
+      "fair_value": 87.1351945016712,
+      "entry_price": 66.1912798646895,
+      "exit_price": 89.86620605982944,
+      "actus": [],
+      "fondamentaux_degrades": false,
+      "rendement_5j_pct": -3.565016617926414,
+      "rendement_20j_pct": 4.955981307295713,
+      "volume_ratio_5j_vs_20j": 0.8355387212988192,
+      "score": 35.4,
+      "appel": "neutre",
+      "confiance": "moyenne",
+      "dimension_dominante": "technique",
+      "raison": "La phase technique de Weinstein est neutre, le score fondamental est mitigé à 35.4, et l'actualité est vide. Bien que le rendement à 20 jours soit positif (+5.0%), le récent repli à 5 jours (-3.6%) avec un ratio de volume faible (0.84) et un prix actuel sous le repère d'entrée justifie une position neutre.",
+      "methode": "backtest_retroactif",
+      "date_resolution": "2026-04-05",
+      "return_pct": -7.859582153138114,
+      "index_return_pct": -3.819662684499362,
+      "alpha_pct": -4.039919468638752
+    },
+    {
+      "ticker": "HSX.L",
+      "name": "Hiscox",
+      "index": "FTSE",
+      "date_cible": "2025-11-28",
+      "score_raw": 49.3,
+      "factors": [
+        {
+          "name": "Rentabilité / création de valeur",
+          "score": 4.489313827235567,
+          "weight": 0.24,
+          "raw_value": "ROE 15.3% vs coût des capitaux propres 8.6% (profil financier)"
+        },
+        {
+          "name": "Structure financière / solvabilité",
+          "score": 10.0,
+          "weight": 0.2,
+          "raw_value": "Capitaux propres/actif total 32.4% (seuil confort 6%, vigilance sous 3%) — profil financier"
+        },
+        {
+          "name": "Croissance",
+          "score": 10.0,
+          "weight": 0.16,
+          "raw_value": "CAGR CA +10.2%/an, CAGR résultat net +34.3%/an (CAGR lissé, profil financier)"
+        },
+        {
+          "name": "Génération de cash",
+          "score": -1.6987253765932793,
+          "weight": 0.12,
+          "raw_value": "OCF/résultat net 12% (profil financier, signal volatil)"
+        },
+        {
+          "name": "Valorisation relative",
+          "score": 1.5007072140357902,
+          "weight": 0.08,
+          "raw_value": "PER 9.4x (moy. 5 ans 10.2x) — P/B 1.4x (moy. 5 ans 1.4x) — profil financier"
+        },
+        {
+          "name": "Dynamique récente",
+          "score": 3.343806372960387,
+          "weight": 0.1,
+          "raw_value": "Cours +6.7% vs MM200"
+        },
+        {
+          "name": "Actualité récente",
+          "score": 0.0,
+          "weight": 0.1,
+          "raw_value": "Ton moyen pondéré des 3 actualités point-in-temps : +0.00"
+        }
+      ],
+      "current_price": 13.416822509765625,
+      "ma200": 12.575801599121094,
+      "ecart_pct_ma200": 6.687612745920774,
+      "stage": 2,
+      "stage_label": "Achat",
+      "volume_confirme": true,
+      "sector": "Financial Services",
+      "is_financial": true,
+      "is_trust": false,
+      "fair_value": 16.71627136065948,
+      "entry_price": 13.707698969332526,
+      "exit_price": 16.843929753387503,
+      "actus": [
+        {
+          "date": "2025-11-21",
+          "sentiment": 0,
+          "importance": "mineure",
+          "titre": "Hiscox creates new HNW trading director role",
+          "resume": "",
+          "url": "https://www.insuranceage.co.uk/insurer/7956814/hiscox-creates-new-hnw-trading-director-role"
+        },
+        {
+          "date": "2025-11-17",
+          "sentiment": 0,
+          "importance": "mineure",
+          "titre": "AM Best Affirms Credit Ratings Of Hiscox",
+          "resume": "",
+          "url": "https://bernews.com/2025/11/best-affirms-credit-ratings-hiscox-4/"
+        },
+        {
+          "date": "2025-11-17",
+          "sentiment": 0,
+          "importance": "mineure",
+          "titre": "Hiscox Group receives excellent financial strength rating",
+          "resume": "",
+          "url": "https://www.royalgazette.com/reinsurance/business/article/20251116/hiscox-group-receives-excellent-financial-strength-rating/"
+        }
+      ],
+      "fondamentaux_degrades": false,
+      "rendement_5j_pct": 1.4361286333285654,
+      "rendement_20j_pct": -4.415956559115282,
+      "volume_ratio_5j_vs_20j": 1.2836014061304786,
+      "score": 49.3,
+      "appel": "haussier",
+      "confiance": "moyenne",
+      "dimension_dominante": "technique",
+      "raison": "La phase technique de Weinstein indique un Achat avec un prix actuel proche du repere d'entree de 13.71, soutenu par des volumes en legere acceleration (ratio de 1.28) et des nouvelles recentes stables ou positives (confirmations de notations et reorganisation interne).",
+      "methode": "backtest_retroactif",
+      "date_resolution": "2025-12-28",
+      "return_pct": 5.663193025677864,
+      "index_return_pct": 1.7804970385493293,
+      "alpha_pct": 3.8826959871285345
+    }
+  ]
+}

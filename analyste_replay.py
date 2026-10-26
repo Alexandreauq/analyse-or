@@ -147,9 +147,21 @@ INDEX_YFINANCE_TICKER = {
 
 
 def _prix_a_date(ticker: str, date_str: str) -> float:
+    """BUG REEL (backtest du 2026-10-26) : yfinance cote les actions LSE
+    (suffixe .L) en PENCE (GBp), jamais en livres -- indices_score.py
+    divise deja par 100 a la source (signal["current_price"], utilise
+    comme prix_entree dans resout_pari, est donc en livres), mais un
+    appel yfinance brut ici renvoyait la cloture en pence sans la meme
+    conversion : return_pct/alpha_pct explosaient a +11000% sur les
+    tickers .L (ex. STAN.L : prix_entree ~17 livres compare a prix_sortie
+    ~1780 pence, facteur ~100 parasite). ibkr_bot.sizing.from_quotation_price
+    applique deja exactement cette conversion (uniquement pour les
+    tickers .L, jamais pour un indice ^FTSE qui cote en points) -- reutilise
+    ici plutot que reimplementee."""
     import yfinance as yf
+    import ibkr_bot.sizing as sizing
     historique = yf.Ticker(ticker).history(start=date_str, end=None)
-    return float(historique["Close"].iloc[0])
+    return sizing.from_quotation_price(float(historique["Close"].iloc[0]), ticker)
 
 
 def _prix_avant_date(ticker: str, date_str: str) -> float:
@@ -167,10 +179,13 @@ def _prix_avant_date(ticker: str, date_str: str) -> float:
     pour elle aussi. Utilisee UNIQUEMENT pour index_entree ci-dessous --
     la sortie (action et indice) reste sur `prix_source`/`_prix_a_date`,
     les deux dates de sortie etant deja mutuellement coherentes (meme
-    convention "a ou apres" des deux cotes)."""
+    convention "a ou apres" des deux cotes).
+
+    Meme correctif pence/livres que _prix_a_date -- voir sa docstring."""
     import yfinance as yf
+    import ibkr_bot.sizing as sizing
     historique = yf.Ticker(ticker).history(end=date_str)
-    return float(historique["Close"].dropna().iloc[-1])
+    return sizing.from_quotation_price(float(historique["Close"].dropna().iloc[-1]), ticker)
 
 
 def resout_pari(

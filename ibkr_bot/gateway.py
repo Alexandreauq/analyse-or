@@ -265,11 +265,26 @@ def exchange_rate(base_url: str, source: str, target: str) -> float:
     reellement invalide. On leve desormais explicitement pour que ce cas
     passe par la gestion d'exception DEJA correcte de
     daily.py::_taux_de_change() (qui, elle, consigne bien l'echec dans
-    run["erreurs"])."""
+    run["erreurs"]).
+
+    CORRECTIF (bug reel observe en production le 2026-10-26) : un objet
+    Forex() fraichement construit n'a pas de conId tant qu'il n'a pas ete
+    qualifie aupres d'IBKR — reqMktData() l'utilise alors en interne comme
+    cle de dictionnaire et ib_async leve "Contract Forex('EURGBP', ...)
+    can't be hashed because no 'conId' value exists", une exception
+    cryptique qui remontait telle quelle jusqu'a run["erreurs"] au lieu du
+    message clair "indisponible" deja gere plus bas. qualifyContracts()
+    qualifie fx EN PLACE (remplit conId) ; si ca echoue (ex. symbole
+    inconnu du cote IBKR), on leve explicitement plutot que de laisser
+    reqMktData() echouer avec ce message interne peu clair."""
     if source == target:
         return 1.0
     ib = _require_ib()
     fx = Forex(f"{source}{target}")
+    if not ib.qualifyContracts(fx) or not fx.conId:
+        raise RuntimeError(
+            f"taux de change {source}->{target} indisponible : "
+            f"contrat Forex non qualifie (conId manquant)")
     ticker = ib.reqMktData(fx, "", False, False)
     ib.sleep(2)
     try:

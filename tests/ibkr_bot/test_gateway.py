@@ -23,6 +23,13 @@ class _FakeIB:
         self.req_mkt_data_calls = []
         self.place_order_result = None
         self.place_order_calls = []
+        self.qualify_contracts_calls = []
+        # Par defaut, la qualification reussit (comme en conditions reelles
+        # pour un contrat Forex valide) : remplit conId sur le contrat
+        # passe (comportement reel de ib_async, "in-place") et le renvoie.
+        # Mettre a False pour simuler un echec de qualification (ex. pas de
+        # droit de marche sur IDEALPRO pour ce compte).
+        self.qualify_contracts_succeeds = True
 
     def connect(self, host, port, clientId=1, timeout=4, readonly=False,
                 account="", raiseSyncErrors=False, **kwargs):
@@ -54,6 +61,14 @@ class _FakeIB:
 
     def reqContractDetails(self, contract):
         return self.contract_details_result
+
+    def qualifyContracts(self, *contracts):
+        self.qualify_contracts_calls.append(contracts)
+        if not self.qualify_contracts_succeeds:
+            return []
+        for c in contracts:
+            c.conId = 12345
+        return list(contracts)
 
     def reqMktData(self, contract, *a, **k):
         self.req_mkt_data_calls.append(contract)
@@ -386,6 +401,32 @@ def test_exchange_rate_raises_on_a_non_positive_price(fake_ib):
     fake_ib.mkt_data_result = _FakeTicker(0.0)
     with pytest.raises(RuntimeError, match="indisponible"):
         gateway.exchange_rate(BASE, "EUR", "GBP")
+
+
+def test_exchange_rate_qualifies_the_forex_contract_before_requesting_price(fake_ib):
+    # Bug reel observe en production le 2026-10-26 : sans qualification
+    # prealable, ib_async leve "Contract Forex('EURGBP', ...) can't be
+    # hashed because no 'conId' value exists" a l'interieur de reqMktData
+    # — une exception cryptique, pas celle (claire, "indisponible") que
+    # daily.py::_taux_de_change() sait deja consigner proprement.
+    gateway.connect(BASE)
+    fake_ib.mkt_data_result = _FakeTicker(0.86)
+    gateway.exchange_rate(BASE, "EUR", "GBP")
+    assert len(fake_ib.qualify_contracts_calls) == 1
+    (qualified_contract,) = fake_ib.qualify_contracts_calls[0]
+    assert qualified_contract.symbol == "EUR"
+    assert qualified_contract.currency == "GBP"
+
+
+def test_exchange_rate_raises_a_clear_error_when_contract_qualification_fails(fake_ib):
+    gateway.connect(BASE)
+    fake_ib.qualify_contracts_succeeds = False
+    fake_ib.mkt_data_result = _FakeTicker(0.86)
+    with pytest.raises(RuntimeError, match="indisponible"):
+        gateway.exchange_rate(BASE, "EUR", "GBP")
+    # Qualification en echec : jamais d'appel reqMktData (qui leverait
+    # sinon l'erreur cryptique de hachage cote ib_async reel).
+    assert fake_ib.req_mkt_data_calls == []
 
 
 def test_place_market_order_returns_a_single_confirmation(fake_ib):

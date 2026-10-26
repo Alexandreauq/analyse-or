@@ -370,6 +370,14 @@ def test_system_prompt_requires_explaining_each_article_not_just_citing_it():
     assert "n'ont pas de resume fourni par la source" in prompt
 
 
+def test_system_prompt_applies_explain_the_why_to_every_question_not_only_scores():
+    prompt = assistant.SYSTEM_PROMPT.lower()
+
+    assert "pour toute question, pas seulement l'explication d'un score" in prompt
+    assert "cherche" in prompt and "pourquoi du comment" in prompt
+    assert "garde la precision" in prompt and "technique" in prompt
+
+
 def test_construit_system_keeps_the_base_prompt_and_adds_the_level_instruction():
     texte = assistant.construit_system("grand_public")
 

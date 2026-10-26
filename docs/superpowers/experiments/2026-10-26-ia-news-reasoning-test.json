@@ -1,0 +1,346 @@
+{
+ "date_test": "2026-10-26",
+ "date_verification_prevue": "2026-11-23",
+ "methodologie": "Test prospectif (pas un backtest), zero appel reseau : donnees tirees de docs/indices.json (prix, stage, score, actus), docs/volume_history.json (ratio volume 5 dernieres dates vs 20 precedentes) et docs/price_history.json (rendements 5j/20j). Raisonnement qualitatif combinant actu, technique, sectoriel, volume ; pari date avant de connaitre le resultat. Candidats : actu 'majeure' sur 20 jours, tickers deja pris exclus ; 13 retenus pour diversite secteur/pays/sens.",
+ "note_resolution": "Aucun pari des runs precedents n'etait a echeance le 2026-10-26 (premiere echeance : 2026-11-08).",
+ "paris": [
+  {
+   "ticker": "QIA.DE",
+   "nom": "Qiagen",
+   "secteur": "Healthcare",
+   "prix_entree": 45.05,
+   "appel": "neutre_leger_haussier",
+   "confiance": "faible",
+   "dimension_dominante": "volume",
+   "stage_label": "Achat",
+   "score": 33.4,
+   "sector_profile": "defensif",
+   "rendement_5j_pct": 9.8,
+   "rendement_20j_pct": 15.6,
+   "volume_ratio_5j_vs_20j": 5.24,
+   "actualites_recentes": [
+    "2026-10-23 (+0) QIAGEN N.V. (QIA) Discloses Bank of America at 5.01% - TradingView",
+    "2026-10-23 (+0) QIAGEN N.V. (QIA) Reports Millennium at 3.10% Stake - TradingView",
+    "2026-10-22 (+0) Le concurrent allemand de BioMérieux racheté pour 10,8 milliards, l'une des plus grosses opérations de l'année",
+    "2026-10-20 (+0) Les actions Qiagen bondissent sur des rumeurs de rachat par EQT - Yahoo Finance France",
+    "2026-10-20 (+1) EQT en discussions avancées pour acquérir Qiagen, KKR également candidat - Bourse Direct"
+   ],
+   "contexte_sectoriel": [
+    "Healthcare: NANO.PA +34.8%, PHARM.AS +20.8%, CRL +15.1% (5j) : secteur tres porte, pas specifique a Qiagen"
+   ],
+   "raison": "Rachat EQT/KKR en discussions avancees : volume 5.2x, +9.8% 5j. Prime de rachat deja largement integree ; reste un plancher d'offre mais le gain residuel depend d'une surenchere ou d'un echec. Le volume domine : la hausse est un evenement, pas une tendance."
+  },
+  {
+   "ticker": "HAS",
+   "nom": "Hasbro",
+   "secteur": "Consumer Cyclical",
+   "prix_entree": 117.44,
+   "appel": "neutre",
+   "confiance": "tres_faible",
+   "dimension_dominante": "technique",
+   "stage_label": "Achat",
+   "score": -76.9,
+   "sector_profile": "cyclique",
+   "rendement_5j_pct": 18.9,
+   "rendement_20j_pct": 33.3,
+   "volume_ratio_5j_vs_20j": 2.6,
+   "actualites_recentes": [
+    "2026-10-23 (+0) Hasbro, Inc. Estimates – EUROTLX:4HAS - TradingView",
+    "2026-10-21 (+0) 616 millions en trois mois : Magic est-il trop gros pour Hasbro ? - Gus and Co",
+    "2026-10-20 (+0) Hasbro flambe à Wall Street - Boursier.com",
+    "2026-10-20 (+1) Hasbro en hausse après avoir revu à la hausse ses prévisions annuelles grâce à une forte demande dans le secte",
+    "2026-10-19 (+0) Précommander Figurine Hasbro Zelda (The Legend of Zelda Héros d'Hyrule) - Switch-Actu"
+   ],
+   "contexte_sectoriel": [
+    "Consumer Cyclical: FR.PA -18.4%, KER.PA -17.9% (5j) : le luxe/cyclique chute pendant que Hasbro monte, mouvement idiosyncratique"
+   ],
+   "raison": "Hausse des previsions, +18.9% 5j / +33% 20j, volume 2.6x : drift post-resultats plausible mais mouvement deja tres etendu (risque de retracement) ; score fondamental -77 et appel contradictoire. Aucun avantage directionnel."
+  },
+  {
+   "ticker": "FLEX",
+   "nom": "Flex Ltd.",
+   "secteur": "Technology",
+   "prix_entree": 76.55,
+   "appel": "haussier",
+   "confiance": "faible",
+   "dimension_dominante": "technique",
+   "stage_label": "Neutre",
+   "score": -27.5,
+   "sector_profile": "cyclique",
+   "rendement_5j_pct": -15.4,
+   "rendement_20j_pct": -33.2,
+   "volume_ratio_5j_vs_20j": 2.04,
+   "actualites_recentes": [
+    "2026-10-22 (+0) Midday Pulse: S&P 500 top intraday losers - TradingView",
+    "2026-10-19 (+0) Weekly Recap: Axiom Solutions International spin-off and EPC Power $4.4B - TradingView",
+    "2026-10-16 (+0) Prix du Flex Tokenized Stock (Reality) - Bybit",
+    "2026-10-14 (+1) Flex Ltd. (NasdaqGS:FLEX) a finalisé l’acquisition d’EPC Power Corporation auprès de Goldman Sachs Asset Manag",
+    "2026-10-14 (+0) Flex finalise l’acquisition d’EPC Power avant la scission prévue - Zonebourse Suisse"
+   ],
+   "contexte_sectoriel": [
+    "Technology: 6976.T -16.9%, 7735.T -15.8% : purge du hardware IA/electronique, contagion sectorielle partielle"
+   ],
+   "raison": "-15.4% 5j / -33% 20j avec volume 2.0x apres finalisation d'EPC Power et scission annoncee, sans nouvelle fondamentalement negative : survente probable, rebond de court terme possible mais couteau qui tombe, stage Neutre."
+  },
+  {
+   "ticker": "NOW",
+   "nom": "ServiceNow",
+   "secteur": "Technology",
+   "prix_entree": 158.96,
+   "appel": "haussier",
+   "confiance": "faible",
+   "dimension_dominante": "technique",
+   "stage_label": "Achat",
+   "score": 99.6,
+   "sector_profile": "cyclique",
+   "rendement_5j_pct": 12.0,
+   "rendement_20j_pct": 17.2,
+   "volume_ratio_5j_vs_20j": 1.11,
+   "actualites_recentes": [
+    "2026-10-25 (+1) ServiceNow Wants to Be No. 1 in Security. Here’s What Its $7.75 Billion Armis Bet Must Show on October 28 - TI",
+    "2026-10-24 (+0) ServiceNow, Inc. Shs Cert Deposito Arg Repr 0.0058139 Sh Estimates – BCBA:NOW.CI - TradingView",
+    "2026-10-21 (+0) ServiceNow ouvre la création d’agents IA… et les encadre - Silicon.fr",
+    "2026-10-21 (+0) ServiceNow et Nvidia lancent Arc, un nouvel agent IA destiné aux entreprises - ZDNET",
+    "2026-10-20 (+0) ServiceNow lance AI Passport pour gouverner les agents IA - Le Monde Informatique"
+   ],
+   "contexte_sectoriel": [
+    "Technology: ROP +14.5%, CRWD +13.3% : logiciels en reprise, tendance sectorielle concordante"
+   ],
+   "raison": "Score 99.6, stage Achat, +12% 5j / +17% 20j, volume normal (1.11x) : momentum propre sans exces de volume, actu IA/securite positive ; mais cible deja bien valorisee, avantage modeste."
+  },
+  {
+   "ticker": "NOKIA.HE",
+   "nom": "Nokia",
+   "secteur": "Technology",
+   "prix_entree": 7.37,
+   "appel": "baissier",
+   "confiance": "faible",
+   "dimension_dominante": "actu",
+   "stage_label": "Neutre",
+   "score": -57.3,
+   "sector_profile": "cyclique",
+   "rendement_5j_pct": -12.5,
+   "rendement_20j_pct": -19.3,
+   "volume_ratio_5j_vs_20j": 0.98,
+   "actualites_recentes": [
+    "2026-10-24 (-1) Panne géante d’Orange : c’est officiel un bug inédit et complexe chez Nokia a fait tomber le réseau et ses sys",
+    "2026-10-23 (-1) Plus ça change, plus c'est pareil chez Nokia - Zonebourse",
+    "2026-10-23 (+1) Nokia et Iceye concluent un nouveau partenariat ukrainien dans les communications satellitaires souveraines - ",
+    "2026-10-22 (+0) Nokia dépasse les attentes au T3, porté par l'IA - Boursorama",
+    "2026-10-22 (-1) Pourquoi l’action Nokia chute-t-elle aujourd’hui ? - Investing.com France"
+   ],
+   "contexte_sectoriel": [
+    "Technology: 6976.T -16.9%, FLEX -15.4% : faiblesse sectorielle large qui complique la lecture"
+   ],
+   "raison": "Bug Nokia a l'origine de la panne geante Orange (risque reputationnel/contractuel) apres resultats T3 pourtant au-dessus des attentes ; -12.5% 5j deja integre, volume normal (0.98x) donc pas de capitulation. Actu negative dominante mais prix a deja reagi."
+  },
+  {
+   "ticker": "SMCI",
+   "nom": "Supermicro",
+   "secteur": "Technology",
+   "prix_entree": 32.94,
+   "appel": "neutre",
+   "confiance": "tres_faible",
+   "dimension_dominante": "sectoriel",
+   "stage_label": "Neutre",
+   "score": 64.9,
+   "sector_profile": "cyclique",
+   "rendement_5j_pct": 4.1,
+   "rendement_20j_pct": -23.9,
+   "volume_ratio_5j_vs_20j": 1.28,
+   "actualites_recentes": [
+    "2026-10-21 (+1) Supermicro présente le rack CPU NVIDIA Vera, une solution rackable 256 CPU 100 % refroidie par liquide, complé",
+    "2026-10-21 (+1) Supermicro revoit ses prévisions à la hausse de 4 milliards de dollars, la demande en serveurs IA surprenant u",
+    "2026-10-21 (+0) Le Nasdaq mène la hausse à Wall Street, SpaceX et Super Micro stimulant l'optimisme autour de l'IA - Boursoram",
+    "2026-10-21 (+1) SpaceX et Super Micro ravivent la flamme de l'IA à Wall Street - Zonebourse",
+    "2026-10-20 (+1) Supermicro relève ses prévisions de revenus du T1 grâce à la demande IA - Investing.com France"
+   ],
+   "contexte_sectoriel": [
+    "Technology: purge hardware IA (FLEX, 6976.T) vs reprise logiciels (ROP, CRWD) : signaux contradictoires"
+   ],
+   "raison": "Relevement de previsions de 4 Md$ (+) mais -23.9% sur 20j et profil historique erratique ; volume 1.28x modere. La demande IA aide mais la volatilite rend la direction indecidable."
+  },
+  {
+   "ticker": "UAL",
+   "nom": "United Airlines Holdings",
+   "secteur": "Industrials",
+   "prix_entree": 97.93,
+   "appel": "baissier",
+   "confiance": "faible",
+   "dimension_dominante": "actu",
+   "stage_label": "Neutre",
+   "score": -20.9,
+   "sector_profile": "standard",
+   "rendement_5j_pct": 1.9,
+   "rendement_20j_pct": -14.1,
+   "volume_ratio_5j_vs_20j": 1.47,
+   "actualites_recentes": [
+    "2026-10-24 (+0) United Airlines Holdings, Inc. Estimates – NASDAQ:UAL - TradingView",
+    "2026-10-22 (+0) United Airlines Holdings, Inc. : Argus est neutre - Zonebourse Suisse",
+    "2026-10-21 (-1) United Airlines : la facture carburant s'envole - Boursier.com",
+    "2026-10-20 (-1) Le BPA de United Airlines Holdings a manqué les attentes de 0,04$, le CA en dessous des prévisions - Investing",
+    "2026-10-20 (-1) United Airlines prévoit un bénéfice inférieur aux attentes face à la hausse du carburant... - Fortuneo"
+   ],
+   "contexte_sectoriel": [
+    "Industrials: pas de contagion aerienne clairement visible dans les gros mouvements du secteur"
+   ],
+   "raison": "Previsions de benefice inferieures aux attentes a cause du carburant, BPA sous consensus, volume 1.47x ; -14% sur 20j. Le cout carburant est un facteur persistant mais deja largement escompte."
+  },
+  {
+   "ticker": "FDJU.PA",
+   "nom": "FDJ United",
+   "secteur": "Consumer Cyclical",
+   "prix_entree": 20.61,
+   "appel": "baissier",
+   "confiance": "moyenne",
+   "dimension_dominante": "actu",
+   "stage_label": "Déclin",
+   "score": -6.5,
+   "sector_profile": "cyclique",
+   "rendement_5j_pct": -4.3,
+   "rendement_20j_pct": -2.5,
+   "volume_ratio_5j_vs_20j": 1.57,
+   "actualites_recentes": [
+    "2026-10-23 (+0) FDJ United-Suez lance son équipe « multidisciplinaire » au côté de Specialized - L'Équipe",
+    "2026-10-23 (+0) Coupe de France Femmes Pro FDJ United : Avec 7 manches en 2027 - DirectVelo",
+    "2026-10-23 (-1) FDJ United abaisse ses objectifs face à une moindre fréquentation des points de vente et à la hausse de la fis",
+    "2026-10-23 (+0) Cyclisme. FDJ United-Suez lance Specialized TMRW, son équipe de cyclo-cross - Ouest-France",
+    "2026-10-22 (-1) FDJ United : sanctionné - Boursier.com"
+   ],
+   "contexte_sectoriel": [
+    "Consumer Cyclical: faiblesse du luxe europeen (KER.PA -17.9%) sans lien causal direct"
+   ],
+   "raison": "Baisse des objectifs (frequentation des points de vente, hausse de taxes), volume 1.57x, stage Declin : actu negative majeure + signal technique et volume alignes. Titre defensif, la baisse peut etre limitee."
+  },
+  {
+   "ticker": "LMT",
+   "nom": "Lockheed Martin",
+   "secteur": "Industrials",
+   "prix_entree": 604.18,
+   "appel": "neutre_leger_haussier",
+   "confiance": "faible",
+   "dimension_dominante": "actu",
+   "stage_label": "Neutre",
+   "score": 82.4,
+   "sector_profile": "standard",
+   "rendement_5j_pct": 9.4,
+   "rendement_20j_pct": 16.3,
+   "volume_ratio_5j_vs_20j": 1.55,
+   "actualites_recentes": [
+    "2026-10-24 (+0) Cash flow from operating activities de Lockheed Martin Corporation – SIX:LMT.USD - TradingView",
+    "2026-10-22 (+1) Le Lockheed-Martin F-35C Lightning II bientôt « ambassadeur » de l’US Navy ? - Avionslegendaires.net",
+    "2026-10-22 (+1) Armée: Le Pentagone négocie l'achat de 850 chasseurs F-35 - Blick",
+    "2026-10-22 (+1) Lockheed Martin relève ses prévisions grâce à la demande de défense antimissile et d'avions de chasse - Bourso",
+    "2026-10-21 (+1) Lockheed Martin Vectis Expansion. - Aerocontact.com"
+   ],
+   "contexte_sectoriel": [
+    "Industrials: SAF.PA -14.3%, HWM -15.9% (aero) : divergence avec la defense US"
+   ],
+   "raison": "Relevement des previsions et negociation de 850 F-35 par le Pentagone, +9.4% 5j / +16% 20j, volume 1.55x. Fondamentalement positif mais extension deja forte (retracement possible)."
+  },
+  {
+   "ticker": "MRO.L",
+   "nom": "Melrose Industries",
+   "secteur": "Industrials",
+   "prix_entree": 4.526,
+   "appel": "neutre",
+   "confiance": "tres_faible",
+   "dimension_dominante": "sectoriel",
+   "stage_label": "Déclin",
+   "score": 4.4,
+   "sector_profile": "standard",
+   "rendement_5j_pct": -6.7,
+   "rendement_20j_pct": -4.5,
+   "volume_ratio_5j_vs_20j": 1.01,
+   "actualites_recentes": [
+    "2026-10-24 (+0) Melrose Industries PLC Estimates – LSE:MRO - TradingView",
+    "2026-10-24 (+0) OPA de Melrose sur GKN : la décision revient aux actionnaires, selon Airbus - WanSquare",
+    "2026-10-13 (+0) Pourquoi l’action Melrose Industries est-elle en hausse aujourd’hui ? - Investing.com France",
+    "2026-10-13 (+0) Melrose affirme que l’usine de Garden Grove devrait reprendre ses activités au quatrième trimestre - Zonebours",
+    "2026-10-13 (+0) Les actions Melrose Industries progressent alors que l’enquête civile GKN touche à sa fin - Investing.com Fran"
+   ],
+   "contexte_sectoriel": [
+    "Industrials: mouvements sectoriels dispersés, pas de tendance claire"
+   ],
+   "raison": "Dossier GKN/OPA a l'etat de dependance actionnariale, news ambigue (sentiment 0), -6.7% 5j, volume normal. Rien d'exploitable."
+  },
+  {
+   "ticker": "BAMI.MI",
+   "nom": "Banco BPM",
+   "secteur": "Financial Services",
+   "prix_entree": 13.085,
+   "appel": "incertain",
+   "confiance": "tres_faible",
+   "dimension_dominante": "sectoriel",
+   "stage_label": "Neutre",
+   "score": 7.1,
+   "sector_profile": "standard",
+   "rendement_5j_pct": -5.2,
+   "rendement_20j_pct": -20.2,
+   "volume_ratio_5j_vs_20j": 1.11,
+   "actualites_recentes": [
+    "2026-10-24 (+0) Banco BPM et Crédit Agricole Italia, une fenêtre qui s’ouvre / Le golden power restera l’arbitre du dossier - ",
+    "2026-10-22 (+0) Banco BPM rachète des obligations pour plus de 143 millions d’EUR - Zonebourse Suisse",
+    "2026-10-22 (+0) Banco Bpm Announces Results Of Cash Tender Offer For €300 Million 7.000% Additional Tier 1 Notes - TradingView",
+    "2026-10-08 (+0) Crédit Agricole : n'apportera pas ses titre Banco BPM à Monte dei Paschi - Boursier.com",
+    "2026-09-25 (+0) Le Crédit Agricole et UniCredit envisageraient de se partager l’italien Banco BPM - L'Agefi"
+   ],
+   "contexte_sectoriel": [
+    "Banques italiennes ISP -4.7%, BMPS -4.8%, MB -2.2% (5j) : repli sectoriel simultane lie aux offres croisees"
+   ],
+   "raison": "Jeu de consolidation bancaire italienne (MPS, Credit Agricole Italia, UniCredit) sous controle du golden power : -20% 20j mais issue politique imprevisible. Volume normal."
+  },
+  {
+   "ticker": "CMG",
+   "nom": "Chipotle Mexican Grill",
+   "secteur": "Consumer Cyclical",
+   "prix_entree": 27.52,
+   "appel": "baissier",
+   "confiance": "faible",
+   "dimension_dominante": "technique",
+   "stage_label": "Déclin",
+   "score": 61.6,
+   "sector_profile": "cyclique",
+   "rendement_5j_pct": -7.9,
+   "rendement_20j_pct": -12.2,
+   "volume_ratio_5j_vs_20j": 1.16,
+   "actualites_recentes": [
+    "2026-10-23 (+0) Chipotle Mexican Grill, Inc. Estimates – LSE:0HXW - TradingView",
+    "2026-10-23 (+0) Chipotle Mexican Grill, Inc. : Mizuho Securities optimiste sur le dossier - Zonebourse Suisse",
+    "2026-10-21 (+0) L’action Chipotle Mexican Grill atteint un plus bas sur 52 semaines à 28,03 $ - Investing.com France",
+    "2026-10-12 (+0) Starbucks affirme ne pas racheter Chipotle Mexican Grill - Boursorama",
+    "2026-10-09 (+1) Starbucks envisage de racheter Chipotle Mexican Grill - Le Revenu"
+   ],
+   "contexte_sectoriel": [
+    "Consumer Cyclical: restauration/conso faible mais sans mouvement sectoriel clair"
+   ],
+   "raison": "Plus bas 52 semaines (28.03$), -7.9% 5j / -12.2% 20j, rumeur de rachat Starbucks dementie : la prime speculative s'evapore ; stage Declin, tendance baissiere etablie. Score fondamental eleve (61.6) freine le pari."
+  },
+  {
+   "ticker": "BKNG",
+   "nom": "Booking Holdings",
+   "secteur": "Consumer Cyclical",
+   "prix_entree": 155.83,
+   "appel": "neutre",
+   "confiance": "tres_faible",
+   "dimension_dominante": "actu",
+   "stage_label": "Déclin",
+   "score": -42.1,
+   "sector_profile": "cyclique",
+   "rendement_5j_pct": -4.7,
+   "rendement_20j_pct": -5.0,
+   "volume_ratio_5j_vs_20j": 0.9,
+   "actualites_recentes": [
+    "2026-10-24 (+0) Booking Holdings Inc. Shs -CAD hedged- Canadian Depositary Receipt Repr Shs Reg S Estimates – TSX:BKNG - Tradi",
+    "2026-10-23 (-1) L'UE ouvre une enquête contre Booking.com, accusé de ne pas assez protéger ses clients des arnaques - Siècle D",
+    "2026-10-22 (+0) Journée en hausse pour Booking Holdings - Boursier.com",
+    "2026-10-22 (+0) BTIG maintient sa recommandation d’achat sur Booking Holdings malgré les inquiétudes liées au tourisme - Inves",
+    "2026-10-21 (-1) Booking Holdings recule alors que l'UE ouvre une enquête sur les risques de fraude liés à Booking.com - Bourso"
+   ],
+   "contexte_sectoriel": [
+    "Consumer Cyclical: pas de signal sectoriel net"
+   ],
+   "raison": "Enquete UE sur fraude (actu negative majeure) mais analystes toujours acheteurs, volume 0.9x (pas de panique), -4.7% 5j. Risque reglementaire de long terme, effet court terme probablement limite."
+  }
+ ]
+}

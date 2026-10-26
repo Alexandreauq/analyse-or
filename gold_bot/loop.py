@@ -14,6 +14,7 @@ import gold_bot.backtest as backtest
 import gold_bot.bot as bot
 import gold_bot.broker as broker
 import gold_bot.confluence as confluence
+import gold_bot.ftmo_guard as ftmo_guard
 import gold_bot.risk as risk
 import gold_bot.state as state
 
@@ -52,6 +53,11 @@ DECISIONS_LOG_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "d
 # entre deux processus sur le même fichier ne puisse jamais écraser
 # silencieusement un changement de l'interrupteur d'urgence.
 CIRCUIT_BREAKER_STATE_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "circuit_breaker_state.json")
+# N'est utilisé que si FTMO_ISC est présente dans l'environnement (voir
+# main()) -- surchargeable par FTMO_GUARD_STATE_PATH, même convention
+# que les autres chemins d'état de ce fichier.
+FTMO_GUARD_STATE_PATH = os.environ.get(
+    "FTMO_GUARD_STATE_PATH", os.path.join(os.path.dirname(os.path.abspath(__file__)), "ftmo_guard_state.json"))
 LATEST_CANDLES_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "latest_candles.json")
 LATEST_BALANCE_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "latest_balance.json")
 LATEST_POSITIONS_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "latest_positions.json")
@@ -241,7 +247,8 @@ def _with_retry(fn, *, attempts: int = NETWORK_RETRY_ATTEMPTS, delay_s: float = 
 
 def run_cycle(token: str, account_id: str,
               circuit_breaker: "risk.CircuitBreaker", region: str = broker.DEFAULT_MT5_REGION,
-              symbol: str = SYMBOL, now: datetime | None = None) -> dict:
+              symbol: str = SYMBOL, now: datetime | None = None,
+              ftmo_guard_instance: "ftmo_guard.FtmoGuard | None" = None) -> dict:
     """Un cycle complet : interrupteur d'urgence -> bougies -> garde
     marché fermé/données périmées -> reste des données réelles + décision
     (dans un seul bloc try, jamais d'exception non capturée) ->
@@ -250,7 +257,16 @@ def run_cycle(token: str, account_id: str,
     exécution réelle seulement si toujours pas dry_run. Journalise
     systématiquement le résultat, y compris les erreurs. `now` est
     injectable pour les tests (défaut : l'heure réelle), même convention
-    que runOnce (scalping_tracker.js)."""
+    que runOnce (scalping_tracker.js).
+
+    `ftmo_guard_instance`, si fourni (None par défaut -- voir main(),
+    actif seulement si FTMO_ISC est dans l'environnement), est contrôlé
+    juste après la lecture balance/equity : un franchissement ferme
+    TOUTES les positions ouvertes du compte (broker.close_all_positions,
+    pas seulement celles de ce cycle/symbole) et arme le kill_switch
+    existant, puis le cycle s'arrête là -- aucune nouvelle décision
+    n'est prise ce cycle. Absent (None), ce bloc ne s'exécute jamais et
+    rien ne change par rapport au comportement du bot sans FTMO."""
     now_dt = now or datetime.now(timezone.utc)
     current_state = state.load_state(state.STATE_PATH)
     if current_state["kill_switch"]:
@@ -300,6 +316,23 @@ def run_cycle(token: str, account_id: str,
         balance = account_info["balance"]
         equity = account_info["equity"]
         _save_cache({"balance": balance, "fetched_at": _now_iso()}, LATEST_BALANCE_PATH)
+
+        if ftmo_guard_instance is not None:
+            breach = ftmo_guard_instance.check(balance, equity)
+            if breach is not None:
+                close_results = broker.close_all_positions(token, account_id, region)
+                failed_closes = [r for r in close_results if not r["closed"]]
+                if failed_closes:
+                    print(f"ERREUR FTMO : {len(failed_closes)} position(s) non fermée(s) après "
+                          f"franchissement du plancher {breach} : {failed_closes}")
+                state.update_state({"kill_switch": True})
+                decision = {
+                    "action": "ftmo_garde_fou", "reason": breach, "symbol": symbol,
+                    "close_results": close_results,
+                }
+                _log_decision(decision, path=DECISIONS_LOG_PATH)
+                return decision
+
         open_positions = _with_retry(lambda: bot.reconcile_positions(token, account_id, region))
         _save_cache({"positions": open_positions, "fetched_at": _now_iso()}, LATEST_POSITIONS_PATH)
         spec = _with_retry(lambda: broker.get_symbol_specification(token, account_id, symbol, region))
@@ -384,11 +417,21 @@ def main():
     token = os.environ["METAAPI_TRADE_TOKEN"]
     account_id = os.environ["METAAPI_TRADE_ACCOUNT_ID"]
     circuit_breaker = risk.CircuitBreaker(persist_path=CIRCUIT_BREAKER_STATE_PATH)
+    # FTMO_ISC optionnelle -- absente (déploiement du compte perso actuel) :
+    # ftmo_guard_instance reste None, run_cycle ne change rien à son
+    # comportement actuel (voir sa docstring). Présente (déploiement
+    # dédié à un compte FTMO) : un seul garde-fou partagé entre les deux
+    # symboles de SYMBOLS, même pattern que circuit_breaker ci-dessus.
+    ftmo_isc = os.environ.get("FTMO_ISC")
+    ftmo_guard_instance = (
+        ftmo_guard.FtmoGuard(isc=float(ftmo_isc), persist_path=FTMO_GUARD_STATE_PATH)
+        if ftmo_isc is not None else None
+    )
 
     while True:
         for symbol in SYMBOLS:
             try:
-                run_cycle(token, account_id, circuit_breaker, symbol=symbol)
+                run_cycle(token, account_id, circuit_breaker, symbol=symbol, ftmo_guard_instance=ftmo_guard_instance)
             except Exception as e:
                 # Filet de sécurité ultime — run_cycle ne devrait jamais
                 # lever (elle capture déjà ses propres erreurs), mais un

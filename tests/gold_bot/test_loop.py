@@ -1336,3 +1336,140 @@ def test_run_cycle_anti_slippage_recheck_uses_the_given_symbol(monkeypatch, tmp_
     # jamais retomber implicitement sur XAUUSD (bug trouve et corrige
     # le 2026-09-30 : l'appel de re-controle ignorait `symbol`).
     assert captured_symbols == ["XAGUSD", "XAGUSD"]
+
+
+def test_run_cycle_unaffected_when_ftmo_guard_not_passed(monkeypatch, tmp_path):
+    """Sans ftmo_guard_instance (valeur par defaut None -- deploiement du
+    compte perso actuel) : close_all_positions ne doit jamais etre
+    appelee, le cycle se deroule exactement comme avant ce changement."""
+    monkeypatch.setattr(loop.state, "load_state", lambda *a, **k: {"kill_switch": False, "dry_run": True})
+    monkeypatch.setattr(loop, "DECISIONS_LOG_PATH", str(tmp_path / "decisions_log.jsonl"))
+    monkeypatch.setattr(loop, "LATEST_CANDLES_PATH", str(tmp_path / "latest_candles.json"))
+    monkeypatch.setattr(loop, "LATEST_BALANCE_PATH", str(tmp_path / "latest_balance.json"))
+    monkeypatch.setattr(loop, "LATEST_POSITIONS_PATH", str(tmp_path / "latest_positions.json"))
+    monkeypatch.setattr(loop.confluence, "fetch_gold_candles", lambda *a, **k: [_FRESH_CANDLE])
+    monkeypatch.setattr(loop.broker, "get_account_information", lambda *a, **k: {"balance": 9000, "equity": 100})
+    monkeypatch.setattr(
+        loop.broker, "close_all_positions",
+        lambda *a, **k: (_ for _ in ()).throw(AssertionError("ne doit jamais etre appele sans ftmo_guard_instance")))
+    monkeypatch.setattr(loop.bot, "reconcile_positions", lambda *a, **k: [])
+    monkeypatch.setattr(loop.broker, "get_symbol_specification", lambda *a, **k: {"contractSize": 100, "volumeStep": 0.01, "minVolume": 0.01, "maxVolume": 500})
+    monkeypatch.setattr(loop.bot, "decide_and_act_vwap", lambda *a, **k: {"action": "aucune", "reason": "signal neutre"})
+
+    result = loop.run_cycle("tok", "acc", loop.risk.CircuitBreaker(), now=_FRESH_NOW)
+
+    assert result["action"] == "aucune"
+
+
+def test_run_cycle_ftmo_guard_does_nothing_when_equity_above_floors(monkeypatch, tmp_path):
+    monkeypatch.setattr(loop.state, "load_state", lambda *a, **k: {"kill_switch": False, "dry_run": True})
+    monkeypatch.setattr(loop, "DECISIONS_LOG_PATH", str(tmp_path / "decisions_log.jsonl"))
+    monkeypatch.setattr(loop, "LATEST_CANDLES_PATH", str(tmp_path / "latest_candles.json"))
+    monkeypatch.setattr(loop, "LATEST_BALANCE_PATH", str(tmp_path / "latest_balance.json"))
+    monkeypatch.setattr(loop, "LATEST_POSITIONS_PATH", str(tmp_path / "latest_positions.json"))
+    monkeypatch.setattr(loop.confluence, "fetch_gold_candles", lambda *a, **k: [_FRESH_CANDLE])
+    monkeypatch.setattr(loop.broker, "get_account_information", lambda *a, **k: {"balance": 10000, "equity": 9900})
+    monkeypatch.setattr(
+        loop.broker, "close_all_positions",
+        lambda *a, **k: (_ for _ in ()).throw(AssertionError("ne doit pas etre appele, equite au-dessus des deux planchers")))
+    monkeypatch.setattr(loop.bot, "reconcile_positions", lambda *a, **k: [])
+    monkeypatch.setattr(loop.broker, "get_symbol_specification", lambda *a, **k: {"contractSize": 100, "volumeStep": 0.01, "minVolume": 0.01, "maxVolume": 500})
+    monkeypatch.setattr(loop.bot, "decide_and_act_vwap", lambda *a, **k: {"action": "aucune", "reason": "signal neutre"})
+
+    guard = loop.ftmo_guard.FtmoGuard(isc=10000, now_fn=lambda: _FRESH_NOW)
+    result = loop.run_cycle("tok", "acc", loop.risk.CircuitBreaker(), now=_FRESH_NOW, ftmo_guard_instance=guard)
+
+    assert result["action"] == "aucune"
+
+
+def test_run_cycle_ftmo_guard_closes_all_and_arms_kill_switch_on_daily_breach(monkeypatch, tmp_path):
+    monkeypatch.setattr(loop.state, "load_state", lambda *a, **k: {"kill_switch": False, "dry_run": True})
+    monkeypatch.setattr(loop, "DECISIONS_LOG_PATH", str(tmp_path / "decisions_log.jsonl"))
+    monkeypatch.setattr(loop, "LATEST_CANDLES_PATH", str(tmp_path / "latest_candles.json"))
+    monkeypatch.setattr(loop, "LATEST_BALANCE_PATH", str(tmp_path / "latest_balance.json"))
+    monkeypatch.setattr(loop, "LATEST_POSITIONS_PATH", str(tmp_path / "latest_positions.json"))
+    monkeypatch.setattr(loop.confluence, "fetch_gold_candles", lambda *a, **k: [_FRESH_CANDLE])
+    # Plancher quotidien par defaut (4%) sur un solde de 10000 : 9600.
+    monkeypatch.setattr(loop.broker, "get_account_information", lambda *a, **k: {"balance": 10000, "equity": 9500})
+    close_calls = []
+    monkeypatch.setattr(
+        loop.broker, "close_all_positions",
+        lambda *a, **k: close_calls.append(a) or [{"position_id": "1", "closed": True, "error": None}])
+    monkeypatch.setattr(
+        loop.bot, "reconcile_positions",
+        lambda *a, **k: (_ for _ in ()).throw(AssertionError("ne doit pas etre appele apres franchissement FTMO")))
+    monkeypatch.setattr(
+        loop.bot, "decide_and_act_vwap",
+        lambda *a, **k: (_ for _ in ()).throw(AssertionError("aucune decision ne doit etre prise apres franchissement FTMO")))
+    update_calls = []
+    monkeypatch.setattr(loop.state, "update_state", lambda fields, **k: update_calls.append(fields))
+
+    guard = loop.ftmo_guard.FtmoGuard(isc=10000, now_fn=lambda: _FRESH_NOW)
+    result = loop.run_cycle("tok", "acc", loop.risk.CircuitBreaker(), now=_FRESH_NOW, ftmo_guard_instance=guard)
+
+    assert result["action"] == "ftmo_garde_fou"
+    assert result["reason"] == "daily"
+    assert len(close_calls) == 1
+    assert update_calls == [{"kill_switch": True}]
+
+
+def test_run_cycle_ftmo_guard_closes_all_and_arms_kill_switch_on_overall_breach(monkeypatch, tmp_path):
+    monkeypatch.setattr(loop.state, "load_state", lambda *a, **k: {"kill_switch": False, "dry_run": True})
+    monkeypatch.setattr(loop, "DECISIONS_LOG_PATH", str(tmp_path / "decisions_log.jsonl"))
+    monkeypatch.setattr(loop, "LATEST_CANDLES_PATH", str(tmp_path / "latest_candles.json"))
+    monkeypatch.setattr(loop, "LATEST_BALANCE_PATH", str(tmp_path / "latest_balance.json"))
+    monkeypatch.setattr(loop, "LATEST_POSITIONS_PATH", str(tmp_path / "latest_positions.json"))
+    monkeypatch.setattr(loop.confluence, "fetch_gold_candles", lambda *a, **k: [_FRESH_CANDLE])
+    # Plancher global par defaut (9%) sur un ISC de 10000 : 9100.
+    monkeypatch.setattr(loop.broker, "get_account_information", lambda *a, **k: {"balance": 10000, "equity": 9000})
+    close_calls = []
+    monkeypatch.setattr(
+        loop.broker, "close_all_positions",
+        lambda *a, **k: close_calls.append(a) or [{"position_id": "1", "closed": True, "error": None}])
+    monkeypatch.setattr(
+        loop.bot, "reconcile_positions",
+        lambda *a, **k: (_ for _ in ()).throw(AssertionError("ne doit pas etre appele apres franchissement FTMO")))
+    monkeypatch.setattr(
+        loop.bot, "decide_and_act_vwap",
+        lambda *a, **k: (_ for _ in ()).throw(AssertionError("aucune decision ne doit etre prise apres franchissement FTMO")))
+    update_calls = []
+    monkeypatch.setattr(loop.state, "update_state", lambda fields, **k: update_calls.append(fields))
+
+    guard = loop.ftmo_guard.FtmoGuard(isc=10000, now_fn=lambda: _FRESH_NOW)
+    result = loop.run_cycle("tok", "acc", loop.risk.CircuitBreaker(), now=_FRESH_NOW, ftmo_guard_instance=guard)
+
+    assert result["action"] == "ftmo_garde_fou"
+    assert result["reason"] == "overall"
+    assert len(close_calls) == 1
+    assert update_calls == [{"kill_switch": True}]
+
+
+def test_run_cycle_ftmo_guard_still_arms_kill_switch_when_a_close_fails(monkeypatch, tmp_path, capsys):
+    """Meme si une fermeture echoue, le kill_switch doit rester arme --
+    il a deja ete declenche par la detection du franchissement,
+    independamment du resultat de la fermeture."""
+    monkeypatch.setattr(loop.state, "load_state", lambda *a, **k: {"kill_switch": False, "dry_run": True})
+    monkeypatch.setattr(loop, "DECISIONS_LOG_PATH", str(tmp_path / "decisions_log.jsonl"))
+    monkeypatch.setattr(loop, "LATEST_CANDLES_PATH", str(tmp_path / "latest_candles.json"))
+    monkeypatch.setattr(loop, "LATEST_BALANCE_PATH", str(tmp_path / "latest_balance.json"))
+    monkeypatch.setattr(loop, "LATEST_POSITIONS_PATH", str(tmp_path / "latest_positions.json"))
+    monkeypatch.setattr(loop.confluence, "fetch_gold_candles", lambda *a, **k: [_FRESH_CANDLE])
+    monkeypatch.setattr(loop.broker, "get_account_information", lambda *a, **k: {"balance": 10000, "equity": 9000})
+    monkeypatch.setattr(
+        loop.broker, "close_all_positions",
+        lambda *a, **k: [{"position_id": "1", "closed": False, "error": "echec MetaApi"}])
+    monkeypatch.setattr(
+        loop.bot, "reconcile_positions",
+        lambda *a, **k: (_ for _ in ()).throw(AssertionError("ne doit pas etre appele apres franchissement FTMO")))
+    monkeypatch.setattr(
+        loop.bot, "decide_and_act_vwap",
+        lambda *a, **k: (_ for _ in ()).throw(AssertionError("aucune decision ne doit etre prise apres franchissement FTMO")))
+    update_calls = []
+    monkeypatch.setattr(loop.state, "update_state", lambda fields, **k: update_calls.append(fields))
+
+    guard = loop.ftmo_guard.FtmoGuard(isc=10000, now_fn=lambda: _FRESH_NOW)
+    result = loop.run_cycle("tok", "acc", loop.risk.CircuitBreaker(), now=_FRESH_NOW, ftmo_guard_instance=guard)
+
+    assert update_calls == [{"kill_switch": True}]
+    assert "ERREUR FTMO" in capsys.readouterr().out
+    assert result["action"] == "ftmo_garde_fou"

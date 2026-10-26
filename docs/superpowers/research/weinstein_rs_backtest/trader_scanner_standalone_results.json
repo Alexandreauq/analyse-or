@@ -1,0 +1,37 @@
+[
+  {
+    "regle":"breakout_20d",
+    "n_signaux":262153,
+    "rendement_moyen_pct":0.6535498186,
+    "rendement_median_pct":0.3138734182,
+    "taux_reussite_pct":51.6820330113
+  },
+  {
+    "regle":"bull_flag",
+    "n_signaux":71657,
+    "rendement_moyen_pct":0.6629035224,
+    "rendement_median_pct":-0.0360686241,
+    "taux_reussite_pct":49.8123002638
+  },
+  {
+    "regle":"reclaim_ma20",
+    "n_signaux":113206,
+    "rendement_moyen_pct":0.6859186278,
+    "rendement_median_pct":0.2285782354,
+    "taux_reussite_pct":51.1112485204
+  },
+  {
+    "regle":"oversold",
+    "n_signaux":61737,
+    "rendement_moyen_pct":1.9179840129,
+    "rendement_median_pct":1.424144569,
+    "taux_reussite_pct":56.4863857978
+  },
+  {
+    "regle":"oversold_bounce",
+    "n_signaux":32410,
+    "rendement_moyen_pct":1.5086110707,
+    "rendement_median_pct":1.2564714241,
+    "taux_reussite_pct":56.1277383524
+  }
+]

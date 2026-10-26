@@ -362,6 +362,14 @@ def test_system_prompt_uses_news_tools_to_explain_a_score_not_only_a_price_move(
     assert "actualites_marche" in assistant.SYSTEM_PROMPT
 
 
+def test_system_prompt_requires_explaining_each_article_not_just_citing_it():
+    prompt = assistant.SYSTEM_PROMPT.lower()
+
+    assert "pour chaque article retenu, explique" in prompt
+    assert "jamais une simple citation ou reformulation paresseuse du titre" in prompt
+    assert "n'ont pas de resume fourni par la source" in prompt
+
+
 def test_construit_system_keeps_the_base_prompt_and_adds_the_level_instruction():
     texte = assistant.construit_system("grand_public")
 

@@ -1,8 +1,8 @@
 {
-  "date": "2026-10-25",
+  "date": "2026-10-26",
   "commodity": "gaz",
   "label": "Gaz naturel",
-  "composite_score": -33.6,
+  "composite_score": -29.3,
   "interpretation": "Défavorable — pas d'entrée même sur signal technique",
   "cftc_percentile": 1.282051282051282,
   "factors": [
@@ -14,21 +14,21 @@
     },
     {
       "name": "Saisonnalité (Henry Hub)",
-      "score": -8.058252427184467,
+      "score": -7.649019607843135,
       "weight": 0.3333333333333333,
-      "raw_value": "3.10 $/MMBtu (moyenne saisonnière du mois : 3.50 $/MMBtu)"
+      "raw_value": "3.10 $/MMBtu (moyenne saisonnière du mois : 3.48 $/MMBtu)"
     },
     {
       "name": "Dynamique récente",
-      "score": -7.256749199021993,
+      "score": -6.15885395287693,
       "weight": 0.26666666666666666,
-      "raw_value": "-3.6% vs MM200"
+      "raw_value": "-3.1% vs MM200"
     },
     {
       "name": "Dollar (DXY)",
       "score": -10,
       "weight": 0.13333333333333333,
-      "raw_value": "101.81 (il y a 2 mois : 98.92)"
+      "raw_value": "101.70 (il y a 2 mois : 98.92)"
     },
     {
       "name": "Stocks EIA",
@@ -38,9 +38,9 @@
     }
   ],
   "technical": {
-    "note": "Cours en-dessous de la MM200 (-3.6%) — tendance baissière",
-    "spot": 2.9700000286102295,
-    "ma200": 3.0818200027942657,
+    "note": "Cours en-dessous de la MM200 (-3.1%) — tendance baissière",
+    "spot": 2.986999988555908,
+    "ma200": 3.0819050025939942,
     "unite": "$ / MMBtu"
   },
   "calendar": [
@@ -85,5 +85,8 @@
       "kind": "Donnée"
     }
   ],
-  "alerts": []
+  "alerts": [],
+  "news": [],
+  "analysis_html": null,
+  "news_classifications": {}
 }

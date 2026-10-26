@@ -142,3 +142,24 @@ def close_position(token: str, account_id: str, position_id: str,
     )
     resp.raise_for_status()
     return resp.json()
+
+
+def close_all_positions(token: str, account_id: str, region: str = DEFAULT_MT5_REGION) -> list[dict]:
+    """Ferme chaque position ouverte du compte, une par une via
+    close_position -- utilisé par le garde-fou FTMO (gold_bot.ftmo_guard)
+    quand un plancher est franchi. Chaque position est indépendante : un
+    échec sur l'une n'interrompt jamais la tentative de fermeture des
+    autres (même contrat que loop.execute_steps pour une liste
+    d'étapes). Renvoie un résultat par position ouverte au moment de
+    l'appel, succès ou échec, pour que l'appelant sache précisément si
+    une fermeture a réellement échoué plutôt que de supposer un succès
+    silencieux."""
+    results = []
+    for position in get_open_positions(token, account_id, region):
+        position_id = position["id"]
+        try:
+            close_position(token, account_id, position_id, region)
+            results.append({"position_id": position_id, "closed": True, "error": None})
+        except Exception as e:
+            results.append({"position_id": position_id, "closed": False, "error": str(e)})
+    return results

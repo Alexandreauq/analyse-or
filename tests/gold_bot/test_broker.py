@@ -240,3 +240,50 @@ def test_modify_position_stop_loss_sends_correct_body(monkeypatch):
         "stopLoss": 2087.5,
     }
     assert captured["url"].endswith("/users/current/accounts/acc123/trade")
+
+
+def test_close_all_positions_closes_every_open_position(monkeypatch):
+    monkeypatch.setattr(
+        broker, "get_open_positions",
+        lambda *a, **k: [{"id": "1", "symbol": "XAUUSD"}, {"id": "2", "symbol": "XAGUSD"}],
+    )
+    closed = []
+    monkeypatch.setattr(
+        broker, "close_position",
+        lambda token, account_id, position_id, region: closed.append(position_id) or {"orderId": position_id},
+    )
+    result = broker.close_all_positions("tok", "acc123")
+    assert closed == ["1", "2"]
+    assert result == [
+        {"position_id": "1", "closed": True, "error": None},
+        {"position_id": "2", "closed": True, "error": None},
+    ]
+
+
+def test_close_all_positions_returns_empty_list_when_no_open_positions(monkeypatch):
+    monkeypatch.setattr(broker, "get_open_positions", lambda *a, **k: [])
+    monkeypatch.setattr(
+        broker, "close_position",
+        lambda *a, **k: (_ for _ in ()).throw(AssertionError("ne doit pas être appelé, aucune position ouverte")),
+    )
+    assert broker.close_all_positions("tok", "acc123") == []
+
+
+def test_close_all_positions_continues_after_one_failure(monkeypatch):
+    monkeypatch.setattr(
+        broker, "get_open_positions",
+        lambda *a, **k: [{"id": "1"}, {"id": "2"}, {"id": "3"}],
+    )
+
+    def fake_close(token, account_id, position_id, region):
+        if position_id == "2":
+            raise RuntimeError("échec MetaApi")
+        return {"orderId": position_id}
+
+    monkeypatch.setattr(broker, "close_position", fake_close)
+    result = broker.close_all_positions("tok", "acc123")
+    assert result == [
+        {"position_id": "1", "closed": True, "error": None},
+        {"position_id": "2", "closed": False, "error": "échec MetaApi"},
+        {"position_id": "3", "closed": True, "error": None},
+    ]

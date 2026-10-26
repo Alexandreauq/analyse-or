@@ -1,0 +1,4 @@
+# Donnees de marche volumineuses (bougies 5min XAU/USD, 8.5 ans via
+# MetaApi), regenerees localement par backtest_vwap_ftmo.py. Jamais
+# committees (meme pattern que weinstein_rs_backtest/.gitignore).
+data/

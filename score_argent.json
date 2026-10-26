@@ -2,7 +2,7 @@
   "date": "2026-10-26",
   "commodity": "argent",
   "label": "Argent",
-  "composite_score": -30.8,
+  "composite_score": -31.0,
   "interpretation": "Défavorable — pas d'entrée même sur signal technique",
   "cftc_percentile": 3.8461538461538463,
   "factors": [
@@ -16,7 +16,7 @@
       "name": "Dollar (DXY)",
       "score": -10,
       "weight": 0.2,
-      "raw_value": "101.87 (il y a 2 mois : 99.17)"
+      "raw_value": "101.89 (il y a 2 mois : 99.17)"
     },
     {
       "name": "Positionnement CFTC",
@@ -26,21 +26,21 @@
     },
     {
       "name": "Ratio or/argent",
-      "score": -4.9115044247787605,
+      "score": -4.977876106194691,
       "weight": 0.25,
-      "raw_value": "74.7 — 25e percentile (3 ans)"
+      "raw_value": "74.5 — 25e percentile (3 ans)"
     },
     {
       "name": "Dynamique récente",
       "score": -10.0,
       "weight": 0.1,
-      "raw_value": "-24.5% vs MM200"
+      "raw_value": "-24.3% vs MM200"
     }
   ],
   "technical": {
-    "note": "Cours en-dessous de la MM200 (-24.5%) — tendance baissière",
-    "spot": 53.98500061035156,
-    "ma200": 71.53724489212036,
+    "note": "Cours en-dessous de la MM200 (-24.3%) — tendance baissière",
+    "spot": 54.130001068115234,
+    "ma200": 71.53796989440917,
     "unite": "$ / oz"
   },
   "calendar": [
@@ -88,6 +88,15 @@
   "alerts": [],
   "news": [
     {
+      "title": "Or vs argent : quelles perspectives pour 2027 ? - Le Comptoir National de l'Or",
+      "date": "2026-10-21",
+      "link": "https://news.google.com/rss/articles/CBMihwFBVV95cUxOd1ZnSXdQV2lfWGRPMGJveWZBLU15aldGZEs3R0VoTU94UVlFLVdCd294eFljTmczSHA0QktyZ2FhLUxEeWZwaXgyclNmRzRBVkJ4czFFZVZ2dmRlS0VmeXg1anFMVXI1cGNzQjh6R241YUhickl4aEowbWFEbWM2TjVQQXhXMHfSAYwBQVVfeXFMT2dPd0VjdHVkTGVscXprUFU4RWFIdHVOaTdvYzFHdXh5UFZsQnpxc2Q4emZkOWVXUDc5RWJPUGdzQXBsMkx3RURjT0laQUZCMnM0R2NUQ2VmdjVmNzI4OGNSRkpBS3h6a2x2THBITVhlMDdPelJyRUxMMnhMSUxCcHdpekxLTUdGWnJWNWw?oc=5",
+      "source": "Le Comptoir National de l'Or",
+      "summary": "Cet article suggère que le Comptoir National de l'Or propose une analyse comparative des perspectives d'évolution de l'or et de l'argent jusqu'en 2027, sans que le titre seul ne permette de déterminer les conclusions ou recommandations spécifiques de cette comparaison.",
+      "sentiment": 0,
+      "importance": "mineure"
+    },
+    {
       "title": "L’argent métal peut-il rebondir après sa récente chute ? UBS répond - Investing.com France",
       "date": "2026-10-24",
       "link": "https://news.google.com/rss/articles/CBMiuwFBVV95cUxQRzdaUHFWXy1QUHNHQ0dVR2I2cGpmNXhuTVZsOE94WFhsZ3pNY2h1bFJ0UTlDcTNoaTRuN3hvS1EyakNQLUZnYTRtakZYQlI5TTdYNWFIaVRrWmZ3b2Zpa1FPNnRMWEdZaXBkZTFYTU0xRWxLVndWRThuYV9xRl9YYm9zdUNzdGFuSlVQYlg3TWlVQTk0ZU12YndTdndqbnhycVhhT0FrSzg0RXI5dW0zekQwcXM5RWNOemRr?oc=5",
@@ -97,68 +106,59 @@
       "importance": "mineure"
     },
     {
-      "title": "Cours de l’argent : pourquoi de telles variations ? - Le Comptoir National de l'Or",
-      "date": "2026-02-11",
-      "link": "https://news.google.com/rss/articles/CBMiiwFBVV95cUxQSG5SU1oxV0NCYTVtMjNkc0tXYXk0cXRzV3N5dWRBbnU2bkszZktoTHJ3RW1SaFM0OWliczFPZ0lwclVxR3JOZ2NQSE5LTHdHRWNEOHhiZThpQ1Z1UlM5a0ZsYTAwNVpOUGcyZkFHZWNRdUJuTzR2cFZ6cThrTTZFSXZPZUVyY2hoVjdN0gGQAUFVX3lxTE5jZ29TNzhEX2E0LXc3Xy11MnVZNml0b0ZVX3VjRTF1X09oenBsb1NrcHRPRS1yMXJpdU53U0I2T2tfZGZEeThzWGZJeG1veU05NkRmWjBHMW9RSVpNZFd1a2l0ZDhOTk13bGo0ZElGd2tqYUhxeVJDa3Q0WEtfUmI1ZGY3bnZhcjFZclhLZk5jcQ?oc=5",
-      "source": "Le Comptoir National de l'Or",
-      "summary": "Cet article suggère que le prix de l'argent connaît des fluctuations significatives dont les causes mériteraient une explication pédagogique à destination des investisseurs.",
+      "title": "Prévisions du cours de l’argent pour 2026, 2027, 2028–2030 et au-delà - LiteFinance",
+      "date": "2026-10-22",
+      "link": "https://news.google.com/rss/articles/CBMiggFBVV95cUxQMzJNaUdZQlVJajk1cHlxaTdsN3FaS1IwRUxzcXR3OGhWVFJLMTBOc1ZwcUE2OHN6aVNPaFpJX1FIampDakphX0UtXzhfdm9IVDNYVVlNYTFhcHQtSEpCcENzVi1Ib0dxOGM0SlFxNHJVWjV5ejRHWEgzVDBiNkxudkJn?oc=5",
+      "source": "LiteFinance",
+      "summary": "Cet article suggère que la plateforme LiteFinance propose une analyse prospective des tendances du cours de l'argent sur plusieurs années, sans que le contenu permette de confirmer l'orientation ou la fiabilité de ces prévisions.",
       "sentiment": 0,
       "importance": "mineure"
     },
     {
-      "title": "« La remonétisation de l'argent est en cours » - Boursier.com",
-      "date": "2026-01-14",
-      "link": "https://news.google.com/rss/articles/CBMirwFBVV95cUxPNkh2Q3hCd2ZiQ1FhTnB1eGtnbzVsNzAwdnE4VE1XWlA0WnY5MkxUMjZrT0NFWGR1X1BhRmp1TG5qd0JPS0FDOHctS1NoT0F3NEk4dVVKNkFzbWtBc0szV3BYazh1ZXNxU2hEZS1lY3FoWHIyTVZoWDRWbFpoZWFkdDBwUW1qOWl0d2JFMHV6UnQ1S2JsQWpxaW9WdUVidTFEMVlmQjRFTnNUWDhEQkt3?oc=5",
-      "source": "Boursier.com",
-      "summary": "Cet article suggère que l'argent métal connaîtrait un processus de réintégration progressive comme réserve de valeur ou moyen de paiement, potentiellement soutenu par une demande accrue ou des évolutions monétaires.",
-      "sentiment": 1,
-      "importance": "notable"
-    },
-    {
-      "title": "L’argent est-il plus précieux que l’or ? - The Conversation",
-      "date": "2026-03-08",
-      "link": "https://news.google.com/rss/articles/CBMie0FVX3lxTE1HcmxkRFg1Y3h0aF9MQnRHM3pZT3lKZXZoVEtHZmhnUDF0cDd6bFIxT1RUTmgxYzhYMmM1bHFzclN1eTNPbDdMRU0wdnY2S3VZSUxxQmlzekNHb2prdWoyQjJVYkQ0NDFVVnNEVXdJRnBWVmJhZEhaMXZ1Zw?oc=5",
-      "source": "The Conversation",
-      "summary": "Cet article suggère que le titre explore une comparaison de valeur relative entre l'argent et l'or, possiblement dans une perspective de réexamen des hiérarchies traditionnelles de préciosité entre ces deux métaux.",
-      "sentiment": 0,
+      "title": "Cours de l’argent aujourd’hui : le métal recule, selon les données de FXStreet - www.tmgm.com",
+      "date": "2026-10-23",
+      "link": "https://news.google.com/rss/articles/CBMiwgFBVV95cUxQMW9YTUhmS2Q3SzhOZ2diUUxQNGRUd0JQbXpvbjB1QzBseHRrckpIMDgzRHhGQi1LVDFzN0RCUzJQYlItcENkZWhOTnVyWERZazdITHJ4ejlwa1dkVEtEOEN2V1lVX1hJRUN3QTJZcHAtQkxVWm5nT3k1NDYyTGJXSjdHbGlJbFRHUlNHalBvM0MtemZQSGtLbldSRWViLXFUUXI3ZHk3VFFjQ3J0OXlhZHZvUXZ5THEtMFkzdE5WMEZCQQ?oc=5",
+      "source": "www.tmgm.com",
+      "summary": "Cet article suggère que le prix de l'argent connaît une phase de repli à la séance actuelle selon les données de marché de FXStreet.",
+      "sentiment": -1,
       "importance": "mineure"
     },
     {
-      "title": "Perspectives 2026 : l'argent, le retour d'un métal stratégique - Or.fr",
-      "date": "2026-01-13",
-      "link": "https://news.google.com/rss/articles/CBMijgFBVV95cUxNOC1qT01JZmRlQmVpelRiOGQyZGZDY25hcldmYi1Ta1lCZThyY0lhc2Rvcnp0WlJ2NV9XZXRzNEt5NnNYODFqLVNHa212c0JzTExaa08yMU9fclFHeXJzN1lZVEpHV1A3N0ZTMVA3MHdfYXJsWDhEb3FOdWlkd0dRSHJyVTRob1E3SXJOYVRn?oc=5",
-      "source": "Or.fr",
-      "summary": "Cet article suggère que l'argent pourrait regagner un statut de métal stratégique à l'horizon 2026, possiblement en raison de nouvelles applications industrielles, technologiques ou géopolitiques qui renforceraient sa demande.",
-      "sentiment": 1,
-      "importance": "notable"
+      "title": "Pourquoi, malgré une correction à la baisse, le marché de l'argent se maintient à des niveaux élevés? - RFI",
+      "date": "2026-09-24",
+      "link": "https://news.google.com/rss/articles/CBMitgJBVV95cUxQRlZNeG9jaEZLQXY1TXl5b0dUZktCcDFSbTBMZi1jY3FGSU11Z3Q1UzdFTWFQTEp2a0wzWll3TkNoR1ZFR3ZHMjJnSk5iWlV4TVNhdjhHVzZlb3M5M1FyZjRyUnVJaktkS3BtWnNjZURsRWxmaVZaMVlFSjNfYi0xWWQ2aVQtVHVaTzE0QkNxQ2RTUi11MmpncGhld0dZNXFaM2I1bXpXYnp0WEg1N1ZfSmxJdHdMdldsQTItSGR4ZmhqODk0MVpBbC1LRl9xWndqTl9hMGpxSF9RRTU0bkJrVDB4WFJyOS1xaEQyWmtQcXFnTkw5dG5RWEFVcnNuZVplTFRIUzVnUTRIN1NuemVUN2xkdzVSVDRfbHdrQUpGRG1ab0VWLUNMT3NTd3luRThDV1M3RHFn?oc=5",
+      "source": "RFI",
+      "summary": "Cet article suggère que le marché de l'argent traverse une phase de correction des prix à la baisse, mais que les niveaux de cotation demeurent historiquement ou comparativement élevés, ce qui pourrait indiquer une demande persistante ou des facteurs structurels soutenant le métal.",
+      "sentiment": 0,
+      "importance": "mineure"
     }
   ],
-  "analysis_html": "<h3>Contexte récent</h3><p>L'argent traverse une phase de correction marquée : le métal s'échange environ <strong>24,5 % sous sa moyenne mobile 200 jours</strong>, signe d'une rupture nette de tendance après la phase de hausse antérieure. Dans le même temps, l'environnement macro-financier s'est durci, avec un dollar en appréciation et des taux réels américains légèrement plus élevés. Le score composite agrégé ressort autour de <strong>-3,1</strong>, soit une configuration globalement défavorable, mais nuancée par un positionnement spéculatif devenu très peu encombré.</p><h3>Facteurs déterminants</h3><ul><li><strong>Dollar (DXY) — score -10,0, poids 20 % :</strong> c'est le facteur le plus pénalisant en intensité. L'indice est passé de 99,17 à <strong>101,87</strong> en deux mois, soit une appréciation d'environ 2,7 %. Un dollar plus fort renchérit mécaniquement l'argent pour les détenteurs d'autres devises et pèse sur la demande physique et financière.</li><li><strong>Dynamique récente — score -10,0, poids 10 % :</strong> l'écart de -24,5 % par rapport à la moyenne mobile 200 jours traduit un momentum fortement dégradé. Son poids plus faible limite toutefois sa contribution à environ -1,0 point du score global.</li><li><strong>Ratio or/argent — score -4,9, poids 25 % :</strong> à <strong>74,7</strong>, le ratio se situe au 25<strong>e</strong> percentile sur trois ans, c'est-à-dire dans la partie basse de sa distribution historique. L'argent reste donc relativement cher face à l'or après sa surperformance passée, ce qui réduit le potentiel de rattrapage habituellement capté par cet indicateur. Compte tenu de son poids élevé, ce facteur retire environ 1,2 point au composite.</li><li><strong>Taux réels US 10 ans — score -0,8, poids 30 % :</strong> malgré le poids le plus important, la contribution est quasi neutre. Le taux réel est passé de 2,60 % à <strong>2,64 %</strong>, une variation marginale. Le niveau absolu reste néanmoins élevé, ce qui maintient un coût d'opportunité défavorable à un actif sans rendement.</li><li><strong>Positionnement CFTC — score +9,2, poids 15 % :</strong> seul facteur nettement positif. La position nette non commerciale de <strong>19 795 contrats</strong> se situe au <strong>4<strong>e</strong> percentile sur trois ans</strong>, soit un niveau d'exposition spéculative historiquement très faible. Ce dégagement des positions longues réduit le risque de liquidation forcée supplémentaire et constitue, d'un point de vue contrarien, le principal élément de soutien du score.</li></ul><h3>Actualités à retenir</h3><ul><li><strong>« La remonétisation de l'argent est en cours » (Boursier.com, notable) :</strong> cette thématique renvoie à une demande d'investissement et de réserve de valeur potentiellement structurelle. Elle s'inscrit en contrepoint du signal de prix court terme (momentum à -10,0) et pourrait, si elle se matérialise, contribuer à reconstituer le positionnement actuellement au 4<strong>e</strong> percentile.</li><li><strong>« Perspectives 2026 : l'argent, le retour d'un métal stratégique » (Or.fr, notable) :</strong> l'accent mis sur les débouchés industriels et technologiques concerne le volet fondamental de la demande, qui n'est pas directement capté par les facteurs macro-financiers du score. Il s'agit d'un horizon pluriannuel, sans effet mécanique sur les composantes actuelles (dollar, taux réels, ratio or/argent).</li><li><strong>Actualités mineures :</strong> les publications d'UBS sur un éventuel rebond, les explications pédagogiques sur la volatilité du cours et la comparaison or/argent confirment surtout que la correction récente est devenue le sujet central du marché. Elles reflètent le contexte décrit par les scores de momentum et de ratio, sans apporter d'élément nouveau susceptible de les modifier.</li></ul><h3>Synthèse</h3><p>Le score composite négatif s'explique principalement par la combinaison d'un <strong>dollar en appréciation</strong>, d'une <strong>dynamique de prix fortement dégradée</strong> et d'un <strong>ratio or/argent encore bas</strong>, qui limite l'argument de sous-valorisation relative face à l'or. Les taux réels, facteur au poids le plus élevé, jouent un rôle quasi neutre sur la période récente mais maintiennent un environnement de coût d'opportunité élevé. Le seul contrepoids significatif vient du <strong>positionnement spéculatif, proche de ses plus bas de trois ans</strong>, qui traduit un marché largement purgé de ses excès de levier. Les actualités notables portent sur des thèmes de demande structurelle (remonétisation, usage stratégique à horizon 2026) dont l'effet, par nature de long terme, ne se reflète pas dans les facteurs macro-financiers à court terme utilisés ici. Cette analyse est purement descriptive et ne constitue ni un conseil ni une recommandation d'investissement.</p>",
+  "analysis_html": "<h3>Contexte récent</h3><p>L'argent traverse une phase de correction marquée : le métal évolue environ <strong>24,3 % sous sa moyenne mobile 200 jours</strong>, signe d'un repli rapide et violent après une période de hausse. Cet affaiblissement intervient dans un environnement macro-financier défavorable, avec un dollar en appréciation et des taux réels américains qui restent élevés. Le score composite pondéré ressort à environ <strong>-3,1</strong>, soit une orientation globalement négative, mais atténuée par un positionnement spéculatif devenu très bas.</p><h3>Facteurs déterminants</h3><ul><li><strong>Dollar (DXY) — score -10,0, poids 20 %</strong> : c'est le contributeur le plus pénalisant en valeur absolue (-2,0 point de score pondéré). Le passage de 99,17 à 101,89 en deux mois renchérit mécaniquement l'argent pour les acheteurs hors zone dollar et pèse sur la demande libellée en devises étrangères.</li><li><strong>Ratio or/argent — score -5,0, poids 25 %</strong> : à 74,5, le ratio se situe au 25<sup>e</sup> percentile sur trois ans, ce qui signifie que l'argent reste relativement <em>cher</em> par rapport à l'or comparé à son historique récent. Avec le poids le plus élevé après les taux réels, ce facteur retire environ 1,25 point au score et limite le potentiel de rattrapage relatif.</li><li><strong>Dynamique récente — score -10,0, poids 10 %</strong> : l'écart de -24,3 % vs la MM200 traduit une rupture de tendance nette ; malgré un poids limité, le facteur est au plancher de l'échelle et retire 1,0 point.</li><li><strong>Taux réels US 10 ans — score -0,8, poids 30 %</strong> : à 2,64 % contre 2,60 % il y a 45 jours, la hausse est marginale. Bien que ce soit le facteur le plus pondéré, son score quasi neutre ne pèse que -0,24 point. Le niveau absolu élevé des taux réels maintient toutefois un coût d'opportunité défavorable à un actif sans rendement.</li><li><strong>Positionnement CFTC — score +9,2, poids 15 %</strong> : seul facteur nettement positif (+1,38 point). Avec une position nette de 19 795 contrats, soit le <strong>4<sup>e</sup> percentile sur trois ans</strong>, le positionnement spéculatif est quasi vidé. Historiquement, de tels extrêmes réduisent la pression vendeuse résiduelle et constituent un facteur de contre-tendance.</li></ul><h3>Actualités à retenir</h3><p>Aucune actualité majeure n'est recensée sur la période : l'ensemble du flux est classé comme <strong>mineur</strong> et relève principalement du commentaire de marché.</p><ul><li><strong>Confirmation du repli</strong> : les articles de TMGM/FXStreet (« le métal recule ») et d'Investing.com relayant UBS (« l'argent peut-il rebondir après sa récente chute ») valident la lecture du facteur de dynamique, au plancher à -10,0.</li><li><strong>Niveaux absolus encore élevés</strong> : l'article de RFI souligne que, malgré la correction, les cotations restent hautes en comparaison historique. Ce point fait écho au ratio or/argent au 25<sup>e</sup> percentile : la baisse des dernières semaines n'a pas ramené l'argent en territoire bon marché face à l'or.</li><li><strong>Horizon de prévision allongé</strong> : les publications du Comptoir National de l'Or et de LiteFinance portent sur des perspectives 2026-2030. Leur caractère prospectif et non vérifiable les rend sans effet mesurable sur les facteurs du score, qui reposent sur des données de marché observées.</li></ul><h3>Synthèse</h3><p>Le score composite négatif (≈ -3,1) s'explique avant tout par la combinaison <strong>dollar fort + dynamique de prix dégradée + valorisation relative encore tendue face à l'or</strong>, les taux réels jouant un rôle quasi neutre sur la variation récente malgré leur poids dominant. Le seul contrepoids significatif provient du positionnement CFTC, tombé à un extrême bas (4<sup>e</sup> percentile), qui réduit le potentiel de liquidation supplémentaire. Le flux d'actualités, exclusivement mineur, ne fait que décrire la correction en cours sans apporter d'élément fondamental nouveau : l'orientation du score reste donc pilotée par les variables macro (dollar, taux réels) et par l'évolution du ratio or/argent.</p><p><em>Cette analyse est fournie à titre informatif et descriptif ; elle ne constitue ni un conseil en investissement ni une recommandation d'opération.</em></p>",
   "news_classifications": {
+    "https://news.google.com/rss/articles/CBMihwFBVV95cUxOd1ZnSXdQV2lfWGRPMGJveWZBLU15aldGZEs3R0VoTU94UVlFLVdCd294eFljTmczSHA0QktyZ2FhLUxEeWZwaXgyclNmRzRBVkJ4czFFZVZ2dmRlS0VmeXg1anFMVXI1cGNzQjh6R241YUhickl4aEowbWFEbWM2TjVQQXhXMHfSAYwBQVVfeXFMT2dPd0VjdHVkTGVscXprUFU4RWFIdHVOaTdvYzFHdXh5UFZsQnpxc2Q4emZkOWVXUDc5RWJPUGdzQXBsMkx3RURjT0laQUZCMnM0R2NUQ2VmdjVmNzI4OGNSRkpBS3h6a2x2THBITVhlMDdPelJyRUxMMnhMSUxCcHdpekxLTUdGWnJWNWw?oc=5": {
+      "summary": "Cet article suggère que le Comptoir National de l'Or propose une analyse comparative des perspectives d'évolution de l'or et de l'argent jusqu'en 2027, sans que le titre seul ne permette de déterminer les conclusions ou recommandations spécifiques de cette comparaison.",
+      "sentiment": 0,
+      "importance": "mineure"
+    },
     "https://news.google.com/rss/articles/CBMiuwFBVV95cUxQRzdaUHFWXy1QUHNHQ0dVR2I2cGpmNXhuTVZsOE94WFhsZ3pNY2h1bFJ0UTlDcTNoaTRuN3hvS1EyakNQLUZnYTRtakZYQlI5TTdYNWFIaVRrWmZ3b2Zpa1FPNnRMWEdZaXBkZTFYTU0xRWxLVndWRThuYV9xRl9YYm9zdUNzdGFuSlVQYlg3TWlVQTk0ZU12YndTdndqbnhycVhhT0FrSzg0RXI5dW0zekQwcXM5RWNOemRr?oc=5": {
       "summary": "Cet article suggère que le prix de l'argent métal a connu une baisse récente et qu'une analyse d'UBS évalue les perspectives d'une éventuelle reprise de ce cours.",
       "sentiment": 0,
       "importance": "mineure"
     },
-    "https://news.google.com/rss/articles/CBMiiwFBVV95cUxQSG5SU1oxV0NCYTVtMjNkc0tXYXk0cXRzV3N5dWRBbnU2bkszZktoTHJ3RW1SaFM0OWliczFPZ0lwclVxR3JOZ2NQSE5LTHdHRWNEOHhiZThpQ1Z1UlM5a0ZsYTAwNVpOUGcyZkFHZWNRdUJuTzR2cFZ6cThrTTZFSXZPZUVyY2hoVjdN0gGQAUFVX3lxTE5jZ29TNzhEX2E0LXc3Xy11MnVZNml0b0ZVX3VjRTF1X09oenBsb1NrcHRPRS1yMXJpdU53U0I2T2tfZGZEeThzWGZJeG1veU05NkRmWjBHMW9RSVpNZFd1a2l0ZDhOTk13bGo0ZElGd2tqYUhxeVJDa3Q0WEtfUmI1ZGY3bnZhcjFZclhLZk5jcQ?oc=5": {
-      "summary": "Cet article suggère que le prix de l'argent connaît des fluctuations significatives dont les causes mériteraient une explication pédagogique à destination des investisseurs.",
+    "https://news.google.com/rss/articles/CBMiggFBVV95cUxQMzJNaUdZQlVJajk1cHlxaTdsN3FaS1IwRUxzcXR3OGhWVFJLMTBOc1ZwcUE2OHN6aVNPaFpJX1FIampDakphX0UtXzhfdm9IVDNYVVlNYTFhcHQtSEpCcENzVi1Ib0dxOGM0SlFxNHJVWjV5ejRHWEgzVDBiNkxudkJn?oc=5": {
+      "summary": "Cet article suggère que la plateforme LiteFinance propose une analyse prospective des tendances du cours de l'argent sur plusieurs années, sans que le contenu permette de confirmer l'orientation ou la fiabilité de ces prévisions.",
       "sentiment": 0,
       "importance": "mineure"
     },
-    "https://news.google.com/rss/articles/CBMirwFBVV95cUxPNkh2Q3hCd2ZiQ1FhTnB1eGtnbzVsNzAwdnE4VE1XWlA0WnY5MkxUMjZrT0NFWGR1X1BhRmp1TG5qd0JPS0FDOHctS1NoT0F3NEk4dVVKNkFzbWtBc0szV3BYazh1ZXNxU2hEZS1lY3FoWHIyTVZoWDRWbFpoZWFkdDBwUW1qOWl0d2JFMHV6UnQ1S2JsQWpxaW9WdUVidTFEMVlmQjRFTnNUWDhEQkt3?oc=5": {
-      "summary": "Cet article suggère que l'argent métal connaîtrait un processus de réintégration progressive comme réserve de valeur ou moyen de paiement, potentiellement soutenu par une demande accrue ou des évolutions monétaires.",
-      "sentiment": 1,
-      "importance": "notable"
-    },
-    "https://news.google.com/rss/articles/CBMie0FVX3lxTE1HcmxkRFg1Y3h0aF9MQnRHM3pZT3lKZXZoVEtHZmhnUDF0cDd6bFIxT1RUTmgxYzhYMmM1bHFzclN1eTNPbDdMRU0wdnY2S3VZSUxxQmlzekNHb2prdWoyQjJVYkQ0NDFVVnNEVXdJRnBWVmJhZEhaMXZ1Zw?oc=5": {
-      "summary": "Cet article suggère que le titre explore une comparaison de valeur relative entre l'argent et l'or, possiblement dans une perspective de réexamen des hiérarchies traditionnelles de préciosité entre ces deux métaux.",
-      "sentiment": 0,
+    "https://news.google.com/rss/articles/CBMiwgFBVV95cUxQMW9YTUhmS2Q3SzhOZ2diUUxQNGRUd0JQbXpvbjB1QzBseHRrckpIMDgzRHhGQi1LVDFzN0RCUzJQYlItcENkZWhOTnVyWERZazdITHJ4ejlwa1dkVEtEOEN2V1lVX1hJRUN3QTJZcHAtQkxVWm5nT3k1NDYyTGJXSjdHbGlJbFRHUlNHalBvM0MtemZQSGtLbldSRWViLXFUUXI3ZHk3VFFjQ3J0OXlhZHZvUXZ5THEtMFkzdE5WMEZCQQ?oc=5": {
+      "summary": "Cet article suggère que le prix de l'argent connaît une phase de repli à la séance actuelle selon les données de marché de FXStreet.",
+      "sentiment": -1,
       "importance": "mineure"
     },
-    "https://news.google.com/rss/articles/CBMijgFBVV95cUxNOC1qT01JZmRlQmVpelRiOGQyZGZDY25hcldmYi1Ta1lCZThyY0lhc2Rvcnp0WlJ2NV9XZXRzNEt5NnNYODFqLVNHa212c0JzTExaa08yMU9fclFHeXJzN1lZVEpHV1A3N0ZTMVA3MHdfYXJsWDhEb3FOdWlkd0dRSHJyVTRob1E3SXJOYVRn?oc=5": {
-      "summary": "Cet article suggère que l'argent pourrait regagner un statut de métal stratégique à l'horizon 2026, possiblement en raison de nouvelles applications industrielles, technologiques ou géopolitiques qui renforceraient sa demande.",
-      "sentiment": 1,
-      "importance": "notable"
+    "https://news.google.com/rss/articles/CBMitgJBVV95cUxQRlZNeG9jaEZLQXY1TXl5b0dUZktCcDFSbTBMZi1jY3FGSU11Z3Q1UzdFTWFQTEp2a0wzWll3TkNoR1ZFR3ZHMjJnSk5iWlV4TVNhdjhHVzZlb3M5M1FyZjRyUnVJaktkS3BtWnNjZURsRWxmaVZaMVlFSjNfYi0xWWQ2aVQtVHVaTzE0QkNxQ2RTUi11MmpncGhld0dZNXFaM2I1bXpXYnp0WEg1N1ZfSmxJdHdMdldsQTItSGR4ZmhqODk0MVpBbC1LRl9xWndqTl9hMGpxSF9RRTU0bkJrVDB4WFJyOS1xaEQyWmtQcXFnTkw5dG5RWEFVcnNuZVplTFRIUzVnUTRIN1NuemVUN2xkdzVSVDRfbHdrQUpGRG1ab0VWLUNMT3NTd3luRThDV1M3RHFn?oc=5": {
+      "summary": "Cet article suggère que le marché de l'argent traverse une phase de correction des prix à la baisse, mais que les niveaux de cotation demeurent historiquement ou comparativement élevés, ce qui pourrait indiquer une demande persistante ou des facteurs structurels soutenant le métal.",
+      "sentiment": 0,
+      "importance": "mineure"
     }
   }
 }

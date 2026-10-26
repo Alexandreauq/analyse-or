@@ -4140,9 +4140,63 @@ def test_attach_alerts_and_update_history_sets_alerts_key(monkeypatch):
     assert len(companies[0]["alerts"]) >= 1
     assert isinstance(companies[1]["alerts"], list)
     assert recorded["entries"] == [
-        {"date": recorded["entries"][0]["date"], "ticker": "BN.PA", "composite": 20.0, "composite_raw": 20.0},
-        {"date": recorded["entries"][1]["date"], "ticker": "MC.PA", "composite": 5.0, "composite_raw": 5.0},
+        {
+            "date": recorded["entries"][0]["date"], "ticker": "BN.PA",
+            "composite": 20.0, "composite_raw": 20.0, "sentiment": None,
+        },
+        {
+            "date": recorded["entries"][1]["date"], "ticker": "MC.PA",
+            "composite": 5.0, "composite_raw": 5.0, "sentiment": None,
+        },
     ]
+
+
+def test_attach_alerts_and_update_history_records_the_sentiment_factor_score(monkeypatch):
+    """Archive le score (-10/+10) du facteur "Actualité récente" déjà
+    calculé par build_company_entry, pour accumuler assez d'historique et
+    rendre un facteur de backtest base sur le sentiment des actus
+    testable dans quelques mois (sans lui, indices_history.json ne garde
+    que le composite, jamais le sentiment qui y a contribué)."""
+    companies = [{
+        "ticker": "BN.PA", "score": 20.0, "score_raw": 20.0,
+        "current_price": 102.0, "entry_price": 100.0,
+        "factors": [
+            {"name": "Rentabilité", "score": 3.0, "weight": 0.2, "raw_value": "x"},
+            {"name": "Actualité récente", "score": -4.5, "weight": 0.1, "raw_value": "y"},
+        ],
+    }]
+    monkeypatch.setattr(indices_score, "load_indices_history", lambda: [])
+    recorded = {}
+    monkeypatch.setattr(
+        indices_score, "append_indices_history",
+        lambda entries: recorded.setdefault("entries", entries),
+    )
+
+    indices_score._attach_alerts_and_update_history(companies)
+
+    assert recorded["entries"][0]["sentiment"] == -4.5
+
+
+def test_attach_alerts_and_update_history_records_none_sentiment_when_factor_absent(monkeypatch):
+    """Une entreprise sans facteur "Actualité récente" renseigné (ancien
+    format, fixture incomplète) doit archiver sentiment=None, jamais une
+    valeur fabriquée comme 0.0 qui se confondrait avec un vrai ton neutre
+    mesuré."""
+    companies = [{
+        "ticker": "BN.PA", "score": 20.0, "score_raw": 20.0,
+        "current_price": 102.0, "entry_price": 100.0,
+        "factors": [{"name": "Rentabilité", "score": 3.0, "weight": 0.2, "raw_value": "x"}],
+    }]
+    monkeypatch.setattr(indices_score, "load_indices_history", lambda: [])
+    recorded = {}
+    monkeypatch.setattr(
+        indices_score, "append_indices_history",
+        lambda entries: recorded.setdefault("entries", entries),
+    )
+
+    indices_score._attach_alerts_and_update_history(companies)
+
+    assert recorded["entries"][0]["sentiment"] is None
 
 
 def test_attach_alerts_and_update_history_filters_history_per_ticker(monkeypatch):

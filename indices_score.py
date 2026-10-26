@@ -4843,6 +4843,22 @@ HYSTERESIS_BAND = 5.0    # bande morte (points, échelle du score BRUT) pour wat
 ENTRY_SCORE_PERCENTILE_FLOOR = 0.0
 
 
+def _sentiment_factor_score(company: dict) -> float | None:
+    """Score (-10/+10) du facteur "Actualité récente" déjà calculé par
+    build_company_entry pour cette entreprise aujourd'hui -- archivé par
+    _attach_alerts_and_update_history pour accumuler, jour après jour,
+    l'historique nécessaire à un futur facteur de backtest basé sur le
+    sentiment des actus (indices_history.json ne gardait jusqu'ici que le
+    composite, jamais les facteurs qui y contribuent). None si le facteur
+    n'est pas renseigné (ancien format, fixture de test) -- jamais une
+    valeur fabriquée comme 0.0, qui se confondrait avec un vrai ton
+    neutre mesuré."""
+    for factor in company.get("factors") or []:
+        if factor.get("name") == "Actualité récente":
+            return factor.get("score")
+    return None
+
+
 def _last_confirmed_regime(previous_history: list[dict], band: float) -> float | None:
     """Dernière valeur `composite_raw` de l'historique (trié par date),
     strictement en dehors de la bande morte [-band, +band] -- base de
@@ -6163,6 +6179,7 @@ def _attach_alerts_and_update_history(companies: list[dict]) -> tuple[list[dict]
             new_entries.append({
                 "date": today_str, "ticker": company["ticker"], "composite": company["score"],
                 "composite_raw": company["score_raw"],
+                "sentiment": _sentiment_factor_score(company),
             })
         append_indices_history(new_entries)
     except Exception as e:

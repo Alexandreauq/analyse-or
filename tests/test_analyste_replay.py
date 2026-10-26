@@ -147,6 +147,70 @@ def test_resout_pari_uses_prix_source_avant_only_for_index_entree(monkeypatch):
     assert appels_avant == [("^FCHI", "2026-04-01")]
 
 
+def _fake_ticker_with_close(prices_by_symbol):
+    """Reproduit la forme minimale de yf.Ticker(...).history(...)["Close"]
+    necessaire a _prix_a_date/_prix_avant_date : .iloc[0] et
+    .dropna().iloc[-1] doivent fonctionner sur le resultat."""
+    import pandas as pd
+
+    class FakeHistory:
+        def __init__(self, symbol):
+            self._symbol = symbol
+
+        def __getitem__(self, key):
+            assert key == "Close"
+            return pd.Series(prices_by_symbol[self._symbol])
+
+    class FakeTicker:
+        def __init__(self, symbol):
+            self._symbol = symbol
+
+        def history(self, **kwargs):
+            return FakeHistory(self._symbol)
+
+    return FakeTicker
+
+
+def test_prix_a_date_converts_pence_to_pounds_for_lse_tickers(monkeypatch):
+    """BUG REEL (backtest du 2026-10-26) : yfinance cote les actions LSE
+    (suffixe .L) en PENCE (GBp), jamais en livres -- indices_score.py
+    divise deja par 100 a la source (signal["current_price"] est donc en
+    livres), mais _prix_a_date appelait yfinance brut sans la meme
+    conversion. Resultat observe : des return_pct a +11000% sur des
+    tickers .L (prix_entree en livres compare a prix_sortie en pence,
+    soit un facteur ~100 parasite). Verifie empiriquement contre le vrai
+    yfinance (STAN.L ~1780 pence un jour donne) que ce facteur 100 est
+    bien le mecanisme reel, pas une supposition."""
+    monkeypatch.setattr(
+        "yfinance.Ticker", _fake_ticker_with_close({"STAN.L": [1780.0, 1790.0]}))
+
+    assert analyste_replay._prix_a_date("STAN.L", "2026-04-29") == pytest.approx(17.8)
+
+
+def test_prix_avant_date_converts_pence_to_pounds_for_lse_tickers(monkeypatch):
+    monkeypatch.setattr(
+        "yfinance.Ticker", _fake_ticker_with_close({"BARC.L": [390.0, 394.0]}))
+
+    assert analyste_replay._prix_avant_date("BARC.L", "2026-03-28") == pytest.approx(3.94)
+
+
+def test_prix_a_date_does_not_convert_non_lse_tickers(monkeypatch):
+    monkeypatch.setattr(
+        "yfinance.Ticker", _fake_ticker_with_close({"TEST.PA": [100.0, 110.0]}))
+
+    assert analyste_replay._prix_a_date("TEST.PA", "2026-04-01") == pytest.approx(100.0)
+
+
+def test_prix_a_date_does_not_convert_index_tickers(monkeypatch):
+    """^FTSE/^FCHI etc. sont des cotations d'indice (points), jamais en
+    pence, meme pour un indice britannique -- confirme empiriquement
+    contre le vrai yfinance (^FTSE ~10300 points, pas ~103 livres)."""
+    monkeypatch.setattr(
+        "yfinance.Ticker", _fake_ticker_with_close({"^FTSE": [10332.0, 10213.0]}))
+
+    assert analyste_replay._prix_a_date("^FTSE", "2026-04-29") == pytest.approx(10332.0)
+
+
 def test_ecrit_resultats_writes_valid_json(tmp_path):
     chemin = tmp_path / "resultats.json"
     paris = [{"ticker": "TEST.PA", "methode": "backtest_retroactif", "return_pct": 10.0}]

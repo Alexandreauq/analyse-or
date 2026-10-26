@@ -376,3 +376,46 @@ def test_run_commodity_passes_none_spot_ma200_when_technical_fetch_fails(tmp_pat
          patch("commodity_score.build_macro_calendar", return_value=[]):
         run_commodity("petrole", api_key="fake-key", daily_snapshot=False)
     mock_build.assert_called_once_with("petrole", "fake-key", spot=None, ma200=None)
+
+
+def test_commodity_configs_have_news_query_and_subject_label():
+    expected = {
+        "argent": ("cours de l'argent métal", "l'argent (métal)"),
+        "petrole": ("prix du pétrole WTI", "le pétrole WTI"),
+        "gaz": ("prix du gaz naturel", "le gaz naturel"),
+    }
+    for key, (query, label) in expected.items():
+        assert COMMODITY_CONFIGS[key]["news_query"] == query
+        assert COMMODITY_CONFIGS[key]["news_subject_label"] == label
+
+
+def test_run_commodity_includes_news_and_analysis_in_payload(tmp_path, monkeypatch):
+    monkeypatch.setattr("commodity_score.OUTPUT_DIR", str(tmp_path))
+    monkeypatch.setattr("commodity_score.DOCS_DIR", str(tmp_path / "docs"))
+    fake_factors = [FactorResult("X", 1.0, 1.0, "x")]
+    with patch("commodity_score.build_factors", return_value=(fake_factors, None)), \
+         patch("commodity_score.get_spot_and_ma200", return_value=(100.0, 95.0)), \
+         patch("commodity_score.build_macro_calendar", return_value=[]), \
+         patch("commodity_score.load_previous_payload", return_value={}), \
+         patch("commodity_score.build_news_and_analysis_section",
+               return_value=([{"title": "T"}], "<p>analyse</p>", {})) as mock_build:
+        payload = run_commodity("argent", api_key="fake-key", daily_snapshot=True)
+    mock_build.assert_called_once_with(
+        "l'argent (métal)", "cours de l'argent métal", fake_factors, True, {},
+    )
+    assert payload["news"] == [{"title": "T"}]
+    assert payload["analysis_html"] == "<p>analyse</p>"
+    assert payload["news_classifications"] == {}
+
+
+def test_run_commodity_reads_previous_payload_for_carry_forward(tmp_path, monkeypatch):
+    monkeypatch.setattr("commodity_score.OUTPUT_DIR", str(tmp_path))
+    monkeypatch.setattr("commodity_score.DOCS_DIR", str(tmp_path / "docs"))
+    fake_factors = [FactorResult("X", 1.0, 1.0, "x")]
+    with patch("commodity_score.build_factors", return_value=(fake_factors, None)), \
+         patch("commodity_score.get_spot_and_ma200", return_value=(100.0, 95.0)), \
+         patch("commodity_score.build_macro_calendar", return_value=[]), \
+         patch("commodity_score.load_previous_payload", return_value={"analysis_html": "<p>ancienne</p>"}) as mock_load, \
+         patch("commodity_score.build_news_and_analysis_section", return_value=([], "<p>ancienne</p>", {})):
+        run_commodity("gaz", api_key="fake-key", daily_snapshot=False)
+    mock_load.assert_called_once()

@@ -40,6 +40,8 @@ from gold_score import (  # noqa: F401 — réexportés pour les appelants de ce
     build_macro_calendar,
     check_technical_trigger,
 )
+from gold_score import load_previous_payload  # réutilisée telle quelle, jamais dupliquée
+from commodity_news import build_news_and_analysis_section
 
 CFTC_LEGACY_URL = "https://publicreporting.cftc.gov/resource/6dca-aqww.json"
 CFTC_DISAGGREGATED_URL = "https://publicreporting.cftc.gov/resource/72hh-3qpy.json"
@@ -259,16 +261,22 @@ COMMODITY_CONFIGS = {
         "label": "Argent",
         "ticker": "SI=F",
         "unite": "$ / oz",
+        "news_query": "cours de l'argent métal",
+        "news_subject_label": "l'argent (métal)",
     },
     "petrole": {
         "label": "Pétrole (WTI)",
         "ticker": "CL=F",
         "unite": "$ / baril",
+        "news_query": "prix du pétrole WTI",
+        "news_subject_label": "le pétrole WTI",
     },
     "gaz": {
         "label": "Gaz naturel",
         "ticker": "NG=F",
         "unite": "$ / MMBtu",
+        "news_query": "prix du gaz naturel",
+        "news_subject_label": "le gaz naturel",
     },
 }
 
@@ -384,6 +392,8 @@ def run_commodity(commodity_key: str, *, api_key: str | None = None, daily_snaps
 
     cfg = COMMODITY_CONFIGS[commodity_key]
 
+    previous_payload = load_previous_payload(os.path.join(OUTPUT_DIR, f"score_{commodity_key}.json"))
+
     # Le repère technique (spot/MM200) est récupéré AVANT build_factors, pour
     # alimenter le facteur "Dynamique récente" avec de vraies valeurs plutôt
     # qu'un placeholder à brancher après coup — spot/ma200 restent None (et
@@ -401,6 +411,10 @@ def run_commodity(commodity_key: str, *, api_key: str | None = None, daily_snaps
 
     calendar = build_macro_calendar(api_key)
 
+    news, analysis_html, news_classifications = build_news_and_analysis_section(
+        cfg["news_subject_label"], cfg["news_query"], factors, daily_snapshot, previous_payload,
+    )
+
     from gold_score import interpret  # import tardif : pure fonction, pas de cycle
     payload = {
         "date": datetime.today().strftime("%Y-%m-%d"),
@@ -416,6 +430,9 @@ def run_commodity(commodity_key: str, *, api_key: str | None = None, daily_snaps
         "technical": {"note": technical_note, "spot": spot, "ma200": ma200, "unite": cfg["unite"]},
         "calendar": calendar,
         "alerts": [],
+        "news": news,
+        "analysis_html": analysis_html,
+        "news_classifications": news_classifications,
     }
 
     if daily_snapshot:

@@ -2,7 +2,7 @@
   "date": "2026-10-26",
   "commodity": "gaz",
   "label": "Gaz naturel",
-  "composite_score": -27.5,
+  "composite_score": -23.6,
   "interpretation": "Défavorable — pas d'entrée même sur signal technique",
   "cftc_percentile": 1.282051282051282,
   "factors": [
@@ -20,15 +20,15 @@
     },
     {
       "name": "Dynamique récente",
-      "score": -5.513060603218128,
+      "score": -4.027813876898377,
       "weight": 0.26666666666666666,
-      "raw_value": "-2.8% vs MM200"
+      "raw_value": "-2.0% vs MM200"
     },
     {
       "name": "Dollar (DXY)",
       "score": -10,
       "weight": 0.13333333333333333,
-      "raw_value": "101.68 (il y a 2 mois : 99.17)"
+      "raw_value": "101.86 (il y a 2 mois : 99.17)"
     },
     {
       "name": "Stocks EIA",
@@ -38,9 +38,9 @@
     }
   ],
   "technical": {
-    "note": "Cours en-dessous de la MM200 (-2.8%) — tendance baissière",
-    "spot": 2.996999979019165,
-    "ma200": 3.0819550025463105,
+    "note": "Cours en-dessous de la MM200 (-2.0%) — tendance baissière",
+    "spot": 3.0199999809265137,
+    "ma200": 3.082070002555847,
     "unite": "$ / MMBtu"
   },
   "calendar": [
@@ -86,7 +86,79 @@
     }
   ],
   "alerts": [],
-  "news": [],
-  "analysis_html": null,
-  "news_classifications": {}
+  "news": [
+    {
+      "title": "Les prix du gaz en Europe au plus haut depuis 2022 - Anadolu Ajansı",
+      "date": "2026-10-26",
+      "link": "https://news.google.com/rss/articles/CBMikwFBVV95cUxQc1hqX09LZ2pKMWlTM0YyX0YwWlFuQU92eFRlbnZycmM4T0p3Smx6Xzh5SWptSmhvOGpZeXByMUZSTkNfWkFablRXdk1kVnJZTjNITmFNeFJ0VEYxbVV4a3d1cm9jcXRuYzVFeFpudTZWUlBGY0NBWUJ1MEVpU2paMHVQd052M1RVaEpTbTdZWWh3RXM?oc=5",
+      "source": "Anadolu Ajansı",
+      "summary": "Cet article suggère que les prix du gaz naturel en Europe connaissent une hausse significative et atteignent des niveaux non observés depuis 2022, ce qui pourrait indiquer une tension renouvelée sur le marché européen du gaz.",
+      "sentiment": -1,
+      "importance": "notable"
+    },
+    {
+      "title": "Le prix repère de vente de gaz augmente de 6,3 % TTC au 1er octobre 2026 - Commission de régulation de l'énergie | CRE",
+      "date": "2026-10-22",
+      "link": "https://news.google.com/rss/articles/CBMivgFBVV95cUxPdGFsRjJLNmcwY2JHYUNnQzNuS0NKLWhNX2MyOWViMERabnRaYXNNQVNFSnpRUXN6WWIyNng1UHNScXpXcnBTcGllMVhQbWlwS0lSd3hZdjZMTU5YYkxCNnBIM054Z00yVURGZjVGMWVNSFM0Q2FsdEZTeTVzRDNkbTRhbUJrb2ZPcUdFSUdkcERhdURjMnQyRG1mVWVQbV9vdENBVjdQSHRDZzhGM3dpQWRnc0ZNMTFMVkZOWGpB?oc=5",
+      "source": "Commission de régulation de l'énergie | CRE",
+      "summary": "Cet article suggère que la Commission de régulation de l'énergie a décidé d'augmenter le prix de référence de vente du gaz naturel de 6,3 % TTC à partir du 1er octobre 2026, ce qui pourrait affecter les tarifs réglementés en France.",
+      "sentiment": -1,
+      "importance": "notable"
+    },
+    {
+      "title": "Le prix du gaz en Europe grimpe à 97 euros sur le TTF, porté par les craintes sur Ormuz - L'Echo",
+      "date": "2026-10-26",
+      "link": "https://news.google.com/rss/articles/CBMi3wFBVV95cUxPZHdWQmRkcl9QaEl2WEItMUI0VnRXVjJ1RlJPMlA3OWtwazF2a1E2SmtJSVJNZkk0YjgtRjNaMUJrMEl2dTZoejVIc0xkVWR1Rk45dXp2am1zMm1yVWx4MHRycWx4RTAwV2dUV1Z2LUNBdWR0M3pGbjdKMUpqbzR6N3l3QU16MEF6aE5sRXJFeE9yLXdSNmZDODdESmtIdUltUVk1a0hvc3lDRjFmdlM0SmZXU2kzbFJWYzZkaWRmOUhGd2xScmNLUC1OcVZEQjBWRTR3MEhMM1ZlSGk2blVR?oc=5",
+      "source": "L'Echo",
+      "summary": "Cet article suggère que les prix du gaz naturel en Europe auraient augmenté jusqu'à 97 euros par MWh sur le marché TTF, potentiellement en réaction à des préoccupations géopolitiques concernant le détroit d'Ormuz, un passage stratégique pour le transport énergétique mondial.",
+      "sentiment": -1,
+      "importance": "notable"
+    },
+    {
+      "title": "Novembre 2026 : augmentation de 6,6% TTC du prix repère du gaz - énergie-info",
+      "date": "2026-10-12",
+      "link": "https://news.google.com/rss/articles/CBMikAFBVV95cUxNRU1YT2NhNnNsYW40aTFtME5qYUphaThpWm1KbVkyVUI1czE0S0cweXUtdG5rbWUzVUFTZlBaVXhoZXhUclZva3hRWGl5V3JteEs2cDYzMTVSQXdkLWh3VVpZTnFuQ19Pem9XSkNsOEl6cWZ4dzVUWDMzLS1may16NnpNV2dlVkVUbDUyZGIxMEc?oc=5",
+      "source": "énergie-info",
+      "summary": "Cet article suggère qu'en novembre 2026, le prix repère du gaz naturel aurait connu une augmentation tarifaire de 6,6% TTC, ce qui indiquerait une hausse des coûts pour les consommateurs sur cette période.",
+      "sentiment": -1,
+      "importance": "notable"
+    },
+    {
+      "title": "Gaz, retraites, crédit à la conso, impôts… tout ce qui change en novembre 2026 - Journal du Geek",
+      "date": "2026-10-26",
+      "link": "https://news.google.com/rss/articles/CBMitwFBVV95cUxQT01TOG43aHFXT2NGbnZ6ZFhWcDBJQW8wdDktbzdKY005QUhsd3Iyai1INnRkSVFBXzNENkp3TlNUaDh4UzNlWWdOMF94ZC16eU9IU0Fnbjd0ckxsWEZ3cWJOTHlYQzdKcUlmVGpTRmt5eEt5eFNLZlY0QmdYVFJUaGE2em5QQkc3QXFlT2xXX21jWXZUQ3JyTFE5TzNqOXRMUzA2a0tNS3JGMFBhT2hPZDVqeUdJT2M?oc=5",
+      "source": "Journal du Geek",
+      "summary": "Cet article suggère que plusieurs mesures réglementaires ou fiscales françaises, potentiellement incluant une modification des tarifs ou de la fiscalité du gaz naturel, entreraient en vigueur en novembre 2026.",
+      "sentiment": -1,
+      "importance": "mineure"
+    }
+  ],
+  "analysis_html": "<h3>Contexte récent</h3><p>Le Henry Hub évolue autour de <strong>3,10 $/MMBtu</strong>, soit environ 11 % sous la moyenne saisonnière du mois (3,48 $/MMBtu), et se situe <strong>2,0 % sous sa moyenne mobile 200 jours</strong>. Dans le même temps, le dollar s'est raffermi (DXY à 101,86 contre 99,17 deux mois plus tôt), ce qui pèse mécaniquement sur les matières premières libellées en dollars. Le score composite ressort légèrement négatif (de l'ordre de -2,3 sur une échelle de -10 à +10), le seul contrepoids haussier venant d'un positionnement spéculatif extrêmement déprimé.</p><h3>Facteurs déterminants</h3><ul><li><strong>Saisonnalité (poids 33 %, score -7,6)</strong> : facteur le plus lourd du composite et nettement défavorable. Le prix spot se négocie sensiblement en dessous de sa norme saisonnière, signe que la demande attendue à cette période de l'année n'est pas valorisée dans les cours.</li><li><strong>Dollar (poids 13 %, score -10,0)</strong> : contribution la plus négative en intensité. L'appréciation du DXY de près de 2,7 points en deux mois renchérit le gaz pour les acheteurs hors zone dollar et constitue un vent contraire direct.</li><li><strong>Dynamique récente (poids 27 %, score -4,0)</strong> : la tendance reste orientée à la baisse, le prix évoluant sous sa moyenne mobile longue, sans signal de retournement confirmé.</li><li><strong>Positionnement CFTC (poids 27 %, score +9,7)</strong> : unique facteur franchement positif. La position nette des non-commerciaux ressort à <strong>-157 409 contrats</strong>, soit le <strong>1er percentile sur trois ans</strong>. Un tel niveau de pessimisme spéculatif est historiquement associé à un risque de rachats de positions vendeuses, et constitue à ce titre un facteur de soutien contrarien.</li><li><strong>Stocks EIA (poids 0 %)</strong> : donnée indisponible faute de clé API configurée. Le composite est donc établi sans information sur les inventaires américains, ce qui réduit sa couverture fondamentale et accroît l'incertitude autour de la lecture finale.</li></ul><h3>Actualités à retenir</h3><ul><li><strong>Prix du gaz européen au plus haut depuis 2022</strong> et <strong>TTF autour de 97 €/MWh sur fond de craintes liées au détroit d'Ormuz</strong> : ces éléments signalent une tension sur le marché européen et une prime de risque géopolitique sur les flux de GNL. Ils contrastent avec la faiblesse relative du Henry Hub, illustrant la <strong>déconnexion persistante entre les hubs américain et européen</strong> ; le composite, construit sur le benchmark Henry Hub, n'intègre pas directement cette tension.</li><li><strong>Hausse du prix repère de vente du gaz en France (+6,3 % TTC au 1er octobre 2026, puis +6,6 % TTC en novembre 2026)</strong> : ces révisions tarifaires confirment la transmission de prix de gros européens élevés aux consommateurs finaux. Elles relèvent toutefois de la régulation française et n'ont pas d'incidence mécanique sur les facteurs du score (saisonnalité Henry Hub, dollar, positionnement CFTC).</li><li><strong>Changements réglementaires de novembre 2026 (actualité mineure)</strong> : contexte d'arrière-plan sur la fiscalité et les tarifs, sans portée directe sur les déterminants du composite.</li></ul><h3>Synthèse</h3><p>Le score composite est <strong>modérément négatif</strong> : la pénalité saisonnière, le renforcement du dollar et une dynamique de prix sous sa moyenne longue dominent, et ne sont que partiellement compensés par un positionnement spéculatif à un extrême de pessimisme (1er percentile sur trois ans), qui constitue le principal facteur d'asymétrie potentielle. L'actualité met en lumière une <strong>divergence marquée entre l'Europe</strong>, où les prix atteignent des sommets depuis 2022 sous l'effet de tensions géopolitiques, <strong>et le marché américain</strong>, qui reste en dessous de sa norme saisonnière. Enfin, l'absence de données sur les stocks EIA (poids 0 %) laisse un angle mort fondamental dans la lecture actuelle du score. Ce texte est une analyse factuelle et ne constitue ni un conseil d'investissement ni une recommandation.</p>",
+  "news_classifications": {
+    "https://news.google.com/rss/articles/CBMikwFBVV95cUxQc1hqX09LZ2pKMWlTM0YyX0YwWlFuQU92eFRlbnZycmM4T0p3Smx6Xzh5SWptSmhvOGpZeXByMUZSTkNfWkFablRXdk1kVnJZTjNITmFNeFJ0VEYxbVV4a3d1cm9jcXRuYzVFeFpudTZWUlBGY0NBWUJ1MEVpU2paMHVQd052M1RVaEpTbTdZWWh3RXM?oc=5": {
+      "summary": "Cet article suggère que les prix du gaz naturel en Europe connaissent une hausse significative et atteignent des niveaux non observés depuis 2022, ce qui pourrait indiquer une tension renouvelée sur le marché européen du gaz.",
+      "sentiment": -1,
+      "importance": "notable"
+    },
+    "https://news.google.com/rss/articles/CBMivgFBVV95cUxPdGFsRjJLNmcwY2JHYUNnQzNuS0NKLWhNX2MyOWViMERabnRaYXNNQVNFSnpRUXN6WWIyNng1UHNScXpXcnBTcGllMVhQbWlwS0lSd3hZdjZMTU5YYkxCNnBIM054Z00yVURGZjVGMWVNSFM0Q2FsdEZTeTVzRDNkbTRhbUJrb2ZPcUdFSUdkcERhdURjMnQyRG1mVWVQbV9vdENBVjdQSHRDZzhGM3dpQWRnc0ZNMTFMVkZOWGpB?oc=5": {
+      "summary": "Cet article suggère que la Commission de régulation de l'énergie a décidé d'augmenter le prix de référence de vente du gaz naturel de 6,3 % TTC à partir du 1er octobre 2026, ce qui pourrait affecter les tarifs réglementés en France.",
+      "sentiment": -1,
+      "importance": "notable"
+    },
+    "https://news.google.com/rss/articles/CBMi3wFBVV95cUxPZHdWQmRkcl9QaEl2WEItMUI0VnRXVjJ1RlJPMlA3OWtwazF2a1E2SmtJSVJNZkk0YjgtRjNaMUJrMEl2dTZoejVIc0xkVWR1Rk45dXp2am1zMm1yVWx4MHRycWx4RTAwV2dUV1Z2LUNBdWR0M3pGbjdKMUpqbzR6N3l3QU16MEF6aE5sRXJFeE9yLXdSNmZDODdESmtIdUltUVk1a0hvc3lDRjFmdlM0SmZXU2kzbFJWYzZkaWRmOUhGd2xScmNLUC1OcVZEQjBWRTR3MEhMM1ZlSGk2blVR?oc=5": {
+      "summary": "Cet article suggère que les prix du gaz naturel en Europe auraient augmenté jusqu'à 97 euros par MWh sur le marché TTF, potentiellement en réaction à des préoccupations géopolitiques concernant le détroit d'Ormuz, un passage stratégique pour le transport énergétique mondial.",
+      "sentiment": -1,
+      "importance": "notable"
+    },
+    "https://news.google.com/rss/articles/CBMikAFBVV95cUxNRU1YT2NhNnNsYW40aTFtME5qYUphaThpWm1KbVkyVUI1czE0S0cweXUtdG5rbWUzVUFTZlBaVXhoZXhUclZva3hRWGl5V3JteEs2cDYzMTVSQXdkLWh3VVpZTnFuQ19Pem9XSkNsOEl6cWZ4dzVUWDMzLS1may16NnpNV2dlVkVUbDUyZGIxMEc?oc=5": {
+      "summary": "Cet article suggère qu'en novembre 2026, le prix repère du gaz naturel aurait connu une augmentation tarifaire de 6,6% TTC, ce qui indiquerait une hausse des coûts pour les consommateurs sur cette période.",
+      "sentiment": -1,
+      "importance": "notable"
+    },
+    "https://news.google.com/rss/articles/CBMitwFBVV95cUxQT01TOG43aHFXT2NGbnZ6ZFhWcDBJQW8wdDktbzdKY005QUhsd3Iyai1INnRkSVFBXzNENkp3TlNUaDh4UzNlWWdOMF94ZC16eU9IU0Fnbjd0ckxsWEZ3cWJOTHlYQzdKcUlmVGpTRmt5eEt5eFNLZlY0QmdYVFJUaGE2em5QQkc3QXFlT2xXX21jWXZUQ3JyTFE5TzNqOXRMUzA2a0tNS3JGMFBhT2hPZDVqeUdJT2M?oc=5": {
+      "summary": "Cet article suggère que plusieurs mesures réglementaires ou fiscales françaises, potentiellement incluant une modification des tarifs ou de la fiscalité du gaz naturel, entreraient en vigueur en novembre 2026.",
+      "sentiment": -1,
+      "importance": "mineure"
+    }
+  }
 }

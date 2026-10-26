@@ -112,17 +112,53 @@ limiter à un seul trade par jour civil CET quel que soit le signal.
 Aucun des deux n'est implémenté ni testé ici — piste pour un chantier
 séparé, pas une recommandation d'intégration immédiate.
 
-## Limites explicites
+## Quantification au pas de lot — vérifié empiriquement (mise à jour)
 
-- **Quantification au pas de lot (0,01) et plafond de levier** non
-  modélisés dans la synthèse rapide (`ftmo_pass_rate.py`) — les
-  résultats à 10k$ et 100k$ sont par construction identiques dans cette
-  passe, ce qui n'est qu'une approximation : à 10k$ et faible risk_pct,
-  la taille réelle arrondie pourrait dévier un peu plus du risque
-  théorique qu'à 100k$. Non vérifié empiriquement par manque de temps
-  (aurait demandé une passe complète supplémentaire avec `balance`
-  réellement compoundée via `decide_and_act_vwap`, pas la synthèse
-  rapide) — à faire avant toute décision réelle d'y risquer de l'argent.
+L'hypothèse initiale ("à 10k$, le sizing idéal tombe souvent sous le lot
+minimum, donc le bot prendrait plus de risque que visé") **ne se vérifie
+pas** : `gold_bot/risk.round_to_volume_step` (la vraie fonction de
+production, réutilisée ici sans réimplémentation) arrondit **toujours
+vers le bas** et renvoie `None` — jamais une taille gonflée — quand le
+résultat tombe sous le minimum. Le trade est alors simplement **sauté**
+(aucune position ouverte, solde inchangé), pas pris avec un risque excessif.
+
+`ftmo_pass_rate.simulate_challenge_from_quantized` reproduit ce
+comportement réel à chaque trade (taille recalculée et arrondie à partir
+du solde courant, pas une simple remise à l'échelle). Comparaison
+continu (ancienne approximation) vs quantifié réel, 683 points de départ
+testés :
+
+| ISC | risk_pct | Continu (2-Step complet) | Quantifié réel | % trades sautés (Challenge) |
+|---|---|---|---|---|
+| 10k$ | 1.0% | 38.9% | **38.5%** | 0.2% |
+| 10k$ | 2.0% | 13.0% | **14.6%** | 0.0% |
+| 100k$ | 1.0% | 38.9% | **38.9%** | 0.0% |
+| 100k$ | 2.0% | 13.0% | **11.4%** | 0.0% |
+
+**Conclusion** : à risk_pct=1% (le réglage retenu), 10k$ et 100k$ ne
+divergent quasiment pas (38.5% vs 38.9%, écart dans le bruit) — très peu
+de trades (0,2%) tombent sous le lot minimum à ce réglage. L'écart
+devient visible seulement à **risk_pct=0,5%** (plus bas, pas celui
+retenu) : 2,3% des trades sont sautés à 10k$, et le taux d'`incomplet`
+grimpe fortement (69,8% vs 53,3% en continu) — pas parce que le compte
+prend plus de risque, mais parce qu'une partie des signaux ne génère
+tout simplement aucune position assez grosse pour être tradée, donc le
+compte progresse plus lentement vers l'objectif. **Ça ne change pas la
+conclusion pratique** : à 1% de risque, 10k$ est un palier de départ
+raisonnable, sans distorsion significative liée au pas de lot. Reproductible
+via `python docs/superpowers/research/gold_bot_ftmo_check/ftmo_pass_rate.py`
+(nécessite `PYTHONPATH=.` depuis la racine du repo et le cache
+`data/trades_reference.json`, gitignored, régénérable via
+`backtest_vwap_ftmo.py`).
+
+## Limites explicites restantes
+
+- La distance entrée→stop implicite par trade (`_effective_distances`)
+  est retrouvée à partir du volume déjà arrondi du run de référence
+  (1%/100k$, choisi pour que cette distorsion y soit négligeable) —
+  légère approximation plutôt qu'une distance stockée directement, mais
+  cohérente avec le sizing réel (`risk.compute_position_size`) et sans
+  impact mesurable vu le tableau ci-dessus.
 - **r_pire ne suit que le pire point intra-trade, jamais le meilleur** :
   l'objectif de profit n'est vérifié qu'à la clôture de chaque trade, pas
   sur un pic intra-trade qui aurait pu atteindre l'objectif puis

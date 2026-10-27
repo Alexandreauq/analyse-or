@@ -1473,3 +1473,48 @@ def test_run_cycle_ftmo_guard_still_arms_kill_switch_when_a_close_fails(monkeypa
     assert update_calls == [{"kill_switch": True}]
     assert "ERREUR FTMO" in capsys.readouterr().out
     assert result["action"] == "ftmo_garde_fou"
+
+
+def test_run_cycle_ftmo_guard_closes_all_and_arms_kill_switch_on_target_reached(monkeypatch, tmp_path):
+    monkeypatch.setattr(loop.state, "load_state", lambda *a, **k: {"kill_switch": False, "dry_run": True})
+    monkeypatch.setattr(loop, "DECISIONS_LOG_PATH", str(tmp_path / "decisions_log.jsonl"))
+    monkeypatch.setattr(loop, "LATEST_CANDLES_PATH", str(tmp_path / "latest_candles.json"))
+    monkeypatch.setattr(loop, "LATEST_BALANCE_PATH", str(tmp_path / "latest_balance.json"))
+    monkeypatch.setattr(loop, "LATEST_POSITIONS_PATH", str(tmp_path / "latest_positions.json"))
+    monkeypatch.setattr(loop.confluence, "fetch_gold_candles", lambda *a, **k: [_FRESH_CANDLE])
+    # Objectif par defaut (10%) sur un ISC de 10000 : 11000.
+    monkeypatch.setattr(loop.broker, "get_account_information", lambda *a, **k: {"balance": 10000, "equity": 11000})
+    close_calls = []
+    monkeypatch.setattr(
+        loop.broker, "close_all_positions",
+        lambda *a, **k: close_calls.append(a) or [{"position_id": "1", "closed": True, "error": None}])
+    monkeypatch.setattr(
+        loop.bot, "reconcile_positions",
+        lambda *a, **k: (_ for _ in ()).throw(AssertionError("ne doit pas etre appele apres objectif FTMO atteint")))
+    monkeypatch.setattr(
+        loop.bot, "decide_and_act_vwap",
+        lambda *a, **k: (_ for _ in ()).throw(AssertionError("aucune decision ne doit etre prise apres objectif FTMO atteint")))
+    update_calls = []
+    monkeypatch.setattr(loop.state, "update_state", lambda fields, **k: update_calls.append(fields))
+
+    guard = loop.ftmo_guard.FtmoGuard(isc=10000, now_fn=lambda: _FRESH_NOW)
+    result = loop.run_cycle("tok", "acc", loop.risk.CircuitBreaker(), now=_FRESH_NOW, ftmo_guard_instance=guard)
+
+    assert result["action"] == "ftmo_garde_fou"
+    assert result["reason"] == "target"
+    assert len(close_calls) == 1
+    assert update_calls == [{"kill_switch": True}]
+
+
+def test_resolve_symbols_unchanged_without_ftmo_isc():
+    assert loop._resolve_symbols(None, None) == ["XAUUSD", "XAGUSD"]
+    assert loop._resolve_symbols(None, "XAUUSD") == ["XAUUSD", "XAGUSD"]
+
+
+def test_resolve_symbols_defaults_to_xauusd_only_with_ftmo_isc():
+    assert loop._resolve_symbols("10000", None) == ["XAUUSD"]
+
+
+def test_resolve_symbols_respects_explicit_ftmo_symbols_override():
+    assert loop._resolve_symbols("10000", "XAUUSD,XAGUSD") == ["XAUUSD", "XAGUSD"]
+    assert loop._resolve_symbols("10000", "XAGUSD") == ["XAGUSD"]

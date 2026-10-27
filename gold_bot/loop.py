@@ -75,6 +75,21 @@ HISTORICAL_ODDS_FAILURE_BACKOFF_SECONDS = 3600
 HISTORICAL_ODDS_WINDOW_DAYS = 90
 
 
+def _resolve_symbols(ftmo_isc: str | None, ftmo_symbols_env: str | None) -> list[str]:
+    """FTMO_ISC absente (déploiement du compte perso actuel) : renvoie
+    SYMBOLS inchangée. FTMO_ISC présente : les CGU FTMO (clause 7.5.3,
+    lues par l'utilisateur le 2026-10-27) interdisent une exposition
+    cumulée sur des symboles corrélés -- XAUUSD et XAGUSD le sont
+    fortement -- donc seul XAUUSD est tradé par défaut sur l'instance
+    FTMO, sauf surcharge explicite via FTMO_SYMBOLS (liste séparée par
+    des virgules)."""
+    if ftmo_isc is None:
+        return SYMBOLS
+    if ftmo_symbols_env:
+        return [s.strip() for s in ftmo_symbols_env.split(",") if s.strip()]
+    return ["XAUUSD"]
+
+
 def _candles_cache_path(symbol: str) -> str:
     """LATEST_CANDLES_PATH reste réservé à XAUUSD (symbole par défaut,
     déjà lu par gold_bot.api::dashboard pour le graphique du site) --
@@ -320,11 +335,18 @@ def run_cycle(token: str, account_id: str,
         if ftmo_guard_instance is not None:
             breach = ftmo_guard_instance.check(balance, equity)
             if breach is not None:
+                # "target" (objectif de profit atteint) et "daily"/"overall"
+                # (plancher franchi) déclenchent la MÊME action -- fermeture
+                # totale + kill_switch -- seul le libellé du log diffère : un
+                # objectif atteint doit être verrouillé (l'utilisateur
+                # demande l'évaluation à FTMO manuellement) plutôt que de
+                # laisser le bot continuer et risquer de redonner le gain.
+                event_label = "objectif de profit atteint" if breach == "target" else f"plancher {breach} franchi"
                 close_results = broker.close_all_positions(token, account_id, region)
                 failed_closes = [r for r in close_results if not r["closed"]]
                 if failed_closes:
                     print(f"ERREUR FTMO : {len(failed_closes)} position(s) non fermée(s) après "
-                          f"franchissement du plancher {breach} : {failed_closes}")
+                          f"{event_label} : {failed_closes}")
                 state.update_state({"kill_switch": True})
                 decision = {
                     "action": "ftmo_garde_fou", "reason": breach, "symbol": symbol,
@@ -427,9 +449,10 @@ def main():
         ftmo_guard.FtmoGuard(isc=float(ftmo_isc), persist_path=FTMO_GUARD_STATE_PATH)
         if ftmo_isc is not None else None
     )
+    symbols = _resolve_symbols(ftmo_isc, os.environ.get("FTMO_SYMBOLS"))
 
     while True:
-        for symbol in SYMBOLS:
+        for symbol in symbols:
             try:
                 run_cycle(token, account_id, circuit_breaker, symbol=symbol, ftmo_guard_instance=ftmo_guard_instance)
             except Exception as e:

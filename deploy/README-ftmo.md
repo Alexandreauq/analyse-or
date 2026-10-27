@@ -74,12 +74,13 @@ sudo chmod 440 /etc/sudoers.d/goldbot-restart-ftmo
 
 ## 5. Pare-feu : port dédié pour l'API
 
-Le bot perso utilise déjà le port 8443 sur `gold-bot-api.service`.
-L'instance FTMO utilise le **8444** (`gold-bot-api-ftmo.service`) sur
+Le VPS a déjà plusieurs services sur ce domaine : 8443 (`gold-bot-api`,
+bot perso), 8444 (`ibkr-bot-api`), 8445 (`assistant-ia-api`).
+L'instance FTMO utilise le **8446** (`gold-bot-api-ftmo.service`) sur
 le même domaine/certificat :
 
 ```bash
-sudo ufw allow 8444
+sudo ufw allow 8446
 ```
 
 ## 6. Installer les services systemd
@@ -101,7 +102,7 @@ second port -- pas besoin de le régénérer.
 ```bash
 sudo systemctl status gold-bot-loop-ftmo
 sudo systemctl status gold-bot-api-ftmo
-curl https://DOMAINE:8444/status
+curl https://DOMAINE:8446/status
 ```
 
 Le bot démarre en **mode simulation** (`dry_run: true` par défaut),

@@ -1518,3 +1518,55 @@ def test_resolve_symbols_defaults_to_xauusd_only_with_ftmo_isc():
 def test_resolve_symbols_respects_explicit_ftmo_symbols_override():
     assert loop._resolve_symbols("10000", "XAUUSD,XAGUSD") == ["XAUUSD", "XAGUSD"]
     assert loop._resolve_symbols("10000", "XAGUSD") == ["XAGUSD"]
+
+
+_SIGNAL_DECISION = {
+    "action": "simulation",
+    "steps": [{
+        "type": "ouverture_simulee", "symbol": "XAUUSD", "direction": "achat",
+        "volume": 0.1, "entry": 2650.0, "stop_loss": 2645.0, "take_profit": None,
+    }],
+}
+
+
+def test_run_cycle_calls_ftmo_signal_email_when_ftmo_guard_active_and_signal_found(monkeypatch, tmp_path):
+    monkeypatch.setattr(loop.state, "load_state", lambda *a, **k: {"kill_switch": False, "dry_run": True})
+    monkeypatch.setattr(loop, "DECISIONS_LOG_PATH", str(tmp_path / "decisions_log.jsonl"))
+    monkeypatch.setattr(loop, "LATEST_CANDLES_PATH", str(tmp_path / "latest_candles.json"))
+    monkeypatch.setattr(loop, "LATEST_BALANCE_PATH", str(tmp_path / "latest_balance.json"))
+    monkeypatch.setattr(loop, "LATEST_POSITIONS_PATH", str(tmp_path / "latest_positions.json"))
+    monkeypatch.setattr(loop.confluence, "fetch_gold_candles", lambda *a, **k: [_FRESH_CANDLE])
+    monkeypatch.setattr(loop.broker, "get_account_information", lambda *a, **k: {"balance": 10000, "equity": 10000})
+    monkeypatch.setattr(loop.bot, "reconcile_positions", lambda *a, **k: [])
+    monkeypatch.setattr(loop.broker, "get_symbol_specification", lambda *a, **k: {"contractSize": 100, "volumeStep": 0.01, "minVolume": 0.01, "maxVolume": 500})
+    monkeypatch.setattr(loop.bot, "decide_and_act_vwap", lambda *a, **k: dict(_SIGNAL_DECISION))
+    email_calls = []
+    monkeypatch.setattr(loop.notify_ftmo_signal, "maybe_send_signal_email", lambda decision: email_calls.append(decision) or True)
+
+    guard = loop.ftmo_guard.FtmoGuard(isc=10000, now_fn=lambda: _FRESH_NOW)
+    loop.run_cycle("tok", "acc", loop.risk.CircuitBreaker(), now=_FRESH_NOW, ftmo_guard_instance=guard)
+
+    assert len(email_calls) == 1
+    assert email_calls[0]["action"] == "simulation"
+
+
+def test_run_cycle_never_calls_ftmo_signal_email_without_ftmo_guard(monkeypatch, tmp_path):
+    """Instance perso (ftmo_guard_instance=None, valeur par defaut) : le
+    meme signal ne doit JAMAIS declencher l'alerte email FTMO."""
+    monkeypatch.setattr(loop.state, "load_state", lambda *a, **k: {"kill_switch": False, "dry_run": True})
+    monkeypatch.setattr(loop, "DECISIONS_LOG_PATH", str(tmp_path / "decisions_log.jsonl"))
+    monkeypatch.setattr(loop, "LATEST_CANDLES_PATH", str(tmp_path / "latest_candles.json"))
+    monkeypatch.setattr(loop, "LATEST_BALANCE_PATH", str(tmp_path / "latest_balance.json"))
+    monkeypatch.setattr(loop, "LATEST_POSITIONS_PATH", str(tmp_path / "latest_positions.json"))
+    monkeypatch.setattr(loop.confluence, "fetch_gold_candles", lambda *a, **k: [_FRESH_CANDLE])
+    monkeypatch.setattr(loop.broker, "get_account_information", lambda *a, **k: {"balance": 9000, "equity": 9000})
+    monkeypatch.setattr(loop.bot, "reconcile_positions", lambda *a, **k: [])
+    monkeypatch.setattr(loop.broker, "get_symbol_specification", lambda *a, **k: {"contractSize": 100, "volumeStep": 0.01, "minVolume": 0.01, "maxVolume": 500})
+    monkeypatch.setattr(loop.bot, "decide_and_act_vwap", lambda *a, **k: dict(_SIGNAL_DECISION))
+    monkeypatch.setattr(
+        loop.notify_ftmo_signal, "maybe_send_signal_email",
+        lambda *a, **k: (_ for _ in ()).throw(AssertionError("ne doit jamais etre appele sans ftmo_guard_instance")))
+
+    result = loop.run_cycle("tok", "acc", loop.risk.CircuitBreaker(), now=_FRESH_NOW)
+
+    assert result["action"] in ("simulation", "simulation_dry_run")

@@ -2416,6 +2416,11 @@ function renderPortfolioOrTab() {
       desc: 'Le tableau de bord complet du bot de trading automatique : statut en direct, solde, positions ouvertes, historique des décisions et interrupteur d\'urgence.',
       html: botDashboardSectionHtml(), wire: wireBotDashboardSection,
     },
+    {
+      title: 'FTMO',
+      desc: 'Le compte d\'évaluation FTMO (XAUUSD uniquement) : statut en direct, solde, positions ouvertes et derniers signaux — actualisé automatiquement toutes les 60 secondes.',
+      html: ftmoDashboardSectionHtml(), wire: wireFtmoDashboardSection,
+    },
   ];
   renderPager('pfOr', portfolioOrSections, portfolioOrSectionIndex);
 }
@@ -3196,6 +3201,236 @@ function wireBotDashboardSection() {
   fetchBotDashboard();
 }
 
+// --- Section FTMO -----------------------------------------------------
+// Dupliquee plutot que de generaliser les fonctions botXxx ci-dessus :
+// celles-ci dependent fortement d'un etat global unique (botStatusData)
+// et d'IDs DOM fixes, entremeles sur une dizaine de fonctions -- les
+// parametrer sans risquer de regresser la section "Bot Or" existante
+// aurait ete un refactor plus large que ce qui a ete demande. Ce bloc
+// est un miroir volontaire, pointe sur FTMO_API_BASE_URL/son propre
+// jeton/ses propres IDs DOM, avec en plus un rafraichissement
+// automatique (seule difference de comportement, voir
+// wireFtmoDashboardSection).
+
+function ftmoDashboardSectionHtml() {
+  return `
+    <div id="ftmoStatusBlock"></div>
+    <main id="ftmoContent">
+      <div class="skeleton">
+        <div class="skeleton-line"></div>
+        <div class="skeleton-line"></div>
+        <div class="skeleton-line"></div>
+        <div class="skeleton-line"></div>
+      </div>
+    </main>`;
+}
+
+function ftmoKillSwitchHtml() {
+  if (!ftmoStatusData) {
+    return `<div class="empty">Statut FTMO indisponible (compte en cours de connexion).</div>`;
+  }
+  const label = ftmoStatusData.kill_switch ? 'Coupé' : (ftmoStatusData.dry_run ? 'Simulation' : 'Actif');
+  const color = ftmoStatusData.kill_switch ? 'var(--rust)' : 'var(--gold)';
+  const actionLabel = ftmoStatusData.kill_switch ? 'Relancer' : 'Arrêter';
+  return `
+    <div class="portfolio-position-row">
+      <div class="portfolio-position-main">
+        <span class="company-name" style="color:${color}">${label}</span>
+        <span class="hero-sub">${ftmoStatusData.dry_run ? 'Mode simulation — aucun ordre réel' : 'Mode réel'}</span>
+      </div>
+      <div class="portfolio-position-actions">
+        <button class="toggle-btn" type="button" id="ftmoKillBtn">${actionLabel}</button>
+      </div>
+    </div>`;
+}
+
+function getFtmoToken() {
+  let token = localStorage.getItem('ftmoBotToken');
+  if (!token) {
+    token = prompt('Jeton d\'accès au bot FTMO (demandé une seule fois, conservé sur cet appareil) :');
+    if (token) localStorage.setItem('ftmoBotToken', token);
+  }
+  return token;
+}
+
+function wireFtmoKillSwitch() {
+  const btn = document.getElementById('ftmoKillBtn');
+  if (!btn || !ftmoStatusData) return;
+  btn.addEventListener('click', async () => {
+    const token = getFtmoToken();
+    if (!token) return;
+    const action = ftmoStatusData.kill_switch ? 'resume' : 'kill';
+    try {
+      const res = await fetch(`${FTMO_API_BASE_URL}/${action}`, {
+        method: 'POST',
+        headers: { 'X-Bot-Token': token },
+      });
+      if (!res.ok) {
+        if (res.status === 401) localStorage.removeItem('ftmoBotToken');
+        throw new Error('échec de la requête');
+      }
+      await loadFtmoStatus();
+      renderFtmoStatusBlock();
+    } catch (e) {
+      alert('Action impossible : ' + e.message);
+    }
+  });
+}
+
+async function loadFtmoStatus() {
+  try {
+    const res = await fetch(`${FTMO_API_BASE_URL}/status`);
+    ftmoStatusData = res.ok ? await res.json() : null;
+  } catch (e) {
+    ftmoStatusData = null;
+  }
+}
+
+function renderFtmoStatusBlock() {
+  const el = document.getElementById('ftmoStatusBlock');
+  if (!el) return;
+  el.innerHTML = ftmoKillSwitchHtml();
+  wireFtmoKillSwitch();
+}
+
+function ftmoBalanceHtml(data) {
+  if (data.balance == null) {
+    return `<div class="empty">Solde indisponible pour l'instant (compte FTMO déconnecté).</div>`;
+  }
+  const freshness = formatFetchedAgo(data.balance_fetched_at);
+  return `
+    <div class="portfolio-position-row">
+      <div class="portfolio-position-main">
+        <span class="company-name">${formatPriceUsd(data.balance)}</span>
+        <span class="hero-sub">Solde disponible</span>
+        ${freshness ? `<span class="hero-sub">${freshness}</span>` : ''}
+      </div>
+    </div>`;
+}
+
+function ftmoPositionsHtml(data) {
+  if (data.positions_fetched_at == null) {
+    return `<div class="empty">Positions indisponibles pour l'instant (compte FTMO déconnecté).</div>`;
+  }
+  const positions = data.positions || [];
+  if (positions.length === 0) {
+    return `<div class="empty">Aucune position ouverte.</div>`;
+  }
+  return positions.map(p => {
+    const label = p.direction === 'achat' ? 'Achat' : p.direction === 'vente' ? 'Vente' : '—';
+    const color = p.direction === 'achat' ? 'var(--gold)' : p.direction === 'vente' ? 'var(--rust)' : 'var(--muted)';
+    const profitColor = (p.profit ?? 0) >= 0 ? 'var(--gold)' : 'var(--rust)';
+    const profitSign = p.profit != null && p.profit >= 0 ? '+' : '';
+    return `
+    <div class="portfolio-position-row">
+      <div class="portfolio-position-main">
+        <span class="company-name">${escHtml(p.symbol)}</span>
+        <span class="hero-sub" style="color:${color}">${label} · ${p.volume} lot(s)</span>
+      </div>
+      <div class="portfolio-position-pnl">
+        <span class="price-value">${formatPriceUsd(p.current_price)}</span>
+        <span style="color:${profitColor}">${profitSign}${formatPrice(p.profit)}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function ftmoDecisionsHtml(data) {
+  const decisions = data.recent_decisions || [];
+  if (decisions.length === 0) {
+    return `<div class="empty">Aucun signal récent.</div>`;
+  }
+  return decisions.slice().reverse().map(d => {
+    const label = d.direction === 'achat' ? 'Achat' : d.direction === 'vente' ? 'Vente' : '—';
+    const color = d.direction === 'achat' ? 'var(--gold)' : d.direction === 'vente' ? 'var(--rust)' : 'var(--muted)';
+    const detail = [
+      d.entry != null ? 'Entrée ' + d.entry.toFixed(2) : null,
+      d.stop_loss != null ? 'SL ' + d.stop_loss.toFixed(2) : null,
+      d.take_profit != null ? 'TP ' + d.take_profit.toFixed(2) : null,
+    ].filter(Boolean).join(' · ');
+    const when = d.timestamp ? new Date(d.timestamp).toLocaleString('fr-FR', {
+      day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit', timeZone: 'UTC',
+    }) + ' UTC' : '';
+    return `
+    <div class="portfolio-position-row">
+      <div class="portfolio-position-main">
+        <span class="company-name" style="color:${color}">${label}</span>
+        <span class="hero-sub">${escHtml(d.symbol || '')} · ${detail}</span>
+      </div>
+      <div class="portfolio-position-pnl">
+        <span class="hero-sub">${when}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderFtmoDashboard(data) {
+  const el = document.getElementById('ftmoContent');
+  if (!el) return;
+  el.innerHTML = `
+    <h2>Solde</h2>
+    ${ftmoBalanceHtml(data)}
+    <h2>Positions ouvertes</h2>
+    ${ftmoPositionsHtml(data)}
+    <h2>Signaux récents</h2>
+    ${ftmoDecisionsHtml(data)}
+    <button class="toggle-btn" type="button" id="ftmoRefreshBtn">Actualiser</button>
+  `;
+  wireFtmoDashboardRefresh();
+}
+
+async function fetchFtmoDashboard() {
+  const content = document.getElementById('ftmoContent');
+  if (!content) return;
+  const token = getFtmoToken();
+  if (!token) {
+    content.innerHTML = `<div class="empty">Jeton requis pour afficher le tableau de bord FTMO.</div>`;
+    return;
+  }
+  try {
+    const res = await fetch(`${FTMO_API_BASE_URL}/dashboard`, { headers: { 'X-Bot-Token': token } });
+    if (!res.ok) {
+      if (res.status === 401) localStorage.removeItem('ftmoBotToken');
+      throw new Error('échec de la requête (' + res.status + ')');
+    }
+    const data = await res.json();
+    if (!document.getElementById('ftmoContent')) return;
+    renderFtmoDashboard(data);
+  } catch (e) {
+    const el = document.getElementById('ftmoContent');
+    if (el) el.innerHTML = `<div class="empty">Compte FTMO déconnecté pour l'instant.<br>${e.message}</div>`;
+  }
+}
+
+function wireFtmoDashboardRefresh() {
+  const btn = document.getElementById('ftmoRefreshBtn');
+  if (!btn) return;
+  btn.addEventListener('click', () => fetchFtmoDashboard());
+}
+
+function wireFtmoDashboardSection() {
+  if (ftmoAutoRefreshIntervalId) {
+    clearInterval(ftmoAutoRefreshIntervalId);
+    ftmoAutoRefreshIntervalId = null;
+  }
+  loadFtmoStatus().then(renderFtmoStatusBlock);
+  fetchFtmoDashboard();
+  // Seule section du site avec un rafraichissement automatique (60s,
+  // meme cadence que la boucle du bot) -- demande explicite de
+  // l'utilisateur ("calculs a intervalles reguliers"). S'arrete tout
+  // seul des que la section n'est plus affichee (le carrousel remplace
+  // le DOM en changeant de section, #ftmoContent disparait alors).
+  ftmoAutoRefreshIntervalId = setInterval(() => {
+    if (!document.getElementById('ftmoContent')) {
+      clearInterval(ftmoAutoRefreshIntervalId);
+      ftmoAutoRefreshIntervalId = null;
+      return;
+    }
+    loadFtmoStatus().then(renderFtmoStatusBlock);
+    fetchFtmoDashboard();
+  }, 60000);
+}
+
 function wirePortfolioForm() {
   const form = document.getElementById('portfolioAddForm');
   form.addEventListener('submit', (e) => {
@@ -3865,6 +4100,13 @@ let dividendHistoryData = null;
 let botStatusData = null;
 const BOT_API_BASE_URL = 'https://goldbot.fr:8443';
 const IBKR_BOT_API_BASE_URL = 'https://goldbot.fr:8444';
+let ftmoStatusData = null;
+const FTMO_API_BASE_URL = 'https://goldbot.fr:8446';
+// Rempli/vide par wireFtmoDashboardSection ci-dessous -- seule la
+// section FTMO du portefeuille a un rafraichissement automatique (le
+// reste du site n'en a pas), limite a cette section pour ne pas faire
+// tourner un polling en arriere-plan sur un onglet cache.
+let ftmoAutoRefreshIntervalId = null;
 
 // Pagination carrousel des sections Portefeuille (voir renderPager) : chaque
 // onglet garde son index de section courante d'un rendu à l'autre (ne

@@ -40,6 +40,16 @@ CET_OFFSET_HOURS = 1
 DEFAULT_DAILY_LOSS_PCT = 0.04
 DEFAULT_OVERALL_LOSS_PCT = 0.09
 
+# Objectif de profit OFFICIEL de la phase Challenge du 2-Step (10%) --
+# contrairement aux planchers de perte ci-dessus, AUCUNE marge de
+# sécurité n'est appliquée ici : atteindre la cible plus tôt que prévu
+# n'est pas un risque à absorber. La phase Verification utilise 5% --
+# réglé par le paramètre profit_target_pct du constructeur au moment du
+# déploiement réel (chaque phase FTMO fournit de nouveaux identifiants
+# de compte, donc une nouvelle instance de toute façon -- pas de
+# détection automatique de phase ici).
+DEFAULT_PROFIT_TARGET_PCT = 0.10
+
 DEFAULT_STATE_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "ftmo_guard_state.json")
 
 
@@ -68,19 +78,32 @@ def _save_state(data: dict, path: str) -> None:
 
 class FtmoGuard(object):
     """Garde-fou FTMO 2-Step. `check(balance, equity)` renvoie "daily",
-    "overall", ou None. Une fois déclenché un jour CET donné, reste
-    déclenché (et renvoie la MÊME raison) pour le reste de ce jour CET,
-    même si l'équité remonte entre deux appels -- même contrat que
-    CircuitBreaker._tripped_today (shared_risk.py), pour la même raison :
-    un verdict ne doit pas se dé-déclencher silencieusement.
+    "overall", "target", ou None. Une fois déclenché un jour CET donné,
+    "daily"/"overall" restent déclenchés (et renvoient la MÊME raison)
+    pour le reste de ce jour CET, même si l'équité remonte entre deux
+    appels -- même contrat que CircuitBreaker._tripped_today
+    (shared_risk.py), pour la même raison : un verdict ne doit pas se
+    dé-déclencher silencieusement.
 
-    Si les deux planchers sont franchis au même appel, "overall" est
-    rapporté en priorité -- décision prise ici (non spécifiée par
-    l'utilisateur) : un franchissement global signifie que l'évaluation
-    entière est perdue, une information plus grave et plus actionnable
-    que "juste" la journée en cours. Dans les deux cas l'appelant doit de
-    toute façon fermer toutes les positions et armer le kill_switch --
-    cette priorité n'affecte que le libellé du log, jamais l'action.
+    "target" (objectif de profit atteint) est un état PERMANENT, pas
+    quotidien : une fois atteint une fois, `check()` continue de
+    renvoyer "target" à tous les appels suivants, y compris après un
+    changement de jour CET et même si l'équité redescend ensuite sous
+    la cible -- contrairement aux planchers de perte, il n'y a pas de
+    notion de "jour suivant" pour un objectif déjà atteint. Priorité la
+    plus haute : vérifié avant même les planchers de perte, puisqu'un
+    objectif déjà atteint est définitif et rend les planchers de perte
+    sans objet pour la suite (l'appelant ferme tout et arrête le bot
+    dans les trois cas de toute façon).
+
+    Si les deux planchers de perte sont franchis au même appel,
+    "overall" est rapporté en priorité -- décision prise ici (non
+    spécifiée par l'utilisateur) : un franchissement global signifie que
+    l'évaluation entière est perdue, une information plus grave et plus
+    actionnable que "juste" la journée en cours. Dans tous les cas
+    l'appelant doit de toute façon fermer toutes les positions et armer
+    le kill_switch -- cette priorité n'affecte que le libellé du log,
+    jamais l'action.
 
     Limite assumée du plancher quotidien : la règle officielle FTMO le
     base sur le solde "à 00:00 CET" exactement, mais ce garde-fou n'est
@@ -92,23 +115,29 @@ class FtmoGuard(object):
     seuils eux-mêmes."""
 
     def __init__(self, isc: float, daily_loss_pct: float = DEFAULT_DAILY_LOSS_PCT,
-                 overall_loss_pct: float = DEFAULT_OVERALL_LOSS_PCT, now_fn=None, persist_path=None):
+                 overall_loss_pct: float = DEFAULT_OVERALL_LOSS_PCT,
+                 profit_target_pct: float = DEFAULT_PROFIT_TARGET_PCT, now_fn=None, persist_path=None):
         if isc <= 0:
             raise ValueError("isc (capital de départ) doit être positif")
         if not 0 < daily_loss_pct <= 1:
             raise ValueError("daily_loss_pct doit être compris entre 0 (exclu) et 1 (inclus)")
         if not 0 < overall_loss_pct <= 1:
             raise ValueError("overall_loss_pct doit être compris entre 0 (exclu) et 1 (inclus)")
+        if profit_target_pct <= 0:
+            raise ValueError("profit_target_pct doit être positif")
         self.isc = isc
         self.daily_loss_pct = daily_loss_pct
         self.overall_loss_pct = overall_loss_pct
+        self.profit_target_pct = profit_target_pct
         self._overall_floor = isc * (1.0 - overall_loss_pct)
+        self._target_equity = isc * (1.0 + profit_target_pct)
         self._now_fn = now_fn or (lambda: datetime.now(timezone.utc))
         self._persist_path = persist_path
         self._day = None
         self._daily_floor = None
         self._tripped_today = False
         self._tripped_reason = None
+        self._target_reached = False
         if persist_path is not None:
             saved = _load_state(persist_path)
             saved_day = saved.get("ftmo_guard_day")
@@ -124,10 +153,15 @@ class FtmoGuard(object):
                     self._daily_floor = None
                     self._tripped_today = False
                     self._tripped_reason = None
+            self._target_reached = bool(saved.get("ftmo_guard_target_reached", False))
 
     @property
     def overall_floor(self) -> float:
         return self._overall_floor
+
+    @property
+    def target_equity(self) -> float:
+        return self._target_equity
 
     def _persist(self) -> None:
         if self._persist_path is None:
@@ -138,6 +172,7 @@ class FtmoGuard(object):
                 "ftmo_guard_daily_floor": self._daily_floor,
                 "ftmo_guard_tripped_today": self._tripped_today,
                 "ftmo_guard_tripped_reason": self._tripped_reason,
+                "ftmo_guard_target_reached": self._target_reached,
             },
             self._persist_path,
         )
@@ -150,8 +185,14 @@ class FtmoGuard(object):
             self._tripped_today = False
             self._tripped_reason = None
             self._persist()
+        if self._target_reached:
+            return "target"
         if self._tripped_today:
             return self._tripped_reason
+        if equity >= self._target_equity:
+            self._target_reached = True
+            self._persist()
+            return "target"
         if equity <= self._overall_floor:
             reason = "overall"
         elif equity <= self._daily_floor:

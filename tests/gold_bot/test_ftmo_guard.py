@@ -133,3 +133,73 @@ def test_rejects_invalid_daily_loss_pct():
 def test_rejects_invalid_overall_loss_pct():
     with pytest.raises(ValueError, match="overall_loss_pct"):
         ftmo_guard.FtmoGuard(isc=10000, overall_loss_pct=1.5)
+
+
+def test_rejects_non_positive_profit_target_pct():
+    with pytest.raises(ValueError, match="profit_target_pct"):
+        ftmo_guard.FtmoGuard(isc=10000, profit_target_pct=0)
+
+
+def test_target_equity_is_ten_percent_above_isc_by_default():
+    guard = ftmo_guard.FtmoGuard(isc=10000, now_fn=lambda: _dt(2026, 11, 1))
+    assert guard.target_equity == pytest.approx(11000)
+
+
+def test_check_returns_none_when_equity_below_target():
+    guard = ftmo_guard.FtmoGuard(isc=10000, now_fn=lambda: _dt(2026, 11, 1))
+    assert guard.check(balance=10000, equity=10999) is None
+
+
+def test_check_returns_target_when_equity_reaches_target():
+    guard = ftmo_guard.FtmoGuard(isc=10000, now_fn=lambda: _dt(2026, 11, 1))
+    assert guard.check(balance=10000, equity=11000) == "target"
+
+
+def test_check_returns_target_when_equity_exceeds_target():
+    guard = ftmo_guard.FtmoGuard(isc=10000, now_fn=lambda: _dt(2026, 11, 1))
+    assert guard.check(balance=10000, equity=11500) == "target"
+
+
+def test_target_reached_stays_tripped_even_if_equity_drops_back_below_target():
+    guard = ftmo_guard.FtmoGuard(isc=10000, now_fn=lambda: _dt(2026, 11, 1))
+    assert guard.check(balance=10000, equity=11000) == "target"
+    # L'équité redescend nettement sous la cible, voire sous les planchers
+    # de perte -- "target" reste définitif, pas de retour à None/"daily".
+    assert guard.check(balance=10000, equity=9000) == "target"
+
+
+def test_target_reached_persists_across_cet_day_change():
+    guard = ftmo_guard.FtmoGuard(isc=10000, now_fn=lambda: _dt(2026, 11, 1))
+    guard.check(balance=10000, equity=11000)  # "target"
+    guard._now_fn = lambda: _dt(2026, 11, 2)
+    # Contrairement à "daily"/"overall", il n'y a pas de notion de "jour
+    # suivant" qui remettrait l'objectif déjà atteint en jeu.
+    assert guard.check(balance=10000, equity=9000) == "target"
+
+
+def test_target_reached_takes_priority_over_loss_floors():
+    guard = ftmo_guard.FtmoGuard(isc=10000, now_fn=lambda: _dt(2026, 11, 1))
+    guard.check(balance=10000, equity=11000)  # "target"
+    # Un appel qui franchirait aussi le plancher global doit quand même
+    # rapporter "target", pas "overall" -- état permanent, priorité la
+    # plus haute.
+    assert guard.check(balance=10000, equity=9000) == "target"
+
+
+def test_target_state_persists_and_reloads_across_restart(tmp_path):
+    path = str(tmp_path / "ftmo_guard_state.json")
+    guard1 = ftmo_guard.FtmoGuard(isc=10000, now_fn=lambda: _dt(2026, 11, 1), persist_path=path)
+    guard1.check(balance=10000, equity=11000)  # "target", persisté
+
+    guard2 = ftmo_guard.FtmoGuard(isc=10000, now_fn=lambda: _dt(2026, 11, 1), persist_path=path)
+    # Équité repassée sous la cible -- doit quand même renvoyer "target"
+    # après "redémarrage", preuve que l'état figé a bien été rechargé.
+    assert guard2.check(balance=10000, equity=9000) == "target"
+
+
+def test_custom_profit_target_pct_is_respected():
+    # Simule la phase Verification (objectif officiel : 5%, pas 10%).
+    guard = ftmo_guard.FtmoGuard(isc=10000, profit_target_pct=0.05, now_fn=lambda: _dt(2026, 11, 1))
+    assert guard.target_equity == pytest.approx(10500)
+    assert guard.check(balance=10000, equity=10499) is None
+    assert guard.check(balance=10000, equity=10500) == "target"

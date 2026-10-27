@@ -75,8 +75,14 @@ def test_set_profile_updates_state_and_is_reflected_in_status(client):
 
 
 def test_set_profile_rejects_out_of_range_value(client):
-    response = client.post("/profile", json={"profile": 6}, headers={"X-Bot-Token": "secret-token"})
+    response = client.post("/profile", json={"profile": 7}, headers={"X-Bot-Token": "secret-token"})
     assert response.status_code == 422
+
+
+def test_set_profile_accepts_profile_6_the_ftmo_setting(client):
+    response = client.post("/profile", json={"profile": 6}, headers={"X-Bot-Token": "secret-token"})
+    assert response.status_code == 200
+    assert response.json()["risk_profile"] == 6
 
 
 def test_set_profile_rejects_non_integer_value(client):

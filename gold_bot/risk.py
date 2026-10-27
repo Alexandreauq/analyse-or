@@ -12,6 +12,14 @@ RISK_PROFILE_PARAMS: dict[int, dict[str, float]] = {
     3: {"risk_pct": 0.05, "threshold_pct": 0.10, "max_trades_per_day": 4},
     4: {"risk_pct": 0.075, "threshold_pct": 0.135, "max_trades_per_day": 6},
     5: {"risk_pct": 0.10, "threshold_pct": 0.175, "max_trades_per_day": 8},
+    # Profil 6 : reglage valide par docs/superpowers/research/gold_bot_ftmo_check/
+    # ftmo_simulator_README.md (risk_pct=1% -> ~38.5% de reussite complete
+    # 2-Step, contre ~14.6% au profil 1 a 2%) -- pas une extrapolation du
+    # pas 1-5, un chiffre backteste separement pour l'instance FTMO
+    # (voir gold_bot/ftmo_guard.py). threshold_pct/max_trades_per_day
+    # suivent le meme ratio decroissant que les profils 1-5, non testes
+    # independamment.
+    6: {"risk_pct": 0.01, "threshold_pct": 0.03, "max_trades_per_day": 2},
 }
 DEFAULT_RISK_PROFILE = 3
 # Levier max réellement disponible sur le compte Vantage/MT5 utilisé

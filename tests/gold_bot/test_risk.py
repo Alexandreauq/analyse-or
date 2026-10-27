@@ -279,25 +279,32 @@ def test_risk_profile_params_profile_5_is_most_aggressive():
     assert risk.risk_profile_params(5) == {"risk_pct": 0.10, "threshold_pct": 0.175, "max_trades_per_day": 8}
 
 
-def test_risk_profile_params_all_five_profiles_present():
-    assert set(risk.RISK_PROFILE_PARAMS.keys()) == {1, 2, 3, 4, 5}
+def test_risk_profile_params_profile_6_is_the_ftmo_validated_setting():
+    # Valeur backtestee separement (voir commentaire dans risk.py), pas
+    # une extrapolation du pas 1-5 -- ne pas "corriger" vers un ratio
+    # regulier sans revalider le backtest FTMO.
+    assert risk.risk_profile_params(6) == {"risk_pct": 0.01, "threshold_pct": 0.03, "max_trades_per_day": 2}
+
+
+def test_risk_profile_params_all_six_profiles_present():
+    assert set(risk.RISK_PROFILE_PARAMS.keys()) == {1, 2, 3, 4, 5, 6}
 
 
 def test_risk_profile_params_includes_max_trades_per_day_for_every_profile():
-    for profile in (1, 2, 3, 4, 5):
+    for profile in (1, 2, 3, 4, 5, 6):
         params = risk.risk_profile_params(profile)
         assert isinstance(params["max_trades_per_day"], int)
         assert params["max_trades_per_day"] > 0
 
 
-def test_risk_profile_params_max_trades_per_day_increases_with_profile():
+def test_risk_profile_params_max_trades_per_day_increases_with_profile_1_to_5():
     values = [risk.risk_profile_params(p)["max_trades_per_day"] for p in (1, 2, 3, 4, 5)]
     assert values == sorted(values)
     assert values[0] < values[-1]
 
 
 def test_risk_profile_params_falls_back_to_default_when_out_of_range():
-    assert risk.risk_profile_params(6) == risk.RISK_PROFILE_PARAMS[3]
+    assert risk.risk_profile_params(7) == risk.RISK_PROFILE_PARAMS[3]
     assert risk.risk_profile_params(0) == risk.RISK_PROFILE_PARAMS[3]
     assert risk.risk_profile_params(-1) == risk.RISK_PROFILE_PARAMS[3]
 
@@ -321,6 +328,7 @@ def test_risk_profile_params_falls_back_to_default_for_bool():
 
 def test_resolve_risk_profile_returns_valid_profile_unchanged():
     assert risk.resolve_risk_profile(5) == 5
+    assert risk.resolve_risk_profile(6) == 6
 
 
 def test_resolve_risk_profile_falls_back_to_default_for_invalid_values():

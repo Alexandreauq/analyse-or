@@ -15,6 +15,7 @@ import gold_bot.bot as bot
 import gold_bot.broker as broker
 import gold_bot.confluence as confluence
 import gold_bot.ftmo_guard as ftmo_guard
+import gold_bot.notify_ftmo_signal as notify_ftmo_signal
 import gold_bot.risk as risk
 import gold_bot.state as state
 
@@ -367,6 +368,14 @@ def run_cycle(token: str, account_id: str,
             risk_pct=profile_params["risk_pct"], historical_candles=historical_candles,
         )
         decision = {**decision, "symbol": symbol}
+        if ftmo_guard_instance is not None:
+            # Alerte email sur nouveau signal d'entree FTMO -- distincte
+            # du resume quotidien (gold_bot.notify), jamais appelee pour
+            # l'instance perso (gardee sous ce meme "if" que le reste de
+            # la logique FTMO). Avant _log_decision ci-dessous : l'ordre
+            # n'a pas d'impact fonctionnel (les deux sont independants),
+            # mais place ici le lien est visible avec le bloc FTMO.
+            notify_ftmo_signal.maybe_send_signal_email(decision)
     except Exception as e:
         decision = {"action": "erreur", "reason": f"Erreur pendant la décision : {e}", "symbol": symbol}
         _log_decision(decision, path=DECISIONS_LOG_PATH)

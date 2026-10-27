@@ -10,7 +10,7 @@
       "name": "Dollar (DXY)",
       "score": -10,
       "weight": 0.26666666666666666,
-      "raw_value": "102.32 (il y a 2 mois : 99.16)"
+      "raw_value": "102.36 (il y a 2 mois : 99.16)"
     },
     {
       "name": "Positionnement CFTC",
@@ -22,7 +22,7 @@
       "name": "Spread WTI-Brent",
       "score": -10,
       "weight": 0.19999999999999998,
-      "raw_value": "+9.56 $/baril (il y a ~2 mois : +6.08 $/baril)"
+      "raw_value": "+9.50 $/baril (il y a ~2 mois : +6.08 $/baril)"
     },
     {
       "name": "Dynamique récente",
@@ -39,8 +39,8 @@
   ],
   "technical": {
     "note": "Cours au-dessus de la MM200 (+16.6%) — tendance haussière",
-    "spot": 99.95999908447266,
-    "ma200": 85.71110004425049,
+    "spot": 99.9000015258789,
+    "ma200": 85.71080005645751,
     "unite": "$ / baril"
   },
   "calendar": [

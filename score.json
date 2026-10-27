@@ -1,6 +1,6 @@
 {
-  "date": "2026-10-26",
-  "composite_score": -2.5,
+  "date": "2026-10-27",
+  "composite_score": -3.0,
   "interpretation": "Neutre — pas d'action",
   "cftc_percentile": 34.61538461538461,
   "factors": [
@@ -14,13 +14,13 @@
       "name": "Dollar (DXY)",
       "score": -10,
       "weight": 0.15,
-      "raw_value": "102.01 (il y a 2 mois : 99.17)"
+      "raw_value": "102.03 (il y a 2 mois : 99.17)"
     },
     {
       "name": "Anticipations d'inflation",
-      "score": -0.6666666666666674,
+      "score": -1.0000000000000084,
       "weight": 0.15,
-      "raw_value": "2.34% (il y a ~45j : 2.36%)"
+      "raw_value": "2.34% (il y a ~45j : 2.37%)"
     },
     {
       "name": "Ton de la Fed",
@@ -48,9 +48,9 @@
     }
   ],
   "technical": {
-    "note": "Cours en-dessous de la MM200 (-11.0%) — tendance baissière",
-    "spot": 4031.0,
-    "ma200": 4530.749998779297
+    "note": "Cours en-dessous de la MM200 (-11.1%) — tendance baissière",
+    "spot": 4026.60009765625,
+    "ma200": 4530.7279992675785
   },
   "calendar": [
     {
@@ -99,7 +99,7 @@
       "kind": "info",
       "title": "Pas de signal actif",
       "detail": "Aucune des conditions de veille, d'entrée ou de risque n'est réunie aujourd'hui.",
-      "date": "26/10/2026"
+      "date": "27/10/2026"
     }
   ],
   "news": [

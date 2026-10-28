@@ -431,6 +431,116 @@ def test_is_news_blackout_exactly_at_boe_decision():
     assert confluence.is_news_blackout(datetime(2026, 6, 18, 11, 0, tzinfo=timezone.utc)) is True
 
 
+def test_is_news_blackout_exactly_at_fomc_decision():
+    from datetime import datetime, timezone
+    # Décision FOMC du 28/10/2026, 14h00 ET = 18h00 UTC -- jour de
+    # l'incident reel du 2026-10-28.
+    assert confluence.is_news_blackout(datetime(2026, 10, 28, 18, 0, tzinfo=timezone.utc)) is True
+
+
+def test_is_news_blackout_covers_fomc_press_conference_90min_later():
+    # Avant le correctif du 2026-10-28, la fenêtre etait ±15 min partout
+    # -- 90 min apres l'annonce FOMC (pendant la conference de presse,
+    # qui a cause la vraie perte) tombait HORS fenêtre. Doit maintenant
+    # etre couverte par PRESS_CONFERENCE_BLACKOUT_MINUTES (100 min).
+    from datetime import datetime, timezone
+    assert confluence.is_news_blackout(datetime(2026, 10, 28, 19, 30, tzinfo=timezone.utc)) is True
+
+
+def test_is_news_blackout_covers_ecb_press_conference_90min_later():
+    from datetime import datetime, timezone
+    # Décision BCE du 29/10/2026, 13h15 UTC + 90 min = 14h45 UTC.
+    assert confluence.is_news_blackout(datetime(2026, 10, 29, 14, 45, tzinfo=timezone.utc)) is True
+
+
+def test_is_news_blackout_false_just_outside_press_conference_window():
+    from datetime import datetime, timezone
+    # 101 min apres l'annonce FOMC du 28/10 (18h00 UTC) -> hors fenêtre
+    # de 100 min.
+    assert confluence.is_news_blackout(datetime(2026, 10, 28, 19, 41, 1, tzinfo=timezone.utc)) is False
+
+
+def test_is_news_blackout_cpi_still_uses_the_short_window():
+    # Le CPI n'a pas de conference de presse -- doit RESTER a ±15min,
+    # ne pas avoir herite de la fenêtre longue par erreur.
+    from datetime import datetime, timezone
+    assert confluence.is_news_blackout(datetime(2026, 9, 11, 13, 30, tzinfo=timezone.utc)) is False
+
+
+def test_is_volatility_shock_none_without_enough_history():
+    candles = [_candle(100, 101, 99, 100) for _ in range(104)]  # baseline_window(100)+lag(5)-1
+    assert confluence.is_volatility_shock(candles) is None
+
+
+def test_is_volatility_shock_false_on_calm_market():
+    candles = [_candle(100, 101, 99, 100) for _ in range(105)]  # amplitude 2, constante
+    assert confluence.is_volatility_shock(candles) is False
+
+
+def test_is_volatility_shock_true_when_last_candle_far_exceeds_baseline():
+    candles = [_candle(100, 101, 99, 100) for _ in range(104)]
+    candles.append(_candle(100, 130, 70, 100))  # amplitude 60, 30x la baseline (2)
+    assert confluence.is_volatility_shock(candles) is True
+
+
+def test_is_volatility_shock_baseline_excludes_the_lag_window():
+    # Les 5 dernieres bougies AVANT la bougie testee sont deja des chocs
+    # -- si la baseline les incluait, elle serait gonflee et un nouveau
+    # choc du meme ordre de grandeur ne la depasserait plus (c'est
+    # exactement le defaut d'une EMA ATR classique, trouve le
+    # 2026-10-28 : un 2e/3e candle de la meme actualite ne depassait
+    # plus le seuil alors que le marche etait toujours en plein choc).
+    candles = [_candle(100, 101, 99, 100) for _ in range(99)]  # baseline calme
+    candles += [_candle(100, 130, 70, 100) for _ in range(5)]  # lag : deja des chocs
+    candles.append(_candle(100, 130, 70, 100))  # nouveau choc, meme amplitude
+    assert confluence.is_volatility_shock(candles) is True
+
+
+def test_is_volatility_shock_real_incident_sequence_2026_10_28():
+    # Sequence reelle (XAUUSD 5min, 2026-10-28, voir decisions_log.jsonl)
+    # : annonce FOMC a 18h00 UTC (TR~11, 18h00-18h25), puis conference de
+    # presse a 18h30 UTC qui fait grimper le TR a 17-25 pendant 35+ min --
+    # exactement la fenetre ou le bot a perdu de l'argent (18h55-18h59).
+    # 400 bougies calmes (TR~1.5-3.5, amplitude realiste) avant la
+    # sequence reelle pour une baseline representative d'une vraie
+    # journee de trading (pas juste quelques heures).
+    calm = [_candle(4040.0, 4041.5, 4038.5, 4040.0) for _ in range(400)]
+    real_ohlc = [
+        (4041.47, 4041.88, 4040.31, 4041.68), (4041.53, 4042.32, 4035.88, 4037.6),
+        (4037.55, 4039.02, 4037.14, 4037.84), (4037.83, 4039.97, 4037.1, 4037.42),
+        (4037.36, 4040.03, 4036.83, 4039.24), (4039.23, 4040.79, 4038.33, 4039.9),
+        (4039.91, 4040.99, 4038.58, 4040.05), (4040.06, 4040.52, 4038.59, 4039.85),
+        (4039.83, 4040.44, 4038.91, 4039.34), (4039.35, 4040.96, 4038.96, 4040.36),
+        (4040.29, 4040.92, 4039.5, 4040.15), (4040.12, 4047.85, 4039.09, 4047.81),
+        (4047.71, 4048.07, 4041.62, 4042.25), (4042.24, 4042.66, 4041.23, 4041.63),
+        (4041.6, 4042.15, 4040.63, 4041.71), (4041.7, 4042.65, 4040.75, 4041.37),
+        (4041.33, 4041.8, 4038.44, 4040.12), (4040.09, 4040.18, 4038.74, 4038.92),
+        (4038.91, 4039.55, 4037.8, 4038.26), (4038.2, 4041.53, 4037.88, 4040.91),
+        (4040.88, 4040.93, 4039.07, 4039.21), (4039.19, 4039.46, 4037.66, 4037.99),
+        (4037.98, 4039.62, 4037.26, 4039.62), (4039.61, 4040.42, 4039.07, 4039.93),
+        (4039.96, 4041.52, 4039.22, 4039.85),
+        (4040.14, 4044.76, 4033.49, 4034.11),  # 18h00 UTC -- annonce FOMC
+        (4034.1, 4038.55, 4031.55, 4032.57), (4032.62, 4036.29, 4030.2, 4033.82),
+        (4033.86, 4035.86, 4029.58, 4032.88), (4032.89, 4034.38, 4030.46, 4031.86),
+        (4031.81, 4037.08, 4031.8, 4036.19),
+        (4036.29, 4050.13, 4024.63, 4039.2),  # 18h30 UTC -- conference de presse
+        (4038.78, 4062.24, 4037.74, 4052.25), (4052.29, 4067.49, 4049.51, 4054.88),
+        (4054.75, 4061.79, 4044.59, 4055.74),
+        (4055.72, 4061.5, 4040.93, 4050.65),  # 18h50 UTC
+        (4050.57, 4050.57, 4032.94, 4032.98),  # 18h55 UTC -- 1er trade perdant reel
+        (4033, 4049.21, 4027.28, 4046.48),  # 19h00 UTC -- 2e trade perdant reel
+        (4047.14, 4054.49, 4031.42, 4049.11), (4049.06, 4049.1, 4042.23, 4045.02),
+    ]
+    candles = calm + [_candle(o, h, l, c) for o, h, l, c in real_ohlc]
+
+    def shock_at(n_real_candles):
+        return confluence.is_volatility_shock(candles[: len(calm) + n_real_candles])
+
+    assert shock_at(25) is False  # 17h55 UTC, juste avant l'annonce -- calme
+    assert shock_at(37) is True  # 18h55 UTC -- 1er trade perdant reel : aurait du etre bloque
+    assert shock_at(38) is True  # 19h00 UTC -- 2e trade perdant reel : aurait du etre bloque
+
+
 def test_compute_signal_neutre_during_news_blackout():
     candles = [_candle(100, 101, 99, 100.5) for _ in range(confluence.SCALP_MIN_CANDLES)]
     candles[-1]["time"] = "2026-09-16 18:00:00"  # décision FOMC du 16/09/2026

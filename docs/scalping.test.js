@@ -221,6 +221,27 @@ function test_isNewsBlackout_exactly_at_boe_decision() {
   console.log('OK: test_isNewsBlackout_exactly_at_boe_decision');
 }
 
+function test_isNewsBlackout_covers_fomc_press_conference_90min_later() {
+  // Avant le correctif du 2026-10-28, la fenêtre était ±15 min partout --
+  // 90 min après l'annonce FOMC (pendant la conférence de presse) tombait
+  // HORS fenêtre. Doit maintenant être couverte par
+  // PRESS_CONFERENCE_BLACKOUT_MINUTES (100 min).
+  assert.strictEqual(isNewsBlackout(new Date('2026-10-28T19:30:00Z')), true);
+  console.log('OK: test_isNewsBlackout_covers_fomc_press_conference_90min_later');
+}
+
+function test_isNewsBlackout_false_just_outside_press_conference_window() {
+  // 101 min après l'annonce FOMC du 28/10 (18h00 UTC) -> hors fenêtre de 100 min.
+  assert.strictEqual(isNewsBlackout(new Date('2026-10-28T19:41:01Z')), false);
+  console.log('OK: test_isNewsBlackout_false_just_outside_press_conference_window');
+}
+
+function test_isNewsBlackout_cpi_still_uses_the_short_window() {
+  // Le CPI n'a pas de conférence de presse -- doit RESTER à ±15min.
+  assert.strictEqual(isNewsBlackout(new Date('2026-09-11T13:30:00Z')), false);
+  console.log('OK: test_isNewsBlackout_cpi_still_uses_the_short_window');
+}
+
 function test_computeSignal_neutre_during_news_blackout() {
   // 36 bougies (>= SCALP_MIN_CANDLES), la dernière horodatée pile sur la
   // décision FOMC du 16/09/2026 (14h00 ET = 18h00 UTC) -> neutre forcé,
@@ -290,6 +311,9 @@ async function main() {
   test_isNewsBlackout_false_on_quiet_day();
   test_isNewsBlackout_exactly_at_ecb_decision();
   test_isNewsBlackout_exactly_at_boe_decision();
+  test_isNewsBlackout_covers_fomc_press_conference_90min_later();
+  test_isNewsBlackout_false_just_outside_press_conference_window();
+  test_isNewsBlackout_cpi_still_uses_the_short_window();
   test_computeSignal_neutre_during_news_blackout();
   test_meetsMinimumRiskReward_accepts_a_ratio_at_or_above_the_multiple();
   test_meetsMinimumRiskReward_rejects_a_ratio_below_the_multiple();

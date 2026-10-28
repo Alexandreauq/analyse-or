@@ -151,16 +151,6 @@ SCALP_HIGH_IMPACT_EVENTS_UTC = [
     "2026-04-03T12:30:00Z", "2026-05-08T12:30:00Z", "2026-06-05T12:30:00Z",
     "2026-07-02T12:30:00Z", "2026-08-07T12:30:00Z", "2026-09-04T12:30:00Z",
     "2026-10-02T12:30:00Z", "2026-11-06T13:30:00Z", "2026-12-04T13:30:00Z",
-    # Décision FOMC (taux directeur US), 14h00 ET, 2e jour de chaque
-    # réunion — source : federalreserve.gov/monetarypolicy/fomccalendars.htm
-    "2026-01-28T19:00:00Z", "2026-03-18T18:00:00Z", "2026-04-29T18:00:00Z",
-    "2026-06-17T18:00:00Z", "2026-07-29T18:00:00Z", "2026-09-16T18:00:00Z",
-    "2026-10-28T18:00:00Z", "2026-12-09T19:00:00Z",
-    # Décision BCE (taux directeur zone euro), 14h15 CET/CEST, 2e jour de
-    # chaque réunion — source : ecb.europa.eu/press/calendars/mgcgc
-    "2026-03-19T13:15:00Z", "2026-04-30T12:15:00Z", "2026-06-11T12:15:00Z",
-    "2026-07-23T12:15:00Z", "2026-09-10T12:15:00Z", "2026-10-29T13:15:00Z",
-    "2026-12-17T13:15:00Z",
     # Décision Bank of England (taux directeur GBP), 12h00 heure de
     # Londres — source : bankofengland.co.uk/monetary-policy/upcoming-mpc-dates
     "2026-02-05T12:00:00Z", "2026-03-19T12:00:00Z", "2026-04-30T11:00:00Z",
@@ -168,19 +158,97 @@ SCALP_HIGH_IMPACT_EVENTS_UTC = [
     "2026-11-05T12:00:00Z", "2026-12-17T12:00:00Z",
 ]
 
+# Fenêtre de black-out plus LONGUE, réservée aux banques centrales qui
+# publient leur décision puis tiennent une conférence de presse ~30-45
+# minutes plus tard (FOMC, BCE) -- la conférence (questions/réponses du
+# président) cause souvent un second mouvement plus violent et plus long
+# que l'annonce elle-même (CPI/Emploi/BOE n'ont pas cette structure en
+# deux temps, ±15min suffit). Trouvé le 2026-10-28 : la décision FOMC de
+# 18h00 UTC n'a causé qu'un True Range ~11 (vs ~1.5-3.5 normal) sur sa
+# propre bougie, mais la conférence de presse de 18h30 UTC a fait
+# grimper le True Range à 17-25 pendant les 40 minutes suivantes --
+# largement hors de la fenêtre ±15min, cause directe d'une perte réelle
+# sur le compte FTMO (voir decisions_log.jsonl de ce jour). 100 minutes
+# couvre 15min avant l'annonce + l'annonce + la conférence + une bonne
+# marge sur ses remous.
+PRESS_CONFERENCE_BLACKOUT_MINUTES = 100
+PRESS_CONFERENCE_EVENTS_UTC = [
+    # Décision FOMC (taux directeur US) + conférence de presse, 14h00 ET,
+    # 2e jour de chaque réunion — source :
+    # federalreserve.gov/monetarypolicy/fomccalendars.htm
+    "2026-01-28T19:00:00Z", "2026-03-18T18:00:00Z", "2026-04-29T18:00:00Z",
+    "2026-06-17T18:00:00Z", "2026-07-29T18:00:00Z", "2026-09-16T18:00:00Z",
+    "2026-10-28T18:00:00Z", "2026-12-09T19:00:00Z",
+    # Décision BCE (taux directeur zone euro) + conférence de presse,
+    # 14h15 CET/CEST, 2e jour de chaque réunion — source :
+    # ecb.europa.eu/press/calendars/mgcgc
+    "2026-03-19T13:15:00Z", "2026-04-30T12:15:00Z", "2026-06-11T12:15:00Z",
+    "2026-07-23T12:15:00Z", "2026-09-10T12:15:00Z", "2026-10-29T13:15:00Z",
+    "2026-12-17T13:15:00Z",
+]
+
 
 def is_news_blackout(date: datetime) -> bool:
-    """`date` tombe-t-elle dans la fenêtre de black-out
-    (± SCALP_NEWS_BLACKOUT_MINUTES) d'une publication macro à très fort
-    impact ? Utilisé pour neutraliser compute_signal plutôt que de
-    laisser le moteur technique interpréter le bruit de la publication
-    comme un vrai signal."""
+    """`date` tombe-t-elle dans la fenêtre de black-out d'une
+    publication macro à très fort impact ? ± SCALP_NEWS_BLACKOUT_MINUTES
+    pour SCALP_HIGH_IMPACT_EVENTS_UTC (publication ponctuelle), ±
+    PRESS_CONFERENCE_BLACKOUT_MINUTES pour PRESS_CONFERENCE_EVENTS_UTC
+    (banques centrales avec conférence de presse -- voir son
+    commentaire). Utilisé pour neutraliser compute_signal/bloquer une
+    nouvelle entrée plutôt que de laisser le moteur technique
+    interpréter le bruit de la publication comme un vrai signal."""
     window = SCALP_NEWS_BLACKOUT_MINUTES * 60
     for iso in SCALP_HIGH_IMPACT_EVENTS_UTC:
         event = datetime.fromisoformat(iso.replace("Z", "+00:00"))
         if abs((date - event).total_seconds()) <= window:
             return True
+    pc_window = PRESS_CONFERENCE_BLACKOUT_MINUTES * 60
+    for iso in PRESS_CONFERENCE_EVENTS_UTC:
+        event = datetime.fromisoformat(iso.replace("Z", "+00:00"))
+        if abs((date - event).total_seconds()) <= pc_window:
+            return True
     return False
+
+
+def is_volatility_shock(candles: list[dict], baseline_window: int = 100, lag: int = 5,
+                         shock_mult: float = 4.0) -> bool | None:
+    """Le dernier candle a-t-il une amplitude (high-low) anormalement
+    grande par rapport au marché RÉCENT -- détecte n'importe quelle
+    actualité à fort impact (prévue ou pas) par son SYMPTÔME (une
+    volatilité qui explose), sans dépendre d'un calendrier qui ne peut
+    jamais être exhaustif (voir is_news_blackout, qui reste une
+    protection complémentaire -- préventive sur les événements connus,
+    alors que celle-ci est réactive mais couvre tout le reste, y compris
+    une conférence de presse qui déborde largement de la fenêtre d'un
+    calendrier, ou une actualité non programmée).
+
+    La baseline (médiane des amplitudes, PAS une moyenne mobile
+    exponentielle) est calculée sur `baseline_window` bougies, en
+    excluant les `lag` bougies les plus récentes -- sinon le choc
+    lui-même contamine sa propre référence en quelques bougies (vérifié
+    sur les données réelles du 2026-10-28 : une EMA ATR classique,
+    k=1/14, remonte assez vite pour qu'un 2e ou 3e candle de la même
+    actualité ne dépasse plus le seuil, alors que le marché est
+    toujours en plein choc). Une médiane sur une fenêtre décalée reste
+    stable pendant tout le choc, qui dure typiquement bien plus que
+    `lag` bougies.
+
+    None si l'historique ne couvre pas `baseline_window + lag` bougies
+    -- jamais une bougie sans mesure fiable de la volatilité normale ne
+    doit être traitée comme "calme" par défaut (même principe que
+    fibonacci_reversion._trend_strength_for_filter)."""
+    if len(candles) < baseline_window + lag:
+        return None
+    baseline_candles = candles[-(baseline_window + lag):-lag] if lag > 0 else candles[-baseline_window:]
+    baseline_ranges = sorted(c["high"] - c["low"] for c in baseline_candles)
+    mid = len(baseline_ranges) // 2
+    baseline = (baseline_ranges[mid] if len(baseline_ranges) % 2
+                else (baseline_ranges[mid - 1] + baseline_ranges[mid]) / 2)
+    if baseline <= 0:
+        return None
+    last = candles[-1]
+    current_range = last["high"] - last["low"]
+    return current_range > shock_mult * baseline
 
 
 def is_market_closed(date: datetime) -> bool:

@@ -115,6 +115,58 @@ def test_latest_state_hour_utc_matches_last_candle():
     assert state["hour_utc"] == last_hour
 
 
+def _daily_history(num_days, start_price, daily_delta, start_day):
+    """Un candle par jour calendaire, les `num_days` jours precedant
+    `start_day` (jamais `start_day` lui-meme) -- assez pour
+    daily_trend_strength, qui ne regarde que la cloture du dernier
+    candle de chaque jour."""
+    out = []
+    price = start_price
+    for d in range(num_days):
+        day = start_day - timedelta(days=num_days - d)
+        price += daily_delta
+        out.append(_candle(day.strftime("%Y-%m-%d 23:55:00"), price - 0.1, price + 0.1, price - 0.1, price))
+    return out
+
+
+def test_latest_state_trend_strength_none_without_enough_merged_history():
+    # `candles` seul (fenetre recente de quelques heures) ne couvre
+    # jamais TREND_WINDOW_DAYS jours complets -- sans historical_candles,
+    # un signal ne doit jamais etre laisse passer sans filtre fiable.
+    candles = _series(fib.ATR_PERIOD + fib.FIB_WINDOW + 5,
+                       start_dt=datetime(2026, 10, 1, tzinfo=timezone.utc))
+    state = fib.latest_state(candles)
+    assert state["trend_strength"] is None
+
+
+def test_latest_state_trend_strength_uses_merged_historical_candles():
+    today = datetime(2026, 10, 1, tzinfo=timezone.utc)
+    historical = _daily_history(25, start_price=1900.0, daily_delta=2.0, start_day=today)
+    candles = _series(fib.ATR_PERIOD + fib.FIB_WINDOW + 5, start_price=1960.0, start_dt=today)
+    state = fib.latest_state(candles, historical)
+    assert state["trend_strength"] is not None
+    assert state["trend_strength"] > 0  # tendance haussiere reguliere dans l'historique
+
+
+def test_latest_state_trend_strength_ignores_todays_own_partial_close():
+    # Jamais la cloture (encore partielle en production) du jour
+    # courant -- toujours celle du dernier jour calendaire COMPLET.
+    # Modifier la derniere bougie d'aujourd'hui ne doit RIEN changer,
+    # contrairement a la recherche de validation qui taguait (a tort)
+    # chaque signal avec la cloture FINALE de son propre jour.
+    today = datetime(2026, 10, 1, tzinfo=timezone.utc)
+    historical = _daily_history(25, start_price=1900.0, daily_delta=2.0, start_day=today)
+    candles = _series(fib.ATR_PERIOD + fib.FIB_WINDOW + 5, start_price=1960.0, start_dt=today)
+    baseline = fib.latest_state(candles, historical)["trend_strength"]
+
+    candles_modified = [dict(c) for c in candles]
+    candles_modified[-1] = dict(candles_modified[-1])
+    candles_modified[-1]["close"] = 5000.0
+    modified = fib.latest_state(candles_modified, historical)["trend_strength"]
+
+    assert modified == baseline
+
+
 def _series_with_level(n, start_price=2000.0, start_dt=None):
     """Série causant un retracement ACHAT bien défini (bas ancien à
     l'indice 21, haut récent à l'indice 55 -> hi_idx > lo_idx -> niveau
@@ -188,3 +240,102 @@ def test_compute_trailing_stop_never_loosens():
     current_stop_loss = entry_price + 500.0
     result = fib.compute_trailing_stop(candles, "achat", entry_time_iso, entry_price, current_stop_loss)
     assert result is None
+
+
+def _realistic_entry_time_iso(candles, entry_idx, delay_seconds=3):
+    """Horodatage de remplissage REALISTE : quelques secondes apres la
+    CLOTURE de la bougie signal (le remplissage a lieu pendant la
+    bougie suivante), contrairement a l'horodatage a l'OUVERTURE de la
+    bougie signal elle-meme utilise par convenance dans les tests
+    ci-dessus (qui reste un entree valide, juste differente -- avant
+    la cloture de cette bougie, donc resolue sur la bougie PRECEDENTE)."""
+    close_dt = (datetime.strptime(candles[entry_idx]["time"], "%Y-%m-%d %H:%M:%S").replace(tzinfo=timezone.utc)
+                + timedelta(minutes=fib.CANDLE_INTERVAL_MINUTES))
+    return (close_dt + timedelta(seconds=delay_seconds)).isoformat()
+
+
+def test_compute_trailing_stop_uses_signal_candle_atr_for_realistic_entry_time():
+    # Avant le correctif du 2026-10-28 (revue finale de branche),
+    # l'horodatage REALISTE (post-cloture) resolvait entry_idx sur la
+    # bougie SUIVANTE, pas sur la bougie signal elle-meme -- donc sur
+    # le mauvais ATR/niveau pour calculer R. Fond de prix (1988) proche
+    # du niveau attendu pour que les bougies "normales" ne dominent pas
+    # le plus haut depuis l'entree (contrairement a _series_with_level,
+    # dont le fond a 2000 est loin au-dessus de cette zone).
+    candles = [dict(c, high=1988.1, low=1987.9, open=1988.0, close=1988.0) if i not in (21, 55) else c
+               for i, c in enumerate(_series_with_level(fib.ATR_PERIOD + fib.FIB_WINDOW + 20))]
+    entry_idx = fib.ATR_PERIOD + fib.FIB_WINDOW + 5
+    atr = fib.compute_atr(candles)
+    level, _bias = fib.levels_fibonacci(candles)
+    atr_entry = atr[entry_idx]
+    entry_price = level[entry_idx] + 1.0
+    initial_stop = level[entry_idx] - fib.STOP_BUFFER_ATR_MULT * atr_entry
+    r = entry_price - initial_stop
+    entry_time_iso = _realistic_entry_time_iso(candles, entry_idx)
+    current_stop_loss = entry_price - 5.0
+
+    candles_below = [dict(c) for c in candles]
+    candles_below[entry_idx + 2]["high"] = entry_price + r * 0.9
+    result_below = fib.compute_trailing_stop(candles_below, "achat", entry_time_iso, entry_price, current_stop_loss)
+    assert result_below is None  # excursion sous R (bougie signal) -> pas encore active
+
+    candles_above = [dict(c) for c in candles]
+    candles_above[entry_idx + 2]["high"] = entry_price + r * 1.5
+    result_above = fib.compute_trailing_stop(candles_above, "achat", entry_time_iso, entry_price, current_stop_loss)
+    assert result_above is not None  # excursion au-dessus de R -> active
+
+
+def test_compute_trailing_stop_none_when_entry_bias_mismatches_direction():
+    # Garde-fou : si le biais Fibonacci a la bougie d'entree retrouvee
+    # ne correspond pas a la direction reelle de la position, on
+    # refuse plutot que de calculer R avec le mauvais niveau.
+    candles = _series_with_level(fib.ATR_PERIOD + fib.FIB_WINDOW + 20)
+    entry_idx = fib.ATR_PERIOD + fib.FIB_WINDOW + 5
+    entry_price = candles[entry_idx]["close"]
+    entry_time_iso = candles[entry_idx]["time"].replace(" ", "T") + "+00:00"
+    result = fib.compute_trailing_stop(candles, "vente", entry_time_iso, entry_price, entry_price + 5.0)
+    assert result is None  # bias reel a entry_idx = "achat"
+
+
+def test_compute_trailing_stop_never_tightens_beyond_entry_price():
+    # Le plancher max(entry_price, candidat) doit ramener le stop
+    # exactement a l'entree, jamais plus loin, meme quand le candidat
+    # naturel (meilleur prix - TRAIL_BUFFER_ATR_MULT*atr) tombe en
+    # dessous. Fond de prix proche du niveau (meme raison que le test
+    # ci-dessus) pour isoler l'excursion au candle injecte.
+    candles = [dict(c, high=1988.1, low=1987.9, open=1988.0, close=1988.0) if i not in (21, 55) else c
+               for i, c in enumerate(_series_with_level(fib.ATR_PERIOD + fib.FIB_WINDOW + 20))]
+    entry_idx = fib.ATR_PERIOD + fib.FIB_WINDOW + 5
+    atr = fib.compute_atr(candles)
+    level, _bias = fib.levels_fibonacci(candles)
+    atr_entry = atr[entry_idx]
+    # entre initial_stop et level -> r < TRAIL_BUFFER_ATR_MULT*atr_entry,
+    # rendant la zone "active mais sous l'entree" atteignable.
+    entry_price = level[entry_idx] - 0.1 * atr_entry
+    initial_stop = level[entry_idx] - fib.STOP_BUFFER_ATR_MULT * atr_entry
+    r = abs(entry_price - initial_stop)
+    best_price = entry_price + r * 1.05
+    candles[entry_idx + 2]["high"] = best_price
+    entry_time_iso = _realistic_entry_time_iso(candles, entry_idx)
+    current_stop_loss = entry_price - 5.0
+
+    result = fib.compute_trailing_stop(candles, "achat", entry_time_iso, entry_price, current_stop_loss)
+    assert result == entry_price
+
+
+def test_compute_trailing_stop_moves_stop_down_once_activated_vente():
+    # Symetrique du test achat -- haut ancien (21), bas recent (55).
+    candles = _series_with_level(fib.ATR_PERIOD + fib.FIB_WINDOW + 20, start_price=2000.0)
+    for i, c in enumerate(candles):
+        if i == 21:
+            c["open"] = c["high"] = c["low"] = c["close"] = 2050.0
+        elif i == 55:
+            c["open"] = c["high"] = c["low"] = c["close"] = 1950.0
+    entry_idx = fib.ATR_PERIOD + fib.FIB_WINDOW + 5
+    entry_price = candles[entry_idx]["close"]
+    entry_time_iso = candles[entry_idx]["time"].replace(" ", "T") + "+00:00"
+    candles[entry_idx + 2]["low"] = entry_price - 200.0
+    current_stop_loss = entry_price + 5.0
+    result = fib.compute_trailing_stop(candles, "vente", entry_time_iso, entry_price, current_stop_loss)
+    assert result is not None
+    assert result < current_stop_loss

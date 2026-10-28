@@ -10,7 +10,7 @@
       "name": "Dollar (DXY)",
       "score": -10,
       "weight": 0.26666666666666666,
-      "raw_value": "102.37 (il y a 2 mois : 99.16)"
+      "raw_value": "102.38 (il y a 2 mois : 99.70)"
     },
     {
       "name": "Positionnement CFTC",
@@ -22,13 +22,13 @@
       "name": "Spread WTI-Brent",
       "score": -10,
       "weight": 0.19999999999999998,
-      "raw_value": "+9.71 $/baril (il y a ~2 mois : +6.08 $/baril)"
+      "raw_value": "+9.48 $/baril (il y a ~2 mois : +5.79 $/baril)"
     },
     {
       "name": "Dynamique récente",
       "score": 10.0,
       "weight": 0.26666666666666666,
-      "raw_value": "+17.9% vs MM200"
+      "raw_value": "+17.8% vs MM200"
     },
     {
       "name": "Stocks EIA",
@@ -38,9 +38,9 @@
     }
   ],
   "technical": {
-    "note": "Cours au-dessus de la MM200 (+17.9%) — tendance haussière",
-    "spot": 101.0199966430664,
-    "ma200": 85.71640003204345,
+    "note": "Cours au-dessus de la MM200 (+17.8%) — tendance haussière",
+    "spot": 101.16999816894531,
+    "ma200": 85.91915004730225,
     "unite": "$ / baril"
   },
   "calendar": [
@@ -88,37 +88,10 @@
   "alerts": [],
   "news": [
     {
-      "title": "Le prix du baril de pétrole bondit à 115 dollars, au plus haut depuis le début de la guerre au Moyen-Orient - Les Echos",
-      "date": "2026-10-23",
-      "link": "https://news.google.com/rss/articles/CBMigwJBVV95cUxPUGxteWZsQnlyWFd6RmM2QmhTWlY1NzBtYWNUNGQ5eGwwZ0dtSVVGZzFfSnlSazZSOXJmTjBpcUZ4TExzaldRSHRyQUNwN3dnQTVXTnlyM05hVEh4Z0h2eTJ2b3B0ZlhqbzU4dTBYV3A4ZGtHUmI1ZFA3cXlDMWNWS0o3cmF6cGlFZGtXT2luZF9oZERaMjJwMWRvSkEtVE1MVThhVi1VaDFId0xhaVVqTHR0cE00b1d6RW9hdW1tdDN3OVIwdTI0eFdKQzlBdGdIYkJrZnNSUkxBdnVyYlpyQnVUTzFmTktQUU5kaGlHeE9CSWNZZ3QxTm1WNkpCQVJVQkM0?oc=5",
-      "source": "Les Echos",
-      "summary": "",
-      "sentiment": 0,
-      "importance": "mineure"
-    },
-    {
-      "title": "Le WTI recule vers les 100 dollars, les pourparlers au Moyen-Orient apaisant les craintes sur l’approvisionnement - www.tmgm.com",
+      "title": "Prévisions du cours du WTI : le pétrole reste sous pression sous les 100,00 $, mais les craintes au Moyen-Orient limitent le repli - www.tmgm.com",
       "date": "2026-10-27",
-      "link": "https://news.google.com/rss/articles/CBMixAFBVV95cUxNU2otVzd0NjhpOTFDNkpvS3BMOXVtellxY2pBZXdOSzJDbmNCNkhUcWFFblg5Mkk2VHNoZi12NjIzMl81WkVzek1YR3gwMno5TXZzSTl4RnA0SHp2ZXk0aGthOGJQTnI2cGZvSDNjZUo0c3NMUWlCUTZGZnZ2QnEyd2pvc0RNa25sbWI2dllOdXFnUUNfcDc4NFhHMU5oa0VBUjJiLXJZa1oxdVZ1cUdQZ2lEV0x0cHZBd25MajFlaEROWjVW?oc=5",
+      "link": "https://news.google.com/rss/articles/CBMi4gFBVV95cUxPd2ZIdFAtUTJhYm04N0NPMndfeUlOc0tnUTZqUC1wTXdKdlB0UlNUOTYyZjQ2ZVYyU3hUNjhvcU9rWkZTS2lPT0NkVTA0cU9oLXU5MVVkMnlVMElRWHAya1Y4UXZNbWE0b1o5N3UxODFmeDBJbkxoR2ZPLURGbURjTTJZVnhsTG1LazE3aDBMR29NS1Y4MUdlU2xOMXIzV1pweVVWUGlRZ1NxaVVtdjMzc0lYbmJFUmJmRXJDQUNSRWVhSV9ON3dNM3FvQ0lGMEZZQy1iUEZHQUFGTmUtekRhYXB3?oc=5",
       "source": "www.tmgm.com",
-      "summary": "",
-      "sentiment": 0,
-      "importance": "mineure"
-    },
-    {
-      "title": "Brut de la mer du Nord : Le WTI s'échange à la hausse avec l'augmentation de la demande - Boursorama",
-      "date": "2026-10-21",
-      "link": "https://news.google.com/rss/articles/CBMi9gFBVV95cUxNREVlSHhhN1hnYXBCdmYtcjR6UzRqOUl0RTMyeDZiWWV2TEFJTUNnRzVKTEt0TU5ZUDVUaVVkdlY0TW10UUNtMksweGJVemlZR1NqandYcUlfYnlaUHNoSW1TYk8zcWVwd0RjQjh1Y0dKZzhfUWRNci16RWFvTmZGV0dwZVpPR1RiVWM3UjYySndwYXBud0sySHRDYWU5RHVHbWVGNHVkenBsY0xNTktxM3MtNlg5OFFoVDZ2b2NLR3FzalRHSUx4UFZIRENMTXFMeThLb2tSY2lWdjREcFc3ejJmaTZ3dmhPR2l5X0MzVmNXUnUwOWfSAfsBQVVfeXFMTktzcjFJNHZXXzM2a1M0ZzFhTkdqQlZiMXotbndRTExTMk9sNENmZUhseU1wY29VbEtManBfRm1RWHpoekRLXzZRd1pwcXVmMmgtZmZmaGVpS3A2enlRR0xRUWVYdFZjUjR1MXQwTXBBUkZhWjFlYmZxMmtVa01JekZ6SHhVWVpKMVMyTzhXZjVwZVFPMzB0TmZULUxyNmFaQ2xxM1BPaUh6OWdINjFYQ1Vfd1VtY2ZpNWRrOTFmU2dLMFFsSDJQaEJwbVdteVB2aTU0LWNQX1g5RGpBMlVrSDRjUlN3R25WOTRiZUF5NU1uN3lnd1U3R25pMVU?oc=5",
-      "source": "Boursorama",
-      "summary": "Cet article suggère que le cours du WTI serait orienté à la hausse en raison d'une augmentation de la demande de pétrole brut.",
-      "sentiment": 1,
-      "importance": "notable"
-    },
-    {
-      "title": "Prix du pétrole : le baril de Brent recule à 104,60 dollars - www.horizons.dz",
-      "date": "2026-10-27",
-      "link": "https://news.google.com/rss/articles/CBMikwFBVV95cUxOd2RaRWZGY2Q5d1BxVFB6bm9WSm0zMWlud3Q5eWxMXzNqVlFxNGI2X1JMSjB1MWNPa2hiTGdiWlllU2RmbGl5NGtZZGRJZHZpRkxPVnpwNVQyMHE4ZGNEd3U2Y1IycUxVU1FTdExQS2RQelJrR0hQU3RoTGw3Z1RkeFFfZDYtaXRyNHpWOTFLWTlpUms?oc=5",
-      "source": "www.horizons.dz",
       "summary": "",
       "sentiment": 0,
       "importance": "mineure"
@@ -131,32 +104,59 @@
       "summary": "Cet article suggère qu'IFPEN publie une mise à jour de son tableau de bord de suivi des marchés pétroliers, susceptible de fournir des données ou analyses sur les tendances actuelles du pétrole WTI.",
       "sentiment": 0,
       "importance": "mineure"
+    },
+    {
+      "title": "Brent, WTI : pourquoi le pétrole a deux prix que personne ne vous explique - Idéal Investisseur",
+      "date": "2026-03-09",
+      "link": "https://news.google.com/rss/articles/CBMiygFBVV95cUxPYjVqMEVCek1Ic245VkdZVDhPbjczbFpNT0w5NFpCYWdPU0xTMEgzUnN0alIzc19rMTlvOFBqd1pvWFpDdmQ4Z2lwYzlCY0YtQm5MRHViM3VobDFyNE1ORmViRzlfWVhyZlViSklvNGxyTWFOYlVaQkh5dkFvTXJzWTQxZjVaenY0b2U3UTZ4Z0NVT3lmUnYyV0dUcFJRUDRlZGhTQU56WlVBZERfWG9yZElneGw1N2FMRTAtN3ZCWGtVOV9fdnp4dTl3?oc=5",
+      "source": "Idéal Investisseur",
+      "summary": "",
+      "sentiment": 0,
+      "importance": "mineure"
+    },
+    {
+      "title": "Les ETF sur le pétrole (Brent et WTI) en 2026 - Finance Héros",
+      "date": "2026-04-17",
+      "link": "https://news.google.com/rss/articles/CBMiTkFVX3lxTE5CSThUei1mdzV5N0t5MVpmaUhEVVZyNXYzVHExZVJ3bFdDM2NLMTk4Wl93RlF2ZTBnREFlY3lJaDNHLWlENlRXVzFzWDJDZw?oc=5",
+      "source": "Finance Héros",
+      "summary": "",
+      "sentiment": 0,
+      "importance": "mineure"
+    },
+    {
+      "title": "Au plus bas depuis plus d'un mois: le pétrole chute de 10% après l'annonce de la \"réouverture totale\" du détroit d'Ormuz par l'Iran - BFM",
+      "date": "2026-04-17",
+      "link": "https://news.google.com/rss/articles/CBMirwJBVV95cUxNcmpXVnFQM292d0g0R0lfblNsYnZHbXdwUW41d2JodWlHMUI3XzRNWUhVYWZwYzlHclZ6Vzk0X1hNUnhEcnVkLUFDOEt3bXFhMm9YMWtQdVBjNFlHeG9XY295aS1WN1FidW1nNnpzVDdjYldxRGxtMERKdGFVWXNyVEFPNWFrM0tXSjVWaE84RUtBRGRxYTY5ZHN5WW42RndqMHBYaTFpRlRfNU04UFhacUhMQlpVdVptODVEckFNc1Z6b00yQVM4ZkZMZnoyM05pbGd4ci1LZ2NfdUhpVmVqci1SVHAtQmRkSXRLRVlkRjUwNmwxTHR3TkVQeEYtTjY3RnhZVzMtdjMtZUFiUWc2OFVwMmI5SERPZVZuMkxIMTRZUWVLdVRsSm1VZ1ltQVU?oc=5",
+      "source": "BFM",
+      "summary": "",
+      "sentiment": 0,
+      "importance": "mineure"
     }
   ],
   "analysis_html": "<h3>Contexte récent</h3><p>Le WTI évolue dans une phase de tension haussière marquée : le cours se situe environ <strong>18,4 % au-dessus de sa moyenne mobile 200 jours</strong>, et les articles récents évoquent un baril proche de 98 $ avec un Brent au-delà de 110 $. Cette dynamique s'accompagne toutefois d'un environnement macro moins porteur, le dollar s'étant apprécié (DXY à 101,88 contre 99,17 il y a deux mois) et le différentiel WTI-Brent s'étant creusé en défaveur du brut américain. Le score composite qui en résulte est globalement <strong>neutre</strong>, les contributions positives et négatives s'annulant presque intégralement.</p><h3>Facteurs déterminants</h3><ul><li><strong>Dollar (DXY) — score -10,0, poids 27 %</strong> : c'est le principal frein. L'appréciation du billet vert de près de 2,7 points en deux mois renchérit mécaniquement le baril pour les acheteurs hors zone dollar et pèse sur la demande exprimée en devises locales. Avec un poids de 27 %, ce facteur retire environ 2,7 points au score global.</li><li><strong>Dynamique récente — score +10,0, poids 27 %</strong> : contrepoids exact du dollar. L'écart de +18,4 % par rapport à la moyenne mobile 200 jours traduit une tendance haussière installée, mais un tel niveau d'extension signale aussi un marché techniquement tendu, propice à des phases de consolidation.</li><li><strong>Spread WTI-Brent — score -10,0, poids 20 %</strong> : l'élargissement de la décote du WTI face au Brent (de +6,37 $ à +8,99 $ en deux mois) suggère une offre américaine relativement abondante ou des contraintes d'exportation, et constitue le second facteur négatif du score, pour environ -2 points.</li><li><strong>Positionnement CFTC — score +7,3, poids 27 %</strong> : la position nette des non-commerciaux ressort à 36 187 contrats, soit seulement le <strong>13e percentile sur trois ans</strong>. Ce positionnement spéculatif historiquement bas est lu comme un facteur de soutien : il limite le risque de liquidation massive et laisse une marge de reconstitution de positions longues.</li><li><strong>Stocks EIA — poids 0 %</strong> : donnée indisponible faute de clé API configurée. Le volet inventaires, habituellement central pour le WTI, est donc absent du score, ce qui réduit la robustesse de la lecture fondamentale.</li></ul><h3>Actualités à retenir</h3><ul><li><strong>[Notable] Hausse du WTI portée par l'augmentation de la demande</strong> : c'est l'actualité la plus significative. Elle vient conforter le facteur « dynamique récente » (+10,0) et offre une justification fondamentale à l'extension du cours au-dessus de sa moyenne longue. Elle n'apporte en revanche aucun élément correctif sur le dollar ni sur le spread WTI-Brent, les deux composantes négatives du score.</li><li>Les autres éléments sont classés comme mineurs : prises de bénéfices après la phase de hausse (cohérentes avec un marché très étendu par rapport à sa MM200), tentative de franchissement du seuil des 100 $, point de marché de l'IFPEN et relevé de prix situant le WTI autour de 98 $ face à un Brent au-delà de 110 $. Ce dernier point illustre directement l'élargissement du spread WTI-Brent qui pénalise le score.</li></ul><h3>Synthèse</h3><p>Le score composite est <strong>quasi neutre</strong> : la force de la tendance de prix et un positionnement spéculatif peu encombré (13e percentile) compensent presque exactement la pression d'un dollar plus ferme et d'une décote du WTI élargie face au Brent. Le marché affiche donc une tendance haussière confirmée par les prix observés et par l'argument de demande, mais sans appui macro-monétaire, et avec un écart grandissant entre les deux références mondiales qui reflète une situation spécifique au brut américain. L'absence de données sur les stocks EIA constitue une limite notable de cette lecture : le volet inventaires, non renseigné, pourrait modifier sensiblement l'équilibre du score une fois intégré. Ce texte est une analyse factuelle et ne constitue ni un conseil ni une recommandation d'investissement.</p>",
   "news_classifications": {
-    "https://news.google.com/rss/articles/CBMigwJBVV95cUxPUGxteWZsQnlyWFd6RmM2QmhTWlY1NzBtYWNUNGQ5eGwwZ0dtSVVGZzFfSnlSazZSOXJmTjBpcUZ4TExzaldRSHRyQUNwN3dnQTVXTnlyM05hVEh4Z0h2eTJ2b3B0ZlhqbzU4dTBYV3A4ZGtHUmI1ZFA3cXlDMWNWS0o3cmF6cGlFZGtXT2luZF9oZERaMjJwMWRvSkEtVE1MVThhVi1VaDFId0xhaVVqTHR0cE00b1d6RW9hdW1tdDN3OVIwdTI0eFdKQzlBdGdIYkJrZnNSUkxBdnVyYlpyQnVUTzFmTktQUU5kaGlHeE9CSWNZZ3QxTm1WNkpCQVJVQkM0?oc=5": {
-      "summary": "",
-      "sentiment": 0,
-      "importance": "mineure"
-    },
-    "https://news.google.com/rss/articles/CBMixAFBVV95cUxNU2otVzd0NjhpOTFDNkpvS3BMOXVtellxY2pBZXdOSzJDbmNCNkhUcWFFblg5Mkk2VHNoZi12NjIzMl81WkVzek1YR3gwMno5TXZzSTl4RnA0SHp2ZXk0aGthOGJQTnI2cGZvSDNjZUo0c3NMUWlCUTZGZnZ2QnEyd2pvc0RNa25sbWI2dllOdXFnUUNfcDc4NFhHMU5oa0VBUjJiLXJZa1oxdVZ1cUdQZ2lEV0x0cHZBd25MajFlaEROWjVW?oc=5": {
-      "summary": "",
-      "sentiment": 0,
-      "importance": "mineure"
-    },
-    "https://news.google.com/rss/articles/CBMi9gFBVV95cUxNREVlSHhhN1hnYXBCdmYtcjR6UzRqOUl0RTMyeDZiWWV2TEFJTUNnRzVKTEt0TU5ZUDVUaVVkdlY0TW10UUNtMksweGJVemlZR1NqandYcUlfYnlaUHNoSW1TYk8zcWVwd0RjQjh1Y0dKZzhfUWRNci16RWFvTmZGV0dwZVpPR1RiVWM3UjYySndwYXBud0sySHRDYWU5RHVHbWVGNHVkenBsY0xNTktxM3MtNlg5OFFoVDZ2b2NLR3FzalRHSUx4UFZIRENMTXFMeThLb2tSY2lWdjREcFc3ejJmaTZ3dmhPR2l5X0MzVmNXUnUwOWfSAfsBQVVfeXFMTktzcjFJNHZXXzM2a1M0ZzFhTkdqQlZiMXotbndRTExTMk9sNENmZUhseU1wY29VbEtManBfRm1RWHpoekRLXzZRd1pwcXVmMmgtZmZmaGVpS3A2enlRR0xRUWVYdFZjUjR1MXQwTXBBUkZhWjFlYmZxMmtVa01JekZ6SHhVWVpKMVMyTzhXZjVwZVFPMzB0TmZULUxyNmFaQ2xxM1BPaUh6OWdINjFYQ1Vfd1VtY2ZpNWRrOTFmU2dLMFFsSDJQaEJwbVdteVB2aTU0LWNQX1g5RGpBMlVrSDRjUlN3R25WOTRiZUF5NU1uN3lnd1U3R25pMVU?oc=5": {
-      "summary": "Cet article suggère que le cours du WTI serait orienté à la hausse en raison d'une augmentation de la demande de pétrole brut.",
-      "sentiment": 1,
-      "importance": "notable"
-    },
-    "https://news.google.com/rss/articles/CBMikwFBVV95cUxOd2RaRWZGY2Q5d1BxVFB6bm9WSm0zMWlud3Q5eWxMXzNqVlFxNGI2X1JMSjB1MWNPa2hiTGdiWlllU2RmbGl5NGtZZGRJZHZpRkxPVnpwNVQyMHE4ZGNEd3U2Y1IycUxVU1FTdExQS2RQelJrR0hQU3RoTGw3Z1RkeFFfZDYtaXRyNHpWOTFLWTlpUms?oc=5": {
+    "https://news.google.com/rss/articles/CBMi4gFBVV95cUxPd2ZIdFAtUTJhYm04N0NPMndfeUlOc0tnUTZqUC1wTXdKdlB0UlNUOTYyZjQ2ZVYyU3hUNjhvcU9rWkZTS2lPT0NkVTA0cU9oLXU5MVVkMnlVMElRWHAya1Y4UXZNbWE0b1o5N3UxODFmeDBJbkxoR2ZPLURGbURjTTJZVnhsTG1LazE3aDBMR29NS1Y4MUdlU2xOMXIzV1pweVVWUGlRZ1NxaVVtdjMzc0lYbmJFUmJmRXJDQUNSRWVhSV9ON3dNM3FvQ0lGMEZZQy1iUEZHQUFGTmUtekRhYXB3?oc=5": {
       "summary": "",
       "sentiment": 0,
       "importance": "mineure"
     },
     "https://news.google.com/rss/articles/CBMigAFBVV95cUxNcUtMQXZXa1NoaGxQZkJxU1hMSXBhUnlCWWloV2U3NE8tX1o2MFJESDg4ckd1amR0WW5BZWxyQ3hzQ1VwcXpGTEhxc1ZndDJHNi1iaTB2RHg0aDFYR0VaSElZY18wVUotS2dqUDEzaExCLXpyeU55amZkeHpwbnNhQQ?oc=5": {
       "summary": "Cet article suggère qu'IFPEN publie une mise à jour de son tableau de bord de suivi des marchés pétroliers, susceptible de fournir des données ou analyses sur les tendances actuelles du pétrole WTI.",
+      "sentiment": 0,
+      "importance": "mineure"
+    },
+    "https://news.google.com/rss/articles/CBMiygFBVV95cUxPYjVqMEVCek1Ic245VkdZVDhPbjczbFpNT0w5NFpCYWdPU0xTMEgzUnN0alIzc19rMTlvOFBqd1pvWFpDdmQ4Z2lwYzlCY0YtQm5MRHViM3VobDFyNE1ORmViRzlfWVhyZlViSklvNGxyTWFOYlVaQkh5dkFvTXJzWTQxZjVaenY0b2U3UTZ4Z0NVT3lmUnYyV0dUcFJRUDRlZGhTQU56WlVBZERfWG9yZElneGw1N2FMRTAtN3ZCWGtVOV9fdnp4dTl3?oc=5": {
+      "summary": "",
+      "sentiment": 0,
+      "importance": "mineure"
+    },
+    "https://news.google.com/rss/articles/CBMiTkFVX3lxTE5CSThUei1mdzV5N0t5MVpmaUhEVVZyNXYzVHExZVJ3bFdDM2NLMTk4Wl93RlF2ZTBnREFlY3lJaDNHLWlENlRXVzFzWDJDZw?oc=5": {
+      "summary": "",
+      "sentiment": 0,
+      "importance": "mineure"
+    },
+    "https://news.google.com/rss/articles/CBMirwJBVV95cUxNcmpXVnFQM292d0g0R0lfblNsYnZHbXdwUW41d2JodWlHMUI3XzRNWUhVYWZwYzlHclZ6Vzk0X1hNUnhEcnVkLUFDOEt3bXFhMm9YMWtQdVBjNFlHeG9XY295aS1WN1FidW1nNnpzVDdjYldxRGxtMERKdGFVWXNyVEFPNWFrM0tXSjVWaE84RUtBRGRxYTY5ZHN5WW42RndqMHBYaTFpRlRfNU04UFhacUhMQlpVdVptODVEckFNc1Z6b00yQVM4ZkZMZnoyM05pbGd4ci1LZ2NfdUhpVmVqci1SVHAtQmRkSXRLRVlkRjUwNmwxTHR3TkVQeEYtTjY3RnhZVzMtdjMtZUFiUWc2OFVwMmI5SERPZVZuMkxIMTRZUWVLdVRsSm1VZ1ltQVU?oc=5": {
+      "summary": "",
       "sentiment": 0,
       "importance": "mineure"
     }

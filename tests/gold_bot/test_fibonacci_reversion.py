@@ -139,6 +139,22 @@ def test_latest_state_trend_strength_none_without_enough_merged_history():
     assert state["trend_strength"] is None
 
 
+def test_latest_state_trend_strength_none_at_exactly_window_days_of_history():
+    # A exactement TREND_WINDOW_DAYS(20) jours avant aujourd'hui, le
+    # jour retenu serait lui-meme le premier jour "mesurable" de
+    # daily_trend_strength -- qui renvoie encore son 0.0 par DEFAUT
+    # (historique insuffisant) a cet indice, pas une vraie mesure.
+    # Trouve en contre-revue du correctif, 2026-10-28 (l'ancienne
+    # condition "< TREND_WINDOW_DAYS" laissait passer ce cas-limite).
+    today = datetime(2026, 10, 1, tzinfo=timezone.utc)
+    candles = _series(fib.ATR_PERIOD + fib.FIB_WINDOW + 5, start_price=1960.0, start_dt=today)
+    historical_exactly_20 = _daily_history(fib.TREND_WINDOW_DAYS, start_price=1900.0, daily_delta=2.0, start_day=today)
+    assert fib.latest_state(candles, historical_exactly_20)["trend_strength"] is None
+
+    historical_21 = _daily_history(fib.TREND_WINDOW_DAYS + 1, start_price=1900.0, daily_delta=2.0, start_day=today)
+    assert fib.latest_state(candles, historical_21)["trend_strength"] is not None
+
+
 def test_latest_state_trend_strength_uses_merged_historical_candles():
     today = datetime(2026, 10, 1, tzinfo=timezone.utc)
     historical = _daily_history(25, start_price=1900.0, daily_delta=2.0, start_day=today)
@@ -267,34 +283,43 @@ def test_compute_trailing_stop_uses_signal_candle_atr_for_realistic_entry_time()
     entry_idx = fib.ATR_PERIOD + fib.FIB_WINDOW + 5
     atr = fib.compute_atr(candles)
     level, _bias = fib.levels_fibonacci(candles)
-    atr_entry = atr[entry_idx]
     entry_price = level[entry_idx] + 1.0
-    initial_stop = level[entry_idx] - fib.STOP_BUFFER_ATR_MULT * atr_entry
-    r = entry_price - initial_stop
+    r_signal = entry_price - (level[entry_idx] - fib.STOP_BUFFER_ATR_MULT * atr[entry_idx])
+    r_next = entry_price - (level[entry_idx + 1] - fib.STOP_BUFFER_ATR_MULT * atr[entry_idx + 1])
+    assert r_next != r_signal  # sinon ce fixture ne distingue rien
     entry_time_iso = _realistic_entry_time_iso(candles, entry_idx)
     current_stop_loss = entry_price - 5.0
 
-    candles_below = [dict(c) for c in candles]
-    candles_below[entry_idx + 2]["high"] = entry_price + r * 0.9
-    result_below = fib.compute_trailing_stop(candles_below, "achat", entry_time_iso, entry_price, current_stop_loss)
-    assert result_below is None  # excursion sous R (bougie signal) -> pas encore active
+    # Excursion ENTRE r_next et r_signal : n'active le suiveur QUE si
+    # le mauvais R (bougie suivante, bug) est utilise -- donc None ici
+    # prouve que le code utilise bien R de la bougie SIGNAL.
+    between = (r_signal + r_next) / 2
+    candles_between = [dict(c) for c in candles]
+    candles_between[entry_idx + 2]["high"] = entry_price + between
+    result_between = fib.compute_trailing_stop(candles_between, "achat", entry_time_iso, entry_price, current_stop_loss)
+    assert result_between is None
 
     candles_above = [dict(c) for c in candles]
-    candles_above[entry_idx + 2]["high"] = entry_price + r * 1.5
+    candles_above[entry_idx + 2]["high"] = entry_price + max(r_signal, r_next) * 1.5
     result_above = fib.compute_trailing_stop(candles_above, "achat", entry_time_iso, entry_price, current_stop_loss)
-    assert result_above is not None  # excursion au-dessus de R -> active
+    assert result_above is not None  # excursion au-dessus des deux R -> active quoi qu'il arrive
 
 
 def test_compute_trailing_stop_none_when_entry_bias_mismatches_direction():
     # Garde-fou : si le biais Fibonacci a la bougie d'entree retrouvee
     # ne correspond pas a la direction reelle de la position, on
-    # refuse plutot que de calculer R avec le mauvais niveau.
+    # refuse plutot que de calculer R avec le mauvais niveau --
+    # excursion favorable large injectee pour que la SEULE raison du
+    # None possible soit ce garde-fou (sans excursion, le None serait
+    # trivial -- pas d'activation -- et ne prouverait rien sur le
+    # garde-fou lui-meme, trouve en contre-revue du correctif).
     candles = _series_with_level(fib.ATR_PERIOD + fib.FIB_WINDOW + 20)
     entry_idx = fib.ATR_PERIOD + fib.FIB_WINDOW + 5
     entry_price = candles[entry_idx]["close"]
     entry_time_iso = candles[entry_idx]["time"].replace(" ", "T") + "+00:00"
+    candles[entry_idx + 2]["low"] = entry_price - 200.0  # excursion favorable a une VENTE
     result = fib.compute_trailing_stop(candles, "vente", entry_time_iso, entry_price, entry_price + 5.0)
-    assert result is None  # bias reel a entry_idx = "achat"
+    assert result is None  # bias reel a entry_idx = "achat", pas "vente"
 
 
 def test_compute_trailing_stop_never_tightens_beyond_entry_price():

@@ -21,6 +21,19 @@ def _default_volatility_shock_guard(monkeypatch):
     monkeypatch.setattr(bot.confluence, "is_volatility_shock", lambda candles: False)
 
 
+@pytest.fixture(autouse=True)
+def _default_ai_shadow_veto(monkeypatch):
+    """Le veto IA fantome (gold_bot/ai_shadow.py, ajoute le 2026-10-28)
+    est appele par decide_and_act_fibonacci a chaque signal d'entree
+    confirme. Sans ce defaut, les tests qui atteignent ce chemin
+    ecriraient pour de vrai dans gold_bot/ai_shadow_log.jsonl (le vrai
+    fichier de prod) et, si ANTHROPIC_API_KEY est present dans
+    l'environnement de test, tenteraient un vrai appel reseau facture.
+    Un test qui veut exercer shadow_judge_entry directement l'ecrase
+    avec son propre monkeypatch (voir tests/gold_bot/test_ai_shadow.py)."""
+    monkeypatch.setattr(bot.ai_shadow, "shadow_judge_entry", lambda *a, **k: None)
+
+
 def _signal(status, entry=None, stop_loss=None, take_profit=None):
     return {"status": status, "price": entry, "entry": entry, "stop_loss": stop_loss,
             "take_profit": take_profit, "trend": "baissier" if status != "neutre" else "neutre",

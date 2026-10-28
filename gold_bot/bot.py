@@ -342,15 +342,18 @@ def decide_and_act_fibonacci(candles: list[dict], *, contract_size: float, balan
     d'entrée/sortie à deux jambes (prise partielle + runner) que
     decide_and_act_vwap, mais moteur de signal différent. `symbol` par
     défaut XAUUSD -- seul symbole calibré pour ce moteur.
-    `historical_candles` est accepté pour compatibilité d'appel avec
-    gold_bot.loop (même signature que decide_and_act_vwap) mais n'est
-    pas utilisé : le filtre de cotes historiques n'a jamais été validé
+    `historical_candles` (même paramètre que decide_and_act_vwap,
+    fenêtre ~90 jours déjà récupérée par gold_bot.loop) alimente ICI le
+    filtre de force de tendance de fibonacci_reversion.latest_state --
+    `candles` seul (fenêtre récente de quelques jours) ne couvre jamais
+    TREND_WINDOW_DAYS jours complets. Il n'alimente PAS le filtre de
+    cotes historiques (odds_check) : celui-ci n'a jamais été validé
     pour ce moteur, voir le spec (non-objectif explicite)."""
     circuit_breaker.check(equity)
 
-    state = fibonacci_reversion.latest_state(candles)
+    state = fibonacci_reversion.latest_state(candles, historical_candles)
     if state is None:
-        return {"action": "aucune", "reason": "historique insuffisant pour l'ATR/niveau Fibonacci"}
+        return {"action": "aucune", "reason": "historique insuffisant pour l'ATR"}
 
     matching = [p for p in open_positions if p.get("symbol") == symbol]
     runner_matching = [p for p in matching if not p.get("takeProfit")]
@@ -398,6 +401,8 @@ def decide_and_act_fibonacci(candles: list[dict], *, contract_size: float, balan
         return {"action": "aucune", "reason": "aucun niveau de retracement disponible"}
     if state["atr"] is None or state["atr"] <= 0:
         return {"action": "aucune", "reason": "atr indisponible"}
+    if state["trend_strength"] is None:
+        return {"action": "aucune", "reason": "historique insuffisant pour mesurer la tendance"}
     if abs(state["trend_strength"]) > fibonacci_reversion.TREND_FILTER_THRESHOLD:
         return {"action": "aucune", "reason": "tendance trop forte, signal filtre"}
 

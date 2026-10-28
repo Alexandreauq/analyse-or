@@ -858,17 +858,17 @@ def _fib_state(close=2000.0, high=2001.0, low=1999.0, level=1990.0, bias="achat"
 
 
 def test_decide_and_act_fibonacci_no_action_when_insufficient_history(monkeypatch):
-    monkeypatch.setattr(bot.fibonacci_reversion, "latest_state", lambda candles: None)
+    monkeypatch.setattr(bot.fibonacci_reversion, "latest_state", lambda candles, historical_candles=None: None)
     result = bot.decide_and_act_fibonacci(
         [], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
         balance=10000, equity=10000, open_positions=[], circuit_breaker=_open_circuit_breaker(),
     )
-    assert result == {"action": "aucune", "reason": "historique insuffisant pour l'ATR/niveau Fibonacci"}
+    assert result == {"action": "aucune", "reason": "historique insuffisant pour l'ATR"}
 
 
 def test_decide_and_act_fibonacci_closes_both_legs_at_session_end(monkeypatch):
     state = _fib_state(hour_utc=bot.fibonacci_reversion.SESSION_END_HOUR_UTC)
-    monkeypatch.setattr(bot.fibonacci_reversion, "latest_state", lambda candles: state)
+    monkeypatch.setattr(bot.fibonacci_reversion, "latest_state", lambda candles, historical_candles=None: state)
     open_positions = [
         {"id": "1", "symbol": "XAUUSD", "type": "POSITION_TYPE_BUY", "takeProfit": None},
         {"id": "2", "symbol": "XAUUSD", "type": "POSITION_TYPE_BUY", "takeProfit": 2050.0},
@@ -884,7 +884,7 @@ def test_decide_and_act_fibonacci_closes_both_legs_at_session_end(monkeypatch):
 
 def test_decide_and_act_fibonacci_no_action_when_only_partial_leg_open(monkeypatch):
     state = _fib_state()
-    monkeypatch.setattr(bot.fibonacci_reversion, "latest_state", lambda candles: state)
+    monkeypatch.setattr(bot.fibonacci_reversion, "latest_state", lambda candles, historical_candles=None: state)
     open_positions = [{"id": "1", "symbol": "XAUUSD", "type": "POSITION_TYPE_BUY", "takeProfit": 2050.0}]
     result = bot.decide_and_act_fibonacci(
         [{"dummy": True}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
@@ -895,7 +895,7 @@ def test_decide_and_act_fibonacci_no_action_when_only_partial_leg_open(monkeypat
 
 def test_decide_and_act_fibonacci_refuses_when_multiple_runner_positions_open(monkeypatch):
     state = _fib_state()
-    monkeypatch.setattr(bot.fibonacci_reversion, "latest_state", lambda candles: state)
+    monkeypatch.setattr(bot.fibonacci_reversion, "latest_state", lambda candles, historical_candles=None: state)
     open_positions = [
         {"id": "1", "symbol": "XAUUSD", "type": "POSITION_TYPE_BUY", "takeProfit": None},
         {"id": "2", "symbol": "XAUUSD", "type": "POSITION_TYPE_BUY", "takeProfit": None},
@@ -909,7 +909,7 @@ def test_decide_and_act_fibonacci_refuses_when_multiple_runner_positions_open(mo
 
 def test_decide_and_act_fibonacci_refuses_on_unexpected_position_type(monkeypatch):
     state = _fib_state()
-    monkeypatch.setattr(bot.fibonacci_reversion, "latest_state", lambda candles: state)
+    monkeypatch.setattr(bot.fibonacci_reversion, "latest_state", lambda candles, historical_candles=None: state)
     open_positions = [{"id": "1", "symbol": "XAUUSD", "type": "SOMETHING_ELSE", "takeProfit": None}]
     result = bot.decide_and_act_fibonacci(
         [{"dummy": True}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
@@ -920,7 +920,7 @@ def test_decide_and_act_fibonacci_refuses_on_unexpected_position_type(monkeypatc
 
 def test_decide_and_act_fibonacci_refuses_when_position_fields_missing(monkeypatch):
     state = _fib_state()
-    monkeypatch.setattr(bot.fibonacci_reversion, "latest_state", lambda candles: state)
+    monkeypatch.setattr(bot.fibonacci_reversion, "latest_state", lambda candles, historical_candles=None: state)
     open_positions = [{"id": "1", "symbol": "XAUUSD", "type": "POSITION_TYPE_BUY", "takeProfit": None}]  # pas de openPrice/stopLoss/time
     result = bot.decide_and_act_fibonacci(
         [{"dummy": True}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
@@ -931,7 +931,7 @@ def test_decide_and_act_fibonacci_refuses_when_position_fields_missing(monkeypat
 
 def test_decide_and_act_fibonacci_holds_when_no_trailing_update(monkeypatch):
     state = _fib_state()
-    monkeypatch.setattr(bot.fibonacci_reversion, "latest_state", lambda candles: state)
+    monkeypatch.setattr(bot.fibonacci_reversion, "latest_state", lambda candles, historical_candles=None: state)
     monkeypatch.setattr(bot.fibonacci_reversion, "compute_trailing_stop", lambda *a, **k: None)
     open_positions = [{"id": "1", "symbol": "XAUUSD", "type": "POSITION_TYPE_BUY", "takeProfit": None,
                         "openPrice": 2000.0, "stopLoss": 1990.0, "time": "2026-09-01T10:00:00+00:00"}]
@@ -944,7 +944,7 @@ def test_decide_and_act_fibonacci_holds_when_no_trailing_update(monkeypatch):
 
 def test_decide_and_act_fibonacci_modifies_stop_when_trailing_stop_updates(monkeypatch):
     state = _fib_state()
-    monkeypatch.setattr(bot.fibonacci_reversion, "latest_state", lambda candles: state)
+    monkeypatch.setattr(bot.fibonacci_reversion, "latest_state", lambda candles, historical_candles=None: state)
     monkeypatch.setattr(bot.fibonacci_reversion, "compute_trailing_stop", lambda *a, **k: 1995.0)
     open_positions = [{"id": "1", "symbol": "XAUUSD", "type": "POSITION_TYPE_BUY", "takeProfit": None,
                         "openPrice": 2000.0, "stopLoss": 1990.0, "time": "2026-09-01T10:00:00+00:00"}]
@@ -959,7 +959,7 @@ def test_decide_and_act_fibonacci_modifies_stop_when_trailing_stop_updates(monke
 
 def test_decide_and_act_fibonacci_no_action_after_session_end_hour(monkeypatch):
     state = _fib_state(hour_utc=bot.fibonacci_reversion.SESSION_END_HOUR_UTC)
-    monkeypatch.setattr(bot.fibonacci_reversion, "latest_state", lambda candles: state)
+    monkeypatch.setattr(bot.fibonacci_reversion, "latest_state", lambda candles, historical_candles=None: state)
     result = bot.decide_and_act_fibonacci(
         [{"dummy": True}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
         balance=10000, equity=10000, open_positions=[], circuit_breaker=_open_circuit_breaker(),
@@ -969,7 +969,7 @@ def test_decide_and_act_fibonacci_no_action_after_session_end_hour(monkeypatch):
 
 def test_decide_and_act_fibonacci_no_action_when_no_level(monkeypatch):
     state = _fib_state(level=None, bias=None)
-    monkeypatch.setattr(bot.fibonacci_reversion, "latest_state", lambda candles: state)
+    monkeypatch.setattr(bot.fibonacci_reversion, "latest_state", lambda candles, historical_candles=None: state)
     result = bot.decide_and_act_fibonacci(
         [{"dummy": True}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
         balance=10000, equity=10000, open_positions=[], circuit_breaker=_open_circuit_breaker(),
@@ -979,12 +979,22 @@ def test_decide_and_act_fibonacci_no_action_when_no_level(monkeypatch):
 
 def test_decide_and_act_fibonacci_no_action_when_atr_not_positive(monkeypatch):
     state = _fib_state(atr=0.0)
-    monkeypatch.setattr(bot.fibonacci_reversion, "latest_state", lambda candles: state)
+    monkeypatch.setattr(bot.fibonacci_reversion, "latest_state", lambda candles, historical_candles=None: state)
     result = bot.decide_and_act_fibonacci(
         [{"dummy": True}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
         balance=10000, equity=10000, open_positions=[], circuit_breaker=_open_circuit_breaker(),
     )
     assert result == {"action": "aucune", "reason": "atr indisponible"}
+
+
+def test_decide_and_act_fibonacci_no_action_when_trend_strength_unmeasurable(monkeypatch):
+    state = _fib_state(trend_strength=None)
+    monkeypatch.setattr(bot.fibonacci_reversion, "latest_state", lambda candles, historical_candles=None: state)
+    result = bot.decide_and_act_fibonacci(
+        [{"dummy": True}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
+        balance=10000, equity=10000, open_positions=[], circuit_breaker=_open_circuit_breaker(),
+    )
+    assert result == {"action": "aucune", "reason": "historique insuffisant pour mesurer la tendance"}
 
 
 def test_decide_and_act_fibonacci_filtered_by_strong_trend(monkeypatch):
@@ -993,7 +1003,7 @@ def test_decide_and_act_fibonacci_filtered_by_strong_trend(monkeypatch):
     # evaluation de touche/rejet.
     state = _fib_state(close=1981.0, high=1982.0, low=1974.0, level=1980.0, bias="achat",
                         atr=20.0, trend_strength=0.06)
-    monkeypatch.setattr(bot.fibonacci_reversion, "latest_state", lambda candles: state)
+    monkeypatch.setattr(bot.fibonacci_reversion, "latest_state", lambda candles, historical_candles=None: state)
     result = bot.decide_and_act_fibonacci(
         [{"dummy": True}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
         balance=10000, equity=10000, open_positions=[], circuit_breaker=_open_circuit_breaker(),
@@ -1008,7 +1018,7 @@ def test_decide_and_act_fibonacci_no_action_when_level_not_touched(monkeypatch):
     # sens a verifier puisque touched est deja faux). Bougie valide :
     # low(1987) <= close(1990) <= high(1992).
     state = _fib_state(close=1990.0, high=1992.0, low=1987.0, level=1980.0, bias="achat", atr=20.0)
-    monkeypatch.setattr(bot.fibonacci_reversion, "latest_state", lambda candles: state)
+    monkeypatch.setattr(bot.fibonacci_reversion, "latest_state", lambda candles, historical_candles=None: state)
     result = bot.decide_and_act_fibonacci(
         [{"dummy": True}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
         balance=10000, equity=10000, open_positions=[], circuit_breaker=_open_circuit_breaker(),
@@ -1021,7 +1031,7 @@ def test_decide_and_act_fibonacci_opens_achat_with_partial_and_runner_legs(monke
     # 0.3*20=6 (1980-6=1974, 1974<=1974 -> touche), close (1981) > niveau
     # (1980) -> rejet haussier confirme.
     state = _fib_state(close=1981.0, high=1982.0, low=1974.0, level=1980.0, bias="achat", atr=20.0)
-    monkeypatch.setattr(bot.fibonacci_reversion, "latest_state", lambda candles: state)
+    monkeypatch.setattr(bot.fibonacci_reversion, "latest_state", lambda candles, historical_candles=None: state)
     result = bot.decide_and_act_fibonacci(
         [{"dummy": True}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
         balance=10000, equity=10000, open_positions=[], circuit_breaker=_open_circuit_breaker(),
@@ -1049,7 +1059,7 @@ def test_decide_and_act_fibonacci_opens_vente_with_partial_and_runner_legs(monke
     # touche le niveau 1980 avec tolerance 6 (1980+6=1986, 1986>=1986 ->
     # touche), close (1979) < niveau (1980) -> rejet baissier confirme.
     state = _fib_state(close=1979.0, high=1986.0, low=1978.0, level=1980.0, bias="vente", atr=20.0)
-    monkeypatch.setattr(bot.fibonacci_reversion, "latest_state", lambda candles: state)
+    monkeypatch.setattr(bot.fibonacci_reversion, "latest_state", lambda candles, historical_candles=None: state)
     result = bot.decide_and_act_fibonacci(
         [{"dummy": True}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
         balance=10000, equity=10000, open_positions=[], circuit_breaker=_open_circuit_breaker(),
@@ -1071,7 +1081,7 @@ def test_decide_and_act_fibonacci_no_action_when_distance_too_small(monkeypatch)
     # avec le niveau, donc la distance entree-stop est minuscule, sous
     # MIN_DISTANCE_PCT*entry_price (0.002 * ~2000 = 4.0).
     state = _fib_state(close=2000.001, high=2000.002, low=1999.999, level=2000.0, bias="achat", atr=0.0001)
-    monkeypatch.setattr(bot.fibonacci_reversion, "latest_state", lambda candles: state)
+    monkeypatch.setattr(bot.fibonacci_reversion, "latest_state", lambda candles, historical_candles=None: state)
     result = bot.decide_and_act_fibonacci(
         [{"dummy": True}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
         balance=10000, equity=10000, open_positions=[], circuit_breaker=_open_circuit_breaker(),
@@ -1081,7 +1091,7 @@ def test_decide_and_act_fibonacci_no_action_when_distance_too_small(monkeypatch)
 
 def test_decide_and_act_fibonacci_blocked_by_circuit_breaker(monkeypatch):
     state = _fib_state(close=1981.0, high=1982.0, low=1974.0, level=1980.0, bias="achat", atr=20.0)
-    monkeypatch.setattr(bot.fibonacci_reversion, "latest_state", lambda candles: state)
+    monkeypatch.setattr(bot.fibonacci_reversion, "latest_state", lambda candles, historical_candles=None: state)
     from datetime import datetime, timezone
     cb = risk.CircuitBreaker(threshold_pct=0.10, now_fn=lambda: datetime(2026, 9, 10, tzinfo=timezone.utc))
     cb.check(10000)
@@ -1094,7 +1104,7 @@ def test_decide_and_act_fibonacci_blocked_by_circuit_breaker(monkeypatch):
 
 def test_decide_and_act_fibonacci_no_action_when_size_below_minimum(monkeypatch):
     state = _fib_state(close=1981.0, high=1982.0, low=1974.0, level=1980.0, bias="achat", atr=20.0)
-    monkeypatch.setattr(bot.fibonacci_reversion, "latest_state", lambda candles: state)
+    monkeypatch.setattr(bot.fibonacci_reversion, "latest_state", lambda candles, historical_candles=None: state)
     result = bot.decide_and_act_fibonacci(
         [{"dummy": True}], contract_size=100, volume_step=0.01, min_volume=10000.0, max_volume=50000.0,
         balance=10000, equity=10000, open_positions=[], circuit_breaker=_open_circuit_breaker(),
@@ -1114,7 +1124,7 @@ def test_decide_and_act_fibonacci_opens_single_leg_when_partial_too_small(monkey
     # tol = 0.3*28 = 8.4, touched (low=1974 <= 1980+8.4=1988.4) vrai ;
     # rejected (close=1981 > level=1980) vrai.
     state = _fib_state(close=1981.0, high=1982.0, low=1974.0, level=1980.0, bias="achat", atr=28.0)
-    monkeypatch.setattr(bot.fibonacci_reversion, "latest_state", lambda candles: state)
+    monkeypatch.setattr(bot.fibonacci_reversion, "latest_state", lambda candles, historical_candles=None: state)
     result = bot.decide_and_act_fibonacci(
         [{"dummy": True}], contract_size=100, volume_step=0.01, min_volume=0.3, max_volume=500,
         balance=10000, equity=10000, open_positions=[], circuit_breaker=_open_circuit_breaker(),

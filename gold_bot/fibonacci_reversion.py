@@ -6,7 +6,7 @@
 # gold_bot_deepen_fibonacci/, gold_bot_validate_fib_trend_filter/) --
 # copiés tels quels, jamais re-optimisés ici.
 from collections import defaultdict, deque
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 ATR_PERIOD = 14
 TOUCH_ATR_MULT = 0.3
@@ -20,6 +20,7 @@ TREND_WINDOW_DAYS = 20
 TREND_FILTER_THRESHOLD = 0.05
 SESSION_END_HOUR_UTC = 22
 MIN_DISTANCE_PCT = 0.002
+CANDLE_INTERVAL_MINUTES = 5
 
 
 def compute_atr(candles: list[dict], period: int = ATR_PERIOD) -> list[float | None]:
@@ -104,11 +105,36 @@ def daily_trend_strength(candles: list[dict], window_days: int = TREND_WINDOW_DA
     return strength
 
 
-def latest_state(candles: list[dict]) -> dict | None:
+def _trend_strength_for_filter(candles: list[dict], historical_candles: list[dict] | None,
+                                today: str) -> float | None:
+    """Force de tendance a appliquer au filtre des signaux du jour
+    `today` -- celle du dernier jour calendaire COMPLET avant `today`,
+    jamais celle de `today` lui-meme (qui serait calculee sur une
+    journee encore partielle en production, contrairement a la
+    recherche de validation qui taguait chaque signal avec la cloture
+    FINALE de son propre jour -- un lookahead que seul un backtest peut
+    se permettre). `candles` seul (fenetre glissante recente, ~quelques
+    jours) ne couvre jamais TREND_WINDOW_DAYS jours complets a lui
+    seul -- `historical_candles` (fenetre plus large, deja recuperee
+    par gold_bot.loop pour le filtre de cotes historiques de l'autre
+    moteur) est necessaire pour avoir une vraie mesure. None si
+    l'historique fusionne ne couvre pas au moins TREND_WINDOW_DAYS
+    jours complets avant `today` -- un signal sans mesure fiable de la
+    tendance ne doit jamais etre laisse passer sans filtre."""
+    merged = list(historical_candles or []) + list(candles)
+    strength_by_day = daily_trend_strength(merged, window_days=TREND_WINDOW_DAYS)
+    days_before_today = sorted(d for d in strength_by_day if d < today)
+    if len(days_before_today) < TREND_WINDOW_DAYS:
+        return None
+    return strength_by_day[days_before_today[-1]]
+
+
+def latest_state(candles: list[dict], historical_candles: list[dict] | None = None) -> dict | None:
     """État de la dernière bougie : prix, niveau/biais Fibonacci, ATR,
-    force de tendance du jour, heure UTC. None si l'historique est
-    insuffisant pour l'ATR (le niveau Fibonacci, lui, peut être None
-    individuellement -- c'est un état valide, pas une erreur)."""
+    force de tendance du jour (voir _trend_strength_for_filter), heure
+    UTC. None si l'historique est insuffisant pour l'ATR (le niveau
+    Fibonacci, lui, peut être None individuellement -- c'est un état
+    valide, pas une erreur)."""
     if not candles:
         return None
     atr = compute_atr(candles)
@@ -116,14 +142,13 @@ def latest_state(candles: list[dict]) -> dict | None:
     if atr[i] is None:
         return None
     level, bias = levels_fibonacci(candles)
-    strength_by_day = daily_trend_strength(candles)
     c = candles[i]
     t = datetime.strptime(c["time"], "%Y-%m-%d %H:%M:%S").replace(tzinfo=timezone.utc)
-    day = c["time"][:10]
+    today = c["time"][:10]
     return {
         "close": c["close"], "high": c["high"], "low": c["low"],
         "level": level[i], "bias": bias[i], "atr": atr[i],
-        "trend_strength": strength_by_day.get(day, 0.0),
+        "trend_strength": _trend_strength_for_filter(candles, historical_candles, today),
         "hour_utc": t.hour,
     }
 
@@ -141,13 +166,24 @@ def compute_trailing_stop(candles: list[dict], direction: str, entry_time_iso: s
     courant). Ne resserre jamais au-delà du prix d'entrée, ne recule
     jamais."""
     atr = compute_atr(candles)
-    level, _bias = levels_fibonacci(candles)
+    level, bias = levels_fibonacci(candles)
 
+    # Le remplissage reel se produit APRES la cloture de la bougie
+    # signal (quelques secondes a ~1 minute plus tard, pendant la
+    # bougie suivante) -- comparer sur l'heure d'OUVERTURE de chaque
+    # bougie choisirait donc systematiquement la bougie suivante (son
+    # ouverture est <= entry_dt des que le remplissage a eu lieu),
+    # decalant tout d'un cran par rapport a atr[i]/level[i] utilises
+    # par decide_and_act_fibonacci pour calculer CE signal. Comparer
+    # sur l'heure de CLOTURE (ouverture + CANDLE_INTERVAL_MINUTES)
+    # retrouve la bougie signal elle-meme -- trouve en revue finale de
+    # branche, 2026-10-28.
     entry_dt = datetime.fromisoformat(entry_time_iso.replace("Z", "+00:00"))
     entry_idx = None
     for i, c in enumerate(candles):
-        c_dt = datetime.strptime(c["time"], "%Y-%m-%d %H:%M:%S").replace(tzinfo=timezone.utc)
-        if c_dt <= entry_dt:
+        c_close_dt = (datetime.strptime(c["time"], "%Y-%m-%d %H:%M:%S").replace(tzinfo=timezone.utc)
+                      + timedelta(minutes=CANDLE_INTERVAL_MINUTES))
+        if c_close_dt <= entry_dt:
             entry_idx = i
         else:
             break
@@ -156,7 +192,8 @@ def compute_trailing_stop(candles: list[dict], direction: str, entry_time_iso: s
 
     atr_entry = atr[entry_idx]
     entry_level = level[entry_idx]
-    if atr_entry is None or atr_entry <= 0 or entry_level is None:
+    entry_bias = bias[entry_idx]
+    if atr_entry is None or atr_entry <= 0 or entry_level is None or entry_bias != direction:
         return None
 
     initial_stop = (entry_level - STOP_BUFFER_ATR_MULT * atr_entry if direction == "achat"

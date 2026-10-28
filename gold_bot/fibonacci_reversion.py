@@ -118,13 +118,17 @@ def _trend_strength_for_filter(candles: list[dict], historical_candles: list[dic
     seul -- `historical_candles` (fenetre plus large, deja recuperee
     par gold_bot.loop pour le filtre de cotes historiques de l'autre
     moteur) est necessaire pour avoir une vraie mesure. None si
-    l'historique fusionne ne couvre pas au moins TREND_WINDOW_DAYS
-    jours complets avant `today` -- un signal sans mesure fiable de la
-    tendance ne doit jamais etre laisse passer sans filtre."""
+    l'historique fusionne ne couvre pas STRICTEMENT PLUS de
+    TREND_WINDOW_DAYS jours complets avant `today` -- a exactement
+    TREND_WINDOW_DAYS jours, le jour retenu serait lui-meme le tout
+    premier jour mesurable de daily_trend_strength, qui lui renvoie
+    encore son 0.0 par defaut (historique insuffisant), pas une
+    vraie mesure -- un signal sans mesure fiable de la tendance ne
+    doit jamais etre laisse passer sans filtre."""
     merged = list(historical_candles or []) + list(candles)
     strength_by_day = daily_trend_strength(merged, window_days=TREND_WINDOW_DAYS)
     days_before_today = sorted(d for d in strength_by_day if d < today)
-    if len(days_before_today) < TREND_WINDOW_DAYS:
+    if len(days_before_today) <= TREND_WINDOW_DAYS:
         return None
     return strength_by_day[days_before_today[-1]]
 

@@ -8,6 +8,7 @@ from datetime import datetime, timezone
 
 import gold_bot.broker as broker
 import gold_bot.confluence as confluence
+import gold_bot.fibonacci_reversion as fibonacci_reversion
 import gold_bot.macro_signal as macro_signal
 import gold_bot.odds_check as odds_check
 import gold_bot.risk as risk
@@ -328,6 +329,70 @@ def decide_and_act_vwap(candles: list[dict], *, contract_size: float, balance: f
             "entry": entry_price, "stop_loss": stop_loss, "take_profit": None,
         })
     return {"action": "simulation", "steps": steps}
+
+
+def decide_and_act_fibonacci(candles: list[dict], *, contract_size: float, balance: float, equity: float,
+                              volume_step: float, min_volume: float, max_volume: float,
+                              open_positions: list[dict], circuit_breaker: "risk.CircuitBreaker",
+                              symbol: str = "XAUUSD", risk_pct: float = 0.05,
+                              historical_candles: list[dict] | None = None) -> dict:
+    """Moteur de rebond sur retracement de Fibonacci + filtre de force
+    de tendance + stop suiveur ATR -- voir docs/superpowers/specs/
+    2026-10-28-gold-bot-fibonacci-ftmo-design.md. Même contrat
+    d'entrée/sortie à deux jambes (prise partielle + runner) que
+    decide_and_act_vwap, mais moteur de signal différent. `symbol` par
+    défaut XAUUSD -- seul symbole calibré pour ce moteur.
+    `historical_candles` est accepté pour compatibilité d'appel avec
+    gold_bot.loop (même signature que decide_and_act_vwap) mais n'est
+    pas utilisé : le filtre de cotes historiques n'a jamais été validé
+    pour ce moteur, voir le spec (non-objectif explicite)."""
+    circuit_breaker.check(equity)
+
+    state = fibonacci_reversion.latest_state(candles)
+    if state is None:
+        return {"action": "aucune", "reason": "historique insuffisant pour l'ATR/niveau Fibonacci"}
+
+    matching = [p for p in open_positions if p.get("symbol") == symbol]
+    runner_matching = [p for p in matching if not p.get("takeProfit")]
+    partial_matching = [p for p in matching if p.get("takeProfit")]
+
+    if len(runner_matching) > 1 or len(partial_matching) > 1:
+        return {"action": "aucune", "reason": "plusieurs positions ouvertes sur ce symbole, aucune action par prudence"}
+
+    if matching:
+        if state["hour_utc"] >= fibonacci_reversion.SESSION_END_HOUR_UTC:
+            steps = [{"type": "clôture_simulee", "position_id": p.get("id"), "symbol": symbol} for p in matching]
+            return {"action": "simulation", "steps": steps}
+
+        if not runner_matching:
+            return {"action": "aucune", "reason": "jambe partielle seule ouverte, rien a gerer"}
+
+        position = runner_matching[0]
+        raw_type = position.get("type")
+        if raw_type == "POSITION_TYPE_BUY":
+            direction = "achat"
+        elif raw_type == "POSITION_TYPE_SELL":
+            direction = "vente"
+        else:
+            return {"action": "aucune", "reason": "position de type inattendu, aucune action par prudence"}
+
+        entry_price = position.get("openPrice")
+        current_stop_loss = position.get("stopLoss")
+        entry_time_iso = position.get("time")
+        if entry_price is None or current_stop_loss is None or entry_time_iso is None:
+            return {"action": "aucune", "reason": "champs de position manquants, aucune action par prudence"}
+
+        new_stop = fibonacci_reversion.compute_trailing_stop(
+            candles, direction, entry_time_iso, entry_price, current_stop_loss)
+        if new_stop is None:
+            return {"action": "aucune", "reason": "position ouverte, pas de mise a jour du stop suiveur"}
+
+        return {"action": "simulation", "steps": [{
+            "type": "modification_simulee", "position_id": position.get("id"), "symbol": symbol,
+            "new_stop_loss": new_stop,
+        }]}
+
+    return {"action": "aucune", "reason": "pas de signal d'entree"}
 
 
 def reconcile_positions(token: str, account_id: str, region: str = broker.DEFAULT_MT5_REGION) -> list[dict]:

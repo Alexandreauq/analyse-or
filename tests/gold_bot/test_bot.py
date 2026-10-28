@@ -1,7 +1,6 @@
 import pytest
 import gold_bot.bot as bot
 import gold_bot.risk as risk
-import gold_bot.fibonacci_reversion as fib_reversion
 
 
 def _signal(status, entry=None, stop_loss=None, take_profit=None):
@@ -959,7 +958,7 @@ def test_decide_and_act_fibonacci_modifies_stop_when_trailing_stop_updates(monke
 
 
 def test_decide_and_act_fibonacci_no_action_after_session_end_hour(monkeypatch):
-    state = _fib_state(hour_utc=fib_reversion.SESSION_END_HOUR_UTC)
+    state = _fib_state(hour_utc=bot.fibonacci_reversion.SESSION_END_HOUR_UTC)
     monkeypatch.setattr(bot.fibonacci_reversion, "latest_state", lambda candles: state)
     result = bot.decide_and_act_fibonacci(
         [{"dummy": True}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,

@@ -2,7 +2,7 @@
   "date": "2026-10-28",
   "commodity": "gaz",
   "label": "Gaz naturel",
-  "composite_score": -13.8,
+  "composite_score": -14.8,
   "interpretation": "Neutre — pas d'action",
   "cftc_percentile": 1.282051282051282,
   "factors": [
@@ -20,15 +20,15 @@
     },
     {
       "name": "Dynamique récente",
-      "score": -1.520743956892008,
+      "score": -1.8733323524184922,
       "weight": 0.26666666666666666,
-      "raw_value": "-0.8% vs MM200"
+      "raw_value": "-0.9% vs MM200"
     },
     {
       "name": "Dollar (DXY)",
       "score": -10,
       "weight": 0.13333333333333333,
-      "raw_value": "102.37 (il y a 2 mois : 99.16)"
+      "raw_value": "102.38 (il y a 2 mois : 99.70)"
     },
     {
       "name": "Stocks EIA",
@@ -38,9 +38,9 @@
     }
   ],
   "technical": {
-    "note": "Cours proche de la MM200 (-0.8%) — zone de décision",
-    "spot": 3.055999994277954,
-    "ma200": 3.0794150030612943,
+    "note": "Cours proche de la MM200 (-0.9%) — zone de décision",
+    "spot": 3.046999931335449,
+    "ma200": 3.0758100032806395,
     "unite": "$ / MMBtu"
   },
   "calendar": [
@@ -88,6 +88,24 @@
   "alerts": [],
   "news": [
     {
+      "title": "Les prix du gaz naturel en Europe s'envolent : quel impact sur vos factures d'hiver - Euronews.com",
+      "date": "2026-10-27",
+      "link": "https://news.google.com/rss/articles/CBMitAFBVV95cUxNUlJtRHJWZS1uVmZiZUxKWkNrVXBvT1M2c01MRDNPUlBZZWhwbnNRTzRLd1N6eFRNY05NTlNkd1JpTnh0OXBOUzcyMzdSTkpiRzJwdjAwNjUtNnRBNm81X2hrdGVDaUVTRm5MMXhKYlh2eVdNRV9rWGdwZGZBSGg4UHZVX01zREhWdWRqMkQyTGpVU1U2aGhmWjFaeG5CUEJsUnlTWkV4MzJacDFVeUgtRnlVYjA?oc=5",
+      "source": "Euronews.com",
+      "summary": "",
+      "sentiment": 0,
+      "importance": "mineure"
+    },
+    {
+      "title": "Énergie -Le prix repère de vente de gaz va augmenter de 6,6 % en novembre - Service Public",
+      "date": "2026-10-12",
+      "link": "https://news.google.com/rss/articles/CBMic0FVX3lxTE1aLXB2OUQ5dWpLU3R0OHRqeXlrb3RwdXByenR5aTY5Y0tKa0xEZGdhVElrWjVZUzVjd3hlVkVjdmY0aE1oMnpTd01XZC1wbk1oY3FickFLVkxyY2dwSTJTbXdBc3lpUkMtZ25FbGVjRHR1aXc?oc=5",
+      "source": "Service Public",
+      "summary": "",
+      "sentiment": 0,
+      "importance": "mineure"
+    },
+    {
       "title": "Prix du gaz : une nouvelle hausse au 1er novembre - Effy | Rénovation énergétique",
       "date": "2026-10-26",
       "link": "https://news.google.com/rss/articles/CBMiggFBVV95cUxOZzN6WjUtYkpnRzRrMlJZamNfekRyMk0wQU1lWmZDNFpRRzJvTFRJSEs5X0hjcE9rWnpDbThRMjVaYlRTdDJJa0RMM0pLY1hIOEFONzBLM285YWplRWIybzg4bFVtdVV0ZmF4dVAzNWdPUUkwemJiS1Q5VWx4Z3pLRnl3?oc=5",
@@ -97,37 +115,19 @@
       "importance": "mineure"
     },
     {
-      "title": "EQT va racheter Range Resources dans le cadre d'une opération de 13 milliards de dollars visant à créer le pre - Boursorama",
-      "date": "2026-10-26",
-      "link": "https://news.google.com/rss/articles/CBMizgJBVV95cUxNVVZvZWZ6UVBnUXN6VFZJVkdiRy0zZTZLQ2RwaU9FV3EyM0JyT1U5aUVlR3dWdXRJc0dfa0tjSDNKRG54MndYaXpocTR0UGo0N0ZwaTdaZmp4TlI5aVhiZFFUZUhOdVNrY3BUMmFvNnhRM2xtVVlTa2x2S0REQnc4bG5CaG94T09GbkRxamtJdVJNc3ZhOHdYSzZ4R1NWbHZMeDQ4NEFIaVBIbkhnaUNWX3dZRmFacTJQUW10UlhIQXhxaFpPdTJoMXFFelF6WXJLTHZSdnpoUlllQUJUR2dNQkh0dTBocFJ4VjkzQjZJQ0ZQa2pnRU5URXlhSHJmR29oZGtyYXExSk1TMGVldFRUR2NnNGM5SFFhUTJjLTZZZ1RUTC1FamxNSUo2MDByckY4RXNJbE5McXVoTmtxZDBlSGRJTUVDVWlobVA4UUtB0gHOAkFVX3lxTE1VVm9lZnpRUGdRc3pUVklWR2JHLTNlNktDZHBpT0VXcTIzQnJPVTlpRWVHd1Z1dElzR19rS2NIM0pEbngyd1hpemhxNHRQajQ3RnBpN1pmanhOUjlpWGJkUVRlSE51U2tjcFQyYW82eFEzbG1VWVNrbHZLRERCdzhsbkJob3hPT0ZuRHFqa0l1Uk1zdmE4d1hLNnhHU1Zsdkx4NDg0QUhpUEhuSGdpQ1Zfd1lGYVpxMlBRbXRSWEhBeHFoWk91MmgxcUV6UXpZcktMdlJ2emhSWWVBQlRHZ01CSHR1MGhwUnhWOTNCNklDRlBramdFTlRFeWFIcmZHb2hka3JhcTFKTVMwZWV0VFRHY2c0YzlIUWFRMmMtNllnVFRMLUVqbE1JSjYwMHJyRjhFc0lsTkxxdWhOa3FkMGVIZElNRUNVaWhtUDhRS0E?oc=5",
-      "source": "Boursorama",
+      "title": "Gaz et pétrole : l’Insee mesure une forte hausse des cours en septembre 2026 - L'Energeek",
+      "date": "2026-10-27",
+      "link": "https://news.google.com/rss/articles/CBMioAFBVV95cUxNN3dsNTFsM1lpTnZkNHVZMlplaEc1YTFfa1VrOE5PZUE5cmU2N3oyc3lUd1hJaGJGQnE5dmV6SFJVcGdUaW9EazliRnlBMTBTTy11bXc1SUU5QlZRZkl0aTdLWWtwRXQzRW9IZjVBVEZhVjJfMlVJTWptUzNEMmhaZjRnUnRJaG9HTXpDbmRUMzhzeVQ3eE43ajl4U1NtZHU3?oc=5",
+      "source": "L'Energeek",
       "summary": "",
       "sentiment": 0,
       "importance": "mineure"
     },
     {
-      "title": "Les prix du gaz naturel en Europe atteignent leur plus haut niveau depuis 2022 - Business AM",
-      "date": "2026-10-26",
-      "link": "https://news.google.com/rss/articles/CBMipwFBVV95cUxNYndHMjF6VXZ5RUZINmhYZzVJWXlNMmRvZzM5VUZ3UFBoOFprczZmWWR2SmV4WEYwZkdvZHY2bV90bmdYSzJobk9uMmhvUWhDRkp3bF9mUmJOc0lkN25NTGpWaUYyelpLX2RnTkEzTzdlSnQ0QnE4ZTdTLWNib0R1bGxxVXZNSnphbTM2V2R2cXV4MkJHYk94bFBzYm9qZWg0NmNMQTBVbw?oc=5",
-      "source": "Business AM",
-      "summary": "",
-      "sentiment": 0,
-      "importance": "mineure"
-    },
-    {
-      "title": "Le prix repère de vente de gaz augmente de 6,3 % TTC au 1er octobre 2026 - Commission de régulation de l'énergie | CRE",
-      "date": "2026-10-22",
-      "link": "https://news.google.com/rss/articles/CBMivgFBVV95cUxPdGFsRjJLNmcwY2JHYUNnQzNuS0NKLWhNX2MyOWViMERabnRaYXNNQVNFSnpRUXN6WWIyNng1UHNScXpXcnBTcGllMVhQbWlwS0lSd3hZdjZMTU5YYkxCNnBIM054Z00yVURGZjVGMWVNSFM0Q2FsdEZTeTVzRDNkbTRhbUJrb2ZPcUdFSUdkcERhdURjMnQyRG1mVWVQbV9vdENBVjdQSHRDZzhGM3dpQWRnc0ZNMTFMVkZOWGpB?oc=5",
-      "source": "Commission de régulation de l'énergie | CRE",
-      "summary": "Cet article suggère que la Commission de régulation de l'énergie a décidé d'augmenter le prix de référence de vente du gaz naturel de 6,3 % TTC à partir du 1er octobre 2026, ce qui pourrait affecter les tarifs réglementés en France.",
-      "sentiment": -1,
-      "importance": "notable"
-    },
-    {
-      "title": "Les prix du gaz en Europe au plus haut depuis 2022 - azərtac",
-      "date": "2026-10-26",
-      "link": "https://news.google.com/rss/articles/CBMijwFBVV95cUxPZG1oWkV4TmVleHJqa19rWl9QY1hXYVdFd2w3aElzSDhZVm1jY3AybkpSM1pDM21MV2pYRWV4cUhyNllHc0x0SWxJUkdpRHVVQ19sYTlEdklTdlNGNHdYeDI2WDlyTmZKa1psQ1RqMEVGSnpEWmtkX19EWkV4OEtaVjEzZC1yeFhpU3pBTXJwcw?oc=5",
-      "source": "azərtac",
+      "title": "Novembre 2026 : augmentation de 6,6% TTC du prix repère du gaz - énergie-info",
+      "date": "2026-10-12",
+      "link": "https://news.google.com/rss/articles/CBMikAFBVV95cUxNRU1YT2NhNnNsYW40aTFtME5qYUphaThpWm1KbVkyVUI1czE0S0cweXUtdG5rbWUzVUFTZlBaVXhoZXhUclZva3hRWGl5V3JteEs2cDYzMTVSQXdkLWh3VVpZTnFuQ19Pem9XSkNsOEl6cWZ4dzVUWDMzLS1may16NnpNV2dlVkVUbDUyZGIxMEc?oc=5",
+      "source": "énergie-info",
       "summary": "",
       "sentiment": 0,
       "importance": "mineure"
@@ -135,27 +135,27 @@
   ],
   "analysis_html": "<h3>Contexte récent</h3><p>Le gaz naturel américain s'échange autour de <strong>3,10 $/MMBtu</strong> sur le Henry Hub, soit environ 11 % en dessous de la moyenne saisonnière du mois (3,48 $/MMBtu) et <strong>2,6 % sous sa moyenne mobile 200 jours</strong>. Le score composite ressort légèrement négatif (de l'ordre de <strong>-2,6</strong> une fois les pondérations appliquées), le signal saisonnier défavorable et la force du dollar l'emportant sur un positionnement spéculatif extrêmement déprimé. Le contraste est marqué avec l'Europe, où les cotations TTF évoluent sur des niveaux de tension élevés.</p><h3>Facteurs déterminants</h3><ul><li><strong>Saisonnalité (poids 33 %, score -7,6)</strong> : c'est le facteur le plus lourd du composite et il tire franchement vers le bas. Le prix spot se situe nettement sous la référence saisonnière du mois, ce qui traduit une demande ou un équilibre offre/demande moins porteur que ce que la période impliquerait habituellement.</li><li><strong>Dollar / DXY (poids 13 %, score -10,0)</strong> : avec un indice passé de 99,17 à <strong>101,89</strong> en deux mois, le billet vert s'est nettement apprécié. Ce facteur obtient le score le plus négatif de la grille : un dollar fort renchérit mécaniquement les matières premières libellées en USD pour les acheteurs étrangers et pèse sur la demande exportatrice.</li><li><strong>Dynamique récente (poids 27 %, score -5,3)</strong> : le prix évolue sous sa moyenne mobile 200 jours, confirmant une tendance de fond orientée à la baisse, sans excès toutefois (écart limité à -2,6 %).</li><li><strong>Positionnement CFTC (poids 27 %, score +9,7)</strong> : seul contributeur positif, et il est puissant. Avec une position nette de <strong>-157 409 contrats</strong>, située dans le <strong>1<sup>er</sup> percentile sur trois ans</strong>, le pessimisme des opérateurs non commerciaux est historiquement extrême. Ce type de configuration est lu comme un facteur de soutien à contre-courant : l'essentiel du flux vendeur paraît déjà en place.</li><li><strong>Stocks EIA (poids 0 %)</strong> : donnée indisponible faute de clé API configurée. L'absence de ce pilier fondamental laisse le composite reposer sur les seuls facteurs de prix, de positionnement et de change, ce qui réduit sa capacité à arbitrer entre un marché réellement excédentaire et un simple creux saisonnier.</li></ul><h3>Actualités à retenir</h3><ul><li><strong>Prix du gaz européen au plus haut depuis 2022</strong> (Anadolu Ajansı) et <strong>TTF à 97 €/MWh sur fond de craintes autour du détroit d'Ormuz</strong> (L'Echo) : ces deux éléments décrivent une tension sur le marché européen, de nature géopolitique et logistique. Ils ne sont pas intégrés au score, construit sur le Henry Hub, et illustrent la <strong>déconnexion actuelle entre les deux bassins</strong> : prix américain sous sa norme saisonnière d'un côté, prime de risque européenne de l'autre. À la marge, une demande européenne soutenue constitue un facteur de soutien potentiel pour les exportations de GNL américain, ce qui va dans le sens du signal contrarien du positionnement CFTC.</li><li><strong>Hausse du prix repère de vente du gaz en France : +6,3 % TTC au 1<sup>er</sup> octobre 2026</strong> (CRE) puis <strong>+6,6 % TTC en novembre 2026</strong> (énergie-info) : ces révisions tarifaires réglementées confirment la transmission de la tension européenne aux prix de détail. Elles relèvent du marché aval français et n'influencent pas directement les composantes du score.</li><li><strong>Changements réglementaires de novembre 2026</strong> (Journal du Geek, actualité mineure) : contexte fiscal et réglementaire français, sans portée sur l'équilibre fondamental du Henry Hub.</li></ul><h3>Synthèse</h3><p>Le composite est modérément négatif, résultat d'une opposition nette entre deux blocs. D'un côté, la <strong>saisonnalité décevante, la tendance sous la MM200 et un dollar en appréciation</strong> — qui cumulent 73 % du poids — pèsent sur le score. De l'autre, un <strong>positionnement spéculatif dans le 1<sup>er</sup> percentile à trois ans</strong> signale un marché déjà massivement vendeur, configuration historiquement associée à une asymétrie des risques. Les actualités européennes, marquées par la prime géopolitique liée à Ormuz et des prix TTF au plus haut depuis 2022, ne se reflètent pas dans le prix américain et rappellent la segmentation des marchés régionaux. L'absence de données de stocks EIA constitue la principale lacune de cette lecture : sa réintégration permettrait de trancher entre un déséquilibre fondamental durable et un simple décalage saisonnier.</p>",
   "news_classifications": {
+    "https://news.google.com/rss/articles/CBMitAFBVV95cUxNUlJtRHJWZS1uVmZiZUxKWkNrVXBvT1M2c01MRDNPUlBZZWhwbnNRTzRLd1N6eFRNY05NTlNkd1JpTnh0OXBOUzcyMzdSTkpiRzJwdjAwNjUtNnRBNm81X2hrdGVDaUVTRm5MMXhKYlh2eVdNRV9rWGdwZGZBSGg4UHZVX01zREhWdWRqMkQyTGpVU1U2aGhmWjFaeG5CUEJsUnlTWkV4MzJacDFVeUgtRnlVYjA?oc=5": {
+      "summary": "",
+      "sentiment": 0,
+      "importance": "mineure"
+    },
+    "https://news.google.com/rss/articles/CBMic0FVX3lxTE1aLXB2OUQ5dWpLU3R0OHRqeXlrb3RwdXByenR5aTY5Y0tKa0xEZGdhVElrWjVZUzVjd3hlVkVjdmY0aE1oMnpTd01XZC1wbk1oY3FickFLVkxyY2dwSTJTbXdBc3lpUkMtZ25FbGVjRHR1aXc?oc=5": {
+      "summary": "",
+      "sentiment": 0,
+      "importance": "mineure"
+    },
     "https://news.google.com/rss/articles/CBMiggFBVV95cUxOZzN6WjUtYkpnRzRrMlJZamNfekRyMk0wQU1lWmZDNFpRRzJvTFRJSEs5X0hjcE9rWnpDbThRMjVaYlRTdDJJa0RMM0pLY1hIOEFONzBLM285YWplRWIybzg4bFVtdVV0ZmF4dVAzNWdPUUkwemJiS1Q5VWx4Z3pLRnl3?oc=5": {
       "summary": "",
       "sentiment": 0,
       "importance": "mineure"
     },
-    "https://news.google.com/rss/articles/CBMizgJBVV95cUxNVVZvZWZ6UVBnUXN6VFZJVkdiRy0zZTZLQ2RwaU9FV3EyM0JyT1U5aUVlR3dWdXRJc0dfa0tjSDNKRG54MndYaXpocTR0UGo0N0ZwaTdaZmp4TlI5aVhiZFFUZUhOdVNrY3BUMmFvNnhRM2xtVVlTa2x2S0REQnc4bG5CaG94T09GbkRxamtJdVJNc3ZhOHdYSzZ4R1NWbHZMeDQ4NEFIaVBIbkhnaUNWX3dZRmFacTJQUW10UlhIQXhxaFpPdTJoMXFFelF6WXJLTHZSdnpoUlllQUJUR2dNQkh0dTBocFJ4VjkzQjZJQ0ZQa2pnRU5URXlhSHJmR29oZGtyYXExSk1TMGVldFRUR2NnNGM5SFFhUTJjLTZZZ1RUTC1FamxNSUo2MDByckY4RXNJbE5McXVoTmtxZDBlSGRJTUVDVWlobVA4UUtB0gHOAkFVX3lxTE1VVm9lZnpRUGdRc3pUVklWR2JHLTNlNktDZHBpT0VXcTIzQnJPVTlpRWVHd1Z1dElzR19rS2NIM0pEbngyd1hpemhxNHRQajQ3RnBpN1pmanhOUjlpWGJkUVRlSE51U2tjcFQyYW82eFEzbG1VWVNrbHZLRERCdzhsbkJob3hPT0ZuRHFqa0l1Uk1zdmE4d1hLNnhHU1Zsdkx4NDg0QUhpUEhuSGdpQ1Zfd1lGYVpxMlBRbXRSWEhBeHFoWk91MmgxcUV6UXpZcktMdlJ2emhSWWVBQlRHZ01CSHR1MGhwUnhWOTNCNklDRlBramdFTlRFeWFIcmZHb2hka3JhcTFKTVMwZWV0VFRHY2c0YzlIUWFRMmMtNllnVFRMLUVqbE1JSjYwMHJyRjhFc0lsTkxxdWhOa3FkMGVIZElNRUNVaWhtUDhRS0E?oc=5": {
+    "https://news.google.com/rss/articles/CBMioAFBVV95cUxNN3dsNTFsM1lpTnZkNHVZMlplaEc1YTFfa1VrOE5PZUE5cmU2N3oyc3lUd1hJaGJGQnE5dmV6SFJVcGdUaW9EazliRnlBMTBTTy11bXc1SUU5QlZRZkl0aTdLWWtwRXQzRW9IZjVBVEZhVjJfMlVJTWptUzNEMmhaZjRnUnRJaG9HTXpDbmRUMzhzeVQ3eE43ajl4U1NtZHU3?oc=5": {
       "summary": "",
       "sentiment": 0,
       "importance": "mineure"
     },
-    "https://news.google.com/rss/articles/CBMipwFBVV95cUxNYndHMjF6VXZ5RUZINmhYZzVJWXlNMmRvZzM5VUZ3UFBoOFprczZmWWR2SmV4WEYwZkdvZHY2bV90bmdYSzJobk9uMmhvUWhDRkp3bF9mUmJOc0lkN25NTGpWaUYyelpLX2RnTkEzTzdlSnQ0QnE4ZTdTLWNib0R1bGxxVXZNSnphbTM2V2R2cXV4MkJHYk94bFBzYm9qZWg0NmNMQTBVbw?oc=5": {
-      "summary": "",
-      "sentiment": 0,
-      "importance": "mineure"
-    },
-    "https://news.google.com/rss/articles/CBMivgFBVV95cUxPdGFsRjJLNmcwY2JHYUNnQzNuS0NKLWhNX2MyOWViMERabnRaYXNNQVNFSnpRUXN6WWIyNng1UHNScXpXcnBTcGllMVhQbWlwS0lSd3hZdjZMTU5YYkxCNnBIM054Z00yVURGZjVGMWVNSFM0Q2FsdEZTeTVzRDNkbTRhbUJrb2ZPcUdFSUdkcERhdURjMnQyRG1mVWVQbV9vdENBVjdQSHRDZzhGM3dpQWRnc0ZNMTFMVkZOWGpB?oc=5": {
-      "summary": "Cet article suggère que la Commission de régulation de l'énergie a décidé d'augmenter le prix de référence de vente du gaz naturel de 6,3 % TTC à partir du 1er octobre 2026, ce qui pourrait affecter les tarifs réglementés en France.",
-      "sentiment": -1,
-      "importance": "notable"
-    },
-    "https://news.google.com/rss/articles/CBMijwFBVV95cUxPZG1oWkV4TmVleHJqa19rWl9QY1hXYVdFd2w3aElzSDhZVm1jY3AybkpSM1pDM21MV2pYRWV4cUhyNllHc0x0SWxJUkdpRHVVQ19sYTlEdklTdlNGNHdYeDI2WDlyTmZKa1psQ1RqMEVGSnpEWmtkX19EWkV4OEtaVjEzZC1yeFhpU3pBTXJwcw?oc=5": {
+    "https://news.google.com/rss/articles/CBMikAFBVV95cUxNRU1YT2NhNnNsYW40aTFtME5qYUphaThpWm1KbVkyVUI1czE0S0cweXUtdG5rbWUzVUFTZlBaVXhoZXhUclZva3hRWGl5V3JteEs2cDYzMTVSQXdkLWh3VVpZTnFuQ19Pem9XSkNsOEl6cWZ4dzVUWDMzLS1may16NnpNV2dlVkVUbDUyZGIxMEc?oc=5": {
       "summary": "",
       "sentiment": 0,
       "importance": "mineure"

@@ -2,7 +2,7 @@
   "date": "2026-10-28",
   "commodity": "argent",
   "label": "Argent",
-  "composite_score": -32.0,
+  "composite_score": -31.9,
   "interpretation": "Défavorable — pas d'entrée même sur signal technique",
   "cftc_percentile": 3.8461538461538463,
   "factors": [
@@ -16,7 +16,7 @@
       "name": "Dollar (DXY)",
       "score": -10,
       "weight": 0.2,
-      "raw_value": "102.37 (il y a 2 mois : 99.16)"
+      "raw_value": "102.38 (il y a 2 mois : 99.70)"
     },
     {
       "name": "Positionnement CFTC",
@@ -26,21 +26,21 @@
     },
     {
       "name": "Ratio or/argent",
-      "score": -4.889380530973452,
+      "score": -4.845132743362832,
       "weight": 0.25,
-      "raw_value": "75.0 — 26e percentile (3 ans)"
+      "raw_value": "75.5 — 26e percentile (3 ans)"
     },
     {
       "name": "Dynamique récente",
       "score": -10.0,
       "weight": 0.1,
-      "raw_value": "-24.2% vs MM200"
+      "raw_value": "-24.4% vs MM200"
     }
   ],
   "technical": {
-    "note": "Cours en-dessous de la MM200 (-24.2%) — tendance baissière",
-    "spot": 54.15999984741211,
-    "ma200": 71.41423988342285,
+    "note": "Cours en-dessous de la MM200 (-24.4%) — tendance baissière",
+    "spot": 53.900001525878906,
+    "ma200": 71.26135488510131,
     "unite": "$ / oz"
   },
   "calendar": [
@@ -97,37 +97,37 @@
       "importance": "mineure"
     },
     {
-      "title": "Or vs argent : quelles perspectives pour 2027 ? - Le Comptoir National de l'Or",
-      "date": "2026-10-21",
-      "link": "https://news.google.com/rss/articles/CBMihwFBVV95cUxOd1ZnSXdQV2lfWGRPMGJveWZBLU15aldGZEs3R0VoTU94UVlFLVdCd294eFljTmczSHA0QktyZ2FhLUxEeWZwaXgyclNmRzRBVkJ4czFFZVZ2dmRlS0VmeXg1anFMVXI1cGNzQjh6R241YUhickl4aEowbWFEbWM2TjVQQXhXMHfSAYwBQVVfeXFMT2dPd0VjdHVkTGVscXprUFU4RWFIdHVOaTdvYzFHdXh5UFZsQnpxc2Q4emZkOWVXUDc5RWJPUGdzQXBsMkx3RURjT0laQUZCMnM0R2NUQ2VmdjVmNzI4OGNSRkpBS3h6a2x2THBITVhlMDdPelJyRUxMMnhMSUxCcHdpekxLTUdGWnJWNWw?oc=5",
+      "title": "Pourquoi, malgré une correction à la baisse, le marché de l'argent se maintient à des niveaux élevés? - RFI",
+      "date": "2026-09-24",
+      "link": "https://news.google.com/rss/articles/CBMitgJBVV95cUxQRlZNeG9jaEZLQXY1TXl5b0dUZktCcDFSbTBMZi1jY3FGSU11Z3Q1UzdFTWFQTEp2a0wzWll3TkNoR1ZFR3ZHMjJnSk5iWlV4TVNhdjhHVzZlb3M5M1FyZjRyUnVJaktkS3BtWnNjZURsRWxmaVZaMVlFSjNfYi0xWWQ2aVQtVHVaTzE0QkNxQ2RTUi11MmpncGhld0dZNXFaM2I1bXpXYnp0WEg1N1ZfSmxJdHdMdldsQTItSGR4ZmhqODk0MVpBbC1LRl9xWndqTl9hMGpxSF9RRTU0bkJrVDB4WFJyOS1xaEQyWmtQcXFnTkw5dG5RWEFVcnNuZVplTFRIUzVnUTRIN1NuemVUN2xkdzVSVDRfbHdrQUpGRG1ab0VWLUNMT3NTd3luRThDV1M3RHFn?oc=5",
+      "source": "RFI",
+      "summary": "",
+      "sentiment": 0,
+      "importance": "mineure"
+    },
+    {
+      "title": "Cours de l'argent le 28 octobre : Les cours mondiaux de l'argent ont légèrement augmenté, les cours nationaux sont restés inchangés. - Vietnam.vn",
+      "date": "2026-10-28",
+      "link": "https://news.google.com/rss/articles/CBMilAFBVV95cUxPSjEzNHQ1bVNRdjJJX2FuVEFEUE0zbzJoc1RjOV9zTEJOVktueldEb0lmWHRkMHRVdFdfNy1FUlViUTh0X3NzYzA5TWJZMTdFcXdyVzFIU05OT2NCQy1NV0J0ZWJyczRmZGZGVUQ1NzRSX09VM3FfQjZYSUt1dm5STC1nR3NfMGNjb0NydEhaOFAwcFk2?oc=5",
+      "source": "Vietnam.vn",
+      "summary": "",
+      "sentiment": 0,
+      "importance": "mineure"
+    },
+    {
+      "title": "Cours de l’argent : pourquoi de telles variations ? - Le Comptoir National de l'Or",
+      "date": "2026-02-11",
+      "link": "https://news.google.com/rss/articles/CBMiiwFBVV95cUxQSG5SU1oxV0NCYTVtMjNkc0tXYXk0cXRzV3N5dWRBbnU2bkszZktoTHJ3RW1SaFM0OWliczFPZ0lwclVxR3JOZ2NQSE5LTHdHRWNEOHhiZThpQ1Z1UlM5a0ZsYTAwNVpOUGcyZkFHZWNRdUJuTzR2cFZ6cThrTTZFSXZPZUVyY2hoVjdN0gGQAUFVX3lxTE5jZ29TNzhEX2E0LXc3Xy11MnVZNml0b0ZVX3VjRTF1X09oenBsb1NrcHRPRS1yMXJpdU53U0I2T2tfZGZEeThzWGZJeG1veU05NkRmWjBHMW9RSVpNZFd1a2l0ZDhOTk13bGo0ZElGd2tqYUhxeVJDa3Q0WEtfUmI1ZGY3bnZhcjFZclhLZk5jcQ?oc=5",
       "source": "Le Comptoir National de l'Or",
-      "summary": "Cet article suggère que le Comptoir National de l'Or propose une analyse comparative des perspectives d'évolution de l'or et de l'argent jusqu'en 2027, sans que le titre seul ne permette de déterminer les conclusions ou recommandations spécifiques de cette comparaison.",
+      "summary": "",
       "sentiment": 0,
       "importance": "mineure"
     },
     {
-      "title": "Prévisions du cours de l’argent pour 2026, 2027, 2028–2030 et au-delà - LiteFinance",
-      "date": "2026-10-22",
-      "link": "https://news.google.com/rss/articles/CBMiggFBVV95cUxQMzJNaUdZQlVJajk1cHlxaTdsN3FaS1IwRUxzcXR3OGhWVFJLMTBOc1ZwcUE2OHN6aVNPaFpJX1FIampDakphX0UtXzhfdm9IVDNYVVlNYTFhcHQtSEpCcENzVi1Ib0dxOGM0SlFxNHJVWjV5ejRHWEgzVDBiNkxudkJn?oc=5",
-      "source": "LiteFinance",
-      "summary": "Cet article suggère que la plateforme LiteFinance propose une analyse prospective des tendances du cours de l'argent sur plusieurs années, sans que le contenu permette de confirmer l'orientation ou la fiabilité de ces prévisions.",
-      "sentiment": 0,
-      "importance": "mineure"
-    },
-    {
-      "title": "Cours de l’argent aujourd’hui : le métal recule, selon les données de FXStreet - www.tmgm.com",
-      "date": "2026-10-23",
-      "link": "https://news.google.com/rss/articles/CBMiwgFBVV95cUxQMW9YTUhmS2Q3SzhOZ2diUUxQNGRUd0JQbXpvbjB1QzBseHRrckpIMDgzRHhGQi1LVDFzN0RCUzJQYlItcENkZWhOTnVyWERZazdITHJ4ejlwa1dkVEtEOEN2V1lVX1hJRUN3QTJZcHAtQkxVWm5nT3k1NDYyTGJXSjdHbGlJbFRHUlNHalBvM0MtemZQSGtLbldSRWViLXFUUXI3ZHk3VFFjQ3J0OXlhZHZvUXZ5THEtMFkzdE5WMEZCQQ?oc=5",
-      "source": "www.tmgm.com",
-      "summary": "Cet article suggère que le prix de l'argent connaît une phase de repli à la séance actuelle selon les données de marché de FXStreet.",
-      "sentiment": -1,
-      "importance": "mineure"
-    },
-    {
-      "title": "Les actions des sociétés minières d'argent reculent alors que les cours des métaux s'affaiblissent légèrement - Boursorama",
-      "date": "2026-10-07",
-      "link": "https://news.google.com/rss/articles/CBMiyAJBVV95cUxPRDJMNHh0R0NxSlN5WnBncHRLTFYxMEIzdUtTUHdpMmdkb01EOVBXQ0RPVGNBbW5lVDVIbjI5STlhZ3liSVFnNXpCUnJZaHJrMmV4bkJCQ01EYzNjLTY1LTRUclFYdkhHU0hMNzV5WXV1RTZlWGhPa0UxX2t3RUU5S2l3WWZmU0hsNjVkUHpHOTRPa3RWWFIyV0FLMnJwSk1sQXhFaWZwRVpBbU04bHZhUFZ2M0ZLZUdoM1BjSW1FM3dWb3BLQ196OWs2cTVPVVlOUkpNVlhlWFZUQVd5V2tKd0dBYnQ3ZUZ1NnhSbUNPLWtqcXJKMmhwRFNiM3lLalVhbFFsaUxzZnNNM1FxSzkySy04M21CNEs5dXNhX0RQYjRwNmZ1VnlTQ092MnBvc3V6TFBwdFpUeTdxM3FHdi1PTjJfRENxS24w0gHOAkFVX3lxTE81V0hOQWdYSmFUeElnQldBSXBSdnpvOWVpWFlXUG12ZTFXTjYyR0hlaWlnVGV5S1pNeGRWZXBrdmNYMVctbFBWb3E2MzBaa1dIbXRRbGxGa0VHMF85OWVZZzROUFpoZ0JvVmVOY09nTGtMaF9rM3F4SWE2Q05GT0ZudkhKQTFXdVpFbm5rREh3M2w1M3BweFp2TFJsMFdFaTdfaWJjbzVUUGFwM0Z4NTNtVEpxbWl5dlFpa1M4SnVWSXQ5VUsyRHFwRTJ0ZHc1ZG94bC1UTnRJTnZkOEVrTkRkQkY2eEpJZ05tVGx2cVg5b2gwcTQyUHVOMkJrSU14aE52LWZIU0ZJMGJjRktITTdvNWdPeThUWEJwN20xRWhHVVliOTl5ZU54eTdtcHFCX3psX0l6YTY3MUxqUEE0Q0hMZ1BvRndxN0QxZVpnVFE?oc=5",
-      "source": "Boursorama",
+      "title": "« La remonétisation de l'argent est en cours » - Boursier.com",
+      "date": "2026-01-14",
+      "link": "https://news.google.com/rss/articles/CBMirwFBVV95cUxPNkh2Q3hCd2ZiQ1FhTnB1eGtnbzVsNzAwdnE4VE1XWlA0WnY5MkxUMjZrT0NFWGR1X1BhRmp1TG5qd0JPS0FDOHctS1NoT0F3NEk4dVVKNkFzbWtBc0szV3BYazh1ZXNxU2hEZS1lY3FoWHIyTVZoWDRWbFpoZWFkdDBwUW1qOWl0d2JFMHV6UnQ1S2JsQWpxaW9WdUVidTFEMVlmQjRFTnNUWDhEQkt3?oc=5",
+      "source": "Boursier.com",
       "summary": "",
       "sentiment": 0,
       "importance": "mineure"
@@ -140,22 +140,22 @@
       "sentiment": 0,
       "importance": "mineure"
     },
-    "https://news.google.com/rss/articles/CBMihwFBVV95cUxOd1ZnSXdQV2lfWGRPMGJveWZBLU15aldGZEs3R0VoTU94UVlFLVdCd294eFljTmczSHA0QktyZ2FhLUxEeWZwaXgyclNmRzRBVkJ4czFFZVZ2dmRlS0VmeXg1anFMVXI1cGNzQjh6R241YUhickl4aEowbWFEbWM2TjVQQXhXMHfSAYwBQVVfeXFMT2dPd0VjdHVkTGVscXprUFU4RWFIdHVOaTdvYzFHdXh5UFZsQnpxc2Q4emZkOWVXUDc5RWJPUGdzQXBsMkx3RURjT0laQUZCMnM0R2NUQ2VmdjVmNzI4OGNSRkpBS3h6a2x2THBITVhlMDdPelJyRUxMMnhMSUxCcHdpekxLTUdGWnJWNWw?oc=5": {
-      "summary": "Cet article suggère que le Comptoir National de l'Or propose une analyse comparative des perspectives d'évolution de l'or et de l'argent jusqu'en 2027, sans que le titre seul ne permette de déterminer les conclusions ou recommandations spécifiques de cette comparaison.",
+    "https://news.google.com/rss/articles/CBMitgJBVV95cUxQRlZNeG9jaEZLQXY1TXl5b0dUZktCcDFSbTBMZi1jY3FGSU11Z3Q1UzdFTWFQTEp2a0wzWll3TkNoR1ZFR3ZHMjJnSk5iWlV4TVNhdjhHVzZlb3M5M1FyZjRyUnVJaktkS3BtWnNjZURsRWxmaVZaMVlFSjNfYi0xWWQ2aVQtVHVaTzE0QkNxQ2RTUi11MmpncGhld0dZNXFaM2I1bXpXYnp0WEg1N1ZfSmxJdHdMdldsQTItSGR4ZmhqODk0MVpBbC1LRl9xWndqTl9hMGpxSF9RRTU0bkJrVDB4WFJyOS1xaEQyWmtQcXFnTkw5dG5RWEFVcnNuZVplTFRIUzVnUTRIN1NuemVUN2xkdzVSVDRfbHdrQUpGRG1ab0VWLUNMT3NTd3luRThDV1M3RHFn?oc=5": {
+      "summary": "",
       "sentiment": 0,
       "importance": "mineure"
     },
-    "https://news.google.com/rss/articles/CBMiggFBVV95cUxQMzJNaUdZQlVJajk1cHlxaTdsN3FaS1IwRUxzcXR3OGhWVFJLMTBOc1ZwcUE2OHN6aVNPaFpJX1FIampDakphX0UtXzhfdm9IVDNYVVlNYTFhcHQtSEpCcENzVi1Ib0dxOGM0SlFxNHJVWjV5ejRHWEgzVDBiNkxudkJn?oc=5": {
-      "summary": "Cet article suggère que la plateforme LiteFinance propose une analyse prospective des tendances du cours de l'argent sur plusieurs années, sans que le contenu permette de confirmer l'orientation ou la fiabilité de ces prévisions.",
+    "https://news.google.com/rss/articles/CBMilAFBVV95cUxPSjEzNHQ1bVNRdjJJX2FuVEFEUE0zbzJoc1RjOV9zTEJOVktueldEb0lmWHRkMHRVdFdfNy1FUlViUTh0X3NzYzA5TWJZMTdFcXdyVzFIU05OT2NCQy1NV0J0ZWJyczRmZGZGVUQ1NzRSX09VM3FfQjZYSUt1dm5STC1nR3NfMGNjb0NydEhaOFAwcFk2?oc=5": {
+      "summary": "",
       "sentiment": 0,
       "importance": "mineure"
     },
-    "https://news.google.com/rss/articles/CBMiwgFBVV95cUxQMW9YTUhmS2Q3SzhOZ2diUUxQNGRUd0JQbXpvbjB1QzBseHRrckpIMDgzRHhGQi1LVDFzN0RCUzJQYlItcENkZWhOTnVyWERZazdITHJ4ejlwa1dkVEtEOEN2V1lVX1hJRUN3QTJZcHAtQkxVWm5nT3k1NDYyTGJXSjdHbGlJbFRHUlNHalBvM0MtemZQSGtLbldSRWViLXFUUXI3ZHk3VFFjQ3J0OXlhZHZvUXZ5THEtMFkzdE5WMEZCQQ?oc=5": {
-      "summary": "Cet article suggère que le prix de l'argent connaît une phase de repli à la séance actuelle selon les données de marché de FXStreet.",
-      "sentiment": -1,
+    "https://news.google.com/rss/articles/CBMiiwFBVV95cUxQSG5SU1oxV0NCYTVtMjNkc0tXYXk0cXRzV3N5dWRBbnU2bkszZktoTHJ3RW1SaFM0OWliczFPZ0lwclVxR3JOZ2NQSE5LTHdHRWNEOHhiZThpQ1Z1UlM5a0ZsYTAwNVpOUGcyZkFHZWNRdUJuTzR2cFZ6cThrTTZFSXZPZUVyY2hoVjdN0gGQAUFVX3lxTE5jZ29TNzhEX2E0LXc3Xy11MnVZNml0b0ZVX3VjRTF1X09oenBsb1NrcHRPRS1yMXJpdU53U0I2T2tfZGZEeThzWGZJeG1veU05NkRmWjBHMW9RSVpNZFd1a2l0ZDhOTk13bGo0ZElGd2tqYUhxeVJDa3Q0WEtfUmI1ZGY3bnZhcjFZclhLZk5jcQ?oc=5": {
+      "summary": "",
+      "sentiment": 0,
       "importance": "mineure"
     },
-    "https://news.google.com/rss/articles/CBMiyAJBVV95cUxPRDJMNHh0R0NxSlN5WnBncHRLTFYxMEIzdUtTUHdpMmdkb01EOVBXQ0RPVGNBbW5lVDVIbjI5STlhZ3liSVFnNXpCUnJZaHJrMmV4bkJCQ01EYzNjLTY1LTRUclFYdkhHU0hMNzV5WXV1RTZlWGhPa0UxX2t3RUU5S2l3WWZmU0hsNjVkUHpHOTRPa3RWWFIyV0FLMnJwSk1sQXhFaWZwRVpBbU04bHZhUFZ2M0ZLZUdoM1BjSW1FM3dWb3BLQ196OWs2cTVPVVlOUkpNVlhlWFZUQVd5V2tKd0dBYnQ3ZUZ1NnhSbUNPLWtqcXJKMmhwRFNiM3lLalVhbFFsaUxzZnNNM1FxSzkySy04M21CNEs5dXNhX0RQYjRwNmZ1VnlTQ092MnBvc3V6TFBwdFpUeTdxM3FHdi1PTjJfRENxS24w0gHOAkFVX3lxTE81V0hOQWdYSmFUeElnQldBSXBSdnpvOWVpWFlXUG12ZTFXTjYyR0hlaWlnVGV5S1pNeGRWZXBrdmNYMVctbFBWb3E2MzBaa1dIbXRRbGxGa0VHMF85OWVZZzROUFpoZ0JvVmVOY09nTGtMaF9rM3F4SWE2Q05GT0ZudkhKQTFXdVpFbm5rREh3M2w1M3BweFp2TFJsMFdFaTdfaWJjbzVUUGFwM0Z4NTNtVEpxbWl5dlFpa1M4SnVWSXQ5VUsyRHFwRTJ0ZHc1ZG94bC1UTnRJTnZkOEVrTkRkQkY2eEpJZ05tVGx2cVg5b2gwcTQyUHVOMkJrSU14aE52LWZIU0ZJMGJjRktITTdvNWdPeThUWEJwN20xRWhHVVliOTl5ZU54eTdtcHFCX3psX0l6YTY3MUxqUEE0Q0hMZ1BvRndxN0QxZVpnVFE?oc=5": {
+    "https://news.google.com/rss/articles/CBMirwFBVV95cUxPNkh2Q3hCd2ZiQ1FhTnB1eGtnbzVsNzAwdnE4VE1XWlA0WnY5MkxUMjZrT0NFWGR1X1BhRmp1TG5qd0JPS0FDOHctS1NoT0F3NEk4dVVKNkFzbWtBc0szV3BYazh1ZXNxU2hEZS1lY3FoWHIyTVZoWDRWbFpoZWFkdDBwUW1qOWl0d2JFMHV6UnQ1S2JsQWpxaW9WdUVidTFEMVlmQjRFTnNUWDhEQkt3?oc=5": {
       "summary": "",
       "sentiment": 0,
       "importance": "mineure"

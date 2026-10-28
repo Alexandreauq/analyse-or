@@ -1361,6 +1361,55 @@ def test_run_cycle_unaffected_when_ftmo_guard_not_passed(monkeypatch, tmp_path):
     assert result["action"] == "aucune"
 
 
+def test_run_cycle_uses_fibonacci_engine_for_ftmo_instance(monkeypatch, tmp_path):
+    monkeypatch.setattr(loop.state, "load_state", lambda *a, **k: {"kill_switch": False, "dry_run": True})
+    monkeypatch.setattr(loop, "DECISIONS_LOG_PATH", str(tmp_path / "decisions_log.jsonl"))
+    monkeypatch.setattr(loop, "LATEST_CANDLES_PATH", str(tmp_path / "latest_candles.json"))
+    monkeypatch.setattr(loop, "LATEST_BALANCE_PATH", str(tmp_path / "latest_balance.json"))
+    monkeypatch.setattr(loop, "LATEST_POSITIONS_PATH", str(tmp_path / "latest_positions.json"))
+    monkeypatch.setattr(loop.confluence, "fetch_gold_candles", lambda *a, **k: [_FRESH_CANDLE])
+    monkeypatch.setattr(loop.broker, "get_account_information", lambda *a, **k: {"balance": 10000, "equity": 9900})
+    monkeypatch.setattr(loop.bot, "reconcile_positions", lambda *a, **k: [])
+    monkeypatch.setattr(loop.broker, "get_symbol_specification", lambda *a, **k: {"contractSize": 100, "volumeStep": 0.01, "minVolume": 0.01, "maxVolume": 500})
+    monkeypatch.setattr(
+        loop.bot, "decide_and_act_vwap",
+        lambda *a, **k: (_ for _ in ()).throw(AssertionError("decide_and_act_vwap ne doit jamais etre appele avec ftmo_guard_instance")))
+    fibonacci_calls = []
+    monkeypatch.setattr(
+        loop.bot, "decide_and_act_fibonacci",
+        lambda *a, **k: fibonacci_calls.append(k) or {"action": "aucune", "reason": "pas de signal d'entree"})
+
+    guard = loop.ftmo_guard.FtmoGuard(isc=10000, now_fn=lambda: _FRESH_NOW)
+    result = loop.run_cycle("tok", "acc", loop.risk.CircuitBreaker(), now=_FRESH_NOW, ftmo_guard_instance=guard)
+
+    assert result["action"] == "aucune"
+    assert len(fibonacci_calls) == 1
+
+
+def test_run_cycle_uses_vwap_engine_for_personal_instance(monkeypatch, tmp_path):
+    monkeypatch.setattr(loop.state, "load_state", lambda *a, **k: {"kill_switch": False, "dry_run": True})
+    monkeypatch.setattr(loop, "DECISIONS_LOG_PATH", str(tmp_path / "decisions_log.jsonl"))
+    monkeypatch.setattr(loop, "LATEST_CANDLES_PATH", str(tmp_path / "latest_candles.json"))
+    monkeypatch.setattr(loop, "LATEST_BALANCE_PATH", str(tmp_path / "latest_balance.json"))
+    monkeypatch.setattr(loop, "LATEST_POSITIONS_PATH", str(tmp_path / "latest_positions.json"))
+    monkeypatch.setattr(loop.confluence, "fetch_gold_candles", lambda *a, **k: [_FRESH_CANDLE])
+    monkeypatch.setattr(loop.broker, "get_account_information", lambda *a, **k: {"balance": 10000, "equity": 10000})
+    monkeypatch.setattr(loop.bot, "reconcile_positions", lambda *a, **k: [])
+    monkeypatch.setattr(loop.broker, "get_symbol_specification", lambda *a, **k: {"contractSize": 100, "volumeStep": 0.01, "minVolume": 0.01, "maxVolume": 500})
+    monkeypatch.setattr(
+        loop.bot, "decide_and_act_fibonacci",
+        lambda *a, **k: (_ for _ in ()).throw(AssertionError("decide_and_act_fibonacci ne doit jamais etre appele sans ftmo_guard_instance")))
+    vwap_calls = []
+    monkeypatch.setattr(
+        loop.bot, "decide_and_act_vwap",
+        lambda *a, **k: vwap_calls.append(k) or {"action": "aucune", "reason": "signal neutre"})
+
+    result = loop.run_cycle("tok", "acc", loop.risk.CircuitBreaker(), now=_FRESH_NOW)  # pas de ftmo_guard_instance
+
+    assert result["action"] == "aucune"
+    assert len(vwap_calls) == 1
+
+
 def test_run_cycle_ftmo_guard_does_nothing_when_equity_above_floors(monkeypatch, tmp_path):
     monkeypatch.setattr(loop.state, "load_state", lambda *a, **k: {"kill_switch": False, "dry_run": True})
     monkeypatch.setattr(loop, "DECISIONS_LOG_PATH", str(tmp_path / "decisions_log.jsonl"))
@@ -1374,7 +1423,7 @@ def test_run_cycle_ftmo_guard_does_nothing_when_equity_above_floors(monkeypatch,
         lambda *a, **k: (_ for _ in ()).throw(AssertionError("ne doit pas etre appele, equite au-dessus des deux planchers")))
     monkeypatch.setattr(loop.bot, "reconcile_positions", lambda *a, **k: [])
     monkeypatch.setattr(loop.broker, "get_symbol_specification", lambda *a, **k: {"contractSize": 100, "volumeStep": 0.01, "minVolume": 0.01, "maxVolume": 500})
-    monkeypatch.setattr(loop.bot, "decide_and_act_vwap", lambda *a, **k: {"action": "aucune", "reason": "signal neutre"})
+    monkeypatch.setattr(loop.bot, "decide_and_act_fibonacci", lambda *a, **k: {"action": "aucune", "reason": "signal neutre"})
 
     guard = loop.ftmo_guard.FtmoGuard(isc=10000, now_fn=lambda: _FRESH_NOW)
     result = loop.run_cycle("tok", "acc", loop.risk.CircuitBreaker(), now=_FRESH_NOW, ftmo_guard_instance=guard)
@@ -1539,7 +1588,7 @@ def test_run_cycle_calls_ftmo_signal_email_when_ftmo_guard_active_and_signal_fou
     monkeypatch.setattr(loop.broker, "get_account_information", lambda *a, **k: {"balance": 10000, "equity": 10000})
     monkeypatch.setattr(loop.bot, "reconcile_positions", lambda *a, **k: [])
     monkeypatch.setattr(loop.broker, "get_symbol_specification", lambda *a, **k: {"contractSize": 100, "volumeStep": 0.01, "minVolume": 0.01, "maxVolume": 500})
-    monkeypatch.setattr(loop.bot, "decide_and_act_vwap", lambda *a, **k: dict(_SIGNAL_DECISION))
+    monkeypatch.setattr(loop.bot, "decide_and_act_fibonacci", lambda *a, **k: dict(_SIGNAL_DECISION))
     email_calls = []
     monkeypatch.setattr(loop.notify_ftmo_signal, "maybe_send_signal_email", lambda decision: email_calls.append(decision) or True)
 

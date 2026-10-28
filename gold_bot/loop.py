@@ -362,7 +362,8 @@ def run_cycle(token: str, account_id: str,
         spec = _with_retry(lambda: broker.get_symbol_specification(token, account_id, symbol, region))
         contract_size = spec["contractSize"]
         historical_candles = _load_or_fetch_historical_candles(token, account_id, symbol, region, now_dt)
-        decision = bot.decide_and_act_vwap(
+        engine = bot.decide_and_act_fibonacci if ftmo_guard_instance is not None else bot.decide_and_act_vwap
+        decision = engine(
             candles, contract_size=contract_size, balance=balance, equity=equity,
             volume_step=spec["volumeStep"], min_volume=spec["minVolume"], max_volume=spec["maxVolume"],
             open_positions=open_positions, circuit_breaker=circuit_breaker, symbol=symbol,

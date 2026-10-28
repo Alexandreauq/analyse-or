@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-28T21:36:26Z",
+  "generated_at": "2026-10-28T21:37:19Z",
   "healthy": true,
-  "summary_fr": "Le bot est actuellement actif : sa dernière analyse du marché date de quelques minutes et aucun arrêt d'urgence n'est enclenché. Le détail chiffré de l'activité (nombre de cycles évalués et de positions ouvertes sur les 7 derniers jours) est momentanément indisponible et sera de nouveau affiché dès la prochaine mise à jour."
+  "summary_fr": "Le bot fonctionne normalement : il est actif et a pris sa dernière décision il y a quelques instants. Sur les 7 derniers jours, il a évalué 1 990 situations de marché (dont 1 300 aujourd'hui) et ouvert 4 positions, toutes aujourd'hui. Le plus souvent, il n'a pas pris position faute de signal d'entrée suffisamment clair, ce qui reflète une approche volontairement prudente."
 }

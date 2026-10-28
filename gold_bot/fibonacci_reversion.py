@@ -102,3 +102,88 @@ def daily_trend_strength(candles: list[dict], window_days: int = TREND_WINDOW_DA
         ref = closes[i - window_days]
         strength[d] = (closes[i] - ref) / ref if ref else 0.0
     return strength
+
+
+def latest_state(candles: list[dict]) -> dict | None:
+    """État de la dernière bougie : prix, niveau/biais Fibonacci, ATR,
+    force de tendance du jour, heure UTC. None si l'historique est
+    insuffisant pour l'ATR (le niveau Fibonacci, lui, peut être None
+    individuellement -- c'est un état valide, pas une erreur)."""
+    if not candles:
+        return None
+    atr = compute_atr(candles)
+    i = len(candles) - 1
+    if atr[i] is None:
+        return None
+    level, bias = levels_fibonacci(candles)
+    strength_by_day = daily_trend_strength(candles)
+    c = candles[i]
+    t = datetime.strptime(c["time"], "%Y-%m-%d %H:%M:%S").replace(tzinfo=timezone.utc)
+    day = c["time"][:10]
+    return {
+        "close": c["close"], "high": c["high"], "low": c["low"],
+        "level": level[i], "bias": bias[i], "atr": atr[i],
+        "trend_strength": strength_by_day.get(day, 0.0),
+        "hour_utc": t.hour,
+    }
+
+
+def compute_trailing_stop(candles: list[dict], direction: str, entry_time_iso: str,
+                           entry_price: float, current_stop_loss: float) -> float | None:
+    """Stop suiveur sans état côté bot -- recalcule tout depuis les
+    bougies fournies, comme vwap_reversion.compute_trailing_stop. Le
+    stop INITIAL (utilisé pour R, l'activation à 1R) est recalculé
+    depuis le niveau/ATR de la bougie d'ENTRÉE elle-même, jamais depuis
+    `current_stop_loss` (qui peut déjà avoir été déplacé) -- même
+    principe que le moteur VWAP. Une fois actif (excursion favorable
+    >= 1R), le stop suit le meilleur prix atteint depuis l'entrée ∓
+    TRAIL_BUFFER_ATR_MULT × l'ATR CAPTURÉ À L'ENTRÉE (pas l'ATR
+    courant). Ne resserre jamais au-delà du prix d'entrée, ne recule
+    jamais."""
+    atr = compute_atr(candles)
+    level, _bias = levels_fibonacci(candles)
+
+    entry_dt = datetime.fromisoformat(entry_time_iso.replace("Z", "+00:00"))
+    entry_idx = None
+    for i, c in enumerate(candles):
+        c_dt = datetime.strptime(c["time"], "%Y-%m-%d %H:%M:%S").replace(tzinfo=timezone.utc)
+        if c_dt <= entry_dt:
+            entry_idx = i
+        else:
+            break
+    if entry_idx is None:
+        return None
+
+    atr_entry = atr[entry_idx]
+    entry_level = level[entry_idx]
+    if atr_entry is None or atr_entry <= 0 or entry_level is None:
+        return None
+
+    initial_stop = (entry_level - STOP_BUFFER_ATR_MULT * atr_entry if direction == "achat"
+                     else entry_level + STOP_BUFFER_ATR_MULT * atr_entry)
+    r = abs(entry_price - initial_stop)
+    if r <= 0:
+        return None
+
+    since_entry = candles[entry_idx + 1:]
+    if not since_entry:
+        return None
+    if direction == "achat":
+        best_price = max(c["high"] for c in since_entry)
+        best_excursion = best_price - entry_price
+    else:
+        best_price = min(c["low"] for c in since_entry)
+        best_excursion = entry_price - best_price
+    if best_excursion < r:
+        return None
+
+    if direction == "achat":
+        candidate = max(entry_price, best_price - TRAIL_BUFFER_ATR_MULT * atr_entry)
+        new_stop = max(current_stop_loss, candidate)
+    else:
+        candidate = min(entry_price, best_price + TRAIL_BUFFER_ATR_MULT * atr_entry)
+        new_stop = min(current_stop_loss, candidate)
+
+    if new_stop == current_stop_loss:
+        return None
+    return new_stop

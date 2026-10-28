@@ -392,7 +392,72 @@ def decide_and_act_fibonacci(candles: list[dict], *, contract_size: float, balan
             "new_stop_loss": new_stop,
         }]}
 
-    return {"action": "aucune", "reason": "pas de signal d'entree"}
+    if state["hour_utc"] >= fibonacci_reversion.SESSION_END_HOUR_UTC:
+        return {"action": "aucune", "reason": "trop tard dans la session pour ouvrir"}
+    if state["level"] is None or state["bias"] is None:
+        return {"action": "aucune", "reason": "aucun niveau de retracement disponible"}
+    if state["atr"] is None or state["atr"] <= 0:
+        return {"action": "aucune", "reason": "atr indisponible"}
+    if abs(state["trend_strength"]) > fibonacci_reversion.TREND_FILTER_THRESHOLD:
+        return {"action": "aucune", "reason": "tendance trop forte, signal filtre"}
+
+    tol = fibonacci_reversion.TOUCH_ATR_MULT * state["atr"]
+    direction = None
+    stop_loss = None
+    if state["bias"] == "achat":
+        touched = state["low"] <= state["level"] + tol
+        rejected = state["close"] > state["level"]
+        if touched and rejected:
+            direction = "achat"
+            stop_loss = state["level"] - fibonacci_reversion.STOP_BUFFER_ATR_MULT * state["atr"]
+    else:
+        touched = state["high"] >= state["level"] - tol
+        rejected = state["close"] < state["level"]
+        if touched and rejected:
+            direction = "vente"
+            stop_loss = state["level"] + fibonacci_reversion.STOP_BUFFER_ATR_MULT * state["atr"]
+
+    if direction is None:
+        return {"action": "aucune", "reason": "pas de signal d'entree"}
+
+    entry_price = state["close"]
+    distance = abs(entry_price - stop_loss)
+    if distance < entry_price * fibonacci_reversion.MIN_DISTANCE_PCT:
+        return {"action": "aucune", "reason": "distance entree-stop trop faible"}
+
+    if not circuit_breaker.can_open_position(equity):
+        return {"action": "aucune", "reason": "coupe-circuit journalier déclenché"}
+
+    raw_size = risk.compute_position_size(balance, entry_price, stop_loss, contract_size, risk_pct=risk_pct)
+    total_size = risk.round_to_volume_step(raw_size, volume_step, min_volume, max_volume)
+    if total_size is None:
+        return {"action": "aucune", "reason": "compte trop petit pour ce stop (volume sous le minimum du broker)"}
+
+    partial_volume = None
+    if fibonacci_reversion.PARTIAL_TP_PCT > 0:
+        partial_volume = risk.round_to_volume_step(
+            total_size * fibonacci_reversion.PARTIAL_TP_PCT, volume_step, min_volume, max_volume)
+
+    if partial_volume is None:
+        return {"action": "simulation", "steps": [{
+            "type": "ouverture_simulee", "symbol": symbol, "direction": direction, "volume": total_size,
+            "entry": entry_price, "stop_loss": stop_loss, "take_profit": None,
+        }]}
+
+    runner_volume = round(total_size - partial_volume, 2)
+    partial_target = (entry_price + fibonacci_reversion.TARGET_R * distance if direction == "achat"
+                       else entry_price - fibonacci_reversion.TARGET_R * distance)
+
+    steps = [{
+        "type": "ouverture_simulee", "symbol": symbol, "direction": direction, "volume": partial_volume,
+        "entry": entry_price, "stop_loss": stop_loss, "take_profit": partial_target,
+    }]
+    if runner_volume >= volume_step:
+        steps.append({
+            "type": "ouverture_simulee", "symbol": symbol, "direction": direction, "volume": runner_volume,
+            "entry": entry_price, "stop_loss": stop_loss, "take_profit": None,
+        })
+    return {"action": "simulation", "steps": steps}
 
 
 def reconcile_positions(token: str, account_id: str, region: str = broker.DEFAULT_MT5_REGION) -> list[dict]:

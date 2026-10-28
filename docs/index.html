@@ -3214,6 +3214,12 @@ function wireBotDashboardSection() {
 
 function ftmoDashboardSectionHtml() {
   return `
+    <div style="height:400px;margin-bottom:16px">
+      <div class="tradingview-widget-container" id="ftmoChartContainer" style="height:100%;width:100%">
+        <div class="tradingview-widget-container__widget" style="height:calc(100% - 32px);width:100%"></div>
+        <div class="tradingview-widget-copyright"><a href="https://www.tradingview.com/" rel="noopener nofollow" target="_blank"><span class="blue-text">Suivre tous les marchés sur TradingView</span></a></div>
+      </div>
+    </div>
     <div id="ftmoStatusBlock"></div>
     <main id="ftmoContent">
       <div class="skeleton">
@@ -3223,6 +3229,33 @@ function ftmoDashboardSectionHtml() {
         <div class="skeleton-line"></div>
       </div>
     </main>`;
+}
+
+// Widget gratuit TradingView (pas de cle API) -- script externe injecte
+// via createElement plutot que dans le template HTML ci-dessus car un
+// <script> pose par innerHTML ne s'execute jamais (restriction navigateur).
+// Garde dataset.loaded par securite si wireFtmoDashboardSection() etait
+// jamais appelee deux fois sur le meme montage DOM.
+function loadFtmoTradingViewChart() {
+  const container = document.getElementById('ftmoChartContainer');
+  if (!container || container.dataset.loaded === '1') return;
+  container.dataset.loaded = '1';
+  const script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js';
+  script.async = true;
+  script.text = JSON.stringify({
+    autosize: true,
+    symbol: 'OANDA:XAUUSD',
+    interval: '15',
+    timezone: 'Etc/UTC',
+    theme: 'dark',
+    style: '1',
+    locale: 'fr',
+    allow_symbol_change: false,
+    support_host: 'https://www.tradingview.com',
+  });
+  container.appendChild(script);
 }
 
 function ftmoKillSwitchHtml() {
@@ -3413,6 +3446,7 @@ function wireFtmoDashboardSection() {
     clearInterval(ftmoAutoRefreshIntervalId);
     ftmoAutoRefreshIntervalId = null;
   }
+  loadFtmoTradingViewChart();
   loadFtmoStatus().then(renderFtmoStatusBlock);
   fetchFtmoDashboard();
   // Seule section du site avec un rafraichissement automatique (60s,

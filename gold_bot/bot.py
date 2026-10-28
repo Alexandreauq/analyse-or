@@ -6,6 +6,7 @@
 # docs/superpowers/specs/2026-09-10-bot-trading-or-design.md.
 from datetime import datetime, timezone
 
+import gold_bot.ai_shadow as ai_shadow
 import gold_bot.broker as broker
 import gold_bot.confluence as confluence
 import gold_bot.fibonacci_reversion as fibonacci_reversion
@@ -474,6 +475,12 @@ def decide_and_act_fibonacci(candles: list[dict], *, contract_size: float, balan
 
     if direction is None:
         return {"action": "aucune", "reason": "pas de signal d'entree"}
+
+    # Veto IA en mode FANTOME (voir gold_bot/ai_shadow.py) -- journalise
+    # un avis independant, ne modifie JAMAIS direction/stop_loss/steps
+    # ci-dessous, et ne peut jamais faire echouer ce cycle (toute erreur
+    # est capturee a l'interieur de shadow_judge_entry).
+    ai_shadow.shadow_judge_entry(symbol, direction, state, candles)
 
     entry_price = state["close"]
     distance = abs(entry_price - stop_loss)

@@ -1,6 +1,7 @@
 import pytest
 import gold_bot.bot as bot
 import gold_bot.risk as risk
+import gold_bot.fibonacci_reversion as fib_reversion
 
 
 def _signal(status, entry=None, stop_loss=None, take_profit=None):
@@ -955,3 +956,170 @@ def test_decide_and_act_fibonacci_modifies_stop_when_trailing_stop_updates(monke
     assert result == {"action": "simulation", "steps": [
         {"type": "modification_simulee", "position_id": "1", "symbol": "XAUUSD", "new_stop_loss": 1995.0},
     ]}
+
+
+def test_decide_and_act_fibonacci_no_action_after_session_end_hour(monkeypatch):
+    state = _fib_state(hour_utc=fib_reversion.SESSION_END_HOUR_UTC)
+    monkeypatch.setattr(bot.fibonacci_reversion, "latest_state", lambda candles: state)
+    result = bot.decide_and_act_fibonacci(
+        [{"dummy": True}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
+        balance=10000, equity=10000, open_positions=[], circuit_breaker=_open_circuit_breaker(),
+    )
+    assert result == {"action": "aucune", "reason": "trop tard dans la session pour ouvrir"}
+
+
+def test_decide_and_act_fibonacci_no_action_when_no_level(monkeypatch):
+    state = _fib_state(level=None, bias=None)
+    monkeypatch.setattr(bot.fibonacci_reversion, "latest_state", lambda candles: state)
+    result = bot.decide_and_act_fibonacci(
+        [{"dummy": True}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
+        balance=10000, equity=10000, open_positions=[], circuit_breaker=_open_circuit_breaker(),
+    )
+    assert result == {"action": "aucune", "reason": "aucun niveau de retracement disponible"}
+
+
+def test_decide_and_act_fibonacci_no_action_when_atr_not_positive(monkeypatch):
+    state = _fib_state(atr=0.0)
+    monkeypatch.setattr(bot.fibonacci_reversion, "latest_state", lambda candles: state)
+    result = bot.decide_and_act_fibonacci(
+        [{"dummy": True}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
+        balance=10000, equity=10000, open_positions=[], circuit_breaker=_open_circuit_breaker(),
+    )
+    assert result == {"action": "aucune", "reason": "atr indisponible"}
+
+
+def test_decide_and_act_fibonacci_filtered_by_strong_trend(monkeypatch):
+    # memes chiffres entree que le test d'ouverture plus bas, mais force
+    # de tendance au-dela du seuil -- signal filtre avant toute
+    # evaluation de touche/rejet.
+    state = _fib_state(close=1981.0, high=1982.0, low=1974.0, level=1980.0, bias="achat",
+                        atr=20.0, trend_strength=0.06)
+    monkeypatch.setattr(bot.fibonacci_reversion, "latest_state", lambda candles: state)
+    result = bot.decide_and_act_fibonacci(
+        [{"dummy": True}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
+        balance=10000, equity=10000, open_positions=[], circuit_breaker=_open_circuit_breaker(),
+    )
+    assert result == {"action": "aucune", "reason": "tendance trop forte, signal filtre"}
+
+
+def test_decide_and_act_fibonacci_no_action_when_level_not_touched(monkeypatch):
+    # touched (achat) = low <= level + tol ; tol = 0.3*20 = 6, level+tol =
+    # 1986 -- low (1987) depasse ce seuil, donc pas de touche, meme si
+    # close (1990) est bien au-dessus du niveau (rejet qui n'a pas de
+    # sens a verifier puisque touched est deja faux). Bougie valide :
+    # low(1987) <= close(1990) <= high(1992).
+    state = _fib_state(close=1990.0, high=1992.0, low=1987.0, level=1980.0, bias="achat", atr=20.0)
+    monkeypatch.setattr(bot.fibonacci_reversion, "latest_state", lambda candles: state)
+    result = bot.decide_and_act_fibonacci(
+        [{"dummy": True}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
+        balance=10000, equity=10000, open_positions=[], circuit_breaker=_open_circuit_breaker(),
+    )
+    assert result == {"action": "aucune", "reason": "pas de signal d'entree"}
+
+
+def test_decide_and_act_fibonacci_opens_achat_with_partial_and_runner_legs(monkeypatch):
+    # biais achat, low (1974) touche le niveau 1980 avec tolerance
+    # 0.3*20=6 (1980-6=1974, 1974<=1974 -> touche), close (1981) > niveau
+    # (1980) -> rejet haussier confirme.
+    state = _fib_state(close=1981.0, high=1982.0, low=1974.0, level=1980.0, bias="achat", atr=20.0)
+    monkeypatch.setattr(bot.fibonacci_reversion, "latest_state", lambda candles: state)
+    result = bot.decide_and_act_fibonacci(
+        [{"dummy": True}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
+        balance=10000, equity=10000, open_positions=[], circuit_breaker=_open_circuit_breaker(),
+    )
+    assert result["action"] == "simulation"
+    assert len(result["steps"]) == 2
+    partial, runner = result["steps"]
+    stop_loss = 1980.0 - 0.5 * 20.0  # 1970.0
+    distance = 1981.0 - stop_loss  # 11.0
+
+    assert partial["type"] == "ouverture_simulee"
+    assert partial["direction"] == "achat"
+    assert partial["entry"] == 1981.0
+    assert partial["stop_loss"] == pytest.approx(stop_loss)
+    assert partial["take_profit"] == pytest.approx(1981.0 + 1.5 * distance)
+
+    assert runner["type"] == "ouverture_simulee"
+    assert runner["direction"] == "achat"
+    assert runner["stop_loss"] == pytest.approx(stop_loss)
+    assert runner["take_profit"] is None
+
+
+def test_decide_and_act_fibonacci_opens_vente_with_partial_and_runner_legs(monkeypatch):
+    # biais vente, symetrique du test achat ci-dessus : high (1986)
+    # touche le niveau 1980 avec tolerance 6 (1980+6=1986, 1986>=1986 ->
+    # touche), close (1979) < niveau (1980) -> rejet baissier confirme.
+    state = _fib_state(close=1979.0, high=1986.0, low=1978.0, level=1980.0, bias="vente", atr=20.0)
+    monkeypatch.setattr(bot.fibonacci_reversion, "latest_state", lambda candles: state)
+    result = bot.decide_and_act_fibonacci(
+        [{"dummy": True}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
+        balance=10000, equity=10000, open_positions=[], circuit_breaker=_open_circuit_breaker(),
+    )
+    assert result["action"] == "simulation"
+    partial, runner = result["steps"]
+    stop_loss = 1980.0 + 0.5 * 20.0  # 1990.0
+    distance = stop_loss - 1979.0  # 11.0
+    assert partial["direction"] == "vente"
+    assert partial["take_profit"] == pytest.approx(1979.0 - 1.5 * distance)
+    assert runner["direction"] == "vente"
+    assert runner["take_profit"] is None
+
+
+def test_decide_and_act_fibonacci_no_action_when_distance_too_small(monkeypatch):
+    # close (2000.001) doit rester STRICTEMENT au-dessus du niveau
+    # (2000.0) pour que "rejected" soit vrai (comparaison stricte ">")
+    # -- atr quasi nul rend le stop (level - 0.5*atr) quasiment confondu
+    # avec le niveau, donc la distance entree-stop est minuscule, sous
+    # MIN_DISTANCE_PCT*entry_price (0.002 * ~2000 = 4.0).
+    state = _fib_state(close=2000.001, high=2000.002, low=1999.999, level=2000.0, bias="achat", atr=0.0001)
+    monkeypatch.setattr(bot.fibonacci_reversion, "latest_state", lambda candles: state)
+    result = bot.decide_and_act_fibonacci(
+        [{"dummy": True}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
+        balance=10000, equity=10000, open_positions=[], circuit_breaker=_open_circuit_breaker(),
+    )
+    assert result == {"action": "aucune", "reason": "distance entree-stop trop faible"}
+
+
+def test_decide_and_act_fibonacci_blocked_by_circuit_breaker(monkeypatch):
+    state = _fib_state(close=1981.0, high=1982.0, low=1974.0, level=1980.0, bias="achat", atr=20.0)
+    monkeypatch.setattr(bot.fibonacci_reversion, "latest_state", lambda candles: state)
+    from datetime import datetime, timezone
+    cb = risk.CircuitBreaker(threshold_pct=0.10, now_fn=lambda: datetime(2026, 9, 10, tzinfo=timezone.utc))
+    cb.check(10000)
+    result = bot.decide_and_act_fibonacci(
+        [{"dummy": True}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
+        balance=10000, equity=8900, open_positions=[], circuit_breaker=cb,  # -11%, coupe-circuit declenche
+    )
+    assert result == {"action": "aucune", "reason": "coupe-circuit journalier déclenché"}
+
+
+def test_decide_and_act_fibonacci_no_action_when_size_below_minimum(monkeypatch):
+    state = _fib_state(close=1981.0, high=1982.0, low=1974.0, level=1980.0, bias="achat", atr=20.0)
+    monkeypatch.setattr(bot.fibonacci_reversion, "latest_state", lambda candles: state)
+    result = bot.decide_and_act_fibonacci(
+        [{"dummy": True}], contract_size=100, volume_step=0.01, min_volume=10000.0, max_volume=50000.0,
+        balance=10000, equity=10000, open_positions=[], circuit_breaker=_open_circuit_breaker(),
+    )
+    assert result == {"action": "aucune", "reason": "compte trop petit pour ce stop (volume sous le minimum du broker)"}
+
+
+def test_decide_and_act_fibonacci_opens_single_leg_when_partial_too_small(monkeypatch):
+    # atr=28 -> stop_loss = 1980 - 0.5*28 = 1966, distance = close(1981) -
+    # stop(1966) = 15 -- choisi pour que le volume total tombe juste
+    # au-dessus du minimum (0.3) mais sa fraction partielle (70%) tombe
+    # EN DESSOUS : balance=10000, risk_pct par defaut 0.05 -> risque
+    # 500$ ; raw_size = 500/(15*100) = 0.3333 -> arrondi 0.33 (>= 0.3,
+    # ouvrable) ; jambe partielle 0.33*0.7=0.231 -> arrondie 0.23 (<
+    # 0.3, PAS ouvrable) -- repli sur une seule jambe runner, meme
+    # mecanique que test_decide_and_act_vwap_opens_single_leg_when_partial_too_small.
+    # tol = 0.3*28 = 8.4, touched (low=1974 <= 1980+8.4=1988.4) vrai ;
+    # rejected (close=1981 > level=1980) vrai.
+    state = _fib_state(close=1981.0, high=1982.0, low=1974.0, level=1980.0, bias="achat", atr=28.0)
+    monkeypatch.setattr(bot.fibonacci_reversion, "latest_state", lambda candles: state)
+    result = bot.decide_and_act_fibonacci(
+        [{"dummy": True}], contract_size=100, volume_step=0.01, min_volume=0.3, max_volume=500,
+        balance=10000, equity=10000, open_positions=[], circuit_breaker=_open_circuit_breaker(),
+    )
+    assert result["action"] == "simulation"
+    assert len(result["steps"]) == 1
+    assert result["steps"][0]["take_profit"] is None

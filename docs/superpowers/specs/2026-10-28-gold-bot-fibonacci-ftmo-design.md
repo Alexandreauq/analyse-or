@@ -10,7 +10,8 @@ Chantier de recherche complet (10+ passes, voir
 `docs/superpowers/research/gold_bot_fibonacci_seasonality/`,
 `docs/superpowers/research/gold_bot_deepen_winners/`,
 `docs/superpowers/research/gold_bot_deepen_fibonacci/`,
-`docs/superpowers/research/gold_bot_validate_fib_trend_filter/`) :
+`docs/superpowers/research/gold_bot_validate_fib_trend_filter/`,
+`docs/superpowers/research/gold_bot_validate_fib_trend_filter_nolookahead/`) :
 le moteur VWAP actuel passe le 2-Step FTMO en 869 jours médian à
 risk_pct=1% (38.5% de réussite) ou 149 jours à 2% (14.6%) — trop lent
 pour l'usage prévu par l'utilisateur (offrir ce service à d'autres
@@ -21,13 +22,28 @@ de rebond sur retracement de Fibonacci, avec une gestion de sortie à
 deux jambes (prise partielle + stop suiveur ATR) et un filtre de force
 de tendance, est le candidat final retenu :
 
-- **risk_pct=2%, chiffre final walk-forward-validé indépendamment**
-  (y compris le seuil du filtre de tendance, validé séparément des
-  autres paramètres) : **25.4% de réussite 2-Step / 29 jours médian**
-  — contre 14.6%/149j pour le VWAP actuel.
-- Généralisation : 4/6 années de test (2021-2026) positives — moins
-  que le 6/6 du VWAP en production, un risque assumé et documenté,
-  pas une garantie de même niveau.
+- **risk_pct=2%, chiffre final walk-forward-validé indépendamment,
+  CORRIGÉ le 2026-10-28** (y compris le seuil du filtre de tendance,
+  validé séparément des autres paramètres) : **22.8% de réussite
+  2-Step / 35 jours médian** — contre 14.6%/149j pour le VWAP actuel.
+  Un premier chiffre (25.4%/29j) avait été rapporté, mais sa
+  validation taguait chaque signal avec la clôture FINALE de son
+  propre jour (lookahead, inconnue au moment réel du signal) ; une
+  revue finale de branche a trouvé ce biais, et une re-validation
+  indépendante sans lookahead (clôture du dernier jour COMPLET avant
+  le signal, comme le code de production) donne le chiffre corrigé
+  ci-dessus — une dégradation réelle, pas cosmétique (~10% de réussite
+  relative, ~21% de durée en plus), voir le répertoire de recherche
+  cité pour le détail par année. Le seuil de 5% lui-même survit à la
+  correction (toujours le plus fréquent, 4/6 fenêtres d'entraînement).
+- Généralisation : 3/6 années de test (2021-2026) positives (corrigé
+  depuis 4/6) — moins que le 6/6 du VWAP en production, un risque
+  assumé et documenté, pas une garantie de même niveau.
+- À risk_pct=1%, le chiffre corrigé s'améliore au contraire (70.2% de
+  réussite / 328 jours médian, contre 60.9%/272j avant correction) —
+  bien plus fiable, mais ~11 mois au lieu d'~1 mois pour valider un
+  compte. Retenu malgré tout : risk_pct=2% avec le chiffre corrigé,
+  décision utilisateur du 2026-10-28 après avoir vu les deux options.
 - Paramètres walk-forward validés, à utiliser tels quels (pas une
   ré-optimisation, voir recherche citée) : fenêtre de retracement
   `window=40` bougies 5min, niveau `fib_pct=0.618`, cible de la jambe

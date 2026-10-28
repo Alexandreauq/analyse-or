@@ -1,0 +1,512 @@
+{
+  "n_trades_raw": 3362,
+  "before_lookahead": {
+    "per_window": {
+      "2021": {
+        "train_n": 964,
+        "test_n": 240,
+        "train_fitness_by_threshold": {
+          "0.05": {
+            "n": 602,
+            "mean_r": 0.022
+          },
+          "0.06": {
+            "n": 724,
+            "mean_r": 0.019
+          },
+          "0.08": {
+            "n": 802,
+            "mean_r": 0.0295
+          },
+          "0.1": {
+            "n": 888,
+            "mean_r": 0.031
+          },
+          "0.12": {
+            "n": 928,
+            "mean_r": 0.0246
+          },
+          "0.15": {
+            "n": 944,
+            "mean_r": 0.0248
+          }
+        },
+        "chosen_threshold": 0.1,
+        "test_unfiltered_mean_r": 0.0446,
+        "test_filtered_mean_r": 0.0446,
+        "test_filtered_n": 240,
+        "improves_on_test": false
+      },
+      "2022": {
+        "train_n": 1204,
+        "test_n": 294,
+        "train_fitness_by_threshold": {
+          "0.05": {
+            "n": 796,
+            "mean_r": 0.0352
+          },
+          "0.06": {
+            "n": 940,
+            "mean_r": 0.0287
+          },
+          "0.08": {
+            "n": 1042,
+            "mean_r": 0.033
+          },
+          "0.1": {
+            "n": 1128,
+            "mean_r": 0.0339
+          },
+          "0.12": {
+            "n": 1168,
+            "mean_r": 0.0287
+          },
+          "0.15": {
+            "n": 1184,
+            "mean_r": 0.0288
+          }
+        },
+        "chosen_threshold": 0.05,
+        "test_unfiltered_mean_r": 0.0282,
+        "test_filtered_mean_r": 0.0166,
+        "test_filtered_n": 220,
+        "improves_on_test": false
+      },
+      "2023": {
+        "train_n": 1498,
+        "test_n": 184,
+        "train_fitness_by_threshold": {
+          "0.05": {
+            "n": 1016,
+            "mean_r": 0.0311
+          },
+          "0.06": {
+            "n": 1182,
+            "mean_r": 0.0289
+          },
+          "0.08": {
+            "n": 1324,
+            "mean_r": 0.0314
+          },
+          "0.1": {
+            "n": 1422,
+            "mean_r": 0.0327
+          },
+          "0.12": {
+            "n": 1462,
+            "mean_r": 0.0286
+          },
+          "0.15": {
+            "n": 1478,
+            "mean_r": 0.0287
+          }
+        },
+        "chosen_threshold": 0.1,
+        "test_unfiltered_mean_r": 0.0603,
+        "test_filtered_mean_r": 0.0664,
+        "test_filtered_n": 182,
+        "improves_on_test": true
+      },
+      "2024": {
+        "train_n": 1682,
+        "test_n": 214,
+        "train_fitness_by_threshold": {
+          "0.05": {
+            "n": 1150,
+            "mean_r": 0.0368
+          },
+          "0.06": {
+            "n": 1336,
+            "mean_r": 0.033
+          },
+          "0.08": {
+            "n": 1496,
+            "mean_r": 0.0347
+          },
+          "0.1": {
+            "n": 1604,
+            "mean_r": 0.0365
+          },
+          "0.12": {
+            "n": 1646,
+            "mean_r": 0.0321
+          },
+          "0.15": {
+            "n": 1662,
+            "mean_r": 0.0322
+          }
+        },
+        "chosen_threshold": 0.05,
+        "test_unfiltered_mean_r": -0.0145,
+        "test_filtered_mean_r": 0.0509,
+        "test_filtered_n": 152,
+        "improves_on_test": true
+      },
+      "2025": {
+        "train_n": 1896,
+        "test_n": 452,
+        "train_fitness_by_threshold": {
+          "0.05": {
+            "n": 1302,
+            "mean_r": 0.0384
+          },
+          "0.06": {
+            "n": 1502,
+            "mean_r": 0.0319
+          },
+          "0.08": {
+            "n": 1676,
+            "mean_r": 0.0322
+          },
+          "0.1": {
+            "n": 1812,
+            "mean_r": 0.0305
+          },
+          "0.12": {
+            "n": 1860,
+            "mean_r": 0.0268
+          },
+          "0.15": {
+            "n": 1876,
+            "mean_r": 0.0269
+          }
+        },
+        "chosen_threshold": 0.05,
+        "test_unfiltered_mean_r": -0.0038,
+        "test_filtered_mean_r": 0.001,
+        "test_filtered_n": 274,
+        "improves_on_test": true
+      },
+      "2026": {
+        "train_n": 2348,
+        "test_n": 1014,
+        "train_fitness_by_threshold": {
+          "0.05": {
+            "n": 1576,
+            "mean_r": 0.0319
+          },
+          "0.06": {
+            "n": 1792,
+            "mean_r": 0.0279
+          },
+          "0.08": {
+            "n": 2040,
+            "mean_r": 0.0286
+          },
+          "0.1": {
+            "n": 2218,
+            "mean_r": 0.0247
+          },
+          "0.12": {
+            "n": 2272,
+            "mean_r": 0.0216
+          },
+          "0.15": {
+            "n": 2318,
+            "mean_r": 0.0202
+          }
+        },
+        "chosen_threshold": 0.05,
+        "test_unfiltered_mean_r": 0.0378,
+        "test_filtered_mean_r": 0.0686,
+        "test_filtered_n": 468,
+        "improves_on_test": true
+      }
+    },
+    "grid_tested": [
+      0.05,
+      0.06,
+      0.08,
+      0.1,
+      0.12,
+      0.15
+    ],
+    "stability": {
+      "0.1": 2,
+      "0.05": 4
+    },
+    "most_common_threshold": 0.05,
+    "most_common_count": 4,
+    "generalizes_count": 4,
+    "final_eval": {
+      "0.01": {
+        "n": 2044,
+        "pass_rate": 60.9,
+        "median_days": 272.0
+      },
+      "0.02": {
+        "n": 2044,
+        "pass_rate": 25.4,
+        "median_days": 29.0
+      }
+    },
+    "fixed_5pct_eval": {
+      "n_tagged_kept": 2044,
+      "0.01": {
+        "n": 2044,
+        "pass_rate": 60.9,
+        "median_days": 272.0
+      },
+      "0.02": {
+        "n": 2044,
+        "pass_rate": 25.4,
+        "median_days": 29.0
+      }
+    }
+  },
+  "n_excluded_unmeasurable": 18,
+  "after_nolookahead": {
+    "per_window": {
+      "2021": {
+        "train_n": 946,
+        "test_n": 240,
+        "train_fitness_by_threshold": {
+          "0.05": {
+            "n": 592,
+            "mean_r": 0.0347
+          },
+          "0.06": {
+            "n": 696,
+            "mean_r": 0.0259
+          },
+          "0.08": {
+            "n": 780,
+            "mean_r": 0.0275
+          },
+          "0.1": {
+            "n": 882,
+            "mean_r": 0.022
+          },
+          "0.12": {
+            "n": 902,
+            "mean_r": 0.0292
+          },
+          "0.15": {
+            "n": 918,
+            "mean_r": 0.0293
+          }
+        },
+        "chosen_threshold": 0.05,
+        "test_unfiltered_mean_r": 0.0446,
+        "test_filtered_mean_r": 0.0494,
+        "test_filtered_n": 198,
+        "improves_on_test": true
+      },
+      "2022": {
+        "train_n": 1186,
+        "test_n": 294,
+        "train_fitness_by_threshold": {
+          "0.05": {
+            "n": 790,
+            "mean_r": 0.0383
+          },
+          "0.06": {
+            "n": 906,
+            "mean_r": 0.0299
+          },
+          "0.08": {
+            "n": 1020,
+            "mean_r": 0.0315
+          },
+          "0.1": {
+            "n": 1122,
+            "mean_r": 0.0268
+          },
+          "0.12": {
+            "n": 1142,
+            "mean_r": 0.0324
+          },
+          "0.15": {
+            "n": 1158,
+            "mean_r": 0.0325
+          }
+        },
+        "chosen_threshold": 0.05,
+        "test_unfiltered_mean_r": 0.0282,
+        "test_filtered_mean_r": -0.0093,
+        "test_filtered_n": 222,
+        "improves_on_test": false
+      },
+      "2023": {
+        "train_n": 1480,
+        "test_n": 184,
+        "train_fitness_by_threshold": {
+          "0.05": {
+            "n": 1012,
+            "mean_r": 0.0279
+          },
+          "0.06": {
+            "n": 1148,
+            "mean_r": 0.0247
+          },
+          "0.08": {
+            "n": 1310,
+            "mean_r": 0.0305
+          },
+          "0.1": {
+            "n": 1416,
+            "mean_r": 0.0271
+          },
+          "0.12": {
+            "n": 1436,
+            "mean_r": 0.0316
+          },
+          "0.15": {
+            "n": 1452,
+            "mean_r": 0.0316
+          }
+        },
+        "chosen_threshold": 0.15,
+        "test_unfiltered_mean_r": 0.0603,
+        "test_filtered_mean_r": 0.0603,
+        "test_filtered_n": 184,
+        "improves_on_test": false
+      },
+      "2024": {
+        "train_n": 1664,
+        "test_n": 214,
+        "train_fitness_by_threshold": {
+          "0.05": {
+            "n": 1152,
+            "mean_r": 0.0341
+          },
+          "0.06": {
+            "n": 1294,
+            "mean_r": 0.0294
+          },
+          "0.08": {
+            "n": 1474,
+            "mean_r": 0.0346
+          },
+          "0.1": {
+            "n": 1600,
+            "mean_r": 0.0309
+          },
+          "0.12": {
+            "n": 1620,
+            "mean_r": 0.0348
+          },
+          "0.15": {
+            "n": 1636,
+            "mean_r": 0.0349
+          }
+        },
+        "chosen_threshold": 0.15,
+        "test_unfiltered_mean_r": -0.0145,
+        "test_filtered_mean_r": -0.0145,
+        "test_filtered_n": 214,
+        "improves_on_test": false
+      },
+      "2025": {
+        "train_n": 1878,
+        "test_n": 452,
+        "train_fitness_by_threshold": {
+          "0.05": {
+            "n": 1300,
+            "mean_r": 0.0337
+          },
+          "0.06": {
+            "n": 1460,
+            "mean_r": 0.0311
+          },
+          "0.08": {
+            "n": 1662,
+            "mean_r": 0.0321
+          },
+          "0.1": {
+            "n": 1814,
+            "mean_r": 0.0256
+          },
+          "0.12": {
+            "n": 1834,
+            "mean_r": 0.0291
+          },
+          "0.15": {
+            "n": 1850,
+            "mean_r": 0.0291
+          }
+        },
+        "chosen_threshold": 0.05,
+        "test_unfiltered_mean_r": -0.0038,
+        "test_filtered_mean_r": 0.0175,
+        "test_filtered_n": 270,
+        "improves_on_test": true
+      },
+      "2026": {
+        "train_n": 2330,
+        "test_n": 1014,
+        "train_fitness_by_threshold": {
+          "0.05": {
+            "n": 1570,
+            "mean_r": 0.0309
+          },
+          "0.06": {
+            "n": 1752,
+            "mean_r": 0.0268
+          },
+          "0.08": {
+            "n": 2016,
+            "mean_r": 0.0303
+          },
+          "0.1": {
+            "n": 2210,
+            "mean_r": 0.0206
+          },
+          "0.12": {
+            "n": 2236,
+            "mean_r": 0.0232
+          },
+          "0.15": {
+            "n": 2284,
+            "mean_r": 0.0215
+          }
+        },
+        "chosen_threshold": 0.05,
+        "test_unfiltered_mean_r": 0.0378,
+        "test_filtered_mean_r": 0.0586,
+        "test_filtered_n": 444,
+        "improves_on_test": true
+      }
+    },
+    "grid_tested": [
+      0.05,
+      0.06,
+      0.08,
+      0.1,
+      0.12,
+      0.15
+    ],
+    "stability": {
+      "0.05": 4,
+      "0.15": 2
+    },
+    "most_common_threshold": 0.05,
+    "most_common_count": 4,
+    "generalizes_count": 3,
+    "final_eval": {
+      "0.01": {
+        "n": 2014,
+        "pass_rate": 70.2,
+        "median_days": 328.0
+      },
+      "0.02": {
+        "n": 2014,
+        "pass_rate": 22.8,
+        "median_days": 35
+      }
+    },
+    "fixed_5pct_eval": {
+      "n_tagged_kept": 2014,
+      "0.01": {
+        "n": 2014,
+        "pass_rate": 70.2,
+        "median_days": 328.0
+      },
+      "0.02": {
+        "n": 2014,
+        "pass_rate": 22.8,
+        "median_days": 35
+      }
+    }
+  }
+}

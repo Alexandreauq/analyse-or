@@ -3,6 +3,24 @@ import gold_bot.bot as bot
 import gold_bot.risk as risk
 
 
+@pytest.fixture(autouse=True)
+def _default_volatility_shock_guard(monkeypatch):
+    """Le garde de choc de volatilite (decide_and_act_vwap/
+    decide_and_act_fibonacci, ajoute le 2026-10-28) appelle
+    confluence.is_volatility_shock a chaque evaluation d'entree -- sans
+    historique reel (>=105 bougies), la vraie fonction renvoie None
+    (historique insuffisant -> bloque par prudence), hors sujet pour la
+    quasi-totalite des tests de ce fichier qui passent un seul candle
+    factice. Scope a ce fichier (pas un conftest.py du dossier) :
+    confluence.is_volatility_shock est le MEME objet module partout --
+    un defaut autouse au niveau dossier avait pollue les tests de
+    test_confluence.py qui exercent la vraie fonction directement.
+    Un test qui veut exercer le choc explicitement l'ecrase avec son
+    propre monkeypatch.setattr dans son corps (meme monkeypatch, meme
+    test -- la derniere affectation gagne)."""
+    monkeypatch.setattr(bot.confluence, "is_volatility_shock", lambda candles: False)
+
+
 def _signal(status, entry=None, stop_loss=None, take_profit=None):
     return {"status": status, "price": entry, "entry": entry, "stop_loss": stop_loss,
             "take_profit": take_profit, "trend": "baissier" if status != "neutre" else "neutre",
@@ -498,12 +516,49 @@ def test_decide_and_act_vwap_no_action_when_insufficient_history(monkeypatch):
     assert result == {"action": "aucune", "reason": "historique insuffisant pour l'EMA200"}
 
 
+def test_decide_and_act_vwap_closes_open_position_during_news_blackout(monkeypatch):
+    state = _vwap_state()
+    monkeypatch.setattr(bot.vwap_reversion, "latest_state", lambda candles: state)
+    existing = [{"id": "1", "symbol": "XAUUSD", "type": "POSITION_TYPE_BUY", "takeProfit": None,
+                 "openPrice": 2000.0, "stopLoss": 1990.0, "time": "2026-09-11T10:00:00+00:00"}]
+    result = bot.decide_and_act_vwap(
+        _blackout_candles(), contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
+        balance=10000, equity=10000, open_positions=existing, circuit_breaker=_open_circuit_breaker(),
+    )
+    assert result == {"action": "simulation", "steps": [
+        {"type": "clôture_simulee", "position_id": "1", "symbol": "XAUUSD"},
+    ]}
+
+
+def test_decide_and_act_vwap_no_action_during_news_blackout_when_no_position(monkeypatch):
+    state = _vwap_state()
+    monkeypatch.setattr(bot.vwap_reversion, "latest_state", lambda candles: state)
+    result = bot.decide_and_act_vwap(
+        _blackout_candles(), contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
+        balance=10000, equity=10000, open_positions=[], circuit_breaker=_open_circuit_breaker(),
+    )
+    assert result == {"action": "aucune", "reason": "publication macro imminente ou en cours, aucune position ouverte à clôturer"}
+
+
+def test_decide_and_act_vwap_no_action_during_volatility_shock(monkeypatch):
+    # regime haussier (close > ema200) et close <= vwap - 1.5*std (2010 - 1.5*20 = 1980)
+    # -- signal d'entree valide SANS le choc, pour isoler le garde.
+    state = _vwap_state(close=1975.0, vwap=2010.0, vwap_std=20.0, ema200=1900.0)
+    monkeypatch.setattr(bot.vwap_reversion, "latest_state", lambda candles: state)
+    monkeypatch.setattr(bot.confluence, "is_volatility_shock", lambda candles: True)
+    result = bot.decide_and_act_vwap(
+        [{"dummy": True, "time": "2026-01-05 12:00:00"}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
+        balance=10000, equity=10000, open_positions=[], circuit_breaker=_open_circuit_breaker(),
+    )
+    assert result == {"action": "aucune", "reason": "volatilite anormale (actualite probable), signal ignore par prudence"}
+
+
 def test_decide_and_act_vwap_opens_achat_with_partial_and_runner_legs(monkeypatch):
     # regime haussier (close > ema200) et close <= vwap - 1.5*std (2010 - 1.5*20 = 1980)
     state = _vwap_state(close=1975.0, vwap=2010.0, vwap_std=20.0, ema200=1900.0)
     monkeypatch.setattr(bot.vwap_reversion, "latest_state", lambda candles: state)
     result = bot.decide_and_act_vwap(
-        [{"dummy": True}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
+        [{"dummy": True, "time": "2026-01-05 12:00:00"}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
         balance=10000, equity=10000, open_positions=[], circuit_breaker=_open_circuit_breaker(),
     )
     assert result["action"] == "simulation"
@@ -536,7 +591,7 @@ def test_decide_and_act_vwap_blocked_by_unfavorable_odds_check(monkeypatch):
         },
     )
     result = bot.decide_and_act_vwap(
-        [{"dummy": True}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
+        [{"dummy": True, "time": "2026-01-05 12:00:00"}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
         balance=10000, equity=10000, open_positions=[], circuit_breaker=_open_circuit_breaker(),
         historical_candles=[{"dummy": True}],
     )
@@ -553,7 +608,7 @@ def test_decide_and_act_vwap_opens_when_odds_check_favorable(monkeypatch):
         },
     )
     result = bot.decide_and_act_vwap(
-        [{"dummy": True}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
+        [{"dummy": True, "time": "2026-01-05 12:00:00"}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
         balance=10000, equity=10000, open_positions=[], circuit_breaker=_open_circuit_breaker(),
         historical_candles=[{"dummy": True}],
     )
@@ -573,7 +628,7 @@ def test_decide_and_act_vwap_checks_circuit_breaker_before_odds_check(monkeypatc
     cb = risk.CircuitBreaker(threshold_pct=0.10, now_fn=lambda: datetime(2026, 9, 10, tzinfo=timezone.utc))
     cb.check(10000)  # reference de depart du jour
     result = bot.decide_and_act_vwap(
-        [{"dummy": True}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
+        [{"dummy": True, "time": "2026-01-05 12:00:00"}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
         balance=10000, equity=8900, open_positions=[], circuit_breaker=cb,  # -11%, coupe-circuit declenche
         historical_candles=[{"dummy": True}],
     )
@@ -593,7 +648,7 @@ def test_decide_and_act_vwap_skips_odds_check_when_no_historical_candles(monkeyp
     monkeypatch.setattr(bot.odds_check, "historical_odds_for_setup", _fail_if_called)
 
     result = bot.decide_and_act_vwap(
-        [{"dummy": True}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
+        [{"dummy": True, "time": "2026-01-05 12:00:00"}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
         balance=10000, equity=10000, open_positions=[], circuit_breaker=_open_circuit_breaker(),
     )
     assert result["action"] == "simulation"
@@ -608,7 +663,7 @@ def test_decide_and_act_vwap_uses_xagusd_params_when_symbol_is_xagusd(monkeypatc
     state = _vwap_state(close=1975.0, vwap=2010.0, vwap_std=20.0, ema200=1900.0)
     monkeypatch.setattr(bot.vwap_reversion, "latest_state", lambda candles: state)
     result = bot.decide_and_act_vwap(
-        [{"dummy": True}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
+        [{"dummy": True, "time": "2026-01-05 12:00:00"}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
         balance=10000, equity=10000, open_positions=[], circuit_breaker=_open_circuit_breaker(),
         symbol="XAGUSD",
     )
@@ -631,7 +686,7 @@ def test_decide_and_act_vwap_opens_vente_with_partial_and_runner_legs(monkeypatc
     state = _vwap_state(close=2045.0, vwap=2010.0, vwap_std=20.0, ema200=2100.0)
     monkeypatch.setattr(bot.vwap_reversion, "latest_state", lambda candles: state)
     result = bot.decide_and_act_vwap(
-        [{"dummy": True}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
+        [{"dummy": True, "time": "2026-01-05 12:00:00"}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
         balance=10000, equity=10000, open_positions=[], circuit_breaker=_open_circuit_breaker(),
     )
     assert result["action"] == "simulation"
@@ -653,7 +708,7 @@ def test_decide_and_act_vwap_opens_single_leg_when_partial_too_small(monkeypatch
     state = _vwap_state(close=1975.0, vwap=2010.0, vwap_std=20.0, ema200=1900.0)
     monkeypatch.setattr(bot.vwap_reversion, "latest_state", lambda candles: state)
     result = bot.decide_and_act_vwap(
-        [{"dummy": True}], contract_size=100, volume_step=0.01, min_volume=0.3, max_volume=500,
+        [{"dummy": True, "time": "2026-01-05 12:00:00"}], contract_size=100, volume_step=0.01, min_volume=0.3, max_volume=500,
         balance=10000, equity=10000, open_positions=[], circuit_breaker=_open_circuit_breaker(),
     )
     assert result["action"] == "simulation"
@@ -668,7 +723,7 @@ def test_decide_and_act_vwap_no_action_when_no_entry_signal(monkeypatch):
     state = _vwap_state(close=2010.0, vwap=2010.0, vwap_std=2.0, ema200=1995.0)
     monkeypatch.setattr(bot.vwap_reversion, "latest_state", lambda candles: state)
     result = bot.decide_and_act_vwap(
-        [{"dummy": True}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
+        [{"dummy": True, "time": "2026-01-05 12:00:00"}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
         balance=10000, equity=10000, open_positions=[], circuit_breaker=_open_circuit_breaker(),
     )
     assert result == {"action": "aucune", "reason": "pas de signal d'entree"}
@@ -678,7 +733,7 @@ def test_decide_and_act_vwap_no_action_before_min_bars_into_session(monkeypatch)
     state = _vwap_state(close=1985.0, vwap=2010.0, vwap_std=10.0, ema200=1900.0, bars_into_session=3)
     monkeypatch.setattr(bot.vwap_reversion, "latest_state", lambda candles: state)
     result = bot.decide_and_act_vwap(
-        [{"dummy": True}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
+        [{"dummy": True, "time": "2026-01-05 12:00:00"}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
         balance=10000, equity=10000, open_positions=[], circuit_breaker=_open_circuit_breaker(),
     )
     assert result == {"action": "aucune", "reason": "debut de session, VWAP pas encore stabilisee"}
@@ -688,7 +743,7 @@ def test_decide_and_act_vwap_no_action_after_session_end_hour(monkeypatch):
     state = _vwap_state(close=1985.0, vwap=2010.0, vwap_std=10.0, ema200=1900.0, hour_utc=22)
     monkeypatch.setattr(bot.vwap_reversion, "latest_state", lambda candles: state)
     result = bot.decide_and_act_vwap(
-        [{"dummy": True}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
+        [{"dummy": True, "time": "2026-01-05 12:00:00"}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
         balance=10000, equity=10000, open_positions=[], circuit_breaker=_open_circuit_breaker(),
     )
     assert result == {"action": "aucune", "reason": "trop tard dans la session pour ouvrir"}
@@ -698,7 +753,7 @@ def test_decide_and_act_vwap_no_action_when_std_zero(monkeypatch):
     state = _vwap_state(close=2005.0, vwap=2010.0, vwap_std=0.0, ema200=1995.0)
     monkeypatch.setattr(bot.vwap_reversion, "latest_state", lambda candles: state)
     result = bot.decide_and_act_vwap(
-        [{"dummy": True}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
+        [{"dummy": True, "time": "2026-01-05 12:00:00"}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
         balance=10000, equity=10000, open_positions=[], circuit_breaker=_open_circuit_breaker(),
     )
     assert result == {"action": "aucune", "reason": "ecart-type VWAP indisponible"}
@@ -711,7 +766,7 @@ def test_decide_and_act_vwap_no_action_when_distance_too_small(monkeypatch):
     state = _vwap_state(close=2009.9975, vwap=2010.0, vwap_std=0.001, ema200=1995.0)
     monkeypatch.setattr(bot.vwap_reversion, "latest_state", lambda candles: state)
     result = bot.decide_and_act_vwap(
-        [{"dummy": True}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
+        [{"dummy": True, "time": "2026-01-05 12:00:00"}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
         balance=10000, equity=10000, open_positions=[], circuit_breaker=_open_circuit_breaker(),
     )
     assert result == {"action": "aucune", "reason": "distance entree-stop trop faible (ecart-type degenere)"}
@@ -724,7 +779,7 @@ def test_decide_and_act_vwap_holds_open_position_when_no_trailing_update(monkeyp
     existing = [{"id": "1", "symbol": "XAUUSD", "type": "POSITION_TYPE_BUY", "openPrice": 2000.0,
                  "stopLoss": 1990.0, "time": "2026-09-29T10:00:00.000Z"}]
     result = bot.decide_and_act_vwap(
-        [{"dummy": True}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
+        [{"dummy": True, "time": "2026-01-05 12:00:00"}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
         balance=10000, equity=10000, open_positions=existing, circuit_breaker=_open_circuit_breaker(),
     )
     assert result == {"action": "aucune", "reason": "position ouverte, pas de mise a jour du stop suiveur"}
@@ -744,7 +799,7 @@ def test_decide_and_act_vwap_modifies_stop_when_trailing_stop_updates_achat(monk
     existing = [{"id": "1", "symbol": "XAUUSD", "type": "POSITION_TYPE_BUY", "openPrice": 2000.0,
                  "stopLoss": 1990.0, "time": "2026-09-29T10:00:00.000Z"}]
     result = bot.decide_and_act_vwap(
-        [{"dummy": True}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
+        [{"dummy": True, "time": "2026-01-05 12:00:00"}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
         balance=10000, equity=10000, open_positions=existing, circuit_breaker=_open_circuit_breaker(),
     )
     assert captured == {"direction": "achat", "entry_time_iso": "2026-09-29T10:00:00.000Z",
@@ -767,7 +822,7 @@ def test_decide_and_act_vwap_modifies_stop_when_trailing_stop_updates_vente(monk
     existing = [{"id": "1", "symbol": "XAUUSD", "type": "POSITION_TYPE_SELL", "openPrice": 2010.0,
                  "stopLoss": 2020.0, "time": "2026-09-29T10:00:00.000Z"}]
     result = bot.decide_and_act_vwap(
-        [{"dummy": True}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
+        [{"dummy": True, "time": "2026-01-05 12:00:00"}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
         balance=10000, equity=10000, open_positions=existing, circuit_breaker=_open_circuit_breaker(),
     )
     assert captured["direction"] == "vente"
@@ -786,7 +841,7 @@ def test_decide_and_act_vwap_closes_at_session_end_before_checking_trailing_stop
     existing = [{"id": "1", "symbol": "XAUUSD", "type": "POSITION_TYPE_BUY", "openPrice": 2000.0,
                  "stopLoss": 1990.0, "time": "2026-09-29T10:00:00.000Z"}]
     result = bot.decide_and_act_vwap(
-        [{"dummy": True}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
+        [{"dummy": True, "time": "2026-01-05 12:00:00"}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
         balance=10000, equity=10000, open_positions=existing, circuit_breaker=_open_circuit_breaker(),
     )
     assert result == {"action": "simulation", "steps": [{"type": "clôture_simulee", "position_id": "1", "symbol": "XAUUSD"}]}
@@ -797,7 +852,7 @@ def test_decide_and_act_vwap_refuses_when_position_fields_missing(monkeypatch):
     monkeypatch.setattr(bot.vwap_reversion, "latest_state", lambda candles: state)
     existing = [{"id": "1", "symbol": "XAUUSD", "type": "POSITION_TYPE_BUY"}]  # pas de openPrice/stopLoss/time
     result = bot.decide_and_act_vwap(
-        [{"dummy": True}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
+        [{"dummy": True, "time": "2026-01-05 12:00:00"}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
         balance=10000, equity=10000, open_positions=existing, circuit_breaker=_open_circuit_breaker(),
     )
     assert result == {"action": "aucune", "reason": "champs de position manquants, aucune action par prudence"}
@@ -808,7 +863,7 @@ def test_decide_and_act_vwap_refuses_on_unexpected_position_type(monkeypatch):
     monkeypatch.setattr(bot.vwap_reversion, "latest_state", lambda candles: state)
     existing = [{"id": "1", "symbol": "XAUUSD", "type": "POSITION_TYPE_UNKNOWN"}]
     result = bot.decide_and_act_vwap(
-        [{"dummy": True}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
+        [{"dummy": True, "time": "2026-01-05 12:00:00"}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
         balance=10000, equity=10000, open_positions=existing, circuit_breaker=_open_circuit_breaker(),
     )
     assert result == {"action": "aucune", "reason": "position de type inattendu, aucune action par prudence"}
@@ -822,7 +877,7 @@ def test_decide_and_act_vwap_refuses_when_multiple_positions_open(monkeypatch):
         {"id": "2", "symbol": "XAUUSD", "type": "POSITION_TYPE_SELL"},
     ]
     result = bot.decide_and_act_vwap(
-        [{"dummy": True}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
+        [{"dummy": True, "time": "2026-01-05 12:00:00"}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
         balance=10000, equity=10000, open_positions=existing, circuit_breaker=_open_circuit_breaker(),
     )
     assert result == {"action": "aucune", "reason": "plusieurs positions ouvertes sur ce symbole, aucune action par prudence"}
@@ -835,7 +890,7 @@ def test_decide_and_act_vwap_blocked_by_circuit_breaker(monkeypatch):
     cb = risk.CircuitBreaker(threshold_pct=0.10, now_fn=lambda: datetime(2026, 9, 10, tzinfo=timezone.utc))
     cb.check(10000)  # référence de départ du jour (equity=10000)
     result = bot.decide_and_act_vwap(
-        [{"dummy": True}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
+        [{"dummy": True, "time": "2026-01-05 12:00:00"}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
         balance=10000, equity=8900, open_positions=[], circuit_breaker=cb,
     )
     assert result == {"action": "aucune", "reason": "coupe-circuit journalier déclenché"}
@@ -845,7 +900,7 @@ def test_decide_and_act_vwap_no_action_when_size_below_minimum(monkeypatch):
     state = _vwap_state(close=1975.0, vwap=2010.0, vwap_std=20.0, ema200=1900.0)
     monkeypatch.setattr(bot.vwap_reversion, "latest_state", lambda candles: state)
     result = bot.decide_and_act_vwap(
-        [{"dummy": True}], contract_size=100, volume_step=0.01, min_volume=1000.0, max_volume=5000.0,
+        [{"dummy": True, "time": "2026-01-05 12:00:00"}], contract_size=100, volume_step=0.01, min_volume=1000.0, max_volume=5000.0,
         balance=10000, equity=10000, open_positions=[], circuit_breaker=_open_circuit_breaker(),
     )
     assert result == {"action": "aucune", "reason": "compte trop petit pour ce stop (volume sous le minimum du broker)"}
@@ -866,6 +921,44 @@ def test_decide_and_act_fibonacci_no_action_when_insufficient_history(monkeypatc
     assert result == {"action": "aucune", "reason": "historique insuffisant pour l'ATR"}
 
 
+def test_decide_and_act_fibonacci_closes_open_position_during_news_blackout(monkeypatch):
+    state = _fib_state()
+    monkeypatch.setattr(bot.fibonacci_reversion, "latest_state", lambda candles, historical_candles=None: state)
+    existing = [{"id": "1", "symbol": "XAUUSD", "type": "POSITION_TYPE_BUY", "takeProfit": None,
+                 "openPrice": 2000.0, "stopLoss": 1990.0, "time": "2026-09-11T10:00:00+00:00"}]
+    result = bot.decide_and_act_fibonacci(
+        _blackout_candles(), contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
+        balance=10000, equity=10000, open_positions=existing, circuit_breaker=_open_circuit_breaker(),
+    )
+    assert result == {"action": "simulation", "steps": [
+        {"type": "clôture_simulee", "position_id": "1", "symbol": "XAUUSD"},
+    ]}
+
+
+def test_decide_and_act_fibonacci_no_action_during_news_blackout_when_no_position(monkeypatch):
+    state = _fib_state()
+    monkeypatch.setattr(bot.fibonacci_reversion, "latest_state", lambda candles, historical_candles=None: state)
+    result = bot.decide_and_act_fibonacci(
+        _blackout_candles(), contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
+        balance=10000, equity=10000, open_positions=[], circuit_breaker=_open_circuit_breaker(),
+    )
+    assert result == {"action": "aucune", "reason": "publication macro imminente ou en cours, aucune position ouverte à clôturer"}
+
+
+def test_decide_and_act_fibonacci_no_action_during_volatility_shock(monkeypatch):
+    # signal d'entree valide (memes chiffres que
+    # test_decide_and_act_fibonacci_opens_achat_with_partial_and_runner_legs)
+    # SANS le choc, pour isoler le garde.
+    state = _fib_state(close=1981.0, high=1982.0, low=1974.0, level=1980.0, bias="achat", atr=20.0)
+    monkeypatch.setattr(bot.fibonacci_reversion, "latest_state", lambda candles, historical_candles=None: state)
+    monkeypatch.setattr(bot.confluence, "is_volatility_shock", lambda candles: True)
+    result = bot.decide_and_act_fibonacci(
+        [{"dummy": True, "time": "2026-01-05 12:00:00"}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
+        balance=10000, equity=10000, open_positions=[], circuit_breaker=_open_circuit_breaker(),
+    )
+    assert result == {"action": "aucune", "reason": "volatilite anormale (actualite probable), signal ignore par prudence"}
+
+
 def test_decide_and_act_fibonacci_closes_both_legs_at_session_end(monkeypatch):
     state = _fib_state(hour_utc=bot.fibonacci_reversion.SESSION_END_HOUR_UTC)
     monkeypatch.setattr(bot.fibonacci_reversion, "latest_state", lambda candles, historical_candles=None: state)
@@ -874,7 +967,7 @@ def test_decide_and_act_fibonacci_closes_both_legs_at_session_end(monkeypatch):
         {"id": "2", "symbol": "XAUUSD", "type": "POSITION_TYPE_BUY", "takeProfit": 2050.0},
     ]
     result = bot.decide_and_act_fibonacci(
-        [{"dummy": True}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
+        [{"dummy": True, "time": "2026-01-05 12:00:00"}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
         balance=10000, equity=10000, open_positions=open_positions, circuit_breaker=_open_circuit_breaker(),
     )
     assert result["action"] == "simulation"
@@ -887,7 +980,7 @@ def test_decide_and_act_fibonacci_no_action_when_only_partial_leg_open(monkeypat
     monkeypatch.setattr(bot.fibonacci_reversion, "latest_state", lambda candles, historical_candles=None: state)
     open_positions = [{"id": "1", "symbol": "XAUUSD", "type": "POSITION_TYPE_BUY", "takeProfit": 2050.0}]
     result = bot.decide_and_act_fibonacci(
-        [{"dummy": True}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
+        [{"dummy": True, "time": "2026-01-05 12:00:00"}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
         balance=10000, equity=10000, open_positions=open_positions, circuit_breaker=_open_circuit_breaker(),
     )
     assert result == {"action": "aucune", "reason": "jambe partielle seule ouverte, rien a gerer"}
@@ -901,7 +994,7 @@ def test_decide_and_act_fibonacci_refuses_when_multiple_runner_positions_open(mo
         {"id": "2", "symbol": "XAUUSD", "type": "POSITION_TYPE_BUY", "takeProfit": None},
     ]
     result = bot.decide_and_act_fibonacci(
-        [{"dummy": True}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
+        [{"dummy": True, "time": "2026-01-05 12:00:00"}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
         balance=10000, equity=10000, open_positions=open_positions, circuit_breaker=_open_circuit_breaker(),
     )
     assert result == {"action": "aucune", "reason": "plusieurs positions ouvertes sur ce symbole, aucune action par prudence"}
@@ -912,7 +1005,7 @@ def test_decide_and_act_fibonacci_refuses_on_unexpected_position_type(monkeypatc
     monkeypatch.setattr(bot.fibonacci_reversion, "latest_state", lambda candles, historical_candles=None: state)
     open_positions = [{"id": "1", "symbol": "XAUUSD", "type": "SOMETHING_ELSE", "takeProfit": None}]
     result = bot.decide_and_act_fibonacci(
-        [{"dummy": True}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
+        [{"dummy": True, "time": "2026-01-05 12:00:00"}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
         balance=10000, equity=10000, open_positions=open_positions, circuit_breaker=_open_circuit_breaker(),
     )
     assert result == {"action": "aucune", "reason": "position de type inattendu, aucune action par prudence"}
@@ -923,7 +1016,7 @@ def test_decide_and_act_fibonacci_refuses_when_position_fields_missing(monkeypat
     monkeypatch.setattr(bot.fibonacci_reversion, "latest_state", lambda candles, historical_candles=None: state)
     open_positions = [{"id": "1", "symbol": "XAUUSD", "type": "POSITION_TYPE_BUY", "takeProfit": None}]  # pas de openPrice/stopLoss/time
     result = bot.decide_and_act_fibonacci(
-        [{"dummy": True}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
+        [{"dummy": True, "time": "2026-01-05 12:00:00"}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
         balance=10000, equity=10000, open_positions=open_positions, circuit_breaker=_open_circuit_breaker(),
     )
     assert result == {"action": "aucune", "reason": "champs de position manquants, aucune action par prudence"}
@@ -936,7 +1029,7 @@ def test_decide_and_act_fibonacci_holds_when_no_trailing_update(monkeypatch):
     open_positions = [{"id": "1", "symbol": "XAUUSD", "type": "POSITION_TYPE_BUY", "takeProfit": None,
                         "openPrice": 2000.0, "stopLoss": 1990.0, "time": "2026-09-01T10:00:00+00:00"}]
     result = bot.decide_and_act_fibonacci(
-        [{"dummy": True}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
+        [{"dummy": True, "time": "2026-01-05 12:00:00"}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
         balance=10000, equity=10000, open_positions=open_positions, circuit_breaker=_open_circuit_breaker(),
     )
     assert result == {"action": "aucune", "reason": "position ouverte, pas de mise a jour du stop suiveur"}
@@ -949,7 +1042,7 @@ def test_decide_and_act_fibonacci_modifies_stop_when_trailing_stop_updates(monke
     open_positions = [{"id": "1", "symbol": "XAUUSD", "type": "POSITION_TYPE_BUY", "takeProfit": None,
                         "openPrice": 2000.0, "stopLoss": 1990.0, "time": "2026-09-01T10:00:00+00:00"}]
     result = bot.decide_and_act_fibonacci(
-        [{"dummy": True}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
+        [{"dummy": True, "time": "2026-01-05 12:00:00"}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
         balance=10000, equity=10000, open_positions=open_positions, circuit_breaker=_open_circuit_breaker(),
     )
     assert result == {"action": "simulation", "steps": [
@@ -961,7 +1054,7 @@ def test_decide_and_act_fibonacci_no_action_after_session_end_hour(monkeypatch):
     state = _fib_state(hour_utc=bot.fibonacci_reversion.SESSION_END_HOUR_UTC)
     monkeypatch.setattr(bot.fibonacci_reversion, "latest_state", lambda candles, historical_candles=None: state)
     result = bot.decide_and_act_fibonacci(
-        [{"dummy": True}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
+        [{"dummy": True, "time": "2026-01-05 12:00:00"}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
         balance=10000, equity=10000, open_positions=[], circuit_breaker=_open_circuit_breaker(),
     )
     assert result == {"action": "aucune", "reason": "trop tard dans la session pour ouvrir"}
@@ -971,7 +1064,7 @@ def test_decide_and_act_fibonacci_no_action_when_no_level(monkeypatch):
     state = _fib_state(level=None, bias=None)
     monkeypatch.setattr(bot.fibonacci_reversion, "latest_state", lambda candles, historical_candles=None: state)
     result = bot.decide_and_act_fibonacci(
-        [{"dummy": True}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
+        [{"dummy": True, "time": "2026-01-05 12:00:00"}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
         balance=10000, equity=10000, open_positions=[], circuit_breaker=_open_circuit_breaker(),
     )
     assert result == {"action": "aucune", "reason": "aucun niveau de retracement disponible"}
@@ -981,7 +1074,7 @@ def test_decide_and_act_fibonacci_no_action_when_atr_not_positive(monkeypatch):
     state = _fib_state(atr=0.0)
     monkeypatch.setattr(bot.fibonacci_reversion, "latest_state", lambda candles, historical_candles=None: state)
     result = bot.decide_and_act_fibonacci(
-        [{"dummy": True}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
+        [{"dummy": True, "time": "2026-01-05 12:00:00"}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
         balance=10000, equity=10000, open_positions=[], circuit_breaker=_open_circuit_breaker(),
     )
     assert result == {"action": "aucune", "reason": "atr indisponible"}
@@ -991,7 +1084,7 @@ def test_decide_and_act_fibonacci_no_action_when_trend_strength_unmeasurable(mon
     state = _fib_state(trend_strength=None)
     monkeypatch.setattr(bot.fibonacci_reversion, "latest_state", lambda candles, historical_candles=None: state)
     result = bot.decide_and_act_fibonacci(
-        [{"dummy": True}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
+        [{"dummy": True, "time": "2026-01-05 12:00:00"}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
         balance=10000, equity=10000, open_positions=[], circuit_breaker=_open_circuit_breaker(),
     )
     assert result == {"action": "aucune", "reason": "historique insuffisant pour mesurer la tendance"}
@@ -1005,7 +1098,7 @@ def test_decide_and_act_fibonacci_filtered_by_strong_trend(monkeypatch):
                         atr=20.0, trend_strength=0.06)
     monkeypatch.setattr(bot.fibonacci_reversion, "latest_state", lambda candles, historical_candles=None: state)
     result = bot.decide_and_act_fibonacci(
-        [{"dummy": True}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
+        [{"dummy": True, "time": "2026-01-05 12:00:00"}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
         balance=10000, equity=10000, open_positions=[], circuit_breaker=_open_circuit_breaker(),
     )
     assert result == {"action": "aucune", "reason": "tendance trop forte, signal filtre"}
@@ -1020,7 +1113,7 @@ def test_decide_and_act_fibonacci_no_action_when_level_not_touched(monkeypatch):
     state = _fib_state(close=1990.0, high=1992.0, low=1987.0, level=1980.0, bias="achat", atr=20.0)
     monkeypatch.setattr(bot.fibonacci_reversion, "latest_state", lambda candles, historical_candles=None: state)
     result = bot.decide_and_act_fibonacci(
-        [{"dummy": True}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
+        [{"dummy": True, "time": "2026-01-05 12:00:00"}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
         balance=10000, equity=10000, open_positions=[], circuit_breaker=_open_circuit_breaker(),
     )
     assert result == {"action": "aucune", "reason": "pas de signal d'entree"}
@@ -1033,7 +1126,7 @@ def test_decide_and_act_fibonacci_opens_achat_with_partial_and_runner_legs(monke
     state = _fib_state(close=1981.0, high=1982.0, low=1974.0, level=1980.0, bias="achat", atr=20.0)
     monkeypatch.setattr(bot.fibonacci_reversion, "latest_state", lambda candles, historical_candles=None: state)
     result = bot.decide_and_act_fibonacci(
-        [{"dummy": True}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
+        [{"dummy": True, "time": "2026-01-05 12:00:00"}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
         balance=10000, equity=10000, open_positions=[], circuit_breaker=_open_circuit_breaker(),
     )
     assert result["action"] == "simulation"
@@ -1061,7 +1154,7 @@ def test_decide_and_act_fibonacci_opens_vente_with_partial_and_runner_legs(monke
     state = _fib_state(close=1979.0, high=1986.0, low=1978.0, level=1980.0, bias="vente", atr=20.0)
     monkeypatch.setattr(bot.fibonacci_reversion, "latest_state", lambda candles, historical_candles=None: state)
     result = bot.decide_and_act_fibonacci(
-        [{"dummy": True}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
+        [{"dummy": True, "time": "2026-01-05 12:00:00"}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
         balance=10000, equity=10000, open_positions=[], circuit_breaker=_open_circuit_breaker(),
     )
     assert result["action"] == "simulation"
@@ -1083,7 +1176,7 @@ def test_decide_and_act_fibonacci_no_action_when_distance_too_small(monkeypatch)
     state = _fib_state(close=2000.001, high=2000.002, low=1999.999, level=2000.0, bias="achat", atr=0.0001)
     monkeypatch.setattr(bot.fibonacci_reversion, "latest_state", lambda candles, historical_candles=None: state)
     result = bot.decide_and_act_fibonacci(
-        [{"dummy": True}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
+        [{"dummy": True, "time": "2026-01-05 12:00:00"}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
         balance=10000, equity=10000, open_positions=[], circuit_breaker=_open_circuit_breaker(),
     )
     assert result == {"action": "aucune", "reason": "distance entree-stop trop faible"}
@@ -1096,7 +1189,7 @@ def test_decide_and_act_fibonacci_blocked_by_circuit_breaker(monkeypatch):
     cb = risk.CircuitBreaker(threshold_pct=0.10, now_fn=lambda: datetime(2026, 9, 10, tzinfo=timezone.utc))
     cb.check(10000)
     result = bot.decide_and_act_fibonacci(
-        [{"dummy": True}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
+        [{"dummy": True, "time": "2026-01-05 12:00:00"}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
         balance=10000, equity=8900, open_positions=[], circuit_breaker=cb,  # -11%, coupe-circuit declenche
     )
     assert result == {"action": "aucune", "reason": "coupe-circuit journalier déclenché"}
@@ -1106,7 +1199,7 @@ def test_decide_and_act_fibonacci_no_action_when_size_below_minimum(monkeypatch)
     state = _fib_state(close=1981.0, high=1982.0, low=1974.0, level=1980.0, bias="achat", atr=20.0)
     monkeypatch.setattr(bot.fibonacci_reversion, "latest_state", lambda candles, historical_candles=None: state)
     result = bot.decide_and_act_fibonacci(
-        [{"dummy": True}], contract_size=100, volume_step=0.01, min_volume=10000.0, max_volume=50000.0,
+        [{"dummy": True, "time": "2026-01-05 12:00:00"}], contract_size=100, volume_step=0.01, min_volume=10000.0, max_volume=50000.0,
         balance=10000, equity=10000, open_positions=[], circuit_breaker=_open_circuit_breaker(),
     )
     assert result == {"action": "aucune", "reason": "compte trop petit pour ce stop (volume sous le minimum du broker)"}
@@ -1126,7 +1219,7 @@ def test_decide_and_act_fibonacci_opens_single_leg_when_partial_too_small(monkey
     state = _fib_state(close=1981.0, high=1982.0, low=1974.0, level=1980.0, bias="achat", atr=28.0)
     monkeypatch.setattr(bot.fibonacci_reversion, "latest_state", lambda candles, historical_candles=None: state)
     result = bot.decide_and_act_fibonacci(
-        [{"dummy": True}], contract_size=100, volume_step=0.01, min_volume=0.3, max_volume=500,
+        [{"dummy": True, "time": "2026-01-05 12:00:00"}], contract_size=100, volume_step=0.01, min_volume=0.3, max_volume=500,
         balance=10000, equity=10000, open_positions=[], circuit_breaker=_open_circuit_breaker(),
     )
     assert result["action"] == "simulation"

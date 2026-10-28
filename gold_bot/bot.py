@@ -212,13 +212,30 @@ def decide_and_act_vwap(candles: list[dict], *, contract_size: float, balance: f
     vwap_reversion.compute_trailing_stop) ou en fin de session (22h UTC).
     `symbol` sélectionne les seuils entrée/stop/suiveur/prise partielle
     propres à l'instrument (voir vwap_reversion.get_symbol_params) --
-    XAUUSD par défaut, pour ne rien changer au comportement existant."""
+    XAUUSD par défaut, pour ne rien changer au comportement existant.
+
+    Publication macro connue (CPI/Emploi/FOMC/BCE/BOE, voir
+    confluence.is_news_blackout) : toute position ouverte sur `symbol`
+    est clôturée immédiatement (préventif, même logique que
+    decide_and_act) -- aucune nouvelle entrée tant que la fenêtre dure.
+    `confluence.is_volatility_shock` (réactif, basé sur l'amplitude réelle
+    des bougies, pas un calendrier) bloque EN PLUS toute nouvelle entrée
+    pendant un choc de volatilité -- qu'il soit causé par une actualité
+    connue qui déborde de sa fenêtre (conférence de presse FOMC/BCE,
+    trouvé le 2026-10-28, perte réelle sur le compte FTMO) ou une
+    actualité non programmée. Ne force PAS la clôture d'une position déjà
+    ouverte pendant un choc réactif (contrairement au blackout calendaire
+    préventif) : le stop déjà posé gère la sortie, une clôture au marché
+    EN PLEIN choc risquerait un prix pire que ce stop."""
     params = vwap_reversion.get_symbol_params(symbol)
     circuit_breaker.check(equity)
 
     state = vwap_reversion.latest_state(candles)
     if state is None:
         return {"action": "aucune", "reason": "historique insuffisant pour l'EMA200"}
+
+    as_of = datetime.fromisoformat(candles[-1]["time"].replace(" ", "T")).replace(tzinfo=timezone.utc)
+    news_blackout = confluence.is_news_blackout(as_of)
 
     matching = [p for p in open_positions if p.get("symbol") == symbol]
     # Prise de profit partielle (voir docs/superpowers/specs/2026-09-30-
@@ -231,6 +248,12 @@ def decide_and_act_vwap(candles: list[dict], *, contract_size: float, balance: f
 
     if len(runner_matching) > 1 or len(partial_matching) > 1:
         return {"action": "aucune", "reason": "plusieurs positions ouvertes sur ce symbole, aucune action par prudence"}
+
+    if news_blackout:
+        if not matching:
+            return {"action": "aucune", "reason": "publication macro imminente ou en cours, aucune position ouverte à clôturer"}
+        steps = [{"type": "clôture_simulee", "position_id": p.get("id"), "symbol": symbol} for p in matching]
+        return {"action": "simulation", "steps": steps}
 
     if matching:
         if state["hour_utc"] >= vwap_reversion.SESSION_END_HOUR_UTC:
@@ -269,6 +292,8 @@ def decide_and_act_vwap(candles: list[dict], *, contract_size: float, balance: f
         return {"action": "aucune", "reason": "debut de session, VWAP pas encore stabilisee"}
     if state["hour_utc"] >= vwap_reversion.SESSION_END_HOUR_UTC:
         return {"action": "aucune", "reason": "trop tard dans la session pour ouvrir"}
+    if confluence.is_volatility_shock(candles) is not False:
+        return {"action": "aucune", "reason": "volatilite anormale (actualite probable), signal ignore par prudence"}
     if state["vwap_std"] <= 0:
         return {"action": "aucune", "reason": "ecart-type VWAP indisponible"}
 
@@ -348,12 +373,29 @@ def decide_and_act_fibonacci(candles: list[dict], *, contract_size: float, balan
     `candles` seul (fenêtre récente de quelques jours) ne couvre jamais
     TREND_WINDOW_DAYS jours complets. Il n'alimente PAS le filtre de
     cotes historiques (odds_check) : celui-ci n'a jamais été validé
-    pour ce moteur, voir le spec (non-objectif explicite)."""
+    pour ce moteur, voir le spec (non-objectif explicite).
+
+    Publication macro connue (CPI/Emploi/FOMC/BCE/BOE, voir
+    confluence.is_news_blackout) : toute position ouverte sur `symbol`
+    est clôturée immédiatement (préventif, même logique que
+    decide_and_act) -- aucune nouvelle entrée tant que la fenêtre dure.
+    `confluence.is_volatility_shock` (réactif, basé sur l'amplitude réelle
+    des bougies, pas un calendrier) bloque EN PLUS toute nouvelle entrée
+    pendant un choc de volatilité -- qu'il soit causé par une actualité
+    connue qui déborde de sa fenêtre (conférence de presse FOMC/BCE,
+    trouvé le 2026-10-28, perte réelle sur le compte FTMO) ou une
+    actualité non programmée. Ne force PAS la clôture d'une position déjà
+    ouverte pendant un choc réactif (contrairement au blackout calendaire
+    préventif) : le stop déjà posé gère la sortie, une clôture au marché
+    EN PLEIN choc risquerait un prix pire que ce stop."""
     circuit_breaker.check(equity)
 
     state = fibonacci_reversion.latest_state(candles, historical_candles)
     if state is None:
         return {"action": "aucune", "reason": "historique insuffisant pour l'ATR"}
+
+    as_of = datetime.fromisoformat(candles[-1]["time"].replace(" ", "T")).replace(tzinfo=timezone.utc)
+    news_blackout = confluence.is_news_blackout(as_of)
 
     matching = [p for p in open_positions if p.get("symbol") == symbol]
     runner_matching = [p for p in matching if not p.get("takeProfit")]
@@ -361,6 +403,12 @@ def decide_and_act_fibonacci(candles: list[dict], *, contract_size: float, balan
 
     if len(runner_matching) > 1 or len(partial_matching) > 1:
         return {"action": "aucune", "reason": "plusieurs positions ouvertes sur ce symbole, aucune action par prudence"}
+
+    if news_blackout:
+        if not matching:
+            return {"action": "aucune", "reason": "publication macro imminente ou en cours, aucune position ouverte à clôturer"}
+        steps = [{"type": "clôture_simulee", "position_id": p.get("id"), "symbol": symbol} for p in matching]
+        return {"action": "simulation", "steps": steps}
 
     if matching:
         if state["hour_utc"] >= fibonacci_reversion.SESSION_END_HOUR_UTC:
@@ -397,6 +445,8 @@ def decide_and_act_fibonacci(candles: list[dict], *, contract_size: float, balan
 
     if state["hour_utc"] >= fibonacci_reversion.SESSION_END_HOUR_UTC:
         return {"action": "aucune", "reason": "trop tard dans la session pour ouvrir"}
+    if confluence.is_volatility_shock(candles) is not False:
+        return {"action": "aucune", "reason": "volatilite anormale (actualite probable), signal ignore par prudence"}
     if state["level"] is None or state["bias"] is None:
         return {"action": "aucune", "reason": "aucun niveau de retracement disponible"}
     if state["atr"] is None or state["atr"] <= 0:

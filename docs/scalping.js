@@ -332,16 +332,6 @@ const SCALP_HIGH_IMPACT_EVENTS_UTC = [
   '2026-04-03T12:30:00Z', '2026-05-08T12:30:00Z', '2026-06-05T12:30:00Z',
   '2026-07-02T12:30:00Z', '2026-08-07T12:30:00Z', '2026-09-04T12:30:00Z',
   '2026-10-02T12:30:00Z', '2026-11-06T13:30:00Z', '2026-12-04T13:30:00Z',
-  // Décision FOMC (taux directeur US), 14h00 ET, 2e jour de chaque
-  // réunion — source : federalreserve.gov/monetarypolicy/fomccalendars.htm
-  '2026-01-28T19:00:00Z', '2026-03-18T18:00:00Z', '2026-04-29T18:00:00Z',
-  '2026-06-17T18:00:00Z', '2026-07-29T18:00:00Z', '2026-09-16T18:00:00Z',
-  '2026-10-28T18:00:00Z', '2026-12-09T19:00:00Z',
-  // Décision BCE (taux directeur zone euro), 14h15 CET/CEST, 2e jour de
-  // chaque réunion — source : ecb.europa.eu/press/calendars/mgcgc
-  '2026-03-19T13:15:00Z', '2026-04-30T12:15:00Z', '2026-06-11T12:15:00Z',
-  '2026-07-23T12:15:00Z', '2026-09-10T12:15:00Z', '2026-10-29T13:15:00Z',
-  '2026-12-17T13:15:00Z',
   // Décision Bank of England (taux directeur GBP), 12h00 heure de
   // Londres — source : bankofengland.co.uk/monetary-policy/upcoming-mpc-dates
   '2026-02-05T12:00:00Z', '2026-03-19T12:00:00Z', '2026-04-30T11:00:00Z',
@@ -349,16 +339,53 @@ const SCALP_HIGH_IMPACT_EVENTS_UTC = [
   '2026-11-05T12:00:00Z', '2026-12-17T12:00:00Z',
 ];
 
+// Fenêtre de black-out plus LONGUE, réservée aux banques centrales qui
+// publient leur décision puis tiennent une conférence de presse ~30-45
+// minutes plus tard (FOMC, BCE) — la conférence (questions/réponses du
+// président) cause souvent un second mouvement plus violent et plus long
+// que l'annonce elle-même (CPI/Emploi/BOE n'ont pas cette structure en
+// deux temps, ±15min suffit). Portage du correctif Python du 2026-10-28
+// (gold_bot/confluence.py) : la décision FOMC de 18h00 UTC n'a causé
+// qu'un True Range ~11 sur sa propre bougie, mais la conférence de
+// 18h30 UTC a fait grimper le True Range à 17-25 pendant les 40 minutes
+// suivantes — largement hors de l'ancienne fenêtre ±15min, cause
+// directe d'une perte réelle sur le compte FTMO (bot de trading réel,
+// pas cet outil d'affichage — mais la même faille de calendrier existait
+// ici). 100 minutes couvre 15min avant l'annonce + l'annonce + la
+// conférence + une bonne marge sur ses remous.
+const PRESS_CONFERENCE_BLACKOUT_MINUTES = 100;
+const PRESS_CONFERENCE_EVENTS_UTC = [
+  // Décision FOMC (taux directeur US) + conférence de presse, 14h00 ET,
+  // 2e jour de chaque réunion — source :
+  // federalreserve.gov/monetarypolicy/fomccalendars.htm
+  '2026-01-28T19:00:00Z', '2026-03-18T18:00:00Z', '2026-04-29T18:00:00Z',
+  '2026-06-17T18:00:00Z', '2026-07-29T18:00:00Z', '2026-09-16T18:00:00Z',
+  '2026-10-28T18:00:00Z', '2026-12-09T19:00:00Z',
+  // Décision BCE (taux directeur zone euro) + conférence de presse,
+  // 14h15 CET/CEST, 2e jour de chaque réunion — source :
+  // ecb.europa.eu/press/calendars/mgcgc
+  '2026-03-19T13:15:00Z', '2026-04-30T12:15:00Z', '2026-06-11T12:15:00Z',
+  '2026-07-23T12:15:00Z', '2026-09-10T12:15:00Z', '2026-10-29T13:15:00Z',
+  '2026-12-17T13:15:00Z',
+];
+
 /**
- * `date` tombe-t-elle dans la fenêtre de black-out (±SCALP_NEWS_BLACKOUT_MINUTES)
- * d'une publication macro à très fort impact ? Utilisé pour neutraliser
- * computeSignal plutôt que de laisser le moteur technique interpréter le
- * bruit de la publication comme un vrai signal.
+ * `date` tombe-t-elle dans la fenêtre de black-out d'une publication
+ * macro à très fort impact ? ±SCALP_NEWS_BLACKOUT_MINUTES pour
+ * SCALP_HIGH_IMPACT_EVENTS_UTC (publication ponctuelle),
+ * ±PRESS_CONFERENCE_BLACKOUT_MINUTES pour PRESS_CONFERENCE_EVENTS_UTC
+ * (banques centrales avec conférence de presse). Utilisé pour
+ * neutraliser computeSignal plutôt que de laisser le moteur technique
+ * interpréter le bruit de la publication comme un vrai signal.
  */
 function isNewsBlackout(date) {
   const t = date.getTime();
   const windowMs = SCALP_NEWS_BLACKOUT_MINUTES * 60 * 1000;
-  return SCALP_HIGH_IMPACT_EVENTS_UTC.some(iso => Math.abs(t - new Date(iso).getTime()) <= windowMs);
+  if (SCALP_HIGH_IMPACT_EVENTS_UTC.some(iso => Math.abs(t - new Date(iso).getTime()) <= windowMs)) {
+    return true;
+  }
+  const pcWindowMs = PRESS_CONFERENCE_BLACKOUT_MINUTES * 60 * 1000;
+  return PRESS_CONFERENCE_EVENTS_UTC.some(iso => Math.abs(t - new Date(iso).getTime()) <= pcWindowMs);
 }
 
 /**

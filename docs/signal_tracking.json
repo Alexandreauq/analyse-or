@@ -2578,6 +2578,28 @@
       "shadow_resolved": false,
       "shadow_price": null,
       "shadow_return_pct": null
+    },
+    {
+      "id": "PYPL-2026-10-28",
+      "ticker": "PYPL",
+      "name": "PayPal Holdings",
+      "index": "NASDAQ",
+      "status": "open",
+      "entry_date": "2026-10-28",
+      "entry_price": 56.09000015258789,
+      "target_exit_price": 89.1284566477868,
+      "index_price_at_entry": 29651.439453125,
+      "methodology_version": "d5e3d64d8e1db6e91d32c7203a112f5268a0cf68",
+      "close_date": null,
+      "close_price": null,
+      "close_reason": null,
+      "return_pct": null,
+      "index_price_at_close": null,
+      "index_return_pct": null,
+      "shadow_close_date": "2027-04-28",
+      "shadow_resolved": false,
+      "shadow_price": null,
+      "shadow_return_pct": null
     }
   ]
 }

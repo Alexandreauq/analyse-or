@@ -212,6 +212,91 @@ def test_circuit_breaker_state_path_matches_loop_module():
     assert api.CIRCUIT_BREAKER_STATE_PATH == loop.CIRCUIT_BREAKER_STATE_PATH
 
 
+def _write_decisions(path, entries):
+    with open(path, "w", encoding="utf-8") as fh:
+        for entry in entries:
+            fh.write(json.dumps(entry, ensure_ascii=False) + "\n")
+
+
+def test_report_summary_requires_no_token(client, tmp_path, monkeypatch):
+    monkeypatch.setattr(api, "DECISIONS_LOG_PATH", str(tmp_path / "decisions_log.jsonl"))
+    response = client.get("/report-summary")
+    assert response.status_code == 200
+
+
+def test_report_summary_counts_trades_opened_and_errors_today(client, tmp_path, monkeypatch):
+    from datetime import datetime, timezone
+    log_path = tmp_path / "decisions_log.jsonl"
+    monkeypatch.setattr(api, "DECISIONS_LOG_PATH", str(log_path))
+    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    _write_decisions(log_path, [
+        {"action": "aucune", "reason": "pas de signal d'entree", "timestamp": f"{today}T10:00:00Z"},
+        {"action": "aucune", "reason": "pas de signal d'entree", "timestamp": f"{today}T10:01:00Z"},
+        {"action": "exécuté", "timestamp": f"{today}T10:02:00Z", "steps": [
+            {"type": "ouverture_simulee", "symbol": "XAUUSD", "direction": "achat"},
+            {"type": "ouverture_simulee", "symbol": "XAUUSD", "direction": "achat"},
+        ]},
+        {"action": "erreur", "reason": "502", "timestamp": f"{today}T10:03:00Z"},
+    ])
+    body = client.get("/report-summary").json()
+    assert body["today"]["date"] == today
+    assert body["today"]["cycles"] == 4
+    assert body["today"]["trades_opened"] == 2
+    assert body["today"]["errors"] == 1
+    assert body["today"]["blocked_reasons"] == {"pas de signal d'entree": 2}
+
+
+def test_report_summary_simulation_dry_run_counts_as_trade_opened(client, tmp_path, monkeypatch):
+    from datetime import datetime, timezone
+    log_path = tmp_path / "decisions_log.jsonl"
+    monkeypatch.setattr(api, "DECISIONS_LOG_PATH", str(log_path))
+    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    _write_decisions(log_path, [
+        {"action": "simulation_dry_run", "timestamp": f"{today}T10:00:00Z", "steps": [
+            {"type": "ouverture_simulee", "symbol": "XAUUSD", "direction": "vente"},
+        ]},
+    ])
+    body = client.get("/report-summary").json()
+    assert body["today"]["trades_opened"] == 1
+
+
+def test_report_summary_excludes_future_dates_but_week_includes_recent_days(client, tmp_path, monkeypatch):
+    from datetime import datetime, timedelta, timezone
+    log_path = tmp_path / "decisions_log.jsonl"
+    monkeypatch.setattr(api, "DECISIONS_LOG_PATH", str(log_path))
+    today_dt = datetime.now(timezone.utc)
+    today = today_dt.strftime("%Y-%m-%d")
+    three_days_ago = (today_dt - timedelta(days=3)).strftime("%Y-%m-%d")
+    _write_decisions(log_path, [
+        {"action": "erreur", "reason": "x", "timestamp": f"{three_days_ago}T10:00:00Z"},
+    ])
+    body = client.get("/report-summary").json()
+    assert body["today"]["cycles"] == 0
+    assert body["last_7_days"]["cycles"] == 1
+    assert body["last_7_days"]["errors"] == 1
+
+
+def test_report_summary_never_exposes_balance_or_price_fields(client, tmp_path, monkeypatch):
+    # Garde-fou explicite : cet endpoint n'a pas de jeton -- aucune
+    # cle financiere sensible ne doit jamais y figurer, meme si un
+    # futur ajout de champ l'introduisait par erreur.
+    monkeypatch.setattr(api, "DECISIONS_LOG_PATH", str(tmp_path / "decisions_log.jsonl"))
+    body = client.get("/report-summary").json()
+    flat = json.dumps(body)
+    for forbidden in ("balance", "stop_loss", "take_profit", "entry", "equity"):
+        assert forbidden not in flat
+
+
+def test_report_summary_last_decision_timestamp_present(client, tmp_path, monkeypatch):
+    from datetime import datetime, timezone
+    log_path = tmp_path / "decisions_log.jsonl"
+    monkeypatch.setattr(api, "DECISIONS_LOG_PATH", str(log_path))
+    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    _write_decisions(log_path, [{"action": "aucune", "reason": "x", "timestamp": f"{today}T12:00:00Z"}])
+    body = client.get("/report-summary").json()
+    assert body["last_decision_timestamp"] == f"{today}T12:00:00Z"
+
+
 def _seed_dashboard_caches(monkeypatch, tmp_path, *, balance=None, positions=None, candles=None, decisions_lines=None):
     monkeypatch.setattr(api, "LATEST_BALANCE_PATH", str(tmp_path / "latest_balance.json"))
     monkeypatch.setattr(api, "LATEST_POSITIONS_PATH", str(tmp_path / "latest_positions.json"))

@@ -17,6 +17,7 @@ import hmac
 import json
 import math
 import os
+from datetime import datetime, timedelta, timezone
 
 from fastapi import FastAPI, Header, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -174,6 +175,74 @@ def get_status():
         # pas comme la valeur brute mal formée.
         "risk_profile": risk.resolve_risk_profile(current["risk_profile"]),
         "circuit_breaker_day": circuit_breaker_state.get("circuit_breaker_day"),
+        "last_decision_timestamp": _last_decision_timestamp(DECISIONS_LOG_PATH),
+    }
+
+
+def _summarize_decisions(decisions: list[dict]) -> dict:
+    """Agrège une liste de décisions journalisées en compteurs NON
+    sensibles (jamais de solde, de prix, de stop/TP) -- pensé pour
+    alimenter un rapport en langage clair sans authentification, voir
+    /report-summary. "exécuté"/"simulation_dry_run" marquent une
+    décision réelle (vs "aucune"/"erreur"), même convention que
+    _read_recent_decisions ci-dessus."""
+    trades_opened = 0
+    errors = 0
+    blocked_reasons: dict[str, int] = {}
+    for d in decisions:
+        if not isinstance(d, dict):
+            continue
+        action = d.get("action")
+        if action in ("exécuté", "simulation_dry_run"):
+            for step in d.get("steps") or []:
+                if isinstance(step, dict) and step.get("type") == "ouverture_simulee":
+                    trades_opened += 1
+        elif action == "erreur":
+            errors += 1
+        elif action == "aucune":
+            reason = d.get("reason")
+            if isinstance(reason, str):
+                blocked_reasons[reason] = blocked_reasons.get(reason, 0) + 1
+    return {
+        "cycles": len(decisions),
+        "trades_opened": trades_opened,
+        "errors": errors,
+        "blocked_reasons": blocked_reasons,
+    }
+
+
+@app.get("/report-summary")
+def report_summary():
+    """Resume agrege NON sensible de l'activite recente -- sans jeton,
+    comme /status : jamais de solde/positions/prix (voir /dashboard
+    pour ca, qui reste proteges par jeton). Pense pour une IA externe
+    qui redige un rapport client en langage clair sans avoir besoin
+    d'identifiants."""
+    try:
+        with open(DECISIONS_LOG_PATH, "r", encoding="utf-8") as fh:
+            lines = fh.readlines()
+    except Exception:
+        lines = []
+    decisions = []
+    for line in lines:
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            decisions.append(json.loads(line))
+        except json.JSONDecodeError:
+            continue
+
+    now = datetime.now(timezone.utc)
+    today = now.strftime("%Y-%m-%d")
+    week_start = (now - timedelta(days=6)).strftime("%Y-%m-%d")
+
+    today_decisions = [d for d in decisions if isinstance(d, dict) and str(d.get("timestamp", "")).startswith(today)]
+    week_decisions = [d for d in decisions if isinstance(d, dict) and str(d.get("timestamp", "")) >= week_start]
+
+    return {
+        "today": {"date": today, **_summarize_decisions(today_decisions)},
+        "last_7_days": {"since": week_start, **_summarize_decisions(week_decisions)},
         "last_decision_timestamp": _last_decision_timestamp(DECISIONS_LOG_PATH),
     }
 

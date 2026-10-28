@@ -3221,6 +3221,7 @@ function ftmoDashboardSectionHtml() {
       </div>
     </div>
     <div id="ftmoStatusBlock"></div>
+    <div id="ftmoReportBlock"></div>
     <main id="ftmoContent">
       <div class="skeleton">
         <div class="skeleton-line"></div>
@@ -3275,6 +3276,30 @@ function ftmoKillSwitchHtml() {
         <button class="toggle-btn" type="button" id="ftmoKillBtn">${actionLabel}</button>
       </div>
     </div>`;
+}
+
+function ftmoReportHtml(report) {
+  if (!report || !report.summary_fr) return '';
+  const when = report.generated_at ? new Date(report.generated_at).toLocaleString('fr-FR', {
+    day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit', timeZone: 'UTC',
+  }) + ' UTC' : '';
+  const color = report.healthy === false ? 'var(--rust)' : 'var(--gold)';
+  return `
+    <div class="portfolio-position-row" style="border-left:3px solid ${color}">
+      <div class="portfolio-position-main">
+        <span class="company-name">Résumé</span>
+        <span class="hero-sub">${escHtml(report.summary_fr)}</span>
+        ${when ? `<span class="hero-sub">Mis à jour ${when}</span>` : ''}
+      </div>
+    </div>`;
+}
+
+async function loadFtmoReport() {
+  const el = document.getElementById('ftmoReportBlock');
+  if (!el) return;
+  const report = await fetchJsonOrNull('ftmo_report.json');
+  if (!document.getElementById('ftmoReportBlock')) return;
+  el.innerHTML = ftmoReportHtml(report);
 }
 
 function getFtmoToken() {
@@ -3448,6 +3473,7 @@ function wireFtmoDashboardSection() {
   }
   loadFtmoTradingViewChart();
   loadFtmoStatus().then(renderFtmoStatusBlock);
+  loadFtmoReport();
   fetchFtmoDashboard();
   // Seule section du site avec un rafraichissement automatique (60s,
   // meme cadence que la boucle du bot) -- demande explicite de

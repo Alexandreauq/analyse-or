@@ -849,3 +849,109 @@ def test_decide_and_act_vwap_no_action_when_size_below_minimum(monkeypatch):
         balance=10000, equity=10000, open_positions=[], circuit_breaker=_open_circuit_breaker(),
     )
     assert result == {"action": "aucune", "reason": "compte trop petit pour ce stop (volume sous le minimum du broker)"}
+
+
+def _fib_state(close=2000.0, high=2001.0, low=1999.0, level=1990.0, bias="achat",
+               atr=5.0, trend_strength=0.0, hour_utc=10):
+    return {"close": close, "high": high, "low": low, "level": level, "bias": bias,
+            "atr": atr, "trend_strength": trend_strength, "hour_utc": hour_utc}
+
+
+def test_decide_and_act_fibonacci_no_action_when_insufficient_history(monkeypatch):
+    monkeypatch.setattr(bot.fibonacci_reversion, "latest_state", lambda candles: None)
+    result = bot.decide_and_act_fibonacci(
+        [], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
+        balance=10000, equity=10000, open_positions=[], circuit_breaker=_open_circuit_breaker(),
+    )
+    assert result == {"action": "aucune", "reason": "historique insuffisant pour l'ATR/niveau Fibonacci"}
+
+
+def test_decide_and_act_fibonacci_closes_both_legs_at_session_end(monkeypatch):
+    state = _fib_state(hour_utc=bot.fibonacci_reversion.SESSION_END_HOUR_UTC)
+    monkeypatch.setattr(bot.fibonacci_reversion, "latest_state", lambda candles: state)
+    open_positions = [
+        {"id": "1", "symbol": "XAUUSD", "type": "POSITION_TYPE_BUY", "takeProfit": None},
+        {"id": "2", "symbol": "XAUUSD", "type": "POSITION_TYPE_BUY", "takeProfit": 2050.0},
+    ]
+    result = bot.decide_and_act_fibonacci(
+        [{"dummy": True}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
+        balance=10000, equity=10000, open_positions=open_positions, circuit_breaker=_open_circuit_breaker(),
+    )
+    assert result["action"] == "simulation"
+    assert {s["position_id"] for s in result["steps"]} == {"1", "2"}
+    assert all(s["type"] == "clôture_simulee" for s in result["steps"])
+
+
+def test_decide_and_act_fibonacci_no_action_when_only_partial_leg_open(monkeypatch):
+    state = _fib_state()
+    monkeypatch.setattr(bot.fibonacci_reversion, "latest_state", lambda candles: state)
+    open_positions = [{"id": "1", "symbol": "XAUUSD", "type": "POSITION_TYPE_BUY", "takeProfit": 2050.0}]
+    result = bot.decide_and_act_fibonacci(
+        [{"dummy": True}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
+        balance=10000, equity=10000, open_positions=open_positions, circuit_breaker=_open_circuit_breaker(),
+    )
+    assert result == {"action": "aucune", "reason": "jambe partielle seule ouverte, rien a gerer"}
+
+
+def test_decide_and_act_fibonacci_refuses_when_multiple_runner_positions_open(monkeypatch):
+    state = _fib_state()
+    monkeypatch.setattr(bot.fibonacci_reversion, "latest_state", lambda candles: state)
+    open_positions = [
+        {"id": "1", "symbol": "XAUUSD", "type": "POSITION_TYPE_BUY", "takeProfit": None},
+        {"id": "2", "symbol": "XAUUSD", "type": "POSITION_TYPE_BUY", "takeProfit": None},
+    ]
+    result = bot.decide_and_act_fibonacci(
+        [{"dummy": True}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
+        balance=10000, equity=10000, open_positions=open_positions, circuit_breaker=_open_circuit_breaker(),
+    )
+    assert result == {"action": "aucune", "reason": "plusieurs positions ouvertes sur ce symbole, aucune action par prudence"}
+
+
+def test_decide_and_act_fibonacci_refuses_on_unexpected_position_type(monkeypatch):
+    state = _fib_state()
+    monkeypatch.setattr(bot.fibonacci_reversion, "latest_state", lambda candles: state)
+    open_positions = [{"id": "1", "symbol": "XAUUSD", "type": "SOMETHING_ELSE", "takeProfit": None}]
+    result = bot.decide_and_act_fibonacci(
+        [{"dummy": True}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
+        balance=10000, equity=10000, open_positions=open_positions, circuit_breaker=_open_circuit_breaker(),
+    )
+    assert result == {"action": "aucune", "reason": "position de type inattendu, aucune action par prudence"}
+
+
+def test_decide_and_act_fibonacci_refuses_when_position_fields_missing(monkeypatch):
+    state = _fib_state()
+    monkeypatch.setattr(bot.fibonacci_reversion, "latest_state", lambda candles: state)
+    open_positions = [{"id": "1", "symbol": "XAUUSD", "type": "POSITION_TYPE_BUY", "takeProfit": None}]  # pas de openPrice/stopLoss/time
+    result = bot.decide_and_act_fibonacci(
+        [{"dummy": True}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
+        balance=10000, equity=10000, open_positions=open_positions, circuit_breaker=_open_circuit_breaker(),
+    )
+    assert result == {"action": "aucune", "reason": "champs de position manquants, aucune action par prudence"}
+
+
+def test_decide_and_act_fibonacci_holds_when_no_trailing_update(monkeypatch):
+    state = _fib_state()
+    monkeypatch.setattr(bot.fibonacci_reversion, "latest_state", lambda candles: state)
+    monkeypatch.setattr(bot.fibonacci_reversion, "compute_trailing_stop", lambda *a, **k: None)
+    open_positions = [{"id": "1", "symbol": "XAUUSD", "type": "POSITION_TYPE_BUY", "takeProfit": None,
+                        "openPrice": 2000.0, "stopLoss": 1990.0, "time": "2026-09-01T10:00:00+00:00"}]
+    result = bot.decide_and_act_fibonacci(
+        [{"dummy": True}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
+        balance=10000, equity=10000, open_positions=open_positions, circuit_breaker=_open_circuit_breaker(),
+    )
+    assert result == {"action": "aucune", "reason": "position ouverte, pas de mise a jour du stop suiveur"}
+
+
+def test_decide_and_act_fibonacci_modifies_stop_when_trailing_stop_updates(monkeypatch):
+    state = _fib_state()
+    monkeypatch.setattr(bot.fibonacci_reversion, "latest_state", lambda candles: state)
+    monkeypatch.setattr(bot.fibonacci_reversion, "compute_trailing_stop", lambda *a, **k: 1995.0)
+    open_positions = [{"id": "1", "symbol": "XAUUSD", "type": "POSITION_TYPE_BUY", "takeProfit": None,
+                        "openPrice": 2000.0, "stopLoss": 1990.0, "time": "2026-09-01T10:00:00+00:00"}]
+    result = bot.decide_and_act_fibonacci(
+        [{"dummy": True}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
+        balance=10000, equity=10000, open_positions=open_positions, circuit_breaker=_open_circuit_breaker(),
+    )
+    assert result == {"action": "simulation", "steps": [
+        {"type": "modification_simulee", "position_id": "1", "symbol": "XAUUSD", "new_stop_loss": 1995.0},
+    ]}

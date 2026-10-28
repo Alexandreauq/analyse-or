@@ -151,6 +151,32 @@ def test_status_reports_circuit_breaker_fields_from_separate_file(client, monkey
     assert body["circuit_breaker_day"] == "2026-09-10"
 
 
+def test_status_last_decision_timestamp_none_when_log_absent(client, tmp_path, monkeypatch):
+    monkeypatch.setattr(api, "DECISIONS_LOG_PATH", str(tmp_path / "decisions_log.jsonl"))
+    response = client.get("/status")
+    assert response.json()["last_decision_timestamp"] is None
+
+
+def test_status_last_decision_timestamp_reads_last_line(client, tmp_path, monkeypatch):
+    log_path = tmp_path / "decisions_log.jsonl"
+    monkeypatch.setattr(api, "DECISIONS_LOG_PATH", str(log_path))
+    with open(log_path, "w", encoding="utf-8") as fh:
+        fh.write(json.dumps({"action": "aucune", "timestamp": "2026-10-28T19:40:00Z"}) + "\n")
+        fh.write(json.dumps({"action": "aucune", "timestamp": "2026-10-28T19:41:00Z"}) + "\n")
+    response = client.get("/status")
+    assert response.json()["last_decision_timestamp"] == "2026-10-28T19:41:00Z"
+
+
+def test_status_last_decision_timestamp_skips_trailing_malformed_line(client, tmp_path, monkeypatch):
+    log_path = tmp_path / "decisions_log.jsonl"
+    monkeypatch.setattr(api, "DECISIONS_LOG_PATH", str(log_path))
+    with open(log_path, "w", encoding="utf-8") as fh:
+        fh.write(json.dumps({"action": "aucune", "timestamp": "2026-10-28T19:40:00Z"}) + "\n")
+        fh.write("not valid json\n")
+    response = client.get("/status")
+    assert response.json()["last_decision_timestamp"] == "2026-10-28T19:40:00Z"
+
+
 def test_kill_rejected_when_bot_api_token_not_configured(tmp_path, monkeypatch):
     monkeypatch.setattr(state, "STATE_PATH", str(tmp_path / "state.json"))
     monkeypatch.delenv("BOT_API_TOKEN", raising=False)

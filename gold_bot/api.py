@@ -121,6 +121,32 @@ def _read_recent_decisions(path: str, limit: int = RECENT_DECISIONS_LIMIT) -> li
     return decisions[-limit:]
 
 
+def _last_decision_timestamp(path: str) -> str | None:
+    """Horodatage de la DERNIERE decision journalisee (quelle que soit
+    son action -- "aucune" compte, pas seulement une ouverture), pour
+    detecter depuis l'exterieur qu'un service est a l'arret (aucun
+    nouveau cycle depuis trop longtemps) sans avoir besoin d'un acces
+    SSH au VPS. Ignore les lignes vides/invalides en partant de la fin ;
+    fichier absent/illisible ou aucune ligne valide -> None, jamais
+    d'exception (meme contrat que _read_cache/_read_recent_decisions)."""
+    try:
+        with open(path, "r", encoding="utf-8") as fh:
+            lines = fh.readlines()
+    except Exception:
+        return None
+    for line in reversed(lines):
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            entry = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        if isinstance(entry, dict) and isinstance(entry.get("timestamp"), str):
+            return entry["timestamp"]
+    return None
+
+
 def _sanitize_number(v):
     if isinstance(v, float) and not math.isfinite(v):
         return None
@@ -148,6 +174,7 @@ def get_status():
         # pas comme la valeur brute mal formée.
         "risk_profile": risk.resolve_risk_profile(current["risk_profile"]),
         "circuit_breaker_day": circuit_breaker_state.get("circuit_breaker_day"),
+        "last_decision_timestamp": _last_decision_timestamp(DECISIONS_LOG_PATH),
     }
 
 

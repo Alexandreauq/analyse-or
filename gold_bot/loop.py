@@ -15,6 +15,7 @@ import gold_bot.bot as bot
 import gold_bot.broker as broker
 import gold_bot.confluence as confluence
 import gold_bot.ftmo_guard as ftmo_guard
+import gold_bot.notify_ftmo_inactivity as notify_ftmo_inactivity
 import gold_bot.notify_ftmo_signal as notify_ftmo_signal
 import gold_bot.risk as risk
 import gold_bot.state as state
@@ -375,7 +376,12 @@ def run_cycle(token: str, account_id: str,
             # la logique FTMO). Avant _log_decision ci-dessous : l'ordre
             # n'a pas d'impact fonctionnel (les deux sont independants),
             # mais place ici le lien est visible avec le bloc FTMO.
+            # Alerte distincte sur l'inactivite prolongee du compte
+            # (aucun trade REEL depuis N jours, pas un signal) -- voir
+            # gold_bot/notify_ftmo_inactivity.py, marge avant la clause
+            # FTMO 13.2.3(a) (resiliation possible a 30 jours).
             notify_ftmo_signal.maybe_send_signal_email(decision)
+            notify_ftmo_inactivity.maybe_send_inactivity_email(now_dt)
     except Exception as e:
         decision = {"action": "erreur", "reason": f"Erreur pendant la décision : {e}", "symbol": symbol}
         _log_decision(decision, path=DECISIONS_LOG_PATH)

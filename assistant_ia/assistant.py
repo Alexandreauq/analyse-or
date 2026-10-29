@@ -63,18 +63,15 @@ paiement (ex: Mastercard, PayPal) simplement parce qu'ils partagent ce \
 meme secteur au sens du site.
 
 Pour une entreprise du secteur financier (is_financial=true dans la \
-fiche), le score affiche est un RANG PERCENTILE au sein de tout ce \
-secteur melange (banques, assureurs, bourses, paiement...), pas une \
-note absolue sur la sante de l'entreprise. Les assureurs/reassureurs et \
-les reseaux de paiement ont structurellement une rentabilite des \
-capitaux plus elevee qu'une banque de depot classique, ce qui fait \
-mecaniquement ressortir la plupart des grandes banques (francaises ou \
-non) avec un score negatif ("Fragile"/"Tres fragile") alors qu'elles \
-sont fondamentalement saines par ailleurs. Dis-le explicitement avant \
-de qualifier une banque de fragile a partir de ce seul score : precise \
-que ce chiffre la compare a l'ensemble du secteur financier (banques ET \
-non-banques), pas seulement a d'autres banques, et que ce n'est donc \
-pas un diagnostic direct de sa solidite.
+fiche), le score affiche est un RANG PERCENTILE, pas une note absolue \
+sur la sante de l'entreprise — une banque est comparee a d'autres \
+banques, un assureur a d'autres assureurs (jamais les deux pools \
+melanges). Pour les quelques entreprises financieres qui ne sont ni \
+clairement une banque ni clairement un assureur (ex: American Express, \
+Charles Schwab), le score reste un score BRUT non recalibre, sur une \
+echelle differente des autres entreprises — ne le compare jamais \
+directement a un score recalibre d'une autre societe, et dis-le si la \
+question en depend.
 
 Reponds en texte brut, sans formatage markdown (pas de **gras**, pas de \
 listes a tirets, pas de titres) — utilise des phrases completes et des \

@@ -2054,6 +2054,57 @@ FINANCIAL_SECTOR_TICKERS = {
     "PFG", "PRU",
 }
 
+# Sous-classification de FINANCIAL_SECTOR_TICKERS pour le recalibrage par
+# profil (voir _score_profile_key / recalibrate_scores_by_profile) --
+# incident du 2026-10-29 (assistant IA) : comparer une banque de depot a
+# TOUT le secteur financier (assureurs, reassureurs...) la fait ressortir
+# "Fragile"/"Tres fragile" alors que son activite est structurellement
+# moins rentable en capitaux propres qu'une assurance, pas forcement
+# plus fragile. Derivee directement des commentaires deja presents dans
+# FINANCIAL_SECTOR_TICKERS ci-dessus (classification deja faite lors de
+# sa construction, jamais formalisee en donnee jusqu'ici) -- jamais
+# retranscrite a l'aveugle : chaque ticker verifie contre son commentaire
+# d'origine (ex. UNI.MC = Unicaja Banco = banque, a ne pas confondre avec
+# UNI.MI = Unipol = assureur, malgre le prefixe identique).
+#
+# Un ticker de FINANCIAL_SECTOR_TICKERS absent des deux ensembles
+# ci-dessous (AXP, COF, SYF, SCHW, RJF, 8604.T, 8601.T, 8591.T, 6178.T --
+# emetteurs de credit et courtiers/conglomerats reclasses pour des
+# raisons de DONNEES yfinance, pas par similitude de modele economique,
+# voir leurs commentaires respectifs ci-dessus) retombe sur le pool
+# "financial_autre", sous le seuil SCORE_RECALIBRATION_MIN_POOL_SIZE :
+# meme repli (score brut, score_recalibrated=False) que le profil
+# "trust" aujourd'hui -- pas un oubli, un choix assume plutot que de les
+# forcer dans un pool banque/assurance auquel ils ne ressemblent pas
+# vraiment.
+FINANCIAL_BANK_TICKERS = {
+    "BNP.PA", "GLE.PA", "ACA.PA",
+    "DBK.DE", "CBK.DE",
+    "GS", "JPM",
+    "HSBA.L", "BARC.L", "LLOY.L", "NWG.L", "STAN.L", "INVP.L", "BGEO.L",
+    "UBSG.SW",
+    "SAN.MC", "BBVA.MC", "CABK.MC", "SAB.MC", "BKT.MC", "UNI.MC",
+    "ISP.MI", "UCG.MI", "BAMI.MI", "BPE.MI", "BMPS.MI", "MB.MI", "FBK.MI", "BMED.MI",
+    "8306.T", "8316.T", "8411.T", "8308.T", "8309.T", "8331.T", "8354.T",
+    "5831.T", "7186.T", "8304.T",
+    "0939.HK", "1398.HK", "3988.HK", "3968.HK", "2388.HK",
+    "BAC", "C", "WFC", "USB", "PNC", "TFC", "MTB", "FITB", "HBAN", "RF",
+    "KEY", "CFG", "BNY", "STT", "NTRS", "MS",
+}
+
+FINANCIAL_INSURER_TICKERS = {
+    "CS.PA",
+    "ALV.DE", "MUV2.DE", "HNR1.DE",
+    "TRV",
+    "PRU.L", "LGEN.L", "AV.L", "MNG.L", "SDLF.L", "ADM.L", "BEZ.L", "HSX.L",
+    "ZURN.SW", "SREN.SW", "SLHN.SW",
+    "MAP.MC",
+    "G.MI", "UNI.MI",
+    "8766.T", "8725.T", "8630.T", "8750.T", "8795.T",
+    "1299.HK", "2628.HK", "2318.HK",
+    "PFG", "PRU",
+}
+
 
 # Trusts d'investissement fermés / gestionnaires d'actifs alternatifs sans
 # ligne EBITDA/EBIT exploitable chez yfinance, mais avec une raison
@@ -2714,7 +2765,12 @@ def _score_profile_key(company: dict) -> str:
     if company.get("is_trust"):
         return "trust"
     if company.get("is_financial"):
-        return "financial"
+        ticker = company.get("ticker")
+        if ticker in FINANCIAL_BANK_TICKERS:
+            return "financial_banque"
+        if ticker in FINANCIAL_INSURER_TICKERS:
+            return "financial_assurance"
+        return "financial_autre"
     return "standard"
 
 

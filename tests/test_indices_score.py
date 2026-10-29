@@ -483,8 +483,38 @@ def test_score_profile_key_trust():
     assert indices_score._score_profile_key({"is_trust": True, "is_financial": False}) == "trust"
 
 
-def test_score_profile_key_financial():
-    assert indices_score._score_profile_key({"is_trust": False, "is_financial": True}) == "financial"
+def test_score_profile_key_financial_bank():
+    assert indices_score._score_profile_key(
+        {"is_trust": False, "is_financial": True, "ticker": "BNP.PA"}
+    ) == "financial_banque"
+
+
+def test_score_profile_key_financial_insurer():
+    assert indices_score._score_profile_key(
+        {"is_trust": False, "is_financial": True, "ticker": "CS.PA"}
+    ) == "financial_assurance"
+
+
+def test_score_profile_key_financial_other_falls_back_to_autre():
+    # AXP (emetteur de credit) : dans FINANCIAL_SECTOR_TICKERS mais ni
+    # banque ni assureur -- incident du 2026-10-29, ne doit jamais etre
+    # force dans un pool auquel il ne ressemble pas vraiment.
+    assert indices_score._score_profile_key(
+        {"is_trust": False, "is_financial": True, "ticker": "AXP"}
+    ) == "financial_autre"
+
+
+def test_score_profile_key_distinguishes_similarly_named_tickers():
+    # UNI.MC (Unicaja Banco, une banque) et UNI.MI (Unipol, un assureur)
+    # partagent le meme prefixe -- un bug de confusion entre les deux
+    # casserait silencieusement le recalibrage sans qu'aucun test ne le
+    # voie si on ne teste pas explicitement ce cas.
+    assert indices_score._score_profile_key(
+        {"is_trust": False, "is_financial": True, "ticker": "UNI.MC"}
+    ) == "financial_banque"
+    assert indices_score._score_profile_key(
+        {"is_trust": False, "is_financial": True, "ticker": "UNI.MI"}
+    ) == "financial_assurance"
 
 
 def test_score_profile_key_standard():
@@ -592,6 +622,37 @@ def test_recalibrate_scores_by_profile_groups_by_profile_independently():
     # valeur brute élevée en absolu.
     worst_financial = companies[25]
     assert worst_financial["score"] < -80
+
+
+def test_recalibrate_scores_by_profile_separates_banks_from_insurers():
+    """Incident du 2026-10-29 : avant ce correctif, une banque de depot
+    etait comparee a TOUT le secteur financier (assureurs compris), qui
+    ont une rentabilite des capitaux structurellement plus elevee -- ce
+    qui faisait ressortir la quasi-totalite des grandes banques
+    mondiales en "Fragile"/"Tres fragile" sans rapport avec leur sante
+    reelle. Ici : une banque au score brut le plus haut de SON pool doit
+    ressortir pres de +100 meme si des assureurs au score brut plus eleve
+    en absolu existent par ailleurs -- les deux pools ne doivent jamais
+    se melanger."""
+    bank_tickers = sorted(indices_score.FINANCIAL_BANK_TICKERS)[:25]
+    insurer_tickers = sorted(indices_score.FINANCIAL_INSURER_TICKERS)[:25]
+    banks = [
+        {"ticker": t, "score": float(i), "interpretation": "peu importe",
+         "is_financial": True, "is_trust": False}
+        for i, t in enumerate(bank_tickers)
+    ]
+    insurers = [
+        {"ticker": t, "score": float(i) + 100.0, "interpretation": "peu importe",
+         "is_financial": True, "is_trust": False}
+        for i, t in enumerate(insurer_tickers)
+    ]
+    companies = banks + insurers
+    indices_score.recalibrate_scores_by_profile(companies)
+
+    best_bank = companies[len(bank_tickers) - 1]
+    assert best_bank["score"] > 80
+    worst_insurer = companies[len(bank_tickers)]
+    assert worst_insurer["score"] < -80
 
 
 import pandas as pd

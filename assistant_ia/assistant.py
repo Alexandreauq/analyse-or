@@ -12,6 +12,16 @@ import assistant_ia.usage as usage
 
 MODEL = "claude-opus-5-5"
 MAX_TOOL_ITERATIONS = 6
+# Recherche web server-side (meme outil que gold_bot/ai_shadow.py) : utilisee
+# pour que le raisonnement de secours (voir SYSTEM_PROMPT, quand les outils
+# d'actualite du site ne donnent rien) s'appuie sur des chiffres/faits reels
+# et dates plutot que sur de la connaissance generale non verifiee. Cout
+# borne par WEB_SEARCH_MAX_USES et par le plafond usage.DAILY_BUDGET_USD deja
+# en place -- pas un risque nouveau, meme garde-fou que le bot Or.
+WEB_SEARCH_MAX_USES = 3
+TOOLS = tools.TOOL_DEFINITIONS + [
+    {"type": "web_search_20260209", "name": "web_search", "max_uses": WEB_SEARCH_MAX_USES},
+]
 
 SYSTEM_PROMPT = """Tu es l'assistant du site "AI Investment" (analyse-or). \
 Pour tout chiffre, score ou statut du site, appuie-toi UNIQUEMENT sur les \
@@ -28,7 +38,12 @@ avec son actualité récente (actualites_entreprise) et, si pertinent, le \
 contexte de marché (actualites_marche) — sans jamais présenter ce \
 contexte général comme la cause d'un mouvement précis d'une entreprise. \
 N'affirme une cause que si un article la formule explicitement ; sinon, \
-dis « je n'ai pas trouvé d'actualité expliquant ce mouvement ». Tu peux \
+dis « je n'ai pas trouvé d'actualité expliquant ce mouvement ». Dans ce \
+cas, cherche d'abord avec web_search des chiffres ou faits récents et \
+vérifiables (taux, spreads, probabilités de marché, actualité non \
+couverte par les outils du site) et cite-les avec leur source et leur \
+date — ça rend ton raisonnement plus précis qu'une pure hypothèse. Si \
+la recherche web ne donne rien non plus, tu peux \
 alors proposer ton propre raisonnement ou tes connaissances générales en \
 finance/économie à la place — mais dis-le clairement (par exemple \
 « d'après le contexte général, sans source précise sur ce mouvement » ) \
@@ -134,7 +149,7 @@ def run_assistant_loop(
                 model=MODEL,
                 max_tokens=16000,
                 system=[{"type": "text", "text": system_text, "cache_control": {"type": "ephemeral"}}],
-                tools=tools.TOOL_DEFINITIONS,
+                tools=TOOLS,
                 output_config={"effort": "high"},
                 messages=messages,
             ) as stream:

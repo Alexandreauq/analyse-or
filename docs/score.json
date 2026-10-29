@@ -1,5 +1,5 @@
 {
-  "date": "2026-10-28",
+  "date": "2026-10-29",
   "composite_score": 0.2,
   "interpretation": "Neutre — pas d'action",
   "cftc_percentile": 34.61538461538461,
@@ -14,7 +14,7 @@
       "name": "Dollar (DXY)",
       "score": -10,
       "weight": 0.15,
-      "raw_value": "102.13 (il y a 2 mois : 99.70)"
+      "raw_value": "102.21 (il y a 2 mois : 99.70)"
     },
     {
       "name": "Anticipations d'inflation",
@@ -48,16 +48,11 @@
     }
   ],
   "technical": {
-    "note": "Cours en-dessous de la MM200 (-9.8%) — tendance baissière",
-    "spot": 4081.199951171875,
-    "ma200": 4525.987998046875
+    "note": "Cours en-dessous de la MM200 (-10.2%) — tendance baissière",
+    "spot": 4064.89990234375,
+    "ma200": 4525.9064978027345
   },
   "calendar": [
-    {
-      "date": "27/10–28/10/2026",
-      "label": "Réunion FOMC",
-      "kind": "Fed"
-    },
     {
       "date": "29/10/2026",
       "label": "PCE (dépenses de consommation des ménages)",
@@ -92,6 +87,11 @@
       "date": "17/11/2026",
       "label": "Ventes au détail",
       "kind": "Donnée"
+    },
+    {
+      "date": "08/12–09/12/2026",
+      "label": "Réunion FOMC",
+      "kind": "Fed"
     }
   ],
   "alerts": [
@@ -99,7 +99,7 @@
       "kind": "info",
       "title": "Pas de signal actif",
       "detail": "Aucune des conditions de veille, d'entrée ou de risque n'est réunie aujourd'hui.",
-      "date": "28/10/2026"
+      "date": "29/10/2026"
     }
   ],
   "news": [

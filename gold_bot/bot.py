@@ -476,12 +476,6 @@ def decide_and_act_fibonacci(candles: list[dict], *, contract_size: float, balan
     if direction is None:
         return {"action": "aucune", "reason": "pas de signal d'entree"}
 
-    # Veto IA en mode FANTOME (voir gold_bot/ai_shadow.py) -- journalise
-    # un avis independant, ne modifie JAMAIS direction/stop_loss/steps
-    # ci-dessous, et ne peut jamais faire echouer ce cycle (toute erreur
-    # est capturee a l'interieur de shadow_judge_entry).
-    ai_shadow.shadow_judge_entry(symbol, direction, state, candles)
-
     entry_price = state["close"]
     distance = abs(entry_price - stop_loss)
     if distance < entry_price * fibonacci_reversion.MIN_DISTANCE_PCT:
@@ -494,6 +488,19 @@ def decide_and_act_fibonacci(candles: list[dict], *, contract_size: float, balan
     total_size = risk.round_to_volume_step(raw_size, volume_step, min_volume, max_volume)
     if total_size is None:
         return {"action": "aucune", "reason": "compte trop petit pour ce stop (volume sous le minimum du broker)"}
+
+    # Veto IA en mode FANTOME (voir gold_bot/ai_shadow.py) -- place ici,
+    # apres tous les garde-fous (distance, coupe-circuit, taille), pour
+    # qu'il ne se declenche QUE quand un vrai trade va reellement
+    # s'ouvrir -- pas a chaque cycle ou la direction est simplement
+    # determinee, ce qui peut rester vrai des heures sans jamais aboutir
+    # a un trade (cause de l'incident de cout du 2026-10-29). D'apres
+    # l'activite reelle, un trade ne s'ouvre que ~4 fois par semaine --
+    # donc ce declencheur est naturellement rare, en plus du cooldown.
+    # Journalise un avis independant, ne modifie JAMAIS direction/
+    # stop_loss/steps ci-dessous, et ne peut jamais faire echouer ce
+    # cycle (toute erreur est capturee a l'interieur de shadow_judge_entry).
+    ai_shadow.shadow_judge_entry(symbol, direction, state, candles)
 
     partial_volume = None
     if fibonacci_reversion.PARTIAL_TP_PCT > 0:

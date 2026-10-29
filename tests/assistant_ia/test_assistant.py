@@ -389,18 +389,19 @@ def test_system_prompt_requires_an_indice_filter_when_a_country_is_named():
     assert "cac40" in prompt
 
 
-def test_system_prompt_warns_that_financial_score_mixes_banks_with_insurers():
-    """Meme incident : les grandes banques (francaises ou non) ressortent
-    presque toutes avec un score negatif ("Fragile"/"Tres fragile") car
-    le percentile les compare a tout le secteur financier (assureurs,
-    bourses, reseaux de paiement, structurellement plus rentables) --
-    pas a d'autres banques. Sans ce garde-fou, l'IA presente ce chiffre
-    comme un diagnostic direct de sante alors qu'il ne l'est pas."""
+def test_system_prompt_explains_financial_score_is_a_peer_group_percentile():
+    """Suite a l'incident du 2026-10-29 : indices_score.py compare
+    maintenant une banque a d'autres banques et un assureur a d'autres
+    assureurs (pools separes, voir _score_profile_key), donc le prompt
+    ne doit plus dire que ces deux pools sont melanges -- juste que le
+    score reste un rang percentile (pas une note absolue), et que les
+    quelques entreprises financieres hors banque/assurance utilisent un
+    score brut non comparable."""
     prompt = assistant.SYSTEM_PROMPT.lower()
 
     assert "rang percentile" in prompt
-    assert "pas une" in prompt and "note absolue" in prompt
-    assert "n'est donc" in prompt and "pas un diagnostic direct" in prompt
+    assert "pas une note absolue" in prompt
+    assert "score brut non recalibre" in prompt
 
 
 def test_system_prompt_tells_apart_banks_from_insurers_and_exchanges_in_financial_services():

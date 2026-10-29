@@ -88,6 +88,29 @@ def test_run_assistant_loop_yields_text_then_fin_when_no_tool_is_called():
     assert evenements[0]["texte"] == "LVMH est solide."
 
 
+def test_run_assistant_loop_passes_web_search_tool_alongside_the_site_tools():
+    """2026-10-29 : le raisonnement de secours (quand les outils d'actualite
+    du site ne donnent rien) doit pouvoir s'appuyer sur une vraie recherche
+    web plutot que sur de la connaissance generale non verifiee -- meme
+    outil server-side que gold_bot/ai_shadow.py."""
+    final = _FakeMessage(
+        content=[_FakeBlock("text", text="Reponse.")],
+        stop_reason="end_turn", usage=_FakeUsage(10, 10))
+    client = _FakeClient([_FakeStream(["Reponse."], final)])
+
+    list(assistant.run_assistant_loop("Une question ?", [], client=client))
+
+    tools_envoyes = client.messages.appels[0]["tools"]
+    web_search = [t for t in tools_envoyes if t.get("name") == "web_search"]
+    assert len(web_search) == 1
+    assert web_search[0]["type"] == "web_search_20260209"
+    assert web_search[0]["max_uses"] == assistant.WEB_SEARCH_MAX_USES
+    # Les outils du site (fiche_entreprise, classement...) restent presents.
+    noms_outils_site = [t.get("name") for t in tools_envoyes if t.get("name") != "web_search"]
+    assert "fiche_entreprise" in noms_outils_site
+    assert "classement" in noms_outils_site
+
+
 def test_run_assistant_loop_dispatches_a_tool_call_and_loops(monkeypatch):
     enregistres = []
     monkeypatch.setattr(assistant.usage, "record_usage", lambda i, o, model=None: enregistres.append((i, o)))
@@ -350,6 +373,18 @@ def test_system_prompt_allows_general_reasoning_when_news_tools_return_nothing()
 
     assert "tu peux" in prompt and "raisonnement ou tes connaissances générales".lower() in prompt
     assert "jamais pris pour un fait sourcé par un outil ou une actualité".lower() in prompt
+
+
+def test_system_prompt_prefers_web_search_over_unverified_reasoning():
+    """Suite directe de l'incident ci-dessus : avant de se rabattre sur du
+    raisonnement non verifie, l'IA doit d'abord essayer web_search pour
+    citer des chiffres/faits reels et dates -- plus precis qu'une pure
+    hypothese de connaissance generale."""
+    prompt = assistant.SYSTEM_PROMPT.lower()
+
+    assert "cherche d'abord avec web_search" in prompt
+    assert "cite-les avec leur source et leur date" in prompt
+    assert "si la recherche web ne donne rien non plus" in prompt
 
 
 def test_system_prompt_separates_company_news_from_market_context():

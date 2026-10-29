@@ -1,8 +1,21 @@
 import json
+from datetime import datetime, timedelta, timezone
 
 import anthropic
+import pytest
 
 import gold_bot.ai_shadow as ai_shadow
+
+
+@pytest.fixture(autouse=True)
+def _reset_shadow_cooldown():
+    """`ai_shadow._last_call_at` est un dict au niveau module (meme
+    objet partage entre tous les tests de ce fichier) -- sans ce reset,
+    un test qui appelle shadow_judge_entry("XAUUSD", ...) ferait sauter
+    le cooldown du test suivant qui utilise le meme symbole."""
+    ai_shadow._last_call_at.clear()
+    yield
+    ai_shadow._last_call_at.clear()
 
 
 class _FakeTextBlock:
@@ -146,3 +159,68 @@ def test_describe_candles_skips_malformed_entries():
     description = ai_shadow._describe_candles(candles)
     assert "12:00:00" in description
     assert "12:05:00" not in description
+
+
+def test_shadow_judge_entry_skips_second_call_within_cooldown(tmp_path, monkeypatch):
+    """Incident reel du 2026-10-29 : sans ce garde-fou, un signal qui
+    reste confirme cycle apres cycle declenchait un vrai appel facture
+    toutes les 1-2 minutes pendant des heures (28 appels, 0 succes,
+    cout reel sans valeur)."""
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-ant-fake")
+    log_path = str(tmp_path / "ai_shadow_log.jsonl")
+    fake_client = _FakeAnthropicClient(response=_FakeResponse([_FakeTextBlock(
+        '{"verdict": "confirme", "confiance": "haute", "raison": "ok"}'
+    )]))
+    monkeypatch.setattr(anthropic, "Anthropic", fake_client)
+    t0 = datetime(2026, 10, 29, 10, 0, 0, tzinfo=timezone.utc)
+
+    first = ai_shadow.shadow_judge_entry("XAUUSD", "achat", _state(), _candles(), log_path=log_path, now=t0)
+    second = ai_shadow.shadow_judge_entry(
+        "XAUUSD", "achat", _state(), _candles(), log_path=log_path, now=t0 + timedelta(minutes=2)
+    )
+
+    assert first is not None
+    assert second is None
+    assert fake_client.messages.last_kwargs is not None
+    # un seul appel reel a l'API malgre les deux invocations
+    entries = [json.loads(line) for line in open(log_path, encoding="utf-8")]
+    assert len(entries) == 1
+
+
+def test_shadow_judge_entry_calls_again_after_cooldown_expires(tmp_path, monkeypatch):
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-ant-fake")
+    log_path = str(tmp_path / "ai_shadow_log.jsonl")
+    fake_client = _FakeAnthropicClient(response=_FakeResponse([_FakeTextBlock(
+        '{"verdict": "confirme", "confiance": "haute", "raison": "ok"}'
+    )]))
+    monkeypatch.setattr(anthropic, "Anthropic", fake_client)
+    t0 = datetime(2026, 10, 29, 10, 0, 0, tzinfo=timezone.utc)
+
+    first = ai_shadow.shadow_judge_entry("XAUUSD", "achat", _state(), _candles(), log_path=log_path, now=t0)
+    second = ai_shadow.shadow_judge_entry(
+        "XAUUSD", "achat", _state(), _candles(), log_path=log_path,
+        now=t0 + ai_shadow.SHADOW_COOLDOWN + timedelta(seconds=1),
+    )
+
+    assert first is not None
+    assert second is not None
+    entries = [json.loads(line) for line in open(log_path, encoding="utf-8")]
+    assert len(entries) == 2
+
+
+def test_shadow_judge_entry_cooldown_is_per_symbol(tmp_path, monkeypatch):
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-ant-fake")
+    log_path = str(tmp_path / "ai_shadow_log.jsonl")
+    fake_client = _FakeAnthropicClient(response=_FakeResponse([_FakeTextBlock(
+        '{"verdict": "confirme", "confiance": "haute", "raison": "ok"}'
+    )]))
+    monkeypatch.setattr(anthropic, "Anthropic", fake_client)
+    t0 = datetime(2026, 10, 29, 10, 0, 0, tzinfo=timezone.utc)
+
+    xau = ai_shadow.shadow_judge_entry("XAUUSD", "achat", _state(), _candles(), log_path=log_path, now=t0)
+    xag = ai_shadow.shadow_judge_entry(
+        "XAGUSD", "achat", _state(), _candles(), log_path=log_path, now=t0 + timedelta(minutes=1)
+    )
+
+    assert xau is not None
+    assert xag is not None

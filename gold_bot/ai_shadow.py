@@ -8,24 +8,38 @@
 # voir docs/superpowers/experiments/*-ia-news-reasoning-test.json pour
 # le meme principe applique aux actions).
 #
-# Appelee uniquement quand decide_and_act_fibonacci a DEJA confirme un
-# vrai signal d'entree (direction determinee) -- jamais a chaque cycle,
-# pour rester rare et peu couteux (quelques fois par semaine d'apres
-# l'activite reelle du bot). Ne doit JAMAIS pouvoir affecter la vraie
-# decision ni bloquer la boucle de trading : toute erreur (reseau, API,
-# timeout, reponse malformee) est capturee et journalisee, jamais levee.
+# Appelee quand decide_and_act_fibonacci a DEJA confirme un vrai signal
+# d'entree (direction determinee) -- mais la condition "direction
+# determinee" peut rester vraie cycle apres cycle pendant des heures
+# tant que le prix reste pres du niveau (meme si un autre garde-fou,
+# ex. distance entree-stop trop faible, empeche l'ouverture reelle).
+# Incident reel du 2026-10-29 : sans garde-fou de frequence, ça a
+# declenche 28 vrais appels factures en une matinee (jusqu'a toutes les
+# 2 minutes pendant des heures), tous Opus 5.5 + recherche web + effort
+# eleve, 0 succes (chaque appel expirait au bout de 25s) -- cout reel
+# sans aucune valeur produite. D'ou le cooldown ci-dessous : au plus un
+# appel reel par symbole et par fenetre de SHADOW_COOLDOWN, quel que
+# soit le nombre de cycles ou le signal persiste. Ne doit JAMAIS
+# pouvoir affecter la vraie decision ni bloquer durablement la boucle
+# de trading : toute erreur (reseau, API, timeout, reponse malformee)
+# est capturee et journalisee, jamais levee.
 from __future__ import annotations
 
 import json
 import os
 import re
-from datetime import datetime, timezone
+import threading
+from datetime import datetime, timedelta, timezone
 
 SHADOW_LOG_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "ai_shadow_log.jsonl")
 MODEL = "claude-opus-5-5"
 MAX_CANDLES_IN_PROMPT = 12
-REQUEST_TIMEOUT_SECONDS = 25.0
-WEB_SEARCH_MAX_USES = 3
+REQUEST_TIMEOUT_SECONDS = 40.0
+WEB_SEARCH_MAX_USES = 2
+SHADOW_COOLDOWN = timedelta(hours=24)
+
+_last_call_at: dict[str, datetime] = {}
+_cooldown_lock = threading.Lock()
 
 _VERDICT_JSON_RE = re.compile(r"\{[^{}]*\"verdict\"[^{}]*\}")
 
@@ -86,16 +100,26 @@ def _append_log(entry: dict, path: str = SHADOW_LOG_PATH) -> None:
 
 
 def shadow_judge_entry(symbol: str, direction: str, state: dict, candles: list[dict],
-                        log_path: str = SHADOW_LOG_PATH) -> dict | None:
+                        log_path: str = SHADOW_LOG_PATH, now: datetime | None = None) -> dict | None:
     """Appelle Claude en mode FANTOME pour juger un signal d'entree reel
     deja confirme par le moteur mecanique -- ne change jamais la vraie
     decision, ne doit jamais etre appelee avant que le signal soit
     confirme. Journalise systematiquement (succes, echec, ou verdict
     non parseable) dans `log_path`. Renvoie le verdict structure
     ({"verdict", "confiance", "raison"}) si tout s'est bien passe,
-    None dans tous les autres cas (jamais d'exception propagee)."""
+    None dans tous les autres cas (jamais d'exception propagee), y
+    compris quand l'appel est saute par le cooldown (voir
+    SHADOW_COOLDOWN) -- dans ce cas, rien n'est journalise non plus,
+    pour ne pas saturer le journal de lignes "saute" a chaque cycle."""
+    now = now or datetime.now(timezone.utc)
+    with _cooldown_lock:
+        last = _last_call_at.get(symbol)
+        if last is not None and now - last < SHADOW_COOLDOWN:
+            return None
+        _last_call_at[symbol] = now
+
     entry: dict = {
-        "timestamp": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "timestamp": now.strftime("%Y-%m-%dT%H:%M:%SZ"),
         "symbol": symbol,
         "direction": direction,
         "state": state,
@@ -112,8 +136,8 @@ def shadow_judge_entry(symbol: str, direction: str, state: dict, candles: list[d
         client = anthropic.Anthropic(api_key=api_key, timeout=REQUEST_TIMEOUT_SECONDS)
         response = client.messages.create(
             model=MODEL,
-            max_tokens=2000,
-            output_config={"effort": "high"},
+            max_tokens=1024,
+            output_config={"effort": "medium"},
             tools=[{"type": "web_search_20260209", "name": "web_search", "max_uses": WEB_SEARCH_MAX_USES}],
             messages=[{"role": "user", "content": _build_prompt(symbol, direction, state, candles)}],
         )

@@ -340,10 +340,14 @@ def test_system_prompt_forbids_stating_an_unsupported_cause():
 
 
 def test_system_prompt_separates_company_news_from_market_context():
-    prompt = assistant.SYSTEM_PROMPT
+    """Allege le 2026-10-29 (reflexion sur le sur-cadrage du prompt) : la
+    structure imposee "toujours deux blocs" a ete retiree pour laisser
+    l'IA raisonner plus librement, mais la garantie de fond doit rester
+    -- ne jamais presenter le contexte de marche general comme la cause
+    d'un mouvement precis d'une entreprise."""
+    prompt = assistant.SYSTEM_PROMPT.lower()
 
-    assert "Actualités de l'entreprise" in prompt
-    assert "Contexte de marché" in prompt
+    assert "sans jamais présenter ce contexte général comme la cause d'un mouvement précis" in prompt
     assert "actualites_marche" in prompt
 
 
@@ -355,10 +359,16 @@ def test_system_prompt_treats_article_text_as_data_not_instructions():
 
 
 def test_system_prompt_uses_news_tools_to_explain_a_score_not_only_a_price_move():
+    """Allege le 2026-10-29 : "appelle AUSSI actualites_entreprise ET
+    actualites_marche" (toujours les deux, sur toute question de
+    situation) remplace par un croisement laisse au jugement du modele
+    ("si pertinent") -- forcer systematiquement les deux appels etait
+    justement le genre de regle mecanique qui etouffait le raisonnement
+    plutot que de l'orienter."""
     prompt = assistant.SYSTEM_PROMPT.lower()
 
-    assert "pour expliquer un score, la situation d'une entreprise, ou un mouvement de" in prompt
-    assert "appelle aussi" in prompt
+    assert "quand la question porte sur la situation d'une entreprise ou un mouvement de cours" in prompt
+    assert "actualites_entreprise" in assistant.SYSTEM_PROMPT
     assert "actualites_marche" in assistant.SYSTEM_PROMPT
 
 
@@ -371,11 +381,16 @@ def test_system_prompt_requires_explaining_each_article_not_just_citing_it():
 
 
 def test_system_prompt_applies_explain_the_why_to_every_question_not_only_scores():
+    """Allege le 2026-10-29 : le long paragraphe dedie ("pour toute
+    question... garde la precision technique...") est remplace par une
+    formulation plus courte qui garde le meme principe (toujours
+    expliquer le pourquoi, jamais juste le chiffre brut) sans la
+    redondance mecanique accumulee incident apres incident."""
     prompt = assistant.SYSTEM_PROMPT.lower()
 
-    assert "pour toute question, pas seulement l'explication d'un score" in prompt
-    assert "cherche" in prompt and "pourquoi du comment" in prompt
-    assert "garde la precision" in prompt and "technique" in prompt
+    assert "ne te contente jamais d'un chiffre brut sans l'expliquer" in prompt
+    assert "va chercher" in prompt and "pourquoi" in prompt
+    assert "roce" in prompt and "croissance" in prompt
 
 
 def test_system_prompt_requires_an_indice_filter_when_a_country_is_named():

@@ -2,7 +2,7 @@
   "date": "2026-10-29",
   "commodity": "argent",
   "label": "Argent",
-  "composite_score": -30.8,
+  "composite_score": -30.5,
   "interpretation": "Défavorable — pas d'entrée même sur signal technique",
   "cftc_percentile": 3.8461538461538463,
   "factors": [
@@ -16,7 +16,7 @@
       "name": "Dollar (DXY)",
       "score": -10,
       "weight": 0.2,
-      "raw_value": "102.21 (il y a 2 mois : 99.70)"
+      "raw_value": "102.25 (il y a 2 mois : 99.43)"
     },
     {
       "name": "Positionnement CFTC",
@@ -26,21 +26,21 @@
     },
     {
       "name": "Ratio or/argent",
-      "score": -4.889380530973452,
+      "score": -4.76243093922652,
       "weight": 0.25,
-      "raw_value": "75.0 — 26e percentile (3 ans)"
+      "raw_value": "76.4 — 26e percentile (3 ans)"
     },
     {
       "name": "Dynamique récente",
       "score": -10.0,
       "weight": 0.1,
-      "raw_value": "-24.0% vs MM200"
+      "raw_value": "-25.6% vs MM200"
     }
   ],
   "technical": {
-    "note": "Cours en-dessous de la MM200 (-24.0%) — tendance baissière",
-    "spot": 54.189998626708984,
-    "ma200": 71.26280487060546,
+    "note": "Cours en-dessous de la MM200 (-25.6%) — tendance baissière",
+    "spot": 52.88999938964844,
+    "ma200": 71.09420488357544,
     "unite": "$ / oz"
   },
   "calendar": [
@@ -88,12 +88,12 @@
   "alerts": [],
   "news": [
     {
-      "title": "L’argent métal peut-il rebondir après sa récente chute ? UBS répond - Investing.com France",
-      "date": "2026-10-24",
-      "link": "https://news.google.com/rss/articles/CBMiuwFBVV95cUxQRzdaUHFWXy1QUHNHQ0dVR2I2cGpmNXhuTVZsOE94WFhsZ3pNY2h1bFJ0UTlDcTNoaTRuN3hvS1EyakNQLUZnYTRtakZYQlI5TTdYNWFIaVRrWmZ3b2Zpa1FPNnRMWEdZaXBkZTFYTU0xRWxLVndWRThuYV9xRl9YYm9zdUNzdGFuSlVQYlg3TWlVQTk0ZU12YndTdndqbnhycVhhT0FrSzg0RXI5dW0zekQwcXM5RWNOemRr?oc=5",
-      "source": "Investing.com France",
-      "summary": "Cet article suggère que le prix de l'argent métal a connu une baisse récente et qu'une analyse d'UBS évalue les perspectives d'une éventuelle reprise de ce cours.",
-      "sentiment": 0,
+      "title": "Cours de l'argent le 29 octobre : les cours mondiaux de l'argent fléchissent, les cours nationaux diminuent légèrement. - Vietnam.vn",
+      "date": "2026-10-29",
+      "link": "https://news.google.com/rss/articles/CBMikwFBVV95cUxNV1EwNkZHOHZRVTFrWFFnVDhIMXZ5eVFmcV9xU1FDUXRqV05zODhOV0w3eURDTDYtaGhWUWhzeWRnRHZIMGxwN1RySGpOaDJoTk54Z01kZE5qNlBvWHRnTDUzVTZVc3I1V1VHRWJRckJocXNIQWtlRlBabGVWVUFXdFRTUTVRSllzSmpOSE4tM2c3VGs?oc=5",
+      "source": "Vietnam.vn",
+      "summary": "Cet article suggère que les cours mondiaux de l'argent ont enregistré une baisse le 29 octobre, accompagnée d'une légère diminution des prix au Vietnam.",
+      "sentiment": -1,
       "importance": "mineure"
     },
     {
@@ -106,11 +106,11 @@
       "importance": "mineure"
     },
     {
-      "title": "Cours de l'argent le 28 octobre : Les cours mondiaux de l'argent ont légèrement augmenté, les cours nationaux sont restés inchangés. - Vietnam.vn",
-      "date": "2026-10-28",
-      "link": "https://news.google.com/rss/articles/CBMilAFBVV95cUxPSjEzNHQ1bVNRdjJJX2FuVEFEUE0zbzJoc1RjOV9zTEJOVktueldEb0lmWHRkMHRVdFdfNy1FUlViUTh0X3NzYzA5TWJZMTdFcXdyVzFIU05OT2NCQy1NV0J0ZWJyczRmZGZGVUQ1NzRSX09VM3FfQjZYSUt1dm5STC1nR3NfMGNjb0NydEhaOFAwcFk2?oc=5",
-      "source": "Vietnam.vn",
-      "summary": "",
+      "title": "L’argent métal peut-il rebondir après sa récente chute ? UBS répond - Investing.com France",
+      "date": "2026-10-24",
+      "link": "https://news.google.com/rss/articles/CBMiuwFBVV95cUxQRzdaUHFWXy1QUHNHQ0dVR2I2cGpmNXhuTVZsOE94WFhsZ3pNY2h1bFJ0UTlDcTNoaTRuN3hvS1EyakNQLUZnYTRtakZYQlI5TTdYNWFIaVRrWmZ3b2Zpa1FPNnRMWEdZaXBkZTFYTU0xRWxLVndWRThuYV9xRl9YYm9zdUNzdGFuSlVQYlg3TWlVQTk0ZU12YndTdndqbnhycVhhT0FrSzg0RXI5dW0zekQwcXM5RWNOemRr?oc=5",
+      "source": "Investing.com France",
+      "summary": "Cet article suggère que le prix de l'argent métal a connu une baisse récente et qu'une analyse d'UBS évalue les perspectives d'une éventuelle reprise de ce cours.",
       "sentiment": 0,
       "importance": "mineure"
     },
@@ -133,11 +133,11 @@
       "importance": "mineure"
     }
   ],
-  "analysis_html": "<h3>Contexte récent</h3><p>L'argent traverse une phase de correction marquée : le métal évolue environ <strong>24,3 % sous sa moyenne mobile 200 jours</strong>, signe d'un repli rapide et violent après une période de hausse. Cet affaiblissement intervient dans un environnement macro-financier défavorable, avec un dollar en appréciation et des taux réels américains qui restent élevés. Le score composite pondéré ressort à environ <strong>-3,1</strong>, soit une orientation globalement négative, mais atténuée par un positionnement spéculatif devenu très bas.</p><h3>Facteurs déterminants</h3><ul><li><strong>Dollar (DXY) — score -10,0, poids 20 %</strong> : c'est le contributeur le plus pénalisant en valeur absolue (-2,0 point de score pondéré). Le passage de 99,17 à 101,89 en deux mois renchérit mécaniquement l'argent pour les acheteurs hors zone dollar et pèse sur la demande libellée en devises étrangères.</li><li><strong>Ratio or/argent — score -5,0, poids 25 %</strong> : à 74,5, le ratio se situe au 25<sup>e</sup> percentile sur trois ans, ce qui signifie que l'argent reste relativement <em>cher</em> par rapport à l'or comparé à son historique récent. Avec le poids le plus élevé après les taux réels, ce facteur retire environ 1,25 point au score et limite le potentiel de rattrapage relatif.</li><li><strong>Dynamique récente — score -10,0, poids 10 %</strong> : l'écart de -24,3 % vs la MM200 traduit une rupture de tendance nette ; malgré un poids limité, le facteur est au plancher de l'échelle et retire 1,0 point.</li><li><strong>Taux réels US 10 ans — score -0,8, poids 30 %</strong> : à 2,64 % contre 2,60 % il y a 45 jours, la hausse est marginale. Bien que ce soit le facteur le plus pondéré, son score quasi neutre ne pèse que -0,24 point. Le niveau absolu élevé des taux réels maintient toutefois un coût d'opportunité défavorable à un actif sans rendement.</li><li><strong>Positionnement CFTC — score +9,2, poids 15 %</strong> : seul facteur nettement positif (+1,38 point). Avec une position nette de 19 795 contrats, soit le <strong>4<sup>e</sup> percentile sur trois ans</strong>, le positionnement spéculatif est quasi vidé. Historiquement, de tels extrêmes réduisent la pression vendeuse résiduelle et constituent un facteur de contre-tendance.</li></ul><h3>Actualités à retenir</h3><p>Aucune actualité majeure n'est recensée sur la période : l'ensemble du flux est classé comme <strong>mineur</strong> et relève principalement du commentaire de marché.</p><ul><li><strong>Confirmation du repli</strong> : les articles de TMGM/FXStreet (« le métal recule ») et d'Investing.com relayant UBS (« l'argent peut-il rebondir après sa récente chute ») valident la lecture du facteur de dynamique, au plancher à -10,0.</li><li><strong>Niveaux absolus encore élevés</strong> : l'article de RFI souligne que, malgré la correction, les cotations restent hautes en comparaison historique. Ce point fait écho au ratio or/argent au 25<sup>e</sup> percentile : la baisse des dernières semaines n'a pas ramené l'argent en territoire bon marché face à l'or.</li><li><strong>Horizon de prévision allongé</strong> : les publications du Comptoir National de l'Or et de LiteFinance portent sur des perspectives 2026-2030. Leur caractère prospectif et non vérifiable les rend sans effet mesurable sur les facteurs du score, qui reposent sur des données de marché observées.</li></ul><h3>Synthèse</h3><p>Le score composite négatif (≈ -3,1) s'explique avant tout par la combinaison <strong>dollar fort + dynamique de prix dégradée + valorisation relative encore tendue face à l'or</strong>, les taux réels jouant un rôle quasi neutre sur la variation récente malgré leur poids dominant. Le seul contrepoids significatif provient du positionnement CFTC, tombé à un extrême bas (4<sup>e</sup> percentile), qui réduit le potentiel de liquidation supplémentaire. Le flux d'actualités, exclusivement mineur, ne fait que décrire la correction en cours sans apporter d'élément fondamental nouveau : l'orientation du score reste donc pilotée par les variables macro (dollar, taux réels) et par l'évolution du ratio or/argent.</p><p><em>Cette analyse est fournie à titre informatif et descriptif ; elle ne constitue ni un conseil en investissement ni une recommandation d'opération.</em></p>",
+  "analysis_html": "<h3>Contexte récent</h3><p>L'argent évolue dans une phase de correction marquée après la forte progression des mois précédents : le métal cote environ <strong>25,6 % sous sa moyenne mobile 200 jours</strong>, ce qui traduit un décrochage technique prononcé par rapport à sa tendance de fond. Cette correction s'inscrit dans un environnement macro défavorable, combinant un dollar en appréciation et des taux réels américains qui restent élevés. Le score composite ressort à environ <strong>-3,1</strong>, soit une configuration globalement négative, mais atténuée par un positionnement spéculatif devenu très léger.</p><h3>Facteurs déterminants</h3><ul><li><strong>Dollar (DXY), score -10,0 (poids 20 %)</strong> : c'est le facteur le plus pénalisant en contribution. L'indice est passé de 99,43 à 102,25 en deux mois, soit une appréciation d'environ 2,8 %. Un dollar plus fort renchérit mécaniquement l'argent pour les acheteurs hors zone dollar et pèse sur la demande physique et d'investissement.</li><li><strong>Dynamique récente, score -10,0 (poids 10 %)</strong> : l'écart de -25,6 % par rapport à la moyenne mobile 200 jours signale une rupture nette du momentum haussier. Malgré un poids limité, ce facteur confirme la dégradation de la tendance de court terme.</li><li><strong>Ratio or/argent, score -4,8 (poids 25 %)</strong> : à 76,4, le ratio se situe au 26<sup>e</sup> percentile sur trois ans, c'est-à-dire dans la partie basse de sa distribution historique récente. L'argent reste donc relativement cher face à l'or, ce qui réduit le potentiel de rattrapage habituellement associé à un ratio élevé. Avec le deuxième poids le plus important du score, ce facteur contribue significativement à l'orientation négative.</li><li><strong>Taux réels US 10 ans, score -0,8 (poids 30 %)</strong> : à 2,64 % contre 2,60 % il y a environ 45 jours, la variation est marginale. Le facteur le plus lourd du modèle est donc quasi neutre : il ne soutient pas l'argent (le coût d'opportunité de détenir un actif sans rendement reste élevé), mais il n'explique pas non plus la correction en cours.</li><li><strong>Positionnement CFTC, score +9,2 (poids 15 %)</strong> : seul facteur nettement favorable. Avec une position nette de 19 795 contrats, soit le 4<sup>e</sup> percentile sur trois ans, le positionnement spéculatif est historiquement très dégarni. Dans une lecture contrariante, cela signifie que l'essentiel des liquidations de positions longues a probablement déjà eu lieu, ce qui limite la pression vendeuse mécanique résiduelle.</li></ul><h3>Actualités à retenir</h3><p>Le flux d'actualité est composé exclusivement d'éléments <strong>mineurs</strong>, sans catalyseur fondamental majeur susceptible de faire bouger le score à lui seul. Il confirme néanmoins le narratif porté par les facteurs quantitatifs :</p><ul><li>Les articles sur la <strong>baisse des cours mondiaux au 29 octobre</strong> (Vietnam.vn) et sur la <strong>récente chute</strong> du métal (Investing.com, reprenant une analyse UBS sur un éventuel rebond) corroborent directement le score de dynamique à -10,0.</li><li>Les publications de RFI et du Comptoir National de l'Or insistent sur le fait que, <strong>malgré la correction, les niveaux de prix restent historiquement élevés</strong> et que la volatilité est forte. Cela rejoint la lecture du ratio or/argent : la baisse corrige un excès antérieur plus qu'elle ne signale un décrochage par rapport à l'or.</li><li>Le thème de la <strong>« remonétisation de l'argent »</strong> (Boursier.com) illustre une narration structurelle de soutien à la demande, mais il s'agit d'un argument de long terme sans effet mesurable sur les facteurs macro de court terme retenus dans le score.</li></ul><h3>Synthèse</h3><p>Le score composite négatif (~-3,1) résulte d'une combinaison cohérente : un <strong>dollar plus fort</strong> et une <strong>dynamique de prix fortement dégradée</strong> constituent les deux contributions les plus défavorables, tandis que la <strong>valorisation relative face à l'or</strong>, pondérée à 25 %, ne fournit aucun soutien. Le facteur de poids le plus élevé, les taux réels, est quasi stable et joue un rôle quasi neutre. Le seul contrepoids significatif provient du <strong>positionnement spéculatif extrêmement faible</strong> (4<sup>e</sup> percentile), qui empêche le score de s'enfoncer davantage. L'actualité, uniquement constituée d'éléments mineurs, valide ce diagnostic sans y ajouter de catalyseur nouveau : la configuration actuelle reflète une phase de digestion après hausse, dans un environnement monétaire encore peu accommodant. <em>Cette analyse est fournie à titre informatif et ne constitue ni un conseil en investissement ni une recommandation.</em></p>",
   "news_classifications": {
-    "https://news.google.com/rss/articles/CBMiuwFBVV95cUxQRzdaUHFWXy1QUHNHQ0dVR2I2cGpmNXhuTVZsOE94WFhsZ3pNY2h1bFJ0UTlDcTNoaTRuN3hvS1EyakNQLUZnYTRtakZYQlI5TTdYNWFIaVRrWmZ3b2Zpa1FPNnRMWEdZaXBkZTFYTU0xRWxLVndWRThuYV9xRl9YYm9zdUNzdGFuSlVQYlg3TWlVQTk0ZU12YndTdndqbnhycVhhT0FrSzg0RXI5dW0zekQwcXM5RWNOemRr?oc=5": {
-      "summary": "Cet article suggère que le prix de l'argent métal a connu une baisse récente et qu'une analyse d'UBS évalue les perspectives d'une éventuelle reprise de ce cours.",
-      "sentiment": 0,
+    "https://news.google.com/rss/articles/CBMikwFBVV95cUxNV1EwNkZHOHZRVTFrWFFnVDhIMXZ5eVFmcV9xU1FDUXRqV05zODhOV0w3eURDTDYtaGhWUWhzeWRnRHZIMGxwN1RySGpOaDJoTk54Z01kZE5qNlBvWHRnTDUzVTZVc3I1V1VHRWJRckJocXNIQWtlRlBabGVWVUFXdFRTUTVRSllzSmpOSE4tM2c3VGs?oc=5": {
+      "summary": "Cet article suggère que les cours mondiaux de l'argent ont enregistré une baisse le 29 octobre, accompagnée d'une légère diminution des prix au Vietnam.",
+      "sentiment": -1,
       "importance": "mineure"
     },
     "https://news.google.com/rss/articles/CBMitgJBVV95cUxQRlZNeG9jaEZLQXY1TXl5b0dUZktCcDFSbTBMZi1jY3FGSU11Z3Q1UzdFTWFQTEp2a0wzWll3TkNoR1ZFR3ZHMjJnSk5iWlV4TVNhdjhHVzZlb3M5M1FyZjRyUnVJaktkS3BtWnNjZURsRWxmaVZaMVlFSjNfYi0xWWQ2aVQtVHVaTzE0QkNxQ2RTUi11MmpncGhld0dZNXFaM2I1bXpXYnp0WEg1N1ZfSmxJdHdMdldsQTItSGR4ZmhqODk0MVpBbC1LRl9xWndqTl9hMGpxSF9RRTU0bkJrVDB4WFJyOS1xaEQyWmtQcXFnTkw5dG5RWEFVcnNuZVplTFRIUzVnUTRIN1NuemVUN2xkdzVSVDRfbHdrQUpGRG1ab0VWLUNMT3NTd3luRThDV1M3RHFn?oc=5": {
@@ -145,8 +145,8 @@
       "sentiment": 0,
       "importance": "mineure"
     },
-    "https://news.google.com/rss/articles/CBMilAFBVV95cUxPSjEzNHQ1bVNRdjJJX2FuVEFEUE0zbzJoc1RjOV9zTEJOVktueldEb0lmWHRkMHRVdFdfNy1FUlViUTh0X3NzYzA5TWJZMTdFcXdyVzFIU05OT2NCQy1NV0J0ZWJyczRmZGZGVUQ1NzRSX09VM3FfQjZYSUt1dm5STC1nR3NfMGNjb0NydEhaOFAwcFk2?oc=5": {
-      "summary": "",
+    "https://news.google.com/rss/articles/CBMiuwFBVV95cUxQRzdaUHFWXy1QUHNHQ0dVR2I2cGpmNXhuTVZsOE94WFhsZ3pNY2h1bFJ0UTlDcTNoaTRuN3hvS1EyakNQLUZnYTRtakZYQlI5TTdYNWFIaVRrWmZ3b2Zpa1FPNnRMWEdZaXBkZTFYTU0xRWxLVndWRThuYV9xRl9YYm9zdUNzdGFuSlVQYlg3TWlVQTk0ZU12YndTdndqbnhycVhhT0FrSzg0RXI5dW0zekQwcXM5RWNOemRr?oc=5": {
+      "summary": "Cet article suggère que le prix de l'argent métal a connu une baisse récente et qu'une analyse d'UBS évalue les perspectives d'une éventuelle reprise de ce cours.",
       "sentiment": 0,
       "importance": "mineure"
     },

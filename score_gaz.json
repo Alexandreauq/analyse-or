@@ -2,7 +2,7 @@
   "date": "2026-10-29",
   "commodity": "gaz",
   "label": "Gaz naturel",
-  "composite_score": -30.5,
+  "composite_score": -28.3,
   "interpretation": "Défavorable — pas d'entrée même sur signal technique",
   "cftc_percentile": 1.282051282051282,
   "factors": [
@@ -20,15 +20,15 @@
     },
     {
       "name": "Dynamique récente",
-      "score": -3.6850475124793656,
+      "score": -2.845042970473491,
       "weight": 0.26666666666666666,
-      "raw_value": "-1.8% vs MM200"
+      "raw_value": "-1.4% vs MM200"
     },
     {
       "name": "Dollar (DXY)",
       "score": -10,
       "weight": 0.13333333333333333,
-      "raw_value": "102.20 (il y a 2 mois : 99.70)"
+      "raw_value": "102.24 (il y a 2 mois : 99.43)"
     },
     {
       "name": "Stocks EIA",
@@ -38,9 +38,9 @@
     }
   ],
   "technical": {
-    "note": "Cours en-dessous de la MM200 (-1.8%) — tendance baissière",
-    "spot": 3.0190000534057617,
-    "ma200": 3.075670003890991,
+    "note": "Cours en-dessous de la MM200 (-1.4%) — tendance baissière",
+    "spot": 3.0290000438690186,
+    "ma200": 3.072710003852844,
     "unite": "$ / MMBtu"
   },
   "calendar": [
@@ -97,68 +97,68 @@
       "importance": "mineure"
     },
     {
-      "title": "Énergie -Le prix repère de vente de gaz va augmenter de 6,6 % en novembre - Service Public",
-      "date": "2026-10-12",
-      "link": "https://news.google.com/rss/articles/CBMic0FVX3lxTE1aLXB2OUQ5dWpLU3R0OHRqeXlrb3RwdXByenR5aTY5Y0tKa0xEZGdhVElrWjVZUzVjd3hlVkVjdmY0aE1oMnpTd01XZC1wbk1oY3FickFLVkxyY2dwSTJTbXdBc3lpUkMtZ25FbGVjRHR1aXc?oc=5",
-      "source": "Service Public",
-      "summary": "",
-      "sentiment": 0,
-      "importance": "mineure"
+      "title": "Le gaz européen dépasse 100 €; l'UE alerte sur une nouvelle crise - Yahoo Finance France",
+      "date": "2026-10-28",
+      "link": "https://news.google.com/rss/articles/CBMipgFBVV95cUxPY2ZyZUJCZFptb1VhMDBYanlHRnFOeE9FeHZjb253TWZQUWdhQlZLM1RwY0V3TkVMbTFLdVdXVTdzMGRUSW5vZV80SmhwS080cy1oN243ODFhMW92RXlTLU5ybzd5NUpCRzdITm5JS2RMYzdVZFAybWtXRjIyRmRjQ2pKbDkyQThWdnpHMy05Uk9EbDFQVDhzRFZYbkRWWk05bTJ6V3V3?oc=5",
+      "source": "Yahoo Finance France",
+      "summary": "Cet article suggère que les prix du gaz naturel en Europe auraient atteint ou dépassé un seuil de 100 € (probablement par MWh), ce qui aurait incité les autorités de l'UE à émettre une alerte concernant le risque d'une nouvelle crise énergétique.",
+      "sentiment": -1,
+      "importance": "notable"
     },
     {
-      "title": "Prix du gaz : une nouvelle hausse au 1er novembre - Effy | Rénovation énergétique",
-      "date": "2026-10-26",
-      "link": "https://news.google.com/rss/articles/CBMiggFBVV95cUxOZzN6WjUtYkpnRzRrMlJZamNfekRyMk0wQU1lWmZDNFpRRzJvTFRJSEs5X0hjcE9rWnpDbThRMjVaYlRTdDJJa0RMM0pLY1hIOEFONzBLM285YWplRWIybzg4bFVtdVV0ZmF4dVAzNWdPUUkwemJiS1Q5VWx4Z3pLRnl3?oc=5",
-      "source": "Effy | Rénovation énergétique",
-      "summary": "",
-      "sentiment": 0,
-      "importance": "mineure"
+      "title": "L’Europe ferme le robinet du gaz russe alors que les prix flambent - Ouest-France",
+      "date": "2026-10-28",
+      "link": "https://news.google.com/rss/articles/CBMi8AFBVV95cUxOZ3B3dWR2cTctT3ppTW9pcXh5TWJ4cTVDNEZleWE4d2t0WEg3UWcxY1Z2VkVUOVI2bUU1cFdTV2lUOVp4SkR5SENaU1pLWjBZTU5MeVU4R1NZMVVUZFN1eW9nQnhDYzBFa0NhWTg3RE1VSDZCOEc2Z25Ebjdxd282YkhPaktza0hIbXdUOFVLbzZuLUdKYWNnT2RRTTNfMnRXdnRvUWwxYXA5dlJlejBWVkVLQ05lWHlnMWtvRTB6MW12YlhnQ1llTmc4bTgzczlLRVJ2QlBLMTJSNXdOS2M5U1lFWThkN0xBVUp3WW00RmE?oc=5",
+      "source": "Ouest-France",
+      "summary": "Cet article suggère que l'Europe réduirait ses importations de gaz russe dans un contexte où les prix du gaz naturel connaîtraient une hausse significative.",
+      "sentiment": -1,
+      "importance": "majeure"
     },
     {
-      "title": "Gaz et pétrole : l’Insee mesure une forte hausse des cours en septembre 2026 - L'Energeek",
-      "date": "2026-10-27",
-      "link": "https://news.google.com/rss/articles/CBMioAFBVV95cUxNN3dsNTFsM1lpTnZkNHVZMlplaEc1YTFfa1VrOE5PZUE5cmU2N3oyc3lUd1hJaGJGQnE5dmV6SFJVcGdUaW9EazliRnlBMTBTTy11bXc1SUU5QlZRZkl0aTdLWWtwRXQzRW9IZjVBVEZhVjJfMlVJTWptUzNEMmhaZjRnUnRJaG9HTXpDbmRUMzhzeVQ3eE43ajl4U1NtZHU3?oc=5",
-      "source": "L'Energeek",
-      "summary": "",
-      "sentiment": 0,
-      "importance": "mineure"
+      "title": "Le prix du gaz en Europe à 100€/MWh, une première depuis décembre 2022 - Boursorama",
+      "date": "2026-10-28",
+      "link": "https://news.google.com/rss/articles/CBMi3wFBVV95cUxNUnc3V1dVS093TGNuTWd2TmRNZEE5WGdrc19vbEtqX0prSUtmcnFCdGhveWRpaVhnbjRzekpncVFrWklSel9KTUxWM0czTnlGdHdQSkc0YWNlbWtxTHhkNnRKUkRzdV9mcFk1LTdJbzNLTXNtUDdYUmtkUmYtdDV3emg4c2ktMlRmT3RLTnVkZ3F4aU9KT2pUSG1uTGVtREdKV1NkZUhHSE9VZy10LXdUOHZmdDRSSFF5UlJUM1VuS3FTQTc1cF9kNXl1emtVSmdXSFgxV2pJTnJqYjYtaEIw0gHkAUFVX3lxTFBQemtmZVBGNVZfRTI1TkVMWEQ4LURGS3hSTEhwNEVCaml6TEg5QThacHplMHBmRkFDcHpfRHJKYWJEdTJMQU9ZYl9qNUNQQWlVbWxnTHVmSDVVUTlaMm5TWVdwT1FhQU16V0JSZEFOdEluYktDcXdVWk43UlNURzlVNDZ6c09mWmhVODRxbHpJcUxLM0sxNzhHemh1WERIV0xETWFWLVItelNXOTdURGJ4WEJXcU05ODBISFd6aWx6TTdQX25GMzRRVnEyZmxhTHlXUmliYklGTGZKaUZIVWlvOUlsSA?oc=5",
+      "source": "Boursorama",
+      "summary": "Cet article suggère que les prix du gaz naturel en Europe auraient atteint un seuil de 100€/MWh, marquant un niveau de prix non observé depuis décembre 2022, ce qui pourrait indiquer une reprise des tensions sur le marché européen du gaz.",
+      "sentiment": -1,
+      "importance": "notable"
     },
     {
-      "title": "Novembre 2026 : augmentation de 6,6% TTC du prix repère du gaz - énergie-info",
-      "date": "2026-10-12",
-      "link": "https://news.google.com/rss/articles/CBMikAFBVV95cUxNRU1YT2NhNnNsYW40aTFtME5qYUphaThpWm1KbVkyVUI1czE0S0cweXUtdG5rbWUzVUFTZlBaVXhoZXhUclZva3hRWGl5V3JteEs2cDYzMTVSQXdkLWh3VVpZTnFuQ19Pem9XSkNsOEl6cWZ4dzVUWDMzLS1may16NnpNV2dlVkVUbDUyZGIxMEc?oc=5",
-      "source": "énergie-info",
-      "summary": "",
-      "sentiment": 0,
-      "importance": "mineure"
+      "title": "Le prix du gaz atteint des sommets : pourquoi ça devrait durer encore au moins un an ? - L'Indépendant",
+      "date": "2026-10-28",
+      "link": "https://news.google.com/rss/articles/CBMizwFBVV95cUxOdDRLLWkzbG1lVFljRTU2RWJDbVI0ZWYyQUhSYjNDX3c3NXJHa2RCVzB0NUh4UzY5OEpoNWUxLVBBTUFRSUFWMVpRTUFhSG96c295dURiN2xZWEZPM3docHJNaGFPTlhCdi1MMkRFM2ZZRGlZeHBEdXVCWHVWcmR6TndTejdrZmpyUlU0cmE1NE0ycGZIdTJqZVRtVms0a1hnUDF0ajJqenBndTJWSk10TlhXN3VlYTgwNnc4eFNpY2czWl81T0tDTExpT1QyeHM?oc=5",
+      "source": "L'Indépendant",
+      "summary": "Cet article suggère que les prix du gaz naturel connaissent une période de hausse soutenue qui pourrait persister pendant au moins douze mois supplémentaires.",
+      "sentiment": -1,
+      "importance": "notable"
     }
   ],
-  "analysis_html": "<h3>Contexte récent</h3><p>Le gaz naturel américain s'échange autour de <strong>3,10 $/MMBtu</strong> sur le Henry Hub, soit environ 11 % en dessous de la moyenne saisonnière du mois (3,48 $/MMBtu) et <strong>2,6 % sous sa moyenne mobile 200 jours</strong>. Le score composite ressort légèrement négatif (de l'ordre de <strong>-2,6</strong> une fois les pondérations appliquées), le signal saisonnier défavorable et la force du dollar l'emportant sur un positionnement spéculatif extrêmement déprimé. Le contraste est marqué avec l'Europe, où les cotations TTF évoluent sur des niveaux de tension élevés.</p><h3>Facteurs déterminants</h3><ul><li><strong>Saisonnalité (poids 33 %, score -7,6)</strong> : c'est le facteur le plus lourd du composite et il tire franchement vers le bas. Le prix spot se situe nettement sous la référence saisonnière du mois, ce qui traduit une demande ou un équilibre offre/demande moins porteur que ce que la période impliquerait habituellement.</li><li><strong>Dollar / DXY (poids 13 %, score -10,0)</strong> : avec un indice passé de 99,17 à <strong>101,89</strong> en deux mois, le billet vert s'est nettement apprécié. Ce facteur obtient le score le plus négatif de la grille : un dollar fort renchérit mécaniquement les matières premières libellées en USD pour les acheteurs étrangers et pèse sur la demande exportatrice.</li><li><strong>Dynamique récente (poids 27 %, score -5,3)</strong> : le prix évolue sous sa moyenne mobile 200 jours, confirmant une tendance de fond orientée à la baisse, sans excès toutefois (écart limité à -2,6 %).</li><li><strong>Positionnement CFTC (poids 27 %, score +9,7)</strong> : seul contributeur positif, et il est puissant. Avec une position nette de <strong>-157 409 contrats</strong>, située dans le <strong>1<sup>er</sup> percentile sur trois ans</strong>, le pessimisme des opérateurs non commerciaux est historiquement extrême. Ce type de configuration est lu comme un facteur de soutien à contre-courant : l'essentiel du flux vendeur paraît déjà en place.</li><li><strong>Stocks EIA (poids 0 %)</strong> : donnée indisponible faute de clé API configurée. L'absence de ce pilier fondamental laisse le composite reposer sur les seuls facteurs de prix, de positionnement et de change, ce qui réduit sa capacité à arbitrer entre un marché réellement excédentaire et un simple creux saisonnier.</li></ul><h3>Actualités à retenir</h3><ul><li><strong>Prix du gaz européen au plus haut depuis 2022</strong> (Anadolu Ajansı) et <strong>TTF à 97 €/MWh sur fond de craintes autour du détroit d'Ormuz</strong> (L'Echo) : ces deux éléments décrivent une tension sur le marché européen, de nature géopolitique et logistique. Ils ne sont pas intégrés au score, construit sur le Henry Hub, et illustrent la <strong>déconnexion actuelle entre les deux bassins</strong> : prix américain sous sa norme saisonnière d'un côté, prime de risque européenne de l'autre. À la marge, une demande européenne soutenue constitue un facteur de soutien potentiel pour les exportations de GNL américain, ce qui va dans le sens du signal contrarien du positionnement CFTC.</li><li><strong>Hausse du prix repère de vente du gaz en France : +6,3 % TTC au 1<sup>er</sup> octobre 2026</strong> (CRE) puis <strong>+6,6 % TTC en novembre 2026</strong> (énergie-info) : ces révisions tarifaires réglementées confirment la transmission de la tension européenne aux prix de détail. Elles relèvent du marché aval français et n'influencent pas directement les composantes du score.</li><li><strong>Changements réglementaires de novembre 2026</strong> (Journal du Geek, actualité mineure) : contexte fiscal et réglementaire français, sans portée sur l'équilibre fondamental du Henry Hub.</li></ul><h3>Synthèse</h3><p>Le composite est modérément négatif, résultat d'une opposition nette entre deux blocs. D'un côté, la <strong>saisonnalité décevante, la tendance sous la MM200 et un dollar en appréciation</strong> — qui cumulent 73 % du poids — pèsent sur le score. De l'autre, un <strong>positionnement spéculatif dans le 1<sup>er</sup> percentile à trois ans</strong> signale un marché déjà massivement vendeur, configuration historiquement associée à une asymétrie des risques. Les actualités européennes, marquées par la prime géopolitique liée à Ormuz et des prix TTF au plus haut depuis 2022, ne se reflètent pas dans le prix américain et rappellent la segmentation des marchés régionaux. L'absence de données de stocks EIA constitue la principale lacune de cette lecture : sa réintégration permettrait de trancher entre un déséquilibre fondamental durable et un simple décalage saisonnier.</p>",
+  "analysis_html": "<h3>Contexte récent</h3><p>Le gaz naturel américain se négocie autour de <strong>2,76 $/MMBtu</strong> au Henry Hub, soit nettement en dessous de la moyenne saisonnière du mois (3,39 $/MMBtu) et légèrement sous sa moyenne mobile 200 jours (-1,4 %). Dans le même temps, le marché européen envoie un signal opposé, avec des prix repassés au-dessus de <strong>100 €/MWh</strong>, un niveau inédit depuis décembre 2022. La combinaison des facteurs pondérés aboutit à un score composite légèrement négatif (de l'ordre de -2,7), traduisant un équilibre défavorable entre un positionnement spéculatif extrême et des facteurs saisonniers, techniques et monétaires dégradés.</p><h3>Facteurs déterminants</h3><ul><li><strong>Saisonnalité (poids 33 %, score -10,0)</strong> : il s'agit du contributeur le plus lourd et le plus négatif. Le prix spot se situe environ 19 % sous la norme saisonnière du mois, ce qui signale une demande ou un équilibre offre/demande domestique moins tendu que ce que la période de l'année impliquerait habituellement. À lui seul, ce facteur retranche environ 3,3 points au composite.</li><li><strong>Positionnement CFTC (poids 27 %, score +9,7)</strong> : c'est le seul facteur franchement positif. La position nette des opérateurs non commerciaux ressort à <strong>-157 409 contrats</strong>, soit le <strong>1er percentile sur trois ans</strong> : le marché est positionné de manière extrêmement vendeuse. Dans une lecture à contre-courant, un tel extrême est interprété comme un facteur de soutien potentiel (risque de rachats de positions courtes), ce qui explique le score quasi maximal attribué à cette composante.</li><li><strong>Dollar (poids 13 %, score -10,0)</strong> : le DXY est remonté de 99,43 à <strong>102,24</strong> en deux mois. Un dollar plus ferme pèse mécaniquement sur les matières premières libellées en dollars et constitue un vent contraire, même si son poids dans le composite reste limité.</li><li><strong>Dynamique récente (poids 27 %, score -2,8)</strong> : le repli de 1,4 % par rapport à la moyenne mobile 200 jours traduit une tendance légèrement négative mais sans rupture marquée ; la contribution reste modérée.</li><li><strong>Stocks EIA (poids 0 %)</strong> : la composante est indisponible faute de clé API configurée. L'absence de ce repère fondamental sur les niveaux de stockage américains constitue une limite d'interprétation, le score reposant donc intégralement sur les quatre autres facteurs.</li></ul><h3>Actualités à retenir</h3><ul><li><strong>Fermeture du robinet du gaz russe par l'Europe (majeure)</strong> : la réduction des importations russes intervient dans un contexte de tension sur les prix européens. Ce type d'évolution soutient structurellement la demande de GNL, y compris d'origine américaine, mais son effet ne se lit pas dans les facteurs du score, qui restent centrés sur le marché domestique américain (Henry Hub, positionnement CFTC, dollar).</li><li><strong>Gaz européen au-dessus de 100 €/MWh et alerte de l'UE (notable)</strong> : le franchissement de ce seuil, une première depuis décembre 2022, illustre une <strong>divergence marquée entre l'Europe et les États-Unis</strong>. Alors que le TTF se tend, le Henry Hub évolue sous sa norme saisonnière, ce qui explique qu'un environnement d'actualité haussier coexiste avec un score composite légèrement négatif.</li><li><strong>Prix élevés appelés à durer au moins un an (notable)</strong> : cette perspective concerne principalement le marché européen et s'inscrit sur un horizon plus long que celui capté par les facteurs de dynamique et de saisonnalité, qui mesurent des écarts de court terme.</li><li><strong>Impact sur les factures d'hiver européennes (mineure)</strong> : élément de contexte sur la demande finale, sans effet direct identifiable sur les composantes du score.</li></ul><h3>Synthèse</h3><p>Le score composite est <strong>légèrement négatif</strong>, résultat d'un arbitrage entre deux forces contraires : d'un côté, une saisonnalité très défavorable et un dollar plus ferme, qui pèsent pour l'essentiel du score négatif ; de l'autre, un positionnement spéculatif à un extrême historique (1er percentile sur trois ans) qui constitue le principal élément de soutien potentiel. La dynamique de prix, à peine sous la moyenne mobile 200 jours, n'apporte qu'une contribution négative marginale. Le flux d'actualités, nettement orienté vers la tension des prix européens et la fin des approvisionnements russes, n'est pas répercuté dans les facteurs quantitatifs, qui reflètent avant tout la situation du Henry Hub : cette divergence entre narratif européen et données américaines est la clé de lecture du score actuel. Enfin, l'absence de la composante stocks EIA laisse un angle mort fondamental qu'il conviendrait de combler pour affiner le diagnostic.</p>",
   "news_classifications": {
     "https://news.google.com/rss/articles/CBMitAFBVV95cUxNUlJtRHJWZS1uVmZiZUxKWkNrVXBvT1M2c01MRDNPUlBZZWhwbnNRTzRLd1N6eFRNY05NTlNkd1JpTnh0OXBOUzcyMzdSTkpiRzJwdjAwNjUtNnRBNm81X2hrdGVDaUVTRm5MMXhKYlh2eVdNRV9rWGdwZGZBSGg4UHZVX01zREhWdWRqMkQyTGpVU1U2aGhmWjFaeG5CUEJsUnlTWkV4MzJacDFVeUgtRnlVYjA?oc=5": {
       "summary": "",
       "sentiment": 0,
       "importance": "mineure"
     },
-    "https://news.google.com/rss/articles/CBMic0FVX3lxTE1aLXB2OUQ5dWpLU3R0OHRqeXlrb3RwdXByenR5aTY5Y0tKa0xEZGdhVElrWjVZUzVjd3hlVkVjdmY0aE1oMnpTd01XZC1wbk1oY3FickFLVkxyY2dwSTJTbXdBc3lpUkMtZ25FbGVjRHR1aXc?oc=5": {
-      "summary": "",
-      "sentiment": 0,
-      "importance": "mineure"
+    "https://news.google.com/rss/articles/CBMipgFBVV95cUxPY2ZyZUJCZFptb1VhMDBYanlHRnFOeE9FeHZjb253TWZQUWdhQlZLM1RwY0V3TkVMbTFLdVdXVTdzMGRUSW5vZV80SmhwS080cy1oN243ODFhMW92RXlTLU5ybzd5NUpCRzdITm5JS2RMYzdVZFAybWtXRjIyRmRjQ2pKbDkyQThWdnpHMy05Uk9EbDFQVDhzRFZYbkRWWk05bTJ6V3V3?oc=5": {
+      "summary": "Cet article suggère que les prix du gaz naturel en Europe auraient atteint ou dépassé un seuil de 100 € (probablement par MWh), ce qui aurait incité les autorités de l'UE à émettre une alerte concernant le risque d'une nouvelle crise énergétique.",
+      "sentiment": -1,
+      "importance": "notable"
     },
-    "https://news.google.com/rss/articles/CBMiggFBVV95cUxOZzN6WjUtYkpnRzRrMlJZamNfekRyMk0wQU1lWmZDNFpRRzJvTFRJSEs5X0hjcE9rWnpDbThRMjVaYlRTdDJJa0RMM0pLY1hIOEFONzBLM285YWplRWIybzg4bFVtdVV0ZmF4dVAzNWdPUUkwemJiS1Q5VWx4Z3pLRnl3?oc=5": {
-      "summary": "",
-      "sentiment": 0,
-      "importance": "mineure"
+    "https://news.google.com/rss/articles/CBMi8AFBVV95cUxOZ3B3dWR2cTctT3ppTW9pcXh5TWJ4cTVDNEZleWE4d2t0WEg3UWcxY1Z2VkVUOVI2bUU1cFdTV2lUOVp4SkR5SENaU1pLWjBZTU5MeVU4R1NZMVVUZFN1eW9nQnhDYzBFa0NhWTg3RE1VSDZCOEc2Z25Ebjdxd282YkhPaktza0hIbXdUOFVLbzZuLUdKYWNnT2RRTTNfMnRXdnRvUWwxYXA5dlJlejBWVkVLQ05lWHlnMWtvRTB6MW12YlhnQ1llTmc4bTgzczlLRVJ2QlBLMTJSNXdOS2M5U1lFWThkN0xBVUp3WW00RmE?oc=5": {
+      "summary": "Cet article suggère que l'Europe réduirait ses importations de gaz russe dans un contexte où les prix du gaz naturel connaîtraient une hausse significative.",
+      "sentiment": -1,
+      "importance": "majeure"
     },
-    "https://news.google.com/rss/articles/CBMioAFBVV95cUxNN3dsNTFsM1lpTnZkNHVZMlplaEc1YTFfa1VrOE5PZUE5cmU2N3oyc3lUd1hJaGJGQnE5dmV6SFJVcGdUaW9EazliRnlBMTBTTy11bXc1SUU5QlZRZkl0aTdLWWtwRXQzRW9IZjVBVEZhVjJfMlVJTWptUzNEMmhaZjRnUnRJaG9HTXpDbmRUMzhzeVQ3eE43ajl4U1NtZHU3?oc=5": {
-      "summary": "",
-      "sentiment": 0,
-      "importance": "mineure"
+    "https://news.google.com/rss/articles/CBMi3wFBVV95cUxNUnc3V1dVS093TGNuTWd2TmRNZEE5WGdrc19vbEtqX0prSUtmcnFCdGhveWRpaVhnbjRzekpncVFrWklSel9KTUxWM0czTnlGdHdQSkc0YWNlbWtxTHhkNnRKUkRzdV9mcFk1LTdJbzNLTXNtUDdYUmtkUmYtdDV3emg4c2ktMlRmT3RLTnVkZ3F4aU9KT2pUSG1uTGVtREdKV1NkZUhHSE9VZy10LXdUOHZmdDRSSFF5UlJUM1VuS3FTQTc1cF9kNXl1emtVSmdXSFgxV2pJTnJqYjYtaEIw0gHkAUFVX3lxTFBQemtmZVBGNVZfRTI1TkVMWEQ4LURGS3hSTEhwNEVCaml6TEg5QThacHplMHBmRkFDcHpfRHJKYWJEdTJMQU9ZYl9qNUNQQWlVbWxnTHVmSDVVUTlaMm5TWVdwT1FhQU16V0JSZEFOdEluYktDcXdVWk43UlNURzlVNDZ6c09mWmhVODRxbHpJcUxLM0sxNzhHemh1WERIV0xETWFWLVItelNXOTdURGJ4WEJXcU05ODBISFd6aWx6TTdQX25GMzRRVnEyZmxhTHlXUmliYklGTGZKaUZIVWlvOUlsSA?oc=5": {
+      "summary": "Cet article suggère que les prix du gaz naturel en Europe auraient atteint un seuil de 100€/MWh, marquant un niveau de prix non observé depuis décembre 2022, ce qui pourrait indiquer une reprise des tensions sur le marché européen du gaz.",
+      "sentiment": -1,
+      "importance": "notable"
     },
-    "https://news.google.com/rss/articles/CBMikAFBVV95cUxNRU1YT2NhNnNsYW40aTFtME5qYUphaThpWm1KbVkyVUI1czE0S0cweXUtdG5rbWUzVUFTZlBaVXhoZXhUclZva3hRWGl5V3JteEs2cDYzMTVSQXdkLWh3VVpZTnFuQ19Pem9XSkNsOEl6cWZ4dzVUWDMzLS1may16NnpNV2dlVkVUbDUyZGIxMEc?oc=5": {
-      "summary": "",
-      "sentiment": 0,
-      "importance": "mineure"
+    "https://news.google.com/rss/articles/CBMizwFBVV95cUxOdDRLLWkzbG1lVFljRTU2RWJDbVI0ZWYyQUhSYjNDX3c3NXJHa2RCVzB0NUh4UzY5OEpoNWUxLVBBTUFRSUFWMVpRTUFhSG96c295dURiN2xZWEZPM3docHJNaGFPTlhCdi1MMkRFM2ZZRGlZeHBEdXVCWHVWcmR6TndTejdrZmpyUlU0cmE1NE0ycGZIdTJqZVRtVms0a1hnUDF0ajJqenBndTJWSk10TlhXN3VlYTgwNnc4eFNpY2czWl81T0tDTExpT1QyeHM?oc=5": {
+      "summary": "Cet article suggère que les prix du gaz naturel connaissent une période de hausse soutenue qui pourrait persister pendant au moins douze mois supplémentaires.",
+      "sentiment": -1,
+      "importance": "notable"
     }
   }
 }

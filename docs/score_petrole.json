@@ -10,7 +10,7 @@
       "name": "Dollar (DXY)",
       "score": -10,
       "weight": 0.26666666666666666,
-      "raw_value": "102.21 (il y a 2 mois : 99.70)"
+      "raw_value": "102.25 (il y a 2 mois : 99.43)"
     },
     {
       "name": "Positionnement CFTC",
@@ -22,13 +22,13 @@
       "name": "Spread WTI-Brent",
       "score": -10,
       "weight": 0.19999999999999998,
-      "raw_value": "+8.74 $/baril (il y a ~2 mois : +5.79 $/baril)"
+      "raw_value": "+8.95 $/baril (il y a ~2 mois : +5.95 $/baril)"
     },
     {
       "name": "Dynamique récente",
       "score": 10.0,
       "weight": 0.26666666666666666,
-      "raw_value": "+18.5% vs MM200"
+      "raw_value": "+18.4% vs MM200"
     },
     {
       "name": "Stocks EIA",
@@ -38,9 +38,9 @@
     }
   ],
   "technical": {
-    "note": "Cours au-dessus de la MM200 (+18.5%) — tendance haussière",
-    "spot": 101.8499984741211,
-    "ma200": 85.92255004882813,
+    "note": "Cours au-dessus de la MM200 (+18.4%) — tendance haussière",
+    "spot": 101.98999786376953,
+    "ma200": 86.13140003204346,
     "unite": "$ / baril"
   },
   "calendar": [
@@ -88,6 +88,33 @@
   "alerts": [],
   "news": [
     {
+      "title": "Le prix du pétrole WTI baisse de 0,9% au milieu des tensions au Moyen-Orient - IDNFinancials",
+      "date": "2026-10-29",
+      "link": "https://news.google.com/rss/articles/CBMiwgFBVV95cUxOaElVRlVNaHRKeHlHZkNOUXR3czRHYTluYVRHVDh4M2F3VEZlTTBONTd3amJ6NWJNQUFWR2VyejBHdWhsLWppT1NKRG43VjhMd3MyRkl3Q2lvX3FqbGJXaC1YY0ExdGRoRzZkMmtZLTJfNVhFb29OOFc5a0JPenV3ZmRwMlJrRkUteE5YQjQzWlNRcU5ybTEyMzc2eXNCTlVhRERPT0Jlb2lINGU0TS1KaWdNUnR3ZTJCMDhMNEpoN29xQQ?oc=5",
+      "source": "IDNFinancials",
+      "summary": "Cet article suggère que malgré la persistance de tensions géopolitiques au Moyen-Orient, le marché du pétrole WTI aurait connu une légère baisse de 0,9%, ce qui pourrait indiquer que ces tensions ne se sont pas traduites par une perturbation majeure de l'approvisionnement ou une panique acheteur.",
+      "sentiment": 0,
+      "importance": "mineure"
+    },
+    {
+      "title": "IFPEN | Tableau de bord - Marchés pétroliers - IFPEN",
+      "date": "2026-10-26",
+      "link": "https://news.google.com/rss/articles/CBMigAFBVV95cUxNcUtMQXZXa1NoaGxQZkJxU1hMSXBhUnlCWWloV2U3NE8tX1o2MFJESDg4ckd1amR0WW5BZWxyQ3hzQ1VwcXpGTEhxc1ZndDJHNi1iaTB2RHg0aDFYR0VaSElZY18wVUotS2dqUDEzaExCLXpyeU55amZkeHpwbnNhQQ?oc=5",
+      "source": "IFPEN",
+      "summary": "Cet article suggère qu'IFPEN publie une mise à jour de son tableau de bord de suivi des marchés pétroliers, susceptible de fournir des données ou analyses sur les tendances actuelles du pétrole WTI.",
+      "sentiment": 0,
+      "importance": "mineure"
+    },
+    {
+      "title": "Le pétrole brut WTI dépasse les 100 dollars le baril, le café chute pour la cinquième séance consécutive. - Vietnam.vn",
+      "date": "2026-10-29",
+      "link": "https://news.google.com/rss/articles/CBMihwFBVV95cUxPV0t5dU9fblE2S2ZveWtFOUFROTNSd2daN1U3a2lzNzM3NURFLVVFclB4LWZVNnRYbkZISDBNV2ZRTnFhZUZfcFljcGJsMmtLUWg2S0FEdWFTV1V4VGpXRG1QVEUyRmJZRlB0QktsaGlNaGpZeVZuaVhlRHhFOHlxZ1hZOENyaFU?oc=5",
+      "source": "Vietnam.vn",
+      "summary": "Cet article suggère qu'une tension haussière sur le marché pétrolier aurait porté le WTI au-dessus du seuil psychologique de 100 dollars le baril, tandis que d'autres matières premières comme le café connaîtraient une faiblesse prolongée.",
+      "sentiment": 1,
+      "importance": "notable"
+    },
+    {
       "title": "Prévisions du cours du WTI : le pétrole reste sous pression sous les 100,00 $, mais les craintes au Moyen-Orient limitent le repli - www.tmgm.com",
       "date": "2026-10-27",
       "link": "https://news.google.com/rss/articles/CBMi4gFBVV95cUxPd2ZIdFAtUTJhYm04N0NPMndfeUlOc0tnUTZqUC1wTXdKdlB0UlNUOTYyZjQ2ZVYyU3hUNjhvcU9rWkZTS2lPT0NkVTA0cU9oLXU5MVVkMnlVMElRWHAya1Y4UXZNbWE0b1o5N3UxODFmeDBJbkxoR2ZPLURGbURjTTJZVnhsTG1LazE3aDBMR29NS1Y4MUdlU2xOMXIzV1pweVVWUGlRZ1NxaVVtdjMzc0lYbmJFUmJmRXJDQUNSRWVhSV9ON3dNM3FvQ0lGMEZZQy1iUEZHQUFGTmUtekRhYXB3?oc=5",
@@ -97,46 +124,19 @@
       "importance": "mineure"
     },
     {
-      "title": "IFPEN | Tableau de bord - Marchés pétroliers - IFPEN",
-      "date": "2026-10-19",
-      "link": "https://news.google.com/rss/articles/CBMigAFBVV95cUxNcUtMQXZXa1NoaGxQZkJxU1hMSXBhUnlCWWloV2U3NE8tX1o2MFJESDg4ckd1amR0WW5BZWxyQ3hzQ1VwcXpGTEhxc1ZndDJHNi1iaTB2RHg0aDFYR0VaSElZY18wVUotS2dqUDEzaExCLXpyeU55amZkeHpwbnNhQQ?oc=5",
-      "source": "IFPEN",
-      "summary": "Cet article suggère qu'IFPEN publie une mise à jour de son tableau de bord de suivi des marchés pétroliers, susceptible de fournir des données ou analyses sur les tendances actuelles du pétrole WTI.",
-      "sentiment": 0,
-      "importance": "mineure"
-    },
-    {
-      "title": "Brent, WTI : pourquoi le pétrole a deux prix que personne ne vous explique - Idéal Investisseur",
-      "date": "2026-03-09",
-      "link": "https://news.google.com/rss/articles/CBMiygFBVV95cUxPYjVqMEVCek1Ic245VkdZVDhPbjczbFpNT0w5NFpCYWdPU0xTMEgzUnN0alIzc19rMTlvOFBqd1pvWFpDdmQ4Z2lwYzlCY0YtQm5MRHViM3VobDFyNE1ORmViRzlfWVhyZlViSklvNGxyTWFOYlVaQkh5dkFvTXJzWTQxZjVaenY0b2U3UTZ4Z0NVT3lmUnYyV0dUcFJRUDRlZGhTQU56WlVBZERfWG9yZElneGw1N2FMRTAtN3ZCWGtVOV9fdnp4dTl3?oc=5",
-      "source": "Idéal Investisseur",
-      "summary": "",
-      "sentiment": 0,
-      "importance": "mineure"
-    },
-    {
-      "title": "Les ETF sur le pétrole (Brent et WTI) en 2026 - Finance Héros",
-      "date": "2026-04-17",
-      "link": "https://news.google.com/rss/articles/CBMiTkFVX3lxTE5CSThUei1mdzV5N0t5MVpmaUhEVVZyNXYzVHExZVJ3bFdDM2NLMTk4Wl93RlF2ZTBnREFlY3lJaDNHLWlENlRXVzFzWDJDZw?oc=5",
-      "source": "Finance Héros",
-      "summary": "",
-      "sentiment": 0,
-      "importance": "mineure"
-    },
-    {
-      "title": "Au plus bas depuis plus d'un mois: le pétrole chute de 10% après l'annonce de la \"réouverture totale\" du détroit d'Ormuz par l'Iran - BFM",
-      "date": "2026-04-17",
-      "link": "https://news.google.com/rss/articles/CBMirwJBVV95cUxNcmpXVnFQM292d0g0R0lfblNsYnZHbXdwUW41d2JodWlHMUI3XzRNWUhVYWZwYzlHclZ6Vzk0X1hNUnhEcnVkLUFDOEt3bXFhMm9YMWtQdVBjNFlHeG9XY295aS1WN1FidW1nNnpzVDdjYldxRGxtMERKdGFVWXNyVEFPNWFrM0tXSjVWaE84RUtBRGRxYTY5ZHN5WW42RndqMHBYaTFpRlRfNU04UFhacUhMQlpVdVptODVEckFNc1Z6b00yQVM4ZkZMZnoyM05pbGd4ci1LZ2NfdUhpVmVqci1SVHAtQmRkSXRLRVlkRjUwNmwxTHR3TkVQeEYtTjY3RnhZVzMtdjMtZUFiUWc2OFVwMmI5SERPZVZuMkxIMTRZUWVLdVRsSm1VZ1ltQVU?oc=5",
-      "source": "BFM",
-      "summary": "",
-      "sentiment": 0,
-      "importance": "mineure"
+      "title": "Les cours du pétrole reculent, les espoirs de paix éclipsant les craintes d’une extension du conflit au Moyen-Orient - Zonebourse",
+      "date": "2026-10-29",
+      "link": "https://news.google.com/rss/articles/CBMi7wFBVV95cUxPVFJNLURwdVNoZVYzZlpIQy0wUFRTOUlpYVdjeU9adWhadVowNXJLUEVCUzRDeFpaS0dFV2ZfSUQtTllEZUc3X3RUM1hQb2dSVU0yWXlFMzByakpKS1Fibnp1TTF3V0w5Z0NmTC1fSnktLVRkZDMxSFloS0hYWFA3RnBVT1pmYjJWRGhPTVBNamhvZE9LOGt2Y3RzajBNeVE0SDFkRGY3dVk4b2doVnlPOXpOYVFxZVZGNklOeTlDaXR6Q3JXWGFFdERyTzB0VHNaSktIMWdNOFliUWdLWFYwNVFkQ0l2NUR2WHNMb0k0Zw?oc=5",
+      "source": "Zonebourse",
+      "summary": "Cet article suggère que les cours du pétrole WTI reculent en raison d'un regain d'optimisme concernant des négociations de paix au Moyen-Orient, qui éclipse temporairement les préoccupations concernant une possible escalade du conflit régional.",
+      "sentiment": -1,
+      "importance": "notable"
     }
   ],
-  "analysis_html": "<h3>Contexte récent</h3><p>Le WTI évolue dans une phase de tension haussière marquée : le cours se situe environ <strong>18,4 % au-dessus de sa moyenne mobile 200 jours</strong>, et les articles récents évoquent un baril proche de 98 $ avec un Brent au-delà de 110 $. Cette dynamique s'accompagne toutefois d'un environnement macro moins porteur, le dollar s'étant apprécié (DXY à 101,88 contre 99,17 il y a deux mois) et le différentiel WTI-Brent s'étant creusé en défaveur du brut américain. Le score composite qui en résulte est globalement <strong>neutre</strong>, les contributions positives et négatives s'annulant presque intégralement.</p><h3>Facteurs déterminants</h3><ul><li><strong>Dollar (DXY) — score -10,0, poids 27 %</strong> : c'est le principal frein. L'appréciation du billet vert de près de 2,7 points en deux mois renchérit mécaniquement le baril pour les acheteurs hors zone dollar et pèse sur la demande exprimée en devises locales. Avec un poids de 27 %, ce facteur retire environ 2,7 points au score global.</li><li><strong>Dynamique récente — score +10,0, poids 27 %</strong> : contrepoids exact du dollar. L'écart de +18,4 % par rapport à la moyenne mobile 200 jours traduit une tendance haussière installée, mais un tel niveau d'extension signale aussi un marché techniquement tendu, propice à des phases de consolidation.</li><li><strong>Spread WTI-Brent — score -10,0, poids 20 %</strong> : l'élargissement de la décote du WTI face au Brent (de +6,37 $ à +8,99 $ en deux mois) suggère une offre américaine relativement abondante ou des contraintes d'exportation, et constitue le second facteur négatif du score, pour environ -2 points.</li><li><strong>Positionnement CFTC — score +7,3, poids 27 %</strong> : la position nette des non-commerciaux ressort à 36 187 contrats, soit seulement le <strong>13e percentile sur trois ans</strong>. Ce positionnement spéculatif historiquement bas est lu comme un facteur de soutien : il limite le risque de liquidation massive et laisse une marge de reconstitution de positions longues.</li><li><strong>Stocks EIA — poids 0 %</strong> : donnée indisponible faute de clé API configurée. Le volet inventaires, habituellement central pour le WTI, est donc absent du score, ce qui réduit la robustesse de la lecture fondamentale.</li></ul><h3>Actualités à retenir</h3><ul><li><strong>[Notable] Hausse du WTI portée par l'augmentation de la demande</strong> : c'est l'actualité la plus significative. Elle vient conforter le facteur « dynamique récente » (+10,0) et offre une justification fondamentale à l'extension du cours au-dessus de sa moyenne longue. Elle n'apporte en revanche aucun élément correctif sur le dollar ni sur le spread WTI-Brent, les deux composantes négatives du score.</li><li>Les autres éléments sont classés comme mineurs : prises de bénéfices après la phase de hausse (cohérentes avec un marché très étendu par rapport à sa MM200), tentative de franchissement du seuil des 100 $, point de marché de l'IFPEN et relevé de prix situant le WTI autour de 98 $ face à un Brent au-delà de 110 $. Ce dernier point illustre directement l'élargissement du spread WTI-Brent qui pénalise le score.</li></ul><h3>Synthèse</h3><p>Le score composite est <strong>quasi neutre</strong> : la force de la tendance de prix et un positionnement spéculatif peu encombré (13e percentile) compensent presque exactement la pression d'un dollar plus ferme et d'une décote du WTI élargie face au Brent. Le marché affiche donc une tendance haussière confirmée par les prix observés et par l'argument de demande, mais sans appui macro-monétaire, et avec un écart grandissant entre les deux références mondiales qui reflète une situation spécifique au brut américain. L'absence de données sur les stocks EIA constitue une limite notable de cette lecture : le volet inventaires, non renseigné, pourrait modifier sensiblement l'équilibre du score une fois intégré. Ce texte est une analyse factuelle et ne constitue ni un conseil ni une recommandation d'investissement.</p>",
+  "analysis_html": "<h3>Contexte récent</h3><p>Le pétrole WTI évolue dans un environnement de forte tension, avec un prix situé environ <strong>18,4 % au-dessus de sa moyenne mobile 200 jours</strong> et des cotations gravitant autour du seuil psychologique des 100 dollars le baril. Cette dynamique haussière s'est construite sur fond de tensions géopolitiques au Moyen-Orient, mais les dernières séances montrent des signes de consolidation (repli de l'ordre de 0,9 % sur une séance). Le score composite agrégé ressort toutefois proche de la neutralité, les forces haussières et baissières se neutralisant presque parfaitement.</p><h3>Facteurs déterminants</h3><ul><li><strong>Dollar (DXY) — score -10,0, poids 27 % :</strong> il s'agit du frein le plus marqué. L'indice dollar est passé de 99,43 à 102,25 en deux mois, soit un raffermissement d'environ 2,8 %. Un dollar plus fort renchérit mécaniquement le baril pour les acheteurs hors zone dollar et pèse donc structurellement sur la demande et sur le prix exprimé en USD.</li><li><strong>Dynamique récente — score +10,0, poids 27 % :</strong> à l'opposé, c'est le principal soutien. Un écart de +18,4 % par rapport à la moyenne mobile 200 jours traduit une tendance haussière installée et un momentum de marché nettement positif, qui compense à lui seul l'essentiel de la pression du dollar.</li><li><strong>Spread WTI-Brent — score -10,0, poids 20 % :</strong> l'écart s'est creusé de +5,95 à <strong>+8,95 $/baril</strong> en deux mois. Un élargissement de cette ampleur signale une prime relative inhabituelle du WTI, configuration généralement perçue comme peu durable et donc défavorable au score.</li><li><strong>Positionnement CFTC — score +7,3, poids 27 % :</strong> avec une position nette de 36 187 contrats située au <strong>13e percentile sur trois ans</strong>, le positionnement spéculatif reste historiquement bas. Cette faiblesse est lue comme un facteur favorable au score : le marché n'est pas en situation de surchauffe du positionnement, ce qui laisse théoriquement de la marge avant un risque de débouclage massif.</li><li><strong>Stocks EIA — poids 0 % :</strong> donnée indisponible faute de clé API configurée. Le volet inventaires, habituellement central pour le WTI, est donc absent de l'évaluation, ce qui réduit la robustesse du diagnostic fondamental.</li></ul><h3>Actualités à retenir</h3><ul><li><strong>WTI au-dessus de 100 $ le baril (notable) :</strong> le franchissement du seuil des 100 dollars illustre concrètement la composante « dynamique récente » du score, cohérente avec l'écart de +18,4 % vis-à-vis de la moyenne mobile 200 jours. Ce niveau confirme que la tendance de fond reste orientée à la hausse malgré les vents contraires macro.</li><li><strong>Repli des cours sur fond d'espoirs de paix au Moyen-Orient (notable) :</strong> l'apaisement perçu des risques géopolitiques retire une partie de la prime de risque intégrée dans les prix. Cette actualité explique le décalage entre un momentum encore très positif et une consolidation à court terme sous les 100 dollars.</li><li><strong>Actualités mineures :</strong> la baisse de 0,9 % malgré des tensions persistantes suggère que le marché n'intègre plus de scénario de rupture d'approvisionnement immédiate ; les commentaires évoquant un WTI « sous pression sous les 100 $ » avec un repli limité par les craintes régionales décrivent un marché arbitrant entre prime géopolitique et facteurs macro baissiers (dollar fort, spread élargi).</li></ul><h3>Synthèse</h3><p>Le score composite est <strong>quasi neutre</strong> : les contributions positives du momentum (+10,0) et du positionnement CFTC bas (+7,3), qui pèsent ensemble 54 % des poids, sont presque intégralement annulées par le renforcement du dollar (-10,0) et l'élargissement du spread WTI-Brent (-10,0), soit 47 % des poids. Autrement dit, la tendance de prix reste forte et le positionnement spéculatif peu encombré, mais l'environnement macro-monétaire et la structure relative des prix du brut constituent des contrepoids significatifs. Les actualités récentes renforcent cette lecture d'équilibre instable : la prime géopolitique soutient encore les cours autour de 100 dollars, mais tend à s'éroder dès qu'apparaissent des signaux de désescalade. L'absence de données sur les stocks EIA constitue une limite notable de cette évaluation, le volet inventaires n'étant pas pris en compte.</p>",
   "news_classifications": {
-    "https://news.google.com/rss/articles/CBMi4gFBVV95cUxPd2ZIdFAtUTJhYm04N0NPMndfeUlOc0tnUTZqUC1wTXdKdlB0UlNUOTYyZjQ2ZVYyU3hUNjhvcU9rWkZTS2lPT0NkVTA0cU9oLXU5MVVkMnlVMElRWHAya1Y4UXZNbWE0b1o5N3UxODFmeDBJbkxoR2ZPLURGbURjTTJZVnhsTG1LazE3aDBMR29NS1Y4MUdlU2xOMXIzV1pweVVWUGlRZ1NxaVVtdjMzc0lYbmJFUmJmRXJDQUNSRWVhSV9ON3dNM3FvQ0lGMEZZQy1iUEZHQUFGTmUtekRhYXB3?oc=5": {
-      "summary": "",
+    "https://news.google.com/rss/articles/CBMiwgFBVV95cUxOaElVRlVNaHRKeHlHZkNOUXR3czRHYTluYVRHVDh4M2F3VEZlTTBONTd3amJ6NWJNQUFWR2VyejBHdWhsLWppT1NKRG43VjhMd3MyRkl3Q2lvX3FqbGJXaC1YY0ExdGRoRzZkMmtZLTJfNVhFb29OOFc5a0JPenV3ZmRwMlJrRkUteE5YQjQzWlNRcU5ybTEyMzc2eXNCTlVhRERPT0Jlb2lINGU0TS1KaWdNUnR3ZTJCMDhMNEpoN29xQQ?oc=5": {
+      "summary": "Cet article suggère que malgré la persistance de tensions géopolitiques au Moyen-Orient, le marché du pétrole WTI aurait connu une légère baisse de 0,9%, ce qui pourrait indiquer que ces tensions ne se sont pas traduites par une perturbation majeure de l'approvisionnement ou une panique acheteur.",
       "sentiment": 0,
       "importance": "mineure"
     },
@@ -145,20 +145,20 @@
       "sentiment": 0,
       "importance": "mineure"
     },
-    "https://news.google.com/rss/articles/CBMiygFBVV95cUxPYjVqMEVCek1Ic245VkdZVDhPbjczbFpNT0w5NFpCYWdPU0xTMEgzUnN0alIzc19rMTlvOFBqd1pvWFpDdmQ4Z2lwYzlCY0YtQm5MRHViM3VobDFyNE1ORmViRzlfWVhyZlViSklvNGxyTWFOYlVaQkh5dkFvTXJzWTQxZjVaenY0b2U3UTZ4Z0NVT3lmUnYyV0dUcFJRUDRlZGhTQU56WlVBZERfWG9yZElneGw1N2FMRTAtN3ZCWGtVOV9fdnp4dTl3?oc=5": {
+    "https://news.google.com/rss/articles/CBMihwFBVV95cUxPV0t5dU9fblE2S2ZveWtFOUFROTNSd2daN1U3a2lzNzM3NURFLVVFclB4LWZVNnRYbkZISDBNV2ZRTnFhZUZfcFljcGJsMmtLUWg2S0FEdWFTV1V4VGpXRG1QVEUyRmJZRlB0QktsaGlNaGpZeVZuaVhlRHhFOHlxZ1hZOENyaFU?oc=5": {
+      "summary": "Cet article suggère qu'une tension haussière sur le marché pétrolier aurait porté le WTI au-dessus du seuil psychologique de 100 dollars le baril, tandis que d'autres matières premières comme le café connaîtraient une faiblesse prolongée.",
+      "sentiment": 1,
+      "importance": "notable"
+    },
+    "https://news.google.com/rss/articles/CBMi4gFBVV95cUxPd2ZIdFAtUTJhYm04N0NPMndfeUlOc0tnUTZqUC1wTXdKdlB0UlNUOTYyZjQ2ZVYyU3hUNjhvcU9rWkZTS2lPT0NkVTA0cU9oLXU5MVVkMnlVMElRWHAya1Y4UXZNbWE0b1o5N3UxODFmeDBJbkxoR2ZPLURGbURjTTJZVnhsTG1LazE3aDBMR29NS1Y4MUdlU2xOMXIzV1pweVVWUGlRZ1NxaVVtdjMzc0lYbmJFUmJmRXJDQUNSRWVhSV9ON3dNM3FvQ0lGMEZZQy1iUEZHQUFGTmUtekRhYXB3?oc=5": {
       "summary": "",
       "sentiment": 0,
       "importance": "mineure"
     },
-    "https://news.google.com/rss/articles/CBMiTkFVX3lxTE5CSThUei1mdzV5N0t5MVpmaUhEVVZyNXYzVHExZVJ3bFdDM2NLMTk4Wl93RlF2ZTBnREFlY3lJaDNHLWlENlRXVzFzWDJDZw?oc=5": {
-      "summary": "",
-      "sentiment": 0,
-      "importance": "mineure"
-    },
-    "https://news.google.com/rss/articles/CBMirwJBVV95cUxNcmpXVnFQM292d0g0R0lfblNsYnZHbXdwUW41d2JodWlHMUI3XzRNWUhVYWZwYzlHclZ6Vzk0X1hNUnhEcnVkLUFDOEt3bXFhMm9YMWtQdVBjNFlHeG9XY295aS1WN1FidW1nNnpzVDdjYldxRGxtMERKdGFVWXNyVEFPNWFrM0tXSjVWaE84RUtBRGRxYTY5ZHN5WW42RndqMHBYaTFpRlRfNU04UFhacUhMQlpVdVptODVEckFNc1Z6b00yQVM4ZkZMZnoyM05pbGd4ci1LZ2NfdUhpVmVqci1SVHAtQmRkSXRLRVlkRjUwNmwxTHR3TkVQeEYtTjY3RnhZVzMtdjMtZUFiUWc2OFVwMmI5SERPZVZuMkxIMTRZUWVLdVRsSm1VZ1ltQVU?oc=5": {
-      "summary": "",
-      "sentiment": 0,
-      "importance": "mineure"
+    "https://news.google.com/rss/articles/CBMi7wFBVV95cUxPVFJNLURwdVNoZVYzZlpIQy0wUFRTOUlpYVdjeU9adWhadVowNXJLUEVCUzRDeFpaS0dFV2ZfSUQtTllEZUc3X3RUM1hQb2dSVU0yWXlFMzByakpKS1Fibnp1TTF3V0w5Z0NmTC1fSnktLVRkZDMxSFloS0hYWFA3RnBVT1pmYjJWRGhPTVBNamhvZE9LOGt2Y3RzajBNeVE0SDFkRGY3dVk4b2doVnlPOXpOYVFxZVZGNklOeTlDaXR6Q3JXWGFFdERyTzB0VHNaSktIMWdNOFliUWdLWFYwNVFkQ0l2NUR2WHNMb0k0Zw?oc=5": {
+      "summary": "Cet article suggère que les cours du pétrole WTI reculent en raison d'un regain d'optimisme concernant des négociations de paix au Moyen-Orient, qui éclipse temporairement les préoccupations concernant une possible escalade du conflit régional.",
+      "sentiment": -1,
+      "importance": "notable"
     }
   }
 }

@@ -378,6 +378,39 @@ def test_system_prompt_applies_explain_the_why_to_every_question_not_only_scores
     assert "garde la precision" in prompt and "technique" in prompt
 
 
+def test_system_prompt_requires_an_indice_filter_when_a_country_is_named():
+    """Incident du 2026-10-29 : classement(secteur="Financial Services")
+    sans indice renvoie des entreprises du monde entier (ex. PayPal,
+    Mastercard, Cboe) qui n'ont rien a voir avec la France."""
+    prompt = assistant.SYSTEM_PROMPT.lower()
+
+    assert "quand une question nomme un pays ou une zone" in prompt
+    assert "toujours le" in prompt and "indice correspondant" in prompt
+    assert "cac40" in prompt
+
+
+def test_system_prompt_warns_that_financial_score_mixes_banks_with_insurers():
+    """Meme incident : les grandes banques (francaises ou non) ressortent
+    presque toutes avec un score negatif ("Fragile"/"Tres fragile") car
+    le percentile les compare a tout le secteur financier (assureurs,
+    bourses, reseaux de paiement, structurellement plus rentables) --
+    pas a d'autres banques. Sans ce garde-fou, l'IA presente ce chiffre
+    comme un diagnostic direct de sante alors qu'il ne l'est pas."""
+    prompt = assistant.SYSTEM_PROMPT.lower()
+
+    assert "rang percentile" in prompt
+    assert "pas une" in prompt and "note absolue" in prompt
+    assert "n'est donc" in prompt and "pas un diagnostic direct" in prompt
+
+
+def test_system_prompt_tells_apart_banks_from_insurers_and_exchanges_in_financial_services():
+    prompt = assistant.SYSTEM_PROMPT.lower()
+
+    assert "financial services" in prompt
+    assert "banques de depot" in prompt
+    assert "assureur" in prompt and "bourse" in prompt
+
+
 def test_construit_system_keeps_the_base_prompt_and_adds_the_level_instruction():
     texte = assistant.construit_system("grand_public")
 

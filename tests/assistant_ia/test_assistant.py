@@ -339,6 +339,19 @@ def test_system_prompt_forbids_stating_an_unsupported_cause():
     assert "je n'ai pas trouvé d'actualité expliquant ce mouvement" in prompt
 
 
+def test_system_prompt_allows_general_reasoning_when_news_tools_return_nothing():
+    """Incident du 2026-10-29 : une question sur une baisse sectorielle
+    sans actualite disponible (GDELT en erreur 429) ne doit plus se
+    terminer sur un simple "je n'ai pas trouve" -- l'IA peut mobiliser son
+    propre raisonnement/connaissances generales, a condition de le dire
+    clairement pour ne jamais le faire passer pour un fait source par un
+    outil ou une actualite."""
+    prompt = assistant.SYSTEM_PROMPT.lower()
+
+    assert "tu peux" in prompt and "raisonnement ou tes connaissances générales".lower() in prompt
+    assert "jamais pris pour un fait sourcé par un outil ou une actualité".lower() in prompt
+
+
 def test_system_prompt_separates_company_news_from_market_context():
     """Allege le 2026-10-29 (reflexion sur le sur-cadrage du prompt) : la
     structure imposee "toujours deux blocs" a ete retiree pour laisser

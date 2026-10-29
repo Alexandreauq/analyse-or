@@ -1160,6 +1160,23 @@ def test_decide_and_act_fibonacci_opens_achat_with_partial_and_runner_legs(monke
     assert runner["take_profit"] is None
 
 
+def test_decide_and_act_fibonacci_calls_ai_shadow_veto_only_when_a_real_trade_opens(monkeypatch):
+    """Deplace le 2026-10-29 (incident de cout : un veto declenche a
+    chaque cycle ou la direction est simplement determinee, sans jamais
+    aboutir a un vrai trade, a brule du credit API pour rien). Le veto
+    ne doit se declencher QUE quand un trade va reellement s'ouvrir."""
+    calls = []
+    monkeypatch.setattr(bot.ai_shadow, "shadow_judge_entry", lambda *a, **k: calls.append(a) or None)
+    state = _fib_state(close=1981.0, high=1982.0, low=1974.0, level=1980.0, bias="achat", atr=20.0)
+    monkeypatch.setattr(bot.fibonacci_reversion, "latest_state", lambda candles, historical_candles=None: state)
+    result = bot.decide_and_act_fibonacci(
+        [{"dummy": True, "time": "2026-01-05 12:00:00"}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
+        balance=10000, equity=10000, open_positions=[], circuit_breaker=_open_circuit_breaker(),
+    )
+    assert result["action"] == "simulation"
+    assert len(calls) == 1
+
+
 def test_decide_and_act_fibonacci_opens_vente_with_partial_and_runner_legs(monkeypatch):
     # biais vente, symetrique du test achat ci-dessus : high (1986)
     # touche le niveau 1980 avec tolerance 6 (1980+6=1986, 1986>=1986 ->
@@ -1193,6 +1210,22 @@ def test_decide_and_act_fibonacci_no_action_when_distance_too_small(monkeypatch)
         balance=10000, equity=10000, open_positions=[], circuit_breaker=_open_circuit_breaker(),
     )
     assert result == {"action": "aucune", "reason": "distance entree-stop trop faible"}
+
+
+def test_decide_and_act_fibonacci_does_not_call_ai_shadow_veto_when_distance_too_small(monkeypatch):
+    """C'est exactement ce scenario (signal persistant, jamais assez de
+    distance pour ouvrir) qui a fait tourner le veto IA toutes les 1-2
+    minutes pendant des heures le 2026-10-29, facturant 28 appels reels
+    pour 0 trade reellement ouvert."""
+    calls = []
+    monkeypatch.setattr(bot.ai_shadow, "shadow_judge_entry", lambda *a, **k: calls.append(a) or None)
+    state = _fib_state(close=2000.001, high=2000.002, low=1999.999, level=2000.0, bias="achat", atr=0.0001)
+    monkeypatch.setattr(bot.fibonacci_reversion, "latest_state", lambda candles, historical_candles=None: state)
+    bot.decide_and_act_fibonacci(
+        [{"dummy": True, "time": "2026-01-05 12:00:00"}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
+        balance=10000, equity=10000, open_positions=[], circuit_breaker=_open_circuit_breaker(),
+    )
+    assert calls == []
 
 
 def test_decide_and_act_fibonacci_blocked_by_circuit_breaker(monkeypatch):

@@ -1,8 +1,8 @@
 {
-  "date": "2026-10-28",
+  "date": "2026-10-29",
   "commodity": "gaz",
   "label": "Gaz naturel",
-  "composite_score": -28.8,
+  "composite_score": -30.5,
   "interpretation": "Défavorable — pas d'entrée même sur signal technique",
   "cftc_percentile": 1.282051282051282,
   "factors": [
@@ -16,19 +16,19 @@
       "name": "Saisonnalité (Henry Hub)",
       "score": -10,
       "weight": 0.3333333333333333,
-      "raw_value": "2.76 $/MMBtu (moyenne saisonnière du mois : 3.41 $/MMBtu)"
+      "raw_value": "2.76 $/MMBtu (moyenne saisonnière du mois : 3.39 $/MMBtu)"
     },
     {
       "name": "Dynamique récente",
-      "score": -3.0379852467655932,
+      "score": -3.6850475124793656,
       "weight": 0.26666666666666666,
-      "raw_value": "-1.5% vs MM200"
+      "raw_value": "-1.8% vs MM200"
     },
     {
       "name": "Dollar (DXY)",
       "score": -10,
       "weight": 0.13333333333333333,
-      "raw_value": "102.13 (il y a 2 mois : 99.70)"
+      "raw_value": "102.20 (il y a 2 mois : 99.70)"
     },
     {
       "name": "Stocks EIA",
@@ -38,17 +38,12 @@
     }
   ],
   "technical": {
-    "note": "Cours en-dessous de la MM200 (-1.5%) — tendance baissière",
-    "spot": 3.0290000438690186,
-    "ma200": 3.0757200038433075,
+    "note": "Cours en-dessous de la MM200 (-1.8%) — tendance baissière",
+    "spot": 3.0190000534057617,
+    "ma200": 3.075670003890991,
     "unite": "$ / MMBtu"
   },
   "calendar": [
-    {
-      "date": "27/10–28/10/2026",
-      "label": "Réunion FOMC",
-      "kind": "Fed"
-    },
     {
       "date": "29/10/2026",
       "label": "PCE (dépenses de consommation des ménages)",
@@ -83,6 +78,11 @@
       "date": "17/11/2026",
       "label": "Ventes au détail",
       "kind": "Donnée"
+    },
+    {
+      "date": "08/12–09/12/2026",
+      "label": "Réunion FOMC",
+      "kind": "Fed"
     }
   ],
   "alerts": [],

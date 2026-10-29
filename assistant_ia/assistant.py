@@ -104,7 +104,14 @@ def run_assistant_loop(
     tool_dispatch, qui appelle assistant_ia.tools, qui lit les fichiers
     publics/API bots — jamais ce module directement)."""
     if client is None:
-        client = anthropic.Anthropic(timeout=60.0, max_retries=2)
+        # max_retries=0 : le defaut du SDK rejouerait silencieusement un
+        # appel Opus expire jusqu'a 2 fois de plus, et usage.record_usage
+        # (le plafond de 5$/jour) ne comptabilise que la reponse FINALE
+        # reussie -- les tentatives ratees avant ne sont jamais vues par
+        # le compteur. Meme mecanisme que l'incident de cout du bot Or le
+        # 2026-10-29 (gold_bot/ai_shadow.py) : sans ca, le vrai cout peut
+        # depasser ce que le plafond journalier croit avoir depense.
+        client = anthropic.Anthropic(timeout=60.0, max_retries=0)
     if tool_dispatch is None:
         tool_dispatch = tools.dispatch_tool
 

@@ -133,7 +133,15 @@ def shadow_judge_entry(symbol: str, direction: str, state: dict, candles: list[d
             _append_log(entry, log_path)
             return None
 
-        client = anthropic.Anthropic(api_key=api_key, timeout=REQUEST_TIMEOUT_SECONDS)
+        # max_retries=0 : le defaut du SDK (2) rejouerait cette meme
+        # requete couteuse (Opus + recherche web) jusqu'a 2 fois de plus
+        # a chaque timeout -- jusqu'a 3 tentatives reellement facturees
+        # pour un seul appel loggue, probablement le plus gros facteur
+        # dans l'incident de cout du 2026-10-29 (28 timeouts loggues,
+        # potentiellement ~84 tentatives reelles). Un avis fantome rate
+        # une fois n'a pas besoin d'etre rejoue ici : le prochain vrai
+        # trade (ou demain, apres le cooldown) retentera de lui-meme.
+        client = anthropic.Anthropic(api_key=api_key, timeout=REQUEST_TIMEOUT_SECONDS, max_retries=0)
         response = client.messages.create(
             model=MODEL,
             max_tokens=1024,

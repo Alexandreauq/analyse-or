@@ -46,9 +46,10 @@ class _FakeAnthropicClient:
     def __init__(self, response=None, error=None):
         self.messages = _FakeMessages(response=response, error=error)
 
-    def __call__(self, api_key, timeout):
+    def __call__(self, api_key, timeout, max_retries=None):
         self.api_key = api_key
         self.timeout = timeout
+        self.max_retries = max_retries
         return self
 
 
@@ -90,6 +91,11 @@ def test_shadow_judge_entry_parses_verdict_and_logs_on_success(tmp_path, monkeyp
 
     assert result == {"verdict": "confirme", "confiance": "haute", "raison": "pas de news majeure"}
     assert fake_client.messages.last_kwargs["model"] == ai_shadow.MODEL
+    # max_retries=0 : un timeout sur cet appel (deja proteger par son
+    # propre REQUEST_TIMEOUT_SECONDS) ne doit jamais etre rejoue par le
+    # SDK -- incident du 2026-10-29, chaque timeout facturait jusqu'a
+    # 3 tentatives reelles (defaut SDK = 2 retries) au lieu d'une.
+    assert fake_client.max_retries == 0
     entries = [json.loads(line) for line in open(log_path, encoding="utf-8")]
     assert len(entries) == 1
     assert entries[0]["verdict"] == result

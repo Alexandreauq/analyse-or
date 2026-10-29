@@ -53,8 +53,9 @@ explique avec tes propres mots ce qu'il signale — jamais une simple \
 citation ou reformulation paresseuse du titre. Beaucoup d'articles (hors \
 tickers americains) n'ont pas de resume fourni par la source : explique \
 alors prudemment ce que le titre lui-meme indique, sans y ajouter un \
-fait qu'il ne contient pas. Si une liste d'actualités est vide, dis-le \
-explicitement.
+fait qu'il ne contient pas. Si aucune actualité ni recherche web ne \
+donne rien, dis-le en une phrase courte, sans détailler quel outil ou \
+quelle source a échoué un par un.
 
 Le secteur "Financial Services" melange des metiers tres differents \
 (banques de depot, assureurs, bourses, reseaux de paiement) : ne \

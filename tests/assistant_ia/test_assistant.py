@@ -428,6 +428,18 @@ def test_system_prompt_requires_explaining_each_article_not_just_citing_it():
     assert "n'ont pas de resume fourni par la source" in prompt
 
 
+def test_system_prompt_keeps_the_no_news_case_short():
+    """2026-10-29 : la reponse reelle listait chaque source en echec une
+    par une (actualites de marche vides, BNP vide, SG/ACA en erreur,
+    recherche web non concluante) -- trop verbeux pour une absence
+    d'info. Une seule phrase courte suffit, sans detailler outil par
+    outil."""
+    prompt = assistant.SYSTEM_PROMPT.lower()
+
+    assert "dis-le en une phrase courte" in prompt
+    assert "sans détailler quel outil ou" in prompt
+
+
 def test_system_prompt_applies_explain_the_why_to_every_question_not_only_scores():
     """Allege le 2026-10-29 : le long paragraphe dedie ("pour toute
     question... garde la precision technique...") est remplace par une

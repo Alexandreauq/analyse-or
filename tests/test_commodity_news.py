@@ -1,6 +1,7 @@
 import pytest
 from unittest.mock import patch, MagicMock
 
+import commodity_news
 from commodity_news import (
     summarize_commodity_news_item,
     fetch_commodity_news,
@@ -10,6 +11,17 @@ from commodity_news import (
     build_news_and_analysis_section,
 )
 from gold_score import FactorResult
+
+
+@pytest.fixture(autouse=True)
+def _no_real_indices_ai_usage_writes(monkeypatch):
+    """Meme garde-fou que tests/test_indices_score.py -- commodity_news.py
+    importe _record_indices_ai_usage/_indices_ai_budget_exceeded depuis
+    indices_score.py (from-import, liaison propre a ce module), donc un
+    monkeypatch cote indices_score ne suffirait pas ici : il faut patcher
+    les noms tels que lies dans commodity_news lui-meme."""
+    monkeypatch.setattr(commodity_news, "_record_indices_ai_usage", lambda *a, **k: None)
+    monkeypatch.setattr(commodity_news, "_indices_ai_budget_exceeded", lambda *a, **k: False)
 
 
 def _fake_anthropic_response(parsed_json_text):
@@ -45,6 +57,15 @@ def test_summarize_commodity_news_item_never_raises_on_network_error(monkeypatch
     monkeypatch.setenv("ANTHROPIC_API_KEY", "fake-key")
     with patch("commodity_news.requests.post", side_effect=Exception("network down")):
         result = summarize_commodity_news_item("Titre", "l'or", None)
+    assert result == {"summary": "", "sentiment": 0, "importance": "mineure"}
+
+
+def test_summarize_commodity_news_item_skips_the_call_when_budget_is_exceeded(monkeypatch):
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "fake-key")
+    monkeypatch.setattr(commodity_news, "_indices_ai_budget_exceeded", lambda *a, **k: True)
+    with patch("commodity_news.requests.post") as mock_post:
+        result = summarize_commodity_news_item("Titre", "l'or", "contenu")
+    mock_post.assert_not_called()
     assert result == {"summary": "", "sentiment": 0, "importance": "mineure"}
 
 
@@ -116,6 +137,15 @@ def test_build_news_summary_handles_empty_list():
 def test_generate_commodity_analysis_returns_none_without_api_key(monkeypatch):
     monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
     assert generate_commodity_analysis("l'or", "facteurs", "actus") is None
+
+
+def test_generate_commodity_analysis_skips_the_call_when_budget_is_exceeded(monkeypatch):
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "fake-key")
+    monkeypatch.setattr(commodity_news, "_indices_ai_budget_exceeded", lambda *a, **k: True)
+    with patch("commodity_news.requests.post") as mock_post:
+        result = generate_commodity_analysis("l'or", "facteurs", "actus")
+    mock_post.assert_not_called()
+    assert result is None
 
 
 def test_generate_commodity_analysis_parses_valid_response(monkeypatch):

@@ -4117,6 +4117,68 @@ ANTHROPIC_API_URL = "https://api.anthropic.com/v1/messages"
 # Anthropic le 2026-10-29/30 (voir indices.yml, ~710 entreprises/jour).
 ANTHROPIC_MODEL = "claude-haiku-5-5"
 
+# Plafond de depense quotidien pour les deux appels Claude de ce fichier
+# (resumes d'actualites + analyse financiere) -- garde-fou, pas une limite
+# d'usage normal, meme principe que assistant_ia/usage.py. Necessaire
+# depuis le 2026-10-30 : ce fichier pouvait generer jusqu'a 710 analyses
+# par run sans aucun plafond -- le plus gros poste de depense reel du
+# projet ce jour-la, trouve en diagnostiquant un vrai epuisement de
+# credit Anthropic. Une regeneration non faite aujourd'hui faute de
+# budget reste simplement differee : le cache par trimestre (voir
+# build_company_entry) la retentera au prochain run, elle n'est jamais
+# perdue, juste repoussee.
+INDICES_AI_DAILY_BUDGET_USD = 15.0
+INDICES_AI_USAGE_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "indices_ai_usage_today.json")
+INDICES_AI_PRICE_PER_MTOK_USD = {
+    "claude-haiku-5-5": {"input": 0.10, "output": 0.50},
+    "claude-opus-5-5": {"input": 4.0, "output": 20.0},
+}
+
+
+def _load_indices_ai_usage(path: str = INDICES_AI_USAGE_PATH) -> dict:
+    """Depense connue du jour (UTC via date.today(), environnement
+    GitHub Actions). Fichier absent/corrompu/date differente -> total a
+    zero, jamais d'exception (meme contrat que assistant_ia.usage.load_usage)."""
+    today = date.today().isoformat()
+    try:
+        with open(path, "r", encoding="utf-8") as fh:
+            data = json.load(fh)
+    except Exception:
+        return {"date": today, "total_usd": 0.0}
+    if not isinstance(data, dict) or data.get("date") != today:
+        return {"date": today, "total_usd": 0.0}
+    total = data.get("total_usd")
+    if not isinstance(total, (int, float)) or isinstance(total, bool):
+        return {"date": today, "total_usd": 0.0}
+    return {"date": today, "total_usd": float(total)}
+
+
+def _record_indices_ai_usage(
+    model: str, input_tokens: int, output_tokens: int, path: str = INDICES_AI_USAGE_PATH,
+) -> None:
+    """Ajoute le cout d'un appel au total du jour. Degrade silencieusement
+    sur echec d'ecriture (meme philosophie que journal.append_run) --
+    jamais une raison de faire echouer la generation qui vient de reussir."""
+    prices = INDICES_AI_PRICE_PER_MTOK_USD.get(model)
+    if prices is None:
+        return
+    cout = (input_tokens / 1_000_000) * prices["input"] + (output_tokens / 1_000_000) * prices["output"]
+    nouveau_total = _load_indices_ai_usage(path)["total_usd"] + cout
+    try:
+        dirname = os.path.dirname(path)
+        if dirname:
+            os.makedirs(dirname, exist_ok=True)
+        tmp_path = f"{path}.tmp"
+        with open(tmp_path, "w", encoding="utf-8") as fh:
+            json.dump({"date": date.today().isoformat(), "total_usd": nouveau_total}, fh)
+        os.replace(tmp_path, path)
+    except Exception:
+        pass
+
+
+def _indices_ai_budget_exceeded(path: str = INDICES_AI_USAGE_PATH) -> bool:
+    return _load_indices_ai_usage(path)["total_usd"] >= INDICES_AI_DAILY_BUDGET_USD
+
 
 def summarize_news_item(title: str, company_name: str, article_text: str | None) -> dict:
     """Génère un résumé/contexte (1-2 phrases en français), une
@@ -4132,6 +4194,8 @@ def summarize_news_item(title: str, company_name: str, article_text: str | None)
     tort l'alerte "actu majeure"."""
     api_key = os.environ.get("ANTHROPIC_API_KEY")
     if not api_key:
+        return {"summary": "", "sentiment": 0, "importance": "mineure"}
+    if _indices_ai_budget_exceeded():
         return {"summary": "", "sentiment": 0, "importance": "mineure"}
 
     if article_text:
@@ -4191,6 +4255,8 @@ def summarize_news_item(title: str, company_name: str, article_text: str | None)
         )
         resp.raise_for_status()
         data = resp.json()
+        usage = data.get("usage", {})
+        _record_indices_ai_usage(ANTHROPIC_MODEL, usage.get("input_tokens", 0), usage.get("output_tokens", 0))
         text = data["content"][0]["text"].strip()
         if text.startswith("```"):
             text = text.strip("`")
@@ -4234,6 +4300,8 @@ def generate_financial_analysis(
     api_key = os.environ.get("ANTHROPIC_API_KEY")
     if not api_key:
         return None
+    if _indices_ai_budget_exceeded():
+        return None
 
     prompt = (
         f"Entreprise : {company_name}\n\n{financial_context}\n\n"
@@ -4271,6 +4339,8 @@ def generate_financial_analysis(
         )
         resp.raise_for_status()
         data = resp.json()
+        usage = data.get("usage", {})
+        _record_indices_ai_usage(ANTHROPIC_MODEL_ANALYSIS, usage.get("input_tokens", 0), usage.get("output_tokens", 0))
         text_block = next(
             (b["text"] for b in data["content"] if b.get("type") == "text"), None
         )

@@ -4277,6 +4277,55 @@ def _record_all_indices_ai_usage(
     _record_indices_ai_usage_period(model, input_tokens, output_tokens, monthly_path, _month_key())
 
 
+# Frequence max par ticker (2026-10-30, meme design) : evite qu'un pic
+# de trafic sur UNE seule entreprise consomme le plafond $ a lui seul,
+# meme si le trimestre a re-change entre-temps.
+INDICES_AI_TICKER_COOLDOWN_HOURS = 24
+INDICES_AI_TICKER_COOLDOWN_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "indices_ai_ticker_cooldown.json")
+
+
+def _ticker_cooldown_active(ticker: str, path: str = INDICES_AI_TICKER_COOLDOWN_PATH) -> bool:
+    """True si ce ticker a deja ete regenere il y a moins de
+    INDICES_AI_TICKER_COOLDOWN_HOURS. Fichier absent/corrompu/entree
+    absente -> False (jamais de blocage par defaut), jamais d'exception."""
+    try:
+        with open(path, "r", encoding="utf-8") as fh:
+            data = json.load(fh)
+    except Exception:
+        return False
+    if not isinstance(data, dict):
+        return False
+    horodatage = data.get(ticker)
+    if not isinstance(horodatage, str):
+        return False
+    try:
+        dernier = datetime.fromisoformat(horodatage)
+    except ValueError:
+        return False
+    return datetime.now() - dernier < timedelta(hours=INDICES_AI_TICKER_COOLDOWN_HOURS)
+
+
+def _record_ticker_generated(ticker: str, path: str = INDICES_AI_TICKER_COOLDOWN_PATH) -> None:
+    try:
+        with open(path, "r", encoding="utf-8") as fh:
+            data = json.load(fh)
+        if not isinstance(data, dict):
+            data = {}
+    except Exception:
+        data = {}
+    data[ticker] = datetime.now().isoformat()
+    try:
+        dirname = os.path.dirname(path)
+        if dirname:
+            os.makedirs(dirname, exist_ok=True)
+        tmp_path = f"{path}.tmp"
+        with open(tmp_path, "w", encoding="utf-8") as fh:
+            json.dump(data, fh)
+        os.replace(tmp_path, path)
+    except Exception:
+        pass
+
+
 def summarize_news_item(title: str, company_name: str, article_text: str | None) -> dict:
     """Génère un résumé/contexte (1-2 phrases en français), une
     classification de sentiment et un niveau d'importance pour
@@ -4292,7 +4341,7 @@ def summarize_news_item(title: str, company_name: str, article_text: str | None)
     api_key = os.environ.get("ANTHROPIC_API_KEY")
     if not api_key:
         return {"summary": "", "sentiment": 0, "importance": "mineure"}
-    if _indices_ai_budget_exceeded():
+    if _indices_ai_any_budget_exceeded():
         return {"summary": "", "sentiment": 0, "importance": "mineure"}
 
     if article_text:
@@ -4359,7 +4408,7 @@ def summarize_news_item(title: str, company_name: str, article_text: str | None)
         resp.raise_for_status()
         data = resp.json()
         usage = data.get("usage", {})
-        _record_indices_ai_usage(ANTHROPIC_MODEL, usage.get("input_tokens", 0), usage.get("output_tokens", 0))
+        _record_all_indices_ai_usage(ANTHROPIC_MODEL, usage.get("input_tokens", 0), usage.get("output_tokens", 0))
         text = data["content"][0]["text"].strip()
         if text.startswith("```"):
             text = text.strip("`")
@@ -4395,15 +4444,23 @@ d'achat/vente, à partir des seules données fournies."""
 
 def generate_financial_analysis(
     company_name: str, financial_context: str, ratios_summary: str,
+    ticker: str | None = None,
 ) -> str | None:
-    """Génère l'analyse financière via Claude Opus 5 (thinking adaptatif,
-    effort élevé — tâche de raisonnement/rédaction, pas de classification
+    """Génère l'analyse financière via Claude Opus 5.5 (thinking
+    adaptatif — tâche de raisonnement/rédaction, pas de classification
     simple). None si la clé API est absente ou en cas d'échec — jamais
-    d'exception, même contrat que summarize_news_item."""
+    d'exception, même contrat que summarize_news_item.
+
+    `ticker` (optionnel, 2026-10-30) : active le cooldown par ticker en
+    plus des plafonds $ -- None desactive cette verification (les
+    appelants existants qui ne passent que 3 arguments ne sont pas
+    affectes)."""
     api_key = os.environ.get("ANTHROPIC_API_KEY")
     if not api_key:
         return None
-    if _indices_ai_budget_exceeded():
+    if _indices_ai_any_budget_exceeded():
+        return None
+    if ticker is not None and _ticker_cooldown_active(ticker):
         return None
 
     prompt = (
@@ -4451,7 +4508,9 @@ def generate_financial_analysis(
         resp.raise_for_status()
         data = resp.json()
         usage = data.get("usage", {})
-        _record_indices_ai_usage(ANTHROPIC_MODEL_ANALYSIS, usage.get("input_tokens", 0), usage.get("output_tokens", 0))
+        _record_all_indices_ai_usage(ANTHROPIC_MODEL_ANALYSIS, usage.get("input_tokens", 0), usage.get("output_tokens", 0))
+        if ticker is not None:
+            _record_ticker_generated(ticker)
         text_block = next(
             (b["text"] for b in data["content"] if b.get("type") == "text"), None
         )

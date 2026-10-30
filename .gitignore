@@ -13,6 +13,7 @@ gold_bot/odds_verdict_cache_xauusd_achat.json
 indices_ai_usage_today.json
 indices_ai_usage_week.json
 indices_ai_usage_month.json
+indices_ai_ticker_cooldown.json
 gold_bot/odds_verdict_cache_xauusd_vente.json
 gold_bot/odds_verdict_cache_xagusd_achat.json
 gold_bot/odds_verdict_cache_xagusd_vente.json

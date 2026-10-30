@@ -4249,6 +4249,12 @@ def summarize_news_item(title: str, company_name: str, article_text: str | None)
             json={
                 "model": ANTHROPIC_MODEL,
                 "max_tokens": 200,
+                # effort "low" explicite (2026-10-30, audit de cout) : sans ca,
+                # Haiku 5.5 tourne par defaut en thinking adaptatif + effort
+                # "medium" pour une simple classification sentiment/importance
+                # en 1-2 phrases -- un cout de reflexion cache sur le site
+                # d'appel le plus frequent du fichier (jusqu'a ~3500 appels/jour).
+                "output_config": {"effort": "low"},
                 "messages": [{"role": "user", "content": prompt}],
             },
             timeout=20,
@@ -4332,7 +4338,15 @@ def generate_financial_analysis(
                 "max_tokens": 16000,
                 "system": FINANCIAL_ANALYSIS_SYSTEM_PROMPT,
                 "thinking": {"type": "adaptive"},
-                "output_config": {"effort": "high"},
+                # effort "medium" (2026-10-30, audit de cout) : c'est deja le
+                # defaut d'Opus 5.5 -- "high" ici etait un reste de l'epoque
+                # Opus 5 (dont le defaut etait "high"), jamais re-ajuste au
+                # changement de modele. Les courbes mesurees par Anthropic
+                # sont quasi plates sur ce type de tache (synthese a partir
+                # de ratios/actus deja calcules, pas de raisonnement agentique
+                # a plusieurs etapes) -- "high" ajoutait du cout sans gain
+                # mesurable attendu.
+                "output_config": {"effort": "medium"},
                 "messages": [{"role": "user", "content": prompt}],
             },
             timeout=120,

@@ -4180,6 +4180,103 @@ def _indices_ai_budget_exceeded(path: str = INDICES_AI_USAGE_PATH) -> bool:
     return _load_indices_ai_usage(path)["total_usd"] >= INDICES_AI_DAILY_BUDGET_USD
 
 
+# Plafonds $/semaine et $/mois (2026-10-30, voir
+# docs/superpowers/specs/2026-10-30-financial-analysis-on-demand-design.md) :
+# le plafond jour seul ne protege pas contre une accumulation etalee sur
+# plusieurs jours (ex. la generation a la demande d'un grand nombre de
+# tickers distincts sur quelques jours) -- ces deux plafonds s'ajoutent
+# au plafond jour, pas a sa place. Volontairement inferieurs a 7x/30x le
+# plafond jour : la demande reelle attendue (quelques tickers par jour)
+# est bien plus basse que le plafond jour lui-meme.
+INDICES_AI_WEEKLY_BUDGET_USD = 30.0
+INDICES_AI_MONTHLY_BUDGET_USD = 75.0
+INDICES_AI_WEEKLY_USAGE_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "indices_ai_usage_week.json")
+INDICES_AI_MONTHLY_USAGE_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "indices_ai_usage_month.json")
+
+
+def _week_key() -> str:
+    iso_year, iso_week, _ = date.today().isocalendar()
+    return f"{iso_year}-W{iso_week:02d}"
+
+
+def _month_key() -> str:
+    return date.today().strftime("%Y-%m")
+
+
+def _load_indices_ai_usage_period(path: str, period_key: str) -> dict:
+    """Generalisation de _load_indices_ai_usage a une cle de periode
+    arbitraire (semaine ISO ou mois) -- meme contrat (jamais
+    d'exception, degrade a zero sur fichier absent/corrompu/perime)."""
+    try:
+        with open(path, "r", encoding="utf-8") as fh:
+            data = json.load(fh)
+    except Exception:
+        return {"period_key": period_key, "total_usd": 0.0}
+    if not isinstance(data, dict) or data.get("period_key") != period_key:
+        return {"period_key": period_key, "total_usd": 0.0}
+    total = data.get("total_usd")
+    if not isinstance(total, (int, float)) or isinstance(total, bool):
+        return {"period_key": period_key, "total_usd": 0.0}
+    return {"period_key": period_key, "total_usd": float(total)}
+
+
+def _record_indices_ai_usage_period(
+    model: str, input_tokens: int, output_tokens: int, path: str, period_key: str,
+) -> None:
+    prices = INDICES_AI_PRICE_PER_MTOK_USD.get(model)
+    if prices is None:
+        return
+    cout = (input_tokens / 1_000_000) * prices["input"] + (output_tokens / 1_000_000) * prices["output"]
+    nouveau_total = _load_indices_ai_usage_period(path, period_key)["total_usd"] + cout
+    try:
+        dirname = os.path.dirname(path)
+        if dirname:
+            os.makedirs(dirname, exist_ok=True)
+        tmp_path = f"{path}.tmp"
+        with open(tmp_path, "w", encoding="utf-8") as fh:
+            json.dump({"period_key": period_key, "total_usd": nouveau_total}, fh)
+        os.replace(tmp_path, path)
+    except Exception:
+        pass
+
+
+def _indices_ai_weekly_budget_exceeded(path: str = INDICES_AI_WEEKLY_USAGE_PATH) -> bool:
+    return _load_indices_ai_usage_period(path, _week_key())["total_usd"] >= INDICES_AI_WEEKLY_BUDGET_USD
+
+
+def _indices_ai_monthly_budget_exceeded(path: str = INDICES_AI_MONTHLY_USAGE_PATH) -> bool:
+    return _load_indices_ai_usage_period(path, _month_key())["total_usd"] >= INDICES_AI_MONTHLY_BUDGET_USD
+
+
+def _indices_ai_any_budget_exceeded(
+    daily_path: str = INDICES_AI_USAGE_PATH,
+    weekly_path: str = INDICES_AI_WEEKLY_USAGE_PATH,
+    monthly_path: str = INDICES_AI_MONTHLY_USAGE_PATH,
+) -> bool:
+    """Point d'entree unique pour les 4 sites d'appel (summarize_news_item/
+    generate_financial_analysis ici, summarize_commodity_news_item/
+    generate_commodity_analysis dans commodity_news.py) : aucun des trois
+    plafonds ne peut etre depasse sans que l'appel soit bloque."""
+    return (
+        _indices_ai_budget_exceeded(path=daily_path)
+        or _indices_ai_weekly_budget_exceeded(path=weekly_path)
+        or _indices_ai_monthly_budget_exceeded(path=monthly_path)
+    )
+
+
+def _record_all_indices_ai_usage(
+    model: str, input_tokens: int, output_tokens: int,
+    daily_path: str = INDICES_AI_USAGE_PATH,
+    weekly_path: str = INDICES_AI_WEEKLY_USAGE_PATH,
+    monthly_path: str = INDICES_AI_MONTHLY_USAGE_PATH,
+) -> None:
+    """Enregistre le cout d'un appel sur les trois fenetres a la fois --
+    point d'entree unique symmetrique a _indices_ai_any_budget_exceeded."""
+    _record_indices_ai_usage(model, input_tokens, output_tokens, path=daily_path)
+    _record_indices_ai_usage_period(model, input_tokens, output_tokens, weekly_path, _week_key())
+    _record_indices_ai_usage_period(model, input_tokens, output_tokens, monthly_path, _month_key())
+
+
 def summarize_news_item(title: str, company_name: str, article_text: str | None) -> dict:
     """Génère un résumé/contexte (1-2 phrases en français), une
     classification de sentiment et un niveau d'importance pour

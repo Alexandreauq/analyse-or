@@ -8946,3 +8946,103 @@ def test_build_ratios_summary_marks_unavailable_trust_pb():
     }
     out = indices_score.build_ratios_summary(data, cost_of_capital=6.0)
     assert "indisponible" in out
+
+
+def test_indices_ai_weekly_budget_exceeded_is_true_at_or_above_the_cap(tmp_path):
+    path = str(tmp_path / "indices_ai_usage_week.json")
+    # 2 appels Opus a 1M tokens de sortie chacun = 40$, au-dessus du
+    # plafond de 30$ (indices_score.INDICES_AI_WEEKLY_BUDGET_USD).
+    for _ in range(2):
+        indices_score._record_indices_ai_usage_period(
+            "claude-opus-5-5", 0, 1_000_000, path, indices_score._week_key())
+
+    assert indices_score._indices_ai_weekly_budget_exceeded(path=path) is True
+
+
+def test_indices_ai_weekly_budget_exceeded_is_false_under_the_cap(tmp_path):
+    path = str(tmp_path / "indices_ai_usage_week.json")
+    indices_score._record_indices_ai_usage_period(
+        "claude-haiku-5-5", 1_000_000, 0, path, indices_score._week_key())
+
+    assert indices_score._indices_ai_weekly_budget_exceeded(path=path) is False
+
+
+def test_indices_ai_monthly_budget_exceeded_is_true_at_or_above_the_cap(tmp_path):
+    path = str(tmp_path / "indices_ai_usage_month.json")
+    for _ in range(4):
+        indices_score._record_indices_ai_usage_period(
+            "claude-opus-5-5", 0, 1_000_000, path, indices_score._month_key())
+
+    assert indices_score._indices_ai_monthly_budget_exceeded(path=path) is True
+
+
+def test_load_indices_ai_usage_period_resets_on_a_new_period_key(tmp_path):
+    import json as _json
+    path = str(tmp_path / "indices_ai_usage_week.json")
+    with open(path, "w", encoding="utf-8") as fh:
+        _json.dump({"period_key": "2026-W01", "total_usd": 99.0}, fh)
+
+    assert indices_score._load_indices_ai_usage_period(path, "2026-W02")["total_usd"] == 0.0
+
+
+def test_week_key_follows_the_iso_calendar():
+    import datetime as _dt
+
+    class _FauxDate(_dt.date):
+        @classmethod
+        def today(cls):
+            return cls(2026, 1, 1)  # ISO : semaine 1 de 2026 (le 2026-01-01 est un jeudi)
+
+    original = indices_score.date
+    indices_score.date = _FauxDate
+    try:
+        assert indices_score._week_key() == "2026-W01"
+    finally:
+        indices_score.date = original
+
+
+def test_month_key_formats_year_and_month():
+    import datetime as _dt
+
+    class _FauxDate(_dt.date):
+        @classmethod
+        def today(cls):
+            return cls(2026, 3, 15)
+
+    original = indices_score.date
+    indices_score.date = _FauxDate
+    try:
+        assert indices_score._month_key() == "2026-03"
+    finally:
+        indices_score.date = original
+
+
+def test_record_all_indices_ai_usage_updates_all_three_windows(tmp_path, monkeypatch):
+    daily = str(tmp_path / "daily.json")
+    weekly = str(tmp_path / "weekly.json")
+    monthly = str(tmp_path / "monthly.json")
+    # _record_all_indices_ai_usage appelle _record_indices_ai_usage par son nom
+    # global : sans ce rétablissement, l'autouse fixture (stub no-op) l'avalerait
+    # et le total jour resterait à zéro.
+    monkeypatch.setattr(indices_score, "_record_indices_ai_usage", _REAL_RECORD_INDICES_AI_USAGE)
+
+    indices_score._record_all_indices_ai_usage(
+        "claude-opus-5-5", 1_000_000, 0,
+        daily_path=daily, weekly_path=weekly, monthly_path=monthly)
+
+    assert indices_score._load_indices_ai_usage(path=daily)["total_usd"] == 4.0
+    assert indices_score._load_indices_ai_usage_period(weekly, indices_score._week_key())["total_usd"] == 4.0
+    assert indices_score._load_indices_ai_usage_period(monthly, indices_score._month_key())["total_usd"] == 4.0
+
+
+def test_indices_ai_any_budget_exceeded_checks_all_three_windows(tmp_path):
+    daily = str(tmp_path / "daily.json")
+    weekly = str(tmp_path / "weekly.json")
+    monthly = str(tmp_path / "monthly.json")
+    # Seul le plafond semaine est dépassé ici.
+    for _ in range(2):
+        indices_score._record_indices_ai_usage_period(
+            "claude-opus-5-5", 0, 1_000_000, weekly, indices_score._week_key())
+
+    assert indices_score._indices_ai_any_budget_exceeded(
+        daily_path=daily, weekly_path=weekly, monthly_path=monthly) is True

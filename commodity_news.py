@@ -30,13 +30,11 @@ from indices_score import (  # noqa: F401 — NEWS_MAX_ITEMS réexporté, utilis
     fetch_article_text,
     ANTHROPIC_API_URL,
     NEWS_IMPORTANCE_LEVELS,
-    # Meme plafond de depense quotidien que indices_score.py (pas un
-    # compteur separe) : les deux pipelines tirent sur le meme compte
-    # Anthropic reel -- voir le commentaire au-dessus de
-    # INDICES_AI_DAILY_BUDGET_USD dans indices_score.py pour le contexte
-    # complet (epuisement de credit du 2026-10-30).
-    _indices_ai_budget_exceeded,
-    _record_indices_ai_usage,
+    # Memes plafonds (jour + semaine + mois, voir indices_score.py) que
+    # indices_score.py -- pas des compteurs separes : les deux pipelines
+    # tirent sur le meme compte Anthropic reel.
+    _indices_ai_any_budget_exceeded,
+    _record_all_indices_ai_usage,
 )
 
 # Meme refresh de generation que indices_score.py (2026-10-30), meme raison
@@ -62,7 +60,7 @@ def summarize_commodity_news_item(title: str, subject_label: str, article_text: 
     api_key = os.environ.get("ANTHROPIC_API_KEY")
     if not api_key:
         return {"summary": "", "sentiment": 0, "importance": "mineure"}
-    if _indices_ai_budget_exceeded():
+    if _indices_ai_any_budget_exceeded():
         return {"summary": "", "sentiment": 0, "importance": "mineure"}
 
     if article_text:
@@ -128,7 +126,7 @@ def summarize_commodity_news_item(title: str, subject_label: str, article_text: 
         resp.raise_for_status()
         data = resp.json()
         usage = data.get("usage", {})
-        _record_indices_ai_usage(ANTHROPIC_MODEL_NEWS, usage.get("input_tokens", 0), usage.get("output_tokens", 0))
+        _record_all_indices_ai_usage(ANTHROPIC_MODEL_NEWS, usage.get("input_tokens", 0), usage.get("output_tokens", 0))
         text = data["content"][0]["text"].strip()
         if text.startswith("```"):
             text = text.strip("`")
@@ -207,7 +205,7 @@ def generate_commodity_analysis(subject_label: str, factors_summary: str, news_s
     api_key = os.environ.get("ANTHROPIC_API_KEY")
     if not api_key:
         return None
-    if _indices_ai_budget_exceeded():
+    if _indices_ai_any_budget_exceeded():
         return None
 
     prompt = (
@@ -251,7 +249,7 @@ def generate_commodity_analysis(subject_label: str, factors_summary: str, news_s
         resp.raise_for_status()
         data = resp.json()
         usage = data.get("usage", {})
-        _record_indices_ai_usage(ANTHROPIC_MODEL_ANALYSIS, usage.get("input_tokens", 0), usage.get("output_tokens", 0))
+        _record_all_indices_ai_usage(ANTHROPIC_MODEL_ANALYSIS, usage.get("input_tokens", 0), usage.get("output_tokens", 0))
         text_block = next(
             (b["text"] for b in data["content"] if b.get("type") == "text"), None
         )

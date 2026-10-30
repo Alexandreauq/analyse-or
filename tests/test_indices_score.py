@@ -8898,3 +8898,69 @@ def test_premium_score_is_capped_at_the_penalty_cap():
     score = indices_score._premium_score(current=40.0, avg_5y=10.0, cagr_ebitda=0.0)
 
     assert score == -indices_score.VALUATION_PENALTY_CAP
+
+
+def test_build_ratios_summary_formats_the_generic_profile():
+    data = {
+        "is_financial": False, "is_trust": False,
+        "roce": 12.3, "roce_available": True,
+        "roe": 8.5,
+        "structure_available": True, "net_debt_ebitda": 1.2, "icr": 6.0,
+        "cagr_ca": 4.1, "cagr_ebitda": 5.2,
+        "fcf_conversion_available": True, "fcf_conversion": 72,
+    }
+    out = indices_score.build_ratios_summary(data, cost_of_capital=7.5)
+    assert "ROCE 12.3%" in out
+    assert "ROE 8.5%" in out
+    assert "dette nette/EBITDA 1.2x" in out
+    assert "ICR 6.0x" in out
+    assert "coût du capital 7.5%" in out
+
+
+def test_build_ratios_summary_marks_unavailable_generic_ratios():
+    data = {
+        "is_financial": False, "is_trust": False,
+        "roce": 0.0, "roce_available": False,
+        "roe": 8.5,
+        "structure_available": False, "net_debt_ebitda": 0.0, "icr": 0.0,
+        "cagr_ca": 4.1, "cagr_ebitda": 5.2,
+        "fcf_conversion_available": False, "fcf_conversion": 0,
+    }
+    out = indices_score.build_ratios_summary(data, cost_of_capital=7.5)
+    assert "ROCE indisponible" in out
+    assert "dette nette/EBITDA indisponible" in out
+    assert "ICR indisponible" in out
+    assert "conversion FCF/EBITDA indisponible" in out
+
+
+def test_build_ratios_summary_formats_the_financial_sector_profile():
+    data = {
+        "is_financial": True, "is_trust": False,
+        "roe": 9.0, "leverage_ratio": 6.5,
+        "cagr_ca": 3.0, "cagr_net_income": 4.0, "cash_conversion": 90,
+    }
+    out = indices_score.build_ratios_summary(data, cost_of_capital=7.0)
+    assert "Profil financier" in out
+    assert "ROE 9.0%" in out
+    assert "capitaux propres/actif total 6.5%" in out
+
+
+def test_build_ratios_summary_formats_the_trust_profile():
+    data = {
+        "is_financial": False, "is_trust": True,
+        "roe": 5.0, "leverage_ratio": 50.0,
+        "cagr_ca": 1.0, "cagr_net_income": 2.0, "current_pb": 0.85,
+    }
+    out = indices_score.build_ratios_summary(data, cost_of_capital=6.0)
+    assert "Profil trust d'investissement" in out
+    assert "0.85x" in out
+
+
+def test_build_ratios_summary_marks_unavailable_trust_pb():
+    data = {
+        "is_financial": False, "is_trust": True,
+        "roe": 5.0, "leverage_ratio": 50.0,
+        "cagr_ca": 1.0, "cagr_net_income": 2.0, "current_pb": None,
+    }
+    out = indices_score.build_ratios_summary(data, cost_of_capital=6.0)
+    assert "indisponible" in out

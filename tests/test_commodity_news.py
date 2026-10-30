@@ -20,8 +20,13 @@ def _no_real_indices_ai_usage_writes(monkeypatch):
     indices_score.py (from-import, liaison propre a ce module), donc un
     monkeypatch cote indices_score ne suffirait pas ici : il faut patcher
     les noms tels que lies dans commodity_news lui-meme."""
-    monkeypatch.setattr(commodity_news, "_record_indices_ai_usage", lambda *a, **k: None)
-    monkeypatch.setattr(commodity_news, "_indices_ai_budget_exceeded", lambda *a, **k: False)
+    # raising=False (2026-10-30, Task 4) : avant que l'import de
+    # commodity_news.py ne soit rebranche sur ces deux noms (plus bas dans
+    # cette meme task), le module ne les connait pas encore -- sans ca,
+    # setattr leverait AttributeError et casserait TOUS les tests de ce
+    # fichier avant meme le branchement des sites d'appel.
+    monkeypatch.setattr(commodity_news, "_record_all_indices_ai_usage", lambda *a, **k: None, raising=False)
+    monkeypatch.setattr(commodity_news, "_indices_ai_any_budget_exceeded", lambda *a, **k: False, raising=False)
 
 
 def _fake_anthropic_response(parsed_json_text):
@@ -62,7 +67,7 @@ def test_summarize_commodity_news_item_never_raises_on_network_error(monkeypatch
 
 def test_summarize_commodity_news_item_skips_the_call_when_budget_is_exceeded(monkeypatch):
     monkeypatch.setenv("ANTHROPIC_API_KEY", "fake-key")
-    monkeypatch.setattr(commodity_news, "_indices_ai_budget_exceeded", lambda *a, **k: True)
+    monkeypatch.setattr(commodity_news, "_indices_ai_any_budget_exceeded", lambda *a, **k: True)
     with patch("commodity_news.requests.post") as mock_post:
         result = summarize_commodity_news_item("Titre", "l'or", "contenu")
     mock_post.assert_not_called()
@@ -141,7 +146,7 @@ def test_generate_commodity_analysis_returns_none_without_api_key(monkeypatch):
 
 def test_generate_commodity_analysis_skips_the_call_when_budget_is_exceeded(monkeypatch):
     monkeypatch.setenv("ANTHROPIC_API_KEY", "fake-key")
-    monkeypatch.setattr(commodity_news, "_indices_ai_budget_exceeded", lambda *a, **k: True)
+    monkeypatch.setattr(commodity_news, "_indices_ai_any_budget_exceeded", lambda *a, **k: True)
     with patch("commodity_news.requests.post") as mock_post:
         result = generate_commodity_analysis("l'or", "facteurs", "actus")
     mock_post.assert_not_called()

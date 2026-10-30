@@ -12,6 +12,12 @@ from indices_score import sector_risk_profile, score_rentabilite, COST_OF_CAPITA
 # pour tester le vrai comportement, pas le stub.
 _REAL_RECORD_INDICES_AI_USAGE = indices_score._record_indices_ai_usage
 _REAL_INDICES_AI_BUDGET_EXCEEDED = indices_score._indices_ai_budget_exceeded
+# Idem (2026-10-30, Task 4) pour les deux fonctions combinees de la Task 3 :
+# l'autouse fixture ci-dessous les stub maintenant aussi (branchees sur les
+# 4 sites d'appel depuis cette task), donc leurs propres tests dedies
+# doivent appeler ces references-ci pour exercer le vrai comportement.
+_REAL_RECORD_ALL_INDICES_AI_USAGE = indices_score._record_all_indices_ai_usage
+_REAL_INDICES_AI_ANY_BUDGET_EXCEEDED = indices_score._indices_ai_any_budget_exceeded
 
 
 @pytest.fixture(autouse=True)
@@ -23,10 +29,13 @@ def _no_real_indices_ai_usage_writes(monkeypatch):
     meme risque que assistant_ia/usage.py, voir
     tests/assistant_ia/test_assistant.py::_no_real_usage_writes). Les
     tests dedies au mecanisme de plafond appellent
-    _REAL_RECORD_INDICES_AI_USAGE/_REAL_INDICES_AI_BUDGET_EXCEEDED
-    directement plutot que de defaire ce monkeypatch."""
+    _REAL_RECORD_INDICES_AI_USAGE/_REAL_INDICES_AI_BUDGET_EXCEEDED (et les
+    variantes _ALL_/_ANY_ ci-dessus) directement plutot que de defaire ce
+    monkeypatch."""
     monkeypatch.setattr(indices_score, "_record_indices_ai_usage", lambda *a, **k: None)
     monkeypatch.setattr(indices_score, "_indices_ai_budget_exceeded", lambda *a, **k: False)
+    monkeypatch.setattr(indices_score, "_record_all_indices_ai_usage", lambda *a, **k: None)
+    monkeypatch.setattr(indices_score, "_indices_ai_any_budget_exceeded", lambda *a, **k: False)
 
 
 def test_record_indices_ai_usage_computes_cost_from_token_counts(tmp_path):
@@ -5327,6 +5336,64 @@ def test_generate_financial_analysis_logs_failure_instead_of_swallowing_silently
     assert "crédit insuffisant" in captured.out
 
 
+def test_ticker_cooldown_is_not_active_when_the_file_is_absent(tmp_path):
+    path = str(tmp_path / "cooldown.json")
+
+    assert indices_score._ticker_cooldown_active("AAA", path=path) is False
+
+
+def test_ticker_cooldown_is_active_right_after_recording(tmp_path):
+    path = str(tmp_path / "cooldown.json")
+    indices_score._record_ticker_generated("AAA", path=path)
+
+    assert indices_score._ticker_cooldown_active("AAA", path=path) is True
+
+
+def test_ticker_cooldown_does_not_affect_other_tickers(tmp_path):
+    path = str(tmp_path / "cooldown.json")
+    indices_score._record_ticker_generated("AAA", path=path)
+
+    assert indices_score._ticker_cooldown_active("BBB", path=path) is False
+
+
+def test_ticker_cooldown_degrades_to_false_on_corrupt_file(tmp_path):
+    path = str(tmp_path / "cooldown.json")
+    with open(path, "w", encoding="utf-8") as fh:
+        fh.write("{not json")
+
+    assert indices_score._ticker_cooldown_active("AAA", path=path) is False
+
+
+def test_generate_financial_analysis_skips_the_call_when_ticker_cooldown_is_active(monkeypatch):
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "fake-key")
+    monkeypatch.setattr(indices_score, "_ticker_cooldown_active", lambda ticker, **k: ticker == "AAA")
+
+    def fail_if_called(*a, **k):
+        raise AssertionError("no network call expected when the ticker cooldown is active")
+
+    monkeypatch.setattr(indices_score.requests, "post", fail_if_called)
+    result = indices_score.generate_financial_analysis("Nom", "contexte", "ratios", ticker="AAA")
+
+    assert result is None
+
+
+def test_generate_financial_analysis_ignores_cooldown_when_no_ticker_given(monkeypatch):
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "fake-key")
+    monkeypatch.setattr(indices_score, "_ticker_cooldown_active", lambda ticker, **k: True)
+
+    class _FakeResponse:
+        def raise_for_status(self):
+            pass
+
+        def json(self):
+            return {"content": [{"type": "text", "text": '{"analysis_html": "<p>OK</p>"}'}]}
+
+    monkeypatch.setattr(indices_score.requests, "post", lambda *a, **k: _FakeResponse())
+    result = indices_score.generate_financial_analysis("Nom", "contexte", "ratios")
+
+    assert result == "<p>OK</p>"
+
+
 import json
 
 
@@ -9023,10 +9090,13 @@ def test_record_all_indices_ai_usage_updates_all_three_windows(tmp_path, monkeyp
     monthly = str(tmp_path / "monthly.json")
     # _record_all_indices_ai_usage appelle _record_indices_ai_usage par son nom
     # global : sans ce rétablissement, l'autouse fixture (stub no-op) l'avalerait
-    # et le total jour resterait à zéro.
+    # et le total jour resterait à zéro. Appel via _REAL_RECORD_ALL_INDICES_AI_USAGE
+    # (2026-10-30, Task 4) -- depuis que ce garde-fou stub aussi
+    # _record_all_indices_ai_usage elle-meme (desormais branchee sur les 4 sites
+    # d'appel), indices_score._record_all_indices_ai_usage resoudrait le stub.
     monkeypatch.setattr(indices_score, "_record_indices_ai_usage", _REAL_RECORD_INDICES_AI_USAGE)
 
-    indices_score._record_all_indices_ai_usage(
+    _REAL_RECORD_ALL_INDICES_AI_USAGE(
         "claude-opus-5-5", 1_000_000, 0,
         daily_path=daily, weekly_path=weekly, monthly_path=monthly)
 
@@ -9039,10 +9109,13 @@ def test_indices_ai_any_budget_exceeded_checks_all_three_windows(tmp_path):
     daily = str(tmp_path / "daily.json")
     weekly = str(tmp_path / "weekly.json")
     monthly = str(tmp_path / "monthly.json")
-    # Seul le plafond semaine est dépassé ici.
+    # Seul le plafond semaine est dépassé ici. Appel via
+    # _REAL_INDICES_AI_ANY_BUDGET_EXCEEDED (2026-10-30, Task 4) -- meme
+    # raison que ci-dessus : indices_score._indices_ai_any_budget_exceeded
+    # resoudrait desormais le stub de l'autouse fixture.
     for _ in range(2):
         indices_score._record_indices_ai_usage_period(
             "claude-opus-5-5", 0, 1_000_000, weekly, indices_score._week_key())
 
-    assert indices_score._indices_ai_any_budget_exceeded(
+    assert _REAL_INDICES_AI_ANY_BUDGET_EXCEEDED(
         daily_path=daily, weekly_path=weekly, monthly_path=monthly) is True

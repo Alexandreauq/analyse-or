@@ -5404,24 +5404,27 @@ def test_build_company_entry_carries_forward_analysis_when_quarter_unchanged(mon
     assert entry["financial_analysis_quarter"] == "2026-06-30"
 
 
-def test_build_company_entry_regenerates_analysis_when_quarter_changed(monkeypatch):
-    monkeypatch.setattr(indices_score, "fetch_company_financials", lambda ticker: _fake_ratios())
+def test_build_company_entry_exposes_latest_quarter_date_separately_from_cached_analysis(monkeypatch):
+    appels = []
+    monkeypatch.setattr(indices_score, "generate_financial_analysis",
+                         lambda *a, **k: appels.append(a) or "<p>ne devrait jamais arriver</p>")
+    ratios = _fake_ratios()
+    ratios["latest_quarter_date"] = "2026-09-30"  # different de previous_analyses ci-dessous (2026-06-30)
+    monkeypatch.setattr(indices_score, "fetch_company_financials", lambda ticker: ratios)
     monkeypatch.setattr(indices_score, "fetch_news", lambda name, prev=None: [])
-    monkeypatch.setattr(
-        indices_score, "generate_financial_analysis",
-        lambda company_name, financial_context, ratios_summary: "<p>Nouvelle analyse.</p>",
-    )
 
     entry = indices_score.build_company_entry(
         "BN.PA", "Danone", risk_free_rate=3.68,
         previous_analyses={"BN.PA": {
-            "financial_analysis_html": "<p>Ancienne analyse.</p>",
-            "financial_analysis_quarter": "2026-03-31",  # différent de _fake_ratios() (2026-06-30)
+            "financial_analysis_html": "<p>ancienne analyse</p>",
+            "financial_analysis_quarter": "2026-06-30",
         }},
     )
 
-    assert entry["financial_analysis_html"] == "<p>Nouvelle analyse.</p>"
-    assert entry["financial_analysis_quarter"] == "2026-06-30"
+    assert appels == []
+    assert entry["financial_analysis_html"] == "<p>ancienne analyse</p>"
+    assert entry["financial_analysis_quarter"] == "2026-06-30"  # perime, mais conserve tel quel
+    assert entry["latest_quarter_date"] == "2026-09-30"  # toujours a jour, independamment du texte
 
 
 def test_build_company_entry_carries_forward_when_latest_quarter_date_is_none(monkeypatch):
@@ -5446,27 +5449,6 @@ def test_build_company_entry_carries_forward_when_latest_quarter_date_is_none(mo
     )
 
     assert entry["financial_analysis_html"] == "<p>Analyse existante.</p>"
-
-
-def test_build_company_entry_keeps_previous_analysis_when_generation_fails(monkeypatch):
-    """Si le trimestre a changé mais que generate_financial_analysis échoue
-    (None), garder l'ancienne analyse valide plutôt que la remplacer par None."""
-    monkeypatch.setattr(indices_score, "fetch_company_financials", lambda ticker: _fake_ratios())
-    monkeypatch.setattr(indices_score, "fetch_news", lambda name, prev=None: [])
-    monkeypatch.setattr(
-        indices_score, "generate_financial_analysis",
-        lambda company_name, financial_context, ratios_summary: None,
-    )
-
-    entry = indices_score.build_company_entry(
-        "BN.PA", "Danone", risk_free_rate=3.68,
-        previous_analyses={"BN.PA": {
-            "financial_analysis_html": "<p>Ancienne analyse valide.</p>",
-            "financial_analysis_quarter": "2026-03-31",  # différent de _fake_ratios() (2026-06-30)
-        }},
-    )
-
-    assert entry["financial_analysis_html"] == "<p>Ancienne analyse valide.</p>"
 
 
 def test_compute_health_summary_all_present():

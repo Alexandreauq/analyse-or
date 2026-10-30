@@ -2,15 +2,15 @@
   "date": "2026-10-30",
   "commodity": "gaz",
   "label": "Gaz naturel",
-  "composite_score": -47.4,
+  "composite_score": -47.0,
   "interpretation": "Défavorable — pas d'entrée même sur signal technique",
-  "cftc_percentile": 1.282051282051282,
+  "cftc_percentile": 0.641025641025641,
   "factors": [
     {
       "name": "Positionnement CFTC",
-      "score": 9.743589743589743,
+      "score": 9.87179487179487,
       "weight": 0.26666666666666666,
-      "raw_value": "1e percentile (3 ans) — position nette -157,409 contrats"
+      "raw_value": "1e percentile (3 ans) — position nette -206,317 contrats"
     },
     {
       "name": "Saisonnalité (Henry Hub)",
@@ -22,7 +22,7 @@
       "name": "Dynamique récente",
       "score": -10.0,
       "weight": 0.26666666666666666,
-      "raw_value": "-6.3% vs MM200"
+      "raw_value": "-6.1% vs MM200"
     },
     {
       "name": "Dollar (DXY)",
@@ -38,9 +38,9 @@
     }
   ],
   "technical": {
-    "note": "Cours en-dessous de la MM200 (-6.3%) — tendance baissière",
-    "spot": 2.878999948501587,
-    "ma200": 3.0711200034618376,
+    "note": "Cours en-dessous de la MM200 (-6.1%) — tendance baissière",
+    "spot": 2.882999897003174,
+    "ma200": 3.071140003204346,
     "unite": "$ / MMBtu"
   },
   "calendar": [

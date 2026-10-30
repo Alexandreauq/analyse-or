@@ -1,5 +1,5 @@
 {
-  "date": "2026-10-29",
+  "date": "2026-10-30",
   "commodity": "gaz",
   "label": "Gaz naturel",
   "composite_score": -47.4,
@@ -22,13 +22,13 @@
       "name": "Dynamique récente",
       "score": -10.0,
       "weight": 0.26666666666666666,
-      "raw_value": "-5.7% vs MM200"
+      "raw_value": "-5.6% vs MM200"
     },
     {
       "name": "Dollar (DXY)",
       "score": -10,
       "weight": 0.13333333333333333,
-      "raw_value": "101.85 (il y a 2 mois : 99.43)"
+      "raw_value": "101.71 (il y a 2 mois : 99.43)"
     },
     {
       "name": "Stocks EIA",
@@ -38,25 +38,15 @@
     }
   ],
   "technical": {
-    "note": "Cours en-dessous de la MM200 (-5.7%) — tendance baissière",
-    "spot": 2.8970000743865967,
-    "ma200": 3.072050004005432,
+    "note": "Cours en-dessous de la MM200 (-5.6%) — tendance baissière",
+    "spot": 2.9000000953674316,
+    "ma200": 3.0720650041103363,
     "unite": "$ / MMBtu"
   },
   "calendar": [
     {
-      "date": "29/10/2026",
-      "label": "PCE (dépenses de consommation des ménages)",
-      "kind": "Donnée"
-    },
-    {
-      "date": "29/10/2026",
+      "date": "05/11/2026",
       "label": "Inscriptions chômage (hebdo)",
-      "kind": "Donnée"
-    },
-    {
-      "date": "29/10/2026",
-      "label": "PIB (GDP)",
       "kind": "Donnée"
     },
     {
@@ -77,6 +67,16 @@
     {
       "date": "17/11/2026",
       "label": "Ventes au détail",
+      "kind": "Donnée"
+    },
+    {
+      "date": "25/11/2026",
+      "label": "PCE (dépenses de consommation des ménages)",
+      "kind": "Donnée"
+    },
+    {
+      "date": "25/11/2026",
+      "label": "PIB (GDP)",
       "kind": "Donnée"
     },
     {

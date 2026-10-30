@@ -32,8 +32,11 @@ from indices_score import (  # noqa: F401 — NEWS_MAX_ITEMS réexporté, utilis
     NEWS_IMPORTANCE_LEVELS,
 )
 
-ANTHROPIC_MODEL_NEWS = "claude-haiku-4-5-20251001"
-ANTHROPIC_MODEL_ANALYSIS = "claude-opus-5"
+# Meme refresh de generation que indices_score.py (2026-10-30), meme raison
+# (epuisement de credit Anthropic reel diagnostique ce jour-la) : Haiku/Opus
+# gamme actuelle au lieu de l'ancienne generation, aucun changement de palier.
+ANTHROPIC_MODEL_NEWS = "claude-haiku-5-5"
+ANTHROPIC_MODEL_ANALYSIS = "claude-opus-5-5"
 
 COMMODITY_ANALYSIS_SYSTEM_PROMPT = """Tu es un analyste macro qui explique \
 l'évolution récente du prix d'une matière première à partir d'un score \

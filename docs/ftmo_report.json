@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-29T07:12:20Z",
+  "generated_at": "2026-10-30T07:24:40Z",
   "healthy": true,
-  "summary_fr": "Le bot est actuellement actif et fonctionne normalement : sa dernière analyse du marché date de quelques minutes. Aujourd'hui, 422 cycles d'analyse ont été évalués sans qu'aucune position ne soit ouverte, le bot n'ayant pas trouvé de signal d'entrée satisfaisant. Sur les 7 derniers jours, 2 555 cycles ont été évalués et 4 positions ont réellement été ouvertes : le bot reste sélectif et préfère ne pas trader plutôt que de forcer une entrée."
+  "summary_fr": "Le bot est actuellement actif et fonctionne normalement : sa dernière analyse date de quelques instants et aucune mise en pause n'est en vigueur. Depuis le début de la journée, il a évalué 445 situations de marché sans ouvrir de position, faute de signal d'entrée suffisamment clair. Sur les 7 derniers jours, il a évalué 3 986 situations et ouvert 4 positions, en restant volontairement prudent lorsque les conditions n'étaient pas favorables."
 }

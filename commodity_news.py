@@ -116,6 +116,11 @@ def summarize_commodity_news_item(title: str, subject_label: str, article_text: 
             json={
                 "model": ANTHROPIC_MODEL_NEWS,
                 "max_tokens": 200,
+                # effort "low" explicite (2026-10-30, audit de cout, meme
+                # motif que indices_score.py::summarize_news_item) : sans ca,
+                # Haiku 5.5 tourne par defaut en thinking adaptatif + effort
+                # "medium" pour une simple classification sentiment/importance.
+                "output_config": {"effort": "low"},
                 "messages": [{"role": "user", "content": prompt}],
             },
             timeout=20,
@@ -235,7 +240,10 @@ def generate_commodity_analysis(subject_label: str, factors_summary: str, news_s
                 "max_tokens": 16000,
                 "system": COMMODITY_ANALYSIS_SYSTEM_PROMPT,
                 "thinking": {"type": "adaptive"},
-                "output_config": {"effort": "high"},
+                # effort "medium" (2026-10-30, audit de cout, meme motif que
+                # indices_score.py::generate_financial_analysis) : c'est deja
+                # le defaut d'Opus 5.5, "high" etait un reste d'Opus 5.
+                "output_config": {"effort": "medium"},
                 "messages": [{"role": "user", "content": prompt}],
             },
             timeout=120,

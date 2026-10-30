@@ -6066,6 +6066,59 @@ def convertit_prix_entree(entry: dict, devise_cotation, devise_indice: str, taux
     return entry
 
 
+def build_ratios_summary(data: dict, cost_of_capital: float) -> str:
+    """Résumé textuel des ratios déjà calculés, injecté dans le prompt
+    de generate_financial_analysis (« ne pas les recalculer, les
+    interpréter »). Extrait tel quel de build_company_entry (audit
+    2026-10-30) pour être réutilisable par le mode --generate-one sans
+    dupliquer la logique."""
+    if data["is_financial"]:
+        # Profil financier (voir FINANCIAL_SECTOR_TICKERS) : ROE/ratio
+        # de levier/CAGR résultat net plutôt que ROCE/dette nette-
+        # EBITDA/ICR/CAGR EBITDA, absents pour ces entreprises.
+        return (
+            f"[Profil financier — méthodologie adaptée, EBITDA/EBIT non "
+            f"disponibles pour cette entreprise] "
+            f"ROE {data['roe']:.1f}%, capitaux propres/actif total "
+            f"{data['leverage_ratio']:.1f}%, CAGR CA {data['cagr_ca']:+.1f}%/an, "
+            f"CAGR résultat net {data['cagr_net_income']:+.1f}%/an, "
+            f"conversion cash (OCF/résultat net) {data['cash_conversion']:.0f}%, "
+            f"coût du capital {cost_of_capital:.1f}%"
+        )
+    if data["is_trust"]:
+        # Profil trust d'investissement (voir TRUST_TICKERS) : décote/
+        # prime sur NAV (proxy P/B) plutôt que ROCE/dette nette-EBITDA,
+        # pas de notion de conversion de cash d'exploitation.
+        pb_text = f"{data['current_pb']:.2f}x" if data["current_pb"] else "indisponible"
+        return (
+            f"[Profil trust d'investissement — méthodologie adaptée, "
+            f"EBITDA/EBIT non disponibles, pas de cycle d'exploitation "
+            f"classique] ROE {data['roe']:.1f}%, capitaux propres/actif "
+            f"total {data['leverage_ratio']:.1f}%, CAGR CA "
+            f"{data['cagr_ca']:+.1f}%/an, CAGR résultat net "
+            f"{data['cagr_net_income']:+.1f}%/an, P/B (proxy décote/prime "
+            f"sur NAV) {pb_text}, coût du capital {cost_of_capital:.1f}%"
+        )
+    # "indisponible" plutôt que le chiffre de repli (audit 2026-09-13,
+    # même motif que les FactorResult ci-dessous) : sans ça, Claude
+    # recevrait un faux "ROCE 0.0%"/"ICR 10.0x" et pourrait écrire une
+    # analyse contredisant le facteur affiché juste à côté (qui dit
+    # maintenant explicitement "Donnée indisponible").
+    roce_text = f"{data['roce']:.1f}%" if data["roce_available"] else "indisponible"
+    structure_available = data["structure_available"]
+    net_debt_ebitda_text = f"{data['net_debt_ebitda']:.1f}x" if structure_available else "indisponible"
+    icr_text = f"{data['icr']:.1f}x" if structure_available else "indisponible"
+    fcf_conversion_text = f"{data['fcf_conversion']:.0f}%" if data["fcf_conversion_available"] else "indisponible"
+    return (
+        f"ROCE {roce_text}, ROE {data['roe']:.1f}%, "
+        f"dette nette/EBITDA {net_debt_ebitda_text}, "
+        f"ICR {icr_text}, CAGR CA {data['cagr_ca']:+.1f}%/an, "
+        f"CAGR EBITDA {data['cagr_ebitda']:+.1f}%/an, "
+        f"conversion FCF/EBITDA {fcf_conversion_text}, "
+        f"coût du capital {cost_of_capital:.1f}%"
+    )
+
+
 def build_company_entry(
     ticker: str, name: str, risk_free_rate: float | None, previous_analyses: dict,
     index_key: str = "CAC40", also_indices: list[str] | None = None,
@@ -6104,52 +6157,7 @@ def build_company_entry(
         financial_analysis_html = previous["financial_analysis_html"]
         financial_analysis_quarter = previous.get("financial_analysis_quarter")
     else:
-        if data["is_financial"]:
-            # Profil financier (voir FINANCIAL_SECTOR_TICKERS) : ROE/ratio
-            # de levier/CAGR résultat net plutôt que ROCE/dette nette-
-            # EBITDA/ICR/CAGR EBITDA, absents pour ces entreprises.
-            ratios_summary = (
-                f"[Profil financier — méthodologie adaptée, EBITDA/EBIT non "
-                f"disponibles pour cette entreprise] "
-                f"ROE {data['roe']:.1f}%, capitaux propres/actif total "
-                f"{data['leverage_ratio']:.1f}%, CAGR CA {data['cagr_ca']:+.1f}%/an, "
-                f"CAGR résultat net {data['cagr_net_income']:+.1f}%/an, "
-                f"conversion cash (OCF/résultat net) {data['cash_conversion']:.0f}%, "
-                f"coût du capital {cost_of_capital:.1f}%"
-            )
-        elif data["is_trust"]:
-            # Profil trust d'investissement (voir TRUST_TICKERS) : décote/
-            # prime sur NAV (proxy P/B) plutôt que ROCE/dette nette-EBITDA,
-            # pas de notion de conversion de cash d'exploitation.
-            pb_text = f"{data['current_pb']:.2f}x" if data["current_pb"] else "indisponible"
-            ratios_summary = (
-                f"[Profil trust d'investissement — méthodologie adaptée, "
-                f"EBITDA/EBIT non disponibles, pas de cycle d'exploitation "
-                f"classique] ROE {data['roe']:.1f}%, capitaux propres/actif "
-                f"total {data['leverage_ratio']:.1f}%, CAGR CA "
-                f"{data['cagr_ca']:+.1f}%/an, CAGR résultat net "
-                f"{data['cagr_net_income']:+.1f}%/an, P/B (proxy décote/prime "
-                f"sur NAV) {pb_text}, coût du capital {cost_of_capital:.1f}%"
-            )
-        else:
-            # "indisponible" plutôt que le chiffre de repli (audit 2026-09-13,
-            # même motif que les FactorResult ci-dessous) : sans ça, Claude
-            # recevrait un faux "ROCE 0.0%"/"ICR 10.0x" et pourrait écrire une
-            # analyse contredisant le facteur affiché juste à côté (qui dit
-            # maintenant explicitement "Donnée indisponible").
-            roce_text = f"{data['roce']:.1f}%" if data["roce_available"] else "indisponible"
-            structure_available = data["structure_available"]
-            net_debt_ebitda_text = f"{data['net_debt_ebitda']:.1f}x" if structure_available else "indisponible"
-            icr_text = f"{data['icr']:.1f}x" if structure_available else "indisponible"
-            fcf_conversion_text = f"{data['fcf_conversion']:.0f}%" if data["fcf_conversion_available"] else "indisponible"
-            ratios_summary = (
-                f"ROCE {roce_text}, ROE {data['roe']:.1f}%, "
-                f"dette nette/EBITDA {net_debt_ebitda_text}, "
-                f"ICR {icr_text}, CAGR CA {data['cagr_ca']:+.1f}%/an, "
-                f"CAGR EBITDA {data['cagr_ebitda']:+.1f}%/an, "
-                f"conversion FCF/EBITDA {fcf_conversion_text}, "
-                f"coût du capital {cost_of_capital:.1f}%"
-            )
+        ratios_summary = build_ratios_summary(data, cost_of_capital)
         generated = generate_financial_analysis(
             name, data["financial_context"], ratios_summary
         )

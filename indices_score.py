@@ -6145,33 +6145,19 @@ def build_company_entry(
 
     previous = previous_analyses.get(ticker, {})
     current_quarter = data["latest_quarter_date"]
-    quarter_unchanged = (
-        current_quarter is not None
-        and current_quarter == previous.get("financial_analysis_quarter")
-    )
-    if (quarter_unchanged or current_quarter is None) and previous.get("financial_analysis_html"):
-        # Trimestre inchangé, ou date de trimestre indisponible ce run (panne
-        # yfinance sur le trimestriel) : on garde l'analyse existante plutôt
-        # que de la régénérer (coût quotidien illimité si la panne persiste)
-        # ou de la remplacer par rien.
-        financial_analysis_html = previous["financial_analysis_html"]
-        financial_analysis_quarter = previous.get("financial_analysis_quarter")
-    else:
-        ratios_summary = build_ratios_summary(data, cost_of_capital)
-        generated = generate_financial_analysis(
-            name, data["financial_context"], ratios_summary
-        )
-        if generated is not None:
-            financial_analysis_html = generated
-            financial_analysis_quarter = current_quarter
-        elif previous.get("financial_analysis_html"):
-            # Échec de génération (clé API absente, panne réseau/API) : garder
-            # l'ancienne analyse valide plutôt que l'écraser par None.
-            financial_analysis_html = previous["financial_analysis_html"]
-            financial_analysis_quarter = previous.get("financial_analysis_quarter")
-        else:
-            financial_analysis_html = None
-            financial_analysis_quarter = current_quarter
+    # generate_financial_analysis n'est plus jamais appelée ici (audit
+    # 2026-10-30, voir docs/superpowers/specs/2026-10-30-financial-analysis-on-demand-design.md) :
+    # financial_analysis_html n'alimente ni le score (les factors
+    # ci-dessous sont calculés indépendamment) ni les réponses de
+    # l'assistant IA (déjà exclu de fiche_entreprise/comparer_entreprises
+    # côté assistant_ia/tools.py) -- son seul lecteur réel est l'affichage
+    # humain de la fiche détaillée du site. On garde donc simplement
+    # l'ancien texte tel quel (potentiellement périmé par rapport à
+    # current_quarter) ; seule la route à la demande (indices_score.py
+    # --generate-one, voir le mode CLI plus bas) le régénère, pour le
+    # ticker précis qu'un visiteur consulte.
+    financial_analysis_html = previous.get("financial_analysis_html")
+    financial_analysis_quarter = previous.get("financial_analysis_quarter")
 
     # Les news sont récupérées avant la construction des facteurs : le
     # facteur "Actualité récente" dépend du sentiment attaché à chaque
@@ -6278,6 +6264,7 @@ def build_company_entry(
         "dividend_streak_years": data.get("dividend_streak_years", 0),
         "financial_analysis_html": financial_analysis_html,
         "financial_analysis_quarter": financial_analysis_quarter,
+        "latest_quarter_date": current_quarter,
     }
     entry["_price_history_daily"] = data["_price_history_daily"]
     entry["_volume_history_daily"] = data["_volume_history_daily"]

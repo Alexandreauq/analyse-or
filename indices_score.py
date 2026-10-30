@@ -4111,7 +4111,11 @@ def fetch_article_text(url: str) -> str | None:
 
 
 ANTHROPIC_API_URL = "https://api.anthropic.com/v1/messages"
-ANTHROPIC_MODEL = "claude-haiku-4-5-20251001"
+# claude-haiku-5-5 (2026-10-30) : meme gamme Haiku, generation actuelle au
+# lieu de claude-haiku-4-5-20251001 -- 10x moins cher (0.10$/0.50$ contre
+# 1$/5$ par MTok), trouve en diagnostiquant un vrai epuisement de credit
+# Anthropic le 2026-10-29/30 (voir indices.yml, ~710 entreprises/jour).
+ANTHROPIC_MODEL = "claude-haiku-5-5"
 
 
 def summarize_news_item(title: str, company_name: str, article_text: str | None) -> dict:
@@ -4205,7 +4209,11 @@ def summarize_news_item(title: str, company_name: str, article_text: str | None)
         return {"summary": "", "sentiment": 0, "importance": "mineure"}
 
 
-ANTHROPIC_MODEL_ANALYSIS = "claude-opus-5"
+# claude-opus-5-5 (2026-10-30) : meme gamme Opus, generation actuelle au
+# lieu de claude-opus-5 -- ~20% moins cher (4$/20$ contre 5$/25$ par MTok),
+# meme palier de qualite. Le passage eventuel a Sonnet (moins cher mais
+# gamme differente) se decide separement, apres comparaison reelle.
+ANTHROPIC_MODEL_ANALYSIS = "claude-opus-5-5"
 
 FINANCIAL_ANALYSIS_SYSTEM_PROMPT = """Tu es un analyste financier qui \
 applique la méthode du Vernimmen (synthèse du diagnostic financier : \

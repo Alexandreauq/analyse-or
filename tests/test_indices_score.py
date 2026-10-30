@@ -1513,7 +1513,7 @@ def test_summarize_news_item_uses_article_text_when_available(monkeypatch):
     result = summarize_news_item("Titre", "LVMH", "Contenu réel de l'article")
     assert result == {"summary": "Résumé généré.", "sentiment": 1, "importance": "notable"}
     assert "Contenu réel de l'article" in captured["json"]["messages"][0]["content"]
-    assert captured["json"]["model"] == "claude-haiku-4-5-20251001"
+    assert captured["json"]["model"] == "claude-haiku-5-5"
 
 
 def test_summarize_news_item_uses_headline_only_prompt_when_article_text_missing(monkeypatch):

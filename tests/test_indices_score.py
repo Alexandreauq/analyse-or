@@ -3,7 +3,122 @@ import os
 import pytest
 import requests
 from datetime import datetime
+import indices_score
 from indices_score import sector_risk_profile, score_rentabilite, COST_OF_CAPITAL_PROXY
+
+# References vers les vraies fonctions, capturees avant que l'autouse
+# fixture ci-dessous ne les remplace sur le module -- les tests dedies au
+# mecanisme de plafond (plus bas dans ce fichier) les appellent directement
+# pour tester le vrai comportement, pas le stub.
+_REAL_RECORD_INDICES_AI_USAGE = indices_score._record_indices_ai_usage
+_REAL_INDICES_AI_BUDGET_EXCEEDED = indices_score._indices_ai_budget_exceeded
+
+
+@pytest.fixture(autouse=True)
+def _no_real_indices_ai_usage_writes(monkeypatch):
+    """Empeche TOUT test de ce fichier d'ecrire dans le vrai
+    indices_ai_usage_today.json du depot -- trouve en executant les
+    tests existants de summarize_news_item/generate_financial_analysis
+    une premiere fois sans ce garde-fou (le vrai fichier a ete cree,
+    meme risque que assistant_ia/usage.py, voir
+    tests/assistant_ia/test_assistant.py::_no_real_usage_writes). Les
+    tests dedies au mecanisme de plafond appellent
+    _REAL_RECORD_INDICES_AI_USAGE/_REAL_INDICES_AI_BUDGET_EXCEEDED
+    directement plutot que de defaire ce monkeypatch."""
+    monkeypatch.setattr(indices_score, "_record_indices_ai_usage", lambda *a, **k: None)
+    monkeypatch.setattr(indices_score, "_indices_ai_budget_exceeded", lambda *a, **k: False)
+
+
+def test_record_indices_ai_usage_computes_cost_from_token_counts(tmp_path):
+    path = str(tmp_path / "indices_ai_usage_today.json")
+
+    _REAL_RECORD_INDICES_AI_USAGE("claude-opus-5-5", 1_000_000, 0, path=path)
+
+    assert indices_score._load_indices_ai_usage(path=path)["total_usd"] == 4.0  # 1M entree a 4.00 $/MTok
+
+
+def test_record_indices_ai_usage_accumulates_across_calls(tmp_path):
+    path = str(tmp_path / "indices_ai_usage_today.json")
+
+    _REAL_RECORD_INDICES_AI_USAGE("claude-opus-5-5", 1_000_000, 0, path=path)
+    _REAL_RECORD_INDICES_AI_USAGE("claude-opus-5-5", 0, 500_000, path=path)
+
+    assert indices_score._load_indices_ai_usage(path=path)["total_usd"] == 4.0 + 10.0  # +500k sortie a 20.00 $/MTok
+
+
+def test_record_indices_ai_usage_ignores_unknown_model(tmp_path):
+    path = str(tmp_path / "indices_ai_usage_today.json")
+
+    _REAL_RECORD_INDICES_AI_USAGE("un-modele-inconnu", 1_000_000, 1_000_000, path=path)
+
+    assert indices_score._load_indices_ai_usage(path=path)["total_usd"] == 0.0
+
+
+def test_indices_ai_budget_exceeded_is_false_under_the_cap(tmp_path):
+    path = str(tmp_path / "indices_ai_usage_today.json")
+    _REAL_RECORD_INDICES_AI_USAGE("claude-haiku-5-5", 1_000_000, 0, path=path)  # 0.10 $
+
+    assert _REAL_INDICES_AI_BUDGET_EXCEEDED(path=path) is False
+
+
+def test_indices_ai_budget_exceeded_is_true_at_or_above_the_cap(tmp_path):
+    path = str(tmp_path / "indices_ai_usage_today.json")
+    # 4 appels Opus a 1M tokens de sortie chacun = 80$, largement au-dessus
+    # du plafond de 15$ (indices_score.INDICES_AI_DAILY_BUDGET_USD).
+    for _ in range(4):
+        _REAL_RECORD_INDICES_AI_USAGE("claude-opus-5-5", 0, 1_000_000, path=path)
+
+    assert _REAL_INDICES_AI_BUDGET_EXCEEDED(path=path) is True
+
+
+def test_indices_ai_budget_exceeded_is_false_when_the_usage_file_is_absent(tmp_path):
+    path = str(tmp_path / "indices_ai_usage_today.json")
+
+    assert _REAL_INDICES_AI_BUDGET_EXCEEDED(path=path) is False
+
+
+def test_load_indices_ai_usage_degrades_to_zero_on_corrupt_file(tmp_path):
+    path = str(tmp_path / "indices_ai_usage_today.json")
+    with open(path, "w", encoding="utf-8") as fh:
+        fh.write("{not json")
+
+    assert indices_score._load_indices_ai_usage(path=path)["total_usd"] == 0.0
+
+
+def test_load_indices_ai_usage_resets_on_a_new_day(tmp_path):
+    import json as _json
+    path = str(tmp_path / "indices_ai_usage_today.json")
+    with open(path, "w", encoding="utf-8") as fh:
+        _json.dump({"date": "2020-01-01", "total_usd": 999.0}, fh)
+
+    assert indices_score._load_indices_ai_usage(path=path)["total_usd"] == 0.0
+
+
+def test_summarize_news_item_skips_the_call_when_budget_is_exceeded(monkeypatch):
+    """2026-10-30 : ce garde-fou est ce qui empeche une seule journee
+    chargee (beaucoup de trimestres publies le meme jour) de consommer
+    tout le credit Anthropic d'un coup."""
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-test")
+    monkeypatch.setattr(indices_score, "_indices_ai_budget_exceeded", lambda *a, **k: True)
+
+    def fail_if_called(*a, **k):
+        raise AssertionError("no network call expected once the daily budget is exceeded")
+
+    monkeypatch.setattr(indices_score.requests, "post", fail_if_called)
+    assert indices_score.summarize_news_item("Titre", "LVMH", "Texte") == {
+        "summary": "", "sentiment": 0, "importance": "mineure",
+    }
+
+
+def test_generate_financial_analysis_skips_the_call_when_budget_is_exceeded(monkeypatch):
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-test")
+    monkeypatch.setattr(indices_score, "_indices_ai_budget_exceeded", lambda *a, **k: True)
+
+    def fail_if_called(*a, **k):
+        raise AssertionError("no network call expected once the daily budget is exceeded")
+
+    monkeypatch.setattr(indices_score.requests, "post", fail_if_called)
+    assert indices_score.generate_financial_analysis("Danone", "contexte", "ratios") is None
 
 
 def test_sector_risk_profile_defensif():

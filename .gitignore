@@ -10,6 +10,7 @@ gold_bot/latest_positions.json
 gold_bot/historical_candles_cache_xauusd.json
 gold_bot/historical_candles_cache_xagusd.json
 gold_bot/odds_verdict_cache_xauusd_achat.json
+indices_ai_usage_today.json
 gold_bot/odds_verdict_cache_xauusd_vente.json
 gold_bot/odds_verdict_cache_xagusd_achat.json
 gold_bot/odds_verdict_cache_xagusd_vente.json

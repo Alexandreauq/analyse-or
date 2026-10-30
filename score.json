@@ -1,26 +1,26 @@
 {
-  "date": "2026-10-29",
-  "composite_score": -3.1,
+  "date": "2026-10-30",
+  "composite_score": -2.4,
   "interpretation": "Neutre — pas d'action",
   "cftc_percentile": 34.61538461538461,
   "factors": [
     {
       "name": "Taux réels US 10 ans",
-      "score": -1.3999999999999968,
+      "score": -0.9999999999999964,
       "weight": 0.3,
-      "raw_value": "2.67% (il y a ~45j : 2.60%)"
+      "raw_value": "2.67% (il y a ~45j : 2.62%)"
     },
     {
       "name": "Dollar (DXY)",
       "score": -10,
       "weight": 0.15,
-      "raw_value": "101.85 (il y a 2 mois : 99.43)"
+      "raw_value": "101.71 (il y a 2 mois : 99.43)"
     },
     {
       "name": "Anticipations d'inflation",
-      "score": -0.6666666666666674,
+      "score": -0.9999999999999936,
       "weight": 0.15,
-      "raw_value": "2.35% (il y a ~45j : 2.37%)"
+      "raw_value": "2.35% (il y a ~45j : 2.38%)"
     },
     {
       "name": "Ton de la Fed",
@@ -48,24 +48,14 @@
     }
   ],
   "technical": {
-    "note": "Cours en-dessous de la MM200 (-11.0%) — tendance baissière",
-    "spot": 4023.89990234375,
-    "ma200": 4522.963997802734
+    "note": "Cours en-dessous de la MM200 (-11.5%) — tendance baissière",
+    "spot": 4003.800048828125,
+    "ma200": 4522.863498535156
   },
   "calendar": [
     {
-      "date": "29/10/2026",
-      "label": "PCE (dépenses de consommation des ménages)",
-      "kind": "Donnée"
-    },
-    {
-      "date": "29/10/2026",
+      "date": "05/11/2026",
       "label": "Inscriptions chômage (hebdo)",
-      "kind": "Donnée"
-    },
-    {
-      "date": "29/10/2026",
-      "label": "PIB (GDP)",
       "kind": "Donnée"
     },
     {
@@ -89,6 +79,16 @@
       "kind": "Donnée"
     },
     {
+      "date": "25/11/2026",
+      "label": "PCE (dépenses de consommation des ménages)",
+      "kind": "Donnée"
+    },
+    {
+      "date": "25/11/2026",
+      "label": "PIB (GDP)",
+      "kind": "Donnée"
+    },
+    {
       "date": "08/12–09/12/2026",
       "label": "Réunion FOMC",
       "kind": "Fed"
@@ -99,7 +99,7 @@
       "kind": "info",
       "title": "Pas de signal actif",
       "detail": "Aucune des conditions de veille, d'entrée ou de risque n'est réunie aujourd'hui.",
-      "date": "29/10/2026"
+      "date": "30/10/2026"
     }
   ],
   "news": [

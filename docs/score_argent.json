@@ -1,22 +1,22 @@
 {
-  "date": "2026-10-29",
+  "date": "2026-10-30",
   "commodity": "argent",
   "label": "Argent",
-  "composite_score": -31.7,
+  "composite_score": -30.3,
   "interpretation": "Défavorable — pas d'entrée même sur signal technique",
   "cftc_percentile": 3.8461538461538463,
   "factors": [
     {
       "name": "Taux réels US 10 ans",
-      "score": -1.3999999999999968,
+      "score": -0.9999999999999964,
       "weight": 0.3,
-      "raw_value": "2.67% (il y a ~45j : 2.60%)"
+      "raw_value": "2.67% (il y a ~45j : 2.62%)"
     },
     {
       "name": "Dollar (DXY)",
       "score": -10,
       "weight": 0.2,
-      "raw_value": "101.85 (il y a 2 mois : 99.43)"
+      "raw_value": "101.71 (il y a 2 mois : 99.43)"
     },
     {
       "name": "Positionnement CFTC",
@@ -26,37 +26,27 @@
     },
     {
       "name": "Ratio or/argent",
-      "score": -4.541436464088397,
+      "score": -4.47513812154696,
       "weight": 0.25,
-      "raw_value": "77.4 — 27e percentile (3 ans)"
+      "raw_value": "78.0 — 28e percentile (3 ans)"
     },
     {
       "name": "Dynamique récente",
       "score": -10.0,
       "weight": 0.1,
-      "raw_value": "-26.9% vs MM200"
+      "raw_value": "-27.8% vs MM200"
     }
   ],
   "technical": {
-    "note": "Cours en-dessous de la MM200 (-26.9%) — tendance baissière",
-    "spot": 51.959999084472656,
-    "ma200": 71.08955488204955,
+    "note": "Cours en-dessous de la MM200 (-27.8%) — tendance baissière",
+    "spot": 51.345001220703125,
+    "ma200": 71.08647989273071,
     "unite": "$ / oz"
   },
   "calendar": [
     {
-      "date": "29/10/2026",
-      "label": "PCE (dépenses de consommation des ménages)",
-      "kind": "Donnée"
-    },
-    {
-      "date": "29/10/2026",
+      "date": "05/11/2026",
       "label": "Inscriptions chômage (hebdo)",
-      "kind": "Donnée"
-    },
-    {
-      "date": "29/10/2026",
-      "label": "PIB (GDP)",
       "kind": "Donnée"
     },
     {
@@ -77,6 +67,16 @@
     {
       "date": "17/11/2026",
       "label": "Ventes au détail",
+      "kind": "Donnée"
+    },
+    {
+      "date": "25/11/2026",
+      "label": "PCE (dépenses de consommation des ménages)",
+      "kind": "Donnée"
+    },
+    {
+      "date": "25/11/2026",
+      "label": "PIB (GDP)",
       "kind": "Donnée"
     },
     {

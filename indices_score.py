@@ -6795,7 +6795,10 @@ def generate_one(ticker: str) -> dict:
 
         generated = generate_financial_analysis(entry["name"], data["financial_context"], ratios_summary, ticker=ticker)
     except Exception as e:
-        print(f"Erreur generation a la demande pour {ticker} : {e}")
+        # sys.stderr, pas stdout : le seul stdout de --generate-one est le
+        # json.dumps(...) final, lu tel quel par la route FastAPI (Task 6) --
+        # une ligne d'erreur devant casserait son json.loads(stdout).
+        print(f"Erreur generation a la demande pour {ticker} : {e}", file=sys.stderr)
         return {"html": entry.get("financial_analysis_html"), "genere": False}
 
     if generated is None:

@@ -5332,8 +5332,8 @@ def test_generate_financial_analysis_logs_failure_instead_of_swallowing_silently
     indices_score.generate_financial_analysis("Danone", "contexte", "ratios")
 
     captured = capsys.readouterr()
-    assert "Danone" in captured.out
-    assert "crédit insuffisant" in captured.out
+    assert "Danone" in captured.err
+    assert "crédit insuffisant" in captured.err
 
 
 def test_ticker_cooldown_is_not_active_when_the_file_is_absent(tmp_path):

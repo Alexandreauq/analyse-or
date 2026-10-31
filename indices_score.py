@@ -4538,8 +4538,13 @@ def generate_financial_analysis(
         # insuffisant lors du diagnostic de l'échec massif à l'ajout du
         # Nasdaq-100 (104 échecs identiques, cause réelle invisible sans ça).
         body = getattr(getattr(e, "response", None), "text", None)
+        # sys.stderr (2026-10-30, Task 5) : depuis que generate_one() en fait
+        # un outil CLI (--generate-one) dont le seul stdout legitime est le
+        # json.dumps(...) final lu par la route FastAPI (Task 6), ce print
+        # doit rester hors de stdout -- avant cette tache, personne ne
+        # dependait du stdout de cette fonction etant "propre".
         print(f"Erreur génération analyse financière pour {company_name} : {e}"
-              + (f" — réponse API : {body[:500]}" if body else ""))
+              + (f" — réponse API : {body[:500]}" if body else ""), file=sys.stderr)
         return None
 
 

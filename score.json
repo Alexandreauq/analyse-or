@@ -14,7 +14,7 @@
       "name": "Dollar (DXY)",
       "score": -10,
       "weight": 0.15,
-      "raw_value": "101.96 (il y a 2 mois : 99.43)"
+      "raw_value": "101.88 (il y a 2 mois : 99.43)"
     },
     {
       "name": "Anticipations d'inflation",
@@ -48,9 +48,9 @@
     }
   ],
   "technical": {
-    "note": "Cours en-dessous de la MM200 (-14.0%) — tendance baissière",
-    "spot": 3884.89990234375,
-    "ma200": 4519.247496337891
+    "note": "Cours en-dessous de la MM200 (-13.7%) — tendance baissière",
+    "spot": 3898.89990234375,
+    "ma200": 4519.317496337891
   },
   "calendar": [
     {
@@ -104,13 +104,31 @@
   ],
   "news": [
     {
-      "title": "Les cours de l’or reculent alors que les perspectives de taux de la Fed évoluent ; l’argent atteint son plus bas niveau depuis 11 mois | De L'Or - Actualités et analyses - BullionVault FR",
-      "date": "2026-10-29",
-      "link": "https://news.google.com/rss/articles/CBMixgFBVV95cUxQX3puTVpydDg2M0pYbk5TZi1MQVV3X2phWk1pSGpSbU5ucHc5ODBwMVBYaTF2aGlpb1U2aXR4Tk4xSkx3b1I3LUV3Y3NwTmFndS0xRzBzbE95ZDRhcUg4QlhPQk9ZMDQzaEJwYUU5QzM4Um9YUjFKN3JiRmpEcF82VTZBRkNBQjhxR1ZiQzY4QjdmMlJDTFc2UTk2ZmU1enllelc2aGR2VmVOSHBVbG5WY3loQk51TkstTUQ4bWloU0NxR2g1c2c?oc=5",
-      "source": "BullionVault FR",
-      "summary": "Cet article suggère que les anticipations de politiques monétaires de la Réserve fédérale américaine évoluent de manière à exercer une pression baissière sur les cours de l'or, tandis que l'argent connaîtrait une faiblesse marquée atteignant ses plus bas niveaux en près d'un an.",
-      "sentiment": -1,
-      "importance": "notable"
+      "title": "Les cours de l'or ont fortement chuté fin octobre. S'agit-il de l'effondrement du mythe de la valeur refuge ou d'une recherche de liquidités - XTB.com",
+      "date": "2026-10-30",
+      "link": "https://news.google.com/rss/articles/CBMiiwJBVV95cUxPNXBrNkVXUlNQV0hYNEVSbkpwUVZGVzFvRVdkN3d4cXZscW55WE9TUzRLNzFvWnJkSEZsWU9SWl81RGkyRXhRS1ZuelRlQ1ZSQVo3MEdVOXRTWHZsd3o3bDlTbEdrVzBXRUpxZ0NxWjdCeEQ0VGhLcWxYNDIxaDIzOU5vcEtzN3VfYlM3cXlLeGF4TW5pU0w5OHp1cC1VVFpsRnF4ZlNVSDBtdFl5cnU3Y3lBVFVCRmNhUnRhSC1QSDN2OHVIV3pwaEhnWWVKTHRhQ0hIVGw5cEtJdGQ4QXI3MFNTSk5ENWE4X3JmUlVsSTdCWS1YdlN6MGFFb0xSVGFsOHlCaV9JSkxkTTg?oc=5",
+      "source": "XTB.com",
+      "summary": "",
+      "sentiment": 0,
+      "importance": "mineure"
+    },
+    {
+      "title": "L'or baisse : est-il encore une valeur refuge ? - CryptoTicker.io",
+      "date": "2026-10-31",
+      "link": "https://news.google.com/rss/articles/CBMid0FVX3lxTFBjY2tPMVVxbkpzMFo0andVdjRhNGJyRDdia0VBUllwSzl2azFlaHlmZF9aTk1DVDNmQWVXSk9UMDhBUmJoUkdzbHFIb05iMXUxMlBtQmM0a1RnQUdxSERVS3RSWWloMW9HejV5azRSSUpYcGhTZWM0?oc=5",
+      "source": "CryptoTicker.io",
+      "summary": "",
+      "sentiment": 0,
+      "importance": "mineure"
+    },
+    {
+      "title": "Or vs argent : quelles perspectives pour 2027 ? - Le Comptoir National de l'Or",
+      "date": "2026-10-21",
+      "link": "https://news.google.com/rss/articles/CBMihwFBVV95cUxOd1ZnSXdQV2lfWGRPMGJveWZBLU15aldGZEs3R0VoTU94UVlFLVdCd294eFljTmczSHA0QktyZ2FhLUxEeWZwaXgyclNmRzRBVkJ4czFFZVZ2dmRlS0VmeXg1anFMVXI1cGNzQjh6R241YUhickl4aEowbWFEbWM2TjVQQXhXMHfSAYwBQVVfeXFMT2dPd0VjdHVkTGVscXprUFU4RWFIdHVOaTdvYzFHdXh5UFZsQnpxc2Q4emZkOWVXUDc5RWJPUGdzQXBsMkx3RURjT0laQUZCMnM0R2NUQ2VmdjVmNzI4OGNSRkpBS3h6a2x2THBITVhlMDdPelJyRUxMMnhMSUxCcHdpekxLTUdGWnJWNWw?oc=5",
+      "source": "Le Comptoir National de l'Or",
+      "summary": "Cet article suggère qu'il s'agit d'une analyse comparative entre l'or et l'argent portant sur les perspectives de ces métaux à l'horizon 2027, publiée par un acteur spécialisé dans le négoce de métaux précieux ; le contenu réel n'étant pas disponible, cette lecture reste hypothétique.",
+      "sentiment": 0,
+      "importance": "mineure"
     },
     {
       "title": "Pourquoi l’or baisse-t-il malgré les achats des ETF et des banques centrales? - Morningstar",
@@ -122,57 +140,39 @@
       "importance": "notable"
     },
     {
-      "title": "Les cours de l’or reculent légèrement, les données sur l’inflation américaine confortant les perspectives de la Fed - Zonebourse Suisse",
-      "date": "2026-10-30",
-      "link": "https://news.google.com/rss/articles/CBMi7gFBVV95cUxNeXFhR09aaV9aX2h2ZjFjTk5vNHYyWUFFMm1ZVlNUaWpCYTJ2eUV4QjF3ZHFTOVdCVGVGb2dBV1VEOV91VlEwTlFoMmN5M0VCaUdqQ1VhUkpOQ3VNdkx0WDdRd0VLeUR2SmhQVWM1R2NIbEdYdW11ODlld0oxNGlIal9wSkNudmd1RkVQZjBCV2NER3JaaHRaeTlaMXZQNk5LUEZ6REFnT1diYURoMnpEVHlQTUJaN0xPVTZJNlFTMVAxWEdLUUk4aXYzNzk4RllrdzVLby0wa0FKSnV2RUVoMXlNVVNsWWRUM3N2LVln?oc=5",
-      "source": "Zonebourse Suisse",
-      "summary": "Cet article suggère que les données sur l'inflation américaine récemment publiées renforceraient la confiance dans la politique monétaire de la Réserve fédérale, ce qui pourrait expliquer une légère baisse des cours de l'or.",
-      "sentiment": -1,
-      "importance": "notable"
-    },
-    {
-      "title": "Cours de l'or : 3 987 $ sous 4 000 $, Haussier 4 080 $ - FinanceFeeds",
-      "date": "2026-10-30",
-      "link": "https://news.google.com/rss/articles/CBMigwFBVV95cUxOOUdtbGQybU13cDA0Z0Qtd3RJUXZTOVg0dDh4MTI1ZEx2clFRM0hncWZ1UnpiWG9yeGhiTk8wRkRQczlsQXFMZFdGY1A2RHpVbXVpdTlOSGV5NzRMRl80UmdFM2o4YjlfV3EyaXF6dDFRcXFXSW1KQUhOVU5OaFo0SG9SMA?oc=5",
-      "source": "FinanceFeeds",
-      "summary": "Cet article suggère que le cours de l'or fluctue autour de 3 987 $ avec une perspective haussière établie à 4 080 $, indiquant une résistance à court terme sous la barre des 4 000 $.",
-      "sentiment": 0,
-      "importance": "mineure"
-    },
-    {
-      "title": "Victime de la remontée des taux, l'or glisse vers les 4.000 dollars - Les Echos",
-      "date": "2026-10-28",
-      "link": "https://news.google.com/rss/articles/CBMiywFBVV95cUxPVHk5eWpraXNYWXc2Ty0zdDBZQXAwa0xhbWRSTGxpclYyc3dSUko4bUFYa19jSUdoT1ZYQkRBX2xMYU1YNFJpQlpNNmhIZ0F6ay1CdzlNMUpPQWlURFA3d0VwMW5ONW5GRkQwaWJaUEE3WjNIUkk0WEFEUVJPOFNSMk40eHhRcG5TRXlKTm1oMTdCRzU4dE5xRWJBWTg5WTZScnRSTkNLbjhHLUpFX2ttclFkSU10MVhwMlZCRFFYbnZoRERTSi1hN0lSNA?oc=5",
-      "source": "Les Echos",
-      "summary": "Cet article suggère que la hausse des taux d'intérêt exercerait une pression à la baisse sur le prix de l'or, le rapprochant du seuil psychologique des 4.000 dollars.",
+      "title": "Les cours de l’or reculent alors que les perspectives de taux de la Fed évoluent ; l’argent atteint son plus bas niveau depuis 11 mois | De L'Or - Actualités et analyses - BullionVault FR",
+      "date": "2026-10-29",
+      "link": "https://news.google.com/rss/articles/CBMixgFBVV95cUxQX3puTVpydDg2M0pYbk5TZi1MQVV3X2phWk1pSGpSbU5ucHc5ODBwMVBYaTF2aGlpb1U2aXR4Tk4xSkx3b1I3LUV3Y3NwTmFndS0xRzBzbE95ZDRhcUg4QlhPQk9ZMDQzaEJwYUU5QzM4Um9YUjFKN3JiRmpEcF82VTZBRkNBQjhxR1ZiQzY4QjdmMlJDTFc2UTk2ZmU1enllelc2aGR2VmVOSHBVbG5WY3loQk51TkstTUQ4bWloU0NxR2g1c2c?oc=5",
+      "source": "BullionVault FR",
+      "summary": "Cet article suggère que les anticipations de politiques monétaires de la Réserve fédérale américaine évoluent de manière à exercer une pression baissière sur les cours de l'or, tandis que l'argent connaîtrait une faiblesse marquée atteignant ses plus bas niveaux en près d'un an.",
       "sentiment": -1,
       "importance": "notable"
     }
   ],
-  "analysis_html": "<h3>Contexte récent</h3><p>L'or évolue à proximité du seuil psychologique des 4 000 dollars l'once, après avoir buté sur une résistance à court terme et reculé dans le sillage de la remontée des taux longs américains. Le score composite agrégé ressort légèrement négatif (de l'ordre de <strong>-0,2 sur une échelle de -10 à +10</strong>), c'est-à-dire proche de la neutralité, avec un environnement macro-financier globalement défavorable partiellement compensé par des flux structurels porteurs. Cette configuration traduit une tension entre des vents contraires de marché (dollar, taux) et des soutiens de fond (banques centrales, ETF).</p><h3>Facteurs déterminants</h3><ul><li><strong>Dollar (DXY) : score -10,0, poids 15 %</strong> — c'est de loin la contribution la plus pénalisante du composite (environ -1,5 point). L'indice est passé de 99,43 à 101,65 en deux mois, soit une appréciation d'environ 2,2 %, qui renchérit mécaniquement l'or pour les détenteurs de devises non-dollar et pèse sur la demande.</li><li><strong>Taux réels US 10 ans : score -1,0, poids 30 %</strong> — le poids le plus élevé du modèle, mais une contribution modérée (environ -0,3 point). Le taux réel est passé de 2,62 % à 2,67 %, une hausse limitée mais qui va dans le sens défavorable : l'or, actif sans rendement, voit son coût d'opportunité augmenter.</li><li><strong>Anticipations d'inflation : score -1,0, poids 15 %</strong> — légère érosion de 2,38 % à 2,35 %, qui affaiblit marginalement l'argument de couverture inflationniste.</li><li><strong>Ton de la Fed : score +5,0, poids 15 %</strong> — principal contrepoids haussier (environ +0,75 point), reflétant une orientation jugée accommodante malgré la tension sur les taux de marché.</li><li><strong>Achats des banques centrales : score +7,0, poids 5 %</strong> — le score le plus élevé du panel, mais dont l'impact reste limité par sa faible pondération (+0,35 point).</li><li><strong>Flux ETF (GLD + IAU) : score +3,0, poids 10 %</strong> et <strong>positionnement CFTC : score +3,1, poids 10 %</strong> — deux contributions positives modestes. Le positionnement net spéculatif de 199 865 contrats se situe au 35<sup>e</sup> percentile sur trois ans, soit un niveau relativement bas qui laisse de la marge de repositionnement sans signaler d'excès d'optimisme.</li></ul><p>En résumé, le bloc « conditions monétaires de marché » (dollar, taux réels, anticipations d'inflation), qui représente 60 % de la pondération, tire le score vers le bas pour environ -1,95 point, tandis que le bloc « demande et politique monétaire » (Fed, ETF, CFTC, banques centrales) apporte environ +1,71 point. L'équilibre quasi nul qui en résulte explique une dynamique de prix hésitante plutôt qu'un mouvement directionnel marqué.</p><h3>Actualités à retenir</h3><ul><li><strong>Évolution des perspectives de taux de la Fed (BullionVault)</strong> : le recul des cours de l'or est attribué à un repositionnement des anticipations de politique monétaire, avec un argent tombé à son plus bas niveau en 11 mois. Cette actualité est cohérente avec la contribution négative des taux réels et illustre que le marché arbitre actuellement davantage sur les taux que sur le ton perçu de la Fed (score +5,0).</li><li><strong>Données d'inflation américaines (Zonebourse Suisse)</strong> : la publication conforte la trajectoire anticipée de la Fed et entraîne une légère baisse de l'or. Cela fait écho au recul des anticipations d'inflation de 2,38 % à 2,35 % (score -1,0), qui réduit la prime de couverture intégrée dans le métal.</li><li><strong>Remontée des taux et glissement vers 4 000 dollars (Les Echos)</strong> : l'article relie explicitement la faiblesse de l'or à la hausse des taux, confirmant le canal de transmission identifié par le facteur taux réels (poids 30 %) et par la fermeté du dollar (score -10,0).</li><li><strong>Divergence entre flux acheteurs et prix (Morningstar)</strong> : cette analyse met en lumière précisément la tension mesurée par le composite — des achats d'ETF (+3,0) et de banques centrales (+7,0) soutenus mais insuffisamment pondérés pour compenser le bloc macro-financier dominant.</li><li><strong>Niveau technique autour de 3 987 dollars (FinanceFeeds, actualité mineure)</strong> : simple constat de marché, l'once évoluant sous 4 000 dollars avec une zone de résistance identifiée plus haut ; cet élément n'apporte pas d'information macro-fondamentale nouvelle.</li></ul><h3>Synthèse</h3><p>Le score composite proche de zéro décrit un marché de l'or en phase d'équilibre instable. D'un côté, un dollar en appréciation nette, des taux réels américains en légère hausse et des anticipations d'inflation qui s'effritent constituent un triptyque défavorable représentant l'essentiel de la pondération du modèle. De l'autre, les achats des banques centrales, les flux entrants sur les ETF et un positionnement spéculatif encore modéré (35<sup>e</sup> percentile) forment un socle de demande qui limite l'ampleur de la correction. Les actualités récentes convergent toutes vers la même lecture : c'est le canal des taux et des anticipations de politique monétaire qui domine la formation des prix à court terme, tandis que les soutiens structurels à la demande agissent davantage comme un amortisseur que comme un moteur. Ce document est purement descriptif et ne constitue ni une recommandation ni un conseil en investissement.</p>",
+  "analysis_html": "<h3>Contexte récent</h3><p>L'or a nettement reculé fin octobre. La presse spécialisée se demande s'il s'agit d'une remise en cause de son statut de valeur refuge ou d'un mouvement de recherche de liquidités. Ce repli s'accompagne d'une faiblesse marquée de l'argent, tombé à son plus bas niveau depuis environ 11 mois. Il intervient alors que les anticipations sur la politique de la Fed évoluent et que le dollar s'est raffermi sur deux mois.</p><h3>Facteurs déterminants</h3><ul><li><strong>Dollar (DXY), principal facteur négatif :</strong> avec un score de -10 (le plus extrême du tableau) et un poids de 15 %, c'est la contribution pondérée la plus lourde en valeur absolue, d'environ -1,5 point. Le DXY est passé de 99,43 à 101,88 en deux mois, soit une hausse d'environ 2,5 %. Un dollar plus fort renchérit l'or pour les détenteurs d'autres devises et pèse traditionnellement sur son prix.</li><li><strong>Ton de la Fed, principal soutien pondéré :</strong> un score de +5 avec un poids de 15 % apporte environ +0,75 point. Cette donnée est une saisie manuelle. Elle paraît en décalage avec l'actualité récente, qui évoque une évolution des anticipations de taux défavorable à l'or. Ce facteur mériterait d'être réévalué, car il pourrait surestimer le soutien monétaire.</li><li><strong>Taux réels US 10 ans, facteur le plus pondéré mais quasi neutre :</strong> malgré son poids de 30 %, son score de +1 ne contribue qu'à hauteur d'environ +0,3 point. Le taux réel n'a reculé que de 5 points de base (de 2,68 % à 2,63 %). Cette légère détente est marginalement favorable, mais le niveau reste élevé, ce qui augmente le coût d'opportunité de détenir un actif sans rendement.</li><li><strong>Positionnement CFTC :</strong> un score de +4,7 avec un poids de 10 % apporte environ +0,47 point. Avec 186 451 contrats nets, le positionnement spéculatif se situe au 26e percentile sur trois ans. Il est donc relativement allégé, ce qui limite le risque de liquidations supplémentaires et constitue un soutien de nature technique.</li><li><strong>Flux ETF et banques centrales :</strong> les flux ETF (GLD + IAU, +3, poids 10 %) et les achats des banques centrales (+7, poids 5 %) apportent chacun environ +0,3 à +0,35 point. La demande structurelle reste donc présente.</li><li><strong>Anticipations d'inflation :</strong> stables (2,34 % contre 2,33 %), avec un score de +0,3 et une contribution négligeable.</li></ul><p>Le score composite repose donc sur un équilibre fragile. Plusieurs soutiens modérés (Fed, positionnement, demande physique et ETF) compensent un facteur dollar très défavorable. Les taux réels, malgré leur poids important, n'apportent quasiment rien.</p><h3>Actualités à retenir</h3><ul><li><strong>Morningstar, « Pourquoi l'or baisse-t-il malgré les achats des ETF et des banques centrales ? » :</strong> l'article illustre la tension visible dans le score. Les composantes de demande (ETF et banques centrales) sont positives, mais elles ne suffisent pas à contrer les facteurs macro-financiers baissiers, au premier rang desquels la hausse du dollar.</li><li><strong>BullionVault, « Les cours de l'or reculent alors que les perspectives de taux de la Fed évoluent » :</strong> l'article relie directement la baisse de l'or à un ajustement des anticipations de politique monétaire. Ce constat est cohérent avec le raffermissement du DXY. Il interroge en revanche la saisie manuelle positive (+5) du ton de la Fed, qui pourrait ne pas encore refléter ce changement. La faiblesse de l'argent, à son plus bas depuis 11 mois, suggère une pression étendue à l'ensemble des métaux précieux.</li></ul><h3>Synthèse</h3><p>La baisse récente de l'or s'explique principalement par l'appréciation du dollar, seul facteur fortement négatif du score, dans un contexte de réévaluation des anticipations de taux de la Fed. Les taux réels, facteur le plus pondéré, restent quasi neutres. La demande des ETF et des banques centrales ainsi qu'un positionnement spéculatif allégé fournissent un socle de soutien, ce qui explique que le score ne s'effondre pas. La principale incertitude porte sur la composante Fed, saisie manuellement et en apparent décalage avec l'actualité. Si elle était révisée à la baisse, le score composite s'affaiblirait sensiblement. Cette analyse est descriptive et ne constitue pas un conseil d'investissement.</p>",
   "news_classifications": {
-    "https://news.google.com/rss/articles/CBMixgFBVV95cUxQX3puTVpydDg2M0pYbk5TZi1MQVV3X2phWk1pSGpSbU5ucHc5ODBwMVBYaTF2aGlpb1U2aXR4Tk4xSkx3b1I3LUV3Y3NwTmFndS0xRzBzbE95ZDRhcUg4QlhPQk9ZMDQzaEJwYUU5QzM4Um9YUjFKN3JiRmpEcF82VTZBRkNBQjhxR1ZiQzY4QjdmMlJDTFc2UTk2ZmU1enllelc2aGR2VmVOSHBVbG5WY3loQk51TkstTUQ4bWloU0NxR2g1c2c?oc=5": {
-      "summary": "Cet article suggère que les anticipations de politiques monétaires de la Réserve fédérale américaine évoluent de manière à exercer une pression baissière sur les cours de l'or, tandis que l'argent connaîtrait une faiblesse marquée atteignant ses plus bas niveaux en près d'un an.",
-      "sentiment": -1,
-      "importance": "notable"
+    "https://news.google.com/rss/articles/CBMiiwJBVV95cUxPNXBrNkVXUlNQV0hYNEVSbkpwUVZGVzFvRVdkN3d4cXZscW55WE9TUzRLNzFvWnJkSEZsWU9SWl81RGkyRXhRS1ZuelRlQ1ZSQVo3MEdVOXRTWHZsd3o3bDlTbEdrVzBXRUpxZ0NxWjdCeEQ0VGhLcWxYNDIxaDIzOU5vcEtzN3VfYlM3cXlLeGF4TW5pU0w5OHp1cC1VVFpsRnF4ZlNVSDBtdFl5cnU3Y3lBVFVCRmNhUnRhSC1QSDN2OHVIV3pwaEhnWWVKTHRhQ0hIVGw5cEtJdGQ4QXI3MFNTSk5ENWE4X3JmUlVsSTdCWS1YdlN6MGFFb0xSVGFsOHlCaV9JSkxkTTg?oc=5": {
+      "summary": "",
+      "sentiment": 0,
+      "importance": "mineure"
+    },
+    "https://news.google.com/rss/articles/CBMid0FVX3lxTFBjY2tPMVVxbkpzMFo0andVdjRhNGJyRDdia0VBUllwSzl2azFlaHlmZF9aTk1DVDNmQWVXSk9UMDhBUmJoUkdzbHFIb05iMXUxMlBtQmM0a1RnQUdxSERVS3RSWWloMW9HejV5azRSSUpYcGhTZWM0?oc=5": {
+      "summary": "",
+      "sentiment": 0,
+      "importance": "mineure"
+    },
+    "https://news.google.com/rss/articles/CBMihwFBVV95cUxOd1ZnSXdQV2lfWGRPMGJveWZBLU15aldGZEs3R0VoTU94UVlFLVdCd294eFljTmczSHA0QktyZ2FhLUxEeWZwaXgyclNmRzRBVkJ4czFFZVZ2dmRlS0VmeXg1anFMVXI1cGNzQjh6R241YUhickl4aEowbWFEbWM2TjVQQXhXMHfSAYwBQVVfeXFMT2dPd0VjdHVkTGVscXprUFU4RWFIdHVOaTdvYzFHdXh5UFZsQnpxc2Q4emZkOWVXUDc5RWJPUGdzQXBsMkx3RURjT0laQUZCMnM0R2NUQ2VmdjVmNzI4OGNSRkpBS3h6a2x2THBITVhlMDdPelJyRUxMMnhMSUxCcHdpekxLTUdGWnJWNWw?oc=5": {
+      "summary": "Cet article suggère qu'il s'agit d'une analyse comparative entre l'or et l'argent portant sur les perspectives de ces métaux à l'horizon 2027, publiée par un acteur spécialisé dans le négoce de métaux précieux ; le contenu réel n'étant pas disponible, cette lecture reste hypothétique.",
+      "sentiment": 0,
+      "importance": "mineure"
     },
     "https://news.google.com/rss/articles/CBMitwFBVV95cUxQSmVLNUJ0RG9EUTdPcFRFdndPOXJYUFRFaGs5OGFvYm5Rd3JwcDh5VVU1cC14bFlXNjBGZGo5MnFHUWJ0RkFQd3NmNUpBSGFmVWVQTU1FWmVXOUpkYm1GRDZlRUtGVTV6Qk9oVjFPV0tlZFlhQUFGaU54U0R3d2pyQnppQ2xMZjRocGFXN2UtdjdPUnZ5UzVrMy1ZNzNsM0VyZm5lbzdIWkpreWxTY19QdGZHLTdYLTA?oc=5": {
       "summary": "Cet article suggère que malgré les achats soutenant le marché de l'or par les ETF et les banques centrales, le prix de l'or connaîtrait une baisse, pointant potentiellement une tension entre les pressions haussières et d'autres facteurs baissiers non détaillés.",
       "sentiment": -1,
       "importance": "notable"
     },
-    "https://news.google.com/rss/articles/CBMi7gFBVV95cUxNeXFhR09aaV9aX2h2ZjFjTk5vNHYyWUFFMm1ZVlNUaWpCYTJ2eUV4QjF3ZHFTOVdCVGVGb2dBV1VEOV91VlEwTlFoMmN5M0VCaUdqQ1VhUkpOQ3VNdkx0WDdRd0VLeUR2SmhQVWM1R2NIbEdYdW11ODlld0oxNGlIal9wSkNudmd1RkVQZjBCV2NER3JaaHRaeTlaMXZQNk5LUEZ6REFnT1diYURoMnpEVHlQTUJaN0xPVTZJNlFTMVAxWEdLUUk4aXYzNzk4RllrdzVLby0wa0FKSnV2RUVoMXlNVVNsWWRUM3N2LVln?oc=5": {
-      "summary": "Cet article suggère que les données sur l'inflation américaine récemment publiées renforceraient la confiance dans la politique monétaire de la Réserve fédérale, ce qui pourrait expliquer une légère baisse des cours de l'or.",
-      "sentiment": -1,
-      "importance": "notable"
-    },
-    "https://news.google.com/rss/articles/CBMigwFBVV95cUxOOUdtbGQybU13cDA0Z0Qtd3RJUXZTOVg0dDh4MTI1ZEx2clFRM0hncWZ1UnpiWG9yeGhiTk8wRkRQczlsQXFMZFdGY1A2RHpVbXVpdTlOSGV5NzRMRl80UmdFM2o4YjlfV3EyaXF6dDFRcXFXSW1KQUhOVU5OaFo0SG9SMA?oc=5": {
-      "summary": "Cet article suggère que le cours de l'or fluctue autour de 3 987 $ avec une perspective haussière établie à 4 080 $, indiquant une résistance à court terme sous la barre des 4 000 $.",
-      "sentiment": 0,
-      "importance": "mineure"
-    },
-    "https://news.google.com/rss/articles/CBMiywFBVV95cUxPVHk5eWpraXNYWXc2Ty0zdDBZQXAwa0xhbWRSTGxpclYyc3dSUko4bUFYa19jSUdoT1ZYQkRBX2xMYU1YNFJpQlpNNmhIZ0F6ay1CdzlNMUpPQWlURFA3d0VwMW5ONW5GRkQwaWJaUEE3WjNIUkk0WEFEUVJPOFNSMk40eHhRcG5TRXlKTm1oMTdCRzU4dE5xRWJBWTg5WTZScnRSTkNLbjhHLUpFX2ttclFkSU10MVhwMlZCRFFYbnZoRERTSi1hN0lSNA?oc=5": {
-      "summary": "Cet article suggère que la hausse des taux d'intérêt exercerait une pression à la baisse sur le prix de l'or, le rapprochant du seuil psychologique des 4.000 dollars.",
+    "https://news.google.com/rss/articles/CBMixgFBVV95cUxQX3puTVpydDg2M0pYbk5TZi1MQVV3X2phWk1pSGpSbU5ucHc5ODBwMVBYaTF2aGlpb1U2aXR4Tk4xSkx3b1I3LUV3Y3NwTmFndS0xRzBzbE95ZDRhcUg4QlhPQk9ZMDQzaEJwYUU5QzM4Um9YUjFKN3JiRmpEcF82VTZBRkNBQjhxR1ZiQzY4QjdmMlJDTFc2UTk2ZmU1enllelc2aGR2VmVOSHBVbG5WY3loQk51TkstTUQ4bWloU0NxR2g1c2c?oc=5": {
+      "summary": "Cet article suggère que les anticipations de politiques monétaires de la Réserve fédérale américaine évoluent de manière à exercer une pression baissière sur les cours de l'or, tandis que l'argent connaîtrait une faiblesse marquée atteignant ses plus bas niveaux en près d'un an.",
       "sentiment": -1,
       "importance": "notable"
     }

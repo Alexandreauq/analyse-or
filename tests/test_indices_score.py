@@ -9200,7 +9200,7 @@ def test_generate_one_keeps_old_html_when_opus_generation_fails(tmp_path, monkey
     assert result == {"html": "<p>ancienne analyse valide</p>", "genere": False}
 
 
-def test_generate_one_keeps_old_html_when_fetch_company_financials_raises(tmp_path, monkeypatch):
+def test_generate_one_keeps_old_html_when_fetch_company_financials_raises(tmp_path, monkeypatch, capsys):
     indices_json = tmp_path / "indices.json"
     indices_json.write_text(json.dumps({"companies": [
         {"ticker": "AAA", "name": "Entreprise Test", "index": "CAC40",
@@ -9217,3 +9217,9 @@ def test_generate_one_keeps_old_html_when_fetch_company_financials_raises(tmp_pa
     result = indices_score.generate_one("AAA")
 
     assert result == {"html": "<p>ancienne analyse valide</p>", "genere": False}
+    # Le seul stdout de --generate-one est le json.dumps(...) final (lu par
+    # la route FastAPI de la Task 6) -- le message d'erreur doit rester sur
+    # stderr, jamais sur stdout, sous peine de casser son json.loads(stdout).
+    captured = capsys.readouterr()
+    assert captured.out == ""
+    assert "CertificateVerifyError" in captured.err

@@ -131,3 +131,69 @@ def test_ask_truncates_the_history_sent_to_the_assistant(client, monkeypatch):
 
     assert len(recus[0]) == api.MAX_HISTORY_MESSAGES
     assert recus[0][-1]["content"] == "39"
+
+
+def test_financial_analysis_returns_the_subprocess_result(client, monkeypatch):
+    monkeypatch.setattr(api, "_generate_one_subprocess",
+                         lambda ticker: {"html": "<p>Analyse</p>", "genere": True})
+
+    response = client.get("/financial-analysis/AAA")
+
+    assert response.status_code == 200
+    assert response.json() == {"html": "<p>Analyse</p>", "disponible": True}
+
+
+def test_financial_analysis_reports_unavailable_when_nothing_was_generated(client, monkeypatch):
+    monkeypatch.setattr(api, "_generate_one_subprocess",
+                         lambda ticker: {"html": None, "genere": False})
+
+    response = client.get("/financial-analysis/AAA")
+
+    assert response.status_code == 200
+    assert response.json() == {"html": None, "disponible": False}
+
+
+def test_financial_analysis_reports_unavailable_on_subprocess_timeout(client, monkeypatch):
+    import subprocess as sp
+
+    def _leve_timeout(ticker):
+        raise sp.TimeoutExpired(cmd="indices_score.py", timeout=150)
+
+    monkeypatch.setattr(api, "_generate_one_subprocess", _leve_timeout)
+
+    response = client.get("/financial-analysis/AAA")
+
+    assert response.status_code == 200
+    assert response.json() == {"html": None, "disponible": False}
+
+
+def test_financial_analysis_reports_unavailable_on_malformed_subprocess_output(client, monkeypatch):
+    def _sortie_invalide(ticker):
+        raise ValueError("JSON invalide")
+
+    monkeypatch.setattr(api, "_generate_one_subprocess", _sortie_invalide)
+
+    response = client.get("/financial-analysis/AAA")
+
+    assert response.status_code == 200
+    assert response.json() == {"html": None, "disponible": False}
+
+
+def test_financial_analysis_rate_limits_each_visitor(client, monkeypatch):
+    monkeypatch.setattr(api, "_generate_one_subprocess",
+                         lambda ticker: {"html": "<p>x</p>", "genere": False})
+    monkeypatch.setattr(api, "_frequence_analyse", api.limits.RateLimiter(2, 60))
+
+    codes = [client.get("/financial-analysis/AAA").status_code for _ in range(3)]
+
+    assert codes == [200, 200, 429]
+
+
+def test_financial_analysis_answers_503_when_a_generation_is_already_running(client, monkeypatch):
+    monkeypatch.setattr(api, "_frequence_analyse", api.limits.RateLimiter(100, 60))
+    monkeypatch.setattr(api, "_concurrence_analyse", api.limits.ConcurrencyLimiter(1))
+    api._concurrence_analyse.tente()  # une génération déjà en cours occupe la seule place
+
+    response = client.get("/financial-analysis/AAA")
+
+    assert response.status_code == 503

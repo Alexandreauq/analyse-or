@@ -7,6 +7,7 @@
 import hmac
 import json
 import os
+import subprocess
 
 from fastapi import FastAPI, Header, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -21,7 +22,7 @@ app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["https://alexandreauq.github.io"],
-    allow_methods=["POST"],
+    allow_methods=["POST", "GET"],
     allow_headers=["X-Bot-Token", "Content-Type"],
 )
 
@@ -45,6 +46,36 @@ MAX_HISTORY_MESSAGES = 12
 
 _concurrence = limits.ConcurrencyLimiter(MAX_CONCURRENT)
 _frequence = limits.RateLimiter(RATE_MAX_PAR_MINUTE, 60)
+
+# Garde-fous dédiés à /financial-analysis -- séparés de ceux de /ask
+# (une conversation ouverte et un ticker ponctuel n'ont pas le même
+# profil d'abus). Concurrence à 1 : évite toute course entre deux
+# sous-processus qui committeraient en même temps (voir
+# indices_score.py::_git_commit_and_push, qui fait déjà un pull --rebase
+# avant de pousser, mais une seule génération à la fois reste plus sûr
+# et plus simple qu'un retry).
+ANALYSE_MAX_CONCURRENT = int(os.environ.get("AI_FINANCIAL_ANALYSIS_MAX_CONCURRENT", "1"))
+ANALYSE_RATE_MAX_PAR_MINUTE = int(os.environ.get("AI_FINANCIAL_ANALYSIS_RATE_PAR_MINUTE", "10"))
+ANALYSE_SUBPROCESS_TIMEOUT_S = 150  # generate_financial_analysis a son propre timeout HTTP a 120s
+
+_concurrence_analyse = limits.ConcurrencyLimiter(ANALYSE_MAX_CONCURRENT)
+_frequence_analyse = limits.RateLimiter(ANALYSE_RATE_MAX_PAR_MINUTE, 60)
+
+_REPO_ROOT = os.path.dirname(os.path.abspath(os.path.dirname(__file__)))
+
+
+def _generate_one_subprocess(ticker: str) -> dict:
+    """Délègue toute la génération + écriture + commit git à
+    indices_score.py --generate-one, en sous-processus -- ce module
+    reste ainsi "lecture seule" (voir Global Constraints du plan). Lève
+    (jamais n'avale) sur sortie invalide/timeout : l'appelant (la route)
+    décide du repli visiteur."""
+    resultat = subprocess.run(
+        ["python3", "indices_score.py", "--generate-one", ticker],
+        cwd=_REPO_ROOT, capture_output=True, text=True,
+        timeout=ANALYSE_SUBPROCESS_TIMEOUT_S,
+    )
+    return json.loads(resultat.stdout)
 
 
 def _formate_evenements_sse(evenements):
@@ -96,3 +127,21 @@ async def ask(request: Request, x_bot_token: str | None = Header(default=None)):
         _concurrence.libere()
         raise
     return StreamingResponse(_flux_protege(evenements), media_type="text/event-stream")
+
+
+@app.get("/financial-analysis/{ticker}")
+def financial_analysis(ticker: str):
+    if not _frequence_analyse.autorise(ticker):
+        raise HTTPException(status_code=429, detail="Trop de demandes pour ce ticker : réessaie dans une minute.")
+    if not _concurrence_analyse.tente():
+        raise HTTPException(status_code=503, detail="Une génération est déjà en cours : réessaie dans un instant.")
+    try:
+        try:
+            resultat = _generate_one_subprocess(ticker)
+            html = resultat.get("html")
+            disponible = bool(resultat.get("html"))
+        except Exception:
+            html, disponible = None, False
+    finally:
+        _concurrence_analyse.libere()
+    return {"html": html, "disponible": disponible}

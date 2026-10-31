@@ -6953,16 +6953,43 @@ function renderCompanyDetail(company) {
   });
 }
 
-function renderCompanyAnalysis(company) {
-  const html = company.financial_analysis_html;
-  document.getElementById('indicesContent').innerHTML = `
+async function renderCompanyAnalysis(company) {
+  const estPerime = company.financial_analysis_quarter !== company.latest_quarter_date
+    || !company.financial_analysis_html;
+  const enTete = `
     <div class="back-link-row">
       <a href="${companyBackTarget.hash}" class="back-link">← ${companyBackTarget.label}</a>
       <a href="#indices/${encodeURIComponent(company.ticker)}" class="back-link">← ${company.name}</a>
     </div>
     <h2>Analyse financière complète</h2>
-    <div class="ai-analysis">${html || '<p>Analyse non disponible pour le moment.</p>'}</div>
   `;
+  if (!estPerime) {
+    document.getElementById('indicesContent').innerHTML = `
+      ${enTete}
+      <div class="ai-analysis">${company.financial_analysis_html}</div>
+    `;
+    return;
+  }
+  document.getElementById('indicesContent').innerHTML = `
+    ${enTete}
+    <div class="ai-analysis ai-analysis-loading">Génération de l'analyse en cours…</div>
+  `;
+  try {
+    const reponse = await fetch(`https://goldbot.fr:8445/financial-analysis/${encodeURIComponent(company.ticker)}`);
+    const resultat = await reponse.json();
+    const contenuWrap = document.querySelector('#indicesContent .ai-analysis');
+    if (!contenuWrap) return;  // le visiteur a changé de page pendant l'attente
+    contenuWrap.classList.remove('ai-analysis-loading');
+    contenuWrap.innerHTML = resultat.disponible
+      ? resultat.html
+      : '<p>Analyse non disponible pour le moment.</p>';
+  } catch (erreur) {
+    const contenuWrap = document.querySelector('#indicesContent .ai-analysis');
+    if (contenuWrap) {
+      contenuWrap.classList.remove('ai-analysis-loading');
+      contenuWrap.innerHTML = '<p>Analyse non disponible pour le moment.</p>';
+    }
+  }
 }
 
 function parseRoute() {

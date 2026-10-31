@@ -6974,18 +6974,17 @@ async function renderCompanyAnalysis(company) {
     ${enTete}
     <div class="ai-analysis ai-analysis-loading">Génération de l'analyse en cours…</div>
   `;
+  const contenuWrap = document.querySelector('#indicesContent .ai-analysis');  // ce nœud précis, capturé maintenant
   try {
     const reponse = await fetch(`https://goldbot.fr:8445/financial-analysis/${encodeURIComponent(company.ticker)}`);
     const resultat = await reponse.json();
-    const contenuWrap = document.querySelector('#indicesContent .ai-analysis');
-    if (!contenuWrap) return;  // le visiteur a changé de page pendant l'attente
+    if (!contenuWrap.isConnected) return;  // ce nœud n'est plus dans le document : le visiteur a changé de page
     contenuWrap.classList.remove('ai-analysis-loading');
     contenuWrap.innerHTML = resultat.disponible
       ? resultat.html
       : '<p>Analyse non disponible pour le moment.</p>';
   } catch (erreur) {
-    const contenuWrap = document.querySelector('#indicesContent .ai-analysis');
-    if (contenuWrap) {
+    if (contenuWrap.isConnected) {
       contenuWrap.classList.remove('ai-analysis-loading');
       contenuWrap.innerHTML = '<p>Analyse non disponible pour le moment.</p>';
     }

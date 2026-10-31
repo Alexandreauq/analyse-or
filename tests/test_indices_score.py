@@ -9198,3 +9198,22 @@ def test_generate_one_keeps_old_html_when_opus_generation_fails(tmp_path, monkey
     result = indices_score.generate_one("AAA")
 
     assert result == {"html": "<p>ancienne analyse valide</p>", "genere": False}
+
+
+def test_generate_one_keeps_old_html_when_fetch_company_financials_raises(tmp_path, monkeypatch):
+    indices_json = tmp_path / "indices.json"
+    indices_json.write_text(json.dumps({"companies": [
+        {"ticker": "AAA", "name": "Entreprise Test", "index": "CAC40",
+         "financial_analysis_html": "<p>ancienne analyse valide</p>",
+         "financial_analysis_quarter": "2026-06-30"},
+    ]}), encoding="utf-8")
+    monkeypatch.setattr(indices_score, "OUTPUT_JSON_PATH", str(indices_json))
+
+    def _raise(ticker):
+        raise Exception("CertificateVerifyError: panne reseau simulee")
+
+    monkeypatch.setattr(indices_score, "fetch_company_financials", _raise)
+
+    result = indices_score.generate_one("AAA")
+
+    assert result == {"html": "<p>ancienne analyse valide</p>", "genere": False}

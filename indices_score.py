@@ -6761,29 +6761,43 @@ def generate_one(ticker: str) -> dict:
     if entry is None:
         return {"html": None, "genere": False}
 
-    data = fetch_company_financials(ticker)
-    current_quarter = data["latest_quarter_date"]
-    if current_quarter is not None and current_quarter == entry.get("financial_analysis_quarter") \
-            and entry.get("financial_analysis_html"):
-        return {"html": entry["financial_analysis_html"], "genere": False}
+    # fetch_company_financials (contrairement a fetch_risk_free_rate /
+    # fetch_fx_rate_to_usd) n'a pas le contrat "ne leve jamais" -- une
+    # panne reseau yfinance (constate en verification manuelle :
+    # CertificateVerifyError) remonterait sinon telle quelle et casserait
+    # le contrat de generate_one (jamais d'exception liee au contenu),
+    # ce dont depend le parsing du JSON stdout par la route FastAPI
+    # (Task 6). Meme filet que la boucle de main() autour de
+    # build_company_entry : une panne ici retombe sur le HTML en cache,
+    # pas sur un crash du sous-processus.
+    try:
+        data = fetch_company_financials(ticker)
+        current_quarter = data["latest_quarter_date"]
+        if current_quarter is not None and current_quarter == entry.get("financial_analysis_quarter") \
+                and entry.get("financial_analysis_html"):
+            return {"html": entry["financial_analysis_html"], "genere": False}
 
-    currency = INDEX_CURRENCY.get(entry.get("index"), "EUR")
-    fetched_rate = fetch_risk_free_rate(RISK_FREE_SERIES_BY_CURRENCY.get(currency, FRED_RISK_FREE_SERIES))
-    risk_free_rate = fetched_rate if fetched_rate is not None else load_risk_free_rate_cache().get(currency)
-    fx_rate_to_usd = fetch_fx_rate_to_usd(currency)
+        currency = INDEX_CURRENCY.get(entry.get("index"), "EUR")
+        fetched_rate = fetch_risk_free_rate(RISK_FREE_SERIES_BY_CURRENCY.get(currency, FRED_RISK_FREE_SERIES))
+        risk_free_rate = fetched_rate if fetched_rate is not None else load_risk_free_rate_cache().get(currency)
+        fx_rate_to_usd = fetch_fx_rate_to_usd(currency)
 
-    market_cap = (
-        data["current_price"] * data["shares_outstanding"]
-        if data["current_price"] is not None else None
-    )
-    wacc = estimate_wacc(
-        risk_free_rate, data["beta"], market_cap, data["total_debt"], data["tax_rate"],
-        fx_rate_to_usd, data.get("implied_cost_of_debt"),
-    )
-    cost_of_capital = wacc if wacc is not None else COST_OF_CAPITAL_PROXY
-    ratios_summary = build_ratios_summary(data, cost_of_capital)
+        market_cap = (
+            data["current_price"] * data["shares_outstanding"]
+            if data["current_price"] is not None else None
+        )
+        wacc = estimate_wacc(
+            risk_free_rate, data["beta"], market_cap, data["total_debt"], data["tax_rate"],
+            fx_rate_to_usd, data.get("implied_cost_of_debt"),
+        )
+        cost_of_capital = wacc if wacc is not None else COST_OF_CAPITAL_PROXY
+        ratios_summary = build_ratios_summary(data, cost_of_capital)
 
-    generated = generate_financial_analysis(entry["name"], data["financial_context"], ratios_summary, ticker=ticker)
+        generated = generate_financial_analysis(entry["name"], data["financial_context"], ratios_summary, ticker=ticker)
+    except Exception as e:
+        print(f"Erreur generation a la demande pour {ticker} : {e}")
+        return {"html": entry.get("financial_analysis_html"), "genere": False}
+
     if generated is None:
         return {"html": entry.get("financial_analysis_html"), "genere": False}
 

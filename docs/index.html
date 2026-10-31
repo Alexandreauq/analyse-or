@@ -932,25 +932,206 @@
   .mobile-key-bar-score { font-family: 'Newsreader', serif; font-weight: 600; font-size: var(--text-md); flex-shrink: 0; }
   .mobile-key-bar-prices { color: var(--muted); font-size: var(--text-2xs); white-space: nowrap; flex-shrink: 0; }
 
-  /* Page Or (≥1024px) : Actu et Détail du calcul côte à côte en permanence,
-     plutôt qu'un accordéon empilé qui oblige à re-scroller pour comparer
-     les deux — les boutons de bascule n'ont alors plus d'utilité. */
-  @media (min-width: 1024px) {
-    .app:has(.or-columns) { max-width: 1040px; }
-    #or .btn-row { display: none; }
-    .or-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: start; }
-    /* 3e panneau (Actualités, ajouté après Actu/Détail du calcul) : pleine
-       largeur plutôt que de laisser une cellule vide à côté sur la grille
-       à 2 colonnes pensée pour les 2 panneaux d'origine. */
-    #actusWrap { grid-column: 1 / -1; }
-    .or-columns .section-wrap {
-      max-height: none; opacity: 1; padding: 20px; margin: 0;
-      background: var(--bg-2); border: 1px solid var(--border); border-left: 3px solid var(--gold);
-      border-radius: var(--radius-lg); box-shadow: var(--shadow-2);
-    }
-    .or-columns .section-wrap > h2:first-child,
-    .or-columns .section-wrap > .notice:first-child { margin-top: 0; }
+  /* Page Commodités : 3 formes de navigation volontairement différentes.
+     Capsule = quelle commodité, soulignement = quelle vue (desktop),
+     lignes dépliables = quelle section (mobile). */
+  #or .eyebrow { display: none; }
+  #or .or-tabbar {
+    gap: 2px; margin: 8px 20px 14px; padding: 4px; max-width: 440px;
+    background: var(--bg-2); border: 1px solid var(--border); border-radius: var(--radius-pill);
   }
+  #or .or-tab-btn {
+    background: none; border: none; border-radius: var(--radius-pill); min-height: 40px; padding: 0;
+    color: var(--muted); font-weight: 600; transition: background .15s ease, color .15s ease;
+  }
+  #or .or-tab-btn:hover { color: var(--text); }
+  #or .or-tab-btn[aria-selected="true"] { background: var(--gold); color: var(--bg-0); }
+
+  .cmd-summary { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+  .cmd-score { font-family: 'Newsreader', serif; font-size: 38px; line-height: 1; color: var(--gold); flex-shrink: 0; }
+  .cmd-verdict { flex: 1; min-width: 0; font-size: 13px; font-weight: 600; line-height: var(--lh-snug); }
+  .cmd-price { text-align: right; flex-shrink: 0; font-size: 14px; font-weight: 600; }
+  .cmd-price span { display: block; color: var(--muted); font-size: 12px; font-weight: 400; }
+  .cmd-mini { height: 64px; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin-bottom: 12px; }
+  .cmd-stack { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+  .cmd-stack > .panel { margin: 0; }
+  .cmd-stack .panel > h2:first-child { margin-top: 0; }
+  .cmd-synthesis.is-clamped {
+    display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 4; line-clamp: 4; overflow: hidden;
+  }
+  .cmd-synthesis p { margin: 0 0 10px; }
+  .cmd-synthesis p:last-child { margin-bottom: 0; }
+  .cmd-more {
+    background: none; border: none; padding: 0; min-height: 44px; display: inline-flex; align-items: center;
+    color: var(--gold); font-size: 13px; font-weight: 600;
+  }
+  .cmd-cal:not(.show-all) .cal-row:nth-child(n+4) { display: none; }
+  .cmd-fold { background: var(--bg-2); border: 1px solid var(--border); border-radius: var(--radius-lg); }
+  .cmd-fold summary {
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    min-height: 48px; padding: 0 14px; font-weight: 600; cursor: pointer; list-style: none;
+  }
+  .cmd-fold summary::-webkit-details-marker { display: none; }
+  .cmd-fold summary .chevron { color: var(--muted); transition: transform .15s ease; }
+  .cmd-fold[open] summary .chevron { color: var(--gold); transform: rotate(180deg); }
+  .cmd-fold .ai-analysis { padding: 0 14px 14px; animation: none; }
+
+  /* Mobile : lignes dépliables avec aperçu, tout le sommaire tient à l'écran. */
+  .cmd-cards { display: flex; flex-direction: column; border-top: 1px solid var(--border); }
+  .cmd-card { border-bottom: 1px solid var(--border); scroll-margin-top: 12px; }
+  .cmd-card-head {
+    width: 100%; min-height: 60px; display: flex; align-items: center; gap: 10px; padding: 8px 2px;
+    background: none; border: none; color: var(--text); text-align: left;
+  }
+  .cmd-card-text { flex: 1; min-width: 0; }
+  .cmd-card-title { display: block; font-weight: 600; font-size: 14px; }
+  .cmd-card-preview {
+    display: block; color: var(--muted); font-size: 12.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .cmd-card-head .chevron { color: var(--muted); flex-shrink: 0; transition: transform .15s ease; }
+  .cmd-card-head[aria-expanded="true"] .chevron { color: var(--gold); transform: rotate(180deg); }
+  .cmd-card-body { display: none; padding: 2px 0 16px; }
+  .cmd-card-body.is-open { display: flex; }
+
+  /* Desktop : vues en texte souligné, collées sous la barre du haut. */
+  .cmd-views {
+    position: sticky; top: var(--topbar-h); z-index: 3; display: flex; gap: 8px; margin-bottom: 16px;
+    background: var(--bg); border-bottom: 1px solid var(--border);
+  }
+  .cmd-view-btn {
+    background: none; border: none; border-bottom: 2px solid transparent; margin-bottom: -1px;
+    padding: 12px 16px; color: var(--muted); font-size: 14px; font-weight: 500;
+    transition: color .15s ease, border-color .15s ease;
+  }
+  .cmd-view-btn:hover { color: var(--text); }
+  .cmd-view-btn[aria-selected="true"] { color: var(--gold); border-bottom-color: var(--gold); }
+  .cmd-resume-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; align-items: start; }
+  .cmd-resume-grid .cmd-mini { height: 130px; margin: 0; }
+  .cmd-cours-grid { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 12px; align-items: start; }
+  .cmd-folds { display: flex; flex-direction: column; gap: 12px; }
+  @media (min-width: 1024px) {
+    /* Hauteurs réduites pour que chaque vue tienne sur une fenêtre sans
+       défilement : titre et capsule sur une ligne, grilles sur toute la
+       largeur plutôt que des colonnes empilées. */
+    #or .app {
+      max-width: 1160px; display: grid; grid-template-columns: auto minmax(0, 1fr);
+      align-items: end; column-gap: 24px;
+    }
+    #or header { padding: calc(var(--topbar-h) + 14px) 0 0 20px; }
+    #or header h1 { font-size: 30px; line-height: 1.1; margin: 0; }
+    #or header .updated { margin: 2px 0 0; }
+    #or .or-tabbar { margin: 0 20px 2px 0; justify-self: end; width: 100%; }
+    #or main { grid-column: 1 / -1; padding-top: 12px; padding-bottom: 16px; }
+    .cmd-summary { margin-bottom: 4px; }
+    .cmd-score { font-size: 34px; }
+    .cmd-views { margin-bottom: 12px; }
+    .cmd-view-btn { padding: 8px 16px; }
+    #or .panel { padding: 12px 14px; }
+    #or .panel h2 { font-size: 18px; margin-bottom: 8px; }
+    #or .factor-row { padding: 8px 0; }
+    #or .factor-head { margin-bottom: 5px; }
+    #or .bar-track { height: 6px; margin-bottom: 5px; }
+    .cmd-resume-grid .factor-row:last-child { border-bottom: none; padding-bottom: 0; }
+    .cmd-resume-grid .factor-foot { display: none; }
+    .cmd-resume-grid .cmd-more { min-height: 32px; }
+    .cmd-cours-grid .scalp-chart-box { height: clamp(300px, calc(100vh - 340px), 620px); }
+    .cmd-factors-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 28px; }
+    #or .notice { padding: 10px 12px; line-height: 1.45; margin-bottom: 4px; }
+    .cmd-folds { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: start; }
+    .cmd-fold summary { min-height: 44px; }
+    .cmd-news-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 28px; }
+    .cmd-news-grid .news-item { padding: 8px 0; }
+    .cmd-news-grid .news-item:last-child { border-bottom: 1px solid var(--border); }
+  }
+  /* Fenêtres basses (portable 13-14") : résumés de news sur une ligne. */
+  @media (min-width: 1024px) and (max-height: 780px) {
+    .cmd-news-grid .news-summary {
+      display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 1; line-clamp: 1; overflow: hidden; margin: 0;
+    }
+    .cmd-news-grid .news-title { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 1; line-clamp: 1; overflow: hidden; }
+    #or .factor-row { padding: 5px 0; }
+    #or .notice { font-size: 11.5px; padding: 8px 10px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    #or .or-tab-btn, .cmd-view-btn, .cmd-card-head .chevron, .cmd-fold summary .chevron { transition: none; }
+  }
+
+  #botContent, #ftmoContent { padding: 0; }
+  /* Bot Or / FTMO : un seul DOM. Mobile = un panneau à la fois (onglets),
+     desktop = tous les panneaux en grille, onglets masqués. */
+  .gold-status { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
+  .gold-pill { display: inline-flex; align-items: center; gap: 7px; font-weight: 600; }
+  .gold-pill i { width: 8px; height: 8px; border-radius: 50%; }
+  .gold-status-sub { display: block; color: var(--muted); font-size: var(--text-xs); }
+  .gold-action {
+    background: none; border: none; min-height: 44px; padding: 0 4px; flex-shrink: 0;
+    color: var(--gold); font-size: 13px; font-weight: 600;
+  }
+  .gold-tiles { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; margin-bottom: 10px; }
+  .gold-tile { background: var(--bg-2); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 12px 14px; min-width: 0; }
+  .gold-tile > span { display: block; color: var(--muted); font-size: var(--text-xs); }
+  .gold-tile b { display: block; font-family: 'Newsreader', serif; font-weight: 400; font-size: 24px; line-height: 1.2; }
+  .gold-tile-sub { margin-top: 2px; }
+  .gold-tile-extra { display: none; }
+  .gold-tabs { display: flex; border-bottom: 1px solid var(--border); margin-bottom: 14px; }
+  .gold-tab {
+    flex: 1; min-height: 46px; background: none; border: none; border-bottom: 2px solid transparent; margin-bottom: -1px;
+    color: var(--muted); font-size: 14px; font-weight: 500;
+  }
+  .gold-tab[aria-selected="true"] { color: var(--gold); border-bottom-color: var(--gold); }
+  .gold-stack { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+  .gold-panel { min-width: 0; }
+  .gold-panel > .panel, .gold-stack > .panel { margin: 0; }
+  .gold-panel .panel h2 { font-size: 18px; margin-bottom: 8px; }
+  .gold-panel-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: -8px 0 0; }
+  .gold-panel-head h2 { margin: 0; }
+  .gold-position + .gold-position { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); }
+  .gold-position-head { display: flex; justify-content: space-between; gap: 12px; font-weight: 600; }
+  .gold-position-meta { color: var(--muted); font-size: var(--text-xs); }
+  .gold-range { height: 6px; border-radius: var(--radius-pill); background: var(--bg-3); overflow: hidden; margin-top: 6px; }
+  .gold-range i { display: block; height: 100%; background: var(--gold); }
+  .gold-range-ends { display: flex; justify-content: space-between; color: var(--muted); font-size: var(--text-xs); margin-top: 3px; }
+  .gold-rule + .gold-rule { margin-top: 12px; }
+  .gold-rule-head { display: flex; justify-content: space-between; gap: 12px; font-size: 14px; }
+  .gold-rule-head b { font-weight: 600; }
+  .gold-note { color: var(--muted); font-size: var(--text-xs); margin: 0 0 6px; }
+  .gold-day { border-top: 1px solid var(--border); }
+  .gold-day summary {
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    min-height: 46px; font-weight: 600; cursor: pointer; list-style: none;
+  }
+  .gold-day summary::-webkit-details-marker { display: none; }
+  .gold-day summary .chevron { color: var(--muted); transition: transform .15s ease; }
+  .gold-day[open] summary .chevron { color: var(--gold); transform: rotate(180deg); }
+  .gold-day-count { color: var(--muted); font-weight: 400; font-size: var(--text-xs); margin-left: auto; }
+  .gold-trade { padding: 0 0 8px 10px; font-size: 13px; }
+  .gold-trade span { display: block; color: var(--muted); font-size: var(--text-xs); }
+  .gold-extra .cmd-fold { margin-top: 10px; }
+  .gold-extra .scalp-chart-box, .gold-chart { height: 320px; margin: 0 14px 14px; }
+  .gold-extra .hero-sub { padding: 0 14px 14px; }
+  @media (max-width: 1023px) {
+    #pfOrTocTriggerDesc { display: none; }
+    .gold-panel:not(.is-active) { display: none; }
+    .gold-tile-main { background: none; border: none; padding: 0; }
+    .gold-tile-main b { font-size: 40px; }
+  }
+  @media (min-width: 1024px) {
+    .gold-tabs { display: none; }
+    .gold-tiles { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .gold-tile-extra { display: block; }
+    .gold-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; align-items: start; }
+    .gold-grid .gold-panel-today { grid-column: 1; }
+    .gold-grid .gold-panel-goals { grid-column: 1; }
+    .gold-grid .gold-panel-days { grid-column: 2; grid-row: 1 / span 2; }
+    .gold-extra { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; align-items: start; margin-top: 10px; }
+    .gold-extra .cmd-fold { margin-top: 0; }
+    .gold-extra #ftmoReportBlock:empty { display: none; }
+    .gold-tile { padding: 8px 14px; }
+    #portefeuille .gold-panel .panel { padding: 10px 14px; }
+    .gold-day summary { min-height: 40px; }
+  }
+  @media (prefers-reduced-motion: reduce) { .gold-day summary .chevron { transition: none; } }
+
   .tech-row { display:flex; justify-content:space-between; font-size:13px; padding: 5px 0; }
   .tech-label { color: var(--muted); }
   .tech-value { font-weight: 500; }
@@ -1309,7 +1490,15 @@
   .signal-tracking-link:active { transform: scale(.97); }
 
   .signal-stats { display: flex; flex-direction: column; gap: 2px; margin: 0 0 20px; }
-  .signal-stats-group + .signal-stats-group { margin-top: 8px; }
+  .signal-stats-table { width: 100%; border-collapse: collapse; font-size: var(--text-sm); margin-bottom: 12px; }
+  .signal-stats-table th {
+    color: var(--muted); font-weight: 500; font-size: var(--text-xs); text-align: right;
+    padding: 4px 0 6px 10px; border-bottom: 1px solid var(--border); vertical-align: bottom;
+  }
+  .signal-stats-table td { padding: 5px 0 5px 10px; text-align: right; font-weight: 500; }
+  .signal-stats-table td:first-child { padding-left: 0; text-align: left; color: var(--muted); font-weight: 400; }
+  .signal-updated { display: none; }
+  .signal-scope-note { color: var(--muted); font-size: var(--text-xs); line-height: var(--lh-normal); margin: 0 0 6px; }
   .portfolio-perf-chart { width: 100%; height: auto; margin-top: 8px; }
   .portfolio-perf-legend { display: flex; gap: 16px; font-size: var(--text-sm); color: var(--muted); margin-top: 4px; }
   .portfolio-perf-block { margin-bottom: 16px; }
@@ -1328,7 +1517,7 @@
   /* Marque le cours/rendement d'une position encore ouverte comme
      valorisé au cours du jour, pas figé comme une clôture réelle. */
   .signal-live-mark { color: var(--gold); font-weight: 700; margin-left: 1px; }
-  .signal-live-note { margin: -12px 0 20px; }
+  .signal-live-note { margin: 0; font-size: var(--text-xs); }
 
   /* Mobile : cartes empilées plutôt que le tableau (8 colonnes illisibles,
      même en scroll horizontal, sur un écran de téléphone) — repliées par
@@ -1373,22 +1562,31 @@
   #indices.suivi-signaux-active #indicesContent {
     flex: 1; min-height: 0; display: flex; flex-direction: column; padding-bottom: 20px;
   }
-  #indices.suivi-signaux-active .back-link { flex-shrink: 0; }
+  /* align-self : #indicesContent est un flex column, sans ça le bouton est
+     étiré sur toute la largeur du conteneur. */
+  #indices.suivi-signaux-active .back-link { flex-shrink: 0; align-self: flex-start; }
   #indices.suivi-signaux-active .signal-tracking-layout { flex: 1; min-height: 0; }
-  #indices.suivi-signaux-active .signal-tracking-info { flex-shrink: 0; overflow-y: auto; }
+  #indices.suivi-signaux-active .signal-tracking-info {
+    flex-shrink: 0; overflow-y: auto; padding-right: 14px;
+    scrollbar-width: thin; scrollbar-color: var(--muted) transparent;
+  }
   #indices.suivi-signaux-active .signal-cards, #indices.suivi-signaux-active .signal-table-wrap {
     flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; padding-right: 14px;
     scrollbar-width: thin; scrollbar-color: var(--muted) transparent;
   }
+  #indices.suivi-signaux-active .signal-tracking-info::-webkit-scrollbar,
   #indices.suivi-signaux-active .signal-cards::-webkit-scrollbar,
   #indices.suivi-signaux-active .signal-table-wrap::-webkit-scrollbar { width: 12px; }
+  #indices.suivi-signaux-active .signal-tracking-info::-webkit-scrollbar-track,
   #indices.suivi-signaux-active .signal-cards::-webkit-scrollbar-track,
   #indices.suivi-signaux-active .signal-table-wrap::-webkit-scrollbar-track { background: transparent; }
+  #indices.suivi-signaux-active .signal-tracking-info::-webkit-scrollbar-thumb,
   #indices.suivi-signaux-active .signal-cards::-webkit-scrollbar-thumb,
   #indices.suivi-signaux-active .signal-table-wrap::-webkit-scrollbar-thumb {
     background: var(--muted); border-radius: var(--radius-pill);
     border: 3px solid transparent; background-clip: padding-box;
   }
+  #indices.suivi-signaux-active .signal-tracking-info::-webkit-scrollbar-thumb:hover,
   #indices.suivi-signaux-active .signal-cards::-webkit-scrollbar-thumb:hover,
   #indices.suivi-signaux-active .signal-table-wrap::-webkit-scrollbar-thumb:hover { background: var(--accent); }
 
@@ -1398,8 +1596,13 @@
      horizontal même après avoir cédé de la largeur à la colonne de gauche. */
   @media (min-width: 1024px) {
     .app:has(.signal-tracking-layout) { max-width: 1600px; }
-    .signal-tracking-layout { display: grid; grid-template-columns: 300px 1fr; gap: 40px; }
-    .signal-tracking-info { margin-top: 48px; }
+    .signal-tracking-layout { display: grid; grid-template-columns: 380px 1fr; gap: 40px; }
+    /* En-tête "Indices" retiré ici : il répétait le lien retour et prenait
+       la hauteur de la zone utile. */
+    #indices.suivi-signaux-active header { display: none; }
+    .signal-updated { display: block; margin: 0 0 8px; }
+    #indices.suivi-signaux-active .app { padding-top: calc(var(--topbar-h) + 14px); }
+    #indices.suivi-signaux-active .signal-tracking-info h1 { font-size: 30px; line-height: 1.1; margin: 0 0 6px; }
     .signal-table { font-size: 14px; }
     .signal-table th, .signal-table td { padding: 10px 12px; }
     .signal-table thead th { position: sticky; top: 0; background: var(--bg); }
@@ -1452,11 +1655,6 @@
   .adv-filter-label + .list-sort { width: 100%; }
   .adv-score-range { display: flex; align-items: center; gap: 8px; }
   .adv-score-range .list-search { flex: 1; min-width: 0; appearance: textfield; }
-  /* Copie du filtre dans le sommaire desktop du Portefeuille (voir
-     pfOppFilterSidebar) : déjà dans une carte avec son propre padding, pas
-     besoin de la marge du haut ; plus de marge en bas avant la liste de
-     sections qui suit. */
-  .indices-filters.portfolio-opp-filter-sidebar { margin: 0 0 32px; border: none; background: none; box-shadow: none; }
   .indices-filters .list-search, .indices-filters .list-sort {
     width: 100%; padding: 8px 10px; font-size: var(--text-sm);
   }
@@ -1622,6 +1820,12 @@
     .indices-filters > .index-card-header .chevron { display: none; }
     .indices-filters-body { padding: 0 14px 14px; max-height: none; opacity: 1; overflow: visible; }
     .index-card-list { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
+    /* Opportunités : filtres dans la section, repliés à toutes les largeurs,
+       contrairement au panneau toujours déplié de la page Indices. */
+    .indices-filters.portfolio-opp-filter { position: static; margin: 10px 0 14px; }
+    .indices-filters.portfolio-opp-filter > .index-card-header { cursor: pointer; }
+    .indices-filters.portfolio-opp-filter > .index-card-header .chevron { display: inline; }
+    .portfolio-opp-filter .indices-filters-body:not(.is-open) { padding: 0 14px; max-height: 0; opacity: 0; overflow: hidden; }
   }
 
   .alert-row {
@@ -1834,7 +2038,6 @@
 
 <div id="portefeuille" class="screen" hidden>
   <aside class="portfolio-toc-sidebar" id="pfActionsTocSidebar">
-    <div class="indices-filters portfolio-opp-filter-sidebar" id="pfOppFilterSidebar" hidden></div>
     <div class="portfolio-toc-sidebar-list" id="pfActionsTocSidebarList"></div>
   </aside>
   <aside class="portfolio-toc-sidebar" id="pfOrTocSidebar" hidden>
@@ -2042,11 +2245,6 @@ function renderPortfolioScreen() {
 // `prefix` correspond aux ids statiques posés dans le markup (pfActions*/pfOr*).
 function renderPager(prefix, sections, index) {
   const section = sections[index];
-  // Masqué par défaut à chaque changement de section — seul le wire()
-  // d'Opportunités (voir wirePortfolioOpportunities) le réaffiche, sinon il
-  // resterait visible en naviguant vers Ajouter/Tes positions/l'onglet Or.
-  const oppFilterSidebar = document.getElementById('pfOppFilterSidebar');
-  if (oppFilterSidebar) oppFilterSidebar.hidden = true;
   document.getElementById(prefix + 'Title').textContent = section.title;
   const contentEl = document.getElementById(prefix + 'Content');
   contentEl.innerHTML = section.html;
@@ -2521,21 +2719,18 @@ let portfolioOppSector = '';
 let portfolioOppSectorProfile = '';
 let portfolioOppAlertKind = '';
 
-// Ids du filtre, paramétrés par un suffixe — deux instances coexistent dans
-// le DOM (voir portfolioOpportunitiesHtml / markup du sommaire desktop
-// pfOppFilterSidebar) : inline sous mobile (repliée en desktop via
-// .portfolio-toc-mobile, même bascule que le sommaire), colonne gauche
-// sous desktop — jamais les deux visibles en même temps. Même composant
-// que la page Indices (voir filterAccordionHtml/wireFilterAccordionToggles),
-// mêmes filtres avancés (score/secteur/profil sectoriel/signal).
-function portfolioOppFilterIds(suffix) {
+// Ids du filtre, dans la section Opportunités à toutes les largeurs. Même
+// composant que la page Indices (voir filterAccordionHtml/
+// wireFilterAccordionToggles), mêmes filtres avancés (score/secteur/profil
+// sectoriel/signal).
+function portfolioOppFilterIds() {
   return {
-    toggle: 'pfOppToggle' + suffix, body: 'pfOppBody' + suffix,
-    search: 'pfOppSearch' + suffix, sort: 'pfOppSort' + suffix, financialOnly: 'pfOppFinancialOnly' + suffix,
-    reset: 'pfOppReset' + suffix,
-    advToggle: 'pfOppAdvToggle' + suffix, advBody: 'pfOppAdvBody' + suffix,
-    scoreMin: 'pfOppScoreMin' + suffix, scoreMax: 'pfOppScoreMax' + suffix, sector: 'pfOppSector' + suffix,
-    sectorProfile: 'pfOppSectorProfile' + suffix, alertKind: 'pfOppAlertKind' + suffix,
+    toggle: 'pfOppToggle', body: 'pfOppBody',
+    search: 'pfOppSearch', sort: 'pfOppSort', financialOnly: 'pfOppFinancialOnly',
+    reset: 'pfOppReset',
+    advToggle: 'pfOppAdvToggle', advBody: 'pfOppAdvBody',
+    scoreMin: 'pfOppScoreMin', scoreMax: 'pfOppScoreMax', sector: 'pfOppSector',
+    sectorProfile: 'pfOppSectorProfile', alertKind: 'pfOppAlertKind',
   };
 }
 
@@ -2559,7 +2754,7 @@ function portfolioOpportunitiesHtml(opportunities) {
   if (!opportunities.length) return '<div class="empty">Aucune opportunité pour l\'instant — reviens plus tard.</div>';
   return `
     <p class="hero-sub">Entreprises suivies avec un signal d'entrée actif que tu ne détiens pas encore.</p>
-    <div class="indices-filters portfolio-toc-mobile" id="pfOppFilterInline">${filterAccordionHtml(portfolioOppFilterIds(''), portfolioOppFilterState(), { sectors: portfolioOppSectors(opportunities) })}</div>
+    <div class="indices-filters portfolio-opp-filter" id="pfOppFilter">${filterAccordionHtml(portfolioOppFilterIds(), portfolioOppFilterState(), { sectors: portfolioOppSectors(opportunities) })}</div>
     <div class="index-card-list" id="pfOppList"></div>`;
 }
 
@@ -2577,8 +2772,8 @@ function renderPortfolioOppList(opportunities) {
       </a>`).join('') : '<div class="list-empty">Aucun résultat pour ce filtre.</div>';
 }
 
-function wireOppFilterControls(suffix, opportunities) {
-  const ids = portfolioOppFilterIds(suffix);
+function wireOppFilterControls(opportunities) {
+  const ids = portfolioOppFilterIds();
   document.getElementById(ids.search).addEventListener('input', (e) => {
     portfolioOppSearch = e.target.value; renderPortfolioOppList(opportunities);
   });
@@ -2618,23 +2813,13 @@ function wireOppFilterControls(suffix, opportunities) {
 }
 
 function wirePortfolioOpportunities(opportunities) {
-  const inlineFilter = document.getElementById('pfOppFilterInline');
-  const sidebarFilter = document.getElementById('pfOppFilterSidebar');
-  if (!inlineFilter) { if (sidebarFilter) sidebarFilter.hidden = true; return; } // pas de filtre quand la liste est vide
-  // Reconstruit systématiquement le panneau inline depuis l'état courant
-  // (pas seulement au premier rendu) — nécessaire pour qu'un reset (ou tout
-  // changement déclenché depuis l'instance sidebar) se reflète aussi dans
-  // les champs affichés de cette instance, comme c'est déjà le cas pour
-  // sidebarFilter ci-dessous.
+  const filter = document.getElementById('pfOppFilter');
+  if (!filter) return; // pas de filtre quand la liste est vide
+  // Reconstruit depuis l'état courant : un reset doit se refléter dans les champs.
   const sectors = portfolioOppSectors(opportunities);
-  inlineFilter.innerHTML = filterAccordionHtml(portfolioOppFilterIds(''), portfolioOppFilterState(), { sectors });
+  filter.innerHTML = filterAccordionHtml(portfolioOppFilterIds(), portfolioOppFilterState(), { sectors });
   renderPortfolioOppList(opportunities);
-  wireOppFilterControls('', opportunities);
-  if (sidebarFilter) {
-    sidebarFilter.innerHTML = filterAccordionHtml(portfolioOppFilterIds('Sb'), portfolioOppFilterState(), { sectors });
-    sidebarFilter.hidden = false;
-    wireOppFilterControls('Sb', opportunities);
-  }
+  wireOppFilterControls(opportunities);
 }
 
 function realPortfolioHtml() {
@@ -2977,32 +3162,47 @@ function botDashboardSectionHtml() {
         <div class="skeleton-line"></div>
         <div class="skeleton-line"></div>
       </div>
-    </main>`;
+    </main>
+    <div class="gold-extra">
+      <details class="cmd-fold" id="botChartFold">
+        <summary>Graphique XAUUSD <span class="chevron">▾</span></summary>
+        <div class="gold-chart"><div id="tv-bot-chart" style="height:100%;"></div></div>
+      </details>
+    </div>`;
+}
+
+// Bandeau de statut partagé Bot Or / FTMO. Bouton discret : l'action coupe
+// un bot réel, voir confirmGoldAction.
+function goldStatusHtml(status, btnId) {
+  const label = status.kill_switch ? 'Coupé' : (status.dry_run ? 'Simulation' : 'Actif');
+  const color = status.kill_switch ? 'var(--rust)' : 'var(--green-500)';
+  const lastCycle = status.last_decision_timestamp ? ` · dernier cycle ${formatGoldDateTime(status.last_decision_timestamp)}` : '';
+  return `
+    <div class="gold-status">
+      <div>
+        <span class="gold-pill"><i style="background:${color}"></i>${label}</span>
+        <span class="gold-status-sub">${status.dry_run ? 'Mode simulation — aucun ordre réel' : 'Mode réel'}${lastCycle}</span>
+      </div>
+      <button class="gold-action" type="button" id="${btnId}">${status.kill_switch ? 'Relancer' : 'Arrêter'}</button>
+    </div>`;
+}
+
+function confirmGoldAction(name, killSwitchOn) {
+  return confirm(killSwitchOn ? `Relancer ${name} ?` : `Arrêter ${name} ? Il n'ouvrira plus de position.`);
 }
 
 function botKillSwitchHtml() {
   if (!botStatusData) {
     return `<div class="empty">Statut du bot indisponible.</div>`;
   }
-  const label = botStatusData.kill_switch ? 'Coupé' : (botStatusData.dry_run ? 'Simulation' : 'Actif');
-  const color = botStatusData.kill_switch ? 'var(--rust)' : 'var(--gold)';
-  const actionLabel = botStatusData.kill_switch ? 'Relancer' : 'Arrêter';
-  return `
-    <div class="portfolio-position-row">
-      <div class="portfolio-position-main">
-        <span class="company-name" style="color:${color}">${label}</span>
-        <span class="hero-sub">${botStatusData.dry_run ? 'Mode simulation — aucun ordre réel' : 'Mode réel'}</span>
-      </div>
-      <div class="portfolio-position-actions">
-        <button class="toggle-btn" type="button" id="botKillBtn">${actionLabel}</button>
-      </div>
-    </div>`;
+  return goldStatusHtml(botStatusData, 'botKillBtn');
 }
 
 function wireBotKillSwitch() {
   const btn = document.getElementById('botKillBtn');
   if (!btn || !botStatusData) return;
   btn.addEventListener('click', async () => {
+    if (!confirmGoldAction('le Bot Or', botStatusData.kill_switch)) return;
     const token = getBotToken();
     if (!token) return;
     const action = botStatusData.kill_switch ? 'resume' : 'kill';
@@ -3030,69 +3230,33 @@ function renderBotStatusBlock() {
   wireBotKillSwitch();
 }
 
-let botTvChartLoaded = false;
-
 function loadBotTvChart() {
-  // Widget TradingView en lecture seule (cours réel, plus lisible que
-  // notre graphique maison) — même principe de chargement paresseux :
-  // chargé une seule fois, à la demande, jamais avant que l'onglet ne
-  // soit visible. Ne peut pas superposer les positions/décisions du
-  // bot (iframe cross-origin, hors de portée de notre JS) — celles-ci
-  // sont donc listées à part, sous le graphique.
-  if (botTvChartLoaded) return;
-  botTvChartLoaded = true;
+  // Widget TradingView en lecture seule, chargé à la première ouverture du
+  // repli : le conteneur est recréé à chaque retour sur la section.
+  const container = document.getElementById('tv-bot-chart');
+  if (!container || container.childElementCount) return;
+  const createWidget = () => new TradingView.widget({
+    autosize: true,
+    symbol: 'OANDA:XAUUSD',
+    interval: '1',
+    timezone: 'Etc/UTC',
+    theme: isLightTheme() ? 'light' : 'dark',
+    style: '1',
+    locale: 'fr',
+    toolbar_bg: isLightTheme() ? '#f3e4c2' : '#1e2740',
+    enable_publishing: false,
+    allow_symbol_change: false,
+    withdateranges: true,
+    container_id: 'tv-bot-chart',
+  });
+  if (window.TradingView) {
+    createWidget();
+    return;
+  }
   const script = document.createElement('script');
   script.src = 'https://s3.tradingview.com/tv.js';
-  script.onload = () => {
-    new TradingView.widget({
-      autosize: true,
-      symbol: 'OANDA:XAUUSD',
-      interval: '1',
-      timezone: 'Etc/UTC',
-      theme: isLightTheme() ? 'light' : 'dark',
-      style: '1',
-      locale: 'fr',
-      toolbar_bg: isLightTheme() ? '#f3e4c2' : '#1e2740',
-      enable_publishing: false,
-      allow_symbol_change: false,
-      withdateranges: true,
-      container_id: 'tv-bot-chart',
-    });
-  };
+  script.onload = createWidget;
   document.body.appendChild(script);
-}
-
-function botChartHtml() {
-  return `<div class="scalp-chart-box" id="botChartBox"><div id="tv-bot-chart" style="height:100%;"></div></div>`;
-}
-
-function botDecisionsHtml(data) {
-  const decisions = data.recent_decisions || [];
-  if (decisions.length === 0) {
-    return `<div class="empty">Aucune décision récente.</div>`;
-  }
-  return decisions.slice().reverse().map(d => {
-    const label = d.direction === 'achat' ? 'Achat' : d.direction === 'vente' ? 'Vente' : '—';
-    const color = d.direction === 'achat' ? 'var(--gold)' : d.direction === 'vente' ? 'var(--rust)' : 'var(--muted)';
-    const detail = [
-      d.entry != null ? 'Entrée ' + d.entry.toFixed(2) : null,
-      d.stop_loss != null ? 'SL ' + d.stop_loss.toFixed(2) : null,
-      d.take_profit != null ? 'TP ' + d.take_profit.toFixed(2) : null,
-    ].filter(Boolean).join(' · ');
-    const when = d.timestamp ? new Date(d.timestamp).toLocaleString('fr-FR', {
-      day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit', timeZone: 'UTC',
-    }) + ' UTC' : '';
-    return `
-    <div class="portfolio-position-row">
-      <div class="portfolio-position-main">
-        <span class="company-name" style="color:${color}">${label}</span>
-        <span class="hero-sub">${escHtml(d.symbol || '')} · ${detail}</span>
-      </div>
-      <div class="portfolio-position-pnl">
-        <span class="hero-sub">${when}</span>
-      </div>
-    </div>`;
-  }).join('');
 }
 
 function formatFetchedAgo(iso) {
@@ -3103,62 +3267,157 @@ function formatFetchedAgo(iso) {
   return min < 1 ? 'à jour' : `il y a ${min} min`;
 }
 
-function botBalanceHtml(data) {
-  if (data.balance == null) {
-    return `<div class="empty">Solde indisponible pour l'instant.</div>`;
-  }
-  const freshness = formatFetchedAgo(data.balance_fetched_at);
+function formatGoldDateTime(iso) {
+  return new Date(iso).toLocaleString('fr-FR', {
+    day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit', timeZone: 'UTC',
+  }) + ' UTC';
+}
+
+// Base du compte FTMO et seuils de gold_bot/ftmo_guard.py (FTMO_ISC=10000,
+// deploy/README-ftmo.md). À garder en phase avec eux. La perte du jour n'est
+// pas affichée : /dashboard ne donne pas le solde de début de journée.
+const FTMO_ACCOUNT_BASE = 10000;
+const FTMO_PROFIT_TARGET_PCT = 0.10;
+const FTMO_OVERALL_LOSS_PCT = 0.09;
+
+// Onglet actif et jours dépliés, conservés au rafraîchissement automatique.
+const goldAccountUi = { bot: { tab: 'today', days: new Set() }, ftmo: { tab: 'today', days: new Set() } };
+
+function goldPositionHtml(p, fmt) {
+  const side = p.direction === 'achat' ? 'Achat' : p.direction === 'vente' ? 'Vente' : '—';
+  const profitColor = (p.profit ?? 0) >= 0 ? 'var(--green-500)' : 'var(--rust)';
+  const hasRange = p.stop_loss != null && p.take_profit != null && p.take_profit !== p.stop_loss && p.current_price != null;
+  const rangePct = hasRange
+    ? Math.max(0, Math.min(100, (p.current_price - p.stop_loss) / (p.take_profit - p.stop_loss) * 100))
+    : 0;
   return `
-    <div class="portfolio-position-row">
-      <div class="portfolio-position-main">
-        <span class="company-name">${formatPrice(data.balance)}</span>
-        <span class="hero-sub">Solde disponible</span>
-        ${freshness ? `<span class="hero-sub">${freshness}</span>` : ''}
+    <div class="gold-position">
+      <div class="gold-position-head">
+        <span>${side} · ${(p.volume ?? 0).toLocaleString('fr-FR')} lot</span>
+        <span style="color:${profitColor}">${p.profit != null && p.profit >= 0 ? '+' : ''}${fmt(p.profit)}</span>
       </div>
+      <div class="gold-position-meta">${escHtml(p.symbol || '')} · entrée ${formatPriceUsd(p.open_price)} · cours ${formatPriceUsd(p.current_price)}</div>
+      ${hasRange ? `
+        <div class="gold-range"><i style="width:${rangePct}%"></i></div>
+        <div class="gold-range-ends"><span>SL ${formatPriceUsd(p.stop_loss)}</span><span>TP ${formatPriceUsd(p.take_profit)}</span></div>` : ''}
     </div>`;
 }
 
-function botPositionsHtml(data) {
-  if (data.positions_fetched_at == null) {
-    return `<div class="empty">Positions indisponibles pour l'instant.</div>`;
-  }
-  const positions = data.positions || [];
-  if (positions.length === 0) {
-    return `<div class="empty">Aucune position ouverte.</div>`;
-  }
-  return positions.map(p => {
-    const label = p.direction === 'achat' ? 'Achat' : p.direction === 'vente' ? 'Vente' : '—';
-    const color = p.direction === 'achat' ? 'var(--gold)' : p.direction === 'vente' ? 'var(--rust)' : 'var(--muted)';
-    const profitColor = (p.profit ?? 0) >= 0 ? 'var(--gold)' : 'var(--rust)';
-    const profitSign = p.profit != null && p.profit >= 0 ? '+' : '';
+function goldDaysHtml(kind, decisions) {
+  if (!decisions.length) return `<div class="empty">Aucune ouverture récente.</div>`;
+  const byDay = new Map();
+  decisions.slice().reverse().forEach(d => {
+    const day = d.timestamp ? new Date(d.timestamp).toISOString().slice(0, 10) : '';
+    if (!byDay.has(day)) byDay.set(day, []);
+    byDay.get(day).push(d);
+  });
+  return [...byDay.entries()].map(([day, list]) => {
+    const label = day ? day.split('-').reverse().slice(0, 2).join('/') : 'Date inconnue';
+    const rows = list.map(d => {
+      const side = d.direction === 'achat' ? 'Achat' : d.direction === 'vente' ? 'Vente' : '—';
+      const levels = [
+        d.entry != null ? 'Entrée ' + d.entry.toFixed(2) : null,
+        d.stop_loss != null ? 'SL ' + d.stop_loss.toFixed(2) : null,
+        d.take_profit != null ? 'TP ' + d.take_profit.toFixed(2) : null,
+      ].filter(Boolean).join(' · ');
+      const time = d.timestamp ? new Date(d.timestamp).toISOString().slice(11, 16) + ' UTC' : '';
+      return `<div class="gold-trade">${time} · ${side} ${escHtml(d.symbol || '')}<span>${levels}</span></div>`;
+    }).join('');
     return `
-    <div class="portfolio-position-row">
-      <div class="portfolio-position-main">
-        <span class="company-name">${escHtml(p.symbol)}</span>
-        <span class="hero-sub" style="color:${color}">${label} · ${p.volume} lot(s)</span>
-      </div>
-      <div class="portfolio-position-pnl">
-        <span class="price-value">${formatPriceUsd(p.current_price)}</span>
-        <span style="color:${profitColor}">${profitSign}${formatPrice(p.profit)}</span>
-      </div>
-    </div>`;
+      <details class="gold-day" data-day="${day}"${goldAccountUi[kind].days.has(day) ? ' open' : ''}>
+        <summary>${label}<span class="gold-day-count">${list.length} ouverture${list.length > 1 ? 's' : ''}</span><span class="chevron">▾</span></summary>
+        ${rows}
+      </details>`;
   }).join('');
 }
 
+function goldGoalsHtml(data) {
+  if (data.balance == null) return `<div class="empty">Solde indisponible pour l'instant.</div>`;
+  const gain = data.balance - FTMO_ACCOUNT_BASE;
+  const target = FTMO_ACCOUNT_BASE * FTMO_PROFIT_TARGET_PCT;
+  const maxLoss = FTMO_ACCOUNT_BASE * FTMO_OVERALL_LOSS_PCT;
+  const fmt = v => formatPriceUsd(Math.round(v));
+  const rule = (name, value, pct, color, note) => `
+    <div class="gold-rule">
+      <div class="gold-rule-head"><span>${name}</span><b>${value}</b></div>
+      <div class="gold-range"><i style="width:${Math.max(0, Math.min(100, pct))}%; background:${color}"></i></div>
+      <div class="gold-position-meta">${note}</div>
+    </div>`;
+  return rule('Objectif de profit', `${fmt(Math.max(0, gain))} sur ${fmt(target)}`, gain / target * 100, 'var(--green-500)', `Compte visé : ${fmt(FTMO_ACCOUNT_BASE + target)}`)
+    + rule('Perte totale', `${fmt(Math.max(0, -gain))} sur ${fmt(maxLoss)}`, -gain / maxLoss * 100, 'var(--gold)', `Plancher : ${fmt(FTMO_ACCOUNT_BASE - maxLoss)}`);
+}
+
+function goldAccountHtml(kind, data, refreshBtnId) {
+  const isFtmo = kind === 'ftmo';
+  const fmt = isFtmo ? formatPriceUsd : formatPrice;
+  const positions = data.positions_fetched_at == null ? null : (data.positions || []);
+  const decisions = data.recent_decisions || [];
+  const latent = (positions || []).reduce((sum, p) => sum + (p.profit ?? 0), 0);
+  const signed = v => `<span style="color:${v >= 0 ? 'var(--green-500)' : 'var(--rust)'}">${v >= 0 ? '+' : ''}${fmt(v)}</span>`;
+  const gain = isFtmo && data.balance != null ? data.balance - FTMO_ACCOUNT_BASE : null;
+  const freshness = formatFetchedAgo(data.balance_fetched_at);
+  const tabs = [['today', 'Aujourd\u2019hui'], ['days', 'Calendrier'], ...(isFtmo ? [['goals', 'Objectifs']] : [])];
+  const ui = goldAccountUi[kind];
+  const panelClass = name => `gold-panel gold-panel-${name}${ui.tab === name ? ' is-active' : ''}`;
+  const positionsHtml = positions == null
+    ? `<div class="empty">Positions indisponibles pour l'instant${isFtmo ? ' (compte FTMO déconnecté)' : ''}.</div>`
+    : positions.length ? positions.map(p => goldPositionHtml(p, fmt)).join('') : '<p class="hero-sub">Aucune position ouverte.</p>';
+  return `
+    <div class="gold-tiles">
+      <div class="gold-tile gold-tile-main">
+        <span>Solde${freshness ? ` · ${freshness}` : ''}${data.balance == null ? ` · indisponible${isFtmo ? ' (compte FTMO déconnecté)' : ''}` : ''}</span>
+        <b>${data.balance == null ? '—' : fmt(data.balance)}</b>
+        ${gain != null ? `<span class="gold-tile-sub">${signed(gain)} depuis ${formatPriceUsd(FTMO_ACCOUNT_BASE)}</span>` : ''}
+      </div>
+      <div class="gold-tile gold-tile-extra"><span>Résultat latent</span><b>${positions && positions.length ? signed(latent) : '—'}</b></div>
+      <div class="gold-tile gold-tile-extra"><span>Ouvertures récentes</span><b>${decisions.length}</b></div>
+    </div>
+    <div class="gold-tabs" role="tablist">
+      ${tabs.map(([key, label]) => `<button class="gold-tab" data-gold-tab="${key}" role="tab" aria-selected="${ui.tab === key}" type="button">${label}</button>`).join('')}
+    </div>
+    <div class="gold-grid">
+      <div class="${panelClass('today')} gold-stack">
+        <div class="panel">
+          <div class="gold-panel-head">
+            <h2>${positions && positions.length > 1 ? 'Positions ouvertes' : 'Position ouverte'}</h2>
+            <button class="gold-action" type="button" id="${refreshBtnId}">Actualiser</button>
+          </div>
+          ${positionsHtml}
+        </div>
+      </div>
+      ${isFtmo ? `<div class="${panelClass('goals')}"><div class="panel"><h2>Objectifs</h2>${goldGoalsHtml(data)}</div></div>` : ''}
+      <div class="${panelClass('days')}">
+        <div class="panel">
+          <h2>Calendrier</h2>
+          <p class="gold-note">Ouvertures du bot. Le résultat par position n'est pas encore disponible.</p>
+          ${goldDaysHtml(kind, decisions)}
+        </div>
+      </div>
+    </div>`;
+}
+
+function wireGoldAccount(kind, root) {
+  const ui = goldAccountUi[kind];
+  root.querySelectorAll('.gold-tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+      ui.tab = btn.dataset.goldTab;
+      root.querySelectorAll('.gold-tab').forEach(b => b.setAttribute('aria-selected', String(b === btn)));
+      root.querySelectorAll('.gold-panel').forEach(panel => panel.classList.toggle('is-active', panel.classList.contains(`gold-panel-${ui.tab}`)));
+    });
+  });
+  root.querySelectorAll('.gold-day').forEach(day => {
+    day.addEventListener('toggle', () => {
+      if (day.open) ui.days.add(day.dataset.day);
+      else ui.days.delete(day.dataset.day);
+    });
+  });
+}
+
 function renderBotDashboard(data) {
-  document.getElementById('botContent').innerHTML = `
-    <h2>Solde</h2>
-    ${botBalanceHtml(data)}
-    <h2>Positions ouvertes</h2>
-    ${botPositionsHtml(data)}
-    <h2>Cours</h2>
-    ${botChartHtml()}
-    <h2>Décisions récentes</h2>
-    ${botDecisionsHtml(data)}
-    <button class="toggle-btn" type="button" id="botRefreshBtn">Actualiser</button>
-  `;
+  const el = document.getElementById('botContent');
+  el.innerHTML = goldAccountHtml('bot', data, 'botRefreshBtn');
+  wireGoldAccount('bot', el);
   wireBotDashboardRefresh();
-  loadBotTvChart();
 }
 
 async function fetchBotDashboard() {
@@ -3199,29 +3458,17 @@ function wireBotDashboardSection() {
   // visibles même avant que l'utilisateur ait fourni son jeton.
   loadBotStatus().then(renderBotStatusBlock);
   fetchBotDashboard();
+  document.getElementById('botChartFold').addEventListener('toggle', loadBotTvChart);
 }
 
 // --- Section FTMO -----------------------------------------------------
-// Dupliquee plutot que de generaliser les fonctions botXxx ci-dessus :
-// celles-ci dependent fortement d'un etat global unique (botStatusData)
-// et d'IDs DOM fixes, entremeles sur une dizaine de fonctions -- les
-// parametrer sans risquer de regresser la section "Bot Or" existante
-// aurait ete un refactor plus large que ce qui a ete demande. Ce bloc
-// est un miroir volontaire, pointe sur FTMO_API_BASE_URL/son propre
-// jeton/ses propres IDs DOM, avec en plus un rafraichissement
-// automatique (seule difference de comportement, voir
-// wireFtmoDashboardSection).
+// Meme vue que Bot Or (goldAccountHtml), mais FTMO_API_BASE_URL, son propre
+// jeton et ses propres IDs DOM, avec en plus un rafraichissement automatique
+// (voir wireFtmoDashboardSection).
 
 function ftmoDashboardSectionHtml() {
   return `
-    <div style="height:400px;margin-bottom:16px">
-      <div class="tradingview-widget-container" id="ftmoChartContainer" style="height:100%;width:100%">
-        <div class="tradingview-widget-container__widget" style="height:calc(100% - 32px);width:100%"></div>
-        <div class="tradingview-widget-copyright"><a href="https://www.tradingview.com/" rel="noopener nofollow" target="_blank"><span class="blue-text">Suivre tous les marchés sur TradingView</span></a></div>
-      </div>
-    </div>
     <div id="ftmoStatusBlock"></div>
-    <div id="ftmoReportBlock"></div>
     <main id="ftmoContent">
       <div class="skeleton">
         <div class="skeleton-line"></div>
@@ -3229,7 +3476,19 @@ function ftmoDashboardSectionHtml() {
         <div class="skeleton-line"></div>
         <div class="skeleton-line"></div>
       </div>
-    </main>`;
+    </main>
+    <div class="gold-extra">
+      <div id="ftmoReportBlock"></div>
+      <details class="cmd-fold" id="ftmoChartFold">
+        <summary>Graphique XAUUSD <span class="chevron">▾</span></summary>
+        <div class="gold-chart">
+          <div class="tradingview-widget-container" id="ftmoChartContainer" style="height:100%;width:100%">
+            <div class="tradingview-widget-container__widget" style="height:calc(100% - 32px);width:100%"></div>
+            <div class="tradingview-widget-copyright"><a href="https://www.tradingview.com/" rel="noopener nofollow" target="_blank"><span class="blue-text">Suivre tous les marchés sur TradingView</span></a></div>
+          </div>
+        </div>
+      </details>
+    </div>`;
 }
 
 // Widget gratuit TradingView (pas de cle API) -- script externe injecte
@@ -3263,19 +3522,7 @@ function ftmoKillSwitchHtml() {
   if (!ftmoStatusData) {
     return `<div class="empty">Statut FTMO indisponible (compte en cours de connexion).</div>`;
   }
-  const label = ftmoStatusData.kill_switch ? 'Coupé' : (ftmoStatusData.dry_run ? 'Simulation' : 'Actif');
-  const color = ftmoStatusData.kill_switch ? 'var(--rust)' : 'var(--gold)';
-  const actionLabel = ftmoStatusData.kill_switch ? 'Relancer' : 'Arrêter';
-  return `
-    <div class="portfolio-position-row">
-      <div class="portfolio-position-main">
-        <span class="company-name" style="color:${color}">${label}</span>
-        <span class="hero-sub">${ftmoStatusData.dry_run ? 'Mode simulation — aucun ordre réel' : 'Mode réel'}</span>
-      </div>
-      <div class="portfolio-position-actions">
-        <button class="toggle-btn" type="button" id="ftmoKillBtn">${actionLabel}</button>
-      </div>
-    </div>`;
+  return goldStatusHtml(ftmoStatusData, 'ftmoKillBtn');
 }
 
 function ftmoReportHtml(report) {
@@ -3283,15 +3530,11 @@ function ftmoReportHtml(report) {
   const when = report.generated_at ? new Date(report.generated_at).toLocaleString('fr-FR', {
     day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit', timeZone: 'UTC',
   }) + ' UTC' : '';
-  const color = report.healthy === false ? 'var(--rust)' : 'var(--gold)';
   return `
-    <div class="portfolio-position-row" style="border-left:3px solid ${color}">
-      <div class="portfolio-position-main">
-        <span class="company-name">Résumé</span>
-        <span class="hero-sub">${escHtml(report.summary_fr)}</span>
-        ${when ? `<span class="hero-sub">Mis à jour ${when}</span>` : ''}
-      </div>
-    </div>`;
+    <details class="cmd-fold">
+      <summary>Résumé du bot${when ? ` · ${when}` : ''} <span class="chevron">▾</span></summary>
+      <p class="hero-sub">${report.healthy === false ? 'À surveiller. ' : ''}${escHtml(report.summary_fr)}</p>
+    </details>`;
 }
 
 async function loadFtmoReport() {
@@ -3315,6 +3558,7 @@ function wireFtmoKillSwitch() {
   const btn = document.getElementById('ftmoKillBtn');
   if (!btn || !ftmoStatusData) return;
   btn.addEventListener('click', async () => {
+    if (!confirmGoldAction('le bot FTMO', ftmoStatusData.kill_switch)) return;
     const token = getFtmoToken();
     if (!token) return;
     const action = ftmoStatusData.kill_switch ? 'resume' : 'kill';
@@ -3351,89 +3595,11 @@ function renderFtmoStatusBlock() {
   wireFtmoKillSwitch();
 }
 
-function ftmoBalanceHtml(data) {
-  if (data.balance == null) {
-    return `<div class="empty">Solde indisponible pour l'instant (compte FTMO déconnecté).</div>`;
-  }
-  const freshness = formatFetchedAgo(data.balance_fetched_at);
-  return `
-    <div class="portfolio-position-row">
-      <div class="portfolio-position-main">
-        <span class="company-name">${formatPriceUsd(data.balance)}</span>
-        <span class="hero-sub">Solde disponible</span>
-        ${freshness ? `<span class="hero-sub">${freshness}</span>` : ''}
-      </div>
-    </div>`;
-}
-
-function ftmoPositionsHtml(data) {
-  if (data.positions_fetched_at == null) {
-    return `<div class="empty">Positions indisponibles pour l'instant (compte FTMO déconnecté).</div>`;
-  }
-  const positions = data.positions || [];
-  if (positions.length === 0) {
-    return `<div class="empty">Aucune position ouverte.</div>`;
-  }
-  return positions.map(p => {
-    const label = p.direction === 'achat' ? 'Achat' : p.direction === 'vente' ? 'Vente' : '—';
-    const color = p.direction === 'achat' ? 'var(--gold)' : p.direction === 'vente' ? 'var(--rust)' : 'var(--muted)';
-    const profitColor = (p.profit ?? 0) >= 0 ? 'var(--gold)' : 'var(--rust)';
-    const profitSign = p.profit != null && p.profit >= 0 ? '+' : '';
-    return `
-    <div class="portfolio-position-row">
-      <div class="portfolio-position-main">
-        <span class="company-name">${escHtml(p.symbol)}</span>
-        <span class="hero-sub" style="color:${color}">${label} · ${p.volume} lot(s)</span>
-      </div>
-      <div class="portfolio-position-pnl">
-        <span class="price-value">${formatPriceUsd(p.current_price)}</span>
-        <span style="color:${profitColor}">${profitSign}${formatPrice(p.profit)}</span>
-      </div>
-    </div>`;
-  }).join('');
-}
-
-function ftmoDecisionsHtml(data) {
-  const decisions = data.recent_decisions || [];
-  if (decisions.length === 0) {
-    return `<div class="empty">Aucun signal récent.</div>`;
-  }
-  return decisions.slice().reverse().map(d => {
-    const label = d.direction === 'achat' ? 'Achat' : d.direction === 'vente' ? 'Vente' : '—';
-    const color = d.direction === 'achat' ? 'var(--gold)' : d.direction === 'vente' ? 'var(--rust)' : 'var(--muted)';
-    const detail = [
-      d.entry != null ? 'Entrée ' + d.entry.toFixed(2) : null,
-      d.stop_loss != null ? 'SL ' + d.stop_loss.toFixed(2) : null,
-      d.take_profit != null ? 'TP ' + d.take_profit.toFixed(2) : null,
-    ].filter(Boolean).join(' · ');
-    const when = d.timestamp ? new Date(d.timestamp).toLocaleString('fr-FR', {
-      day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit', timeZone: 'UTC',
-    }) + ' UTC' : '';
-    return `
-    <div class="portfolio-position-row">
-      <div class="portfolio-position-main">
-        <span class="company-name" style="color:${color}">${label}</span>
-        <span class="hero-sub">${escHtml(d.symbol || '')} · ${detail}</span>
-      </div>
-      <div class="portfolio-position-pnl">
-        <span class="hero-sub">${when}</span>
-      </div>
-    </div>`;
-  }).join('');
-}
-
 function renderFtmoDashboard(data) {
   const el = document.getElementById('ftmoContent');
   if (!el) return;
-  el.innerHTML = `
-    <h2>Solde</h2>
-    ${ftmoBalanceHtml(data)}
-    <h2>Positions ouvertes</h2>
-    ${ftmoPositionsHtml(data)}
-    <h2>Signaux récents</h2>
-    ${ftmoDecisionsHtml(data)}
-    <button class="toggle-btn" type="button" id="ftmoRefreshBtn">Actualiser</button>
-  `;
+  el.innerHTML = goldAccountHtml('ftmo', data, 'ftmoRefreshBtn');
+  wireGoldAccount('ftmo', el);
   wireFtmoDashboardRefresh();
 }
 
@@ -3471,10 +3637,10 @@ function wireFtmoDashboardSection() {
     clearInterval(ftmoAutoRefreshIntervalId);
     ftmoAutoRefreshIntervalId = null;
   }
-  loadFtmoTradingViewChart();
   loadFtmoStatus().then(renderFtmoStatusBlock);
   loadFtmoReport();
   fetchFtmoDashboard();
+  document.getElementById('ftmoChartFold').addEventListener('toggle', loadFtmoTradingViewChart);
   // Seule section du site avec un rafraichissement automatique (60s,
   // meme cadence que la boucle du bot) -- demande explicite de
   // l'utilisateur ("calculs a intervalles reguliers"). S'arrete tout
@@ -3905,7 +4071,7 @@ function loadCommodityQuoteWidget(commodityKey) {
   // loadIndexQuoteWidget (un <script> posé via innerHTML ne s'exécute
   // jamais tout seul).
   const container = document.getElementById('commodityQuoteWidget');
-  if (!container) return;
+  if (!container || container.childElementCount) return;
   const tvSymbol = COMMODITY_TV_SYMBOL_BY_KEY[commodityKey];
   if (!tvSymbol) return;
   const script = document.createElement('script');
@@ -3944,6 +4110,31 @@ function loadCommodityQuoteWidget(commodityKey) {
   container.appendChild(script);
 }
 
+// Aperçu compact du cours (Résumé desktop, haut de page mobile) : le grand
+// widget n'est chargé qu'à l'ouverture de la vue Cours.
+function loadCommodityMiniWidget(commodityKey, chartOnly) {
+  const container = document.getElementById('commodityMiniWidget');
+  const tvSymbol = COMMODITY_TV_SYMBOL_BY_KEY[commodityKey];
+  if (!container || !tvSymbol) return;
+  const script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-mini-symbol-overview.js';
+  script.async = true;
+  script.textContent = JSON.stringify({
+    symbol: tvSymbol,
+    width: '100%',
+    height: '100%',
+    locale: 'fr',
+    dateRange: '1M',
+    colorTheme: isLightTheme() ? 'light' : 'dark',
+    isTransparent: true,
+    autosize: true,
+    chartOnly,
+    noTimeScale: true,
+  });
+  container.appendChild(script);
+}
+
 const COMMODITY_SCORE_FILES = {
   or: 'score.json',
   argent: 'score_argent.json',
@@ -3951,6 +4142,11 @@ const COMMODITY_SCORE_FILES = {
   gaz: 'score_gaz.json',
 };
 let activeCommodity = 'or';
+// Vue affichée sur desktop, conservée d'une commodité à l'autre.
+let activeCommodityView = 'resume';
+// Dernières données rendues : la mise en page change au passage 1024px.
+let lastCommodityData = null;
+const commodityDesktopQuery = matchMedia('(min-width: 1024px)');
 
 async function loadScore(commodity) {
   commodity = commodity || activeCommodity;
@@ -4036,6 +4232,33 @@ function animateFactorBars() {
   });
 }
 
+// Sépare la Synthèse (affichée en tête) des autres blocs de l'analyse IA,
+// découpés sur les <h3> du HTML généré par commodity_news.
+function splitCommodityAnalysis(html) {
+  const tpl = document.createElement('template');
+  tpl.innerHTML = html || '';
+  const sections = [];
+  let current = null;
+  [...tpl.content.children].forEach(el => {
+    if (el.tagName === 'H3') {
+      current = {title: el.textContent.trim(), html: ''};
+      sections.push(current);
+    } else if (current) {
+      current.html += el.outerHTML;
+    }
+  });
+  const synthesisIndex = sections.findIndex(sec => /synth/i.test(sec.title));
+  if (synthesisIndex < 0) return {synthesis: sections.length ? '' : (html || ''), sections};
+  const [synthesis] = sections.splice(synthesisIndex, 1);
+  return {synthesis: synthesis.html, sections};
+}
+
+function analysisPlainText(html) {
+  const tpl = document.createElement('template');
+  tpl.innerHTML = html || '';
+  return tpl.content.textContent.trim();
+}
+
 function render(data) {
   document.getElementById('updated').textContent = 'Mis à jour le ' + data.date;
 
@@ -4071,85 +4294,153 @@ function render(data) {
       <p class="alert-detail">${a.detail}</p>
     </div>`).join('');
 
-  document.getElementById('content').innerHTML = `
-    <section class="hero">
-      <div class="hero-number">${data.composite_score > 0 ? '+' : ''}${data.composite_score}</div>
-      <div class="hero-label">${data.interpretation}</div>
-    </section>
-    <div class="divider"></div>
+  const gapPct = t.spot && t.ma200 ? (t.spot - t.ma200) / t.ma200 * 100 : null;
+  const gapStr = gapPct == null ? '' : `${gapPct > 0 ? '+' : ''}${gapPct.toLocaleString('fr-FR', {maximumFractionDigits: 1})} % vs MM200`;
+  const analysis = splitCommodityAnalysis(data.analysis_html);
+  const influence = f => f.score * f.weight * 10;
+  const topFactors = [...data.factors].sort((a, b) => Math.abs(influence(b)) - Math.abs(influence(a)));
+  const synthesisText = analysisPlainText(analysis.synthesis);
 
-    <div class="panel" style="margin-bottom:16px;">
-      <h2>Cours</h2>
-      <div class="scalp-chart-box" id="commodityQuoteWidget"></div>
-    </div>
-
-    <div class="btn-row">
-      <button class="toggle-btn" id="toggleActu" type="button" aria-expanded="false">
-        Actu <span class="chevron">▾</span>
-      </button>
-      <button class="toggle-btn" id="toggleDetail" type="button" aria-expanded="false">
-        Détail du calcul <span class="chevron">▾</span>
-      </button>
-      <button class="toggle-btn" id="toggleActus" type="button" aria-expanded="false">
-        Actualités <span class="chevron">▾</span>
-      </button>
-    </div>
-
-    <div class="or-columns">
-    <div class="section-wrap" id="actuWrap">
+  const summaryHtml = `
+    <section class="cmd-summary">
+      <div class="cmd-score">${data.composite_score > 0 ? '+' : ''}${data.composite_score}</div>
+      <div class="cmd-verdict">${data.interpretation}</div>
+      <div class="cmd-price">${spotStr}<span>${gapStr}</span></div>
+    </section>`;
+  const synthesisHtml = `
+    <div class="panel">
+      <h2>Synthèse</h2>
+      <div class="ai-analysis cmd-synthesis is-clamped" id="cmdSynthesis">${analysis.synthesis || '<p>Analyse non disponible pour le moment.</p>'}</div>
+      <button class="cmd-more" id="cmdSynthesisMore" type="button">Lire la suite</button>
+    </div>`;
+  const alertsBlockHtml = `
+    <div class="panel">
       <h2>Alertes</h2>
       ${alertsHtml || '<p class="hero-sub">Aucune alerte.</p>'}
+    </div>`;
+  const techHtml = `
+    <div class="panel">
+      <h2>Repère technique</h2>
+      <div class="tech-row"><span class="tech-label">Cours spot</span><span class="tech-value">${spotStr}</span></div>
+      <div class="tech-row"><span class="tech-label">Moyenne mobile 200j</span><span class="tech-value">${ma200Str}</span></div>
+      <p class="hero-sub" style="margin-top:8px;">${t.note || ''}</p>
+    </div>`;
+  const agendaHtml = `
+    <div class="panel">
+      <h2>À venir</h2>
+      <div class="cmd-cal" id="cmdCalendar">${calendarHtml || '<p class="hero-sub">Aucun événement à venir.</p>'}</div>
+      ${(data.calendar || []).length > 3 ? `<button class="cmd-more" id="cmdCalendarMore" type="button">Voir tout (${data.calendar.length})</button>` : ''}
+    </div>`;
+  const detailHtml = `
+    <div class="notice">
+      Chaque facteur est noté de -10 à +10 selon sa propre méthode (niveau,
+      momentum, ou lecture qualitative pour la Fed), puis pondéré par son
+      poids ci-dessous pour former le score composite. Barre à droite
+      (doré) = favorable, à gauche (rouge) = défavorable — plus
+      elle s'écarte du centre, plus le signal est marqué.
+      <br><br>
+      <strong>Lecture du score composite :</strong> &gt; +50 très favorable
+      · +15 à +50 favorable · -15 à +15 neutre · &lt; -15 défavorable.
+    </div>
+    <div class="cmd-factors-grid">${factorsHtml}</div>`;
+  const actusHtml = `
+    <div class="cmd-folds">${analysis.sections.map(sec => `
+      <details class="cmd-fold">
+        <summary>${sec.title} <span class="chevron">▾</span></summary>
+        <div class="ai-analysis">${sec.html}</div>
+      </details>`).join('')}</div>
+    <div class="panel">
+      <h2>Dernières actualités</h2>
+      <div class="cmd-news-grid">${newsHtml || '<p class="hero-sub">Aucune actualité récente.</p>'}</div>
+    </div>`;
 
-      <div class="panel">
-        <h2>Repère technique</h2>
-        <div class="tech-row"><span class="tech-label">Cours spot</span><span class="tech-value">${spotStr}</span></div>
-        <div class="tech-row"><span class="tech-label">Moyenne mobile 200j</span><span class="tech-value">${ma200Str}</span></div>
-        <p class="hero-sub" style="margin-top:8px;">${t.note || ''}</p>
+  const content = document.getElementById('content');
+  lastCommodityData = data;
+  if (commodityDesktopQuery.matches) {
+    const views = [['resume', 'Résumé'], ['cours', 'Cours'], ['calcul', 'Calcul'], ['actus', 'Actus']];
+    content.innerHTML = `
+      ${summaryHtml}
+      <div class="cmd-views" role="tablist" aria-label="Vues de la commodité">
+        ${views.map(([key, label]) => `<button class="cmd-view-btn" data-view="${key}" role="tab" aria-selected="${key === activeCommodityView}" type="button">${label}</button>`).join('')}
       </div>
-
-      <div class="panel">
-        <h2>Calendrier macro</h2>
-        ${calendarHtml || '<p class="hero-sub">Aucun événement à venir.</p>'}
+      <div data-view-panel="resume" hidden>
+        <div class="cmd-resume-grid">
+          <div class="cmd-stack">${synthesisHtml}${alertsBlockHtml}</div>
+          <div class="cmd-stack">
+            <div class="cmd-mini" id="commodityMiniWidget"></div>
+            <div class="panel"><h2>Ce qui fait bouger le score</h2>${renderFactorRows(topFactors.slice(0, 3))}</div>
+          </div>
+          <div class="cmd-stack">${agendaHtml}</div>
+        </div>
       </div>
-    </div>
-
-    <div class="section-wrap" id="detailWrap">
-      <h2>Détail du calcul</h2>
-      <div class="notice">
-        Chaque facteur est noté de -10 à +10 selon sa propre méthode (niveau,
-        momentum, ou lecture qualitative pour la Fed), puis pondéré par son
-        poids ci-dessous pour former le score composite. Barre à droite
-        (doré) = favorable, à gauche (rouge) = défavorable — plus
-        elle s'écarte du centre, plus le signal est marqué.
-        <br><br>
-        <strong>Lecture du score composite :</strong> &gt; +50 très favorable
-        · +15 à +50 favorable · -15 à +15 neutre · &lt; -15 défavorable.
+      <div class="cmd-cours-grid" data-view-panel="cours" hidden>
+        <div class="panel" style="margin:0;"><div class="scalp-chart-box" id="commodityQuoteWidget"></div></div>
+        <div class="cmd-stack">${techHtml}</div>
       </div>
-      ${factorsHtml}
-    </div>
+      <div class="cmd-stack" data-view-panel="calcul" hidden><div class="panel" style="margin:0;">${detailHtml}</div></div>
+      <div class="cmd-stack" data-view-panel="actus" hidden>${actusHtml}</div>`;
+    const showView = (view) => {
+      activeCommodityView = view;
+      content.querySelectorAll('.cmd-view-btn').forEach(btn => btn.setAttribute('aria-selected', String(btn.dataset.view === view)));
+      content.querySelectorAll('[data-view-panel]').forEach(panel => { panel.hidden = panel.dataset.viewPanel !== view; });
+      if (view === 'cours') loadCommodityQuoteWidget(activeCommodity);
+      animateFactorBars();
+    };
+    content.querySelectorAll('.cmd-view-btn').forEach(btn => btn.addEventListener('click', () => showView(btn.dataset.view)));
+    showView(activeCommodityView);
+    loadCommodityMiniWidget(activeCommodity, false);
+  } else {
+    const firstAlert = (data.alerts || [])[0];
+    const firstEvent = (data.calendar || [])[0];
+    const card = (key, title, preview, body) => `
+      <div class="cmd-card">
+        <button class="cmd-card-head" id="cmdToggle-${key}" type="button" aria-expanded="false">
+          <span class="cmd-card-text">
+            <span class="cmd-card-title">${title}</span>
+            <span class="cmd-card-preview">${preview}</span>
+          </span>
+          <span class="chevron">▾</span>
+        </button>
+        <div class="cmd-card-body cmd-stack" id="cmdBody-${key}">${body}</div>
+      </div>`;
+    const cards = [
+      ['synthese', 'Synthèse', synthesisText || 'Analyse non disponible', `<div class="ai-analysis">${analysis.synthesis || '<p>Analyse non disponible pour le moment.</p>'}</div>`],
+      ['facteurs', 'Facteurs', topFactors.slice(0, 2).map(f => {
+        const v = influence(f);
+        return `${f.name} ${v > 0 ? '+' : ''}${v.toLocaleString('fr-FR', {maximumFractionDigits: 1})}`;
+      }).join(' · '), detailHtml],
+      ['cours', 'Cours et repère technique', gapStr || spotStr, `<div class="scalp-chart-box" id="commodityQuoteWidget"></div>${techHtml}`],
+      ['alertes', 'Alertes', firstAlert ? firstAlert.title : 'Aucune alerte', alertsBlockHtml],
+      ['agenda', 'À venir', firstEvent ? `${firstEvent.date.slice(0, 5)} · ${firstEvent.label}` : 'Aucun événement', agendaHtml],
+      ['actus', 'Actualités', `${(data.news || []).length} articles · analyse IA`, actusHtml],
+    ];
+    content.innerHTML = `
+      ${summaryHtml}
+      <div class="cmd-mini" id="commodityMiniWidget"></div>
+      <div class="cmd-cards">${cards.map(c => card(...c)).join('')}</div>`;
+    wireAccordionGroup(cards.map(([key]) => [`cmdToggle-${key}`, `cmdBody-${key}`, key]), (key, body) => {
+      if (key === 'cours') loadCommodityQuoteWidget(activeCommodity);
+      if (key === 'facteurs') animateFactorBars();
+      body.parentElement.scrollIntoView({block: 'start'});
+    });
+    loadCommodityMiniWidget(activeCommodity, true);
+  }
 
-    <div class="section-wrap" id="actusWrap">
-      <h2>Actualités</h2>
-      <div class="ai-analysis">${data.analysis_html || '<p>Analyse non disponible pour le moment.</p>'}</div>
-      ${newsHtml || '<p class="hero-sub">Aucune actualité récente.</p>'}
-    </div>
-    </div>
-  `;
-
-  wireAccordionGroup([
-    ['toggleActu', 'actuWrap'],
-    ['toggleDetail', 'detailWrap'],
-    ['toggleActus', 'actusWrap'],
-  ], (key, wrap) => {
-    if (wrap.id === 'detailWrap') animateFactorBars();
+  const synthesisMore = document.getElementById('cmdSynthesisMore');
+  if (synthesisMore) synthesisMore.addEventListener('click', () => {
+    const clamped = document.getElementById('cmdSynthesis').classList.toggle('is-clamped');
+    synthesisMore.textContent = clamped ? 'Lire la suite' : 'Réduire';
   });
-
-  // ≥1024px : les deux sections sont affichées côte à côte en permanence
-  // (voir .or-columns), pas besoin d'attendre un clic pour révéler les barres.
-  if (matchMedia('(min-width: 1024px)').matches) animateFactorBars();
-
-  loadCommodityQuoteWidget(activeCommodity);
+  const calendarMore = document.getElementById('cmdCalendarMore');
+  if (calendarMore) calendarMore.addEventListener('click', () => {
+    const showAll = document.getElementById('cmdCalendar').classList.toggle('show-all');
+    calendarMore.textContent = showAll ? 'Voir moins' : `Voir tout (${data.calendar.length})`;
+  });
 }
+
+commodityDesktopQuery.addEventListener('change', () => {
+  if (lastCommodityData) render(lastCommodityData);
+});
 
 const SLIDING_PANES = ['home', 'or', 'indices', 'portefeuille'];
 let indicesLoaded = false;
@@ -6109,13 +6400,10 @@ function positionCurrentPrice(p, companiesByTicker) {
 // son périmètre change côté Python (audit 2026-09-21, point 4).
 const SIGNAL_TRACKING_OUT_OF_SCOPE_INDICES = new Set(['NIKKEI225', 'HANGSENG', 'EUROSTOXX50', 'SBF120', 'AEXALL', 'SP500']);
 
-// Bloc de statistiques (positions clôturées/en cours, taux de réussite,
-// rendement moyen, alpha moyen) pour un sous-ensemble de positions —
-// factorisé pour être appelé une fois par périmètre (audit 2026-09-21,
-// point 4) plutôt que dupliqué.
-function buildSignalStatsHtml(positions, companiesByTicker, title, subtitle) {
-  const closed = positions.filter(p => p.status === 'closed');
-  const open = positions.filter(p => p.status === 'open');
+// Statistiques (positions clôturées/en cours, taux de réussite, rendement
+// moyen, alpha moyen) d'un sous-ensemble de positions — calculées une fois
+// par périmètre (audit 2026-09-21, point 4).
+function computeSignalStats(positions, companiesByTicker) {
   const avg = arr => arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : null;
 
   // Statistiques calculées sur TOUTES les positions du groupe — réel pour
@@ -6125,11 +6413,6 @@ function buildSignalStatsHtml(positions, companiesByTicker, title, subtitle) {
   const returns = positions
     .map(p => positionCurrentReturnPct(p, companiesByTicker))
     .filter(r => r != null);
-  const winCount = positions.filter(p => {
-    const r = positionCurrentReturnPct(p, companiesByTicker);
-    return r != null && r > 0;
-  }).length;
-  const avgReturn = avg(returns);
   const alphas = positions
     .map(p => {
       const r = positionCurrentReturnPct(p, companiesByTicker);
@@ -6137,20 +6420,30 @@ function buildSignalStatsHtml(positions, companiesByTicker, title, subtitle) {
       return r != null && idx != null ? r - idx : null;
     })
     .filter(a => a != null);
-  const avgAlpha = avg(alphas);
 
+  return {
+    closed: positions.filter(p => p.status === 'closed').length,
+    open: positions.filter(p => p.status === 'open').length,
+    winRate: returns.length ? returns.filter(r => r > 0).length / returns.length * 100 : null,
+    avgReturn: avg(returns),
+    avgAlpha: avg(alphas),
+  };
+}
+
+function buildSignalStatsHtml(bot, out) {
+  const row = (label, fmt) => `<tr><td>${label}</td><td>${fmt(bot)}</td><td>${fmt(out)}</td></tr>`;
+  const pctCell = key => g => `<span class="${pctClass(g[key])}">${formatPct(g[key])}</span>`;
   return `
-    <div class="signal-stats-group">
-      <h2>${title}</h2>
-      ${subtitle ? `<p class="hero-sub" style="margin:0 0 10px;">${subtitle}</p>` : ''}
-      <div class="signal-stats">
-        <div class="price-row"><span class="price-label">Positions clôturées</span><span class="price-value">${closed.length}</span></div>
-        <div class="price-row"><span class="price-label">Positions en cours</span><span class="price-value">${open.length}</span></div>
-        <div class="price-row"><span class="price-label">Taux de réussite</span><span class="price-value">${returns.length ? formatPct(winCount / returns.length * 100) : '—'}</span></div>
-        <div class="price-row"><span class="price-label">Rendement moyen</span><span class="price-value ${pctClass(avgReturn)}">${formatPct(avgReturn)}</span></div>
-        <div class="price-row"><span class="price-label">Vs indice (alpha moyen)</span><span class="price-value ${pctClass(avgAlpha)}">${formatPct(avgAlpha)}</span></div>
-      </div>
-    </div>`;
+    <table class="signal-stats-table">
+      <thead><tr><th></th><th>Périmètre du bot</th><th>Hors périmètre</th></tr></thead>
+      <tbody>
+        ${row('Positions clôturées', g => g.closed)}
+        ${row('Positions en cours', g => g.open)}
+        ${row('Taux de réussite', g => formatPct(g.winRate))}
+        ${row('Rendement moyen', pctCell('avgReturn'))}
+        ${row('Vs indice (alpha)', pctCell('avgAlpha'))}
+      </tbody>
+    </table>`;
 }
 
 function renderSignalTracking(positions) {
@@ -6166,14 +6459,12 @@ function renderSignalTracking(positions) {
   const outOfScopePositions = positions.filter(p => SIGNAL_TRACKING_OUT_OF_SCOPE_INDICES.has(p.index));
 
   const statsHtml = buildSignalStatsHtml(
-    botScopePositions, companiesByTicker,
-    'Dans le périmètre du bot',
-    'CAC 40, DAX, Nasdaq 100, Dow Jones, FTSE 100, SMI, IBEX 35, FTSE MIB — indices sur lesquels le bot Actions peut réellement passer un ordre.',
-  ) + buildSignalStatsHtml(
-    outOfScopePositions, companiesByTicker,
-    'Hors périmètre (suivi seul)',
-    'Nikkei 225 et Hang Seng — signaux suivis en paper-trading mais jamais exécutés par le bot réel (v1).',
-  ) + `<p class="hero-sub signal-live-note">Positions en cours valorisées au cours du jour<span class="signal-live-mark">*</span> (pas un flux intrajournalier).</p>`;
+    computeSignalStats(botScopePositions, companiesByTicker),
+    computeSignalStats(outOfScopePositions, companiesByTicker),
+  ) + `
+    <p class="signal-scope-note">Périmètre du bot : CAC 40, DAX, Nasdaq 100, Dow Jones, FTSE 100, SMI, IBEX 35, FTSE MIB.</p>
+    <p class="signal-scope-note">Hors périmètre : Nikkei 225, Hang Seng, Euro Stoxx 50, SBF 120, AEX, S&amp;P 500 (suivis en paper-trading, jamais exécutés par le bot réel).</p>
+    <p class="hero-sub signal-live-note">Positions en cours valorisées au cours du jour<span class="signal-live-mark">*</span> (pas un flux intrajournalier).</p>`;
 
   const rowsHtml = positions.length ? positions.map(p => {
     const curReturn = positionCurrentReturnPct(p, companiesByTicker);
@@ -6227,7 +6518,8 @@ function renderSignalTracking(positions) {
       <div class="signal-tracking-info">
         <div class="eyebrow">Indices</div>
         <h1>Suivi des signaux</h1>
-        <p class="hero-sub" style="margin:0 0 20px;">Performance réelle des signaux "entrée" depuis leur mise en place — comparée à l'indice et à un simple achat-conservation. Pas un conseil d'investissement.</p>
+        <p class="updated signal-updated">${document.getElementById('indicesUpdated').textContent}</p>
+        <p class="hero-sub" style="margin:0 0 12px;">Performance réelle des signaux "entrée" depuis leur mise en place — comparée à l'indice et à un simple achat-conservation. Pas un conseil d'investissement.</p>
         ${statsHtml}
       </div>
       <div class="signal-table-wrap">

@@ -1,7 +1,7 @@
 // Service worker minimal : met en cache la coquille de l'app pour qu'elle
 // s'ouvre instantanément, sans bloquer les mises à jour de score.json qui
 // doit toujours être rechargé depuis le réseau (données du jour).
-const CACHE_NAME = "analyse-or-shell-v93";
+const CACHE_NAME = "analyse-or-shell-v98";
 // index.html charge portfolio.js à la demande (premier clic sur l'onglet
 // Portefeuille) — le précacher ici garantit qu'il est disponible hors-ligne
 // dès la première ouverture de l'app, pas seulement après une première

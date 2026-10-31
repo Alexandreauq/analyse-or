@@ -9119,3 +9119,82 @@ def test_indices_ai_any_budget_exceeded_checks_all_three_windows(tmp_path):
 
     assert _REAL_INDICES_AI_ANY_BUDGET_EXCEEDED(
         daily_path=daily, weekly_path=weekly, monthly_path=monthly) is True
+
+
+def test_generate_one_returns_cached_html_without_calling_opus_when_quarter_unchanged(tmp_path, monkeypatch):
+    indices_json = tmp_path / "indices.json"
+    indices_json.write_text(json.dumps({"companies": [
+        {"ticker": "AAA", "name": "Entreprise Test", "index": "CAC40",
+         "financial_analysis_html": "<p>deja a jour</p>",
+         "financial_analysis_quarter": "2026-09-30"},
+    ]}), encoding="utf-8")
+    monkeypatch.setattr(indices_score, "OUTPUT_JSON_PATH", str(indices_json))
+    monkeypatch.setattr(indices_score, "fetch_company_financials",
+                         lambda ticker: {**_fake_ratios(), "latest_quarter_date": "2026-09-30"})
+    appels_opus = []
+    monkeypatch.setattr(indices_score, "generate_financial_analysis",
+                         lambda *a, **k: appels_opus.append(a) or "<p>ne devrait jamais arriver</p>")
+
+    result = indices_score.generate_one("AAA")
+
+    assert appels_opus == []
+    assert result == {"html": "<p>deja a jour</p>", "genere": False}
+
+
+def test_generate_one_calls_opus_and_patches_the_file_when_quarter_changed(tmp_path, monkeypatch):
+    indices_json = tmp_path / "indices.json"
+    indices_json.write_text(json.dumps({"companies": [
+        {"ticker": "AAA", "name": "Entreprise Test", "index": "CAC40",
+         "financial_analysis_html": "<p>ancienne</p>",
+         "financial_analysis_quarter": "2026-06-30"},
+        {"ticker": "BBB", "name": "Autre Entreprise", "index": "CAC40",
+         "financial_analysis_html": "<p>ne doit pas changer</p>",
+         "financial_analysis_quarter": "2026-06-30"},
+    ]}), encoding="utf-8")
+    monkeypatch.setattr(indices_score, "OUTPUT_JSON_PATH", str(indices_json))
+    monkeypatch.setattr(indices_score, "fetch_company_financials",
+                         lambda ticker: {**_fake_ratios(), "latest_quarter_date": "2026-09-30"})
+    monkeypatch.setattr(indices_score, "generate_financial_analysis",
+                         lambda *a, **k: "<p>nouvelle analyse</p>")
+    monkeypatch.setattr(indices_score, "_git_commit_and_push", lambda *a, **k: None)
+    monkeypatch.setattr(indices_score, "fetch_risk_free_rate", lambda *a, **k: 2.5)
+    monkeypatch.setattr(indices_score, "fetch_fx_rate_to_usd", lambda *a, **k: 1.0)
+
+    result = indices_score.generate_one("AAA")
+
+    assert result == {"html": "<p>nouvelle analyse</p>", "genere": True}
+    patched = json.loads(indices_json.read_text(encoding="utf-8"))
+    aaa = next(c for c in patched["companies"] if c["ticker"] == "AAA")
+    bbb = next(c for c in patched["companies"] if c["ticker"] == "BBB")
+    assert aaa["financial_analysis_html"] == "<p>nouvelle analyse</p>"
+    assert aaa["financial_analysis_quarter"] == "2026-09-30"
+    assert bbb["financial_analysis_html"] == "<p>ne doit pas changer</p>"  # non touchée
+
+
+def test_generate_one_returns_unavailable_for_an_unknown_ticker(tmp_path, monkeypatch):
+    indices_json = tmp_path / "indices.json"
+    indices_json.write_text(json.dumps({"companies": []}), encoding="utf-8")
+    monkeypatch.setattr(indices_score, "OUTPUT_JSON_PATH", str(indices_json))
+
+    result = indices_score.generate_one("INCONNU")
+
+    assert result == {"html": None, "genere": False}
+
+
+def test_generate_one_keeps_old_html_when_opus_generation_fails(tmp_path, monkeypatch):
+    indices_json = tmp_path / "indices.json"
+    indices_json.write_text(json.dumps({"companies": [
+        {"ticker": "AAA", "name": "Entreprise Test", "index": "CAC40",
+         "financial_analysis_html": "<p>ancienne analyse valide</p>",
+         "financial_analysis_quarter": "2026-06-30"},
+    ]}), encoding="utf-8")
+    monkeypatch.setattr(indices_score, "OUTPUT_JSON_PATH", str(indices_json))
+    monkeypatch.setattr(indices_score, "fetch_company_financials",
+                         lambda ticker: {**_fake_ratios(), "latest_quarter_date": "2026-09-30"})
+    monkeypatch.setattr(indices_score, "generate_financial_analysis", lambda *a, **k: None)
+    monkeypatch.setattr(indices_score, "fetch_risk_free_rate", lambda *a, **k: 2.5)
+    monkeypatch.setattr(indices_score, "fetch_fx_rate_to_usd", lambda *a, **k: 1.0)
+
+    result = indices_score.generate_one("AAA")
+
+    assert result == {"html": "<p>ancienne analyse valide</p>", "genere": False}

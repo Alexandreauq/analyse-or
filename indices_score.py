@@ -15,10 +15,13 @@ Installation :
     pip install requests yfinance pandas
 """
 
+import argparse
 import json
 import math
 import os
 import smtplib
+import subprocess
+import sys
 import time
 import traceback
 import xml.etree.ElementTree as ET
@@ -6715,6 +6718,84 @@ def _compute_health_summary(companies: list[dict]) -> dict:
     }
 
 
+_REPO_ROOT = os.path.dirname(os.path.abspath(__file__))
+
+
+def _git_commit_and_push(ticker: str) -> None:
+    """Commit + push docs/indices.json depuis le repertoire du depot
+    (indices_score.py est a sa racine). git pull --rebase --autostash
+    d'abord : le run quotidien (indices.yml) peut avoir pousse entre le
+    moment ou generate_one a lu le fichier et celui ou il le reecrit --
+    meme precaution que la section "Publier" de indices.yml/daily.yml.
+    N'importe quelle etape qui echoue leve CalledProcessError, remonte
+    tel quel a l'appelant (generate_one ne catch pas cette exception :
+    une regeneration non publiee doit etre visible dans les logs, pas
+    silencieusement avalee)."""
+    subprocess.run(["git", "add", "docs/indices.json"], cwd=_REPO_ROOT, check=True, timeout=30)
+    resultat = subprocess.run(["git", "diff", "--staged", "--quiet"], cwd=_REPO_ROOT, timeout=30)
+    if resultat.returncode == 0:
+        return  # rien a committer (le contenu patche est identique a l'existant)
+    subprocess.run(
+        ["git", "commit", "-m", f"Analyse financiere a la demande : {ticker}"],
+        cwd=_REPO_ROOT, check=True, timeout=30)
+    subprocess.run(["git", "pull", "--rebase", "--autostash"], cwd=_REPO_ROOT, check=True, timeout=60)
+    subprocess.run(["git", "push"], cwd=_REPO_ROOT, check=True, timeout=60)
+
+
+def generate_one(ticker: str) -> dict:
+    """Génère (ou renvoie le cache existant pour) financial_analysis_html
+    pour UN SEUL ticker -- voir le mode CLI --generate-one, appelé par
+    la route FastAPI de assistant_ia via un sous-processus (le module
+    reste ainsi "lecture seule" pour ses propres besoins). Ne lève
+    jamais d'exception liée au contenu (ticker inconnu, échec Opus) --
+    toujours {"html": ..., "genere": bool} ; une erreur git réelle,
+    elle, remonte (voir _git_commit_and_push)."""
+    try:
+        with open(OUTPUT_JSON_PATH, "r", encoding="utf-8") as fh:
+            payload = json.load(fh)
+    except Exception:
+        return {"html": None, "genere": False}
+
+    companies = payload.get("companies", [])
+    entry = next((c for c in companies if c.get("ticker") == ticker), None)
+    if entry is None:
+        return {"html": None, "genere": False}
+
+    data = fetch_company_financials(ticker)
+    current_quarter = data["latest_quarter_date"]
+    if current_quarter is not None and current_quarter == entry.get("financial_analysis_quarter") \
+            and entry.get("financial_analysis_html"):
+        return {"html": entry["financial_analysis_html"], "genere": False}
+
+    currency = INDEX_CURRENCY.get(entry.get("index"), "EUR")
+    fetched_rate = fetch_risk_free_rate(RISK_FREE_SERIES_BY_CURRENCY.get(currency, FRED_RISK_FREE_SERIES))
+    risk_free_rate = fetched_rate if fetched_rate is not None else load_risk_free_rate_cache().get(currency)
+    fx_rate_to_usd = fetch_fx_rate_to_usd(currency)
+
+    market_cap = (
+        data["current_price"] * data["shares_outstanding"]
+        if data["current_price"] is not None else None
+    )
+    wacc = estimate_wacc(
+        risk_free_rate, data["beta"], market_cap, data["total_debt"], data["tax_rate"],
+        fx_rate_to_usd, data.get("implied_cost_of_debt"),
+    )
+    cost_of_capital = wacc if wacc is not None else COST_OF_CAPITAL_PROXY
+    ratios_summary = build_ratios_summary(data, cost_of_capital)
+
+    generated = generate_financial_analysis(entry["name"], data["financial_context"], ratios_summary, ticker=ticker)
+    if generated is None:
+        return {"html": entry.get("financial_analysis_html"), "genere": False}
+
+    entry["financial_analysis_html"] = generated
+    entry["financial_analysis_quarter"] = current_quarter
+    entry["latest_quarter_date"] = current_quarter
+    with open(OUTPUT_JSON_PATH, "w", encoding="utf-8") as fh:
+        json.dump(payload, fh, ensure_ascii=False, indent=2, allow_nan=False)
+    _git_commit_and_push(ticker)
+    return {"html": generated, "genere": True}
+
+
 def main():
     # Un taux sans risque par devise (voir RISK_FREE_SERIES_BY_CURRENCY) —
     # un seul appel FRED par devise pour tout le run, pas par entreprise.
@@ -6846,4 +6927,10 @@ def main():
 
 
 if __name__ == "__main__":
+    _parser = argparse.ArgumentParser()
+    _parser.add_argument("--generate-one", metavar="TICKER")
+    _args = _parser.parse_args()
+    if _args.generate_one:
+        print(json.dumps(generate_one(_args.generate_one)))
+        sys.exit(0)
     main()

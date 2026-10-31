@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-30T07:24:40Z",
+  "generated_at": "2026-10-31T07:11:06Z",
   "healthy": true,
-  "summary_fr": "Le bot est actuellement actif et fonctionne normalement : sa dernière analyse date de quelques instants et aucune mise en pause n'est en vigueur. Depuis le début de la journée, il a évalué 445 situations de marché sans ouvrir de position, faute de signal d'entrée suffisamment clair. Sur les 7 derniers jours, il a évalué 3 986 situations et ouvert 4 positions, en restant volontairement prudent lorsque les conditions n'étaient pas favorables."
+  "summary_fr": "Le robot est actuellement actif et fonctionne normalement : sa dernière décision date de quelques instants. Sur les 7 derniers jours, il a évalué 5 409 situations de marché et ouvert 4 positions, en restant volontairement inactif le reste du temps, faute de signal d'entrée clair ou par prudence (publications économiques, volatilité). Aujourd'hui, 432 évaluations ont été réalisées, sans nouvelle position pour l'instant, ce qui est normal en fin de semaine, le marché de l'or étant fermé."
 }

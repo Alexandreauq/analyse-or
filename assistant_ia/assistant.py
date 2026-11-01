@@ -156,9 +156,18 @@ def run_assistant_loop(
     liens_collectes: list[dict] = []
     actus_collectes: list[dict] = []
     urls_actus_vues: set[str] = set()
+    # Un saut de paragraphe entre deux ITERATIONS distinctes (jamais
+    # entre deux blocs texte de la meme iteration) -- sans lui, une
+    # phrase emise avant un appel d'outil se colle au texte de
+    # l'iteration suivante (ex. "...actualites.## Le mecanisme"), ce
+    # qui casse la reconnaissance des titres "## " par
+    # finalizeStructuredText cote client (voir revue finale du
+    # 2026-11-01).
+    texte_deja_emis = False
 
     for iteration in range(MAX_TOOL_ITERATIONS):
         try:
+            premier_bloc_texte = True
             with client.messages.stream(
                 model=MODEL,
                 max_tokens=16000,
@@ -169,7 +178,12 @@ def run_assistant_loop(
             ) as stream:
                 for bloc in stream:
                     if bloc.type == "text" and bloc.text:
-                        yield {"type": "texte", "texte": bloc.text}
+                        texte = bloc.text
+                        if premier_bloc_texte and texte_deja_emis:
+                            texte = "\n\n" + texte
+                        premier_bloc_texte = False
+                        texte_deja_emis = True
+                        yield {"type": "texte", "texte": texte}
                 reponse = stream.get_final_message()
         except Exception as e:
             yield {"type": "erreur", "detail": str(e)}

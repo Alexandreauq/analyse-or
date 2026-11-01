@@ -6982,11 +6982,11 @@ async function renderCompanyAnalysis(company) {
     contenuWrap.classList.remove('ai-analysis-loading');
     contenuWrap.innerHTML = resultat.disponible
       ? resultat.html
-      : '<p>Analyse non disponible pour le moment.</p>';
+      : (company.financial_analysis_html || '<p>Analyse non disponible pour le moment.</p>');
   } catch (erreur) {
     if (contenuWrap.isConnected) {
       contenuWrap.classList.remove('ai-analysis-loading');
-      contenuWrap.innerHTML = '<p>Analyse non disponible pour le moment.</p>';
+      contenuWrap.innerHTML = company.financial_analysis_html || '<p>Analyse non disponible pour le moment.</p>';
     }
   }
 }

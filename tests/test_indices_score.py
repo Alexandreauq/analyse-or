@@ -9141,6 +9141,31 @@ def test_generate_one_returns_cached_html_without_calling_opus_when_quarter_unch
     assert result == {"html": "<p>deja a jour</p>", "genere": False}
 
 
+def test_generate_one_does_not_wipe_known_quarter_when_latest_quarter_is_unknown(tmp_path, monkeypatch):
+    indices_json = tmp_path / "indices.json"
+    indices_json.write_text(json.dumps({"companies": [
+        {"ticker": "AAA", "name": "Entreprise Test", "index": "CAC40",
+         "financial_analysis_html": "<p>ancienne analyse valide</p>",
+         "financial_analysis_quarter": "2026-06-30",
+         "latest_quarter_date": "2026-06-30"},
+    ]}), encoding="utf-8")
+    monkeypatch.setattr(indices_score, "OUTPUT_JSON_PATH", str(indices_json))
+    monkeypatch.setattr(indices_score, "fetch_company_financials",
+                         lambda ticker: {**_fake_ratios(), "latest_quarter_date": None})
+    appels_opus = []
+    monkeypatch.setattr(indices_score, "generate_financial_analysis",
+                         lambda *a, **k: appels_opus.append(a) or "<p>ne devrait jamais arriver</p>")
+
+    result = indices_score.generate_one("AAA")
+
+    assert appels_opus == []
+    assert result == {"html": "<p>ancienne analyse valide</p>", "genere": False}
+    patched = json.loads(indices_json.read_text(encoding="utf-8"))
+    aaa = next(c for c in patched["companies"] if c["ticker"] == "AAA")
+    assert aaa["financial_analysis_quarter"] == "2026-06-30"
+    assert aaa["latest_quarter_date"] == "2026-06-30"
+
+
 def test_generate_one_calls_opus_and_patches_the_file_when_quarter_changed(tmp_path, monkeypatch):
     indices_json = tmp_path / "indices.json"
     indices_json.write_text(json.dumps({"companies": [

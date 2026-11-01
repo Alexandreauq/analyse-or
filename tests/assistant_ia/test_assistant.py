@@ -646,3 +646,31 @@ def test_run_assistant_loop_adds_the_page_context_to_the_system_prompt():
     list(assistant.run_assistant_loop("Q", [], client=client, contexte="fiche de SAF.PA"))
 
     assert "fiche de SAF.PA" in client.messages.appels[0]["system"][0]["text"]
+
+
+def test_run_assistant_loop_inserts_a_paragraph_break_between_tool_iterations():
+    tool_use = _FakeBlock("tool_use", id="tu_1", name="fiche_entreprise", input={"ticker": "X"})
+    first_final = _FakeMessage(content=[tool_use], stop_reason="tool_use", usage=_FakeUsage(10, 5))
+    second_final = _FakeMessage(
+        content=[_FakeBlock("text", text="## Mon avis")], stop_reason="end_turn", usage=_FakeUsage(10, 10))
+    client = _FakeClient([
+        _FakeStream(["Je regarde les actualites."], first_final),
+        _FakeStream(["## Mon avis"], second_final),
+    ])
+
+    evenements = list(assistant.run_assistant_loop(
+        "Q", [], client=client, tool_dispatch=lambda n, i: {"ok": True}))
+
+    textes = [e["texte"] for e in evenements if e["type"] == "texte"]
+    assert textes == ["Je regarde les actualites.", "\n\n## Mon avis"]
+
+
+def test_run_assistant_loop_does_not_insert_a_break_within_the_same_iteration():
+    final = _FakeMessage(
+        content=[_FakeBlock("text", text="Bonjour.")], stop_reason="end_turn", usage=_FakeUsage(10, 10))
+    client = _FakeClient([_FakeStream(["Bon", "jour."], final)])
+
+    evenements = list(assistant.run_assistant_loop("Q", [], client=client))
+
+    textes = [e["texte"] for e in evenements if e["type"] == "texte"]
+    assert textes == ["Bon", "jour."]

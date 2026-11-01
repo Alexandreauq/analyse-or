@@ -31,6 +31,33 @@ function pendingWords(shownText, fullText, final) {
   return words;
 }
 
+const SECTION_TITLE_RE = /^## (.+)$/;
+
+// Reconstruit `target` ligne par ligne a partir du texte final complet,
+// toujours via textContent/createElement (jamais innerHTML, voir
+// l'en-tete de ce fichier) : une ligne "## Titre" devient un titre de
+// section stylise (vert si c'est exactement "Mon avis"), toute autre
+// ligne non vide reste un paragraphe normal. Appelee une seule fois,
+// quand le flux est termine (voir sync() plus bas) — jamais pendant la
+// revelation mot par mot.
+function finalizeStructuredText(target, fullText) {
+  target.replaceChildren();
+  for (const ligne of fullText.split('\n')) {
+    if (!ligne.trim()) continue;
+    const correspond = ligne.trim().match(SECTION_TITLE_RE);
+    const div = document.createElement('div');
+    if (correspond) {
+      const titre = correspond[1].trim();
+      div.className = titre.toLowerCase() === 'mon avis' ? 'ai-section-title-avis' : 'ai-section-title';
+      div.textContent = titre;
+    } else {
+      div.className = 'ai-paragraph';
+      div.textContent = ligne;
+    }
+    target.appendChild(div);
+  }
+}
+
 function createWordReveal(target, opts) {
   const reduceMotion = !!(opts && opts.reduceMotion);
   const onProgress = (opts && opts.onProgress) || (() => {});
@@ -47,7 +74,11 @@ function createWordReveal(target, opts) {
 
   const sync = () => {
     target.classList.toggle('rv-streaming', !isDone());
-    if (isDone() && !doneFired) { doneFired = true; onDone(); }
+    if (isDone() && !doneFired) {
+      doneFired = true;
+      finalizeStructuredText(target, full);
+      onDone();
+    }
   };
 
   const appendWord = (word, animated) => {
@@ -159,5 +190,8 @@ function createWordReveal(target, opts) {
 }
 
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { REVEAL_WORD_MS, REVEAL_FLUSH_MS, REVEAL_FADE_MS, tokenizeWords, pendingWords, createWordReveal };
+  module.exports = {
+    REVEAL_WORD_MS, REVEAL_FLUSH_MS, REVEAL_FADE_MS,
+    tokenizeWords, pendingWords, createWordReveal, finalizeStructuredText,
+  };
 }

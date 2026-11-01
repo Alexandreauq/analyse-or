@@ -4841,7 +4841,10 @@ function lireAVoixHaute(texte, bouton) {
   window.speechSynthesis.cancel();
   document.querySelectorAll('.ai-listen[aria-pressed="true"]').forEach(b => b.setAttribute('aria-pressed', 'false'));
   if (enCours) return;
-  const u = new SpeechSynthesisUtterance(texte);
+  // Les marqueurs de titre "## " (voir SYSTEM_PROMPT) ne doivent pas
+  // etre prononces au micro -- voir revue finale du 2026-11-01, I3.
+  const texteParle = texte.replace(/^## /gm, '');
+  const u = new SpeechSynthesisUtterance(texteParle);
   u.lang = 'fr-FR';
   u.onend = u.onerror = () => bouton.setAttribute('aria-pressed', 'false');
   bouton.setAttribute('aria-pressed', 'true');

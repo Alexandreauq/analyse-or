@@ -206,6 +206,17 @@ def test_financial_analysis_rate_limits_each_visitor(client, monkeypatch):
     assert codes == [200, 200, 429]
 
 
+def test_financial_analysis_rate_limits_by_visitor_not_by_ticker(client, monkeypatch):
+    monkeypatch.setattr(api, "_generate_one_subprocess",
+                         lambda ticker: {"html": "<p>x</p>", "genere": False})
+    monkeypatch.setattr(api, "_frequence_analyse", api.limits.RateLimiter(2, 60))
+
+    tickers = ["AAA", "BBB", "CCC"]
+    codes = [client.get(f"/financial-analysis/{t}").status_code for t in tickers]
+
+    assert codes == [200, 200, 429]
+
+
 def test_financial_analysis_answers_503_when_a_generation_is_already_running(client, monkeypatch):
     monkeypatch.setattr(api, "_frequence_analyse", api.limits.RateLimiter(100, 60))
     monkeypatch.setattr(api, "_concurrence_analyse", api.limits.ConcurrencyLimiter(1))

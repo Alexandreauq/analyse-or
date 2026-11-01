@@ -167,6 +167,113 @@ def test_run_assistant_loop_collects_proposer_lien_calls_separately():
     assert liens_events[0]["liens"][0]["cible_valeur"] == "MC.PA"
 
 
+def test_run_assistant_loop_collects_actualites_entreprise_articles():
+    tool_use_1 = _FakeBlock("tool_use", id="tu_1", name="actualites_entreprise", input={"ticker": "MC.PA"})
+    first_final = _FakeMessage(content=[tool_use_1], stop_reason="tool_use", usage=_FakeUsage(50, 5))
+    second_final = _FakeMessage(
+        content=[_FakeBlock("text", text="Reponse.")], stop_reason="end_turn", usage=_FakeUsage(10, 10))
+    client = _FakeClient([_FakeStream([], first_final), _FakeStream(["Reponse."], second_final)])
+    article = {"titre": "LVMH recule", "source": "Reuters", "date": "2026-11-01T10:00+00:00",
+               "resume_court": "Resume.", "url": "https://reuters.com/a"}
+
+    def fake_dispatch(name, tool_input):
+        return {"ticker": "MC.PA", "articles": [article]}
+
+    evenements = list(assistant.run_assistant_loop("Q", [], client=client, tool_dispatch=fake_dispatch))
+
+    actus_events = [e for e in evenements if e["type"] == "actus"]
+    assert len(actus_events) == 1
+    assert actus_events[0]["articles"] == [article]
+
+
+def test_run_assistant_loop_does_not_collect_an_actualites_error():
+    tool_use_1 = _FakeBlock("tool_use", id="tu_1", name="actualites_marche", input={})
+    first_final = _FakeMessage(content=[tool_use_1], stop_reason="tool_use", usage=_FakeUsage(50, 5))
+    second_final = _FakeMessage(
+        content=[_FakeBlock("text", text="Reponse.")], stop_reason="end_turn", usage=_FakeUsage(10, 10))
+    client = _FakeClient([_FakeStream([], first_final), _FakeStream(["Reponse."], second_final)])
+
+    def fake_dispatch(name, tool_input):
+        return {"erreur": "actualites indisponibles (HTTPError)"}
+
+    evenements = list(assistant.run_assistant_loop("Q", [], client=client, tool_dispatch=fake_dispatch))
+
+    assert [e for e in evenements if e["type"] == "actus"] == []
+
+
+def test_run_assistant_loop_deduplicates_actualites_by_url_across_calls():
+    tool_use_1 = _FakeBlock("tool_use", id="tu_1", name="actualites_entreprise", input={"ticker": "MC.PA"})
+    tool_use_2 = _FakeBlock("tool_use", id="tu_2", name="actualites_marche", input={})
+    first_final = _FakeMessage(content=[tool_use_1, tool_use_2], stop_reason="tool_use", usage=_FakeUsage(50, 5))
+    second_final = _FakeMessage(
+        content=[_FakeBlock("text", text="Reponse.")], stop_reason="end_turn", usage=_FakeUsage(10, 10))
+    client = _FakeClient([_FakeStream([], first_final), _FakeStream(["Reponse."], second_final)])
+    article_commun = {"titre": "Marche global", "source": "AFP", "date": "2026-11-01T09:00+00:00",
+                       "resume_court": "R.", "url": "https://afp.com/a"}
+
+    def fake_dispatch(name, tool_input):
+        # Le meme article (meme url) revient des deux outils dans ce test —
+        # cas reel : actualites_entreprise et actualites_marche peuvent
+        # toutes deux remonter un meme article GDELT.
+        return {"articles": [article_commun]}
+
+    evenements = list(assistant.run_assistant_loop("Q", [], client=client, tool_dispatch=fake_dispatch))
+
+    actus_events = [e for e in evenements if e["type"] == "actus"]
+    assert len(actus_events) == 1
+    assert actus_events[0]["articles"] == [article_commun]
+
+
+def test_run_assistant_loop_caps_actualites_at_max_articles():
+    tool_use_1 = _FakeBlock("tool_use", id="tu_1", name="actualites_entreprise", input={"ticker": "MC.PA"})
+    tool_use_2 = _FakeBlock("tool_use", id="tu_2", name="actualites_marche", input={})
+    first_final = _FakeMessage(content=[tool_use_1, tool_use_2], stop_reason="tool_use", usage=_FakeUsage(50, 5))
+    second_final = _FakeMessage(
+        content=[_FakeBlock("text", text="Reponse.")], stop_reason="end_turn", usage=_FakeUsage(10, 10))
+    client = _FakeClient([_FakeStream([], first_final), _FakeStream(["Reponse."], second_final)])
+
+    def fake_dispatch(name, tool_input):
+        suffixe = "ent" if name == "actualites_entreprise" else "marche"
+        return {"articles": [
+            {"titre": f"Titre {suffixe} {i}", "source": "S", "date": "2026-11-01T09:00+00:00",
+             "resume_court": "R", "url": f"https://x.com/{suffixe}-{i}"}
+            for i in range(4)
+        ]}
+
+    evenements = list(assistant.run_assistant_loop("Q", [], client=client, tool_dispatch=fake_dispatch))
+
+    actus_events = [e for e in evenements if e["type"] == "actus"]
+    assert len(actus_events) == 1
+    assert len(actus_events[0]["articles"]) == assistant.news.MAX_ARTICLES
+
+
+def test_run_assistant_loop_emits_actus_even_when_the_iteration_cap_is_hit():
+    # Pas besoin de monkeypatcher usage.record_usage ici : l'autouse
+    # fixture _no_real_usage_writes (haut de ce fichier) le fait deja
+    # pour tous les tests de ce module.
+    tool_use_actus = _FakeBlock("tool_use", id="tu_1", name="actualites_entreprise", input={"ticker": "X"})
+    tool_use_fiche = _FakeBlock("tool_use", id="tu_2", name="fiche_entreprise", input={"ticker": "X"})
+    premier_tour = _FakeMessage(content=[tool_use_actus, tool_use_fiche], stop_reason="tool_use", usage=_FakeUsage(10, 5))
+    tour_suivant = _FakeMessage(content=[tool_use_fiche], stop_reason="tool_use", usage=_FakeUsage(10, 5))
+    client = _FakeClient(
+        [_FakeStream([], premier_tour)]
+        + [_FakeStream([], tour_suivant) for _ in range(assistant.MAX_TOOL_ITERATIONS - 1)]
+    )
+    article = {"titre": "T", "source": "S", "date": "2026-11-01T09:00+00:00", "resume_court": "R",
+               "url": "https://x.com/a"}
+
+    def fake_dispatch(name, tool_input):
+        if name == "actualites_entreprise":
+            return {"articles": [article]}
+        return {"ok": True}
+
+    evenements = list(assistant.run_assistant_loop("Q", [], client=client, tool_dispatch=fake_dispatch))
+
+    actus_events = [e for e in evenements if e["type"] == "actus"]
+    assert len(actus_events) == 1
+    assert actus_events[0]["articles"] == [article]
+
+
 def test_run_assistant_loop_stops_at_the_iteration_cap(monkeypatch):
     enregistres = []
     monkeypatch.setattr(assistant.usage, "record_usage", lambda i, o, model=None: enregistres.append((i, o)))

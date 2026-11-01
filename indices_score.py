@@ -6786,7 +6786,9 @@ def generate_one(ticker: str) -> dict:
     try:
         data = fetch_company_financials(ticker)
         current_quarter = data["latest_quarter_date"]
-        if current_quarter is not None and current_quarter == entry.get("financial_analysis_quarter") \
+        if current_quarter is None:
+            return {"html": entry.get("financial_analysis_html"), "genere": False}
+        if current_quarter == entry.get("financial_analysis_quarter") \
                 and entry.get("financial_analysis_html"):
             return {"html": entry["financial_analysis_html"], "genere": False}
 

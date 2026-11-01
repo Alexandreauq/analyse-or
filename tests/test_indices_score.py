@@ -9223,3 +9223,29 @@ def test_generate_one_keeps_old_html_when_fetch_company_financials_raises(tmp_pa
     captured = capsys.readouterr()
     assert captured.out == ""
     assert "CertificateVerifyError" in captured.err
+
+
+def test_git_commit_and_push_pulls_before_committing(monkeypatch):
+    appels = []
+
+    class _FakeResultat:
+        def __init__(self, returncode=0):
+            self.returncode = returncode
+            self.stdout = ""
+            self.stderr = ""
+
+    def _fake_run(cmd, **kwargs):
+        appels.append((cmd, kwargs))
+        if cmd[:2] == ["git", "diff"]:
+            return _FakeResultat(returncode=1)  # il y a bien un diff a committer
+        return _FakeResultat(returncode=0)
+
+    monkeypatch.setattr(indices_score.subprocess, "run", _fake_run)
+
+    indices_score._git_commit_and_push("AAA")
+
+    verbes = [cmd[1] for cmd, _ in appels]
+    assert verbes.index("pull") < verbes.index("commit")
+    assert len(appels) == 5
+    for cmd, kwargs in appels:
+        assert kwargs.get("capture_output") is True, f"{cmd} ne capture pas stdout/stderr"

@@ -6736,15 +6736,23 @@ def _git_commit_and_push(ticker: str) -> None:
     tel quel a l'appelant (generate_one ne catch pas cette exception :
     une regeneration non publiee doit etre visible dans les logs, pas
     silencieusement avalee)."""
-    subprocess.run(["git", "add", "docs/indices.json"], cwd=_REPO_ROOT, check=True, timeout=30)
-    resultat = subprocess.run(["git", "diff", "--staged", "--quiet"], cwd=_REPO_ROOT, timeout=30)
+    subprocess.run(["git", "pull", "--rebase", "--autostash"],
+                    cwd=_REPO_ROOT, check=True, timeout=60,
+                    capture_output=True, text=True)
+    subprocess.run(["git", "add", "docs/indices.json"],
+                    cwd=_REPO_ROOT, check=True, timeout=30,
+                    capture_output=True, text=True)
+    resultat = subprocess.run(["git", "diff", "--staged", "--quiet"],
+                               cwd=_REPO_ROOT, timeout=30,
+                               capture_output=True, text=True)
     if resultat.returncode == 0:
         return  # rien a committer (le contenu patche est identique a l'existant)
     subprocess.run(
         ["git", "commit", "-m", f"Analyse financiere a la demande : {ticker}"],
-        cwd=_REPO_ROOT, check=True, timeout=30)
-    subprocess.run(["git", "pull", "--rebase", "--autostash"], cwd=_REPO_ROOT, check=True, timeout=60)
-    subprocess.run(["git", "push"], cwd=_REPO_ROOT, check=True, timeout=60)
+        cwd=_REPO_ROOT, check=True, timeout=30,
+        capture_output=True, text=True)
+    subprocess.run(["git", "push"], cwd=_REPO_ROOT, check=True, timeout=60,
+                    capture_output=True, text=True)
 
 
 def generate_one(ticker: str) -> dict:

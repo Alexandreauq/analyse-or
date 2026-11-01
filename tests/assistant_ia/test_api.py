@@ -179,6 +179,23 @@ def test_financial_analysis_reports_unavailable_on_malformed_subprocess_output(c
     assert response.json() == {"html": None, "disponible": False}
 
 
+def test_generate_one_subprocess_uses_the_current_interpreter(monkeypatch):
+    appels = []
+
+    class _FakeResultat:
+        stdout = '{"html": null, "genere": false}'
+
+    def _fake_run(cmd, **kwargs):
+        appels.append(cmd)
+        return _FakeResultat()
+
+    monkeypatch.setattr(api.subprocess, "run", _fake_run)
+
+    api._generate_one_subprocess("AAA")
+
+    assert appels[0][0] == api.sys.executable
+
+
 def test_financial_analysis_rate_limits_each_visitor(client, monkeypatch):
     monkeypatch.setattr(api, "_generate_one_subprocess",
                          lambda ticker: {"html": "<p>x</p>", "genere": False})

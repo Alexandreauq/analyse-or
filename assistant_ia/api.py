@@ -8,6 +8,7 @@ import hmac
 import json
 import os
 import subprocess
+import sys
 
 from fastapi import FastAPI, Header, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -71,7 +72,7 @@ def _generate_one_subprocess(ticker: str) -> dict:
     (jamais n'avale) sur sortie invalide/timeout : l'appelant (la route)
     décide du repli visiteur."""
     resultat = subprocess.run(
-        ["python3", "indices_score.py", "--generate-one", ticker],
+        [sys.executable, "indices_score.py", "--generate-one", ticker],
         cwd=_REPO_ROOT, capture_output=True, text=True,
         timeout=ANALYSE_SUBPROCESS_TIMEOUT_S,
     )

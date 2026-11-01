@@ -131,9 +131,10 @@ async def ask(request: Request, x_bot_token: str | None = Header(default=None)):
 
 
 @app.get("/financial-analysis/{ticker}")
-def financial_analysis(ticker: str):
-    if not _frequence_analyse.autorise(ticker):
-        raise HTTPException(status_code=429, detail="Trop de demandes pour ce ticker : réessaie dans une minute.")
+def financial_analysis(ticker: str, request: Request):
+    adresse = request.client.host if request.client else "inconnue"
+    if not _frequence_analyse.autorise(adresse):
+        raise HTTPException(status_code=429, detail="Trop de demandes en peu de temps : réessaie dans une minute.")
     if not _concurrence_analyse.tente():
         raise HTTPException(status_code=503, detail="Une génération est déjà en cours : réessaie dans un instant.")
     try:

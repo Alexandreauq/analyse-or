@@ -196,3 +196,46 @@ def compute_quantity_by_risk(
     budget_eur = balance_eur * risk_pct / (abs(stop_loss_pct) / 100)
     return compute_quantity(
         ticker, index_currency, unit_price_indices, fx_rate, budget_eur=budget_eur)
+
+
+# Plancher anti-commission (brainstorming borne, 2026-11-01) : sur un
+# budget nominal minuscule (ex. 5 EUR a 20 EUR de solde reel), la
+# commission IBKR minimum par ordre peut depasser le risque meme du
+# stop-loss -- le bot passerait alors de vrais ordres a esperance
+# negative par construction (les frais mangent plus que ce que le
+# stop-loss limite). Grille "Fixed - IB SmartRouting" (route standard),
+# verifiee en direct sur
+# interactivebrokers.ie/en/pricing/commissions-stocks.php le
+# 2026-11-01 -- a revalider si IBKR change sa grille tarifaire.
+MIN_COMMISSION_LOCAL = {
+    "CAC40": 3.00, "DAX": 3.00, "FTSEMIB": 3.00, "IBEX35": 3.00,  # EUR
+    "FTSE": 3.00,   # GBP
+    "SMI": 5.00,    # CHF
+    "NASDAQ": 1.00, "DOW": 1.00,  # USD
+}
+COMMISSION_SEUIL_PCT = 0.01  # rejette si la commission minimale depasse 1% du budget
+
+
+def rejette_si_commission_trop_elevee(
+    index: str, budget_eur_nominal: float, fx_rate: float = 1.0,
+) -> bool:
+    """True si la commission minimale estimee pour `index` depasse
+    COMMISSION_SEUIL_PCT (1%) du budget nominal EUR de la position --
+    motif dedie 'commission_disproportionnee' cote appelant (voir
+    portfolio.select_entries : le signal ecarte ici ne consomme ni
+    place ni budget, meme philosophie que les autres plafonds).
+
+    `fx_rate` (EUR -> devise de l'indice, meme convention que
+    compute_quantity) convertit la commission minimale (donnee dans sa
+    devise locale) vers EUR avant comparaison. Indice hors de
+    MIN_COMMISSION_LOCAL, fx_rate invalide ou budget invalide : bloque
+    par defaut (True) plutot que de laisser passer un ordre dont le
+    ratio frais/notionnel ne peut pas etre verifie -- meme convention
+    que compute_quantity_by_risk's 'budget_risque_invalide' (echec de
+    validation = rejet, jamais un passage silencieux)."""
+    commission_min_locale = MIN_COMMISSION_LOCAL.get(index)
+    if (commission_min_locale is None or not _is_positive_number(fx_rate)
+            or not _is_positive_number(budget_eur_nominal)):
+        return True
+    commission_min_eur = commission_min_locale / fx_rate
+    return commission_min_eur > COMMISSION_SEUIL_PCT * budget_eur_nominal

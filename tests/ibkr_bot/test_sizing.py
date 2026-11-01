@@ -335,3 +335,42 @@ def test_compute_quantity_by_risk_nan_stop_loss_returns_a_dedicated_reason():
     plan = sizing.compute_quantity_by_risk(
         "MC.PA", "EUR", 415.0, 1.0, balance_eur=1000.0, risk_pct=0.05, stop_loss_pct=float("nan"))
     assert plan["motif"] == "budget_risque_invalide"
+
+
+# --- plancher anti-commission (brainstorming borne, 2026-11-01) -------
+
+def test_rejette_si_commission_trop_elevee_blocks_a_tiny_budget():
+    """5 EUR de budget (20 EUR de solde reel, voir
+    compute_quantity_by_risk) sur le CAC40 : commission minimale 3 EUR
+    > 1% de 5 EUR (0.05 EUR) -> rejette."""
+    assert sizing.rejette_si_commission_trop_elevee("CAC40", 5.0, fx_rate=1.0) is True
+
+
+def test_rejette_si_commission_trop_elevee_allows_a_funded_budget():
+    """1250 EUR de budget (5000 EUR de solde) sur le CAC40 : commission
+    minimale 3 EUR <= 1% de 1250 EUR (12.50 EUR) -> ne rejette pas."""
+    assert sizing.rejette_si_commission_trop_elevee("CAC40", 1250.0, fx_rate=1.0) is False
+
+
+def test_rejette_si_commission_trop_elevee_converts_foreign_currency_minimums():
+    """FTSE : commission minimale 3 GBP. A fx_rate=0.85 (EUR->GBP),
+    3 GBP = 3/0.85 = 3.53 EUR."""
+    assert sizing.rejette_si_commission_trop_elevee("FTSE", 500.0, fx_rate=0.85) is False
+    assert sizing.rejette_si_commission_trop_elevee("FTSE", 100.0, fx_rate=0.85) is True
+
+
+def test_rejette_si_commission_trop_elevee_unknown_index_blocks_by_default():
+    """Indice hors de MIN_COMMISSION_LOCAL : bloque plutot que de
+    laisser passer un ordre dont le ratio frais/notionnel ne peut pas
+    etre verifie -- meme convention que compute_quantity_by_risk."""
+    assert sizing.rejette_si_commission_trop_elevee("SBF120", 1250.0, fx_rate=1.0) is True
+
+
+def test_rejette_si_commission_trop_elevee_invalid_fx_rate_blocks_by_default():
+    assert sizing.rejette_si_commission_trop_elevee("CAC40", 1250.0, fx_rate=0.0) is True
+    assert sizing.rejette_si_commission_trop_elevee("CAC40", 1250.0, fx_rate=None) is True
+
+
+def test_rejette_si_commission_trop_elevee_invalid_budget_blocks_by_default():
+    assert sizing.rejette_si_commission_trop_elevee("CAC40", 0.0, fx_rate=1.0) is True
+    assert sizing.rejette_si_commission_trop_elevee("CAC40", None, fx_rate=1.0) is True

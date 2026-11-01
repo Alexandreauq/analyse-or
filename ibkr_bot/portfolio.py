@@ -13,7 +13,7 @@ from datetime import datetime
 
 from dateutil.relativedelta import relativedelta
 
-from ibkr_bot.sizing import BUDGET_EUR
+from ibkr_bot.sizing import BUDGET_EUR, rejette_si_commission_trop_elevee
 
 MAX_POSITIONS = 10  # positions ouvertes PAR LE BOT, pas sur le compte (spec 3.4 / 9.5)
 
@@ -120,8 +120,14 @@ def select_entries(
 
     ORDRE DES FILTRES, qui est lui-meme une regle de la spec :
     deja detenu -> contrat non resolu -> plan absent -> quantite nulle ->
-    plafond -> plafond entrees quotidien -> plafond secteur -> plafond indice ->
-    plafond zone -> solde. Le cas 0 action passe AVANT le plafond parce que
+    commission disproportionnee -> plafond -> plafond entrees quotidien ->
+    plafond secteur -> plafond indice -> plafond zone -> solde. Le cas
+    commission disproportionnee (brainstorming borne 2026-11-01, voir
+    sizing.rejette_si_commission_trop_elevee) suit le cas 0 action pour
+    la meme raison : "ce signal ne peut fondamentalement pas etre achete
+    a esperance positive" doit etre tranche avant toute consommation de
+    place, exactement comme un prix superieur au budget. Le cas 0 action
+    passe AVANT le plafond parce que
     "la place ainsi liberee reste disponible pour le signal suivant du classement"
     (spec 3.3) : inverser les deux perdrait un signal financable au profit d'un
     signal inachetable. Le contrat non resolu est verifie tot, avec les autres cas
@@ -201,6 +207,12 @@ def select_entries(
 
         if plan["quantite"] < 1:
             rejets.append({**base, "raison": plan["motif"] or "plan_indisponible"})
+            continue
+
+        if rejette_si_commission_trop_elevee(
+                signal.get("index") or "", plan.get("budget_eur_nominal", BUDGET_EUR),
+                fx_rate=plan.get("taux_de_change", 1.0)):
+            rejets.append({**base, "raison": "commission_disproportionnee"})
             continue
 
         if places < 1:

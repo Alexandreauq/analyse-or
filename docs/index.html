@@ -491,7 +491,10 @@
     font-size: 11.5px; font-weight: 600; color: var(--gold); text-transform: uppercase;
     letter-spacing: .03em; margin-top: 14px;
   }
-  .ai-paragraph { font-size: 15.5px; line-height: 1.65; color: var(--text); margin-top: 8px; }
+  /* Pas de font-size/line-height/color ici : herite de .ai-msg-text
+     (et de .ai-msg-text.is-error / .ab-thread .ai-msg-text) -- voir
+     revue finale du 2026-11-01, I2. */
+  .ai-paragraph { margin-top: 8px; }
   .ai-paragraph:first-child { margin-top: 0; }
   .ai-actions { gap: 2px; margin-top: 6px; }
   .ai-icon-btn {

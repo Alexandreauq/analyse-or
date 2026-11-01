@@ -7,6 +7,7 @@
 # logique des outils eux-memes (deja testee dans test_tools.py).
 import anthropic
 
+import assistant_ia.news as news
 import assistant_ia.tools as tools
 import assistant_ia.usage as usage
 
@@ -78,9 +79,15 @@ d'ambiguite entre plusieurs entreprises, utilise l'outil proposer_lien \
 a plusieurs choix. Si une information manque ou qu'une question est \
 ambigue, dis-le explicitement plutot que de deviner silencieusement.
 
-Reponds en texte brut, sans formatage markdown (pas de **gras**, pas de \
-listes a tirets, pas de titres) — utilise des phrases completes et des \
-retours a la ligne simples."""
+Pour une reponse qui depasse une ou deux phrases, structure-la en \
+plusieurs courts paragraphes, chacun precede d'un titre court (3 a 6 \
+mots) seul sur sa ligne, au format "## Titre" (ex. "## Le mecanisme") \
+— aucun autre formatage markdown (pas de **gras**, pas de listes a \
+tirets). Termine TOUJOURS par un paragraphe precede du titre exact \
+"## Mon avis", qui donne ta conclusion explicite et, si pertinent, ce \
+qui la ferait changer. Pour une reponse courte (un chiffre, une \
+confirmation simple, une seule idee), ces titres ne sont pas \
+necessaires — n'en mets pas s'il n'y a qu'un seul paragraphe."""
 
 NIVEAU_DEFAUT = "technique"
 # Deux niveaux seulement : meme reponse, meme chiffres, explication differente.
@@ -118,8 +125,12 @@ def run_assistant_loop(
     *, niveau=NIVEAU_DEFAUT, contexte=None, client=None, tool_dispatch=None,
 ):
     """Genere les evenements de la conversation : {"type": "texte", ...}
-    au fil du streaming, {"type": "liens", "liens": [...]} une fois tous
-    les appels proposer_lien collectes, puis {"type": "fin"}. N'accede
+    au fil du streaming (peut contenir des lignes "## Titre", voir
+    SYSTEM_PROMPT), {"type": "liens", "liens": [...]} une fois tous les
+    appels proposer_lien collectes, {"type": "actus", "articles": [...]}
+    une fois tous les articles actualites_entreprise/actualites_marche
+    collectes (dedoublonnes par url, plafonnes a news.MAX_ARTICLES), puis
+    {"type": "fin"}. N'accede
     jamais au reseau en dehors de l'API Anthropic elle-meme (voir
     tool_dispatch, qui appelle assistant_ia.tools, qui lit les fichiers
     publics/API bots — jamais ce module directement)."""
@@ -143,6 +154,8 @@ def run_assistant_loop(
     navigation = None
 
     liens_collectes: list[dict] = []
+    actus_collectes: list[dict] = []
+    urls_actus_vues: set[str] = set()
 
     for iteration in range(MAX_TOOL_ITERATIONS):
         try:
@@ -175,6 +188,8 @@ def run_assistant_loop(
                 yield {"type": "texte", "texte": "\n\n[reponse tronquee par la limite de longueur]"}
             if liens_collectes:
                 yield {"type": "liens", "liens": liens_collectes}
+            if actus_collectes:
+                yield {"type": "actus", "articles": actus_collectes}
             if navigation:
                 yield {"type": "navigation", **navigation}
             yield {"type": "fin"}
@@ -194,6 +209,13 @@ def run_assistant_loop(
                 liens_collectes.append(resultat)
             if bloc.name == "aller_vers" and "erreur" not in resultat:
                 navigation = resultat
+            if bloc.name in ("actualites_entreprise", "actualites_marche") and "erreur" not in resultat:
+                for article in resultat.get("articles", []):
+                    url = article.get("url")
+                    if url in urls_actus_vues or len(actus_collectes) >= news.MAX_ARTICLES:
+                        continue
+                    urls_actus_vues.add(url)
+                    actus_collectes.append(article)
             resultats_outils.append({
                 "type": "tool_result", "tool_use_id": bloc.id,
                 "content": str(resultat),
@@ -202,6 +224,8 @@ def run_assistant_loop(
 
     if liens_collectes:
         yield {"type": "liens", "liens": liens_collectes}
+    if actus_collectes:
+        yield {"type": "actus", "articles": actus_collectes}
     yield {
         "type": "texte",
         "texte": "\n\nJe n'ai pas pu rassembler toute l'information necessaire en une fois — essaie de reformuler en plusieurs questions plus precises.",

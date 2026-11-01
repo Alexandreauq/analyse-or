@@ -198,6 +198,57 @@ def test_select_entries_zero_share_signal_does_not_consume_a_slot():
     }]
 
 
+def test_select_entries_rejects_a_signal_whose_commission_eats_the_budget():
+    """Budget nominal 5 EUR (20 EUR de solde reel, risque 5%, stop 20%)
+    sur le CAC40 : commission minimale 3 EUR > 1% de 5 EUR -> rejette,
+    motif dedie, meme philosophie que le filtre 0 action : la place
+    reste disponible pour le signal suivant du classement."""
+    signaux = [_signal("CHER.PA", 90.0, index="CAC40"), _signal("B.PA", 48.8)]
+    plans = {
+        "CHER.PA": _plan("CHER.PA", budget_eur_nominal=5.0),
+        "B.PA": _plan("B.PA"),
+    }
+    contrats = _contrats(["CHER.PA", "B.PA"])
+
+    retenus, rejets = portfolio.select_entries(
+        signaux, [], plans, contrats, _CASH_ILLIMITE)
+
+    assert [r["signal"]["ticker"] for r in retenus] == ["B.PA"]
+    assert rejets == [{
+        "ticker": "CHER.PA", "rang": 1, "score": 90.0,
+        "raison": "commission_disproportionnee",
+    }]
+
+
+def test_select_entries_commission_rejection_does_not_consume_a_slot():
+    ouvertes = [_bot_position(f"OPEN{i}.PA", index="CAC40") for i in range(9)]
+    signaux = [_signal("CHER.PA", 90.0, index="CAC40"), _signal("B.PA", 48.8, index="NASDAQ")]
+    plans = {
+        "CHER.PA": _plan("CHER.PA", budget_eur_nominal=5.0),
+        "B.PA": _plan("B.PA"),
+    }
+    contrats = _contrats(["CHER.PA", "B.PA"])
+
+    retenus, rejets = portfolio.select_entries(
+        signaux, ouvertes, plans, contrats, _CASH_ILLIMITE)
+
+    assert [r["signal"]["ticker"] for r in retenus] == ["B.PA"]
+
+
+def test_select_entries_accepts_a_signal_with_a_properly_funded_budget():
+    """Budget nominal 1250 EUR (5000 EUR de solde) sur le CAC40 :
+    commission minimale 3 EUR <= 1% de 1250 EUR -> n'est pas rejete."""
+    signaux = [_signal("A.PA", 90.0, index="CAC40")]
+    plans = {"A.PA": _plan("A.PA", budget_eur_nominal=1250.0)}
+    contrats = _contrats(["A.PA"])
+
+    retenus, rejets = portfolio.select_entries(
+        signaux, [], plans, contrats, _CASH_ILLIMITE)
+
+    assert [r["signal"]["ticker"] for r in retenus] == ["A.PA"]
+    assert rejets == []
+
+
 def test_select_entries_skips_a_ticker_already_held_by_the_bot():
     signaux = [_signal("A.PA", 48.8), _signal("B.PA", 10.0)]
     plans = {"A.PA": _plan("A.PA"), "B.PA": _plan("B.PA")}
@@ -689,34 +740,41 @@ def test_select_entries_accepts_a_cost_exactly_equal_to_the_base_cash():
 def test_select_entries_uses_the_per_signal_risk_based_budget_for_the_balance_guard():
     """Avec un budget variable par signal (dimensionnement par le
     risque, Tache 3), le garde-fou de solde doit sommer le budget REEL
-    de chaque signal, pas une constante fixe -- deux signaux a 5 EUR
-    chacun doivent passer sur un solde de 10 EUR, la que l'ancien
-    comportement (BUDGET_EUR=500 fixe) les aurait tous les deux
-    rejetes."""
+    de chaque signal, pas une constante fixe -- deux signaux a 400 EUR
+    chacun doivent passer sur un solde de 800 EUR, la que l'ancien
+    comportement (BUDGET_EUR=500 fixe) en aurait rejete un des deux.
+    400 EUR (pas 5 EUR comme dans une version anterieure de ce test) :
+    au-dessus du plancher anti-commission (brainstorming 2026-11-01,
+    CAC40 minimum 3 EUR = 1% de 300 EUR) -- ce test porte sur le
+    garde-fou de solde, pas sur ce plancher, qui a sa propre
+    couverture dediee plus bas."""
     signaux = [_signal("A.PA", 48.8), _signal("B.PA", 26.9)]
     plans = {
-        "A.PA": _plan("A.PA", budget_eur_nominal=5.0),
-        "B.PA": _plan("B.PA", budget_eur_nominal=5.0),
+        "A.PA": _plan("A.PA", budget_eur_nominal=400.0),
+        "B.PA": _plan("B.PA", budget_eur_nominal=400.0),
     }
     contrats = _contrats(["A.PA", "B.PA"])
 
     retenus, rejets = portfolio.select_entries(
-        signaux, [], plans, contrats, base_cash=10.0)
+        signaux, [], plans, contrats, base_cash=800.0)
 
     assert [r["signal"]["ticker"] for r in retenus] == ["A.PA", "B.PA"]
     assert rejets == []
 
 
 def test_select_entries_rejects_when_the_per_signal_budget_exceeds_cash():
+    """400 EUR (pas 8 EUR) pour la meme raison que le test precedent :
+    rester au-dessus du plancher anti-commission, qui n'est pas ce que
+    ce test verifie."""
     signaux = [_signal("A.PA", 48.8), _signal("B.PA", 26.9)]
     plans = {
-        "A.PA": _plan("A.PA", budget_eur_nominal=8.0),
-        "B.PA": _plan("B.PA", budget_eur_nominal=8.0),
+        "A.PA": _plan("A.PA", budget_eur_nominal=400.0),
+        "B.PA": _plan("B.PA", budget_eur_nominal=400.0),
     }
     contrats = _contrats(["A.PA", "B.PA"])
 
     retenus, rejets = portfolio.select_entries(
-        signaux, [], plans, contrats, base_cash=10.0)
+        signaux, [], plans, contrats, base_cash=600.0)
 
     assert [r["signal"]["ticker"] for r in retenus] == ["A.PA"]
     assert rejets == [{"ticker": "B.PA", "rang": 2, "score": 26.9,

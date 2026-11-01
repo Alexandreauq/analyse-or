@@ -1193,15 +1193,21 @@ def test_dry_run_places_no_order_but_journals_everything(env):
     assert [e["ticker"] for e in journalise["entrees"]] == ["MC.PA", "ADBE"]
 
 
-def test_run_batch_sizes_the_entry_by_risk_based_budget_not_a_fixed_500(env):
+def test_run_batch_rejects_the_entry_on_commission_floor_at_real_undercapitalization(env):
     """Solde reel a 20 EUR (cas reel de sous-capitalisation, voir
-    sizing.compute_quantity_by_risk) : le budget nominal engage doit
-    valoir 20 * RISK_PCT(0.05) / (abs(STOP_LOSS_PCT)/100 = 0.20) = 5 EUR,
-    jamais BUDGET_EUR=500. A 4 EUR/action, la quantite doit donc etre 1
-    (floor(5/4)), jamais 125 (floor(500/4), l'ancien calcul) -- et le
-    signal ne doit plus etre rejete en solde_insuffisant comme il
-    l'aurait ete avec un budget nominal fixe de 500 EUR face a un solde
-    de 20 EUR."""
+    sizing.compute_quantity_by_risk) : le budget nominal engage vaut
+    20 * RISK_PCT(0.05) / (abs(STOP_LOSS_PCT)/100 = 0.20) = 5 EUR,
+    jamais BUDGET_EUR=500 -- MAIS le plancher anti-commission
+    (brainstorming borne 2026-11-01, sizing.rejette_si_commission_trop_elevee)
+    bloque maintenant ce signal avant tout ordre : la commission
+    minimale CAC40 (3 EUR) depasse 1% de 5 EUR (0.05 EUR). Avant ce
+    plancher, ce meme scenario aurait execute 1 action a 4 EUR avec
+    5 EUR de budget -- un ordre reel ou la commission seule depasse
+    largement le risque du stop-loss, a esperance negative par
+    construction. Le signal n'est plus non plus rejete en
+    solde_insuffisant (ce que l'ancien budget fixe de 500 EUR aurait
+    produit) : c'est bien le plancher anti-commission, pas le solde,
+    qui motive le rejet."""
     indices = {
         "updated": TODAY,
         "index_currency": {"CAC40": "EUR"},
@@ -1223,8 +1229,41 @@ def test_run_batch_sizes_the_entry_by_risk_based_budget_not_a_fixed_500(env):
                           account_id="U1", paths=env["paths"])
 
     assert not any(r["raison"] == "solde_insuffisant" for r in run["signaux_rejetes"])
+    assert [e["ticker"] for e in run["entrees"]] == []
+    assert [r["raison"] for r in run["signaux_rejetes"] if r["ticker"] == "MC.PA"] == [
+        "commission_disproportionnee"]
+
+
+def test_run_batch_sizes_the_entry_by_risk_based_budget_not_a_fixed_500(env):
+    """Solde finance a 6000 EUR (au-dela du plancher anti-commission,
+    voir le test precedent pour le cas 20 EUR sous-capitalise) : le
+    budget nominal engage doit valoir 6000 * RISK_PCT(0.05) /
+    (abs(STOP_LOSS_PCT)/100 = 0.20) = 1500 EUR, jamais BUDGET_EUR=500.
+    A 4 EUR/action, la quantite doit donc etre 375 (floor(1500/4)),
+    jamais 125 (floor(500/4), l'ancien calcul fixe)."""
+    indices = {
+        "updated": TODAY,
+        "index_currency": {"CAC40": "EUR"},
+        "companies": [{"ticker": "MC.PA", "index": "CAC40", "score": 55.2,
+                       "current_price": 4.0, "stage_label": None}],
+        "roster": ["MC.PA"],
+    }
+    with open(env["paths"]["indices"], "w", encoding="utf-8") as fh:
+        json.dump(indices, fh)
+    tracking = {"positions": [
+        {"id": "MC.PA-2026-09-15", "ticker": "MC.PA", "name": "LVMH", "index": "CAC40",
+         "status": "open", "entry_date": TODAY, "entry_price": 3.8,
+         "target_exit_price": 6.0}]}
+    with open(env["paths"]["tracking"], "w", encoding="utf-8") as fh:
+        json.dump(tracking, fh)
+    gw = FakeGateway(base_cash=6000.0)
+
+    run = daily.run_batch(TODAY, gw=gw, sleep_fn=lambda s: None,
+                          account_id="U1", paths=env["paths"])
+
+    assert not any(r["raison"] == "solde_insuffisant" for r in run["signaux_rejetes"])
     assert [e["ticker"] for e in run["entrees"]] == ["MC.PA"]
-    assert run["entrees"][0]["quantite"] == 1   # floor(5/4), pas floor(500/4)=125
+    assert run["entrees"][0]["quantite"] == 375   # floor(1500/4), pas floor(500/4)=125
 
 
 # --- coupe-circuit journalier (shared_risk.CircuitBreaker) ----------

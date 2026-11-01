@@ -467,6 +467,32 @@
   }
   .ai-link::after { content: ' →'; white-space: pre; }
   .ai-link:hover { background: rgba(185,154,104,.16); }
+  .ai-actus { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+  .ai-actus:empty { display: none; }
+  .ai-actu-card {
+    display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px;
+    border-radius: 12px; border: 1px solid var(--border); text-decoration: none; color: inherit;
+  }
+  .ai-actu-card:hover { background: rgba(185,154,104,.1); }
+  /* Meme motif que .hero-logo-wrap/.hero-logo (fiches d'indices, ligne 735) :
+     case clippee, sans fond ni bordure, l'image en object-fit:contain. */
+  .ai-actu-logo { width: 28px; height: 28px; border-radius: 8px; overflow: hidden; flex-shrink: 0; }
+  .ai-actu-logo img { width: 100%; height: 100%; object-fit: contain; display: block; }
+  .ai-actu-body { min-width: 0; flex: 1; }
+  .ai-actu-title { font-size: 13.5px; font-weight: 500; color: var(--text); line-height: 1.4; }
+  .ai-actu-summary { font-size: 12.5px; color: var(--muted); line-height: 1.5; margin-top: 3px; }
+  .ai-actu-meta { font-size: 11.5px; color: var(--text-faint); margin-top: 4px; }
+  .ai-section-title {
+    font-size: 11.5px; font-weight: 600; color: var(--muted); text-transform: uppercase;
+    letter-spacing: .03em; margin-top: 14px;
+  }
+  .ai-section-title:first-child { margin-top: 0; }
+  .ai-section-title-avis {
+    font-size: 11.5px; font-weight: 600; color: var(--gold); text-transform: uppercase;
+    letter-spacing: .03em; margin-top: 14px;
+  }
+  .ai-paragraph { font-size: 15.5px; line-height: 1.65; color: var(--text); margin-top: 8px; }
+  .ai-paragraph:first-child { margin-top: 0; }
   .ai-actions { gap: 2px; margin-top: 6px; }
   .ai-icon-btn {
     width: 30px; height: 30px; border-radius: 9px; border: 0; background: none; padding: 0;
@@ -4776,6 +4802,31 @@ function homeSearchLinksHtml(liens) {
             data-libelle="${escHtml(l.libelle)}">${escHtml(l.libelle)}</button>`).join('');
 }
 
+function faviconActuUrl(url) {
+  try { return `https://www.google.com/s2/favicons?domain=${new URL(url).hostname}&sz=64`; }
+  catch (e) { return null; }
+}
+
+function homeSearchActusHtml(articles) {
+  return (articles || []).map(a => {
+    const favicon = faviconActuUrl(a.url);
+    const logoHtml = favicon
+      ? `<div class="ai-actu-logo"><img src="${escHtml(favicon)}" alt="" loading="lazy" onerror="this.parentElement.style.display='none'"></div>`
+      : '';
+    const date = new Date(a.date);
+    const dateTexte = isNaN(date) ? '' : date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
+    return `
+    <a class="ai-actu-card" href="${escHtml(a.url)}" target="_blank" rel="noopener">
+      ${logoHtml}
+      <div class="ai-actu-body">
+        <div class="ai-actu-title">${escHtml(a.titre)}</div>
+        ${a.resume_court ? `<div class="ai-actu-summary">${escHtml(a.resume_court)}</div>` : ''}
+        <div class="ai-actu-meta">${escHtml(a.source)}${dateTexte ? ' · ' + escHtml(dateTexte) : ''}</div>
+      </div>
+    </a>`;
+  }).join('');
+}
+
 const ICONE_COPIER = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a1 1 0 0 1 1-1h10"/></svg>';
 const ICONE_ECOUTER = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9z M16 9a4 4 0 0 1 0 6"/></svg>';
 
@@ -4836,15 +4887,18 @@ function createHomeAnswer(thread, question, reduceMotion) {
       <span class="ai-avatar" aria-hidden="true"></span>
       <div class="ai-msg-body">
         <div class="ai-msg-text"></div>
+        <div class="ai-actus"></div>
         <div class="ai-links"></div>
         <div class="ai-actions"></div>
       </div>
     </div>`);
   const msg = thread.lastElementChild;
   const textEl = msg.querySelector('.ai-msg-text');
+  const actusEl = msg.querySelector('.ai-actus');
   const linksEl = msg.querySelector('.ai-links');
   const actionsEl = msg.querySelector('.ai-actions');
   let liens = [];
+  let actus = [];
   let pret = false;
 
   // Suit le bas de la conversation seulement si l'utilisateur n'a pas remonté.
@@ -4858,11 +4912,16 @@ function createHomeAnswer(thread, question, reduceMotion) {
     linksEl.classList.add('ai-reveal-after');
     wireHomeSearchLinkButtons(linksEl);
   };
+  const afficherActus = () => {
+    actusEl.innerHTML = homeSearchActusHtml(actus);
+    actusEl.classList.add('ai-reveal-after');
+  };
   const reveal = createWordReveal(textEl, {
     reduceMotion,
     onProgress: suivre,
     onDone: () => {
       pret = true;
+      afficherActus();
       afficherLiens();
       if (reveal.text()) wireAnswerActions(actionsEl, () => reveal.text());
       suivre();
@@ -4874,6 +4933,7 @@ function createHomeAnswer(thread, question, reduceMotion) {
     texte(t) { reveal.setText(t); },
     remplacer(t) { textEl.classList.add('is-error'); reveal.replace(t); },
     liens(l) { liens = l || []; if (pret) afficherLiens(); },
+    actus(a) { actus = a || []; if (pret) afficherActus(); },
     terminer() { reveal.finish(); },
     fixer(t, l) { liens = l || []; reveal.fix(t); },
     annuler() { reveal.cancel(); },
@@ -5001,6 +5061,7 @@ async function askAssistant(question) {
 
   let texteAccumule = '';
   let liensRecus = [];
+  let actusRecus = [];
   let erreurRecue = false;
   // La bulle de réponse n'existe qu'à partir du premier événement utile :
   // pendant la réflexion, c'est l'orbe qui est affiché (plus de bulle '…').
@@ -5070,6 +5131,10 @@ async function askAssistant(question) {
           // qu'une fois le texte révélé et le flux terminé.
           if (typer) typer.liens(liensRecus);
         }
+        if (evenement.type === 'actus') {
+          actusRecus = evenement.articles;
+          if (typer) typer.actus(actusRecus);
+        }
         if (evenement.type === 'erreur') {
           texteAccumule = `Une erreur est survenue : ${evenement.detail}`;
           erreurRecue = true;
@@ -5083,6 +5148,7 @@ async function askAssistant(question) {
       afficherReponse("Je n'ai pas de réponse à te donner pour l'instant.", liensRecus);
     } else {
       typer.liens(liensRecus);
+      typer.actus(actusRecus);
       typer.terminer();
     }
     if (estDepassee()) return;

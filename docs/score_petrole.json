@@ -1,5 +1,5 @@
 {
-  "date": "2026-11-01",
+  "date": "2026-11-02",
   "commodity": "petrole",
   "label": "Pétrole (WTI)",
   "composite_score": -0.5,
@@ -22,13 +22,13 @@
       "name": "Spread WTI-Brent",
       "score": -10,
       "weight": 0.19999999999999998,
-      "raw_value": "+9.26 $/baril (il y a ~2 mois : +7.16 $/baril)"
+      "raw_value": "+9.23 $/baril (il y a ~2 mois : +7.16 $/baril)"
     },
     {
       "name": "Dynamique récente",
       "score": 10.0,
       "weight": 0.26666666666666666,
-      "raw_value": "+18.2% vs MM200"
+      "raw_value": "+16.6% vs MM200"
     },
     {
       "name": "Stocks EIA",
@@ -38,9 +38,9 @@
     }
   ],
   "technical": {
-    "note": "Cours au-dessus de la MM200 (+18.2%) — tendance haussière",
-    "spot": 102.33000183105469,
-    "ma200": 86.55765007019043,
+    "note": "Cours au-dessus de la MM200 (+16.6%) — tendance haussière",
+    "spot": 100.91999816894531,
+    "ma200": 86.55060005187988,
     "unite": "$ / baril"
   },
   "calendar": [

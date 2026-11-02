@@ -2,7 +2,7 @@
   "date": "2026-11-02",
   "commodity": "gaz",
   "label": "Gaz naturel",
-  "composite_score": -45.0,
+  "composite_score": -47.0,
   "interpretation": "Défavorable — pas d'entrée même sur signal technique",
   "cftc_percentile": 0.641025641025641,
   "factors": [
@@ -20,15 +20,15 @@
     },
     {
       "name": "Dynamique récente",
-      "score": -9.264174009419428,
+      "score": -10.0,
       "weight": 0.26666666666666666,
-      "raw_value": "-4.6% vs MM200"
+      "raw_value": "-6.6% vs MM200"
     },
     {
       "name": "Dollar (DXY)",
       "score": -10,
       "weight": 0.13333333333333333,
-      "raw_value": "101.65 (il y a 2 mois : 99.56)"
+      "raw_value": "101.74 (il y a 2 mois : 99.56)"
     },
     {
       "name": "Stocks EIA",
@@ -38,9 +38,9 @@
     }
   ],
   "technical": {
-    "note": "Cours en-dessous de la MM200 (-4.6%) — tendance baissière",
-    "spot": 2.927999973297119,
-    "ma200": 3.070215003490448,
+    "note": "Cours en-dessous de la MM200 (-6.6%) — tendance baissière",
+    "spot": 2.867000102996826,
+    "ma200": 3.0699100041389467,
     "unite": "$ / MMBtu"
   },
   "calendar": [

@@ -22,13 +22,13 @@
       "name": "Dynamique récente",
       "score": -10.0,
       "weight": 0.26666666666666666,
-      "raw_value": "-5.9% vs MM200"
+      "raw_value": "-5.7% vs MM200"
     },
     {
       "name": "Dollar (DXY)",
       "score": -10,
       "weight": 0.13333333333333333,
-      "raw_value": "101.81 (il y a 2 mois : 99.00)"
+      "raw_value": "101.89 (il y a 2 mois : 99.00)"
     },
     {
       "name": "Stocks EIA",
@@ -38,9 +38,9 @@
     }
   ],
   "technical": {
-    "note": "Cours en-dessous de la MM200 (-5.9%) — tendance baissière",
-    "spot": 2.8889999389648438,
-    "ma200": 3.0687850034236908,
+    "note": "Cours en-dessous de la MM200 (-5.7%) — tendance baissière",
+    "spot": 2.8949999809265137,
+    "ma200": 3.068815003633499,
     "unite": "$ / MMBtu"
   },
   "calendar": [

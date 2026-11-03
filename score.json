@@ -14,7 +14,7 @@
       "name": "Dollar (DXY)",
       "score": -10,
       "weight": 0.15,
-      "raw_value": "101.81 (il y a 2 mois : 99.56)"
+      "raw_value": "101.87 (il y a 2 mois : 99.00)"
     },
     {
       "name": "Anticipations d'inflation",
@@ -48,9 +48,9 @@
     }
   ],
   "technical": {
-    "note": "Cours en-dessous de la MM200 (-12.3%) — tendance baissière",
-    "spot": 3956.0,
-    "ma200": 4512.849996337891
+    "note": "Cours en-dessous de la MM200 (-13.2%) — tendance baissière",
+    "spot": 3916.699951171875,
+    "ma200": 4512.65349609375
   },
   "calendar": [
     {
@@ -104,6 +104,33 @@
   ],
   "news": [
     {
+      "title": "L’argent et l’or testent des supports de long terme décisifs - Or.fr",
+      "date": "2026-11-03",
+      "link": "https://news.google.com/rss/articles/CBMie0FVX3lxTE40eUxjUFlEcGZLRkZWa0NqYjVVLW5fUXduZmJsSDMzS1FicEFxWlBvQVpmOXpCTmdCUlV2YVdjRlliYVJhT01BSmRLZjJQSU9TY09iTzRaV0g5YXU1Y3NpQUtHMnFuczZFNDVOTUFlYUNDb1poNGJHb3luNA?oc=5",
+      "source": "Or.fr",
+      "summary": "Cet article suggère que l'argent et l'or pourraient atteindre des niveaux de support de long terme jugés déterminants par les analystes, mais le contenu complet n'étant pas disponible, cette lecture reste une simple supposition fondée sur le seul titre.",
+      "sentiment": 0,
+      "importance": "mineure"
+    },
+    {
+      "title": "Dong vietnamien, cours de l’or – 3 novembre - Zonebourse Suisse",
+      "date": "2026-11-03",
+      "link": "https://news.google.com/rss/articles/CBMipgFBVV95cUxQQ1IxakdIN3JkQXgxRFk1a0J0amJpNlMyTndsU0lkdDYtSW9nQjlPVG9xMVV1S1U2eUtYQkJ3aHc1ZExhYjRnVVUxbWlaQko2aEJzaVAxMk5CalhXVGhNbzFKMDVuejR6aGJXZFZ1aTJrRDE5V1NFMnA3U1Y5X084T3V5LWd6ZTJpb1lOaHAwNFQwWVQyY1lhSEsxTGVEX3JveVVJSGdB?oc=5",
+      "source": "Zonebourse Suisse",
+      "summary": "",
+      "sentiment": 0,
+      "importance": "mineure"
+    },
+    {
+      "title": "Hausse des cours de l'or - وكالة الأنباء السعودية",
+      "date": "2026-11-03",
+      "link": "https://news.google.com/rss/articles/CBMiSkFVX3lxTFA2ZGZ4WTg1RGs1M1VIZWhiN2ROTTlqemhXOHo4clJ2QWVKcDQ5MmtLZzhoWFBvbWlBWG9MQmR3eXUtcV9OR0ZrTUdn?oc=5",
+      "source": "وكالة الأنباء السعودية",
+      "summary": "",
+      "sentiment": 0,
+      "importance": "mineure"
+    },
+    {
       "title": "Les cours de l'or ont fortement chuté fin octobre. S'agit-il de l'effondrement du mythe de la valeur refuge ou d'une recherche de liquidités - XTB.com",
       "date": "2026-10-30",
       "link": "https://news.google.com/rss/articles/CBMiiwJBVV95cUxPNXBrNkVXUlNQV0hYNEVSbkpwUVZGVzFvRVdkN3d4cXZscW55WE9TUzRLNzFvWnJkSEZsWU9SWl81RGkyRXhRS1ZuelRlQ1ZSQVo3MEdVOXRTWHZsd3o3bDlTbEdrVzBXRUpxZ0NxWjdCeEQ0VGhLcWxYNDIxaDIzOU5vcEtzN3VfYlM3cXlLeGF4TW5pU0w5OHp1cC1VVFpsRnF4ZlNVSDBtdFl5cnU3Y3lBVFVCRmNhUnRhSC1QSDN2OHVIV3pwaEhnWWVKTHRhQ0hIVGw5cEtJdGQ4QXI3MFNTSk5ENWE4X3JmUlVsSTdCWS1YdlN6MGFFb0xSVGFsOHlCaV9JSkxkTTg?oc=5",
@@ -120,37 +147,25 @@
       "summary": "Cet article suggère que les anticipations de politiques monétaires de la Réserve fédérale américaine évoluent de manière à exercer une pression baissière sur les cours de l'or, tandis que l'argent connaîtrait une faiblesse marquée atteignant ses plus bas niveaux en près d'un an.",
       "sentiment": -1,
       "importance": "notable"
-    },
-    {
-      "title": "Les actions des sociétés minières aurifères progressent alors que les cours de l'or remontent légèrement dans - Boursorama",
-      "date": "2026-11-02",
-      "link": "https://news.google.com/rss/articles/CBMizgJBVV95cUxQUUl2RDItLUtJMUdnMzdybzNmWVFLTy1vbzJnTkRISF9YdmppVF9ldXYtY1Y1bER3U1ZKVHduSW9nSlNPenpEdUYwV1pLZU5MWWg5Snk3bkhYcmhZWGctWlJWSXBJWTBDaWg0bjZsdmx5cUVQd21iemotV2wwUzVXNUo4VlgwNk9DQzd0TkJJQnBwU041d3p2MnAyY2pOZDJWamxOdVg4VWh0V1EyS0k5UmN1cDZUNG9Ha05xcEZNOXdDcnZBeUY4TlpGMHU4UjRUYmpjOUJ5N3I0MEljazNVRFdad2t3NVc4YTJqaWg4UWFGeDRZQWFsTUpkQXlrMlBaSGpMU0J1TjNsakRPOGE3d2M2Q0E1YU1LbDBWdk9XNGJUa2t0N1M5b2l3RHFzUXI3dUdNVzNjcnZzNGhqZW9aZF9YYl82dTZIMFVYUjRB0gHTAkFVX3lxTE1GNmtBRFBtempVT0VVVlR6eXA5aGRzbkxvbGFwMVUtcnpZbHhqZWpEUkZRbTQzVWk4cms5VVpOVGVfclQzS2hENS1vSnhpVkMwdUduRG9TMnR1clc0emQwaGI0alM3TElNLVk1Y2Nfb2R0VUdHXzNrN3lBT3ZnN1VqXzZUcldjcUUwazJwZTZ0NldmZ0R3bzdkelBQVTlOX0NQV2paT0REOGhFNHdxY0ppNjJLSkNTMGhJMkphUTJSbDBqbk1HY3dvbnhSYmJwZEpZV0tOdTdwNXlKdXY4N2RURUVBX1Z2SmEwY3hkQ09fLWRMR2tIU3pFeXhzRV85dWJYZGluY21TdVlIZjJJcmMya1FMMlFUbUxTLUtkeXZ6Umt5RHpDUEw0ZnBvdm5aWVlGMlJQSmVHVUhqQ1d4Y3V0aWdiVFVlQWZKcDYxaDVZSG1RNA?oc=5",
-      "source": "Boursorama",
-      "summary": "",
-      "sentiment": 0,
-      "importance": "mineure"
-    },
-    {
-      "title": "Marché : En chute de près de 30% par rapport à ses records, l'or peut-il signer une remontada et redépasser les 5.000 dollars l'once? - BFM Bourse",
-      "date": "2026-11-01",
-      "link": "https://news.google.com/rss/articles/CBMimgJBVV95cUxON2tHeGVXeXpsM244Ty12NHllMTNQX3hZVHZTd1piSmlLTXdOMk43dFo4NmQ0T3dHNXF6U0Itb25tSmJuTTc2N25Xemo0WG1tVXpYSjdGMVl0bXloZ3V3ZEN4Mjd3cksyaVVXcVB4UHVDQ25RV0xQdEoyMzZfdFJtbm9MaHhFckszSkRzbGFkbnk1QXkwY1BqX19BV1QzaTB6RGtGbm1UMWhXd2c1TThrYlZBYzR3ajBxaFJ2Vk5QU19YTzZVYkdXYXVMNzVfNDVjTFM1YUFTeUk4RV9yOXp2ZWRMWk5JcUE1NjFweXZZbmllU0wyeGM2RDdGTGtuNFZJOUhuN1ByUlI0YTBZeVVpTTZuTTM0WmxNdXc?oc=5",
-      "source": "BFM Bourse",
-      "summary": "",
-      "sentiment": 0,
-      "importance": "mineure"
-    },
-    {
-      "title": "L’or continue de reculer, pourquoi ? - Investing.com France",
-      "date": "2026-11-02",
-      "link": "https://news.google.com/rss/articles/CBMigwFBVV95cUxPOC1YT09vVUFlanpLTVdQUzFaYU1VZXdKMjdMcFV6Y2d3SnQ3NTJJSlpnYU5GRDJRSUMxOUVxay1LaC1UZDdrTDVCWTBja0ZRbEpvb05zM3BuZVpWZTNraVZYZTZMX0xxQWJ2czl1YXVqV0c2Wm5aWEkyb1EwU3lFTDFYWQ?oc=5",
-      "source": "Investing.com France",
-      "summary": "Cet article suggère que l'or pourrait connaître une phase de repli sur les marchés, dont les causes précises restent à préciser faute de contenu disponible.",
-      "sentiment": -1,
-      "importance": "mineure"
     }
   ],
-  "analysis_html": "<h3>Contexte récent</h3><p>L'or traverse une phase de repli marquée depuis fin octobre. Selon les articles disponibles, le métal aurait perdu près de 30 % par rapport à ses records, situés au-delà de 5 000 dollars l'once. Ce recul s'accompagne d'une faiblesse de l'argent, tombé à son plus bas niveau depuis environ 11 mois, et de rebonds ponctuels limités, illustrés par la légère remontée des minières aurifères.</p><h3>Facteurs déterminants</h3><p>En pondérant chaque score par son poids, la plupart des facteurs restent favorables à l'or. Un seul facteur négatif, mais de forte amplitude, compense une grande partie de ces soutiens.</p><ul><li><strong>Dollar (DXY), le principal frein :</strong> avec un score de -10,0 et un poids de 15 %, c'est la contribution pondérée la plus importante du score, et elle est négative. Le DXY est passé de 99,56 à 101,64 en deux mois, soit une hausse d'environ 2 %. Un dollar plus fort renchérit l'or pour les détenteurs d'autres devises et pèse traditionnellement sur son prix. Ce facteur est cohérent avec la baisse observée.</li><li><strong>Ton de la Fed, un soutien théorique important :</strong> le score de +5,0 (poids 15 %) constitue la plus forte contribution positive. Il s'agit toutefois d'une saisie manuelle, alors que l'actualité notable évoque une évolution des anticipations de taux défavorable à l'or. Cette appréciation mérite donc d'être confrontée aux derniers signaux de la Fed.</li><li><strong>Positionnement CFTC, un soutien de nature contrariante :</strong> la position nette de 186 451 contrats se situe au 26e percentile sur trois ans (score +4,7, poids 10 %). Le positionnement spéculatif est donc relativement allégé, ce qui suggère qu'une partie des liquidations a déjà eu lieu.</li><li><strong>Banques centrales et flux ETF, des soutiens structurels secondaires :</strong> les achats des banques centrales (+7,0, poids 5 %) et les flux vers GLD et IAU (+3,0, poids 10 %) apportent une contribution positive modeste. Ces deux scores reposent également sur des saisies manuelles.</li><li><strong>Taux réels et anticipations d'inflation, des facteurs quasi neutres :</strong> le taux réel US à 10 ans a légèrement reculé, de 2,68 % à 2,63 % sur environ 45 jours (score +1,0). Malgré son poids de 30 %, l'ampleur du mouvement reste trop faible pour peser fortement. Les anticipations d'inflation sont stables, à 2,34 % contre 2,33 % (score +0,3), et leur impact est marginal.</li></ul><h3>Actualités à retenir</h3><ul><li><strong>Évolution des perspectives de taux de la Fed (notable) :</strong> c'est la seule actualité classée notable. Elle attribue le recul de l'or à un changement des anticipations de politique monétaire américaine, qui réduirait l'espoir d'un assouplissement. Ce constat est cohérent avec la remontée du dollar intégrée dans le score. Il crée en revanche une tension avec le ton de la Fed saisi à +5, qui reflète une lecture plus favorable à l'or que celle suggérée par cette actualité.</li><li>Les autres actualités sont classées mineures. Elles confirment le contexte de correction prononcée depuis fin octobre et évoquent notamment une possible recherche de liquidités, mais elles n'apportent pas de facteur explicatif nouveau.</li></ul><h3>Synthèse</h3><p>Le score composite reflète un équilibre légèrement positif. Les soutiens de fond restent présents : un positionnement spéculatif allégé, des achats des banques centrales, des flux ETF positifs et des taux réels stables à légèrement baissiers. Ils sont toutefois largement neutralisés par l'appréciation du dollar, qui apparaît comme le facteur explicatif le plus direct de la baisse récente. Le principal point de vigilance concerne la cohérence entre le ton de la Fed saisi manuellement et l'actualité notable, qui décrit des anticipations de taux défavorables à l'or. Si cette dernière lecture se confirmait, la contribution positive de la Fed serait surestimée et l'équilibre du score s'en trouverait affaibli.</p>",
+  "analysis_html": "<h3>Contexte récent</h3><p>L’or sort d’une fin octobre marquée par une <strong>forte correction</strong>, selon plusieurs sources qui s’interrogent sur une recherche de liquidités plutôt que sur une remise en cause de son statut de valeur refuge. Début novembre, le métal jaune et l’argent semblent tester des zones de support techniques de long terme. Dans le même temps, les anticipations sur la politique de la Réserve fédérale évoluent dans un sens moins favorable aux métaux précieux.</p><h3>Facteurs déterminants</h3><ul><li><strong>Dollar (DXY), principal frein :</strong> avec un score de -10, au plancher de l’échelle, et un poids de 15 %, c’est le facteur dont la contribution pondérée est la plus lourde, autour de -1,5 point. Le DXY est passé d’environ 99,00 à 101,87 en deux mois, soit une hausse proche de 3 %. Un billet vert plus fort renchérit l’or pour les acheteurs hors zone dollar et pèse traditionnellement sur son cours.</li><li><strong>Ton de la Fed, principal soutien :</strong> le score de +5, pondéré à 15 %, contribue pour environ +0,75 point. Cette donnée est une <strong>saisie manuelle</strong>. Elle paraît en décalage avec l’actualité récente, qui évoque des perspectives de taux évoluant défavorablement pour l’or. Ce point mérite d’être réexaminé.</li><li><strong>Positionnement CFTC, appui contrarien :</strong> la position nette de 186 451 contrats se situe au 26e percentile sur trois ans. Ce positionnement spéculatif relativement allégé laisse de la marge pour une reconstitution des positions longues, d’où un score de +4,7 et une contribution d’environ +0,47 point.</li><li><strong>Achats des banques centrales et flux ETF :</strong> scores de +7 et +3, pondérés à 5 % et 10 %. Ils apportent un soutien structurel modeste, d’environ +0,35 et +0,3 point. Ces deux données sont également des saisies manuelles.</li><li><strong>Taux réels US 10 ans, facteur neutre malgré son poids :</strong> c’est le facteur le plus pondéré (30 %), mais les taux réels sont quasi stables, de 2,62 % à 2,60 %. Le score de +0,4 n’apporte donc qu’une contribution marginale, d’environ +0,12 point.</li><li><strong>Anticipations d’inflation, léger vent contraire :</strong> le recul de 2,34 % à 2,29 % affaiblit un peu la demande de couverture contre l’inflation. Le score de -1,7 représente environ -0,26 point.</li></ul><p>Les contributions positives, dispersées sur plusieurs facteurs, compensent globalement le poids très négatif du dollar. Le facteur le plus pondéré, les taux réels, reste quant à lui pratiquement sans effet faute de mouvement significatif.</p><h3>Actualités à retenir</h3><ul><li><strong>[Notable] Recul de l’or sur fond d’évolution des perspectives de taux de la Fed, argent au plus bas depuis 11 mois (BullionVault) :</strong> cette information va dans le sens de la pression baissière observée et cohère avec la vigueur du dollar, facteur le plus pénalisant du score. Elle contraste en revanche avec le score positif attribué au ton de la Fed. Si les anticipations monétaires se durcissent effectivement, cette composante pourrait être surestimée dans le score actuel.</li></ul><p>Les autres actualités sont mineures. Elles évoquent la forte baisse de fin octobre, un rebond ponctuel des cours et des tests de supports de long terme. Elles décrivent un marché en phase de consolidation après la correction, sans apporter de nouvel élément fondamental.</p><h3>Synthèse</h3><p>Le score composite de l’or reflète un <strong>équilibre fragile</strong> entre deux forces :</p><ul><li>d’un côté, un dollar nettement raffermi, principal vent contraire, et des anticipations d’inflation en léger repli ;</li><li>de l’autre, un ensemble de soutiens : un ton de la Fed jugé favorable, un positionnement spéculatif allégé, ainsi que des achats officiels et des flux ETF positifs.</li></ul><p>Les taux réels, stables, ne jouent pas leur rôle habituel de moteur directionnel. Plusieurs composantes favorables reposent sur des saisies manuelles, dont le ton de la Fed, qui semble en tension avec l’actualité récente. La lecture du score doit donc tenir compte de cette incertitude. L’évolution du dollar et la clarification des anticipations de politique monétaire apparaissent comme les éléments clés à suivre.</p>",
   "news_classifications": {
+    "https://news.google.com/rss/articles/CBMie0FVX3lxTE40eUxjUFlEcGZLRkZWa0NqYjVVLW5fUXduZmJsSDMzS1FicEFxWlBvQVpmOXpCTmdCUlV2YVdjRlliYVJhT01BSmRLZjJQSU9TY09iTzRaV0g5YXU1Y3NpQUtHMnFuczZFNDVOTUFlYUNDb1poNGJHb3luNA?oc=5": {
+      "summary": "Cet article suggère que l'argent et l'or pourraient atteindre des niveaux de support de long terme jugés déterminants par les analystes, mais le contenu complet n'étant pas disponible, cette lecture reste une simple supposition fondée sur le seul titre.",
+      "sentiment": 0,
+      "importance": "mineure"
+    },
+    "https://news.google.com/rss/articles/CBMipgFBVV95cUxQQ1IxakdIN3JkQXgxRFk1a0J0amJpNlMyTndsU0lkdDYtSW9nQjlPVG9xMVV1S1U2eUtYQkJ3aHc1ZExhYjRnVVUxbWlaQko2aEJzaVAxMk5CalhXVGhNbzFKMDVuejR6aGJXZFZ1aTJrRDE5V1NFMnA3U1Y5X084T3V5LWd6ZTJpb1lOaHAwNFQwWVQyY1lhSEsxTGVEX3JveVVJSGdB?oc=5": {
+      "summary": "",
+      "sentiment": 0,
+      "importance": "mineure"
+    },
+    "https://news.google.com/rss/articles/CBMiSkFVX3lxTFA2ZGZ4WTg1RGs1M1VIZWhiN2ROTTlqemhXOHo4clJ2QWVKcDQ5MmtLZzhoWFBvbWlBWG9MQmR3eXUtcV9OR0ZrTUdn?oc=5": {
+      "summary": "",
+      "sentiment": 0,
+      "importance": "mineure"
+    },
     "https://news.google.com/rss/articles/CBMiiwJBVV95cUxPNXBrNkVXUlNQV0hYNEVSbkpwUVZGVzFvRVdkN3d4cXZscW55WE9TUzRLNzFvWnJkSEZsWU9SWl81RGkyRXhRS1ZuelRlQ1ZSQVo3MEdVOXRTWHZsd3o3bDlTbEdrVzBXRUpxZ0NxWjdCeEQ0VGhLcWxYNDIxaDIzOU5vcEtzN3VfYlM3cXlLeGF4TW5pU0w5OHp1cC1VVFpsRnF4ZlNVSDBtdFl5cnU3Y3lBVFVCRmNhUnRhSC1QSDN2OHVIV3pwaEhnWWVKTHRhQ0hIVGw5cEtJdGQ4QXI3MFNTSk5ENWE4X3JmUlVsSTdCWS1YdlN6MGFFb0xSVGFsOHlCaV9JSkxkTTg?oc=5": {
       "summary": "",
       "sentiment": 0,
@@ -160,21 +175,6 @@
       "summary": "Cet article suggère que les anticipations de politiques monétaires de la Réserve fédérale américaine évoluent de manière à exercer une pression baissière sur les cours de l'or, tandis que l'argent connaîtrait une faiblesse marquée atteignant ses plus bas niveaux en près d'un an.",
       "sentiment": -1,
       "importance": "notable"
-    },
-    "https://news.google.com/rss/articles/CBMizgJBVV95cUxQUUl2RDItLUtJMUdnMzdybzNmWVFLTy1vbzJnTkRISF9YdmppVF9ldXYtY1Y1bER3U1ZKVHduSW9nSlNPenpEdUYwV1pLZU5MWWg5Snk3bkhYcmhZWGctWlJWSXBJWTBDaWg0bjZsdmx5cUVQd21iemotV2wwUzVXNUo4VlgwNk9DQzd0TkJJQnBwU041d3p2MnAyY2pOZDJWamxOdVg4VWh0V1EyS0k5UmN1cDZUNG9Ha05xcEZNOXdDcnZBeUY4TlpGMHU4UjRUYmpjOUJ5N3I0MEljazNVRFdad2t3NVc4YTJqaWg4UWFGeDRZQWFsTUpkQXlrMlBaSGpMU0J1TjNsakRPOGE3d2M2Q0E1YU1LbDBWdk9XNGJUa2t0N1M5b2l3RHFzUXI3dUdNVzNjcnZzNGhqZW9aZF9YYl82dTZIMFVYUjRB0gHTAkFVX3lxTE1GNmtBRFBtempVT0VVVlR6eXA5aGRzbkxvbGFwMVUtcnpZbHhqZWpEUkZRbTQzVWk4cms5VVpOVGVfclQzS2hENS1vSnhpVkMwdUduRG9TMnR1clc0emQwaGI0alM3TElNLVk1Y2Nfb2R0VUdHXzNrN3lBT3ZnN1VqXzZUcldjcUUwazJwZTZ0NldmZ0R3bzdkelBQVTlOX0NQV2paT0REOGhFNHdxY0ppNjJLSkNTMGhJMkphUTJSbDBqbk1HY3dvbnhSYmJwZEpZV0tOdTdwNXlKdXY4N2RURUVBX1Z2SmEwY3hkQ09fLWRMR2tIU3pFeXhzRV85dWJYZGluY21TdVlIZjJJcmMya1FMMlFUbUxTLUtkeXZ6Umt5RHpDUEw0ZnBvdm5aWVlGMlJQSmVHVUhqQ1d4Y3V0aWdiVFVlQWZKcDYxaDVZSG1RNA?oc=5": {
-      "summary": "",
-      "sentiment": 0,
-      "importance": "mineure"
-    },
-    "https://news.google.com/rss/articles/CBMimgJBVV95cUxON2tHeGVXeXpsM244Ty12NHllMTNQX3hZVHZTd1piSmlLTXdOMk43dFo4NmQ0T3dHNXF6U0Itb25tSmJuTTc2N25Xemo0WG1tVXpYSjdGMVl0bXloZ3V3ZEN4Mjd3cksyaVVXcVB4UHVDQ25RV0xQdEoyMzZfdFJtbm9MaHhFckszSkRzbGFkbnk1QXkwY1BqX19BV1QzaTB6RGtGbm1UMWhXd2c1TThrYlZBYzR3ajBxaFJ2Vk5QU19YTzZVYkdXYXVMNzVfNDVjTFM1YUFTeUk4RV9yOXp2ZWRMWk5JcUE1NjFweXZZbmllU0wyeGM2RDdGTGtuNFZJOUhuN1ByUlI0YTBZeVVpTTZuTTM0WmxNdXc?oc=5": {
-      "summary": "",
-      "sentiment": 0,
-      "importance": "mineure"
-    },
-    "https://news.google.com/rss/articles/CBMigwFBVV95cUxPOC1YT09vVUFlanpLTVdQUzFaYU1VZXdKMjdMcFV6Y2d3SnQ3NTJJSlpnYU5GRDJRSUMxOUVxay1LaC1UZDdrTDVCWTBja0ZRbEpvb05zM3BuZVpWZTNraVZYZTZMX0xxQWJ2czl1YXVqV0c2Wm5aWEkyb1EwU3lFTDFYWQ?oc=5": {
-      "summary": "Cet article suggère que l'or pourrait connaître une phase de repli sur les marchés, dont les causes précises restent à préciser faute de contenu disponible.",
-      "sentiment": -1,
-      "importance": "mineure"
     }
   }
 }

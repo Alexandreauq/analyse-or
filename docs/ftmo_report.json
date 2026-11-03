@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-02T07:24:19Z",
+  "generated_at": "2026-11-03T07:12:20Z",
   "healthy": true,
-  "summary_fr": "Le bot de trading sur l'or est actuellement actif et fonctionne normalement : il a évalué 445 situations de marché depuis le début de la journée et plus de 8 300 sur les 7 derniers jours. Sur cette semaine, 4 positions ont réellement été ouvertes ; aujourd'hui, aucune position n'a été ouverte, le bot ayant jugé les conditions peu favorables et préférant rester prudent. Cette sélectivité est voulue : le bot n'intervient que lorsque les conditions correspondent à sa stratégie."
+  "summary_fr": "Le robot est actuellement actif et fonctionne normalement : sa dernière analyse date de quelques secondes. Aujourd'hui, il a évalué 432 situations de marché sans ouvrir de position, car les conditions n'étaient pas jugées assez favorables (tendance trop marquée, signaux filtrés). Sur les 7 derniers jours, il a évalué 9 039 situations et ouvert 4 positions, ce qui reflète une approche sélective et prudente."
 }

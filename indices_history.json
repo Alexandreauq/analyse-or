@@ -654849,5 +654849,9098 @@
     "composite": 69.5,
     "composite_raw": 48.4,
     "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "MC.PA",
+    "composite": 13.2,
+    "composite_raw": 23.3,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "TTE.PA",
+    "composite": -3.9,
+    "composite_raw": 17.1,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "SU.PA",
+    "composite": 6.0,
+    "composite_raw": 20.5,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "SAN.PA",
+    "composite": 20.0,
+    "composite_raw": 25.9,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "BN.PA",
+    "composite": 23.3,
+    "composite_raw": 26.9,
+    "sentiment": 4.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "AIR.PA",
+    "composite": 77.2,
+    "composite_raw": 53.1,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "MT.AS",
+    "composite": -80.6,
+    "composite_raw": -21.8,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "OR.PA",
+    "composite": 73.2,
+    "composite_raw": 50.4,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "DG.PA",
+    "composite": 18.6,
+    "composite_raw": 25.6,
+    "sentiment": -2.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "RMS.PA",
+    "composite": 76.7,
+    "composite_raw": 52.8,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "ENGI.PA",
+    "composite": -25.0,
+    "composite_raw": 9.9,
+    "sentiment": 2.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "ORA.PA",
+    "composite": -38.8,
+    "composite_raw": 5.5,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "STMPA.PA",
+    "composite": -81.0,
+    "composite_raw": -22.2,
+    "sentiment": 2.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "STLAP.PA",
+    "composite": -90.2,
+    "composite_raw": -32.0,
+    "sentiment": -4.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "CA.PA",
+    "composite": 14.0,
+    "composite_raw": 23.7,
+    "sentiment": 2.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "SAF.PA",
+    "composite": 88.2,
+    "composite_raw": 60.3,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "LR.PA",
+    "composite": 23.0,
+    "composite_raw": 26.8,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "SGO.PA",
+    "composite": -27.9,
+    "composite_raw": 8.9,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "HO.PA",
+    "composite": 72.5,
+    "composite_raw": 50.2,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "VIE.PA",
+    "composite": 12.7,
+    "composite_raw": 23.1,
+    "sentiment": 4.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "KER.PA",
+    "composite": -97.1,
+    "composite_raw": -47.1,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "CAP.PA",
+    "composite": 38.4,
+    "composite_raw": 32.5,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "RI.PA",
+    "composite": -26.1,
+    "composite_raw": 9.3,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "RNO.PA",
+    "composite": -82.3,
+    "composite_raw": -23.3,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "ERF.PA",
+    "composite": -6.3,
+    "composite_raw": 16.2,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "EL.PA",
+    "composite": 4.5,
+    "composite_raw": 20.1,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "PUB.PA",
+    "composite": 79.4,
+    "composite_raw": 54.5,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "DSY.PA",
+    "composite": 80.5,
+    "composite_raw": 55.0,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "URW.PA",
+    "composite": -28.7,
+    "composite_raw": 8.7,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "ENX.PA",
+    "composite": 39.0,
+    "composite_raw": 32.8,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "FGR.PA",
+    "composite": -21.2,
+    "composite_raw": 11.3,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "BVI.PA",
+    "composite": 66.7,
+    "composite_raw": 47.3,
+    "sentiment": 2.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "EN.PA",
+    "composite": 15.4,
+    "composite_raw": 24.4,
+    "sentiment": 3.333333333333333
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "AI.PA",
+    "composite": 8.6,
+    "composite_raw": 21.5,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "ML.PA",
+    "composite": -19.9,
+    "composite_raw": 11.8,
+    "sentiment": 2.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "AC.PA",
+    "composite": -14.8,
+    "composite_raw": 14.0,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "BNP.PA",
+    "composite": -65.0,
+    "composite_raw": 12.2,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "GLE.PA",
+    "composite": -91.7,
+    "composite_raw": -2.6,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "ACA.PA",
+    "composite": -95.0,
+    "composite_raw": -6.7,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "CS.PA",
+    "composite": 62.1,
+    "composite_raw": 60.5,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "SAP.DE",
+    "composite": 91.7,
+    "composite_raw": 63.5,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "SIE.DE",
+    "composite": 9.7,
+    "composite_raw": 22.0,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "DTE.DE",
+    "composite": -12.7,
+    "composite_raw": 14.4,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "VOW3.DE",
+    "composite": -89.8,
+    "composite_raw": -31.4,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "MBG.DE",
+    "composite": -84.6,
+    "composite_raw": -26.4,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "BAS.DE",
+    "composite": -67.7,
+    "composite_raw": -10.9,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "BAYN.DE",
+    "composite": -89.8,
+    "composite_raw": -31.4,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "SHL.DE",
+    "composite": -45.7,
+    "composite_raw": 2.3,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "ADS.DE",
+    "composite": 64.6,
+    "composite_raw": 45.9,
+    "sentiment": 4.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "HEN3.DE",
+    "composite": 51.4,
+    "composite_raw": 38.4,
+    "sentiment": 2.5
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "DHL.DE",
+    "composite": 10.9,
+    "composite_raw": 22.4,
+    "sentiment": 3.333333333333333
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "IFX.DE",
+    "composite": -79.8,
+    "composite_raw": -20.3,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "MRK.DE",
+    "composite": -11.4,
+    "composite_raw": 15.1,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "FRE.DE",
+    "composite": -16.4,
+    "composite_raw": 13.3,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "CON.DE",
+    "composite": -83.6,
+    "composite_raw": -25.1,
+    "sentiment": 2.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "RWE.DE",
+    "composite": 5.1,
+    "composite_raw": 20.3,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "EOAN.DE",
+    "composite": 9.0,
+    "composite_raw": 21.8,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "RHM.DE",
+    "composite": 90.0,
+    "composite_raw": 61.9,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "BEI.DE",
+    "composite": 48.7,
+    "composite_raw": 37.3,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "MTX.DE",
+    "composite": 83.1,
+    "composite_raw": 56.4,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "DBK.DE",
+    "composite": -41.7,
+    "composite_raw": 18.4,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "CBK.DE",
+    "composite": -51.7,
+    "composite_raw": 14.3,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "ALV.DE",
+    "composite": 75.9,
+    "composite_raw": 65.1,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "MUV2.DE",
+    "composite": -82.8,
+    "composite_raw": -22.9,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "VNA.DE",
+    "composite": -35.2,
+    "composite_raw": 6.6,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "DB1.DE",
+    "composite": 68.7,
+    "composite_raw": 48.2,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "SY1.DE",
+    "composite": 0.3,
+    "composite_raw": 18.6,
+    "sentiment": 2.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "ZAL.DE",
+    "composite": 84.2,
+    "composite_raw": 57.2,
+    "sentiment": 2.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "DTG.DE",
+    "composite": -38.5,
+    "composite_raw": 5.6,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "QIA.DE",
+    "composite": 18.6,
+    "composite_raw": 25.6,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "BNR.DE",
+    "composite": -52.7,
+    "composite_raw": -1.8,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "HEI.DE",
+    "composite": 3.0,
+    "composite_raw": 19.6,
+    "sentiment": 4.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "BMW.DE",
+    "composite": -89.3,
+    "composite_raw": -31.2,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "ENR.DE",
+    "composite": 70.9,
+    "composite_raw": 49.5,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "G1A.DE",
+    "composite": 78.3,
+    "composite_raw": 53.6,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "HNR1.DE",
+    "composite": 96.6,
+    "composite_raw": 74.7,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "FME.DE",
+    "composite": -0.8,
+    "composite_raw": 18.2,
+    "sentiment": -2.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "PAH3.DE",
+    "composite": -73.3,
+    "composite_raw": -15.0,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "G24.DE",
+    "composite": 81.3,
+    "composite_raw": 55.5,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "ADBE",
+    "composite": 98.6,
+    "composite_raw": 72.3,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "AMD",
+    "composite": 8.2,
+    "composite_raw": 21.4,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "ABNB",
+    "composite": 62.6,
+    "composite_raw": 44.9,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "ALNY",
+    "composite": 80.8,
+    "composite_raw": 55.2,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "GOOGL",
+    "composite": 82.6,
+    "composite_raw": 56.2,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "GOOG",
+    "composite": 82.6,
+    "composite_raw": 56.2,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "AMZN",
+    "composite": 46.0,
+    "composite_raw": 36.5,
+    "sentiment": -2.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "AEP",
+    "composite": -57.5,
+    "composite_raw": -4.1,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "AMGN",
+    "composite": 55.9,
+    "composite_raw": 40.6,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "ADI",
+    "composite": -20.3,
+    "composite_raw": 11.7,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "AAPL",
+    "composite": 79.9,
+    "composite_raw": 54.8,
+    "sentiment": 2.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "AMAT",
+    "composite": 70.7,
+    "composite_raw": 49.2,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "APP",
+    "composite": 98.7,
+    "composite_raw": 72.6,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "ARM",
+    "composite": 3.4,
+    "composite_raw": 19.7,
+    "sentiment": 2.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "ASML",
+    "composite": 96.4,
+    "composite_raw": 67.7,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "ALAB",
+    "composite": -8.3,
+    "composite_raw": 15.7,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "ADSK",
+    "composite": 99.4,
+    "composite_raw": 75.6,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "ADP",
+    "composite": 86.2,
+    "composite_raw": 58.5,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "AXON",
+    "composite": -69.4,
+    "composite_raw": -12.1,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "BKR",
+    "composite": 57.4,
+    "composite_raw": 41.2,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "BKNG",
+    "composite": -32.5,
+    "composite_raw": 7.6,
+    "sentiment": -2.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "AVGO",
+    "composite": 43.9,
+    "composite_raw": 35.6,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "CDNS",
+    "composite": 92.3,
+    "composite_raw": 64.1,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "CTAS",
+    "composite": 74.9,
+    "composite_raw": 51.6,
+    "sentiment": -5.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "CSCO",
+    "composite": 48.1,
+    "composite_raw": 37.1,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "CCEP",
+    "composite": 39.3,
+    "composite_raw": 33.0,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "CMCSA",
+    "composite": 36.2,
+    "composite_raw": 31.7,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "CEG",
+    "composite": 45.4,
+    "composite_raw": 36.3,
+    "sentiment": -3.333333333333333
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "CPRT",
+    "composite": 65.4,
+    "composite_raw": 46.4,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "CRWV",
+    "composite": -96.4,
+    "composite_raw": -43.5,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "COST",
+    "composite": 83.9,
+    "composite_raw": 56.8,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "CRWD",
+    "composite": -34.6,
+    "composite_raw": 6.8,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "CSX",
+    "composite": -33.2,
+    "composite_raw": 7.5,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "DDOG",
+    "composite": 2.8,
+    "composite_raw": 19.5,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "DXCM",
+    "composite": 98.9,
+    "composite_raw": 74.2,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "FANG",
+    "composite": -60.4,
+    "composite_raw": -5.8,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "DASH",
+    "composite": 57.8,
+    "composite_raw": 41.6,
+    "sentiment": 5.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "EXC",
+    "composite": -63.8,
+    "composite_raw": -8.7,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "FAST",
+    "composite": 75.9,
+    "composite_raw": 52.4,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "FER",
+    "composite": 33.6,
+    "composite_raw": 30.8,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "FTNT",
+    "composite": 14.0,
+    "composite_raw": 23.7,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "GEHC",
+    "composite": 55.9,
+    "composite_raw": 40.6,
+    "sentiment": 6.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "GILD",
+    "composite": 81.6,
+    "composite_raw": 55.7,
+    "sentiment": 4.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "HONA",
+    "composite": 61.2,
+    "composite_raw": 43.6,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "HON",
+    "composite": 22.2,
+    "composite_raw": 26.5,
+    "sentiment": 5.7142857142857135
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "IDXX",
+    "composite": 87.0,
+    "composite_raw": 59.4,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "INTC",
+    "composite": -97.9,
+    "composite_raw": -51.2,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "INTU",
+    "composite": 97.1,
+    "composite_raw": 68.5,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "ISRG",
+    "composite": 40.2,
+    "composite_raw": 33.3,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "KDP",
+    "composite": 13.2,
+    "composite_raw": 23.3,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "KLAC",
+    "composite": 80.2,
+    "composite_raw": 54.9,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "KHC",
+    "composite": -75.6,
+    "composite_raw": -15.9,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "LRCX",
+    "composite": 84.8,
+    "composite_raw": 57.7,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "LIN",
+    "composite": 14.5,
+    "composite_raw": 23.9,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "LITE",
+    "composite": -83.1,
+    "composite_raw": -23.8,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "MAR",
+    "composite": 19.2,
+    "composite_raw": 25.7,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "MRVL",
+    "composite": 43.5,
+    "composite_raw": 35.1,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "MELI",
+    "composite": 79.6,
+    "composite_raw": 54.7,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "META",
+    "composite": 78.8,
+    "composite_raw": 53.9,
+    "sentiment": -2.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "MCHP",
+    "composite": -92.2,
+    "composite_raw": -34.1,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "MU",
+    "composite": 99.7,
+    "composite_raw": 77.4,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "MSFT",
+    "composite": 93.7,
+    "composite_raw": 65.4,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "MSTR",
+    "composite": -83.3,
+    "composite_raw": -24.2,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "MDLZ",
+    "composite": 2.4,
+    "composite_raw": 19.4,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "MPWR",
+    "composite": 65.7,
+    "composite_raw": 46.6,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "MNST",
+    "composite": 62.2,
+    "composite_raw": 44.5,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "NBIS",
+    "composite": -83.8,
+    "composite_raw": -25.2,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "NFLX",
+    "composite": 73.2,
+    "composite_raw": 50.4,
+    "sentiment": 2.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "NVDA",
+    "composite": 99.6,
+    "composite_raw": 77.0,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "NXPI",
+    "composite": -41.7,
+    "composite_raw": 4.5,
+    "sentiment": -2.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "ORLY",
+    "composite": 48.7,
+    "composite_raw": 37.3,
+    "sentiment": 2.5
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "ODFL",
+    "composite": 18.0,
+    "composite_raw": 25.4,
+    "sentiment": -3.333333333333333
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "PCAR",
+    "composite": -0.1,
+    "composite_raw": 18.5,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "PLTR",
+    "composite": 83.9,
+    "composite_raw": 56.8,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "PANW",
+    "composite": 59.1,
+    "composite_raw": 42.3,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "PAYX",
+    "composite": 83.1,
+    "composite_raw": 56.4,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "PYPL",
+    "composite": 92.8,
+    "composite_raw": 64.7,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "PDD",
+    "composite": 97.9,
+    "composite_raw": 70.8,
+    "sentiment": 2.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "PEP",
+    "composite": 34.7,
+    "composite_raw": 31.2,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "QCOM",
+    "composite": 61.7,
+    "composite_raw": 44.0,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "REGN",
+    "composite": 69.9,
+    "composite_raw": 48.8,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "RKLB",
+    "composite": -67.3,
+    "composite_raw": -10.8,
+    "sentiment": 4.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "ROP",
+    "composite": 32.7,
+    "composite_raw": 30.4,
+    "sentiment": 3.333333333333333
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "ROST",
+    "composite": 83.6,
+    "composite_raw": 56.6,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "SNDK",
+    "composite": 90.8,
+    "composite_raw": 62.3,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "STX",
+    "composite": 92.3,
+    "composite_raw": 64.1,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "SHOP",
+    "composite": 86.7,
+    "composite_raw": 59.0,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "SPCX",
+    "composite": -78.2,
+    "composite_raw": -18.5,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "SBUX",
+    "composite": -56.6,
+    "composite_raw": -3.7,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "SNPS",
+    "composite": -40.4,
+    "composite_raw": 4.9,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "TMUS",
+    "composite": -12.7,
+    "composite_raw": 14.4,
+    "sentiment": -5.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "TTWO",
+    "composite": -85.6,
+    "composite_raw": -27.0,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "TER",
+    "composite": -24.0,
+    "composite_raw": 10.2,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "TSLA",
+    "composite": -58.6,
+    "composite_raw": -5.0,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "TXN",
+    "composite": 7.8,
+    "composite_raw": 21.1,
+    "sentiment": 3.333333333333333
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "TRI",
+    "composite": 54.9,
+    "composite_raw": 40.1,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "VRTX",
+    "composite": 76.4,
+    "composite_raw": 52.7,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "WMT",
+    "composite": 40.9,
+    "composite_raw": 33.8,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "WBD",
+    "composite": -77.3,
+    "composite_raw": -17.7,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "WDC",
+    "composite": 92.8,
+    "composite_raw": 64.7,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "WDAY",
+    "composite": 61.5,
+    "composite_raw": 43.8,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "XEL",
+    "composite": -72.0,
+    "composite_raw": -13.8,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "MMM",
+    "composite": 36.2,
+    "composite_raw": 31.7,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "AXP",
+    "composite": 57.4,
+    "composite_raw": 57.4,
+    "sentiment": 4.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "BA",
+    "composite": -78.6,
+    "composite_raw": -19.1,
+    "sentiment": 2.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "CAT",
+    "composite": -0.8,
+    "composite_raw": 18.2,
+    "sentiment": 3.333333333333333
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "CVX",
+    "composite": -40.4,
+    "composite_raw": 4.9,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "KO",
+    "composite": 59.8,
+    "composite_raw": 42.8,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "DIS",
+    "composite": 23.7,
+    "composite_raw": 27.1,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "GS",
+    "composite": -15.0,
+    "composite_raw": 25.3,
+    "sentiment": 2.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "HD",
+    "composite": 26.3,
+    "composite_raw": 28.1,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "IBM",
+    "composite": 26.1,
+    "composite_raw": 27.9,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "JNJ",
+    "composite": 72.9,
+    "composite_raw": 50.3,
+    "sentiment": 2.5
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "JPM",
+    "composite": 21.7,
+    "composite_raw": 30.7,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "MCD",
+    "composite": 17.4,
+    "composite_raw": 25.0,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "MRK",
+    "composite": 86.5,
+    "composite_raw": 58.8,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "NKE",
+    "composite": 8.6,
+    "composite_raw": 21.5,
+    "sentiment": 2.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "PG",
+    "composite": 71.6,
+    "composite_raw": 49.9,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "CRM",
+    "composite": 80.2,
+    "composite_raw": 54.9,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "SHW",
+    "composite": 22.2,
+    "composite_raw": 26.5,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "TRV",
+    "composite": 41.4,
+    "composite_raw": 57.0,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "UNH",
+    "composite": 13.5,
+    "composite_raw": 23.6,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "V",
+    "composite": 96.6,
+    "composite_raw": 67.8,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "III.L",
+    "composite": 30.6,
+    "composite_raw": 30.6,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "ABDN.L",
+    "composite": 14.0,
+    "composite_raw": 14.0,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "ADM.L",
+    "composite": 82.8,
+    "composite_raw": 68.0,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "AAF.L",
+    "composite": 14.0,
+    "composite_raw": 23.7,
+    "sentiment": -4.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "ALW.L",
+    "composite": 9.6,
+    "composite_raw": 9.6,
+    "sentiment": 2.5
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "AAL.L",
+    "composite": -86.8,
+    "composite_raw": -29.3,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "ANTO.L",
+    "composite": -29.2,
+    "composite_raw": 8.6,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "ABF.L",
+    "composite": 5.1,
+    "composite_raw": 20.3,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "AZN.L",
+    "composite": 74.4,
+    "composite_raw": 51.2,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "AUTO.L",
+    "composite": 95.0,
+    "composite_raw": 66.7,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "AV.L",
+    "composite": -89.7,
+    "composite_raw": -26.5,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "BAB.L",
+    "composite": 68.2,
+    "composite_raw": 47.9,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "BA.L",
+    "composite": 63.1,
+    "composite_raw": 45.0,
+    "sentiment": 5.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "BARC.L",
+    "composite": -75.0,
+    "composite_raw": 9.4,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "BTRW.L",
+    "composite": 6.5,
+    "composite_raw": 20.6,
+    "sentiment": 5.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "BEZ.L",
+    "composite": 20.7,
+    "composite_raw": 51.4,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "BP.L",
+    "composite": -36.2,
+    "composite_raw": 6.4,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "BATS.L",
+    "composite": 7.5,
+    "composite_raw": 21.0,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "BLND.L",
+    "composite": -39.9,
+    "composite_raw": 5.0,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "BT-A.L",
+    "composite": -59.4,
+    "composite_raw": -5.4,
+    "sentiment": 2.5
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "BNZL.L",
+    "composite": 46.5,
+    "composite_raw": 36.6,
+    "sentiment": 5.7142857142857135
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "BRBY.L",
+    "composite": -81.2,
+    "composite_raw": -22.6,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "CNA.L",
+    "composite": 0.3,
+    "composite_raw": 18.6,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "CCH.L",
+    "composite": 67.8,
+    "composite_raw": 47.8,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "CPG.L",
+    "composite": 56.7,
+    "composite_raw": 40.8,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "CCC.L",
+    "composite": 86.2,
+    "composite_raw": 58.5,
+    "sentiment": 6.666666666666666
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "CTEC.L",
+    "composite": 32.4,
+    "composite_raw": 30.3,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "CRDA.L",
+    "composite": -67.9,
+    "composite_raw": -11.0,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "DCC.L",
+    "composite": -36.9,
+    "composite_raw": 6.1,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "DGE.L",
+    "composite": -31.5,
+    "composite_raw": 7.8,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "DPLM.L",
+    "composite": 64.3,
+    "composite_raw": 45.7,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "EDV.L",
+    "composite": 75.5,
+    "composite_raw": 52.2,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "ENT.L",
+    "composite": -95.6,
+    "composite_raw": -42.0,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "EXPN.L",
+    "composite": 63.7,
+    "composite_raw": 45.1,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "FCIT.L",
+    "composite": 9.1,
+    "composite_raw": 9.1,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "FRES.L",
+    "composite": 80.8,
+    "composite_raw": 55.2,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "GAW.L",
+    "composite": 78.4,
+    "composite_raw": 53.7,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "GLEN.L",
+    "composite": -98.6,
+    "composite_raw": -58.3,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "GSK.L",
+    "composite": 53.7,
+    "composite_raw": 39.6,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "HLN.L",
+    "composite": 27.7,
+    "composite_raw": 28.5,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "HLMA.L",
+    "composite": 35.6,
+    "composite_raw": 31.4,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "HSX.L",
+    "composite": 13.8,
+    "composite_raw": 50.7,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "HWDN.L",
+    "composite": 29.6,
+    "composite_raw": 29.4,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "HSBA.L",
+    "composite": 28.3,
+    "composite_raw": 31.7,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "ICG.L",
+    "composite": -2.4,
+    "composite_raw": -2.4,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "IGG.L",
+    "composite": 46.0,
+    "composite_raw": 36.5,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "IHG.L",
+    "composite": 68.2,
+    "composite_raw": 47.9,
+    "sentiment": 2.5
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "IMI.L",
+    "composite": 43.7,
+    "composite_raw": 35.2,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "IMB.L",
+    "composite": 51.8,
+    "composite_raw": 38.9,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "INF.L",
+    "composite": -70.4,
+    "composite_raw": -12.6,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "IAG.L",
+    "composite": 76.1,
+    "composite_raw": 52.5,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "ITRK.L",
+    "composite": 49.1,
+    "composite_raw": 37.4,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "INVP.L",
+    "composite": -61.7,
+    "composite_raw": 12.7,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "JD.L",
+    "composite": 24.5,
+    "composite_raw": 27.3,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "KGF.L",
+    "composite": -39.5,
+    "composite_raw": 5.2,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "LAND.L",
+    "composite": -59.1,
+    "composite_raw": -5.3,
+    "sentiment": 6.666666666666666
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "LGEN.L",
+    "composite": -62.1,
+    "composite_raw": 9.5,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "BGEO.L",
+    "composite": 98.3,
+    "composite_raw": 56.8,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "LLOY.L",
+    "composite": -55.0,
+    "composite_raw": 13.7,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "LSEG.L",
+    "composite": 35.2,
+    "composite_raw": 31.3,
+    "sentiment": 5.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "LMP.L",
+    "composite": -36.9,
+    "composite_raw": 6.1,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "MNG.L",
+    "composite": -75.9,
+    "composite_raw": -17.3,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "MKS.L",
+    "composite": -55.0,
+    "composite_raw": -2.7,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "MRO.L",
+    "composite": 11.4,
+    "composite_raw": 22.7,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "MTLN.L",
+    "composite": -50.6,
+    "composite_raw": -0.3,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "NG.L",
+    "composite": -74.9,
+    "composite_raw": -15.6,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "NWG.L",
+    "composite": 38.3,
+    "composite_raw": 33.5,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "NXT.L",
+    "composite": 79.1,
+    "composite_raw": 54.4,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "PSON.L",
+    "composite": 17.7,
+    "composite_raw": 25.1,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "PSH.L",
+    "composite": 14.7,
+    "composite_raw": 14.7,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "PSN.L",
+    "composite": -75.3,
+    "composite_raw": -15.8,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "PCT.L",
+    "composite": 44.7,
+    "composite_raw": 44.7,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "PRU.L",
+    "composite": -34.5,
+    "composite_raw": 35.6,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "RKT.L",
+    "composite": 68.2,
+    "composite_raw": 47.9,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "REL.L",
+    "composite": 82.1,
+    "composite_raw": 56.1,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "RTO.L",
+    "composite": -34.3,
+    "composite_raw": 7.0,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "RIO.L",
+    "composite": -33.2,
+    "composite_raw": 7.5,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "RR.L",
+    "composite": 60.5,
+    "composite_raw": 43.2,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "SGE.L",
+    "composite": 87.7,
+    "composite_raw": 59.8,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "SBRY.L",
+    "composite": -24.0,
+    "composite_raw": 10.2,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "SDR.L",
+    "composite": 85.2,
+    "composite_raw": 57.8,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "SMT.L",
+    "composite": 22.4,
+    "composite_raw": 22.4,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "SGRO.L",
+    "composite": -26.6,
+    "composite_raw": 9.2,
+    "sentiment": 2.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "SVT.L",
+    "composite": -35.2,
+    "composite_raw": 6.6,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "SHEL.L",
+    "composite": -10.3,
+    "composite_raw": 15.3,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "SN.L",
+    "composite": 30.5,
+    "composite_raw": 29.6,
+    "sentiment": -5.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "SMIN.L",
+    "composite": 33.4,
+    "composite_raw": 30.7,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "SPX.L",
+    "composite": 1.9,
+    "composite_raw": 19.1,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "SSE.L",
+    "composite": 21.1,
+    "composite_raw": 26.2,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "STJ.L",
+    "composite": 12.7,
+    "composite_raw": 23.1,
+    "sentiment": 2.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "STAN.L",
+    "composite": 85.0,
+    "composite_raw": 47.5,
+    "sentiment": 2.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "SDLF.L",
+    "composite": -96.6,
+    "composite_raw": -34.0,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "TSCO.L",
+    "composite": 28.3,
+    "composite_raw": 28.7,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "BBOX.L",
+    "composite": -19.5,
+    "composite_raw": -19.5,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "ULVR.L",
+    "composite": 47.7,
+    "composite_raw": 37.0,
+    "sentiment": 2.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "UU.L",
+    "composite": -21.7,
+    "composite_raw": 11.1,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "VOD.L",
+    "composite": -81.8,
+    "composite_raw": -23.0,
+    "sentiment": -5.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "WEIR.L",
+    "composite": -29.9,
+    "composite_raw": 8.4,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "WTB.L",
+    "composite": -77.8,
+    "composite_raw": -18.2,
+    "sentiment": 4.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "ABBN.SW",
+    "composite": 77.7,
+    "composite_raw": 53.4,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "ALC.SW",
+    "composite": 50.8,
+    "composite_raw": 37.9,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "AMRZ.SW",
+    "composite": -41.2,
+    "composite_raw": 4.7,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "GEBN.SW",
+    "composite": 65.2,
+    "composite_raw": 46.3,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "GIVN.SW",
+    "composite": 61.7,
+    "composite_raw": 44.0,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "HOLN.SW",
+    "composite": -58.8,
+    "composite_raw": -5.1,
+    "sentiment": -2.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "KNIN.SW",
+    "composite": 38.8,
+    "composite_raw": 32.6,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "LOGN.SW",
+    "composite": 94.0,
+    "composite_raw": 65.5,
+    "sentiment": 2.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "LONN.SW",
+    "composite": -8.3,
+    "composite_raw": 15.7,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "NESN.SW",
+    "composite": 34.4,
+    "composite_raw": 31.1,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "NOVN.SW",
+    "composite": 78.0,
+    "composite_raw": 53.5,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "PGHN.SW",
+    "composite": 87.5,
+    "composite_raw": 59.7,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "CFR.SW",
+    "composite": 43.0,
+    "composite_raw": 34.9,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "ROP.SW",
+    "composite": 62.6,
+    "composite_raw": 44.9,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "SIKA.SW",
+    "composite": 34.4,
+    "composite_raw": 31.1,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "SLHN.SW",
+    "composite": -55.2,
+    "composite_raw": 12.8,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "SREN.SW",
+    "composite": 89.7,
+    "composite_raw": 72.0,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "SCMN.SW",
+    "composite": 29.6,
+    "composite_raw": 29.4,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "UBSG.SW",
+    "composite": -31.7,
+    "composite_raw": 22.3,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "ZURN.SW",
+    "composite": 55.2,
+    "composite_raw": 60.1,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "ANA.MC",
+    "composite": -18.2,
+    "composite_raw": 12.2,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "ANE.MC",
+    "composite": -49.4,
+    "composite_raw": 0.4,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "ACX.MC",
+    "composite": -90.6,
+    "composite_raw": -32.4,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "ACS.MC",
+    "composite": 57.6,
+    "composite_raw": 41.3,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "AENA.MC",
+    "composite": 62.3,
+    "composite_raw": 44.7,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "AMS.MC",
+    "composite": 71.2,
+    "composite_raw": 49.7,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "SAB.MC",
+    "composite": 71.7,
+    "composite_raw": 41.7,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "SAN.MC",
+    "composite": -38.3,
+    "composite_raw": 18.7,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "BKT.MC",
+    "composite": 11.7,
+    "composite_raw": 29.2,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "BBVA.MC",
+    "composite": 91.7,
+    "composite_raw": 54.2,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "CABK.MC",
+    "composite": 81.7,
+    "composite_raw": 43.8,
+    "sentiment": 2.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "CLNX.MC",
+    "composite": -88.3,
+    "composite_raw": -30.2,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "ENG.MC",
+    "composite": -45.0,
+    "composite_raw": 2.7,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "ELE.MC",
+    "composite": 19.2,
+    "composite_raw": 25.7,
+    "sentiment": 2.5
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "FDR.MC",
+    "composite": -25.3,
+    "composite_raw": 9.8,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "GRF.MC",
+    "composite": -35.7,
+    "composite_raw": 6.5,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "IBE.MC",
+    "composite": -48.6,
+    "composite_raw": 0.8,
+    "sentiment": 2.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "ITX.MC",
+    "composite": 85.9,
+    "composite_raw": 58.1,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "IDR.MC",
+    "composite": 35.6,
+    "composite_raw": 31.4,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "COL.MC",
+    "composite": -45.9,
+    "composite_raw": 2.2,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "ROVI.MC",
+    "composite": 40.5,
+    "composite_raw": 33.5,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "LOG.MC",
+    "composite": 94.2,
+    "composite_raw": 65.8,
+    "sentiment": 5.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "MAP.MC",
+    "composite": -20.7,
+    "composite_raw": 42.1,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "MRL.MC",
+    "composite": 39.8,
+    "composite_raw": 33.2,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "NTGY.MC",
+    "composite": 21.7,
+    "composite_raw": 26.3,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "PUIG.MC",
+    "composite": 81.1,
+    "composite_raw": 55.4,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "RED.MC",
+    "composite": -58.1,
+    "composite_raw": -4.8,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "REP.MC",
+    "composite": -43.2,
+    "composite_raw": 4.0,
+    "sentiment": 5.7142857142857135
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "SCYR.MC",
+    "composite": -49.0,
+    "composite_raw": 0.5,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "SLR.MC",
+    "composite": -50.6,
+    "composite_raw": -0.3,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "TEF.MC",
+    "composite": -90.4,
+    "composite_raw": -32.2,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "UNI.MC",
+    "composite": 18.3,
+    "composite_raw": 30.2,
+    "sentiment": 3.333333333333333
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "A2A.MI",
+    "composite": -38.0,
+    "composite_raw": 5.8,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "AMP.MI",
+    "composite": -9.1,
+    "composite_raw": 15.6,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "AVIO.MI",
+    "composite": 27.7,
+    "composite_raw": 28.5,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "AZM.MI",
+    "composite": 89.5,
+    "composite_raw": 61.6,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "BMED.MI",
+    "composite": 88.3,
+    "composite_raw": 49.9,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "BMPS.MI",
+    "composite": -48.3,
+    "composite_raw": 16.9,
+    "sentiment": -6.666666666666666
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "BAMI.MI",
+    "composite": 48.3,
+    "composite_raw": 36.8,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "BPE.MI",
+    "composite": 15.0,
+    "composite_raw": 29.7,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "BC.MI",
+    "composite": -5.1,
+    "composite_raw": 16.7,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "BZU.MI",
+    "composite": 28.9,
+    "composite_raw": 29.0,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "CPR.MI",
+    "composite": 16.8,
+    "composite_raw": 24.9,
+    "sentiment": 2.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "DIA.MI",
+    "composite": -10.9,
+    "composite_raw": 15.2,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "ENEL.MI",
+    "composite": -41.2,
+    "composite_raw": 4.7,
+    "sentiment": 2.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "ENI.MI",
+    "composite": -50.0,
+    "composite_raw": -0.1,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "RACE.MI",
+    "composite": 77.4,
+    "composite_raw": 53.2,
+    "sentiment": -2.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "FCT.MI",
+    "composite": -11.7,
+    "composite_raw": 15.0,
+    "sentiment": 3.333333333333333
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "FBK.MI",
+    "composite": 95.0,
+    "composite_raw": 54.8,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "G.MI",
+    "composite": 34.5,
+    "composite_raw": 56.9,
+    "sentiment": 5.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "HER.MI",
+    "composite": -24.5,
+    "composite_raw": 10.1,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "ISP.MI",
+    "composite": 76.7,
+    "composite_raw": 43.7,
+    "sentiment": 2.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "INW.MI",
+    "composite": -25.8,
+    "composite_raw": 9.6,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "IG.MI",
+    "composite": -23.2,
+    "composite_raw": 10.6,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "IVG.MI",
+    "composite": -48.2,
+    "composite_raw": 1.3,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "LDO.MI",
+    "composite": 41.9,
+    "composite_raw": 34.3,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "LTMC.MI",
+    "composite": -6.7,
+    "composite_raw": 16.0,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "MB.MI",
+    "composite": 51.7,
+    "composite_raw": 38.7,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "MONC.MI",
+    "composite": 58.6,
+    "composite_raw": 42.1,
+    "sentiment": 4.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "NEXI.MI",
+    "composite": -76.4,
+    "composite_raw": -16.7,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "PST.MI",
+    "composite": 35.2,
+    "composite_raw": 31.3,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "PRY.MI",
+    "composite": 57.4,
+    "composite_raw": 41.2,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "REC.MI",
+    "composite": 47.4,
+    "composite_raw": 36.9,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "SPM.MI",
+    "composite": 24.7,
+    "composite_raw": 27.4,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "SRG.MI",
+    "composite": -33.9,
+    "composite_raw": 7.2,
+    "sentiment": 3.333333333333333
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "TIT.MI",
+    "composite": -80.5,
+    "composite_raw": -21.7,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "TEN.MI",
+    "composite": 3.9,
+    "composite_raw": 19.8,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "TRN.MI",
+    "composite": -19.5,
+    "composite_raw": 11.9,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "UCG.MI",
+    "composite": 41.7,
+    "composite_raw": 34.0,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "UNI.MI",
+    "composite": 48.3,
+    "composite_raw": 58.0,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "6857.T",
+    "composite": 97.7,
+    "composite_raw": 69.3,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "8267.T",
+    "composite": -74.2,
+    "composite_raw": -15.3,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "5201.T",
+    "composite": -34.9,
+    "composite_raw": 6.7,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "2802.T",
+    "composite": -8.3,
+    "composite_raw": 15.7,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "6770.T",
+    "composite": -7.6,
+    "composite_raw": 15.8,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "6113.T",
+    "composite": -1.8,
+    "composite_raw": 17.9,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "9202.T",
+    "composite": 55.9,
+    "composite_raw": 40.6,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "8304.T",
+    "composite": -8.3,
+    "composite_raw": 25.6,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "543A.T",
+    "composite": -22.3,
+    "composite_raw": 10.9,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "2502.T",
+    "composite": -47.7,
+    "composite_raw": 1.8,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "3407.T",
+    "composite": 37.2,
+    "composite_raw": 31.9,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "4503.T",
+    "composite": 99.1,
+    "composite_raw": 74.8,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "7832.T",
+    "composite": 84.2,
+    "composite_raw": 57.2,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "6532.T",
+    "composite": 79.9,
+    "composite_raw": 54.8,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "5108.T",
+    "composite": 31.5,
+    "composite_raw": 29.9,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "7751.T",
+    "composite": 21.1,
+    "composite_raw": 26.2,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "9022.T",
+    "composite": 4.1,
+    "composite_raw": 19.9,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "8331.T",
+    "composite": 5.0,
+    "composite_raw": 28.6,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "9502.T",
+    "composite": -26.6,
+    "composite_raw": 9.2,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "4519.T",
+    "composite": 13.2,
+    "composite_raw": 23.3,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "1721.T",
+    "composite": 40.4,
+    "composite_raw": 33.4,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "8253.T",
+    "composite": -79.0,
+    "composite_raw": -19.3,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "4751.T",
+    "composite": 88.5,
+    "composite_raw": 60.6,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "7912.T",
+    "composite": -12.7,
+    "composite_raw": 14.4,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "8750.T",
+    "composite": 6.9,
+    "composite_raw": 49.7,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "4568.T",
+    "composite": 87.0,
+    "composite_raw": 59.4,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "6367.T",
+    "composite": 37.8,
+    "composite_raw": 32.2,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "1925.T",
+    "composite": -21.7,
+    "composite_raw": 11.1,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "8601.T",
+    "composite": 30.2,
+    "composite_raw": 30.2,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "2432.T",
+    "composite": 15.9,
+    "composite_raw": 24.6,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "4061.T",
+    "composite": -88.3,
+    "composite_raw": -30.2,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "6902.T",
+    "composite": 33.8,
+    "composite_raw": 30.9,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "4324.T",
+    "composite": -75.8,
+    "composite_raw": -16.4,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "6146.T",
+    "composite": 34.7,
+    "composite_raw": 31.2,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "5714.T",
+    "composite": -2.6,
+    "composite_raw": 17.6,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "9020.T",
+    "composite": -39.0,
+    "composite_raw": 5.4,
+    "sentiment": 6.666666666666666
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "6361.T",
+    "composite": -11.4,
+    "composite_raw": 15.1,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "4523.T",
+    "composite": 11.2,
+    "composite_raw": 22.5,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "5020.T",
+    "composite": -15.5,
+    "composite_raw": 13.9,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "6954.T",
+    "composite": -7.0,
+    "composite_raw": 15.9,
+    "sentiment": 5.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "9983.T",
+    "composite": 87.0,
+    "composite_raw": 59.4,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "6504.T",
+    "composite": 20.0,
+    "composite_raw": 25.9,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "4901.T",
+    "composite": -22.8,
+    "composite_raw": 10.7,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "5803.T",
+    "composite": 82.1,
+    "composite_raw": 56.1,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "6702.T",
+    "composite": 51.2,
+    "composite_raw": 38.2,
+    "sentiment": 2.5
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "8354.T",
+    "composite": -98.3,
+    "composite_raw": -9.7,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "5801.T",
+    "composite": -2.9,
+    "composite_raw": 17.5,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "1808.T",
+    "composite": 18.2,
+    "composite_raw": 25.5,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "6501.T",
+    "composite": 50.9,
+    "composite_raw": 38.0,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "6305.T",
+    "composite": -4.4,
+    "composite_raw": 17.0,
+    "sentiment": 3.333333333333333
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "7267.T",
+    "composite": -69.7,
+    "composite_raw": -12.4,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "7741.T",
+    "composite": 70.3,
+    "composite_raw": 48.9,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "4062.T",
+    "composite": -13.7,
+    "composite_raw": 14.2,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "5019.T",
+    "composite": -50.9,
+    "composite_raw": -0.4,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "7013.T",
+    "composite": 52.2,
+    "composite_raw": 39.1,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "1605.T",
+    "composite": -5.1,
+    "composite_raw": 16.7,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "3099.T",
+    "composite": 65.0,
+    "composite_raw": 46.1,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "7202.T",
+    "composite": -29.9,
+    "composite_raw": 8.4,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "8001.T",
+    "composite": 7.8,
+    "composite_raw": 21.1,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "3086.T",
+    "composite": -30.6,
+    "composite_raw": 8.1,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "9201.T",
+    "composite": 56.4,
+    "composite_raw": 40.7,
+    "sentiment": -3.333333333333333
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "8697.T",
+    "composite": 91.3,
+    "composite_raw": 62.9,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "6178.T",
+    "composite": -25.1,
+    "composite_raw": -25.1,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "5631.T",
+    "composite": -38.0,
+    "composite_raw": 5.8,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "2914.T",
+    "composite": 30.0,
+    "composite_raw": 29.5,
+    "sentiment": 2.5
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "5411.T",
+    "composite": -96.6,
+    "composite_raw": -43.9,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "1963.T",
+    "composite": 82.6,
+    "composite_raw": 56.2,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "6473.T",
+    "composite": -79.4,
+    "composite_raw": -19.7,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "1812.T",
+    "composite": -9.8,
+    "composite_raw": 15.4,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "7004.T",
+    "composite": -63.6,
+    "composite_raw": -8.1,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "9503.T",
+    "composite": 43.3,
+    "composite_raw": 35.0,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "4452.T",
+    "composite": 30.9,
+    "composite_raw": 29.7,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "7012.T",
+    "composite": -46.2,
+    "composite_raw": 2.1,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "9107.T",
+    "composite": 7.1,
+    "composite_raw": 20.8,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "9433.T",
+    "composite": 36.6,
+    "composite_raw": 31.8,
+    "sentiment": 8.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "9008.T",
+    "composite": -10.3,
+    "composite_raw": 15.3,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "9009.T",
+    "composite": -19.5,
+    "composite_raw": 11.9,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "6861.T",
+    "composite": 11.4,
+    "composite_raw": 22.7,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "2801.T",
+    "composite": 58.0,
+    "composite_raw": 41.7,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "285A.T",
+    "composite": 71.9,
+    "composite_raw": 50.0,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "2503.T",
+    "composite": -28.7,
+    "composite_raw": 8.7,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "5406.T",
+    "composite": -39.9,
+    "composite_raw": 5.0,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "6301.T",
+    "composite": -5.5,
+    "composite_raw": 16.5,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "9766.T",
+    "composite": 95.6,
+    "composite_raw": 67.3,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "4902.T",
+    "composite": -12.2,
+    "composite_raw": 14.5,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "6326.T",
+    "composite": -36.2,
+    "composite_raw": 6.4,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "3405.T",
+    "composite": -72.6,
+    "composite_raw": -14.3,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "6971.T",
+    "composite": -27.3,
+    "composite_raw": 9.0,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "4151.T",
+    "composite": -47.7,
+    "composite_raw": 1.8,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "6920.T",
+    "composite": 36.6,
+    "composite_raw": 31.8,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "4689.T",
+    "composite": -27.3,
+    "composite_raw": 9.0,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "2413.T",
+    "composite": 30.5,
+    "composite_raw": 29.6,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "8002.T",
+    "composite": -9.1,
+    "composite_raw": 15.6,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "8252.T",
+    "composite": -64.7,
+    "composite_raw": -9.4,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "7261.T",
+    "composite": -75.1,
+    "composite_raw": -15.7,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "2269.T",
+    "composite": -47.1,
+    "composite_raw": 1.9,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "4385.T",
+    "composite": 45.2,
+    "composite_raw": 36.2,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "6479.T",
+    "composite": -2.9,
+    "composite_raw": 17.5,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "4188.T",
+    "composite": -93.1,
+    "composite_raw": -35.3,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "8058.T",
+    "composite": -19.0,
+    "composite_raw": 12.0,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "6503.T",
+    "composite": 46.0,
+    "composite_raw": 36.5,
+    "sentiment": 4.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "8802.T",
+    "composite": -48.1,
+    "composite_raw": 1.7,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "7011.T",
+    "composite": 9.7,
+    "composite_raw": 22.0,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "5711.T",
+    "composite": -71.1,
+    "composite_raw": -13.1,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "7211.T",
+    "composite": -59.0,
+    "composite_raw": -5.2,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "8306.T",
+    "composite": -28.3,
+    "composite_raw": 23.8,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "8031.T",
+    "composite": -55.5,
+    "composite_raw": -3.0,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "4183.T",
+    "composite": -92.4,
+    "composite_raw": -34.9,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "8801.T",
+    "composite": -66.4,
+    "composite_raw": -10.5,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "5706.T",
+    "composite": 63.7,
+    "composite_raw": 45.1,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "9104.T",
+    "composite": -66.1,
+    "composite_raw": -10.4,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "8411.T",
+    "composite": -78.3,
+    "composite_raw": 7.5,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "8725.T",
+    "composite": 27.6,
+    "composite_raw": 53.8,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "6981.T",
+    "composite": 4.5,
+    "composite_raw": 20.1,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "6701.T",
+    "composite": 60.1,
+    "composite_raw": 42.9,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "3659.T",
+    "composite": 0.3,
+    "composite_raw": 18.6,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "5333.T",
+    "composite": 32.0,
+    "composite_raw": 30.1,
+    "sentiment": 5.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "2282.T",
+    "composite": 17.4,
+    "composite_raw": 25.0,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "2871.T",
+    "composite": 11.8,
+    "composite_raw": 22.8,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "7731.T",
+    "composite": -86.2,
+    "composite_raw": -27.7,
+    "sentiment": 3.333333333333333
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "7974.T",
+    "composite": -54.8,
+    "composite_raw": -2.6,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "5214.T",
+    "composite": -3.3,
+    "composite_raw": 17.2,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "9147.T",
+    "composite": -90.0,
+    "composite_raw": -31.5,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "5401.T",
+    "composite": -87.5,
+    "composite_raw": -29.7,
+    "sentiment": 3.333333333333333
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "9101.T",
+    "composite": -46.7,
+    "composite_raw": 2.0,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "4021.T",
+    "composite": 67.2,
+    "composite_raw": 47.6,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "7201.T",
+    "composite": -98.7,
+    "composite_raw": -59.2,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "2002.T",
+    "composite": 42.2,
+    "composite_raw": 34.5,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "1332.T",
+    "composite": -17.5,
+    "composite_raw": 12.5,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "9843.T",
+    "composite": 29.6,
+    "composite_raw": 29.4,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "6988.T",
+    "composite": -44.5,
+    "composite_raw": 2.8,
+    "sentiment": -4.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "8604.T",
+    "composite": 33.6,
+    "composite_raw": 33.6,
+    "sentiment": 2.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "4307.T",
+    "composite": 21.1,
+    "composite_raw": 26.2,
+    "sentiment": 5.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "6471.T",
+    "composite": -84.1,
+    "composite_raw": -26.2,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "6472.T",
+    "composite": -68.4,
+    "composite_raw": -11.6,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "9432.T",
+    "composite": -43.7,
+    "composite_raw": 3.2,
+    "sentiment": 2.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "1802.T",
+    "composite": 63.1,
+    "composite_raw": 45.0,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "9007.T",
+    "composite": -71.6,
+    "composite_raw": -13.2,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "3861.T",
+    "composite": -65.0,
+    "composite_raw": -9.7,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "6103.T",
+    "composite": -57.6,
+    "composite_raw": -4.3,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "7733.T",
+    "composite": -30.4,
+    "composite_raw": 8.3,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "6645.T",
+    "composite": -49.4,
+    "composite_raw": 0.4,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "4661.T",
+    "composite": 74.7,
+    "composite_raw": 51.4,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "8591.T",
+    "composite": 42.3,
+    "composite_raw": 42.3,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "9532.T",
+    "composite": 6.0,
+    "composite_raw": 20.5,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "4578.T",
+    "composite": 69.9,
+    "composite_raw": 48.8,
+    "sentiment": -3.333333333333333
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "7532.T",
+    "composite": 50.2,
+    "composite_raw": 37.7,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "6752.T",
+    "composite": -73.8,
+    "composite_raw": -15.2,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "4755.T",
+    "composite": 43.3,
+    "composite_raw": 35.0,
+    "sentiment": 10.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "6098.T",
+    "composite": 63.1,
+    "composite_raw": 45.0,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "6723.T",
+    "composite": -82.0,
+    "composite_raw": -23.1,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "8308.T",
+    "composite": -88.3,
+    "composite_raw": -0.5,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "4004.T",
+    "composite": -85.8,
+    "composite_raw": -27.2,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "7752.T",
+    "composite": -71.7,
+    "composite_raw": -13.4,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "6963.T",
+    "composite": -81.5,
+    "composite_raw": -22.7,
+    "sentiment": 10.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "7453.T",
+    "composite": 4.5,
+    "composite_raw": 20.1,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "2501.T",
+    "composite": 22.7,
+    "composite_raw": 26.6,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "7735.T",
+    "composite": 64.1,
+    "composite_raw": 45.4,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "9735.T",
+    "composite": 61.2,
+    "composite_raw": 43.6,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "6724.T",
+    "composite": -20.9,
+    "composite_raw": 11.4,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "1928.T",
+    "composite": -25.5,
+    "composite_raw": 9.7,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "3382.T",
+    "composite": -1.2,
+    "composite_raw": 18.1,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "6753.T",
+    "composite": -40.4,
+    "composite_raw": 4.9,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "3697.T",
+    "composite": 37.2,
+    "composite_raw": 31.9,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "1803.T",
+    "composite": -23.6,
+    "composite_raw": 10.3,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "4063.T",
+    "composite": 11.8,
+    "composite_raw": 22.8,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "4507.T",
+    "composite": 58.8,
+    "composite_raw": 42.2,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "4911.T",
+    "composite": -79.0,
+    "composite_raw": -19.3,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "5831.T",
+    "composite": 8.3,
+    "composite_raw": 28.8,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "6273.T",
+    "composite": -18.7,
+    "composite_raw": 12.1,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "6526.T",
+    "composite": -60.9,
+    "composite_raw": -6.3,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "9434.T",
+    "composite": -58.1,
+    "composite_raw": -4.8,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "9984.T",
+    "composite": 37.8,
+    "composite_raw": 32.2,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "2768.T",
+    "composite": -73.6,
+    "composite_raw": -15.1,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "8630.T",
+    "composite": 0.0,
+    "composite_raw": 49.2,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "6758.T",
+    "composite": 56.4,
+    "composite_raw": 40.7,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "7270.T",
+    "composite": -46.2,
+    "composite_raw": 2.1,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "3436.T",
+    "composite": -97.6,
+    "composite_raw": -49.4,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "4005.T",
+    "composite": -54.4,
+    "composite_raw": -2.5,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "8053.T",
+    "composite": -10.9,
+    "composite_raw": 15.2,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "5802.T",
+    "composite": 31.2,
+    "composite_raw": 29.8,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "6302.T",
+    "composite": -57.0,
+    "composite_raw": -3.8,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "5713.T",
+    "composite": -42.6,
+    "composite_raw": 4.3,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "8316.T",
+    "composite": -45.0,
+    "composite_raw": 17.8,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "8309.T",
+    "composite": 58.3,
+    "composite_raw": 40.3,
+    "sentiment": 5.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "4506.T",
+    "composite": 12.2,
+    "composite_raw": 23.0,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "8830.T",
+    "composite": -72.7,
+    "composite_raw": -14.4,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "7269.T",
+    "composite": 30.5,
+    "composite_raw": 29.6,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "8795.T",
+    "composite": -48.3,
+    "composite_raw": 22.7,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "5233.T",
+    "composite": -27.3,
+    "composite_raw": 9.0,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "1801.T",
+    "composite": 48.7,
+    "composite_raw": 37.3,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "6976.T",
+    "composite": -17.7,
+    "composite_raw": 12.4,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "8233.T",
+    "composite": -95.4,
+    "composite_raw": -40.8,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "4502.T",
+    "composite": -65.4,
+    "composite_raw": -10.0,
+    "sentiment": 4.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "6762.T",
+    "composite": 6.5,
+    "composite_raw": 20.6,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "3401.T",
+    "composite": -78.4,
+    "composite_raw": -18.7,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "4543.T",
+    "composite": 60.7,
+    "composite_raw": 43.5,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "9001.T",
+    "composite": -43.4,
+    "composite_raw": 3.9,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "9602.T",
+    "composite": 52.9,
+    "composite_raw": 39.4,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "5301.T",
+    "composite": -48.4,
+    "composite_raw": 1.1,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "8766.T",
+    "composite": -27.6,
+    "composite_raw": 37.7,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "4043.T",
+    "composite": -26.1,
+    "composite_raw": 9.3,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "9501.T",
+    "composite": -96.1,
+    "composite_raw": -43.1,
+    "sentiment": -5.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "8035.T",
+    "composite": 28.9,
+    "composite_raw": 29.0,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "9531.T",
+    "composite": -42.2,
+    "composite_raw": 4.4,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "8804.T",
+    "composite": -49.4,
+    "composite_raw": 0.4,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "9005.T",
+    "composite": -69.7,
+    "composite_raw": -12.4,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "3289.T",
+    "composite": -49.7,
+    "composite_raw": 0.2,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "7911.T",
+    "composite": -33.2,
+    "composite_raw": 7.5,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "3402.T",
+    "composite": -34.9,
+    "composite_raw": 6.7,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "4042.T",
+    "composite": -31.0,
+    "composite_raw": 7.9,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "5332.T",
+    "composite": -36.5,
+    "composite_raw": 6.3,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "7203.T",
+    "composite": -52.0,
+    "composite_raw": -1.0,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "8015.T",
+    "composite": 14.8,
+    "composite_raw": 24.0,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "4704.T",
+    "composite": 44.1,
+    "composite_raw": 35.7,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "4208.T",
+    "composite": -24.5,
+    "composite_raw": 10.1,
+    "sentiment": 5.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "9021.T",
+    "composite": -31.5,
+    "composite_raw": 7.8,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "7951.T",
+    "composite": 16.8,
+    "composite_raw": 24.9,
+    "sentiment": 4.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "7272.T",
+    "composite": -50.3,
+    "composite_raw": -0.2,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "9064.T",
+    "composite": -6.1,
+    "composite_raw": 16.3,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "6506.T",
+    "composite": -50.6,
+    "composite_raw": -0.3,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "6841.T",
+    "composite": 61.2,
+    "composite_raw": 43.6,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "7186.T",
+    "composite": -11.7,
+    "composite_raw": 25.4,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "5101.T",
+    "composite": -13.7,
+    "composite_raw": 14.2,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "3092.T",
+    "composite": 78.8,
+    "composite_raw": 53.9,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "1299.HK",
+    "composite": -6.9,
+    "composite_raw": 44.1,
+    "sentiment": 2.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "9988.HK",
+    "composite": -17.2,
+    "composite_raw": 12.7,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "0241.HK",
+    "composite": 48.1,
+    "composite_raw": 37.1,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "2600.HK",
+    "composite": 28.9,
+    "composite_raw": 29.0,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "2020.HK",
+    "composite": 88.0,
+    "composite_raw": 60.0,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "9888.HK",
+    "composite": -82.6,
+    "composite_raw": -23.5,
+    "sentiment": 2.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "3988.HK",
+    "composite": 45.0,
+    "composite_raw": 34.3,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "6160.HK",
+    "composite": 97.3,
+    "composite_raw": 68.8,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "2388.HK",
+    "composite": 31.7,
+    "composite_raw": 32.1,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "1876.HK",
+    "composite": -14.1,
+    "composite_raw": 14.1,
+    "sentiment": -5.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "1211.HK",
+    "composite": 23.0,
+    "composite_raw": 26.8,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "0285.HK",
+    "composite": 72.1,
+    "composite_raw": 50.1,
+    "sentiment": -5.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "0939.HK",
+    "composite": 63.3,
+    "composite_raw": 41.1,
+    "sentiment": 3.333333333333333
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "1378.HK",
+    "composite": 47.0,
+    "composite_raw": 36.8,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "2628.HK",
+    "composite": 69.0,
+    "composite_raw": 63.7,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "2319.HK",
+    "composite": 15.0,
+    "composite_raw": 24.2,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "3968.HK",
+    "composite": 55.0,
+    "composite_raw": 39.2,
+    "sentiment": 4.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "0941.HK",
+    "composite": 1.1,
+    "composite_raw": 18.8,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "3993.HK",
+    "composite": 45.6,
+    "composite_raw": 36.4,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "0688.HK",
+    "composite": -72.4,
+    "composite_raw": -14.0,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "0291.HK",
+    "composite": 44.1,
+    "composite_raw": 35.7,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "1109.HK",
+    "composite": -7.6,
+    "composite_raw": 15.8,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "1209.HK",
+    "composite": 87.8,
+    "composite_raw": 59.9,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "0836.HK",
+    "composite": -29.2,
+    "composite_raw": 8.6,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "1088.HK",
+    "composite": 47.0,
+    "composite_raw": 36.8,
+    "sentiment": 4.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "0728.HK",
+    "composite": -13.2,
+    "composite_raw": 14.3,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "0762.HK",
+    "composite": -54.0,
+    "composite_raw": -2.4,
+    "sentiment": -4.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "1929.HK",
+    "composite": 27.4,
+    "composite_raw": 28.4,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "0267.HK",
+    "composite": -68.2,
+    "composite_raw": -11.5,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "1113.HK",
+    "composite": -27.9,
+    "composite_raw": 8.9,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "0001.HK",
+    "composite": -63.3,
+    "composite_raw": -7.7,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "1038.HK",
+    "composite": -36.7,
+    "composite_raw": 6.2,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "0002.HK",
+    "composite": 26.9,
+    "composite_raw": 28.3,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "0883.HK",
+    "composite": 14.0,
+    "composite_raw": 23.7,
+    "sentiment": -3.333333333333333
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "3750.HK",
+    "composite": 94.4,
+    "composite_raw": 66.0,
+    "sentiment": 3.333333333333333
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "1093.HK",
+    "composite": 3.9,
+    "composite_raw": 19.8,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "2688.HK",
+    "composite": 1.6,
+    "composite_raw": 19.0,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "0027.HK",
+    "composite": 85.9,
+    "composite_raw": 58.1,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "0175.HK",
+    "composite": 96.1,
+    "composite_raw": 67.6,
+    "sentiment": 2.5
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "6862.HK",
+    "composite": 73.9,
+    "composite_raw": 50.6,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "6690.HK",
+    "composite": 67.5,
+    "composite_raw": 47.7,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "0101.HK",
+    "composite": -67.3,
+    "composite_raw": -10.8,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "3692.HK",
+    "composite": 96.7,
+    "composite_raw": 68.3,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "0012.HK",
+    "composite": -66.8,
+    "composite_raw": -10.7,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "1044.HK",
+    "composite": 26.9,
+    "composite_raw": 28.3,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "0003.HK",
+    "composite": -34.5,
+    "composite_raw": 6.9,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "0388.HK",
+    "composite": -3.9,
+    "composite_raw": 17.1,
+    "sentiment": 3.333333333333333
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "1347.HK",
+    "composite": -97.2,
+    "composite_raw": -48.3,
+    "sentiment": 10.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "1398.HK",
+    "composite": 63.3,
+    "composite_raw": 41.1,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "1801.HK",
+    "composite": 89.8,
+    "composite_raw": 61.8,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "1519.HK",
+    "composite": -54.0,
+    "composite_raw": -2.4,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "6618.HK",
+    "composite": 91.3,
+    "composite_raw": 62.9,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "2618.HK",
+    "composite": 62.0,
+    "composite_raw": 44.4,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "9618.HK",
+    "composite": 55.2,
+    "composite_raw": 40.2,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "1024.HK",
+    "composite": 24.9,
+    "composite_raw": 27.5,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "6181.HK",
+    "composite": 59.6,
+    "composite_raw": 42.7,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "0992.HK",
+    "composite": 38.4,
+    "composite_raw": 32.5,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "2015.HK",
+    "composite": -42.6,
+    "composite_raw": 4.3,
+    "sentiment": 5.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "2331.HK",
+    "composite": 64.8,
+    "composite_raw": 46.0,
+    "sentiment": 6.666666666666666
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "0823.HK",
+    "composite": -64.5,
+    "composite_raw": -9.3,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "0960.HK",
+    "composite": -91.4,
+    "composite_raw": -33.1,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "3690.HK",
+    "composite": -69.0,
+    "composite_raw": -11.9,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "0300.HK",
+    "composite": 83.3,
+    "composite_raw": 56.5,
+    "sentiment": -5.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "0066.HK",
+    "composite": -3.3,
+    "composite_raw": 17.2,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "9999.HK",
+    "composite": 93.0,
+    "composite_raw": 64.8,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "9901.HK",
+    "composite": 95.4,
+    "composite_raw": 67.2,
+    "sentiment": -2.5
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "9633.HK",
+    "composite": 91.5,
+    "composite_raw": 63.2,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "0316.HK",
+    "composite": -31.5,
+    "composite_raw": 7.8,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "0857.HK",
+    "composite": 11.8,
+    "composite_raw": 22.8,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "2318.HK",
+    "composite": -13.8,
+    "composite_raw": 42.4,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "9992.HK",
+    "composite": -28.4,
+    "composite_raw": 8.8,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "0006.HK",
+    "composite": -18.2,
+    "composite_raw": 12.2,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "1928.HK",
+    "composite": -2.1,
+    "composite_raw": 17.8,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "0981.HK",
+    "composite": -86.0,
+    "composite_raw": -27.4,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "2313.HK",
+    "composite": 39.8,
+    "composite_raw": 33.2,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "1177.HK",
+    "composite": 53.4,
+    "composite_raw": 39.5,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "0386.HK",
+    "composite": -51.7,
+    "composite_raw": -0.9,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "1099.HK",
+    "composite": 2.4,
+    "composite_raw": 19.4,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "0016.HK",
+    "composite": -16.8,
+    "composite_raw": 13.0,
+    "sentiment": 3.333333333333333
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "2382.HK",
+    "composite": 75.8,
+    "composite_raw": 52.3,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "0669.HK",
+    "composite": 56.7,
+    "composite_raw": 40.8,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "0700.HK",
+    "composite": 15.9,
+    "composite_raw": 24.6,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "0322.HK",
+    "composite": 76.3,
+    "composite_raw": 52.6,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "9961.HK",
+    "composite": 88.7,
+    "composite_raw": 60.7,
+    "sentiment": 5.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "2338.HK",
+    "composite": 49.5,
+    "composite_raw": 37.6,
+    "sentiment": -6.666666666666666
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "0288.HK",
+    "composite": 35.2,
+    "composite_raw": 31.3,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "1997.HK",
+    "composite": -55.8,
+    "composite_raw": -3.3,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "2359.HK",
+    "composite": 90.3,
+    "composite_raw": 62.0,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "2269.HK",
+    "composite": 64.1,
+    "composite_raw": 45.4,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "1810.HK",
+    "composite": 72.5,
+    "composite_raw": 50.2,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "0868.HK",
+    "composite": -44.2,
+    "composite_raw": 3.0,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "0968.HK",
+    "composite": -82.0,
+    "composite_raw": -23.1,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "2899.HK",
+    "composite": 69.5,
+    "composite_raw": 48.7,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "2057.HK",
+    "composite": 66.4,
+    "composite_raw": 47.2,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "ASML.AS",
+    "composite": 96.1,
+    "composite_raw": 67.6,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "PRX.AS",
+    "composite": 10.2,
+    "composite_raw": 22.1,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "ABI.BR",
+    "composite": -0.3,
+    "composite_raw": 18.4,
+    "sentiment": 2.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "INGA.AS",
+    "composite": -46.7,
+    "composite_raw": 2.0,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "ADYEN.AS",
+    "composite": -51.7,
+    "composite_raw": -0.9,
+    "sentiment": 2.5
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "STLAM.MI",
+    "composite": -87.9,
+    "composite_raw": -30.0,
+    "sentiment": -2.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "CRH",
+    "composite": -25.5,
+    "composite_raw": 9.7,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "NDA-FI.HE",
+    "composite": -52.3,
+    "composite_raw": -1.2,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "FLUT",
+    "composite": -82.8,
+    "composite_raw": -23.7,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "AD.AS",
+    "composite": 3.0,
+    "composite_raw": 19.6,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "NOKIA.HE",
+    "composite": -60.1,
+    "composite_raw": -5.6,
+    "sentiment": -6.25
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "ABVX.PA",
+    "composite": -12.0,
+    "composite_raw": 14.8,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "ADP.PA",
+    "composite": -44.5,
+    "composite_raw": 2.8,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "AF.PA",
+    "composite": 41.4,
+    "composite_raw": 33.9,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "ALO.PA",
+    "composite": -49.0,
+    "composite_raw": 0.5,
+    "sentiment": -5.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "ATE.PA",
+    "composite": 6.9,
+    "composite_raw": 20.7,
+    "sentiment": 2.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "AMUN.PA",
+    "composite": 66.7,
+    "composite_raw": 47.3,
+    "sentiment": 4.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "APAM.AS",
+    "composite": -96.1,
+    "composite_raw": -43.1,
+    "sentiment": 2.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "ARG.PA",
+    "composite": 9.7,
+    "composite_raw": 22.0,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "AKE.PA",
+    "composite": -85.2,
+    "composite_raw": -26.9,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "ATO.PA",
+    "composite": -93.5,
+    "composite_raw": -35.7,
+    "sentiment": 2.5
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "AYV.PA",
+    "composite": -36.2,
+    "composite_raw": 6.4,
+    "sentiment": 3.333333333333333
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "BB.PA",
+    "composite": 24.1,
+    "composite_raw": 27.2,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "BIM.PA",
+    "composite": 49.5,
+    "composite_raw": 37.6,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "BOL.PA",
+    "composite": -24.5,
+    "composite_raw": 10.1,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "CARM.PA",
+    "composite": -8.3,
+    "composite_raw": 15.7,
+    "sentiment": 1.6666666666666665
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "CLARI.PA",
+    "composite": -69.0,
+    "composite_raw": -11.9,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "COFA.PA",
+    "composite": -45.0,
+    "composite_raw": 2.7,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "COV.PA",
+    "composite": -67.3,
+    "composite_raw": -10.8,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "AM.PA",
+    "composite": 89.3,
+    "composite_raw": 61.4,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "DBV.PA",
+    "composite": -14.8,
+    "composite_raw": 14.0,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "DBG.PA",
+    "composite": -83.6,
+    "composite_raw": -25.1,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "EDEN.PA",
+    "composite": 96.9,
+    "composite_raw": 68.4,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "ELIS.PA",
+    "composite": -23.2,
+    "composite_raw": 10.6,
+    "sentiment": 3.333333333333333
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "EMEIS.PA",
+    "composite": -92.8,
+    "composite_raw": -35.2,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "ERA.PA",
+    "composite": -99.9,
+    "composite_raw": -86.5,
+    "sentiment": -2.5
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "RF.PA",
+    "composite": -94.0,
+    "composite_raw": -36.8,
+    "sentiment": -5.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "ETL.PA",
+    "composite": -98.2,
+    "composite_raw": -52.5,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "EXA.PA",
+    "composite": -1.2,
+    "composite_raw": 18.1,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "EXENS.PA",
+    "composite": 34.1,
+    "composite_raw": 31.0,
+    "sentiment": 5.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "FDJU.PA",
+    "composite": 16.8,
+    "composite_raw": 24.9,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "FRVIA.PA",
+    "composite": -98.1,
+    "composite_raw": -52.0,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "GFC.PA",
+    "composite": -56.2,
+    "composite_raw": -3.6,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "GNFT.PA",
+    "composite": -60.9,
+    "composite_raw": -6.3,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "GET.PA",
+    "composite": -17.2,
+    "composite_raw": 12.7,
+    "sentiment": 6.666666666666666
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "GTT.PA",
+    "composite": 89.2,
+    "composite_raw": 61.3,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "ICAD.PA",
+    "composite": -76.1,
+    "composite_raw": -16.5,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "IDL.PA",
+    "composite": -16.0,
+    "composite_raw": 13.6,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "NK.PA",
+    "composite": -79.9,
+    "composite_raw": -20.8,
+    "sentiment": 2.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "IVA.PA",
+    "composite": -20.3,
+    "composite_raw": 11.7,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "IPN.PA",
+    "composite": 41.5,
+    "composite_raw": 34.0,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "IPS.PA",
+    "composite": 34.1,
+    "composite_raw": 31.0,
+    "sentiment": 2.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "DEC.PA",
+    "composite": -4.6,
+    "composite_raw": 16.9,
+    "sentiment": 3.333333333333333
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "LI.PA",
+    "composite": 54.6,
+    "composite_raw": 39.9,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "FII.PA",
+    "composite": -30.8,
+    "composite_raw": 8.0,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "MAU.PA",
+    "composite": 28.0,
+    "composite_raw": 28.6,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "MEDCL.PA",
+    "composite": 54.2,
+    "composite_raw": 39.8,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "MERY.PA",
+    "composite": -85.6,
+    "composite_raw": -27.0,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "MRN.PA",
+    "composite": -80.3,
+    "composite_raw": -21.3,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "MMT.PA",
+    "composite": -29.9,
+    "composite_raw": 8.4,
+    "sentiment": 2.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "NANO.PA",
+    "composite": 1.6,
+    "composite_raw": 19.0,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "NEX.PA",
+    "composite": 5.5,
+    "composite_raw": 20.4,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "OPM.PA",
+    "composite": -56.6,
+    "composite_raw": -3.7,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "PLX.PA",
+    "composite": 74.2,
+    "composite_raw": 50.9,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "RCO.PA",
+    "composite": -79.6,
+    "composite_raw": -20.2,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "RXL.PA",
+    "composite": -73.8,
+    "composite_raw": -15.2,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "RUI.PA",
+    "composite": -16.5,
+    "composite_raw": 13.1,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "SK.PA",
+    "composite": -66.5,
+    "composite_raw": -10.6,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "DIM.PA",
+    "composite": -62.3,
+    "composite_raw": -7.3,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "SCR.PA",
+    "composite": 1.6,
+    "composite_raw": 19.0,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "SESG.PA",
+    "composite": -87.3,
+    "composite_raw": -29.6,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "SW.PA",
+    "composite": -37.2,
+    "composite_raw": 6.0,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "SOI.PA",
+    "composite": -93.7,
+    "composite_raw": -35.9,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "SOLB.BR",
+    "composite": -74.2,
+    "composite_raw": -15.3,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "SOP.PA",
+    "composite": 54.2,
+    "composite_raw": 39.8,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "SPIE.PA",
+    "composite": 7.3,
+    "composite_raw": 20.9,
+    "sentiment": 2.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "TE.PA",
+    "composite": -32.0,
+    "composite_raw": 7.7,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "TEP.PA",
+    "composite": 50.2,
+    "composite_raw": 37.7,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "TFI.PA",
+    "composite": -42.2,
+    "composite_raw": 4.4,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "TRI.PA",
+    "composite": -26.6,
+    "composite_raw": 9.2,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "UBI.PA",
+    "composite": -99.5,
+    "composite_raw": -61.8,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "FR.PA",
+    "composite": -64.0,
+    "composite_raw": -8.9,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "VK.PA",
+    "composite": 40.9,
+    "composite_raw": 33.8,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "VLA.PA",
+    "composite": -95.0,
+    "composite_raw": -38.9,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "VCT.PA",
+    "composite": -5.8,
+    "composite_raw": 16.4,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "VIRP.PA",
+    "composite": 21.1,
+    "composite_raw": 26.2,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "VIRI.PA",
+    "composite": -44.0,
+    "composite_raw": 3.1,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "VIV.PA",
+    "composite": -98.4,
+    "composite_raw": -57.5,
+    "sentiment": 3.333333333333333
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "VU.PA",
+    "composite": 95.9,
+    "composite_raw": 67.5,
+    "sentiment": 3.333333333333333
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "MF.PA",
+    "composite": 28.4,
+    "composite_raw": 28.8,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "WLN.PA",
+    "composite": -87.7,
+    "composite_raw": -29.9,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "AALB.AS",
+    "composite": -66.8,
+    "composite_raw": -10.7,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "ABN.AS",
+    "composite": -22.1,
+    "composite_raw": 11.0,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "AXS.AS",
+    "composite": -87.1,
+    "composite_raw": -29.5,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "ACOMO.AS",
+    "composite": -35.7,
+    "composite_raw": 6.5,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "AED.BR",
+    "composite": -39.3,
+    "composite_raw": 5.3,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "AGN.AS",
+    "composite": -26.1,
+    "composite_raw": 9.3,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "AGIL.AS",
+    "composite": -73.1,
+    "composite_raw": -14.9,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "AJAX.AS",
+    "composite": -91.9,
+    "composite_raw": -34.0,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "AKZA.AS",
+    "composite": 1.3,
+    "composite_raw": 18.9,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "ALFEN.AS",
+    "composite": -88.8,
+    "composite_raw": -30.7,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "ALLFG.AS",
+    "composite": -80.1,
+    "composite_raw": -21.1,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "AMUND.AS",
+    "composite": -72.9,
+    "composite_raw": -14.8,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "ALX.AS",
+    "composite": -60.1,
+    "composite_raw": -5.6,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "AMG.AS",
+    "composite": -96.7,
+    "composite_raw": -46.0,
+    "sentiment": 2.5
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "ARCAD.AS",
+    "composite": 66.0,
+    "composite_raw": 46.8,
+    "sentiment": 4.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "ASM.AS",
+    "composite": 77.7,
+    "composite_raw": 53.4,
+    "sentiment": 3.333333333333333
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "ASRNL.AS",
+    "composite": 63.7,
+    "composite_raw": 45.1,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "AVTX.AS",
+    "composite": -91.9,
+    "composite_raw": -34.0,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "AZRN.AS",
+    "composite": -99.5,
+    "composite_raw": -61.8,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "BAMNB.AS",
+    "composite": 74.1,
+    "composite_raw": 50.8,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "BNJ.AS",
+    "composite": 53.9,
+    "composite_raw": 39.7,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "BFIT.AS",
+    "composite": -52.4,
+    "composite_raw": -1.4,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "BESI.AS",
+    "composite": 21.1,
+    "composite_raw": 26.2,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "BEVER.AS",
+    "composite": -88.6,
+    "composite_raw": -30.3,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "BRNL.AS",
+    "composite": -61.5,
+    "composite_raw": -6.6,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "CABKA.AS",
+    "composite": -84.6,
+    "composite_raw": -26.4,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "CMCOM.AS",
+    "composite": -94.2,
+    "composite_raw": -37.2,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "CRBN.AS",
+    "composite": -33.9,
+    "composite_raw": 7.2,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "CSG.AS",
+    "composite": -58.1,
+    "composite_raw": -4.8,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "CTAC.AS",
+    "composite": -40.4,
+    "composite_raw": 4.9,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "CTPNV.AS",
+    "composite": -22.8,
+    "composite_raw": 10.7,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "CVC.AS",
+    "composite": 98.2,
+    "composite_raw": 71.6,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "DSFIR.AS",
+    "composite": -2.3,
+    "composite_raw": 17.7,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "EAS2P.AS",
+    "composite": -32.5,
+    "composite_raw": 7.6,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "EBUS.AS",
+    "composite": -97.4,
+    "composite_raw": -48.5,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "ENVI.AS",
+    "composite": -84.6,
+    "composite_raw": -26.4,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "ERC.AS",
+    "composite": -74.2,
+    "composite_raw": -15.3,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "ECT.AS",
+    "composite": -38.8,
+    "composite_raw": 5.5,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "ECMPA.AS",
+    "composite": -37.6,
+    "composite_raw": 5.9,
+    "sentiment": 6.666666666666666
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "EXO.AS",
+    "composite": -37.6,
+    "composite_raw": 5.9,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "FAGR.BR",
+    "composite": 52.9,
+    "composite_raw": 39.4,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "FAST.AS",
+    "composite": -94.4,
+    "composite_raw": -37.4,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "FLOW.AS",
+    "composite": -62.6,
+    "composite_raw": -7.4,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "FFARM.AS",
+    "composite": 51.2,
+    "composite_raw": 38.2,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "FUR.AS",
+    "composite": -91.0,
+    "composite_raw": -32.7,
+    "sentiment": 10.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "EARTH.AS",
+    "composite": -97.7,
+    "composite_raw": -50.0,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "HAL.AS",
+    "composite": 46.0,
+    "composite_raw": 36.5,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "HAVAS.AS",
+    "composite": 39.5,
+    "composite_raw": 33.1,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "HWK.AS",
+    "composite": -84.6,
+    "composite_raw": -26.4,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "HEIJM.AS",
+    "composite": 94.7,
+    "composite_raw": 66.6,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "HEIA.AS",
+    "composite": 10.3,
+    "composite_raw": 22.2,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "HEIO.AS",
+    "composite": 23.7,
+    "composite_raw": 27.1,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "HOLCO.AS",
+    "composite": -59.7,
+    "composite_raw": -5.5,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "HYDRA.AS",
+    "composite": 70.6,
+    "composite_raw": 49.0,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "IMCD.AS",
+    "composite": -40.9,
+    "composite_raw": 4.8,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "INPST.AS",
+    "composite": -23.6,
+    "composite_raw": 10.3,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "KENDR.AS",
+    "composite": 37.2,
+    "composite_raw": 31.9,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "KPN.AS",
+    "composite": -21.2,
+    "composite_raw": 11.3,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "LKFT.AS",
+    "composite": 32.4,
+    "composite_raw": 30.3,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "LVIDE.AS",
+    "composite": -14.8,
+    "composite_raw": 14.0,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "MICC.AS",
+    "composite": -14.8,
+    "composite_raw": 14.0,
+    "sentiment": 2.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "NEDSE.AS",
+    "composite": -90.9,
+    "composite_raw": -32.6,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "MORE.AS",
+    "composite": -22.3,
+    "composite_raw": 10.9,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "MTRK.AS",
+    "composite": -99.1,
+    "composite_raw": -60.0,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "NAI.AS",
+    "composite": -60.7,
+    "composite_raw": -6.0,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "NEDAP.AS",
+    "composite": 84.5,
+    "composite_raw": 57.4,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "NRP.AS",
+    "composite": 2.1,
+    "composite_raw": 19.3,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "NSE.AS",
+    "composite": -14.8,
+    "composite_raw": 14.0,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "NN.AS",
+    "composite": -37.2,
+    "composite_raw": 6.0,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "NSI.AS",
+    "composite": -61.9,
+    "composite_raw": -7.1,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "NXFIL.AS",
+    "composite": -77.1,
+    "composite_raw": -17.5,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "OCI.AS",
+    "composite": -91.6,
+    "composite_raw": -33.8,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "ONWD.BR",
+    "composite": -81.6,
+    "composite_raw": -22.8,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "PBH.AS",
+    "composite": -84.6,
+    "composite_raw": -26.4,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "PHARM.AS",
+    "composite": 9.7,
+    "composite_raw": 22.0,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "PHIA.AS",
+    "composite": 42.0,
+    "composite_raw": 34.4,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "PORF.AS",
+    "composite": -68.6,
+    "composite_raw": -11.7,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "PNL.AS",
+    "composite": -86.4,
+    "composite_raw": -28.0,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "QEV.AS",
+    "composite": -93.9,
+    "composite_raw": -36.0,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "RAND.AS",
+    "composite": -18.2,
+    "composite_raw": 12.2,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "REN.AS",
+    "composite": 85.2,
+    "composite_raw": 57.8,
+    "sentiment": 2.5
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "RET.BR",
+    "composite": -51.4,
+    "composite_raw": -0.8,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "SBMO.AS",
+    "composite": -27.9,
+    "composite_raw": 8.9,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "SHELL.AS",
+    "composite": -3.9,
+    "composite_raw": 17.1,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "SIFG.AS",
+    "composite": -98.9,
+    "composite_raw": -59.8,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "LIGHT.AS",
+    "composite": -7.0,
+    "composite_raw": 15.9,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "SLIGR.AS",
+    "composite": -17.2,
+    "composite_raw": 12.7,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "SWICH.AS",
+    "composite": 53.7,
+    "composite_raw": 39.6,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "TFG.AS",
+    "composite": 3.4,
+    "composite_raw": 19.7,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "THEON.AS",
+    "composite": -29.2,
+    "composite_raw": 8.6,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "TWEKA.AS",
+    "composite": -61.3,
+    "composite_raw": -6.5,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "TOM2.AS",
+    "composite": -76.1,
+    "composite_raw": -16.5,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "TRIO.AS",
+    "composite": -0.3,
+    "composite_raw": 18.4,
+    "sentiment": 7.5
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "UMG.AS",
+    "composite": 85.2,
+    "composite_raw": 57.8,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "UNA.AS",
+    "composite": 50.2,
+    "composite_raw": 37.7,
+    "sentiment": 2.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "VLK.AS",
+    "composite": -21.2,
+    "composite_raw": 11.3,
+    "sentiment": 10.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "VALUE.AS",
+    "composite": -10.9,
+    "composite_raw": 15.2,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "VASTB.BR",
+    "composite": 8.2,
+    "composite_raw": 21.4,
+    "sentiment": 2.5
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "VVY.AS",
+    "composite": -14.8,
+    "composite_raw": 14.0,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "VTA.AS",
+    "composite": -45.6,
+    "composite_raw": 2.4,
+    "sentiment": -10.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "VPK.AS",
+    "composite": 25.9,
+    "composite_raw": 27.8,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "WDP.BR",
+    "composite": 4.5,
+    "composite_raw": 20.1,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "WHA.AS",
+    "composite": -33.6,
+    "composite_raw": 7.4,
+    "sentiment": 4.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "WKL.AS",
+    "composite": 89.7,
+    "composite_raw": 61.7,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "AOS",
+    "composite": 91.0,
+    "composite_raw": 62.7,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "ABT",
+    "composite": 39.8,
+    "composite_raw": 33.2,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "ABBV",
+    "composite": 19.5,
+    "composite_raw": 25.8,
+    "sentiment": 3.333333333333333
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "ACN",
+    "composite": 97.3,
+    "composite_raw": 68.8,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "AES",
+    "composite": -77.6,
+    "composite_raw": -17.8,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "AFL",
+    "composite": -19.0,
+    "composite_raw": 12.0,
+    "sentiment": 2.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "A",
+    "composite": 52.4,
+    "composite_raw": 39.2,
+    "sentiment": 3.333333333333333
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "APD",
+    "composite": -95.9,
+    "composite_raw": -42.9,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "AKAM",
+    "composite": -56.0,
+    "composite_raw": -3.4,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "ALB",
+    "composite": -95.0,
+    "composite_raw": -38.9,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "ARE",
+    "composite": -95.2,
+    "composite_raw": -40.5,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "ALGN",
+    "composite": 18.0,
+    "composite_raw": 25.4,
+    "sentiment": -2.5
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "ALLE",
+    "composite": 73.6,
+    "composite_raw": 50.5,
+    "sentiment": 2.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "LNT",
+    "composite": -71.1,
+    "composite_raw": -13.1,
+    "sentiment": 3.333333333333333
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "ALL",
+    "composite": 25.2,
+    "composite_raw": 27.6,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "MO",
+    "composite": 83.6,
+    "composite_raw": 56.6,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "AMCR",
+    "composite": -10.9,
+    "composite_raw": 15.2,
+    "sentiment": 10.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "AEE",
+    "composite": -71.1,
+    "composite_raw": -13.1,
+    "sentiment": -5.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "AIG",
+    "composite": -47.7,
+    "composite_raw": 1.8,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "AMT",
+    "composite": -31.0,
+    "composite_raw": 7.9,
+    "sentiment": 2.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "AWK",
+    "composite": -56.6,
+    "composite_raw": -3.7,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "AMP",
+    "composite": 12.7,
+    "composite_raw": 23.1,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "AME",
+    "composite": 45.1,
+    "composite_raw": 36.1,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "APH",
+    "composite": 92.0,
+    "composite_raw": 63.7,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "AON",
+    "composite": 59.5,
+    "composite_raw": 42.5,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "APA",
+    "composite": 18.6,
+    "composite_raw": 25.6,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "APO",
+    "composite": 59.3,
+    "composite_raw": 42.4,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "APTV",
+    "composite": -52.0,
+    "composite_raw": -1.0,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "ACGL",
+    "composite": 25.2,
+    "composite_raw": 27.6,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "ADM",
+    "composite": -54.4,
+    "composite_raw": -2.5,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "ARES",
+    "composite": -11.8,
+    "composite_raw": 14.9,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "ANET",
+    "composite": 91.9,
+    "composite_raw": 63.6,
+    "sentiment": 3.333333333333333
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "AJG",
+    "composite": 12.2,
+    "composite_raw": 23.0,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "AIZ",
+    "composite": 5.1,
+    "composite_raw": 20.3,
+    "sentiment": 3.333333333333333
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "T",
+    "composite": 33.4,
+    "composite_raw": 30.7,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "ATO",
+    "composite": -10.3,
+    "composite_raw": 15.3,
+    "sentiment": 10.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "AZO",
+    "composite": 31.7,
+    "composite_raw": 30.0,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "AVY",
+    "composite": 6.9,
+    "composite_raw": 20.7,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "BALL",
+    "composite": -45.4,
+    "composite_raw": 2.5,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "BAC",
+    "composite": -58.3,
+    "composite_raw": 13.6,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "BAX",
+    "composite": -86.7,
+    "composite_raw": -28.2,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "BDX",
+    "composite": -3.9,
+    "composite_raw": 17.1,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "BRK-B",
+    "composite": -27.9,
+    "composite_raw": 8.9,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "BBY",
+    "composite": 47.0,
+    "composite_raw": 36.8,
+    "sentiment": 3.333333333333333
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "TECH",
+    "composite": -3.9,
+    "composite_raw": 17.1,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "BIIB",
+    "composite": 6.0,
+    "composite_raw": 20.5,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "BLK",
+    "composite": 38.2,
+    "composite_raw": 32.4,
+    "sentiment": 2.5
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "BX",
+    "composite": -22.6,
+    "composite_raw": 10.8,
+    "sentiment": 3.333333333333333
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "XYZ",
+    "composite": 66.2,
+    "composite_raw": 47.0,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "BE",
+    "composite": -88.6,
+    "composite_raw": -30.3,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "BNY",
+    "composite": 68.3,
+    "composite_raw": 41.3,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "BSX",
+    "composite": 30.0,
+    "composite_raw": 29.5,
+    "sentiment": -5.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "BMY",
+    "composite": 37.2,
+    "composite_raw": 31.9,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "BR",
+    "composite": 82.1,
+    "composite_raw": 56.1,
+    "sentiment": 2.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "BRO",
+    "composite": 25.6,
+    "composite_raw": 27.7,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "BF-B",
+    "composite": 48.4,
+    "composite_raw": 37.2,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "BG",
+    "composite": -81.2,
+    "composite_raw": -22.6,
+    "sentiment": 2.8571428571428568
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "BXP",
+    "composite": -79.3,
+    "composite_raw": -19.4,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "CHRW",
+    "composite": 25.6,
+    "composite_raw": 27.7,
+    "sentiment": -5.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "CPT",
+    "composite": -56.2,
+    "composite_raw": -3.6,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "COF",
+    "composite": 10.7,
+    "composite_raw": 10.7,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "CAH",
+    "composite": 98.4,
+    "composite_raw": 72.0,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "CCL",
+    "composite": -68.6,
+    "composite_raw": -11.7,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "CARR",
+    "composite": -7.6,
+    "composite_raw": 15.8,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "CVNA",
+    "composite": -74.7,
+    "composite_raw": -15.5,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "CASY",
+    "composite": 28.9,
+    "composite_raw": 29.0,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "CBOE",
+    "composite": 99.9,
+    "composite_raw": 78.6,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "CBRE",
+    "composite": -47.7,
+    "composite_raw": 1.8,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "CDW",
+    "composite": 24.5,
+    "composite_raw": 27.3,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "COR",
+    "composite": 73.6,
+    "composite_raw": 50.5,
+    "sentiment": 3.333333333333333
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "CNC",
+    "composite": -92.8,
+    "composite_raw": -35.2,
+    "sentiment": 2.5
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "CNP",
+    "composite": -77.3,
+    "composite_raw": -17.7,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "CF",
+    "composite": 26.9,
+    "composite_raw": 28.3,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "CRL",
+    "composite": -91.2,
+    "composite_raw": -32.8,
+    "sentiment": 2.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "SCHW",
+    "composite": 34.5,
+    "composite_raw": 34.5,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "CHTR",
+    "composite": -64.3,
+    "composite_raw": -9.2,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "CMG",
+    "composite": 70.3,
+    "composite_raw": 48.9,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "CB",
+    "composite": -23.6,
+    "composite_raw": 10.3,
+    "sentiment": 2.5
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "CHD",
+    "composite": 58.3,
+    "composite_raw": 42.0,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "CIEN",
+    "composite": -64.2,
+    "composite_raw": -9.0,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "CI",
+    "composite": 28.0,
+    "composite_raw": 28.6,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "CINF",
+    "composite": -13.7,
+    "composite_raw": 14.2,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "C",
+    "composite": -83.3,
+    "composite_raw": 5.4,
+    "sentiment": 2.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "CFG",
+    "composite": -68.3,
+    "composite_raw": 11.7,
+    "sentiment": 3.333333333333333
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "CLX",
+    "composite": 42.5,
+    "composite_raw": 34.6,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "CME",
+    "composite": 78.0,
+    "composite_raw": 53.5,
+    "sentiment": 2.5
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "CMS",
+    "composite": -63.6,
+    "composite_raw": -8.1,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "CTSH",
+    "composite": 59.1,
+    "composite_raw": 42.3,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "COHR",
+    "composite": -51.1,
+    "composite_raw": -0.5,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "COIN",
+    "composite": -45.2,
+    "composite_raw": 2.6,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "CL",
+    "composite": 88.9,
+    "composite_raw": 61.0,
+    "sentiment": 5.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "FIX",
+    "composite": 95.2,
+    "composite_raw": 66.9,
+    "sentiment": 3.333333333333333
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "COP",
+    "composite": -6.7,
+    "composite_raw": 16.0,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "ED",
+    "composite": -55.3,
+    "composite_raw": -2.8,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "STZ",
+    "composite": 54.6,
+    "composite_raw": 39.9,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "COO",
+    "composite": -16.8,
+    "composite_raw": 13.0,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "GLW",
+    "composite": -69.2,
+    "composite_raw": -12.0,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "CPAY",
+    "composite": -7.6,
+    "composite_raw": 15.8,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "CTVA",
+    "composite": 21.1,
+    "composite_raw": 26.2,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "CSGP",
+    "composite": -92.4,
+    "composite_raw": -34.9,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "CCI",
+    "composite": -59.7,
+    "composite_raw": -5.5,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "CMI",
+    "composite": 38.8,
+    "composite_raw": 32.6,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "CVS",
+    "composite": -78.2,
+    "composite_raw": -18.5,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "DHR",
+    "composite": -18.2,
+    "composite_raw": 12.2,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "DRI",
+    "composite": 22.7,
+    "composite_raw": 26.6,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "DVA",
+    "composite": -1.5,
+    "composite_raw": 18.0,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "DECK",
+    "composite": 95.0,
+    "composite_raw": 66.7,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "DE",
+    "composite": -70.4,
+    "composite_raw": -12.6,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "DELL",
+    "composite": 71.6,
+    "composite_raw": 49.9,
+    "sentiment": 3.333333333333333
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "DAL",
+    "composite": 53.4,
+    "composite_raw": 39.5,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "DVN",
+    "composite": -19.9,
+    "composite_raw": 11.8,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "DLR",
+    "composite": -39.7,
+    "composite_raw": 5.1,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "DG",
+    "composite": -34.1,
+    "composite_raw": 7.1,
+    "sentiment": -5.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "DLTR",
+    "composite": 22.2,
+    "composite_raw": 26.5,
+    "sentiment": 3.333333333333333
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "D",
+    "composite": -43.5,
+    "composite_raw": 3.6,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "DPZ",
+    "composite": 24.1,
+    "composite_raw": 27.2,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "DOV",
+    "composite": 29.3,
+    "composite_raw": 29.3,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "DOW",
+    "composite": -99.2,
+    "composite_raw": -61.7,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "DHI",
+    "composite": -16.2,
+    "composite_raw": 13.4,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "DTE",
+    "composite": -70.7,
+    "composite_raw": -12.9,
+    "sentiment": 5.7142857142857135
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "DUK",
+    "composite": -62.9,
+    "composite_raw": -7.5,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "DD",
+    "composite": -94.5,
+    "composite_raw": -37.9,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "ETN",
+    "composite": 37.2,
+    "composite_raw": 31.9,
+    "sentiment": -2.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "EBAY",
+    "composite": 78.8,
+    "composite_raw": 53.9,
+    "sentiment": 2.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "ECHO",
+    "composite": -85.2,
+    "composite_raw": -26.9,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "ECL",
+    "composite": 31.2,
+    "composite_raw": 29.8,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "EIX",
+    "composite": -2.3,
+    "composite_raw": 17.7,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "EW",
+    "composite": 48.1,
+    "composite_raw": 37.1,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "ELV",
+    "composite": -43.0,
+    "composite_raw": 4.2,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "EME",
+    "composite": 90.5,
+    "composite_raw": 62.1,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "EMR",
+    "composite": -5.1,
+    "composite_raw": 16.7,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "ETR",
+    "composite": -65.8,
+    "composite_raw": -10.3,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "EOG",
+    "composite": 20.6,
+    "composite_raw": 26.1,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "EQT",
+    "composite": -9.1,
+    "composite_raw": 15.6,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "EFX",
+    "composite": 9.2,
+    "composite_raw": 21.9,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "EQIX",
+    "composite": -57.2,
+    "composite_raw": -3.9,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "ERIE",
+    "composite": -53.4,
+    "composite_raw": -2.2,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "ESS",
+    "composite": -19.0,
+    "composite_raw": 12.0,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "EL",
+    "composite": -53.2,
+    "composite_raw": -2.0,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "EG",
+    "composite": -32.5,
+    "composite_raw": 7.6,
+    "sentiment": 2.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "EVRG",
+    "composite": -71.1,
+    "composite_raw": -13.1,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "P",
+    "composite": 97.6,
+    "composite_raw": 68.9,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "ES",
+    "composite": -68.0,
+    "composite_raw": -11.1,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "EXE",
+    "composite": -25.0,
+    "composite_raw": 9.9,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "EXPE",
+    "composite": 98.1,
+    "composite_raw": 71.3,
+    "sentiment": 5.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "EXPD",
+    "composite": 65.5,
+    "composite_raw": 46.5,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "EXR",
+    "composite": -20.6,
+    "composite_raw": 11.5,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "XOM",
+    "composite": -21.7,
+    "composite_raw": 11.1,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "FFIV",
+    "composite": -47.1,
+    "composite_raw": 1.9,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "FDS",
+    "composite": 72.5,
+    "composite_raw": 50.2,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "FICO",
+    "composite": 75.3,
+    "composite_raw": 51.9,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "FRT",
+    "composite": -53.7,
+    "composite_raw": -2.3,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "FDX",
+    "composite": -31.5,
+    "composite_raw": 7.8,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "FDXF",
+    "composite": -73.3,
+    "composite_raw": -15.0,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "FERG",
+    "composite": -54.4,
+    "composite_raw": -2.5,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "FIS",
+    "composite": -62.6,
+    "composite_raw": -7.4,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "FITB",
+    "composite": -25.0,
+    "composite_raw": 23.9,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "FSLR",
+    "composite": 74.6,
+    "composite_raw": 51.3,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "FE",
+    "composite": -69.7,
+    "composite_raw": -12.4,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "FISV",
+    "composite": -38.3,
+    "composite_raw": 5.7,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "FLEX",
+    "composite": -6.5,
+    "composite_raw": 16.1,
+    "sentiment": 2.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "F",
+    "composite": -72.0,
+    "composite_raw": -13.8,
+    "sentiment": 2.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "FTV",
+    "composite": -76.7,
+    "composite_raw": -17.2,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "FOXA",
+    "composite": 50.6,
+    "composite_raw": 37.8,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "FOX",
+    "composite": 49.5,
+    "composite_raw": 37.6,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "BEN",
+    "composite": -61.9,
+    "composite_raw": -7.1,
+    "sentiment": 10.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "FCX",
+    "composite": -15.5,
+    "composite_raw": 13.9,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "GRMN",
+    "composite": 88.3,
+    "composite_raw": 60.5,
+    "sentiment": 2.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "IT",
+    "composite": 84.6,
+    "composite_raw": 57.5,
+    "sentiment": -3.75
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "GE",
+    "composite": 93.4,
+    "composite_raw": 65.1,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "GEV",
+    "composite": 85.7,
+    "composite_raw": 58.0,
+    "sentiment": 2.5
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "GEN",
+    "composite": 3.4,
+    "composite_raw": 19.7,
+    "sentiment": 2.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "GNRC",
+    "composite": -80.8,
+    "composite_raw": -21.9,
+    "sentiment": 3.333333333333333
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "GD",
+    "composite": 51.9,
+    "composite_raw": 39.0,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "GIS",
+    "composite": -77.9,
+    "composite_raw": -18.4,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "GM",
+    "composite": -94.7,
+    "composite_raw": -38.0,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "GPC",
+    "composite": -93.1,
+    "composite_raw": -35.3,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "GPN",
+    "composite": -9.8,
+    "composite_raw": 15.4,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "GL",
+    "composite": -24.5,
+    "composite_raw": 10.1,
+    "sentiment": -4.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "GDDY",
+    "composite": 95.7,
+    "composite_raw": 67.4,
+    "sentiment": 2.5
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "HAL",
+    "composite": -41.2,
+    "composite_raw": 4.7,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "HIG",
+    "composite": -19.9,
+    "composite_raw": 11.8,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "HAS",
+    "composite": -82.5,
+    "composite_raw": -23.4,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "HCA",
+    "composite": 47.7,
+    "composite_raw": 37.0,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "DOC",
+    "composite": -72.2,
+    "composite_raw": -13.9,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "HSIC",
+    "composite": -18.2,
+    "composite_raw": 12.2,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "HSY",
+    "composite": 26.9,
+    "composite_raw": 28.3,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "HPE",
+    "composite": -89.5,
+    "composite_raw": -31.3,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "HLT",
+    "composite": 15.9,
+    "composite_raw": 24.6,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "HRL",
+    "composite": -46.2,
+    "composite_raw": 2.1,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "HST",
+    "composite": -1.8,
+    "composite_raw": 17.9,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "HWM",
+    "composite": 69.3,
+    "composite_raw": 48.6,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "HPQ",
+    "composite": 44.9,
+    "composite_raw": 35.9,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "HUBB",
+    "composite": 55.2,
+    "composite_raw": 40.2,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "HUM",
+    "composite": -29.2,
+    "composite_raw": 8.6,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "HBAN",
+    "composite": -35.0,
+    "composite_raw": 22.2,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "HII",
+    "composite": -0.6,
+    "composite_raw": 18.3,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "IEX",
+    "composite": -3.3,
+    "composite_raw": 17.2,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "ITW",
+    "composite": 58.1,
+    "composite_raw": 41.9,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "ILMN",
+    "composite": 71.6,
+    "composite_raw": 49.9,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "INCY",
+    "composite": 99.2,
+    "composite_raw": 75.3,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "IR",
+    "composite": -14.1,
+    "composite_raw": 14.1,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "PODD",
+    "composite": 81.8,
+    "composite_raw": 55.8,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "IBKR",
+    "composite": 90.8,
+    "composite_raw": 62.3,
+    "sentiment": -5.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "ICE",
+    "composite": 57.0,
+    "composite_raw": 40.9,
+    "sentiment": 5.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "IFF",
+    "composite": -93.4,
+    "composite_raw": -35.5,
+    "sentiment": -5.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "IP",
+    "composite": -99.7,
+    "composite_raw": -75.1,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "IVZ",
+    "composite": -83.1,
+    "composite_raw": -23.8,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "INVH",
+    "composite": -43.0,
+    "composite_raw": 4.2,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "IQV",
+    "composite": 20.4,
+    "composite_raw": 26.0,
+    "sentiment": 10.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "IRM",
+    "composite": -90.6,
+    "composite_raw": -32.4,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "JBHT",
+    "composite": -9.5,
+    "composite_raw": 15.5,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "JBL",
+    "composite": 44.5,
+    "composite_raw": 35.8,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "JKHY",
+    "composite": 85.2,
+    "composite_raw": 57.8,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "J",
+    "composite": 26.4,
+    "composite_raw": 28.2,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "JCI",
+    "composite": -28.4,
+    "composite_raw": 8.8,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "KVUE",
+    "composite": -12.2,
+    "composite_raw": 14.5,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "KEY",
+    "composite": -83.3,
+    "composite_raw": 5.4,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "KEYS",
+    "composite": 5.5,
+    "composite_raw": 20.4,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "KMB",
+    "composite": 60.7,
+    "composite_raw": 43.5,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "KIM",
+    "composite": -26.9,
+    "composite_raw": 9.1,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "KMI",
+    "composite": -62.9,
+    "composite_raw": -7.5,
+    "sentiment": 3.333333333333333
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "KKR",
+    "composite": -38.0,
+    "composite_raw": 5.8,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "KR",
+    "composite": -41.7,
+    "composite_raw": 4.5,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "LHX",
+    "composite": 7.8,
+    "composite_raw": 21.1,
+    "sentiment": 5.7142857142857135
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "LH",
+    "composite": 16.4,
+    "composite_raw": 24.8,
+    "sentiment": 2.5
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "LVS",
+    "composite": 16.8,
+    "composite_raw": 24.9,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "LDOS",
+    "composite": 69.3,
+    "composite_raw": 48.6,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "LEN",
+    "composite": -76.9,
+    "composite_raw": -17.4,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "LII",
+    "composite": 76.7,
+    "composite_raw": 52.8,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "LLY",
+    "composite": 88.9,
+    "composite_raw": 61.0,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "LYV",
+    "composite": 40.9,
+    "composite_raw": 33.8,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "LMT",
+    "composite": 67.2,
+    "composite_raw": 47.6,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "L",
+    "composite": -46.7,
+    "composite_raw": 2.0,
+    "sentiment": 4.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "LOW",
+    "composite": 21.9,
+    "composite_raw": 26.4,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "LULU",
+    "composite": 68.9,
+    "composite_raw": 48.3,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "LYB",
+    "composite": -96.9,
+    "composite_raw": -46.2,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "MTB",
+    "composite": -1.7,
+    "composite_raw": 27.5,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "MPC",
+    "composite": -51.3,
+    "composite_raw": -0.6,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "MRSH",
+    "composite": 73.6,
+    "composite_raw": 50.5,
+    "sentiment": 10.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "MLM",
+    "composite": -42.2,
+    "composite_raw": 4.4,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "MAS",
+    "composite": 60.3,
+    "composite_raw": 43.0,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "MA",
+    "composite": 94.0,
+    "composite_raw": 65.5,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "MKC",
+    "composite": 30.9,
+    "composite_raw": 29.7,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "MCK",
+    "composite": 69.0,
+    "composite_raw": 48.4,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "MDT",
+    "composite": 25.6,
+    "composite_raw": 27.7,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "MET",
+    "composite": 10.9,
+    "composite_raw": 22.4,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "MTD",
+    "composite": 67.8,
+    "composite_raw": 47.8,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "MGM",
+    "composite": -91.6,
+    "composite_raw": -33.8,
+    "sentiment": 2.5
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "MAA",
+    "composite": -50.0,
+    "composite_raw": -0.1,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "MRNA",
+    "composite": -87.9,
+    "composite_raw": -30.0,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "MCO",
+    "composite": 66.7,
+    "composite_raw": 47.3,
+    "sentiment": -5.7142857142857135
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "MS",
+    "composite": -5.0,
+    "composite_raw": 25.9,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "MOS",
+    "composite": -78.8,
+    "composite_raw": -19.2,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "MSI",
+    "composite": 80.8,
+    "composite_raw": 55.2,
+    "sentiment": 6.666666666666666
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "MSCI",
+    "composite": 76.9,
+    "composite_raw": 52.9,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "NDAQ",
+    "composite": 41.7,
+    "composite_raw": 34.1,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "NTAP",
+    "composite": 94.5,
+    "composite_raw": 66.4,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "NEM",
+    "composite": 93.5,
+    "composite_raw": 65.2,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "NWSA",
+    "composite": 49.5,
+    "composite_raw": 37.6,
+    "sentiment": 2.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "NWS",
+    "composite": 46.5,
+    "composite_raw": 36.6,
+    "sentiment": 2.5
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "NEE",
+    "composite": -65.8,
+    "composite_raw": -10.3,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "NI",
+    "composite": -67.3,
+    "composite_raw": -10.8,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "NDSN",
+    "composite": 20.0,
+    "composite_raw": 25.9,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "NSC",
+    "composite": -5.8,
+    "composite_raw": 16.4,
+    "sentiment": 5.7142857142857135
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "NTRS",
+    "composite": 76.7,
+    "composite_raw": 43.7,
+    "sentiment": 4.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "NOC",
+    "composite": 51.6,
+    "composite_raw": 38.8,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "NCLH",
+    "composite": -87.1,
+    "composite_raw": -29.5,
+    "sentiment": 3.333333333333333
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "NRG",
+    "composite": -39.3,
+    "composite_raw": 5.3,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "NUE",
+    "composite": -75.3,
+    "composite_raw": -15.8,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "NVR",
+    "composite": 52.6,
+    "composite_raw": 39.3,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "OXY",
+    "composite": -74.7,
+    "composite_raw": -15.5,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "OMC",
+    "composite": -62.2,
+    "composite_raw": -7.2,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "ON",
+    "composite": -89.0,
+    "composite_raw": -30.8,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "OKE",
+    "composite": -33.2,
+    "composite_raw": 7.5,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "ORCL",
+    "composite": -44.0,
+    "composite_raw": 3.1,
+    "sentiment": 2.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "OTIS",
+    "composite": 60.1,
+    "composite_raw": 42.9,
+    "sentiment": 2.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "PKG",
+    "composite": -8.3,
+    "composite_raw": 15.7,
+    "sentiment": 4.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "PSKY",
+    "composite": -89.2,
+    "composite_raw": -31.0,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "PH",
+    "composite": 47.0,
+    "composite_raw": 36.8,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "PNR",
+    "composite": 33.0,
+    "composite_raw": 30.5,
+    "sentiment": 2.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "PFE",
+    "composite": -53.7,
+    "composite_raw": -2.3,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "PCG",
+    "composite": -70.4,
+    "composite_raw": -12.6,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "PM",
+    "composite": 67.2,
+    "composite_raw": 47.6,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "PSX",
+    "composite": -48.7,
+    "composite_raw": 0.6,
+    "sentiment": 5.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "PNW",
+    "composite": -76.7,
+    "composite_raw": -17.2,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "PNC",
+    "composite": -18.3,
+    "composite_raw": 24.6,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "PPG",
+    "composite": 31.7,
+    "composite_raw": 30.0,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "PPL",
+    "composite": -63.2,
+    "composite_raw": -7.6,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "PFG",
+    "composite": -69.0,
+    "composite_raw": -16.3,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "PGR",
+    "composite": 14.8,
+    "composite_raw": 24.0,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "PLD",
+    "composite": -52.7,
+    "composite_raw": -1.8,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "PRU",
+    "composite": -41.4,
+    "composite_raw": 24.5,
+    "sentiment": 2.5
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "PEG",
+    "composite": -59.4,
+    "composite_raw": -5.4,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "PTC",
+    "composite": 77.2,
+    "composite_raw": 53.1,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "PSA",
+    "composite": -9.8,
+    "composite_raw": 15.4,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "PHM",
+    "composite": 20.0,
+    "composite_raw": 25.9,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "PWR",
+    "composite": 18.6,
+    "composite_raw": 25.6,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "DGX",
+    "composite": 19.2,
+    "composite_raw": 25.7,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "Q",
+    "composite": 0.3,
+    "composite_raw": 18.6,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "RL",
+    "composite": 75.1,
+    "composite_raw": 51.8,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "RJF",
+    "composite": -31.7,
+    "composite_raw": -31.7,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "RDDT",
+    "composite": 63.1,
+    "composite_raw": 45.0,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "RTX",
+    "composite": 10.6,
+    "composite_raw": 22.3,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "O",
+    "composite": -76.1,
+    "composite_raw": -16.5,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "REG",
+    "composite": -44.5,
+    "composite_raw": 2.8,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "RF",
+    "composite": 1.7,
+    "composite_raw": 27.7,
+    "sentiment": 10.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "RSG",
+    "composite": 16.2,
+    "composite_raw": 24.7,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "RMD",
+    "composite": 92.5,
+    "composite_raw": 64.4,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "RVTY",
+    "composite": -55.0,
+    "composite_raw": -2.7,
+    "sentiment": 2.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "HOOD",
+    "composite": -30.4,
+    "composite_raw": 8.3,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "ROK",
+    "composite": 17.4,
+    "composite_raw": 25.0,
+    "sentiment": 7.5
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "ROL",
+    "composite": 75.5,
+    "composite_raw": 52.2,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "RCL",
+    "composite": -4.8,
+    "composite_raw": 16.8,
+    "sentiment": 2.5
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "SPGI",
+    "composite": 42.5,
+    "composite_raw": 34.6,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "SBAC",
+    "composite": -1.5,
+    "composite_raw": 18.0,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "SLB",
+    "composite": 26.9,
+    "composite_raw": 28.3,
+    "sentiment": 3.333333333333333
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "SRE",
+    "composite": -86.4,
+    "composite_raw": -28.0,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "NOW",
+    "composite": 93.2,
+    "composite_raw": 65.0,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "SPG",
+    "composite": 55.9,
+    "composite_raw": 40.6,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "SWKS",
+    "composite": -13.2,
+    "composite_raw": 14.3,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "SJM",
+    "composite": -65.5,
+    "composite_raw": -10.2,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "SW",
+    "composite": -55.5,
+    "composite_raw": -3.0,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "SNA",
+    "composite": 44.5,
+    "composite_raw": 35.8,
+    "sentiment": -1.6666666666666665
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "SOLV",
+    "composite": 39.2,
+    "composite_raw": 32.9,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "SO",
+    "composite": -65.0,
+    "composite_raw": -9.7,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "LUV",
+    "composite": -57.8,
+    "composite_raw": -4.4,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "SWK",
+    "composite": -57.2,
+    "composite_raw": -3.9,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "STT",
+    "composite": 25.0,
+    "composite_raw": 31.2,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "STLD",
+    "composite": -65.0,
+    "composite_raw": -9.7,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "STE",
+    "composite": 35.8,
+    "composite_raw": 31.5,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "SYK",
+    "composite": 40.9,
+    "composite_raw": 33.8,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "SMCI",
+    "composite": 43.0,
+    "composite_raw": 34.9,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "SYF",
+    "composite": 43.4,
+    "composite_raw": 43.4,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "SYY",
+    "composite": 2.4,
+    "composite_raw": 19.4,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "TROW",
+    "composite": 58.6,
+    "composite_raw": 42.1,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "TPR",
+    "composite": 69.9,
+    "composite_raw": 48.8,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "TRGP",
+    "composite": -52.9,
+    "composite_raw": -1.9,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "TGT",
+    "composite": 32.7,
+    "composite_raw": 30.4,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "TEL",
+    "composite": 36.0,
+    "composite_raw": 31.6,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "TDY",
+    "composite": -5.8,
+    "composite_raw": 16.4,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "TPL",
+    "composite": 52.2,
+    "composite_raw": 39.1,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "TXT",
+    "composite": 8.8,
+    "composite_raw": 21.7,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "TMO",
+    "composite": 10.6,
+    "composite_raw": 22.3,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "TJX",
+    "composite": 65.9,
+    "composite_raw": 46.7,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "TKO",
+    "composite": 33.1,
+    "composite_raw": 30.6,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "TSCO",
+    "composite": 0.8,
+    "composite_raw": 18.7,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "TT",
+    "composite": 87.3,
+    "composite_raw": 59.5,
+    "sentiment": 3.333333333333333
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "TDG",
+    "composite": 9.2,
+    "composite_raw": 21.9,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "TRMB",
+    "composite": -15.5,
+    "composite_raw": 13.9,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "TFC",
+    "composite": -71.7,
+    "composite_raw": 11.6,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "TYL",
+    "composite": 79.4,
+    "composite_raw": 54.5,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "TSN",
+    "composite": -66.1,
+    "composite_raw": -10.4,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "USB",
+    "composite": 35.0,
+    "composite_raw": 32.7,
+    "sentiment": 2.5
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "UBER",
+    "composite": 44.5,
+    "composite_raw": 35.8,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "UDR",
+    "composite": -32.5,
+    "composite_raw": 7.6,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "ULTA",
+    "composite": 57.0,
+    "composite_raw": 40.9,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "UNP",
+    "composite": 23.3,
+    "composite_raw": 26.9,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "UAL",
+    "composite": 6.5,
+    "composite_raw": 20.6,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "UPS",
+    "composite": 0.8,
+    "composite_raw": 18.7,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "URI",
+    "composite": -13.2,
+    "composite_raw": 14.3,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "UHS",
+    "composite": 55.5,
+    "composite_raw": 40.5,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "VLO",
+    "composite": -20.6,
+    "composite_raw": 11.5,
+    "sentiment": 3.333333333333333
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "VEEV",
+    "composite": 42.5,
+    "composite_raw": 34.6,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "VTR",
+    "composite": -53.2,
+    "composite_raw": -2.0,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "VLTO",
+    "composite": 81.5,
+    "composite_raw": 55.6,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "VRSN",
+    "composite": -41.7,
+    "composite_raw": 4.5,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "VRSK",
+    "composite": 64.6,
+    "composite_raw": 45.9,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "VZ",
+    "composite": -35.7,
+    "composite_raw": 6.5,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "VRT",
+    "composite": 90.3,
+    "composite_raw": 62.0,
+    "sentiment": 2.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "VTRS",
+    "composite": -84.0,
+    "composite_raw": -25.8,
+    "sentiment": 5.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "VICI",
+    "composite": 32.0,
+    "composite_raw": 30.1,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "VST",
+    "composite": -58.6,
+    "composite_raw": -5.0,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "VMRK",
+    "composite": -32.5,
+    "composite_raw": 7.6,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "VMC",
+    "composite": -29.6,
+    "composite_raw": 8.5,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "WRB",
+    "composite": 14.0,
+    "composite_raw": 23.7,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "GWW",
+    "composite": 68.5,
+    "composite_raw": 48.0,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "WAB",
+    "composite": 15.4,
+    "composite_raw": 24.4,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "WM",
+    "composite": -9.1,
+    "composite_raw": 15.6,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "WAT",
+    "composite": 54.6,
+    "composite_raw": 39.9,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "WEC",
+    "composite": -61.2,
+    "composite_raw": -6.4,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "WFC",
+    "composite": -21.7,
+    "composite_raw": 24.3,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "WELL",
+    "composite": -61.7,
+    "composite_raw": -6.9,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "WST",
+    "composite": 50.2,
+    "composite_raw": 37.7,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "WY",
+    "composite": -95.7,
+    "composite_raw": -42.8,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "WSM",
+    "composite": 72.5,
+    "composite_raw": 50.2,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "WMB",
+    "composite": -70.1,
+    "composite_raw": -12.5,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "WTW",
+    "composite": 52.9,
+    "composite_raw": 39.4,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "WYNN",
+    "composite": -60.4,
+    "composite_raw": -5.8,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "XYL",
+    "composite": 38.0,
+    "composite_raw": 32.3,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "YUM",
+    "composite": 15.4,
+    "composite_raw": 24.4,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "ZBRA",
+    "composite": -15.9,
+    "composite_raw": 13.8,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "ZBH",
+    "composite": 24.1,
+    "composite_raw": 27.2,
+    "sentiment": 0.0
+  },
+  {
+    "date": "2026-11-04",
+    "ticker": "ZTS",
+    "composite": 71.1,
+    "composite_raw": 49.6,
+    "sentiment": 0.0
   }
 ]

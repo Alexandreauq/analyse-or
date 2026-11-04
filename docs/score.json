@@ -1,5 +1,5 @@
 {
-  "date": "2026-11-03",
+  "date": "2026-11-04",
   "composite_score": 1.7,
   "interpretation": "Neutre — pas d'action",
   "cftc_percentile": 26.282051282051285,
@@ -14,7 +14,7 @@
       "name": "Dollar (DXY)",
       "score": -10,
       "weight": 0.15,
-      "raw_value": "101.89 (il y a 2 mois : 99.00)"
+      "raw_value": "101.32 (il y a 2 mois : 99.00)"
     },
     {
       "name": "Anticipations d'inflation",
@@ -48,9 +48,9 @@
     }
   ],
   "technical": {
-    "note": "Cours en-dessous de la MM200 (-12.7%) — tendance baissière",
-    "spot": 3939.300048828125,
-    "ma200": 4512.766496582031
+    "note": "Cours en-dessous de la MM200 (-12.5%) — tendance baissière",
+    "spot": 3946.5,
+    "ma200": 4512.80249633789
   },
   "calendar": [
     {
@@ -99,7 +99,7 @@
       "kind": "info",
       "title": "Pas de signal actif",
       "detail": "Aucune des conditions de veille, d'entrée ou de risque n'est réunie aujourd'hui.",
-      "date": "03/11/2026"
+      "date": "04/11/2026"
     }
   ],
   "news": [

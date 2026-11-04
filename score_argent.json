@@ -16,7 +16,7 @@
       "name": "Dollar (DXY)",
       "score": -10,
       "weight": 0.2,
-      "raw_value": "101.41 (il y a 2 mois : 99.16)"
+      "raw_value": "101.58 (il y a 2 mois : 99.16)"
     },
     {
       "name": "Positionnement CFTC",
@@ -34,13 +34,13 @@
       "name": "Dynamique récente",
       "score": -10.0,
       "weight": 0.1,
-      "raw_value": "-26.0% vs MM200"
+      "raw_value": "-25.6% vs MM200"
     }
   ],
   "technical": {
-    "note": "Cours en-dessous de la MM200 (-26.0%) — tendance baissière",
-    "spot": 52.0,
-    "ma200": 70.27251987457275,
+    "note": "Cours en-dessous de la MM200 (-25.6%) — tendance baissière",
+    "spot": 52.275001525878906,
+    "ma200": 70.27389488220214,
     "unite": "$ / oz"
   },
   "calendar": [

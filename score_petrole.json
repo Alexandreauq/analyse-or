@@ -2,7 +2,7 @@
   "date": "2026-11-04",
   "commodity": "petrole",
   "label": "Pétrole (WTI)",
-  "composite_score": 6.0,
+  "composite_score": 4.3,
   "interpretation": "Neutre — pas d'action",
   "cftc_percentile": 13.461538461538462,
   "factors": [
@@ -10,7 +10,7 @@
       "name": "Dollar (DXY)",
       "score": -10,
       "weight": 0.26666666666666666,
-      "raw_value": "101.31 (il y a 2 mois : 99.00)"
+      "raw_value": "101.42 (il y a 2 mois : 99.16)"
     },
     {
       "name": "Positionnement CFTC",
@@ -20,15 +20,15 @@
     },
     {
       "name": "Spread WTI-Brent",
-      "score": -6.749992370605469,
+      "score": -7.6000213623046875,
       "weight": 0.19999999999999998,
-      "raw_value": "+7.57 $/baril (il y a ~2 mois : +6.22 $/baril)"
+      "raw_value": "+7.13 $/baril (il y a ~2 mois : +5.61 $/baril)"
     },
     {
       "name": "Dynamique récente",
       "score": 10.0,
       "weight": 0.26666666666666666,
-      "raw_value": "+10.3% vs MM200"
+      "raw_value": "+9.5% vs MM200"
     },
     {
       "name": "Stocks EIA",
@@ -38,9 +38,9 @@
     }
   ],
   "technical": {
-    "note": "Cours au-dessus de la MM200 (+10.3%) — tendance haussière",
-    "spot": 95.66999816894531,
-    "ma200": 86.7094500541687,
+    "note": "Cours au-dessus de la MM200 (+9.5%) — tendance haussière",
+    "spot": 95.18000030517578,
+    "ma200": 86.88575004577636,
     "unite": "$ / baril"
   },
   "calendar": [
@@ -88,10 +88,28 @@
   "alerts": [],
   "news": [
     {
-      "title": "Les prix du pétrole chutent face aux espoirs de progrès diplomatiques - Zonebourse Suisse",
-      "date": "2026-11-02",
-      "link": "https://news.google.com/rss/articles/CBMiyAFBVV95cUxNaGJTWVpPS2FVSlNBNWZCQ0c4Z3BmMVdGd1lTSERORklxeEl4T2xsWnY3Y2otRXQ2c3pOT1I4OEstNEYydEhNN1pSUmRiRVViNFpVanRHTkJrWUc3MC11ZUhjV0FFcFl5ckNiVDZ4X2VSVDRuOW9WSENzRnlnVVllc0ZMZWlEUnozQ28zQTNBd2tCWDlHYU92YU8xOERJVGFneUdPcjI5UGVSdHFkMTFXZ0JSVDVJd3Exa0Q3TmNKVnlnR1l5QlJxZA?oc=5",
-      "source": "Zonebourse Suisse",
+      "title": "Le WTI grimpe vers 96,00 $ dans un contexte d’incertitude sur la paix entre les États-Unis et l’Iran - www.tmgm.com",
+      "date": "2026-11-04",
+      "link": "https://news.google.com/rss/articles/CBMiuwFBVV95cUxQQW96MHk3dVdpbHp5RmNQN1I2UlpxTEdycW5ZSVlwQkJYd2ZvVGhkS0xFVmFVa2sxNjN2RU1lS0o5Y0ZuVE5xTDU2WVpPX01sd19CR29fTGtsV2VXdDhIZzlvSEx1SzNUbXc3UFZ5VEVHanVRMFdycm5BckswcGlkSk9DelRzQ0VZSTViRlI4R2p6SXhqODdzWEVXUl9WbWxzejZjZ3dHUnVOTnpxTS0wSl9KZEl1bG9heXRJ?oc=5",
+      "source": "www.tmgm.com",
+      "summary": "",
+      "sentiment": 0,
+      "importance": "mineure"
+    },
+    {
+      "title": "Le prix du Brent corrige, mais reste au-dessus de 100 dollars US - IDNFinancials",
+      "date": "2026-11-04",
+      "link": "https://news.google.com/rss/articles/CBMiqwFBVV95cUxOVUo2dVVGZXpkcE1iZnJjWW1pMEowTlFncWliNVo2a1c1cC1pQ1BadVM5MkZCNEh1dDRHU1pIbEtYcVNOQmNWcEZiMkwwbjMxUmtCdWs1cDl1YmdhQzI3dEVHZHVSc005bnN6S09wQU1ranVTV0IzcGNsdnJtNy0yT25JdFlhbVBDQUpUY2xQcGxSZnhENjNkZlAybVA4SlIxb25EOVpoMHFyRjA?oc=5",
+      "source": "IDNFinancials",
+      "summary": "",
+      "sentiment": 0,
+      "importance": "mineure"
+    },
+    {
+      "title": "Les prix du pétrole baissent avec les espoirs de désescalade - Zonebourse",
+      "date": "2026-11-03",
+      "link": "https://news.google.com/rss/articles/CBMivgFBVV95cUxQR1lEM2tadHNsMktyZWU1WGxUSzlhSjFBQjNmREpLdDBkTlRDMVRxR05EbXdibDVKckhaSkhSRWtJMWVKSDlyRHUxLWJFcUl5V1VrdEFqQ2k1cFlpNjVuUmMzZ0JPZDIxNHlFcFJMNnFFZ0hNeEtBVWRpLWF2TUU3V3FkaklDTFJZa3M2TEhwbExRZ1kyUW1hN3FUd3RWakpSSG1qbDJFS2k0LTlJRTZXa1VSMlNpTm1QQVBjejNR?oc=5",
+      "source": "Zonebourse",
       "summary": "",
       "sentiment": 0,
       "importance": "mineure"
@@ -106,15 +124,6 @@
       "importance": "mineure"
     },
     {
-      "title": "Le pétrole monte après des informations sur des frappes américaines en Iran - Prix du baril",
-      "date": "2026-11-03",
-      "link": "https://news.google.com/rss/articles/CBMiwAFBVV95cUxNRTRqQmp2RnRiWldzZV9OX1JyaGdoWG9BT2o2RGdVTjNSQzFMdHlobHRSZm5BMlNBQkgyZHJMT1BPY1ZDWVo0aEloZU53TXVnRk5qbEliMlFSdUdNSGZpNlRkQ0NsNWpJWlV4QkZNMkNMdjJNS21Qa01yTXlpX0VVMzdSMEFpdFc1LUhqeFYtTDQzekY0Qmk2bnZsVE5URnhJMkZrT1JrQkpIRTh4eGNxWFhBcEgwVXpBMjRyVzlmcEE?oc=5",
-      "source": "Prix du baril",
-      "summary": "",
-      "sentiment": 0,
-      "importance": "mineure"
-    },
-    {
       "title": "Le pétrole chute de plus de 6% sur fond d’espoirs - agefi.com",
       "date": "2026-11-02",
       "link": "https://news.google.com/rss/articles/CBMijAFBVV95cUxOTE1Id3plZVhZbEJQVkI4amM2Q25IRlhZcGNaZnFDS3dMdmkxM19UVmdXT19iSGpEQ0VsRGYzMzdWR3UwVVFhbUNHaldpNmZMellfUFBXUldjWWxHRG9OUlNqSWxKX1c1VnlYWTE3eFVuNjJzUUVNeVNsOGNMQTFKek9TSzRfSkYzOUlNWg?oc=5",
@@ -122,20 +131,21 @@
       "summary": "",
       "sentiment": 0,
       "importance": "mineure"
-    },
-    {
-      "title": "Le pétrole WTI se maintient au-dessus de 103,00 $, près de ses plus hauts depuis cinq mois sur fond de nouvelles attaques dans le détroit d’Ormuz - www.tmgm.com",
-      "date": "2026-10-30",
-      "link": "https://news.google.com/rss/articles/CBMi6gFBVV95cUxPbWtrOGlMQU5mcTdQOTJFREtVWElaUU9JR2t1ZjlFdFM2YmhJbENaV1FhYld2ZEU0Q0IyUDJidFRmYjZVUlI2bmc4a29mZGh3NEg2RTlKWlZPQUdlQUxtWWp6dGRJOHh2R3hSS2RGYTZSNmt5T1hSTnRvaU5mZDhyd29iVGZ3RE5RZHktY204WXRUNDlMc18xX1N4S2xEb0ZoV1ZKUVAzVllKUnJCSUFRVFZ5QVgwX2Q4aUN2ZXFoYWRUeUUya3ZtNDV6RFBJMFdVUlJabU54a29Oc0xMRC1DRkRwLUp0NjFlY2c?oc=5",
-      "source": "www.tmgm.com",
+    }
+  ],
+  "analysis_html": "<h3>Contexte récent</h3><p>Le WTI évolue dans un marché dominé par la géopolitique entre les États-Unis et l'Iran. Les cours ont été tirés vers les 96 $ par l'incertitude sur un accord de paix, puis ont subi un repli marqué (plus de 6 % sur une séance selon l'Agefi) sur fond d'espoirs de désescalade. Malgré cette correction, le prix reste nettement au-dessus de sa moyenne mobile à 200 jours.</p><h3>Facteurs déterminants</h3><p>Le score composite résulte d'un équilibre entre deux forces opposées de poids comparable, sans facteur dominant.</p><ul><li><strong>Dynamique récente (+10,0, poids 27 %)</strong> : c'est le principal soutien. Avec un cours supérieur de 9,5 % à sa MM200, la tendance de fond reste haussière, au maximum de l'échelle du score. La récente chute de plus de 6 % n'a pas suffi à inverser ce signal.</li><li><strong>Dollar DXY (-10,0, poids 27 %)</strong> : c'est le principal frein, d'ampleur symétrique à la dynamique. Le DXY est passé de 99,16 à 101,42 en deux mois. Un dollar plus fort renchérit le pétrole pour les acheteurs hors zone dollar, ce qui pèse traditionnellement sur la demande et sur les prix libellés en dollars.</li><li><strong>Positionnement CFTC (+7,3, poids 27 %)</strong> : la position nette spéculative de 31 128 contrats se situe au 13e percentile sur trois ans. Les spéculateurs sont donc faiblement positionnés à l'achat. Le score lit ce positionnement comme un signal contrariant favorable : il reste un potentiel de rachats et le risque de liquidation massive de positions longues est limité.</li><li><strong>Spread WTI-Brent (-7,6, poids 20 %)</strong> : le spread s'est élargi de +5,61 à +7,13 $/baril en deux mois, et le score l'interprète négativement pour le WTI. Une précaution s'impose : les actualités évoquent un WTI vers 96 $ et un Brent au-dessus de 100 $, ce qui suggère plutôt un WTI sous le Brent. La convention de calcul du spread mérite d'être vérifiée avant toute interprétation fine de ce facteur.</li><li><strong>Stocks EIA (0,0, poids 0 %)</strong> : la donnée est indisponible faute de clé API configurée. Aucune information sur l'état des stocks américains n'est donc intégrée au score, ce qui en limite la portée fondamentale.</li></ul><h3>Actualités à retenir</h3><p>Aucune actualité n'est classée comme notable ou majeure : les cinq dépêches sont jugées mineures. Elles convergent toutefois sur un même thème.</p><ul><li><strong>Géopolitique États-Unis–Iran</strong> : la hausse vers 96 $ a été attribuée à l'incertitude sur la paix, puis la baisse aux espoirs de désescalade. La prime de risque géopolitique apparaît comme le moteur principal des variations de court terme.</li><li><strong>Correction des prix</strong> : la chute de plus de 6 % et le repli du Brent, toujours au-dessus de 100 $, signalent une détente qui ne se reflète pas encore dans le facteur de dynamique, calculé sur une base plus longue (MM200).</li><li><strong>Effets de diffusion</strong> : le recul des rendements obligataires canadiens associé à la baisse du pétrole illustre la sensibilité des marchés liés aux matières premières à ce mouvement.</li></ul><h3>Synthèse</h3><p>Le score composite reflète un équilibre de forces plutôt qu'une orientation tranchée. D'un côté, une tendance haussière encore solide et un positionnement spéculatif bas soutiennent le score. De l'autre, un dollar en appréciation et un spread WTI-Brent jugé défavorable le pénalisent. L'actualité, centrée sur les perspectives de désescalade entre les États-Unis et l'Iran, montre une prime géopolitique en cours de réduction, que les facteurs de tendance ne captent qu'avec retard. L'absence de données sur les stocks EIA et l'incertitude sur la convention du spread invitent à interpréter ce score avec prudence.</p>",
+  "news_classifications": {
+    "https://news.google.com/rss/articles/CBMiuwFBVV95cUxQQW96MHk3dVdpbHp5RmNQN1I2UlpxTEdycW5ZSVlwQkJYd2ZvVGhkS0xFVmFVa2sxNjN2RU1lS0o5Y0ZuVE5xTDU2WVpPX01sd19CR29fTGtsV2VXdDhIZzlvSEx1SzNUbXc3UFZ5VEVHanVRMFdycm5BckswcGlkSk9DelRzQ0VZSTViRlI4R2p6SXhqODdzWEVXUl9WbWxzejZjZ3dHUnVOTnpxTS0wSl9KZEl1bG9heXRJ?oc=5": {
       "summary": "",
       "sentiment": 0,
       "importance": "mineure"
-    }
-  ],
-  "analysis_html": "<h3>Contexte récent</h3><p>Le WTI évolue nettement au-dessus de sa tendance de long terme, avec un cours supérieur de <strong>13,4 % à sa moyenne mobile 200 jours</strong>. Selon une actualité récente, il se maintient au-dessus de <strong>103 $ le baril</strong>, près de ses plus hauts depuis cinq mois. Le marché reste très volatil, sous l'effet d'informations géopolitiques contradictoires liées à l'Iran et au détroit d'Ormuz.</p><h3>Facteurs déterminants</h3><p>Le score composite résulte d'un équilibre entre deux facteurs haussiers et deux facteurs baissiers de poids comparables. Les contributions pondérées se compensent presque entièrement.</p><ul><li><strong>Dynamique récente (score +10,0, poids 27 %)</strong> : c'est le principal soutien. L'écart de +13,4 % au-dessus de la MM200 traduit une tendance haussière marquée, qui atteint le maximum de l'échelle de score.</li><li><strong>Dollar DXY (score -10,0, poids 27 %)</strong> : c'est le principal frein, de même ampleur que la dynamique mais de sens opposé. Le DXY est passé de 99,00 à 101,87 en deux mois. Un dollar plus fort renchérit le baril pour les acheteurs hors zone dollar, ce qui pèse traditionnellement sur la demande et sur les prix libellés en dollars.</li><li><strong>Positionnement CFTC (score +7,3, poids 27 %)</strong> : la position nette spéculative de 31 128 contrats se situe au 13e percentile sur trois ans. Les spéculateurs sont donc peu exposés à la hausse malgré la progression des prix. Le score interprète ce positionnement bas comme un signal favorable, car le potentiel de rachats ou de nouvelles positions acheteuses reste important.</li><li><strong>Spread WTI-Brent (score -8,8, poids 20 %)</strong> : le WTI cote avec une prime de +7,98 $/baril sur le Brent, contre +6,22 $ il y a environ deux mois. Cette prime élevée et croissante du brut américain est lue négativement par le score. Elle suggère un WTI relativement cher par rapport à la référence internationale.</li><li><strong>Stocks EIA (poids 0 %)</strong> : ce facteur n'est pas disponible (clé API non configurée). Il n'est pas pris en compte, ce qui prive l'analyse d'une lecture directe des fondamentaux d'offre et de demande aux États-Unis.</li></ul><h3>Actualités à retenir</h3><p>Aucune actualité n'est classée comme notable ou majeure : les cinq informations récentes sont toutes qualifiées de <strong>mineures</strong>. Prises ensemble, elles décrivent toutefois un environnement dominé par la géopolitique au Moyen-Orient, avec des mouvements dans les deux sens.</p><ul><li><strong>Facteurs de hausse</strong> : des informations sur des frappes américaines en Iran et de nouvelles attaques dans le détroit d'Ormuz ont soutenu les cours, portés près de leurs plus hauts de cinq mois. Ce contexte est cohérent avec le score de dynamique au maximum.</li><li><strong>Facteurs de baisse</strong> : à l'inverse, des espoirs de progrès diplomatiques ont provoqué des replis marqués, dont une baisse de plus de 6 % sur une séance. Ce recul s'est répercuté sur d'autres marchés, comme les rendements obligataires canadiens.</li></ul><p>Cette alternance illustre la sensibilité du prix aux annonces géopolitiques. Elle est un élément de volatilité que les facteurs macro-fondamentaux du score ne captent pas directement.</p><h3>Synthèse</h3><p>Le score composite du WTI reflète un <strong>équilibre de forces opposées</strong>, qui aboutit à une lecture globalement proche de la neutralité :</p><ul><li><strong>Soutiens</strong> : une dynamique haussière forte et un positionnement spéculatif encore bas.</li><li><strong>Freins</strong> : un dollar en appréciation et une prime du WTI sur le Brent qui s'élargit.</li></ul><p>L'absence des données de stocks EIA limite l'appréciation des fondamentaux physiques. Le contexte d'actualité, sans événement classé majeur mais marqué par des tensions autour de l'Iran et d'Ormuz, laisse les prix exposés à de fortes variations dans les deux sens.</p>",
-  "news_classifications": {
-    "https://news.google.com/rss/articles/CBMiyAFBVV95cUxNaGJTWVpPS2FVSlNBNWZCQ0c4Z3BmMVdGd1lTSERORklxeEl4T2xsWnY3Y2otRXQ2c3pOT1I4OEstNEYydEhNN1pSUmRiRVViNFpVanRHTkJrWUc3MC11ZUhjV0FFcFl5ckNiVDZ4X2VSVDRuOW9WSENzRnlnVVllc0ZMZWlEUnozQ28zQTNBd2tCWDlHYU92YU8xOERJVGFneUdPcjI5UGVSdHFkMTFXZ0JSVDVJd3Exa0Q3TmNKVnlnR1l5QlJxZA?oc=5": {
+    },
+    "https://news.google.com/rss/articles/CBMiqwFBVV95cUxOVUo2dVVGZXpkcE1iZnJjWW1pMEowTlFncWliNVo2a1c1cC1pQ1BadVM5MkZCNEh1dDRHU1pIbEtYcVNOQmNWcEZiMkwwbjMxUmtCdWs1cDl1YmdhQzI3dEVHZHVSc005bnN6S09wQU1ranVTV0IzcGNsdnJtNy0yT25JdFlhbVBDQUpUY2xQcGxSZnhENjNkZlAybVA4SlIxb25EOVpoMHFyRjA?oc=5": {
+      "summary": "",
+      "sentiment": 0,
+      "importance": "mineure"
+    },
+    "https://news.google.com/rss/articles/CBMivgFBVV95cUxQR1lEM2tadHNsMktyZWU1WGxUSzlhSjFBQjNmREpLdDBkTlRDMVRxR05EbXdibDVKckhaSkhSRWtJMWVKSDlyRHUxLWJFcUl5V1VrdEFqQ2k1cFlpNjVuUmMzZ0JPZDIxNHlFcFJMNnFFZ0hNeEtBVWRpLWF2TUU3V3FkaklDTFJZa3M2TEhwbExRZ1kyUW1hN3FUd3RWakpSSG1qbDJFS2k0LTlJRTZXa1VSMlNpTm1QQVBjejNR?oc=5": {
       "summary": "",
       "sentiment": 0,
       "importance": "mineure"
@@ -145,17 +155,7 @@
       "sentiment": 0,
       "importance": "mineure"
     },
-    "https://news.google.com/rss/articles/CBMiwAFBVV95cUxNRTRqQmp2RnRiWldzZV9OX1JyaGdoWG9BT2o2RGdVTjNSQzFMdHlobHRSZm5BMlNBQkgyZHJMT1BPY1ZDWVo0aEloZU53TXVnRk5qbEliMlFSdUdNSGZpNlRkQ0NsNWpJWlV4QkZNMkNMdjJNS21Qa01yTXlpX0VVMzdSMEFpdFc1LUhqeFYtTDQzekY0Qmk2bnZsVE5URnhJMkZrT1JrQkpIRTh4eGNxWFhBcEgwVXpBMjRyVzlmcEE?oc=5": {
-      "summary": "",
-      "sentiment": 0,
-      "importance": "mineure"
-    },
     "https://news.google.com/rss/articles/CBMijAFBVV95cUxOTE1Id3plZVhZbEJQVkI4amM2Q25IRlhZcGNaZnFDS3dMdmkxM19UVmdXT19iSGpEQ0VsRGYzMzdWR3UwVVFhbUNHaldpNmZMellfUFBXUldjWWxHRG9OUlNqSWxKX1c1VnlYWTE3eFVuNjJzUUVNeVNsOGNMQTFKek9TSzRfSkYzOUlNWg?oc=5": {
-      "summary": "",
-      "sentiment": 0,
-      "importance": "mineure"
-    },
-    "https://news.google.com/rss/articles/CBMi6gFBVV95cUxPbWtrOGlMQU5mcTdQOTJFREtVWElaUU9JR2t1ZjlFdFM2YmhJbENaV1FhYld2ZEU0Q0IyUDJidFRmYjZVUlI2bmc4a29mZGh3NEg2RTlKWlZPQUdlQUxtWWp6dGRJOHh2R3hSS2RGYTZSNmt5T1hSTnRvaU5mZDhyd29iVGZ3RE5RZHktY204WXRUNDlMc18xX1N4S2xEb0ZoV1ZKUVAzVllKUnJCSUFRVFZ5QVgwX2Q4aUN2ZXFoYWRUeUUya3ZtNDV6RFBJMFdVUlJabU54a29Oc0xMRC1DRkRwLUp0NjFlY2c?oc=5": {
       "summary": "",
       "sentiment": 0,
       "importance": "mineure"

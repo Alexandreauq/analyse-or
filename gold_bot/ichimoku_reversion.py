@@ -189,12 +189,15 @@ def signal(state: dict) -> str | None:
 
 def compute_trailing_stop(candles_5min: list[dict], direction: str, entry_time_iso: str,
                            entry_price: float, current_stop_loss: float) -> float | None:
-    """Stop suiveur ancre sur le kijun courant +/- TRAIL_BUFFER_ATR_MULT*atr,
-    actif seulement une fois l'excursion favorable >= 1R (meme convention
-    que le moteur de recherche, docs/superpowers/research/
-    gold_bot_metaux_silver_engines/two_leg_execution_xag.py::trail_fn),
-    ne se resserre jamais que dans le sens favorable. None si aucun
-    changement ou si l'historique est insuffisant."""
+    """Stop suiveur ancre sur le kijun courant +/- TRAIL_BUFFER_ATR_MULT*atr
+    CAPTURE A L'ENTREE (jamais l'ATR courant -- meme principe que
+    fibonacci_reversion.compute_trailing_stop/vwap_reversion.compute_trailing_stop),
+    actif seulement une fois l'excursion favorable >= 1R, ou R est calcule
+    depuis le stop INITIAL (kijun/atr de la bougie H1 d'entree -- stop_ref_fn
+    du moteur de recherche -- jamais depuis current_stop_loss qui peut deja
+    avoir ete deplace). Ne se resserre jamais que dans le sens favorable.
+    None si aucun changement ou si l'historique/les index d'entree sont
+    insuffisants."""
     candles_h1 = resample_h1(candles_5min)
     if len(candles_h1) < MIN_H1_CANDLES:
         return None
@@ -202,17 +205,41 @@ def compute_trailing_stop(candles_5min: list[dict], direction: str, entry_time_i
     ind = compute_ichimoku(candles_h1)
     i = len(candles_h1) - 1
     kijun_i = ind["kijun"][i]
-    atr_i = atr[i]
-    if kijun_i is None or atr_i is None:
+    if kijun_i is None:
         return None
 
     entry_time = _parse(entry_time_iso) if isinstance(entry_time_iso, str) else entry_time_iso
-    since_entry = [c for c in candles_5min if _parse(c["time"]) >= entry_time]
+
+    entry_5min_idx = None
+    for idx, c in enumerate(candles_5min):
+        if _parse(c["time"]) == entry_time:
+            entry_5min_idx = idx
+            break
+    if entry_5min_idx is None:
+        return None
+    since_entry = candles_5min[entry_5min_idx + 1:]
     if not since_entry:
         return None
-    r_distance = abs(entry_price - current_stop_loss)
+
+    entry_bucket_key = entry_time.replace(minute=0, second=0, microsecond=0).replace(tzinfo=None).isoformat()
+    entry_h1_idx = None
+    for idx, c in enumerate(candles_h1):
+        if c["time"] == entry_bucket_key:
+            entry_h1_idx = idx
+            break
+    if entry_h1_idx is None:
+        return None
+    atr_entry = atr[entry_h1_idx]
+    kijun_entry = ind["kijun"][entry_h1_idx]
+    if atr_entry is None or kijun_entry is None:
+        return None
+
+    initial_stop = (kijun_entry - STOP_BUFFER_ATR_MULT * atr_entry if direction == "achat"
+                     else kijun_entry + STOP_BUFFER_ATR_MULT * atr_entry)
+    r_distance = abs(entry_price - initial_stop)
     if r_distance == 0:
         return None
+
     if direction == "achat":
         best_price = max(c["high"] for c in since_entry)
         excursion_r = (best_price - entry_price) / r_distance
@@ -223,9 +250,9 @@ def compute_trailing_stop(candles_5min: list[dict], direction: str, entry_time_i
         return None
 
     if direction == "achat":
-        candidate = max(entry_price, kijun_i - TRAIL_BUFFER_ATR_MULT * atr_i)
+        candidate = max(entry_price, kijun_i - TRAIL_BUFFER_ATR_MULT * atr_entry)
         new_stop = max(current_stop_loss, candidate)
     else:
-        candidate = min(entry_price, kijun_i + TRAIL_BUFFER_ATR_MULT * atr_i)
+        candidate = min(entry_price, kijun_i + TRAIL_BUFFER_ATR_MULT * atr_entry)
         new_stop = min(current_stop_loss, candidate)
     return None if new_stop == current_stop_loss else new_stop

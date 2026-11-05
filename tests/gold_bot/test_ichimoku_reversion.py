@@ -110,9 +110,96 @@ def test_signal_returns_none_when_cross_not_confirmed_by_cloud():
     assert ichimoku_reversion.signal(state) is None
 
 
+def test_signal_returns_vente_on_bearish_tk_cross_below_cloud():
+    state = {
+        "tenkan_prev": 101.0, "kijun_prev": 100.0, "tenkan": 99.0, "kijun": 100.0,
+        "close": 95.0, "senkou_a": 98.0, "senkou_b": 97.0,
+    }
+    assert ichimoku_reversion.signal(state) == "vente"
+
+
+def _build_bearish_cross_history():
+    """Symetrique de _build_bullish_cross_history : prix stable puis
+    croisement Tenkan/Kijun baissier (descente de 2.0 par bougie H1 sur
+    les 10 dernieres bougies)."""
+    from datetime import timedelta
+    candles = []
+    base = datetime(2026, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
+    price = 100.0
+    for h in range(80):
+        ts = (base + timedelta(hours=h)).strftime("%Y-%m-%d %H:00:00")
+        if h < 70:
+            o, hh, l, c = price, price + 0.5, price - 0.5, price
+        else:
+            price -= 2.0
+            o, hh, l, c = price + 2.0, price + 2.5, price - 0.5, price
+        candles.append(_candle(ts, o, hh, l, c))
+    return candles
+
+
 def test_compute_trailing_stop_returns_none_before_1r_excursion():
+    # Entree a l'indice H1 78 (candle_5min index 78, prix encore en pleine
+    # montee), PAS la derniere bougie -- sinon since_entry serait vide et
+    # le test ne verifierait plus rien sur le calcul d'excursion.
+    # A l'indice H1 78 : kijun_entry=109.0, atr_entry=1.9734789835322215
+    # (verifie via script jetable, meme fonctions que la production).
+    # initial_stop (achat) = 109.0 - 0.5*1.9734789835322215 = 108.01326050823389
+    # r_distance = |118.0 - 108.01326050823389| = 9.98673949176611
+    # since_entry = [candle idx 79] seul, high=120.5
+    # excursion_r = (120.5 - 118.0) / 9.98673949176611 = 0.2503... < 1R => None
     candles_5min = _h1_to_5min(_build_bullish_cross_history())
-    entry_time_iso = candles_5min[-1]["time"]
+    entry_time_iso = candles_5min[78]["time"]
     result = ichimoku_reversion.compute_trailing_stop(
-        candles_5min, "achat", entry_time_iso, entry_price=100.0, current_stop_loss=75.0)  # R=25 : excursion max 20.5/25 = 0.82R < 1R
+        candles_5min, "achat", entry_time_iso, entry_price=118.0, current_stop_loss=105.0)
+    assert result is None
+
+
+def test_compute_trailing_stop_tightens_stop_on_achat_happy_path():
+    # Entree a l'indice H1 70 (premiere bougie de la montee) :
+    # kijun_entry=101.0, atr_entry=1.1428571428571428 (8/7).
+    # initial_stop (achat) = 101.0 - 0.5*1.1428571428571428 = 100.42857142857143
+    # r_distance = |102.0 - 100.42857142857143| = 1.5714285714285714
+    # since_entry = indices 71..79, best high = 120.5 (idx 79)
+    # excursion_r = (120.5 - 102.0) / 1.5714285714285714 = 11.77 >= 1R => trailing actif
+    # kijun_i (derniere bougie H1, idx 79) = 110.0, ATR TOUJOURS celui FIGE
+    # a l'entree (1.1428571428571428, jamais l'ATR courant de idx 79)
+    # candidate = max(102.0, 110.0 - 0.5*1.1428571428571428) = 109.42857142857143
+    # current_stop_loss = 100.42857142857143 (le stop initial, pas encore
+    # resserre) => new_stop = max(100.42857142857143, 109.42857142857143)
+    #            = 109.42857142857143 (!= current_stop_loss)
+    candles_5min = _h1_to_5min(_build_bullish_cross_history())
+    entry_time_iso = candles_5min[70]["time"]
+    result = ichimoku_reversion.compute_trailing_stop(
+        candles_5min, "achat", entry_time_iso, entry_price=102.0, current_stop_loss=100.42857142857143)
+    assert result == 109.42857142857143
+
+
+def test_compute_trailing_stop_tightens_stop_on_vente_happy_path():
+    # Symetrique du cas achat ci-dessus, sur _build_bearish_cross_history.
+    # Entree a l'indice H1 70 : kijun_entry=99.0, atr_entry=1.1428571428571428.
+    # initial_stop (vente) = 99.0 + 0.5*1.1428571428571428 = 99.57142857142857
+    # r_distance = |98.0 - 99.57142857142857| = 1.5714285714285714
+    # since_entry = indices 71..79, best low = 79.5 (idx 79)
+    # excursion_r = (98.0 - 79.5) / 1.5714285714285714 = 11.77 >= 1R
+    # kijun_i (idx 79) = 90.0, atr_entry fige = 1.1428571428571428
+    # candidate = min(98.0, 90.0 + 0.5*1.1428571428571428) = 90.57142857142857
+    # current_stop_loss = 99.57142857142857 (stop initial) => new_stop
+    #            = min(99.57142857142857, 90.57142857142857) = 90.57142857142857
+    candles_5min = _h1_to_5min(_build_bearish_cross_history())
+    entry_time_iso = candles_5min[70]["time"]
+    result = ichimoku_reversion.compute_trailing_stop(
+        candles_5min, "vente", entry_time_iso, entry_price=98.0, current_stop_loss=99.57142857142857)
+    assert result == 90.57142857142857
+
+
+def test_compute_trailing_stop_never_loosens_an_already_tighter_stop():
+    # Meme scenario que le chemin heureux achat (candidate=109.42857142857143
+    # au lieu du candidat calcule), mais current_stop_loss=115.0 est DEJA
+    # plus resserre (plus proche du prix) que le candidat calcule :
+    # new_stop = max(115.0, 109.42857142857143) = 115.0 == current_stop_loss
+    # => aucun changement, la fonction ne doit jamais reculer le stop.
+    candles_5min = _h1_to_5min(_build_bullish_cross_history())
+    entry_time_iso = candles_5min[70]["time"]
+    result = ichimoku_reversion.compute_trailing_stop(
+        candles_5min, "achat", entry_time_iso, entry_price=102.0, current_stop_loss=115.0)
     assert result is None

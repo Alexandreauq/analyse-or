@@ -1,26 +1,26 @@
 {
-  "date": "2026-11-04",
-  "composite_score": 1.7,
+  "date": "2026-11-05",
+  "composite_score": -2.1,
   "interpretation": "Neutre — pas d'action",
   "cftc_percentile": 26.282051282051285,
   "factors": [
     {
       "name": "Taux réels US 10 ans",
-      "score": 0.0,
+      "score": -0.5999999999999961,
       "weight": 0.3,
-      "raw_value": "2.62% (il y a ~45j : 2.62%)"
+      "raw_value": "2.65% (il y a ~45j : 2.62%)"
     },
     {
       "name": "Dollar (DXY)",
       "score": -10,
       "weight": 0.15,
-      "raw_value": "101.58 (il y a 2 mois : 99.16)"
+      "raw_value": "101.49 (il y a 2 mois : 99.16)"
     },
     {
       "name": "Anticipations d'inflation",
-      "score": -1.3333333333333348,
+      "score": -2.6666666666666696,
       "weight": 0.15,
-      "raw_value": "2.30% (il y a ~45j : 2.34%)"
+      "raw_value": "2.26% (il y a ~45j : 2.34%)"
     },
     {
       "name": "Ton de la Fed",
@@ -48,9 +48,9 @@
     }
   ],
   "technical": {
-    "note": "Cours en-dessous de la MM200 (-9.7%) — tendance baissière",
-    "spot": 4073.0,
-    "ma200": 4509.307996826172
+    "note": "Cours en-dessous de la MM200 (-9.3%) — tendance baissière",
+    "spot": 4087.800048828125,
+    "ma200": 4509.3819970703125
   },
   "calendar": [
     {
@@ -99,7 +99,7 @@
       "kind": "info",
       "title": "Pas de signal actif",
       "detail": "Aucune des conditions de veille, d'entrée ou de risque n'est réunie aujourd'hui.",
-      "date": "04/11/2026"
+      "date": "05/11/2026"
     }
   ],
   "news": [

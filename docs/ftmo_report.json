@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-04T07:11:31Z",
+  "generated_at": "2026-11-05T07:12:00Z",
   "healthy": true,
-  "summary_fr": "Le bot est actuellement actif et fonctionne normalement : il a évalué 419 situations de marché aujourd'hui et 9 018 au cours des 7 derniers jours. Aucune position n'a été ouverte sur cette période : le bot a préféré rester prudent, car les conditions (tendance trop marquée, absence de signal d'entrée clair, publications économiques ou volatilité inhabituelle) ne correspondaient pas à ses critères stricts. Rester en retrait fait partie de sa discipline de gestion du risque."
+  "summary_fr": "Le bot est actuellement actif et fonctionne normalement : sa dernière décision date de quelques instants. Sur les 7 derniers jours, il a évalué 9 021 situations de marché et n'a ouvert que 2 positions, ce qui reflète sa prudence : il n'entre en position que lorsque toutes les conditions sont réunies. Aujourd'hui, 433 cycles ont été évalués, dont 2 positions ouvertes."
 }

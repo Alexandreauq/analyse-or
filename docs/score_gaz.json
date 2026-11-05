@@ -2,7 +2,7 @@
   "date": "2026-11-05",
   "commodity": "gaz",
   "label": "Gaz naturel",
-  "composite_score": -41.1,
+  "composite_score": -37.9,
   "interpretation": "Défavorable — pas d'entrée même sur signal technique",
   "cftc_percentile": 0.641025641025641,
   "factors": [
@@ -20,15 +20,15 @@
     },
     {
       "name": "Dynamique récente",
-      "score": -7.767942259696035,
+      "score": -6.578555856275418,
       "weight": 0.26666666666666666,
-      "raw_value": "-3.9% vs MM200"
+      "raw_value": "-3.3% vs MM200"
     },
     {
       "name": "Dollar (DXY)",
       "score": -10,
       "weight": 0.13333333333333333,
-      "raw_value": "101.49 (il y a 2 mois : 99.16)"
+      "raw_value": "101.36 (il y a 2 mois : 98.84)"
     },
     {
       "name": "Stocks EIA",
@@ -38,9 +38,9 @@
     }
   ],
   "technical": {
-    "note": "Cours en-dessous de la MM200 (-3.9%) — tendance baissière",
-    "spot": 2.944999933242798,
-    "ma200": 3.0640050029754637,
+    "note": "Cours en-dessous de la MM200 (-3.3%) — tendance baissière",
+    "spot": 2.9539999961853027,
+    "ma200": 3.0544700038433077,
     "unite": "$ / MMBtu"
   },
   "calendar": [
@@ -88,10 +88,28 @@
   "alerts": [],
   "news": [
     {
-      "title": "Encore une mauvaise nouvelle à venir… Les prix du gaz vont grimper dans les prochaines semaines - Actu.fr",
+      "title": "Petrobras maintient inchangés les prix du gaz naturel pour les distributeurs - Zonebourse Suisse",
       "date": "2026-11-04",
-      "link": "https://news.google.com/rss/articles/CBMi1wFBVV95cUxQX3EwbzRsdGVXclkwQ1otZWFFeEdpT3NveHJPZ3EyZVktWFlNYXVrb2stMmJJSXJTNFViZFRORE1rSWwzQ0RsRnhKOHhHR3dfS3RJTzFFUEN3SmhFbE0tVHBLQkg1SVRfWEx1Ym9SbDN2WWJrMmZJOEtUbUtLUFpWdVBGV24wN0xhZmtrb000TWNDRE1od1l3WkU1NDBuS3d1WGwyclM2TU9BdDhPc1VFbUtidDJoNWVRNDBrN055bXU4RUpZSlZUeXQzU25rOG1vTjVHNzNQNA?oc=5",
-      "source": "Actu.fr",
+      "link": "https://news.google.com/rss/articles/CBMi0gFBVV95cUxNaWZFQ0hRR1JhS05HYkVZS0I5UndoUTdJYko3bWNtTml3WWxpRkVtd2txNFJPM2ZYYmY4dzR0aXhtY0xkX2N0ZmlCdEFrR3dDUXJxakJCbGhDODVCcXFWdTJqcWdaaXJpeDJ1aTdvWHRfaXNLcUE1NzRCRHY1WEFCVGZuZ3RfWVUyaldNVmw0OGktTkY0ajV1bHNYVlVCYXUwbEstb2NwamsxWDV5Tng3RnN6MXhZZVFUWGFMVHhWS0U4bzljTUdRVWFFaDJZVVMxZWc?oc=5",
+      "source": "Zonebourse Suisse",
+      "summary": "",
+      "sentiment": 0,
+      "importance": "mineure"
+    },
+    {
+      "title": "Gulfport Energy : centres de données face à la faiblesse du gaz naturel - Investing.com France",
+      "date": "2026-11-04",
+      "link": "https://news.google.com/rss/articles/CBMivwFBVV95cUxNZlNRVHpLU1QxSkRPbkVhT1dRVEwzbXAyMlZzb1VoSmlVRmkxaWhrc1BHV0ljcWpqU2JtZDQ5RHhzX0RpT0VUZ0ZoZ0JmUlpVRVVGdmJ3Mm5DcjhyX3VvOG5iNVRzT2dRWE85T2FRQkc0bkZKZmFlUkVCdVhkM2Z6NWxxc2laR25jNnNoRi01Mlp1RVRNai1IMEdUT3dMYmZZQWNWUF95V2tEamNtcXpOODl3LVgwb0ZYZ1lnZWk0cw?oc=5",
+      "source": "Investing.com France",
+      "summary": "",
+      "sentiment": 0,
+      "importance": "mineure"
+    },
+    {
+      "title": "Marché des équipements de traitement du gaz de schiste à l'horizon 2035 : l'extraction de liquides de gaz naturel et les infrastructures d'exportation tirent la croissance - Actualités et statistiques - IndexBox",
+      "date": "2026-11-05",
+      "link": "https://news.google.com/rss/articles/CBMi3gFBVV95cUxNVWNveDM3Q0lHemd5Q2FSbzRPYlFiTEpldHRadi1mUGpCRDMyVFZyaXpCS0JZMGFYdktQSlFSSkhrRk5Wd05pRmswSE5ac2RNSTZkd1N0QTI1clpUSDJKLVNsdUdXMUk1RHc1YV9mZ0o0cmh3aWFoamVyNkw1MzlvU1BCSGhRVmFWN2dVT0FYM0duWERoUE9rSlp1TmNtNm5BVXN4WVpJWHpKU2NVRlZDQmhTVnlsMWhWc0FMX0VBci1fT2g5NXczXzJkLXMySEd6bGFSQmxJMnVOZGJnSVE?oc=5",
+      "source": "IndexBox",
       "summary": "",
       "sentiment": 0,
       "importance": "mineure"
@@ -106,36 +124,28 @@
       "importance": "mineure"
     },
     {
-      "title": "Prix du gaz : un surcoût de 691€ sur votre facture en décembre, pourquoi janvier 2027 s'annonce encore pire - Bourse Inside",
+      "title": "L'Italie prépare un seuil sur le coût du gaz des centrales électriques - energynews.pro",
       "date": "2026-11-04",
-      "link": "https://news.google.com/rss/articles/CBMi0wFBVV95cUxQZkViajR5S3YxRS10QlVzbXR2QjNodk5FTmdaTHZ2NnpoZHRRb2hmellUOExxY2tXc3FmNElQbzBaUDI5cUQ2UXVqX0gySEpVbWpRZGVsVnVEQzZmcUxRWXFKU3NVNGhFM1RGSFlYOUFhamI3eFBNMHF2RnhJNldUMXFFZ2NLWTVLVWxMaU0zbVY3VEg5aXoxRFNaLUFWWDh1SUpldk5Ma0VIZmJJb0FITmp3ek1pbTVhaXlHcHpEVUlBcy1KYzhTbWw3dWI3UWMxTzBZ?oc=5",
-      "source": "Bourse Inside",
-      "summary": "",
-      "sentiment": 0,
-      "importance": "mineure"
-    },
-    {
-      "title": "Prix du gaz : le kWh bientôt plus cher que celui de l'électricité ! - Sud Radio",
-      "date": "2026-11-03",
-      "link": "https://news.google.com/rss/articles/CBMimwFBVV95cUxPUDhMeFdOWHBsZGZPU3pjbTFJWmI5LXV6MzFfOHBnZ2lHMXVvb0JFc2Fia3YwVkluUEFsLUpkM2Z6LXMwRkp0cmRPTVp2UGxMeGZvMzAxVjhvZ2tleE9OYlpXVklKWW1PMnByWWlKV1BIY2Izb2o5TVVUUlFMRGYxTFh0VG91MXpLLVF0WGZpMkIwQ3RhVEtFN0JGaw?oc=5",
-      "source": "Sud Radio",
-      "summary": "",
-      "sentiment": 0,
-      "importance": "mineure"
-    },
-    {
-      "title": "Gaz naturel en Europe : prix proches de la zone de surachat, offre tendue - TradingView",
-      "date": "2026-11-01",
-      "link": "https://news.google.com/rss/articles/CBMiZkFVX3lxTFB2d2l5S09FWDY3cFBqSEpmZDFwOFlyTWozUDNOaHJxTmsxSHZwLUd2VU5sem9Za0xUWnBSLWdUdGdMZHFaZ1EtanMyS0tTa0FwRDl5bTluTFo5ZFhUTXFHVThMcFlPdw?oc=5",
-      "source": "TradingView",
+      "link": "https://news.google.com/rss/articles/CBMilwFBVV95cUxQdUIxeFRwZ2l0dHZBWDBGcXRpTUVBdTR0NzJyQUloYTVHMmNCY3VvMVp1RjN5VGV2VVpGbU40ejE5ZXN3UnpoTG1KWl94ZWlOYW13LTRuOFh2ZUI4cG9selNzN21ocXZPSG9HN3dQOE1OY2xLQ2c3Y2JIZVhlWktVTk8tS1hFdkw3WUhsUVNkbUY4Mm5UWnlZ?oc=5",
+      "source": "energynews.pro",
       "summary": "",
       "sentiment": 0,
       "importance": "mineure"
     }
   ],
-  "analysis_html": "<h3>Contexte récent</h3><p>Le gaz naturel américain (Henry Hub) s'échange à 2,76 $/MMBtu, soit environ 19 % sous la moyenne saisonnière du mois (3,39 $/MMBtu). Le prix évolue aussi 5,5 % sous sa moyenne mobile 200 jours, ce qui traduit une tendance de fond baissière. Parallèlement, le dollar s'est raffermi : le DXY est passé de 99,16 à 101,42 en deux mois.</p><h3>Facteurs déterminants</h3><ul><li><strong>Saisonnalité (poids 33 %, score -10,0)</strong> : c'est le facteur le plus lourd du score. Il est à son niveau le plus défavorable, car le prix se situe nettement sous ses niveaux habituels pour la période. Cela signale une faiblesse marquée par rapport aux normes historiques.</li><li><strong>Dynamique récente (poids 27 %, score -10,0)</strong> : l'écart négatif avec la MM200 confirme que la pression vendeuse s'inscrit dans la durée et ne relève pas d'un simple accident ponctuel.</li><li><strong>Positionnement CFTC (poids 27 %, score +9,9)</strong> : c'est le seul contrepoids positif. La position nette spéculative s'établit à -206 317 contrats, au 1er percentile sur trois ans, soit un pessimisme extrême. Dans une lecture contrariante, un tel excès vendeur est interprété comme un facteur de soutien potentiel, car il ouvre la possibilité de rachats de positions courtes.</li><li><strong>Dollar (poids 13 %, score -10,0)</strong> : la hausse du DXY pèse sur les matières premières libellées en dollars. Son poids reste toutefois limité dans le score.</li><li><strong>Stocks EIA (poids 0 %)</strong> : ce facteur est indisponible, faute de clé API configurée. Les niveaux de stockage, pourtant structurants pour le gaz, ne sont donc pas intégrés au score, ce qui en limite la portée.</li></ul><p>Au total, trois facteurs négatifs à leur extrême, représentant 73 % de la pondération, l'emportent sur le seul facteur positif. Le score composite ressort ainsi orienté négativement, et le positionnement CFTC en atténue seulement partiellement l'ampleur.</p><h3>Actualités à retenir</h3><p>Aucune actualité n'est classée notable ou majeure. Les cinq informations recensées sont toutes mineures et concernent surtout le marché européen et les factures des ménages : hausses de tarifs annoncées, dépendance au gaz russe pour l'hiver, prix européens proches d'une zone de surachat avec une offre tendue. Ces éléments décrivent un marché européen sous tension, qui contraste avec la faiblesse observée sur le Henry Hub. Ils n'ont pas de lien direct avec les facteurs du score, centrés sur le marché américain, et ne modifient pas son orientation.</p><h3>Synthèse</h3><p>Le score composite du gaz naturel est orienté négativement. Il est principalement tiré par un prix nettement inférieur à sa norme saisonnière, une tendance baissière confirmée par la MM200 et un dollar plus ferme. Le positionnement spéculatif extrêmement vendeur constitue le principal élément de nuance, car il signale un marché déjà très pessimiste. Les actualités, toutes mineures et surtout européennes, ne remettent pas en cause cette lecture. L'absence des données de stocks EIA représente une limite notable de l'analyse.</p>",
+  "analysis_html": "<h3>Contexte récent</h3><p>Le gaz naturel américain (Henry Hub) s'échange autour de <strong>2,63 $/MMBtu</strong>, nettement sous la moyenne saisonnière du mois (<strong>3,73 $/MMBtu</strong>). Le prix évolue légèrement sous sa moyenne mobile 200 jours (<strong>-3,3 %</strong>), ce qui traduit une tendance de fond plutôt baissière. Parallèlement, le dollar s'est raffermi : le DXY est passé de 98,84 à 101,36 en deux mois.</p><h3>Facteurs déterminants</h3><ul><li><strong>Saisonnalité (poids 33 %, score -10,0) :</strong> c'est le facteur le plus lourd du score et il est à son niveau le plus défavorable. L'écart d'environ 1,10 $/MMBtu avec la moyenne saisonnière indique un prix anormalement bas pour la période. Le modèle y lit une faiblesse marquée de la demande ou un marché bien approvisionné.</li><li><strong>Positionnement CFTC (poids 27 %, score +9,9) :</strong> c'est le seul facteur nettement positif. La position nette spéculative (-206 317 contrats) se situe au <strong>1er percentile sur 3 ans</strong>, soit un pessimisme quasi extrême. Le score l'interprète comme un signal contrarien : un marché aussi vendeur est exposé à des rachats de positions courtes. Ce facteur compense une partie de la pression baissière sans l'annuler.</li><li><strong>Dynamique récente (poids 27 %, score -6,6) :</strong> le prix sous sa MM200 confirme une tendance négative. L'écart limité (-3,3 %) explique que le score ne soit pas au plancher.</li><li><strong>Dollar (poids 13 %, score -10,0) :</strong> la hausse sensible du DXY pèse au maximum sur ce facteur. Son poids plus faible en limite toutefois l'impact sur le score global.</li><li><strong>Stocks EIA (poids 0 %) :</strong> donnée indisponible, faute de clé API configurée. Ce fondamental, pourtant central pour le gaz naturel, ne contribue donc pas au score, ce qui en réduit la portée.</li></ul><p>Au total, trois facteurs sur quatre disponibles sont négatifs, dont le plus pondéré. Le score composite penche donc du côté baissier. Le positionnement CFTC extrême agit comme principal contrepoids.</p><h3>Actualités à retenir</h3><p>Aucune actualité récente n'est classée notable ou majeure : toutes sont considérées comme mineures. Leur influence directe sur le score est donc limitée. Quelques éléments de contexte méritent néanmoins d'être relevés :</p><ul><li><strong>Gulfport Energy et les centres de données :</strong> l'article évoque explicitement la faiblesse du gaz naturel. Il rejoint ainsi les facteurs saisonnalité et dynamique. La demande liée aux centres de données apparaît comme un soutien potentiel de plus long terme, sans effet visible à ce stade sur les prix.</li><li><strong>Europe et Italie (gaz russe, plafonnement du coût du gaz pour les centrales) :</strong> ces sujets concernent surtout le marché européen. Le lien avec le Henry Hub reste indirect, via la demande d'exportation de GNL américain.</li><li><strong>Petrobras et équipements de traitement du gaz de schiste :</strong> ces informations sont sectorielles ou régionales et sans lien immédiat avec l'évolution du score.</li></ul><h3>Synthèse</h3><p>Le score composite du gaz naturel est orienté négativement. Il est principalement tiré vers le bas par un prix très inférieur à sa norme saisonnière, une tendance sous la MM200 et un dollar en hausse. Le positionnement spéculatif, extrêmement vendeur, constitue le seul facteur de soutien notable. Il signale un marché déjà très pessimiste, exposé à des mouvements de rachat. Le flux d'actualités, uniquement mineur, n'apporte pas d'élément de nature à modifier cette lecture. Enfin, l'absence des données de stocks EIA laisse de côté un fondamental clé, ce qui invite à interpréter ce score avec prudence.</p>",
   "news_classifications": {
-    "https://news.google.com/rss/articles/CBMi1wFBVV95cUxQX3EwbzRsdGVXclkwQ1otZWFFeEdpT3NveHJPZ3EyZVktWFlNYXVrb2stMmJJSXJTNFViZFRORE1rSWwzQ0RsRnhKOHhHR3dfS3RJTzFFUEN3SmhFbE0tVHBLQkg1SVRfWEx1Ym9SbDN2WWJrMmZJOEtUbUtLUFpWdVBGV24wN0xhZmtrb000TWNDRE1od1l3WkU1NDBuS3d1WGwyclM2TU9BdDhPc1VFbUtidDJoNWVRNDBrN055bXU4RUpZSlZUeXQzU25rOG1vTjVHNzNQNA?oc=5": {
+    "https://news.google.com/rss/articles/CBMi0gFBVV95cUxNaWZFQ0hRR1JhS05HYkVZS0I5UndoUTdJYko3bWNtTml3WWxpRkVtd2txNFJPM2ZYYmY4dzR0aXhtY0xkX2N0ZmlCdEFrR3dDUXJxakJCbGhDODVCcXFWdTJqcWdaaXJpeDJ1aTdvWHRfaXNLcUE1NzRCRHY1WEFCVGZuZ3RfWVUyaldNVmw0OGktTkY0ajV1bHNYVlVCYXUwbEstb2NwamsxWDV5Tng3RnN6MXhZZVFUWGFMVHhWS0U4bzljTUdRVWFFaDJZVVMxZWc?oc=5": {
+      "summary": "",
+      "sentiment": 0,
+      "importance": "mineure"
+    },
+    "https://news.google.com/rss/articles/CBMivwFBVV95cUxNZlNRVHpLU1QxSkRPbkVhT1dRVEwzbXAyMlZzb1VoSmlVRmkxaWhrc1BHV0ljcWpqU2JtZDQ5RHhzX0RpT0VUZ0ZoZ0JmUlpVRVVGdmJ3Mm5DcjhyX3VvOG5iNVRzT2dRWE85T2FRQkc0bkZKZmFlUkVCdVhkM2Z6NWxxc2laR25jNnNoRi01Mlp1RVRNai1IMEdUT3dMYmZZQWNWUF95V2tEamNtcXpOODl3LVgwb0ZYZ1lnZWk0cw?oc=5": {
+      "summary": "",
+      "sentiment": 0,
+      "importance": "mineure"
+    },
+    "https://news.google.com/rss/articles/CBMi3gFBVV95cUxNVWNveDM3Q0lHemd5Q2FSbzRPYlFiTEpldHRadi1mUGpCRDMyVFZyaXpCS0JZMGFYdktQSlFSSkhrRk5Wd05pRmswSE5ac2RNSTZkd1N0QTI1clpUSDJKLVNsdUdXMUk1RHc1YV9mZ0o0cmh3aWFoamVyNkw1MzlvU1BCSGhRVmFWN2dVT0FYM0duWERoUE9rSlp1TmNtNm5BVXN4WVpJWHpKU2NVRlZDQmhTVnlsMWhWc0FMX0VBci1fT2g5NXczXzJkLXMySEd6bGFSQmxJMnVOZGJnSVE?oc=5": {
       "summary": "",
       "sentiment": 0,
       "importance": "mineure"
@@ -145,17 +155,7 @@
       "sentiment": 0,
       "importance": "mineure"
     },
-    "https://news.google.com/rss/articles/CBMi0wFBVV95cUxQZkViajR5S3YxRS10QlVzbXR2QjNodk5FTmdaTHZ2NnpoZHRRb2hmellUOExxY2tXc3FmNElQbzBaUDI5cUQ2UXVqX0gySEpVbWpRZGVsVnVEQzZmcUxRWXFKU3NVNGhFM1RGSFlYOUFhamI3eFBNMHF2RnhJNldUMXFFZ2NLWTVLVWxMaU0zbVY3VEg5aXoxRFNaLUFWWDh1SUpldk5Ma0VIZmJJb0FITmp3ek1pbTVhaXlHcHpEVUlBcy1KYzhTbWw3dWI3UWMxTzBZ?oc=5": {
-      "summary": "",
-      "sentiment": 0,
-      "importance": "mineure"
-    },
-    "https://news.google.com/rss/articles/CBMimwFBVV95cUxPUDhMeFdOWHBsZGZPU3pjbTFJWmI5LXV6MzFfOHBnZ2lHMXVvb0JFc2Fia3YwVkluUEFsLUpkM2Z6LXMwRkp0cmRPTVp2UGxMeGZvMzAxVjhvZ2tleE9OYlpXVklKWW1PMnByWWlKV1BIY2Izb2o5TVVUUlFMRGYxTFh0VG91MXpLLVF0WGZpMkIwQ3RhVEtFN0JGaw?oc=5": {
-      "summary": "",
-      "sentiment": 0,
-      "importance": "mineure"
-    },
-    "https://news.google.com/rss/articles/CBMiZkFVX3lxTFB2d2l5S09FWDY3cFBqSEpmZDFwOFlyTWozUDNOaHJxTmsxSHZwLUd2VU5sem9Za0xUWnBSLWdUdGdMZHFaZ1EtanMyS0tTa0FwRDl5bTluTFo5ZFhUTXFHVThMcFlPdw?oc=5": {
+    "https://news.google.com/rss/articles/CBMilwFBVV95cUxQdUIxeFRwZ2l0dHZBWDBGcXRpTUVBdTR0NzJyQUloYTVHMmNCY3VvMVp1RjN5VGV2VVpGbU40ejE5ZXN3UnpoTG1KWl94ZWlOYW13LTRuOFh2ZUI4cG9selNzN21ocXZPSG9HN3dQOE1OY2xLQ2c3Y2JIZVhlWktVTk8tS1hFdkw3WUhsUVNkbUY4Mm5UWnlZ?oc=5": {
       "summary": "",
       "sentiment": 0,
       "importance": "mineure"

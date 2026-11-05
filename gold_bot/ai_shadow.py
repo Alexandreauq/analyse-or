@@ -144,7 +144,16 @@ def shadow_judge_entry(symbol: str, direction: str, state: dict, candles: list[d
         client = anthropic.Anthropic(api_key=api_key, timeout=REQUEST_TIMEOUT_SECONDS, max_retries=0)
         response = client.messages.create(
             model=MODEL,
-            max_tokens=1024,
+            # 1024 s'est avere trop bas en pratique (incident du
+            # 2026-11-05) : la recherche web + le raisonnement interne
+            # consomment une partie du budget avant le texte final,
+            # coupant parfois le bloc JSON du verdict avant qu'il soit
+            # ecrit -- reproduit en direct, usage reel observe ~1600
+            # tokens de sortie sur un appel reussi. Marge large plutot
+            # qu'un ajustement fin, vu le cout marginal faible face a
+            # l'objectif (un verdict exploitable a chaque appel reel,
+            # rare -- au plus 1 par symbole/24h).
+            max_tokens=4096,
             output_config={"effort": "medium"},
             tools=[{"type": "web_search_20260209", "name": "web_search", "max_uses": WEB_SEARCH_MAX_USES}],
             messages=[{"role": "user", "content": _build_prompt(symbol, direction, state, candles)}],

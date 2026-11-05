@@ -1,20 +1,20 @@
 {
   "date": "2026-11-05",
-  "composite_score": -2.1,
+  "composite_score": -1.5,
   "interpretation": "Neutre — pas d'action",
   "cftc_percentile": 26.282051282051285,
   "factors": [
     {
       "name": "Taux réels US 10 ans",
-      "score": -0.5999999999999961,
+      "score": -0.40000000000000036,
       "weight": 0.3,
-      "raw_value": "2.65% (il y a ~45j : 2.62%)"
+      "raw_value": "2.64% (il y a ~45j : 2.62%)"
     },
     {
       "name": "Dollar (DXY)",
       "score": -10,
       "weight": 0.15,
-      "raw_value": "101.53 (il y a 2 mois : 98.84)"
+      "raw_value": "101.61 (il y a 2 mois : 98.84)"
     },
     {
       "name": "Anticipations d'inflation",
@@ -48,9 +48,9 @@
     }
   ],
   "technical": {
-    "note": "Cours en-dessous de la MM200 (-8.7%) — tendance baissière",
-    "spot": 4112.2001953125,
-    "ma200": 4505.681497802734
+    "note": "Cours en-dessous de la MM200 (-9.0%) — tendance baissière",
+    "spot": 4100.2001953125,
+    "ma200": 4505.621497802735
   },
   "calendar": [
     {

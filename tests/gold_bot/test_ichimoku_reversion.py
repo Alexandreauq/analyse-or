@@ -47,3 +47,72 @@ def test_compute_ichimoku_senkou_is_none_before_shift():
     ind = ichimoku_reversion.compute_ichimoku(candles_h1, tenkan_period=3, kijun_period=3, senkou_b_period=3, shift=10)
     assert all(v is None for v in ind["senkou_a"])
     assert all(v is None for v in ind["senkou_b"])
+
+
+def _build_bullish_cross_history():
+    """78 bougies H1 (MIN_H1_CANDLES) avec un prix stable puis un
+    croisement Tenkan/Kijun haussier confirme par un prix au-dessus du
+    nuage sur la derniere bougie."""
+    from datetime import timedelta
+    candles = []
+    base = datetime(2026, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
+    price = 100.0
+    for h in range(80):
+        ts = (base + timedelta(hours=h)).strftime("%Y-%m-%d %H:00:00")
+        if h < 70:
+            o, hh, l, c = price, price + 0.5, price - 0.5, price
+        else:
+            # pousse le prix a la hausse sur les 10 dernieres bougies pour provoquer un croisement
+            price += 2.0
+            o, hh, l, c = price - 2.0, price + 0.5, price - 2.5, price
+        candles.append(_candle(ts, o, hh, l, c))
+    return candles
+
+
+def _h1_to_5min(candles_h1):
+    """Convertit une liste de bougies H1 en bougies 5min equivalentes
+    (une seule bougie 5min par heure, au prorata de l'OHLC) -- suffisant
+    pour que resample_h1() reconstruise exactement les memes buckets."""
+    out = []
+    for c in candles_h1:
+        t = ichimoku_reversion._parse(c["time"])
+        out.append(_candle(t.strftime("%Y-%m-%d %H:00:00"), c["open"], c["high"], c["low"], c["close"]))
+    return out
+
+
+def test_latest_state_returns_none_when_history_too_short():
+    candles_5min = _h1_to_5min(_build_bullish_cross_history())[:50]  # < MIN_H1_CANDLES
+    assert ichimoku_reversion.latest_state(candles_5min) is None
+
+
+def test_latest_state_returns_full_state_with_enough_history():
+    candles_5min = _h1_to_5min(_build_bullish_cross_history())
+    state = ichimoku_reversion.latest_state(candles_5min)
+    assert state is not None
+    for key in ("close", "high", "low", "atr", "tenkan", "tenkan_prev", "kijun", "kijun_prev", "senkou_a", "senkou_b", "hour_utc"):
+        assert key in state
+    assert state["atr"] > 0
+
+
+def test_signal_returns_achat_on_bullish_tk_cross_above_cloud():
+    state = {
+        "tenkan_prev": 99.0, "kijun_prev": 100.0, "tenkan": 101.0, "kijun": 100.0,
+        "close": 105.0, "senkou_a": 102.0, "senkou_b": 101.0,
+    }
+    assert ichimoku_reversion.signal(state) == "achat"
+
+
+def test_signal_returns_none_when_cross_not_confirmed_by_cloud():
+    state = {
+        "tenkan_prev": 99.0, "kijun_prev": 100.0, "tenkan": 101.0, "kijun": 100.0,
+        "close": 95.0, "senkou_a": 102.0, "senkou_b": 101.0,  # close sous le nuage malgre le croisement haussier
+    }
+    assert ichimoku_reversion.signal(state) is None
+
+
+def test_compute_trailing_stop_returns_none_before_1r_excursion():
+    candles_5min = _h1_to_5min(_build_bullish_cross_history())
+    entry_time_iso = candles_5min[-1]["time"]
+    result = ichimoku_reversion.compute_trailing_stop(
+        candles_5min, "achat", entry_time_iso, entry_price=100.0, current_stop_loss=75.0)  # R=25 : excursion max 20.5/25 = 0.82R < 1R
+    assert result is None

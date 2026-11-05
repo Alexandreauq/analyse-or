@@ -2,7 +2,7 @@
   "date": "2026-11-05",
   "commodity": "argent",
   "label": "Argent",
-  "composite_score": -29.1,
+  "composite_score": -28.7,
   "interpretation": "Défavorable — pas d'entrée même sur signal technique",
   "cftc_percentile": 3.8461538461538463,
   "factors": [
@@ -16,7 +16,7 @@
       "name": "Dollar (DXY)",
       "score": -10,
       "weight": 0.2,
-      "raw_value": "101.49 (il y a 2 mois : 99.16)"
+      "raw_value": "101.35 (il y a 2 mois : 98.84)"
     },
     {
       "name": "Positionnement CFTC",
@@ -26,21 +26,21 @@
     },
     {
       "name": "Ratio or/argent",
-      "score": -4.469026548672566,
+      "score": -4.2983425414364635,
       "weight": 0.25,
-      "raw_value": "77.8 — 28e percentile (3 ans)"
+      "raw_value": "78.6 — 29e percentile (3 ans)"
     },
     {
       "name": "Dynamique récente",
       "score": -10.0,
       "weight": 0.1,
-      "raw_value": "-25.3% vs MM200"
+      "raw_value": "-25.0% vs MM200"
     }
   ],
   "technical": {
-    "note": "Cours en-dessous de la MM200 (-25.3%) — tendance baissière",
-    "spot": 52.5099983215332,
-    "ma200": 70.27506986618042,
+    "note": "Cours en-dessous de la MM200 (-25.0%) — tendance baissière",
+    "spot": 52.59000015258789,
+    "ma200": 70.07501987457276,
     "unite": "$ / oz"
   },
   "calendar": [
@@ -88,74 +88,74 @@
   "alerts": [],
   "news": [
     {
-      "title": "Cours de l’argent aujourd’hui : le métal progresse, selon les données de FXStreet - www.tmgm.com",
-      "date": "2026-11-02",
-      "link": "https://news.google.com/rss/articles/CBMiwgFBVV95cUxQWkpUV080dm14S0lsblRDWVA1UlMwakl3VFZxSHhnbGwxcndrZFVUOTk5WG1PM1k4Ym05eFUzdGhraFR6ZDF6LVVxSWRaOG5Ia0g1VWYtbFRFTHU0X2xSYnVQampPUHlmeTNsZkZaVEFMaTRkeHJRaE5IbkxlaFFiLXN0V1RQcXdQdDYtal9RazNrZVZ6NnFrdVNLd1NNakM1WDN4QXV3RWQ5eWMteUJsMzc3LXUzWWVQUmFEZXhRbmZQQQ?oc=5",
-      "source": "www.tmgm.com",
-      "summary": "Cet article suggère que le cours de l'argent était orienté à la hausse au moment de sa publication, selon des données attribuées à FXStreet, sans que le titre seul permette de connaître les causes ni l'ampleur de ce mouvement.",
-      "sentiment": 1,
+      "title": "Cours de l'argent aujourd'hui, 5 novembre 2026 : Inversion de tendance et reprise. - Vietnam.vn",
+      "date": "2026-11-04",
+      "link": "https://news.google.com/rss/articles/CBMiekFVX3lxTE1UdmFOek14ZFJXTEFfbFlOYzZNUU5ock9fR3R5cU9uLWNlMDNtTGZ1SVVfcTg0NGxqdGlIRU1GakJXQUk4WDBvWHBWVzZzUjBhNlBXSUlJcGN5UnhZYi1QY2tReVZpV2ZnMG1ZXzBBTXh3d2pSWWdwTDZR?oc=5",
+      "source": "Vietnam.vn",
+      "summary": "",
+      "sentiment": 0,
       "importance": "mineure"
     },
     {
-      "title": "Or vs argent : quelles perspectives pour 2027 ? - Le Comptoir National de l'Or",
-      "date": "2026-10-21",
-      "link": "https://news.google.com/rss/articles/CBMihwFBVV95cUxOd1ZnSXdQV2lfWGRPMGJveWZBLU15aldGZEs3R0VoTU94UVlFLVdCd294eFljTmczSHA0QktyZ2FhLUxEeWZwaXgyclNmRzRBVkJ4czFFZVZ2dmRlS0VmeXg1anFMVXI1cGNzQjh6R241YUhickl4aEowbWFEbWM2TjVQQXhXMHfSAYwBQVVfeXFMT2dPd0VjdHVkTGVscXprUFU4RWFIdHVOaTdvYzFHdXh5UFZsQnpxc2Q4emZkOWVXUDc5RWJPUGdzQXBsMkx3RURjT0laQUZCMnM0R2NUQ2VmdjVmNzI4OGNSRkpBS3h6a2x2THBITVhlMDdPelJyRUxMMnhMSUxCcHdpekxLTUdGWnJWNWw?oc=5",
+      "title": "Pourquoi, malgré une correction à la baisse, le marché de l'argent se maintient à des niveaux élevés? - RFI",
+      "date": "2026-09-24",
+      "link": "https://news.google.com/rss/articles/CBMitgJBVV95cUxQRlZNeG9jaEZLQXY1TXl5b0dUZktCcDFSbTBMZi1jY3FGSU11Z3Q1UzdFTWFQTEp2a0wzWll3TkNoR1ZFR3ZHMjJnSk5iWlV4TVNhdjhHVzZlb3M5M1FyZjRyUnVJaktkS3BtWnNjZURsRWxmaVZaMVlFSjNfYi0xWWQ2aVQtVHVaTzE0QkNxQ2RTUi11MmpncGhld0dZNXFaM2I1bXpXYnp0WEg1N1ZfSmxJdHdMdldsQTItSGR4ZmhqODk0MVpBbC1LRl9xWndqTl9hMGpxSF9RRTU0bkJrVDB4WFJyOS1xaEQyWmtQcXFnTkw5dG5RWEFVcnNuZVplTFRIUzVnUTRIN1NuemVUN2xkdzVSVDRfbHdrQUpGRG1ab0VWLUNMT3NTd3luRThDV1M3RHFn?oc=5",
+      "source": "RFI",
+      "summary": "",
+      "sentiment": 0,
+      "importance": "mineure"
+    },
+    {
+      "title": "L’argent cherche son nouvel équilibre après une année complètement folle - Le Comptoir National de l'Or",
+      "date": "2026-09-09",
+      "link": "https://news.google.com/rss/articles/CBMirAFBVV95cUxQN25UeVBOS2xRVzJJRExHZ3ZNU2Q2bjhHVWRPeEFBcG1DRmZDRW4zTF9HMlZ1dm9hN3JGUGNlQlhrYTJRU2x4NTJRdFk0Ri03eWc5bjdTYm14OHFPUDBSenk3di02cWtGS2N1eXcwU09xVXlUNzBLMFg2NGJzZ1lFMmU2QmYzTjJiazY5QTVRNENzZHZaZnFfanFPUDB1S3NvS3ZhWUVyUXdtaGhX0gGyAUFVX3lxTE1iekFBN0tfQVBNZWVxY0R2SnNjMktBXzhxclctcGp6eVJIb0ZCXzZjdGhQbmJzQ3F0RkFBNDZCU3o3bmpMRVRDeFVnM0hrQjJ6LUpLYk54M09ycDcwd1NkYjhrU290UnlCN1FSZnhDYlgxWk83ODljMEI4VlBFVklYaFR0ZHEtLTBUb3VHTWhoNm5xb19EVHJZeWpZLW0zWlJrN0hOU3FpWDJUcW05Wk1lYnc?oc=5",
       "source": "Le Comptoir National de l'Or",
       "summary": "",
       "sentiment": 0,
       "importance": "mineure"
     },
     {
-      "title": "Prévisions du cours de l’argent pour 2026, 2027, 2028–2030 et au-delà - LiteFinance",
-      "date": "2026-10-28",
-      "link": "https://news.google.com/rss/articles/CBMiggFBVV95cUxQMzJNaUdZQlVJajk1cHlxaTdsN3FaS1IwRUxzcXR3OGhWVFJLMTBOc1ZwcUE2OHN6aVNPaFpJX1FIampDakphX0UtXzhfdm9IVDNYVVlNYTFhcHQtSEpCcENzVi1Ib0dxOGM0SlFxNHJVWjV5ejRHWEgzVDBiNkxudkJn?oc=5",
-      "source": "LiteFinance",
+      "title": "« La remonétisation de l'argent est en cours » - Boursier.com",
+      "date": "2026-01-14",
+      "link": "https://news.google.com/rss/articles/CBMirwFBVV95cUxPNkh2Q3hCd2ZiQ1FhTnB1eGtnbzVsNzAwdnE4VE1XWlA0WnY5MkxUMjZrT0NFWGR1X1BhRmp1TG5qd0JPS0FDOHctS1NoT0F3NEk4dVVKNkFzbWtBc0szV3BYazh1ZXNxU2hEZS1lY3FoWHIyTVZoWDRWbFpoZWFkdDBwUW1qOWl0d2JFMHV6UnQ1S2JsQWpxaW9WdUVidTFEMVlmQjRFTnNUWDhEQkt3?oc=5",
+      "source": "Boursier.com",
       "summary": "",
       "sentiment": 0,
       "importance": "mineure"
     },
     {
-      "title": "Les actions des sociétés minières d'argent reculent alors que les cours des métaux précieux s'affaiblissent - Boursorama",
-      "date": "2026-10-13",
-      "link": "https://news.google.com/rss/articles/CBMikwJBVV95cUxQbkp0Z2tlTlNCb1BtemRPc3hvQWptdHJwbEJRcFE2ZGpWR0hydWVxZFJITmdKMmJXSUZmcElDSnA5RmNZbDUxSk9ITjl2bjZRWUQyMlVzNDIyZzFMTU1HeXRoTDFDQm1GLXJDY2gtQ3FrWHdpRUNiMW9TZnV3LVBHZ1VUNV92TldTTk9GVThhazFoV2d1cUlORDhnNHM4TzBxZG9fZ2NYcVBDb0RaUmhnZlpJX3NBd3hsRFZXc3dsNFF3S3A5T2RFVEdHUVFJRnlDWWlTckhOTGxVOE1UUFN6V2duUzNuVUI4SENFT2QydmJUcTd4QzREWHBhU2pIVk1QM0J2d0o3bG9RWDdBMGhYNjlQRdIBmAJBVV95cUxQRm1FVG01cVlEMzN5bVdOZkJsMnlUWUJRaTJUVkN5WUhSVzE2R0lLYWctelRsTnJTLUlwbl9zaVhERG4xX1lpWndpMUtrYS1UdDloWHhiTXZ1VU9lVndKcWRmN1k5dGU1TmNRRlo1VlZrSVJ5U0J5NThIN2phRExHOVdIYW1xbVI2d2lxUVM3Q2V6ak5oVDA3clN2S2NjdjFRQlkwQjd4U0lRM1VlYnBqOURiamhIdjNabDZRcmFfd3dHdlpCTTdrY3dWWHltNTBodl9nQ3IzZzh3Q0JSS2wzWkdTWnlJd1gwdXhpZFNBeF85NjBYYmsxWFZoYWFSYm80QkphUTdTOFJVQTE0ckNBSUVWSFJSdHBK?oc=5",
-      "source": "Boursorama",
-      "summary": "",
-      "sentiment": 0,
-      "importance": "mineure"
-    },
-    {
-      "title": "Prix ​​de l'argent aujourd'hui, 4 novembre 2026 : Fluctuations constantes - Vietnam.vn",
-      "date": "2026-11-03",
-      "link": "https://news.google.com/rss/articles/CBMiekFVX3lxTE5aNV91V1dyU3Z1ZW56TmJLTDd6U1dsbU9VNGNyRUJfQTNEbC1BN21xNFdleXg1WmxNVllzT3BhQkRaZHJyY043REE2aWp0T0EzQ1RMR21yZEJGOUpJZTRpR2RwU1R5dmFWT1ZYWVdmYTN1dUM4MGh6Wjl3?oc=5",
-      "source": "Vietnam.vn",
+      "title": "L’argent est-il plus précieux que l’or ? - The Conversation",
+      "date": "2026-03-08",
+      "link": "https://news.google.com/rss/articles/CBMie0FVX3lxTE1HcmxkRFg1Y3h0aF9MQnRHM3pZT3lKZXZoVEtHZmhnUDF0cDd6bFIxT1RUTmgxYzhYMmM1bHFzclN1eTNPbDdMRU0wdnY2S3VZSUxxQmlzekNHb2prdWoyQjJVYkQ0NDFVVnNEVXdJRnBWVmJhZEhaMXZ1Zw?oc=5",
+      "source": "The Conversation",
       "summary": "",
       "sentiment": 0,
       "importance": "mineure"
     }
   ],
-  "analysis_html": "<h3>Contexte récent</h3><p>L’argent évolue nettement en dessous de sa tendance de long terme : le cours se situe environ <strong>26 % sous sa moyenne mobile 200 jours</strong>, ce qui signale une correction marquée. Cette faiblesse survient alors que le dollar s’est raffermi au cours des deux derniers mois et que les taux réels américains sont restés stables. Les actualités récentes, toutes de portée mineure, décrivent un marché hésitant, entre un rebond ponctuel et un recul des minières.</p><h3>Facteurs déterminants</h3><ul><li><strong>Dollar (DXY), principal frein :</strong> l’indice est passé de 99,16 à 101,41 en deux mois, soit une hausse d’environ 2,3 %. Son score est au plancher (-10) et, avec un poids de 20 %, c’est le facteur qui pèse le plus négativement sur le composite (contribution pondérée d’environ -2 points). Un dollar plus fort renchérit le métal pour les acheteurs hors zone dollar et pèse généralement sur les métaux précieux.</li><li><strong>Dynamique récente, nettement négative :</strong> l’écart de -26 % par rapport à la MM200 vaut aussi un score de -10. Son poids limité (10 %) en réduit l’impact à environ -1 point, mais ce facteur confirme une tendance baissière bien installée.</li><li><strong>Ratio or/argent, légèrement défavorable :</strong> à 77,9, il se situe au 28e percentile sur trois ans. L’argent est donc relativement cher face à l’or par rapport à son historique récent, ce qui laisse moins de marge de rattrapage. Le score modéré (-4,4) est amplifié par un poids élevé (25 %), pour une contribution d’environ -1,1 point.</li><li><strong>Positionnement CFTC, seul soutien significatif :</strong> la position nette spéculative (19 703 contrats) se trouve au 4e percentile sur trois ans. Ce niveau très bas traduit un pessimisme déjà largement intégré et un risque limité de liquidation supplémentaire des positions acheteuses. Lu de façon contrariante, il obtient un score de +9,2, soit une contribution d’environ +1,4 point.</li><li><strong>Taux réels US 10 ans, neutres :</strong> stables à 2,62 % sur environ 45 jours, ils obtiennent un score nul. Bien qu’il s’agisse du facteur le plus pondéré (30 %), il n’influence donc pas le composite pour l’instant. Leur niveau reste toutefois élevé, ce qui augmente le coût d’opportunité de détenir un actif sans rendement.</li></ul><h3>Actualités à retenir</h3><p>Aucune actualité classée notable ou majeure ne figure dans la période. Les informations disponibles restent mineures et n’expliquent pas directement l’évolution du score :</p><ul><li>Le recul des <strong>actions des sociétés minières d’argent</strong> dans un contexte d’affaiblissement des métaux précieux (Boursorama) est cohérent avec la dynamique négative et le poids du dollar.</li><li>La progression ponctuelle du cours rapportée d’après FXStreet, ainsi que les fluctuations constantes évoquées le 4 novembre 2026, suggèrent une forte volatilité de court terme sans inversion de tendance établie.</li><li>Les articles de prévisions à moyen et long terme (horizons 2026-2030, comparaison or/argent pour 2027) ne renseignent pas sur les moteurs actuels du score.</li></ul><h3>Synthèse</h3><p>Le score composite de l’argent est orienté <strong>négativement</strong>, principalement sous l’effet du <strong>raffermissement du dollar</strong>, d’une <strong>dynamique de prix très dégradée</strong> et d’un <strong>ratio or/argent</strong> qui ne plaide pas pour un rattrapage. Le <strong>positionnement spéculatif extrêmement bas</strong> constitue le principal contrepoids, en signalant un sentiment déjà très déprimé. Les taux réels, stables, restent neutres malgré leur poids important. En l’absence d’actualité significative, l’évolution récente s’explique avant tout par ces facteurs macro-financiers plutôt que par un événement spécifique.</p>",
+  "analysis_html": "<h3>Contexte récent</h3><p>L'argent traverse une phase de correction marquée : son cours se situe environ 25 % sous sa moyenne mobile à 200 jours, après une année de très forte hausse. Cette baisse s'accompagne d'un raffermissement du dollar, alors que les taux réels américains restent stables à un niveau élevé.</p><h3>Facteurs déterminants</h3><ul><li><strong>Dollar (DXY), facteur le plus pénalisant :</strong> le score de -10,0 est le plus défavorable possible. Avec un poids de 20 %, c'est la contribution négative la plus lourde du composite. Le DXY est passé de 98,84 à 101,35 en deux mois, soit environ +2,5 %. Un dollar plus fort renchérit le métal pour les acheteurs hors zone dollar et pèse traditionnellement sur les métaux précieux.</li><li><strong>Ratio or/argent, deuxième pression négative :</strong> à 78,6, le ratio se situe au 29e percentile sur trois ans. L'argent reste donc relativement cher face à l'or au regard de son historique récent, ce qui limite son potentiel de rattrapage relatif. Le score de -4,3, pondéré à 25 %, constitue la deuxième contribution négative.</li><li><strong>Dynamique récente, au plus bas :</strong> le score de -10,0 traduit un écart de -25 % sous la MM200. Son poids est limité à 10 %, mais il confirme une tendance de court terme nettement baissière.</li><li><strong>Positionnement CFTC, principal soutien :</strong> la position nette spéculative de 19 703 contrats se situe au 4e percentile sur trois ans. Les spéculateurs sont donc très peu exposés. Ce positionnement extrêmement allégé est lu de façon contrarienne : le score de +9,2, pondéré à 15 %, apporte la seule contribution nettement positive. Il signale une purge déjà avancée des positions acheteuses.</li><li><strong>Taux réels US 10 ans, quasi neutres :</strong> à 2,65 % contre 2,62 % il y a environ 45 jours, ils sont pratiquement stables. Leur niveau élevé reste un frein de fond pour un actif sans rendement. Malgré leur poids de 30 %, leur impact sur le score est faible (-0,6), faute de variation significative.</li></ul><h3>Actualités à retenir</h3><p>Aucune actualité classée notable ou majeure ne ressort sur la période : les cinq informations recensées sont jugées mineures. Elles décrivent toutefois un récit cohérent avec le score :</p><ul><li>une correction intervenant après une année qualifiée de « complètement folle » ;</li><li>un marché qui se maintient malgré tout à des niveaux élevés ;</li><li>la recherche d'un « nouvel équilibre » ;</li><li>des signes ponctuels de reprise.</li></ul><p>Les thèmes de fond évoqués, comme la « remonétisation » de l'argent ou sa comparaison avec l'or, relèvent davantage du narratif de long terme que d'un catalyseur susceptible de modifier le score à court terme.</p><h3>Synthèse</h3><p>Le score composite est orienté négativement. Ce sont surtout la hausse du dollar, un ratio or/argent qui ne plaide plus pour une surperformance relative de l'argent et une dynamique de prix très dégradée qui le tirent vers le bas. Le positionnement spéculatif, extrêmement allégé, constitue le principal contrepoids et suggère qu'une partie importante de la correction s'est déjà traduite dans les positions. Les taux réels, stables, jouent un rôle marginal. Aucune actualité majeure ne vient modifier ce tableau, qui décrit une phase de digestion après une forte hausse plutôt qu'un changement identifié de fondamentaux.</p>",
   "news_classifications": {
-    "https://news.google.com/rss/articles/CBMiwgFBVV95cUxQWkpUV080dm14S0lsblRDWVA1UlMwakl3VFZxSHhnbGwxcndrZFVUOTk5WG1PM1k4Ym05eFUzdGhraFR6ZDF6LVVxSWRaOG5Ia0g1VWYtbFRFTHU0X2xSYnVQampPUHlmeTNsZkZaVEFMaTRkeHJRaE5IbkxlaFFiLXN0V1RQcXdQdDYtal9RazNrZVZ6NnFrdVNLd1NNakM1WDN4QXV3RWQ5eWMteUJsMzc3LXUzWWVQUmFEZXhRbmZQQQ?oc=5": {
-      "summary": "Cet article suggère que le cours de l'argent était orienté à la hausse au moment de sa publication, selon des données attribuées à FXStreet, sans que le titre seul permette de connaître les causes ni l'ampleur de ce mouvement.",
-      "sentiment": 1,
-      "importance": "mineure"
-    },
-    "https://news.google.com/rss/articles/CBMihwFBVV95cUxOd1ZnSXdQV2lfWGRPMGJveWZBLU15aldGZEs3R0VoTU94UVlFLVdCd294eFljTmczSHA0QktyZ2FhLUxEeWZwaXgyclNmRzRBVkJ4czFFZVZ2dmRlS0VmeXg1anFMVXI1cGNzQjh6R241YUhickl4aEowbWFEbWM2TjVQQXhXMHfSAYwBQVVfeXFMT2dPd0VjdHVkTGVscXprUFU4RWFIdHVOaTdvYzFHdXh5UFZsQnpxc2Q4emZkOWVXUDc5RWJPUGdzQXBsMkx3RURjT0laQUZCMnM0R2NUQ2VmdjVmNzI4OGNSRkpBS3h6a2x2THBITVhlMDdPelJyRUxMMnhMSUxCcHdpekxLTUdGWnJWNWw?oc=5": {
+    "https://news.google.com/rss/articles/CBMiekFVX3lxTE1UdmFOek14ZFJXTEFfbFlOYzZNUU5ock9fR3R5cU9uLWNlMDNtTGZ1SVVfcTg0NGxqdGlIRU1GakJXQUk4WDBvWHBWVzZzUjBhNlBXSUlJcGN5UnhZYi1QY2tReVZpV2ZnMG1ZXzBBTXh3d2pSWWdwTDZR?oc=5": {
       "summary": "",
       "sentiment": 0,
       "importance": "mineure"
     },
-    "https://news.google.com/rss/articles/CBMiggFBVV95cUxQMzJNaUdZQlVJajk1cHlxaTdsN3FaS1IwRUxzcXR3OGhWVFJLMTBOc1ZwcUE2OHN6aVNPaFpJX1FIampDakphX0UtXzhfdm9IVDNYVVlNYTFhcHQtSEpCcENzVi1Ib0dxOGM0SlFxNHJVWjV5ejRHWEgzVDBiNkxudkJn?oc=5": {
+    "https://news.google.com/rss/articles/CBMitgJBVV95cUxQRlZNeG9jaEZLQXY1TXl5b0dUZktCcDFSbTBMZi1jY3FGSU11Z3Q1UzdFTWFQTEp2a0wzWll3TkNoR1ZFR3ZHMjJnSk5iWlV4TVNhdjhHVzZlb3M5M1FyZjRyUnVJaktkS3BtWnNjZURsRWxmaVZaMVlFSjNfYi0xWWQ2aVQtVHVaTzE0QkNxQ2RTUi11MmpncGhld0dZNXFaM2I1bXpXYnp0WEg1N1ZfSmxJdHdMdldsQTItSGR4ZmhqODk0MVpBbC1LRl9xWndqTl9hMGpxSF9RRTU0bkJrVDB4WFJyOS1xaEQyWmtQcXFnTkw5dG5RWEFVcnNuZVplTFRIUzVnUTRIN1NuemVUN2xkdzVSVDRfbHdrQUpGRG1ab0VWLUNMT3NTd3luRThDV1M3RHFn?oc=5": {
       "summary": "",
       "sentiment": 0,
       "importance": "mineure"
     },
-    "https://news.google.com/rss/articles/CBMikwJBVV95cUxQbkp0Z2tlTlNCb1BtemRPc3hvQWptdHJwbEJRcFE2ZGpWR0hydWVxZFJITmdKMmJXSUZmcElDSnA5RmNZbDUxSk9ITjl2bjZRWUQyMlVzNDIyZzFMTU1HeXRoTDFDQm1GLXJDY2gtQ3FrWHdpRUNiMW9TZnV3LVBHZ1VUNV92TldTTk9GVThhazFoV2d1cUlORDhnNHM4TzBxZG9fZ2NYcVBDb0RaUmhnZlpJX3NBd3hsRFZXc3dsNFF3S3A5T2RFVEdHUVFJRnlDWWlTckhOTGxVOE1UUFN6V2duUzNuVUI4SENFT2QydmJUcTd4QzREWHBhU2pIVk1QM0J2d0o3bG9RWDdBMGhYNjlQRdIBmAJBVV95cUxQRm1FVG01cVlEMzN5bVdOZkJsMnlUWUJRaTJUVkN5WUhSVzE2R0lLYWctelRsTnJTLUlwbl9zaVhERG4xX1lpWndpMUtrYS1UdDloWHhiTXZ1VU9lVndKcWRmN1k5dGU1TmNRRlo1VlZrSVJ5U0J5NThIN2phRExHOVdIYW1xbVI2d2lxUVM3Q2V6ak5oVDA3clN2S2NjdjFRQlkwQjd4U0lRM1VlYnBqOURiamhIdjNabDZRcmFfd3dHdlpCTTdrY3dWWHltNTBodl9nQ3IzZzh3Q0JSS2wzWkdTWnlJd1gwdXhpZFNBeF85NjBYYmsxWFZoYWFSYm80QkphUTdTOFJVQTE0ckNBSUVWSFJSdHBK?oc=5": {
+    "https://news.google.com/rss/articles/CBMirAFBVV95cUxQN25UeVBOS2xRVzJJRExHZ3ZNU2Q2bjhHVWRPeEFBcG1DRmZDRW4zTF9HMlZ1dm9hN3JGUGNlQlhrYTJRU2x4NTJRdFk0Ri03eWc5bjdTYm14OHFPUDBSenk3di02cWtGS2N1eXcwU09xVXlUNzBLMFg2NGJzZ1lFMmU2QmYzTjJiazY5QTVRNENzZHZaZnFfanFPUDB1S3NvS3ZhWUVyUXdtaGhX0gGyAUFVX3lxTE1iekFBN0tfQVBNZWVxY0R2SnNjMktBXzhxclctcGp6eVJIb0ZCXzZjdGhQbmJzQ3F0RkFBNDZCU3o3bmpMRVRDeFVnM0hrQjJ6LUpLYk54M09ycDcwd1NkYjhrU290UnlCN1FSZnhDYlgxWk83ODljMEI4VlBFVklYaFR0ZHEtLTBUb3VHTWhoNm5xb19EVHJZeWpZLW0zWlJrN0hOU3FpWDJUcW05Wk1lYnc?oc=5": {
       "summary": "",
       "sentiment": 0,
       "importance": "mineure"
     },
-    "https://news.google.com/rss/articles/CBMiekFVX3lxTE5aNV91V1dyU3Z1ZW56TmJLTDd6U1dsbU9VNGNyRUJfQTNEbC1BN21xNFdleXg1WmxNVllzT3BhQkRaZHJyY043REE2aWp0T0EzQ1RMR21yZEJGOUpJZTRpR2RwU1R5dmFWT1ZYWVdmYTN1dUM4MGh6Wjl3?oc=5": {
+    "https://news.google.com/rss/articles/CBMirwFBVV95cUxPNkh2Q3hCd2ZiQ1FhTnB1eGtnbzVsNzAwdnE4VE1XWlA0WnY5MkxUMjZrT0NFWGR1X1BhRmp1TG5qd0JPS0FDOHctS1NoT0F3NEk4dVVKNkFzbWtBc0szV3BYazh1ZXNxU2hEZS1lY3FoWHIyTVZoWDRWbFpoZWFkdDBwUW1qOWl0d2JFMHV6UnQ1S2JsQWpxaW9WdUVidTFEMVlmQjRFTnNUWDhEQkt3?oc=5": {
+      "summary": "",
+      "sentiment": 0,
+      "importance": "mineure"
+    },
+    "https://news.google.com/rss/articles/CBMie0FVX3lxTE1HcmxkRFg1Y3h0aF9MQnRHM3pZT3lKZXZoVEtHZmhnUDF0cDd6bFIxT1RUTmgxYzhYMmM1bHFzclN1eTNPbDdMRU0wdnY2S3VZSUxxQmlzekNHb2prdWoyQjJVYkQ0NDFVVnNEVXdJRnBWVmJhZEhaMXZ1Zw?oc=5": {
       "summary": "",
       "sentiment": 0,
       "importance": "mineure"

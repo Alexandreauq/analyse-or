@@ -144,3 +144,88 @@ def compute_ichimoku(candles_h1: list[dict], tenkan_period: int = TENKAN_PERIOD,
             senkou_b[i] = senkou_b_raw[src]
 
     return {"tenkan": tenkan, "kijun": kijun, "senkou_a": senkou_a, "senkou_b": senkou_b}
+
+
+def latest_state(candles_5min: list[dict]) -> dict | None:
+    """Etat Ichimoku de la derniere bougie H1 complete, a partir d'une
+    fenetre de bougies 5min (meme fenetre glissante que gold_bot.loop
+    fournit aux autres moteurs). None si l'historique H1 resultant est
+    trop court (< MIN_H1_CANDLES) pour que le nuage soit defini sur la
+    derniere bougie."""
+    candles_h1 = resample_h1(candles_5min)
+    if len(candles_h1) < MIN_H1_CANDLES:
+        return None
+    atr = compute_atr_h1(candles_h1)
+    ind = compute_ichimoku(candles_h1)
+    i = len(candles_h1) - 1
+    if atr[i] is None or ind["senkou_a"][i] is None or ind["senkou_b"][i] is None:
+        return None
+    last = candles_h1[i]
+    return {
+        "close": last["close"], "high": last["high"], "low": last["low"],
+        "atr": atr[i],
+        "tenkan": ind["tenkan"][i], "tenkan_prev": ind["tenkan"][i - 1],
+        "kijun": ind["kijun"][i], "kijun_prev": ind["kijun"][i - 1],
+        "senkou_a": ind["senkou_a"][i], "senkou_b": ind["senkou_b"][i],
+        "hour_utc": _parse(last["time"]).hour,
+    }
+
+
+def signal(state: dict) -> str | None:
+    """Croisement Tenkan/Kijun confirme par la position du prix vs nuage
+    (meme signal que docs/superpowers/research/gold_bot_ichimoku_macd/
+    generate_trend_trades.py::make_ichimoku_signals, evalue ici sur un
+    seul etat courant plutot qu'en boucle sur tout l'historique)."""
+    cloud_top = max(state["senkou_a"], state["senkou_b"])
+    cloud_bot = min(state["senkou_a"], state["senkou_b"])
+    crossed_up = state["tenkan_prev"] <= state["kijun_prev"] and state["tenkan"] > state["kijun"]
+    crossed_down = state["tenkan_prev"] >= state["kijun_prev"] and state["tenkan"] < state["kijun"]
+    if crossed_up and state["close"] > cloud_top:
+        return "achat"
+    if crossed_down and state["close"] < cloud_bot:
+        return "vente"
+    return None
+
+
+def compute_trailing_stop(candles_5min: list[dict], direction: str, entry_time_iso: str,
+                           entry_price: float, current_stop_loss: float) -> float | None:
+    """Stop suiveur ancre sur le kijun courant +/- TRAIL_BUFFER_ATR_MULT*atr,
+    actif seulement une fois l'excursion favorable >= 1R (meme convention
+    que le moteur de recherche, docs/superpowers/research/
+    gold_bot_metaux_silver_engines/two_leg_execution_xag.py::trail_fn),
+    ne se resserre jamais que dans le sens favorable. None si aucun
+    changement ou si l'historique est insuffisant."""
+    candles_h1 = resample_h1(candles_5min)
+    if len(candles_h1) < MIN_H1_CANDLES:
+        return None
+    atr = compute_atr_h1(candles_h1)
+    ind = compute_ichimoku(candles_h1)
+    i = len(candles_h1) - 1
+    kijun_i = ind["kijun"][i]
+    atr_i = atr[i]
+    if kijun_i is None or atr_i is None:
+        return None
+
+    entry_time = _parse(entry_time_iso) if isinstance(entry_time_iso, str) else entry_time_iso
+    since_entry = [c for c in candles_5min if _parse(c["time"]) >= entry_time]
+    if not since_entry:
+        return None
+    r_distance = abs(entry_price - current_stop_loss)
+    if r_distance == 0:
+        return None
+    if direction == "achat":
+        best_price = max(c["high"] for c in since_entry)
+        excursion_r = (best_price - entry_price) / r_distance
+    else:
+        best_price = min(c["low"] for c in since_entry)
+        excursion_r = (entry_price - best_price) / r_distance
+    if excursion_r < 1.0:
+        return None
+
+    if direction == "achat":
+        candidate = max(entry_price, kijun_i - TRAIL_BUFFER_ATR_MULT * atr_i)
+        new_stop = max(current_stop_loss, candidate)
+    else:
+        candidate = min(entry_price, kijun_i + TRAIL_BUFFER_ATR_MULT * atr_i)
+        new_stop = min(current_stop_loss, candidate)
+    return None if new_stop == current_stop_loss else new_stop

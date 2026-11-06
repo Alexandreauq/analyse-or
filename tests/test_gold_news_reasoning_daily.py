@@ -1,5 +1,10 @@
 # tests/test_gold_news_reasoning_daily.py
+import json
 from datetime import date
+from unittest.mock import MagicMock
+
+import pandas as pd
+import pytest
 
 import gold_news_reasoning_daily as g
 
@@ -131,3 +136,130 @@ def test_find_stop_breach_returns_none_when_never_crossed():
         {"date": "2026-11-11", "high": 4060.0, "low": 4030.0},
     ]
     assert g.find_stop_breach("achat", 3950.0, rows) is None
+
+
+def _fake_yf_dataframe(rows):
+    df = pd.DataFrame(
+        {"Open": [r["open"] for r in rows], "High": [r["high"] for r in rows],
+         "Low": [r["low"] for r in rows], "Close": [r["close"] for r in rows]},
+        index=pd.to_datetime([r["date"] for r in rows]),
+    )
+    return df
+
+
+def test_fetch_daily_ohlc_success_with_primary_ticker(monkeypatch):
+    rows = [
+        {"date": "2026-11-05", "open": 4070.0, "high": 4080.0, "low": 4060.0, "close": 4075.0},
+        {"date": "2026-11-06", "open": 4075.0, "high": 4090.0, "low": 4070.0, "close": 4080.0},
+    ]
+
+    def fake_download(ticker, period=None, interval=None, progress=None):
+        assert ticker == g.YF_PRIMARY_TICKER
+        return _fake_yf_dataframe(rows)
+
+    monkeypatch.setattr(g.yf, "download", fake_download)
+    result = g.fetch_daily_ohlc()
+    assert result == rows
+
+
+def test_fetch_daily_ohlc_falls_back_to_second_ticker_when_primary_empty(monkeypatch):
+    rows = [{"date": "2026-11-06", "open": 4075.0, "high": 4090.0, "low": 4070.0, "close": 4080.0}]
+
+    def fake_download(ticker, period=None, interval=None, progress=None):
+        if ticker == g.YF_PRIMARY_TICKER:
+            return pd.DataFrame()
+        return _fake_yf_dataframe(rows)
+
+    monkeypatch.setattr(g.yf, "download", fake_download)
+    assert g.fetch_daily_ohlc() == rows
+
+
+def test_fetch_daily_ohlc_returns_none_when_both_tickers_fail(monkeypatch):
+    monkeypatch.setattr(g.yf, "download", lambda *a, **k: pd.DataFrame())
+    assert g.fetch_daily_ohlc() is None
+
+
+def test_fetch_daily_ohlc_returns_none_on_exception(monkeypatch):
+    def raising(*a, **k):
+        raise ConnectionError("boom")
+
+    monkeypatch.setattr(g.yf, "download", raising)
+    assert g.fetch_daily_ohlc() is None
+
+
+def test_fetch_daily_ohlc_sorted_by_date(monkeypatch):
+    rows = [
+        {"date": "2026-11-06", "open": 4075.0, "high": 4090.0, "low": 4070.0, "close": 4080.0},
+        {"date": "2026-11-05", "open": 4070.0, "high": 4080.0, "low": 4060.0, "close": 4075.0},
+    ]
+    monkeypatch.setattr(g.yf, "download", lambda *a, **k: _fake_yf_dataframe(rows))
+    result = g.fetch_daily_ohlc()
+    assert [r["date"] for r in result] == ["2026-11-05", "2026-11-06"]
+
+
+def _fake_response(status_ok=True, json_body=None, raise_exc=None):
+    resp = MagicMock()
+    if raise_exc is not None:
+        resp.raise_for_status.side_effect = raise_exc
+    else:
+        resp.raise_for_status.return_value = None
+    resp.json.return_value = json_body or {}
+    return resp
+
+
+def test_call_claude_for_new_entry_returns_none_when_api_key_absent(monkeypatch):
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    assert g.call_claude_for_new_entry([{"date": "2026-11-06", "open": 1, "high": 1, "low": 1, "close": 1}]) is None
+
+
+def test_call_claude_for_new_entry_parses_successful_response(monkeypatch):
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-ant-fake")
+    body = {"content": [{"type": "text", "text": 'blah {"appel": "haussier", "stop_pct": 0.08, "confiance": "moyenne", "raison": "test"}'}]}
+    monkeypatch.setattr(g.requests, "post", lambda *a, **k: _fake_response(json_body=body))
+    result = g.call_claude_for_new_entry([{"date": "2026-11-06", "open": 1, "high": 1, "low": 1, "close": 1}])
+    assert result == {"appel": "haussier", "stop_pct": 0.08, "confiance": "moyenne", "raison": "test"}
+
+
+def test_call_claude_for_new_entry_returns_none_on_http_error(monkeypatch):
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-ant-fake")
+    monkeypatch.setattr(g.requests, "post", lambda *a, **k: _fake_response(raise_exc=Exception("500")))
+    assert g.call_claude_for_new_entry([{"date": "2026-11-06", "open": 1, "high": 1, "low": 1, "close": 1}]) is None
+
+
+def test_call_claude_for_new_entry_returns_none_on_unparseable_json(monkeypatch):
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-ant-fake")
+    body = {"content": [{"type": "text", "text": "reponse sans JSON exploitable"}]}
+    monkeypatch.setattr(g.requests, "post", lambda *a, **k: _fake_response(json_body=body))
+    assert g.call_claude_for_new_entry([{"date": "2026-11-06", "open": 1, "high": 1, "low": 1, "close": 1}]) is None
+
+
+def test_call_claude_for_new_entry_returns_none_on_timeout(monkeypatch):
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-ant-fake")
+
+    def raising(*a, **k):
+        raise TimeoutError("boom")
+
+    monkeypatch.setattr(g.requests, "post", raising)
+    assert g.call_claude_for_new_entry([{"date": "2026-11-06", "open": 1, "high": 1, "low": 1, "close": 1}]) is None
+
+
+def test_call_claude_for_reeval_returns_none_when_api_key_absent(monkeypatch):
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    position = {"entry_date": "2026-11-01", "direction": "achat", "entry_price": 4000.0, "raison_ouverture": "x"}
+    assert g.call_claude_for_reeval(position, [{"date": "2026-11-06", "open": 1, "high": 1, "low": 1, "close": 1}]) is None
+
+
+def test_call_claude_for_reeval_parses_successful_response(monkeypatch):
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-ant-fake")
+    body = {"content": [{"type": "text", "text": '{"decision": "garder", "raison": "test"}'}]}
+    monkeypatch.setattr(g.requests, "post", lambda *a, **k: _fake_response(json_body=body))
+    position = {"entry_date": "2026-11-01", "direction": "achat", "entry_price": 4000.0, "raison_ouverture": "x"}
+    result = g.call_claude_for_reeval(position, [{"date": "2026-11-06", "open": 1, "high": 1, "low": 1, "close": 1}])
+    assert result == {"decision": "garder", "raison": "test"}
+
+
+def test_call_claude_for_reeval_returns_none_on_error(monkeypatch):
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-ant-fake")
+    monkeypatch.setattr(g.requests, "post", lambda *a, **k: _fake_response(raise_exc=Exception("boom")))
+    position = {"entry_date": "2026-11-01", "direction": "achat", "entry_price": 4000.0, "raison_ouverture": "x"}
+    assert g.call_claude_for_reeval(position, [{"date": "2026-11-06", "open": 1, "high": 1, "low": 1, "close": 1}]) is None

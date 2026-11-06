@@ -5,7 +5,13 @@ docs/superpowers/specs/2026-11-06-gold-news-reasoning-daily-paper-trading-design
 Execute quotidiennement via .github/workflows/gold_news_reasoning_daily.yml
 (jours ouvres). Aucun lien avec gold_bot/ -- purement observationnel,
 aucun compte reel, aucune execution de trade."""
+import json
+import os
+import re
 from datetime import date, timedelta
+
+import requests
+import yfinance as yf
 
 MIN_STOP_PCT = 0.03
 MAX_STOP_PCT = 0.15
@@ -84,3 +90,165 @@ def find_stop_breach(direction: str, stop_price: float, ohlc_rows: list[dict]) -
         if direction == "vente" and row["high"] >= stop_price:
             return row
     return None
+
+
+YF_PRIMARY_TICKER = "GC=F"
+YF_FALLBACK_TICKER = "XAUUSD=X"
+
+
+def fetch_daily_ohlc(period: str = "2mo") -> list[dict] | None:
+    """Recupere les clotures/plus-hauts/plus-bas journaliers de l'or via
+    yfinance (GC=F en premier -- confirme fonctionnel le 2026-11-06,
+    XAUUSD=X a echoue seul lors du test manuel -- repli quand meme
+    conserve par resilience). Renvoie une liste de {"date", "open",
+    "high", "low", "close"} triee par date croissante, ou None si les
+    deux tickers echouent/renvoient une serie vide -- jamais
+    d'exception (dialogue avec un service tiers dont on ne peut pas
+    enumerer precisement tous les modes d'echec, meme philosophie que
+    indices_score.py:fetch_article_text)."""
+    for ticker in (YF_PRIMARY_TICKER, YF_FALLBACK_TICKER):
+        try:
+            data = yf.download(ticker, period=period, interval="1d", progress=False)
+        except Exception:
+            continue
+        if data is None or len(data) == 0:
+            continue
+        columns = data.columns
+        if getattr(columns, "nlevels", 1) > 1:
+            data.columns = columns.get_level_values(0)
+        rows = []
+        for ts, row in data.iterrows():
+            try:
+                rows.append({
+                    "date": ts.date().isoformat(),
+                    "open": float(row["Open"]), "high": float(row["High"]),
+                    "low": float(row["Low"]), "close": float(row["Close"]),
+                })
+            except (KeyError, TypeError, ValueError):
+                continue
+        if rows:
+            return sorted(rows, key=lambda r: r["date"])
+    return None
+
+
+ANTHROPIC_API_URL = "https://api.anthropic.com/v1/messages"
+GOLD_REASONING_MODEL = "claude-opus-5-5"
+GOLD_REASONING_TIMEOUT_SECONDS = 40
+GOLD_REASONING_MAX_TOKENS = 4096
+GOLD_REASONING_WEB_SEARCH_MAX_USES = 3
+
+
+def _extract_json_block(text: str, required_key: str) -> dict | None:
+    pattern = re.compile(r'\{[^{}]*"' + re.escape(required_key) + r'"[^{}]*\}')
+    matches = pattern.findall(text)
+    if not matches:
+        return None
+    try:
+        parsed = json.loads(matches[-1])
+    except json.JSONDecodeError:
+        return None
+    return parsed if isinstance(parsed, dict) else None
+
+
+def _ohlc_summary_lines(ohlc_rows: list[dict], limit: int = 10) -> str:
+    recent = ohlc_rows[-limit:]
+    return "\n".join(
+        f"{r['date']}: O={r['open']:.2f} H={r['high']:.2f} L={r['low']:.2f} C={r['close']:.2f}"
+        for r in recent
+    )
+
+
+def call_claude_for_new_entry(ohlc_rows: list[dict]) -> dict | None:
+    """Demande a Claude (avec l'outil web_search) un appel directionnel
+    sur l'or pour les 3 prochaines semaines. Renvoie {"appel": str,
+    "stop_pct": float, "confiance": str, "raison": str} ou None sur
+    tout echec (cle API absente, erreur reseau, reponse non
+    parseable) -- jamais d'exception propagee."""
+    api_key = os.environ.get("ANTHROPIC_API_KEY")
+    if not api_key:
+        return None
+    prompt = (
+        "Tu es un analyste qui raisonne sur l'or (XAUUSD) a partir de "
+        "l'actualite recente et du comportement du prix/volume -- PAS "
+        "de formule mecanique, un jugement contextuel comme un trader "
+        "humain le ferait. Ceci est un test prospectif methodologique "
+        "en paper-trading : aucune position n'est reelle.\n\n"
+        f"Dernieres cloture/plus-haut/plus-bas journaliers :\n{_ohlc_summary_lines(ohlc_rows)}\n\n"
+        "Cherche l'actualite macro/geopolitique la plus pertinente pour "
+        "l'or recemment (banques centrales, inflation, risque "
+        "geopolitique, flux ETF). Fais un appel directionnel sur "
+        "l'horizon des 3 prochaines semaines : haussier, baissier, ou "
+        "neutre (nuances possibles : leger_haussier, neutre_prudent, "
+        "etc., comme un vrai jugement nuance), avec une confiance "
+        "(faible/moyenne/haute) et une raison en une ou deux phrases. "
+        "Si haussier ou baissier, propose aussi une distance de stop de "
+        "securite en % (entre 3% et 15% du prix d'entree, exprimee en "
+        "fraction, ex. 0.08 pour 8%) adaptee a la volatilite recente.\n\n"
+        "Termine ta reponse par un bloc JSON seul sur sa derniere "
+        "ligne, exactement sous cette forme : "
+        '{"appel": "...", "stop_pct": 0.08, "confiance": "faible ou '
+        'moyenne ou haute", "raison": "une ou deux phrases"}'
+    )
+    try:
+        resp = requests.post(
+            ANTHROPIC_API_URL,
+            headers={"x-api-key": api_key, "anthropic-version": "2023-06-01", "content-type": "application/json"},
+            json={
+                "model": GOLD_REASONING_MODEL,
+                "max_tokens": GOLD_REASONING_MAX_TOKENS,
+                "output_config": {"effort": "medium"},
+                "tools": [{"type": "web_search_20260209", "name": "web_search", "max_uses": GOLD_REASONING_WEB_SEARCH_MAX_USES}],
+                "messages": [{"role": "user", "content": prompt}],
+            },
+            timeout=GOLD_REASONING_TIMEOUT_SECONDS,
+        )
+        resp.raise_for_status()
+        data = resp.json()
+        text = "".join(block.get("text", "") for block in data.get("content", []) if block.get("type") == "text")
+        return _extract_json_block(text, "appel")
+    except Exception:
+        return None
+
+
+def call_claude_for_reeval(position: dict, ohlc_rows: list[dict]) -> dict | None:
+    """Demande a Claude (avec l'outil web_search) s'il faut GARDER ou
+    CLOTURER une position ouverte. Renvoie {"decision": "garder" ou
+    "cloturer", "raison": str} ou None sur tout echec. L'appelant
+    (voir main()) traite None comme "garder" par defaut -- jamais de
+    cloture forcee sur un simple echec technique."""
+    api_key = os.environ.get("ANTHROPIC_API_KEY")
+    if not api_key:
+        return None
+    prompt = (
+        "Tu es un analyste qui suit une position simulee sur l'or "
+        f"(XAUUSD), ouverte le {position['entry_date']} en "
+        f"{position['direction']} a {position['entry_price']}, raison "
+        f"initiale : {position.get('raison_ouverture', '')}.\n\n"
+        f"Dernieres cloture/plus-haut/plus-bas journaliers :\n{_ohlc_summary_lines(ohlc_rows)}\n\n"
+        "Cherche l'actualite macro/geopolitique recente pertinente pour "
+        "l'or, et decide : faut-il GARDER cette position, ou la "
+        "CLOTURER par anticipation (prise de profit ou retournement de "
+        "these) ? Donne une raison en une phrase.\n\n"
+        "Termine ta reponse par un bloc JSON seul sur sa derniere "
+        "ligne, exactement sous cette forme : "
+        '{"decision": "garder ou cloturer", "raison": "une phrase"}'
+    )
+    try:
+        resp = requests.post(
+            ANTHROPIC_API_URL,
+            headers={"x-api-key": api_key, "anthropic-version": "2023-06-01", "content-type": "application/json"},
+            json={
+                "model": GOLD_REASONING_MODEL,
+                "max_tokens": GOLD_REASONING_MAX_TOKENS,
+                "output_config": {"effort": "medium"},
+                "tools": [{"type": "web_search_20260209", "name": "web_search", "max_uses": GOLD_REASONING_WEB_SEARCH_MAX_USES}],
+                "messages": [{"role": "user", "content": prompt}],
+            },
+            timeout=GOLD_REASONING_TIMEOUT_SECONDS,
+        )
+        resp.raise_for_status()
+        data = resp.json()
+        text = "".join(block.get("text", "") for block in data.get("content", []) if block.get("type") == "text")
+        return _extract_json_block(text, "decision")
+    except Exception:
+        return None

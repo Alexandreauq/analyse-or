@@ -1,13 +1,15 @@
 # gold_bot/ai_shadow.py
 # Veto IA sur les signaux d'entree reels -- voir discussion du
 # 2026-10-28 : la seule piste "IA sur le trading" jugee assez solide
-# pour etre construite. Deux modes selon l'appelant (`real_decision`) :
-# FANTOME pour decide_and_act_fibonacci (jamais branche sur la vraie
-# decision -- backtest honnete methodologiquement impossible, voir
-# docs/superpowers/experiments/*-ia-news-reasoning-test.json pour le
-# meme principe applique aux actions) ; REEL pour decide_and_act_ichimoku
-# depuis Task 3 du chantier 2026-11-05 (fail-open explicite : seul un
-# verdict "opposerait" bloque le trade -- voir le spec de ce chantier).
+# pour etre construite. Deux modes selon l'appelant (`real_decision`),
+# tous deux REELS (fail-open explicite : seul un verdict "opposerait"
+# bloque le trade, None/erreur/timeout/"confirme" laissent passer) --
+# decide_and_act_ichimoku depuis Task 3 du chantier 2026-11-05 (voir le
+# spec de ce chantier), decide_and_act_fibonacci promu du mode FANTOME
+# au mode reel le meme jour (decision utilisateur explicite, sans
+# attendre les semaines de preuve en conditions reelles initialement
+# prevues -- voir docs/superpowers/experiments/*-ia-news-reasoning-test.json
+# pour le meme principe methodologique, initialement applique ici aussi).
 #
 # Appelee quand le moteur appelant a DEJA confirme un vrai signal
 # d'entree (direction determinee) -- mais la condition "direction

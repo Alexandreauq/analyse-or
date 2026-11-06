@@ -263,3 +263,189 @@ def test_call_claude_for_reeval_returns_none_on_error(monkeypatch):
     monkeypatch.setattr(g.requests, "post", lambda *a, **k: _fake_response(raise_exc=Exception("boom")))
     position = {"entry_date": "2026-11-01", "direction": "achat", "entry_price": 4000.0, "raison_ouverture": "x"}
     assert g.call_claude_for_reeval(position, [{"date": "2026-11-06", "open": 1, "high": 1, "low": 1, "close": 1}]) is None
+
+
+from datetime import date as _date
+
+
+def _ohlc(entries):
+    return [{"date": d, "open": o, "high": h, "low": l, "close": c} for d, o, h, l, c in entries]
+
+
+def test_process_new_entry_opens_achat_position_on_bullish_call(monkeypatch):
+    monkeypatch.setattr(g, "call_claude_for_new_entry", lambda rows: {
+        "appel": "haussier", "stop_pct": 0.08, "confiance": "moyenne", "raison": "test",
+    })
+    ohlc = _ohlc([("2026-11-06", 4070, 4090, 4060, 4080)])
+    position = g.process_new_entry(ohlc, _date(2026, 11, 6))
+    assert position["status"] == "open"
+    assert position["direction"] == "achat"
+    assert position["entry_price"] == 4080
+    assert position["entry_date"] == "2026-11-06"
+    assert position["id"] == "XAUUSD-2026-11-06"
+    assert position["safety_stop_price"] == 4080 * 0.92
+    assert position["max_close_date"] == "2026-11-27"
+    assert position["journal"] == []
+    assert position["close_date"] is None
+
+
+def test_process_new_entry_returns_none_on_neutral_call(monkeypatch):
+    monkeypatch.setattr(g, "call_claude_for_new_entry", lambda rows: {
+        "appel": "neutre_prudent", "confiance": "faible", "raison": "test",
+    })
+    ohlc = _ohlc([("2026-11-06", 4070, 4090, 4060, 4080)])
+    assert g.process_new_entry(ohlc, _date(2026, 11, 6)) is None
+
+
+def test_process_new_entry_returns_none_when_api_call_fails(monkeypatch):
+    monkeypatch.setattr(g, "call_claude_for_new_entry", lambda rows: None)
+    ohlc = _ohlc([("2026-11-06", 4070, 4090, 4060, 4080)])
+    assert g.process_new_entry(ohlc, _date(2026, 11, 6)) is None
+
+
+def _open_position(**overrides):
+    base = {
+        "id": "XAUUSD-2026-10-20", "status": "open",
+        "entry_date": "2026-10-20", "entry_price": 4142.6, "direction": "achat",
+        "safety_stop_price": 3950.0, "safety_stop_pct": -0.0465,
+        "confiance": "moyenne", "raison_ouverture": "test",
+        "max_close_date": "2026-11-10",
+        "close_date": None, "close_price": None, "close_reason": None,
+        "return_pct": None, "buyhold_price_at_close": None, "buyhold_return_pct": None,
+        "journal": [],
+    }
+    base.update(overrides)
+    return base
+
+
+def test_process_open_position_closes_via_stop_without_calling_model(monkeypatch):
+    def fail_if_called(*a, **k):
+        raise AssertionError("call_claude_for_reeval ne doit pas etre appele si le stop est touche")
+
+    monkeypatch.setattr(g, "call_claude_for_reeval", fail_if_called)
+    position = _open_position()
+    ohlc = _ohlc([
+        ("2026-10-29", 4080, 4085, 4016, 4031),
+        ("2026-10-30", 4033, 4038, 3879, 3898.9),
+    ])
+    changed = g.process_open_position(position, ohlc, _date(2026, 11, 6))
+    assert changed is True
+    assert position["status"] == "closed"
+    assert position["close_date"] == "2026-10-30"
+    assert position["close_price"] == 3950.0
+    assert position["close_reason"] == "stop_securite"
+    assert round(position["return_pct"], 6) == round(3950.0 / 4142.6 - 1, 6)
+    assert position["buyhold_price_at_close"] == 3898.9
+    assert round(position["buyhold_return_pct"], 6) == round(3898.9 / 4142.6 - 1, 6)
+    assert position["journal"] == []
+
+
+def test_process_open_position_closes_via_delai_max_without_calling_model(monkeypatch):
+    def fail_if_called(*a, **k):
+        raise AssertionError("call_claude_for_reeval ne doit pas etre appele si le delai max est atteint")
+
+    monkeypatch.setattr(g, "call_claude_for_reeval", fail_if_called)
+    position = _open_position(max_close_date="2026-11-05")
+    ohlc = _ohlc([("2026-11-06", 4070, 4090, 4060, 4080)])
+    changed = g.process_open_position(position, ohlc, _date(2026, 11, 6))
+    assert changed is True
+    assert position["close_reason"] == "delai_max"
+    assert position["close_date"] == "2026-11-06"
+    assert position["close_price"] == 4080
+    assert position["buyhold_price_at_close"] == 4080
+    assert position["journal"] == []
+
+
+def test_process_open_position_keeps_and_appends_journal_on_garder(monkeypatch):
+    monkeypatch.setattr(g, "call_claude_for_reeval", lambda pos, rows: {"decision": "garder", "raison": "these intacte"})
+    position = _open_position(max_close_date="2026-12-01")
+    ohlc = _ohlc([("2026-11-06", 4070, 4090, 4060, 4080)])
+    changed = g.process_open_position(position, ohlc, _date(2026, 11, 6))
+    assert changed is True
+    assert position["status"] == "open"
+    assert len(position["journal"]) == 1
+    assert position["journal"][0] == {"date": "2026-11-06", "price": 4080, "decision": "garder", "raison": "these intacte"}
+
+
+def test_process_open_position_closes_via_ai_anticipated_when_cloturer(monkeypatch):
+    monkeypatch.setattr(g, "call_claude_for_reeval", lambda pos, rows: {"decision": "cloturer", "raison": "retournement"})
+    position = _open_position(max_close_date="2026-12-01")
+    ohlc = _ohlc([("2026-11-06", 4070, 4090, 4060, 4080)])
+    changed = g.process_open_position(position, ohlc, _date(2026, 11, 6))
+    assert changed is True
+    assert position["close_reason"] == "cloture_anticipee_ia"
+    assert position["close_price"] == 4080
+    assert position["journal"] == []
+
+
+def test_process_open_position_treats_failed_reeval_call_as_garder(monkeypatch):
+    monkeypatch.setattr(g, "call_claude_for_reeval", lambda pos, rows: None)
+    position = _open_position(max_close_date="2026-12-01")
+    ohlc = _ohlc([("2026-11-06", 4070, 4090, 4060, 4080)])
+    changed = g.process_open_position(position, ohlc, _date(2026, 11, 6))
+    assert changed is True
+    assert position["status"] == "open"
+    assert len(position["journal"]) == 1
+    assert "echec" in position["journal"][0]["raison"]
+
+
+def test_main_does_nothing_when_fetch_ohlc_fails(monkeypatch, tmp_path):
+    monkeypatch.setattr(g, "fetch_daily_ohlc", lambda *a, **k: None)
+    tracking_path = tmp_path / "tracking.json"
+    monkeypatch.setattr(g, "TRACKING_PATH", str(tracking_path))
+    g.main()
+    assert not tracking_path.exists()
+
+
+def test_main_opens_new_position_when_none_open(monkeypatch, tmp_path):
+    ohlc = _ohlc([("2026-11-06", 4070, 4090, 4060, 4080)])
+    monkeypatch.setattr(g, "fetch_daily_ohlc", lambda *a, **k: ohlc)
+    monkeypatch.setattr(g, "call_claude_for_new_entry", lambda rows: {
+        "appel": "haussier", "stop_pct": 0.08, "confiance": "moyenne", "raison": "test",
+    })
+    tracking_path = tmp_path / "tracking.json"
+    tracking_path.write_text(json.dumps({"positions": []}), encoding="utf-8")
+    monkeypatch.setattr(g, "TRACKING_PATH", str(tracking_path))
+    g.main()
+    written = json.loads(tracking_path.read_text(encoding="utf-8"))
+    assert len(written["positions"]) == 1
+    assert written["positions"][0]["status"] == "open"
+
+
+def test_main_reopens_same_day_after_stop_closes_old_position(monkeypatch, tmp_path):
+    ohlc = _ohlc([
+        ("2026-10-29", 4080, 4085, 4016, 4031),
+        ("2026-10-30", 4033, 4038, 3879, 3898.9),
+    ])
+    monkeypatch.setattr(g, "fetch_daily_ohlc", lambda *a, **k: ohlc)
+    monkeypatch.setattr(g, "call_claude_for_new_entry", lambda rows: {
+        "appel": "baissier", "stop_pct": 0.05, "confiance": "faible", "raison": "nouvelle these",
+    })
+
+    def fail_if_called(*a, **k):
+        raise AssertionError("pas d'appel de reevaluation attendu, le stop tranche")
+
+    monkeypatch.setattr(g, "call_claude_for_reeval", fail_if_called)
+    old_position = _open_position()
+    tracking_path = tmp_path / "tracking.json"
+    tracking_path.write_text(json.dumps({"positions": [old_position]}), encoding="utf-8")
+    monkeypatch.setattr(g, "TRACKING_PATH", str(tracking_path))
+    g.main()
+    written = json.loads(tracking_path.read_text(encoding="utf-8"))
+    assert len(written["positions"]) == 2
+    assert written["positions"][0]["status"] == "closed"
+    assert written["positions"][0]["close_reason"] == "stop_securite"
+    assert written["positions"][0]["journal"] == []
+    assert written["positions"][1]["status"] == "open"
+    assert written["positions"][1]["direction"] == "vente"
+    assert written["positions"][1]["entry_date"] == "2026-10-30"
+
+
+def test_main_does_nothing_and_writes_no_file_on_neutral_call_with_no_open_position(monkeypatch, tmp_path):
+    ohlc = _ohlc([("2026-11-06", 4070, 4090, 4060, 4080)])
+    monkeypatch.setattr(g, "fetch_daily_ohlc", lambda *a, **k: ohlc)
+    monkeypatch.setattr(g, "call_claude_for_new_entry", lambda rows: {"appel": "neutre", "confiance": "faible", "raison": "test"})
+    tracking_path = tmp_path / "tracking.json"
+    monkeypatch.setattr(g, "TRACKING_PATH", str(tracking_path))
+    g.main()
+    assert not tracking_path.exists()

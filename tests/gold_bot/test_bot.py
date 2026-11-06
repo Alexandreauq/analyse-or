@@ -34,6 +34,22 @@ def _default_ai_shadow_veto(monkeypatch):
     monkeypatch.setattr(bot.ai_shadow, "shadow_judge_entry", lambda *a, **k: None)
 
 
+@pytest.fixture(autouse=True)
+def _default_ai_news_watch(monkeypatch):
+    """La fenetre grise post-actualite (gold_bot/ai_news_watch.py, ajoutee
+    le 2026-11-06) est appelee par decide_and_act_fibonacci quand `as_of`
+    tombe dans la fenetre de grace suivant un blackout calendaire connu
+    (confluence.minutes_since_blackout_ended). Sans ce defaut, un test qui
+    utilise par coincidence une date dans une de ces fenetres ecrirait pour
+    de vrai dans gold_bot/ai_news_watch_log.jsonl et, si ANTHROPIC_API_KEY
+    est present dans l'environnement de test, tenterait un vrai appel
+    reseau facture -- meme risque que _default_ai_shadow_veto ci-dessus.
+    Un test qui veut exercer judge_post_news_calm directement l'ecrase avec
+    son propre monkeypatch (voir tests/gold_bot/test_ai_news_watch.py et les
+    tests de non-regression de l'incident du 06/11 dans ce fichier)."""
+    monkeypatch.setattr(bot.ai_news_watch, "judge_post_news_calm", lambda *a, **k: None)
+
+
 def _signal(status, entry=None, stop_loss=None, take_profit=None):
     return {"status": status, "price": entry, "entry": entry, "stop_loss": stop_loss,
             "take_profit": take_profit, "trend": "baissier" if status != "neutre" else "neutre",

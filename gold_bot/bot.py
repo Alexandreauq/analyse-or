@@ -494,21 +494,28 @@ def decide_and_act_fibonacci(candles: list[dict], *, contract_size: float, balan
     if total_size is None:
         return {"action": "aucune", "reason": "compte trop petit pour ce stop (volume sous le minimum du broker)"}
 
-    # Veto IA en mode FANTOME (voir gold_bot/ai_shadow.py) -- place ici,
-    # apres tous les garde-fous (distance, coupe-circuit, taille), pour
-    # qu'il ne se declenche QUE quand un vrai trade va reellement
+    # Veto IA branche pour de vrai depuis le 2026-11-06 (voir
+    # gold_bot/ai_shadow.py) -- meme design fail-open que
+    # decide_and_act_ichimoku : seul un verdict explicite "opposerait"
+    # bloque, un verdict None (API absente, timeout, erreur, verdict non
+    # parseable) OU "confirme" laisse le trade se faire normalement. Place
+    # ici, apres tous les garde-fous (distance, coupe-circuit, taille),
+    # pour qu'il ne se declenche QUE quand un vrai trade va reellement
     # s'ouvrir -- pas a chaque cycle ou la direction est simplement
     # determinee, ce qui peut rester vrai des heures sans jamais aboutir
     # a un trade (cause de l'incident de cout du 2026-10-29). D'apres
     # l'activite reelle, un trade ne s'ouvre que ~4 fois par semaine --
     # donc ce declencheur est naturellement rare, en plus du cooldown.
-    # Journalise un avis independant, ne modifie JAMAIS direction/
-    # stop_loss/steps ci-dessous, et ne peut jamais faire echouer ce
-    # cycle (toute erreur est capturee a l'interieur de shadow_judge_entry).
-    ai_shadow.shadow_judge_entry(
+    # Decision utilisateur explicite (2026-11-06, en connaissance de
+    # cause : le veto etait reste en mode fantome par prudence depuis le
+    # 2026-10-28, aucune preuve de fiabilite sur plusieurs semaines en
+    # conditions reelles -- promu malgre tout, sur demande).
+    verdict = ai_shadow.shadow_judge_entry(
         symbol, direction, state, candles,
-        engine_label="rebond de retracement de Fibonacci", real_decision=False,
+        engine_label="rebond de retracement de Fibonacci", real_decision=True,
     )
+    if verdict is not None and verdict.get("verdict") == "opposerait":
+        return {"action": "aucune", "reason": "veto IA (opposition)"}
 
     partial_volume = None
     if fibonacci_reversion.PARTIAL_TP_PCT > 0:

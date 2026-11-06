@@ -14,7 +14,7 @@
       "name": "Dollar (DXY)",
       "score": -10,
       "weight": 0.15,
-      "raw_value": "101.62 (il y a 2 mois : 98.84)"
+      "raw_value": "101.85 (il y a 2 mois : 98.84)"
     },
     {
       "name": "Anticipations d'inflation",
@@ -48,9 +48,9 @@
     }
   ],
   "technical": {
-    "note": "Cours en-dessous de la MM200 (-9.6%) — tendance baissière",
-    "spot": 4073.800048828125,
-    "ma200": 4505.489497070313
+    "note": "Cours en-dessous de la MM200 (-9.4%) — tendance baissière",
+    "spot": 4079.5,
+    "ma200": 4501.518497314453
   },
   "calendar": [
     {
@@ -104,18 +104,9 @@
   ],
   "news": [
     {
-      "title": "Citi table sur un objectif de cours à 0 à 3 mois de 4.500 dollars l'once pour l'or - Boursorama",
-      "date": "2026-11-04",
-      "link": "https://news.google.com/rss/articles/CBMi8gFBVV95cUxNS2c1ZFpmRTFBa0NpM2xQNTB2WVVsc2d2WU53VEVWS1RnM0RxT2RJZFNfckdsT2ZkanpoT0VKN2g2UFN4eFpLVlpCbExiSHVMQ1JLOUwyMkJzM1lnTkNac3dCS2dPNVpGTjNrZGFKYmFEc2hXNVpURHA0RWhzazhrQWphRi1QaEExOWp6blVIY0RnbjRSdlJCWmw2ckhaNFlnb2M4cjZrSEFCTmxFUlZCaHI0Sk9FeVU2bW1lR3gxSlJHUy0zTkJGSUozc3FHUmhNdEhuYmtLdlp6eW5xUjlrMUU2SGlxNkpmUjFHaXZzT2R5d9IB9wFBVV95cUxNNW5ReG9FMTlnTGg2dTFIdDEyT01zel9ITFBndEExcUhGVy1BN0NzSHVqTnl4YVJGa0k4c3V3VkZmWXRnejZuNV8zeG1UVlhNeFAzSklnSVhqaFdUOTBjQ2U1dWVPeDc0aU9vODRxOFp1VFRUWDhOWVd6NWFKYVFSLTF2M1RBdE5TUFFjMC1waUh4VkRHdVdGTlVzRlVsZXRBQ3BvOGpfaEVuRURuaUtUYWFTc2FSTlhRazNZWmFxcGpNUEU2aWJaa3ViTGpLLTRGYUtINVIyamJQQlppUVdCVnB3QmhQRlZoampKVGs4N1QxRl9rbkJZ?oc=5",
-      "source": "Boursorama",
-      "summary": "",
-      "sentiment": 0,
-      "importance": "mineure"
-    },
-    {
-      "title": "Dong vietnamien, cours de l’or - 5 novembre - Zonebourse Suisse",
-      "date": "2026-11-05",
-      "link": "https://news.google.com/rss/articles/CBMiowFBVV95cUxQbXlhWnFZMnlYbHJ1ZGhkUGJlQjY0d2h4cDBTQnFGbThVc2JpcmswNzNyZjB0NC1YQ3ZkWjdvNU9oVWljNHpGSnd2ZDA3U1c3aHpQdkl1Qi1wTHB6N0I2d3ZZckVnNGhxYlRJa3JRQm4wYjdIalRCMFN0RGMwcS1MV0FodUlRQmNNMUppUVJzQmFiQ2g2ajlpYjhIR21aVk5WdzQ4?oc=5",
+      "title": "L’or recule de plus de 1 % sous l’effet de la hausse des cours du pétrole ; les chiffres de l’emploi américain au centre de l’attention - Zonebourse Suisse",
+      "date": "2026-11-06",
+      "link": "https://news.google.com/rss/articles/CBMi6AFBVV95cUxOaGtvOXh5elNvMVNaWXM0OGZ5TUlHZGlOLTFyLVVKWVpvTVhFeXZDX2FubXhtY0ZuLXdKWl9FZHFGSHVwNUJlLVF2Xzc3ckNvcHhpQmFDV1JaYVZXTkZ2RC1zMTZoMGE2WUxrV0tuLUkzVXhVWUgwN2hiVHFjR0J0dE5yY05yWTJ1bnpjZVl5TVdqYXZMbmRUdkRNMVA4cWJ6N0VpdmhDRndrTjhYNVUwSmtHVzYwWktLaTZleVpiLV9oVkR2bWFfNENiX0lnQWI0d0lwOFVZS3lEclNmcmhmREI0dWdSUWdw?oc=5",
       "source": "Zonebourse Suisse",
       "summary": "",
       "sentiment": 0,
@@ -140,23 +131,27 @@
       "importance": "mineure"
     },
     {
-      "title": "Cours de l’OR et hausse des taux d’intérêt : quelle tendance anticiper pour le métal jaune ? - FranceTransactions.com",
-      "date": "2026-10-22",
-      "link": "https://news.google.com/rss/articles/CBMi2gFBVV95cUxOVHdzaFgydUI3U0R2ZDMwMjlmTVJha3ZfQjlVWjdBNXVJRDJfZ0pFbkN2MUhDRjZYclhCZVR6Smk2cldROTNxb2M0NDJFWThQWndTTV9wLWdSbHBTUXlDZ2N5TS1BR2Vjc2JUb0lWSDVPcTVuRjF0UWZ6UElMOFJNeEZzelVMRGtLTmZPLVdmWEtLSGlLMk42WGRSaVZSRkZlZnhrWHVkNi1lTVM3NU1Cc2IwbmV6aHcyN1UxRzBDX0h4WDlBNUg1MXZsT3V0RUt0WjVoczYwakFKUQ?oc=5",
-      "source": "FranceTransactions.com",
+      "title": "Cours de l'or le 6 novembre : les cours mondiaux de l'or dépassent les 4 100 $/once, les cours nationaux de l'or plongent dans le rouge. - Vietnam.vn",
+      "date": "2026-11-06",
+      "link": "https://news.google.com/rss/articles/CBMiswFBVV95cUxPWFRpc2hJRDNMcDdrcXkxX0c0MjRKY3JvUjVJSTNsYnBUOXNzMWpFZVdmYUY3VjQ0VWVTY0txd1I2ckpHOUpSRmtQa3d2bHNwMlEySS1LQXVsbEhxdjVobmkzTl84cWNNU2REQTgzTmExamRvM0ZrejhaVE9aZVFmZVFJN2tkcUc2UE9NLU9fVnd4b1NTeDRmZ2dMRTg0Zks3UzhJODdZMlNBZDAzQzIwT1gwdw?oc=5",
+      "source": "Vietnam.vn",
+      "summary": "",
+      "sentiment": 0,
+      "importance": "mineure"
+    },
+    {
+      "title": "Citi table sur un objectif de cours à 0 à 3 mois de 4.500 dollars l'once pour l'or - Boursorama",
+      "date": "2026-11-04",
+      "link": "https://news.google.com/rss/articles/CBMi8gFBVV95cUxNS2c1ZFpmRTFBa0NpM2xQNTB2WVVsc2d2WU53VEVWS1RnM0RxT2RJZFNfckdsT2ZkanpoT0VKN2g2UFN4eFpLVlpCbExiSHVMQ1JLOUwyMkJzM1lnTkNac3dCS2dPNVpGTjNrZGFKYmFEc2hXNVpURHA0RWhzazhrQWphRi1QaEExOWp6blVIY0RnbjRSdlJCWmw2ckhaNFlnb2M4cjZrSEFCTmxFUlZCaHI0Sk9FeVU2bW1lR3gxSlJHUy0zTkJGSUozc3FHUmhNdEhuYmtLdlp6eW5xUjlrMUU2SGlxNkpmUjFHaXZzT2R5d9IB9wFBVV95cUxNNW5ReG9FMTlnTGg2dTFIdDEyT01zel9ITFBndEExcUhGVy1BN0NzSHVqTnl4YVJGa0k4c3V3VkZmWXRnejZuNV8zeG1UVlhNeFAzSklnSVhqaFdUOTBjQ2U1dWVPeDc0aU9vODRxOFp1VFRUWDhOWVd6NWFKYVFSLTF2M1RBdE5TUFFjMC1waUh4VkRHdVdGTlVzRlVsZXRBQ3BvOGpfaEVuRURuaUtUYWFTc2FSTlhRazNZWmFxcGpNUEU2aWJaa3ViTGpLLTRGYUtINVIyamJQQlppUVdCVnB3QmhQRlZoampKVGs4N1QxRl9rbkJZ?oc=5",
+      "source": "Boursorama",
       "summary": "",
       "sentiment": 0,
       "importance": "mineure"
     }
   ],
-  "analysis_html": "<h3>Contexte récent</h3><p>Sur les deux derniers mois, l'environnement macro de l'or est marqué par un net raffermissement du dollar : le DXY passe de 98,84 à 101,35, soit environ +2,5 %. Les taux réels américains à 10 ans sont quasi stables (2,62 % à 2,65 %) et les anticipations d'inflation reculent (2,34 % à 2,26 %). Les facteurs de demande, à savoir les flux ETF, les banques centrales et le positionnement spéculatif, restent orientés favorablement. Plusieurs titres de presse évoquent une baisse du métal malgré ces soutiens, mais aucune donnée de prix n'est fournie ici pour en mesurer l'ampleur.</p><h3>Facteurs déterminants</h3><ul><li><strong>Dollar (DXY), principal frein :</strong> son score de -10,0, extrême négatif, pondéré à 15 %, en fait de loin la plus forte contribution baissière du composite. Un dollar plus fort renchérit l'or pour les acheteurs hors zone dollar et pèse traditionnellement sur son prix.</li><li><strong>Ton de la Fed, principal soutien :</strong> son score de +5,0 (15 %) constitue la contribution positive la plus importante. Une orientation perçue comme accommodante réduit en principe le coût d'opportunité de détenir un actif sans rendement. Il s'agit toutefois d'une saisie manuelle, donc d'une appréciation qualitative.</li><li><strong>Anticipations d'inflation, frein secondaire :</strong> le score de -2,7 (15 %) reflète le recul des points morts d'inflation, qui atténue l'attrait de l'or comme couverture contre l'inflation.</li><li><strong>Taux réels, impact limité :</strong> malgré le poids le plus élevé (30 %), le score de -0,6 ne pèse que marginalement, car la variation récente des taux réels est minime (+3 points de base).</li><li><strong>Positionnement CFTC, soutien modéré :</strong> la position nette de 186 451 contrats se situe au 26e percentile sur trois ans. Ce positionnement spéculatif relativement léger est interprété positivement (+4,7, 10 %), car il laisse de la marge à des achats futurs plutôt qu'un risque de liquidation.</li><li><strong>Flux ETF et banques centrales, soutiens structurels :</strong> les scores de +3,0 (10 %) et +7,0 (5 %) sont positifs mais faiblement pondérés. Leur contribution reste donc secondaire malgré un signal favorable, notamment pour les banques centrales.</li></ul><p>Pris ensemble, les facteurs négatifs, concentrés sur le dollar et l'inflation, et les facteurs positifs, répartis entre la Fed, le positionnement et la demande physique et institutionnelle, se compensent largement. Le signal global est proche de la neutralité, avec une légère prédominance de la pression exercée par le dollar.</p><h3>Actualités à retenir</h3><p>Aucune actualité récente n'est classée comme notable ou majeure : toutes sont qualifiées de mineures. Deux titres font néanmoins écho aux facteurs du score :</p><ul><li><strong>Morningstar, « Pourquoi l'or baisse-t-il malgré les achats des ETF et des banques centrales ? » :</strong> le titre illustre précisément la divergence visible dans le composite. Les facteurs de demande sont positifs, mais les facteurs macro, au premier rang desquels le dollar, prennent le dessus à court terme.</li><li><strong>Citi, objectif à 0-3 mois de 4 500 dollars l'once :</strong> cette prévision de banque traduit une lecture favorable à plus long terme, cohérente avec les soutiens structurels du score. Elle reste une opinion de marché et n'est pas intégrée au composite.</li></ul><p>Les autres articles, consacrés au cours en dong vietnamien, aux perspectives or/argent pour 2027 et à la relation entre l'or et les taux, sont d'ordre général ou promotionnel. Ils n'apportent pas d'élément susceptible d'expliquer l'évolution du score.</p><h3>Synthèse</h3><p>Le composite décrit un or tiraillé entre deux forces. D'un côté, un environnement de marché défavorable à court terme, dominé par la forte appréciation du dollar et secondairement par le reflux des anticipations d'inflation. De l'autre, un ensemble de soutiens plus structurels : une Fed jugée accommodante, un positionnement spéculatif peu chargé, des flux ETF positifs et des achats des banques centrales. Les taux réels, malgré leur poids élevé, restent neutres faute de variation significative. L'évolution du signal dépendra donc surtout de la trajectoire du dollar et de la confirmation, ou non, du ton accommodant de la Fed, ce dernier reposant sur une appréciation manuelle. Cette analyse est descriptive et ne constitue pas un conseil d'investissement.</p>",
+  "analysis_html": "<h3>Contexte récent</h3><p>L'or évolue à des niveaux historiquement élevés, au-dessus de 4 100 $/once selon une source datée du 6 novembre, mais traverse une phase de consolidation marquée par des replis ponctuels. Cette hésitation intervient alors que le dollar s'est nettement raffermi en deux mois et que les anticipations d'inflation se tassent. Plusieurs soutiens structurels restent pourtant favorables au métal.</p><h3>Facteurs déterminants</h3><ul><li><strong>Dollar (DXY), principal frein :</strong> le score le plus négatif du tableau (-10,0, poids 15 %) traduit une appréciation d'environ 3 % du DXY, passé de 98,84 à 101,85 en deux mois. Un dollar plus fort renchérit l'or pour les détenteurs d'autres devises et pèse mécaniquement sur la demande. Une fois pondéré, c'est le facteur qui exerce la pression baissière la plus forte sur le score.</li><li><strong>Anticipations d'inflation, frein secondaire :</strong> elles reculent de 2,33 % à 2,24 % (score -3,0, poids 15 %). Cette baisse atténue l'attrait de l'or comme couverture contre l'inflation.</li><li><strong>Taux réels US 10 ans, quasi neutres :</strong> malgré le poids le plus élevé du modèle (30 %), leur stabilité (2,63 % vers 2,64 %) produit un score de -0,2 à l'impact négligeable. Le facteur habituellement dominant ne joue donc pas de rôle directeur à ce stade.</li><li><strong>Ton de la Fed, principal soutien :</strong> le score de +5,0 (poids 15 %, saisie manuelle) reflète une orientation jugée favorable à l'or. Sa contribution pondérée compense une partie de l'effet dollar.</li><li><strong>Positionnement CFTC :</strong> une position nette de 186 451 contrats situe les spéculateurs au 26e percentile sur trois ans. Ce positionnement relativement allégé est interprété positivement (+4,7, poids 10 %), car il suggère un risque limité de liquidation massive et une marge de reconstitution des positions longues.</li><li><strong>Flux ETF et banques centrales :</strong> les achats des banques centrales (+7,0) et les flux ETF sur GLD et IAU (+3,0) restent positifs. Leurs poids plus modestes (5 % et 10 %) limitent toutefois leur influence sur le score global.</li></ul><h3>Actualités à retenir</h3><p>Aucune actualité n'est classée notable ou majeure. Les informations mineures recensées éclairent néanmoins le contexte :</p><ul><li>Le recul de plus de 1 % attribué à la hausse du pétrole, dans l'attente des chiffres de l'emploi américain, illustre la sensibilité de court terme de l'or aux données macro US. Ces données influencent à la fois le dollar et le ton anticipé de la Fed.</li><li>L'article de Morningstar, qui s'interroge sur la baisse de l'or malgré les achats des ETF et des banques centrales, résume bien la tension visible dans le score : des soutiens de flux positifs contrebalancés par un dollar fort.</li><li>L'objectif de Citi à 4 500 $/once à 0-3 mois reflète une lecture haussière de certains acteurs de marché. Il s'agit d'une projection externe, sans incidence directe sur les facteurs du score.</li><li>L'article comparatif or/argent pour 2027, publié par un vendeur d'or, n'apporte pas d'élément vérifiable lié aux facteurs du modèle.</li></ul><h3>Synthèse</h3><p>Le score composite reflète un équilibre fragile entre deux forces opposées :</p><ul><li><strong>Côté baissier :</strong> un dollar nettement plus fort et des anticipations d'inflation en repli.</li><li><strong>Côté haussier :</strong> un ton de la Fed jugé favorable, un positionnement spéculatif allégé et des flux institutionnels (ETF, banques centrales) toujours acheteurs.</li></ul><p>Les taux réels, malgré leur poids prépondérant, restent neutres. L'évolution du dollar et des publications macro américaines, notamment l'emploi, apparaît donc comme le déterminant le plus probable des prochaines variations du score. Les actualités récentes, toutes mineures, confirment cette lecture sans introduire de rupture.</p>",
   "news_classifications": {
-    "https://news.google.com/rss/articles/CBMi8gFBVV95cUxNS2c1ZFpmRTFBa0NpM2xQNTB2WVVsc2d2WU53VEVWS1RnM0RxT2RJZFNfckdsT2ZkanpoT0VKN2g2UFN4eFpLVlpCbExiSHVMQ1JLOUwyMkJzM1lnTkNac3dCS2dPNVpGTjNrZGFKYmFEc2hXNVpURHA0RWhzazhrQWphRi1QaEExOWp6blVIY0RnbjRSdlJCWmw2ckhaNFlnb2M4cjZrSEFCTmxFUlZCaHI0Sk9FeVU2bW1lR3gxSlJHUy0zTkJGSUozc3FHUmhNdEhuYmtLdlp6eW5xUjlrMUU2SGlxNkpmUjFHaXZzT2R5d9IB9wFBVV95cUxNNW5ReG9FMTlnTGg2dTFIdDEyT01zel9ITFBndEExcUhGVy1BN0NzSHVqTnl4YVJGa0k4c3V3VkZmWXRnejZuNV8zeG1UVlhNeFAzSklnSVhqaFdUOTBjQ2U1dWVPeDc0aU9vODRxOFp1VFRUWDhOWVd6NWFKYVFSLTF2M1RBdE5TUFFjMC1waUh4VkRHdVdGTlVzRlVsZXRBQ3BvOGpfaEVuRURuaUtUYWFTc2FSTlhRazNZWmFxcGpNUEU2aWJaa3ViTGpLLTRGYUtINVIyamJQQlppUVdCVnB3QmhQRlZoampKVGs4N1QxRl9rbkJZ?oc=5": {
-      "summary": "",
-      "sentiment": 0,
-      "importance": "mineure"
-    },
-    "https://news.google.com/rss/articles/CBMiowFBVV95cUxQbXlhWnFZMnlYbHJ1ZGhkUGJlQjY0d2h4cDBTQnFGbThVc2JpcmswNzNyZjB0NC1YQ3ZkWjdvNU9oVWljNHpGSnd2ZDA3U1c3aHpQdkl1Qi1wTHB6N0I2d3ZZckVnNGhxYlRJa3JRQm4wYjdIalRCMFN0RGMwcS1MV0FodUlRQmNNMUppUVJzQmFiQ2g2ajlpYjhIR21aVk5WdzQ4?oc=5": {
+    "https://news.google.com/rss/articles/CBMi6AFBVV95cUxOaGtvOXh5elNvMVNaWXM0OGZ5TUlHZGlOLTFyLVVKWVpvTVhFeXZDX2FubXhtY0ZuLXdKWl9FZHFGSHVwNUJlLVF2Xzc3ckNvcHhpQmFDV1JaYVZXTkZ2RC1zMTZoMGE2WUxrV0tuLUkzVXhVWUgwN2hiVHFjR0J0dE5yY05yWTJ1bnpjZVl5TVdqYXZMbmRUdkRNMVA4cWJ6N0VpdmhDRndrTjhYNVUwSmtHVzYwWktLaTZleVpiLV9oVkR2bWFfNENiX0lnQWI0d0lwOFVZS3lEclNmcmhmREI0dWdSUWdw?oc=5": {
       "summary": "",
       "sentiment": 0,
       "importance": "mineure"
@@ -171,7 +166,12 @@
       "sentiment": 0,
       "importance": "mineure"
     },
-    "https://news.google.com/rss/articles/CBMi2gFBVV95cUxOVHdzaFgydUI3U0R2ZDMwMjlmTVJha3ZfQjlVWjdBNXVJRDJfZ0pFbkN2MUhDRjZYclhCZVR6Smk2cldROTNxb2M0NDJFWThQWndTTV9wLWdSbHBTUXlDZ2N5TS1BR2Vjc2JUb0lWSDVPcTVuRjF0UWZ6UElMOFJNeEZzelVMRGtLTmZPLVdmWEtLSGlLMk42WGRSaVZSRkZlZnhrWHVkNi1lTVM3NU1Cc2IwbmV6aHcyN1UxRzBDX0h4WDlBNUg1MXZsT3V0RUt0WjVoczYwakFKUQ?oc=5": {
+    "https://news.google.com/rss/articles/CBMiswFBVV95cUxPWFRpc2hJRDNMcDdrcXkxX0c0MjRKY3JvUjVJSTNsYnBUOXNzMWpFZVdmYUY3VjQ0VWVTY0txd1I2ckpHOUpSRmtQa3d2bHNwMlEySS1LQXVsbEhxdjVobmkzTl84cWNNU2REQTgzTmExamRvM0ZrejhaVE9aZVFmZVFJN2tkcUc2UE9NLU9fVnd4b1NTeDRmZ2dMRTg0Zks3UzhJODdZMlNBZDAzQzIwT1gwdw?oc=5": {
+      "summary": "",
+      "sentiment": 0,
+      "importance": "mineure"
+    },
+    "https://news.google.com/rss/articles/CBMi8gFBVV95cUxNS2c1ZFpmRTFBa0NpM2xQNTB2WVVsc2d2WU53VEVWS1RnM0RxT2RJZFNfckdsT2ZkanpoT0VKN2g2UFN4eFpLVlpCbExiSHVMQ1JLOUwyMkJzM1lnTkNac3dCS2dPNVpGTjNrZGFKYmFEc2hXNVpURHA0RWhzazhrQWphRi1QaEExOWp6blVIY0RnbjRSdlJCWmw2ckhaNFlnb2M4cjZrSEFCTmxFUlZCaHI0Sk9FeVU2bW1lR3gxSlJHUy0zTkJGSUozc3FHUmhNdEhuYmtLdlp6eW5xUjlrMUU2SGlxNkpmUjFHaXZzT2R5d9IB9wFBVV95cUxNNW5ReG9FMTlnTGg2dTFIdDEyT01zel9ITFBndEExcUhGVy1BN0NzSHVqTnl4YVJGa0k4c3V3VkZmWXRnejZuNV8zeG1UVlhNeFAzSklnSVhqaFdUOTBjQ2U1dWVPeDc0aU9vODRxOFp1VFRUWDhOWVd6NWFKYVFSLTF2M1RBdE5TUFFjMC1waUh4VkRHdVdGTlVzRlVsZXRBQ3BvOGpfaEVuRURuaUtUYWFTc2FSTlhRazNZWmFxcGpNUEU2aWJaa3ViTGpLLTRGYUtINVIyamJQQlppUVdCVnB3QmhQRlZoampKVGs4N1QxRl9rbkJZ?oc=5": {
       "summary": "",
       "sentiment": 0,
       "importance": "mineure"

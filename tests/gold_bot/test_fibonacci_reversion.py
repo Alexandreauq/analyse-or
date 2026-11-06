@@ -103,7 +103,7 @@ def test_latest_state_returns_expected_keys():
     candles = _series(fib.ATR_PERIOD + fib.FIB_WINDOW + 5)
     state = fib.latest_state(candles)
     assert state is not None
-    for key in ("close", "high", "low", "level", "bias", "atr", "trend_strength", "hour_utc"):
+    for key in ("close", "high", "low", "level", "bias", "atr", "trend_strength", "trend_strength_short", "hour_utc"):
         assert key in state
 
 
@@ -137,6 +137,7 @@ def test_latest_state_trend_strength_none_without_enough_merged_history():
                        start_dt=datetime(2026, 10, 1, tzinfo=timezone.utc))
     state = fib.latest_state(candles)
     assert state["trend_strength"] is None
+    assert state["trend_strength_short"] is None  # les deux ensemble, jamais l'une sans l'autre
 
 
 def test_latest_state_trend_strength_none_at_exactly_window_days_of_history():
@@ -162,6 +163,51 @@ def test_latest_state_trend_strength_uses_merged_historical_candles():
     state = fib.latest_state(candles, historical)
     assert state["trend_strength"] is not None
     assert state["trend_strength"] > 0  # tendance haussiere reguliere dans l'historique
+
+
+def _v_shaped_daily_history(start_day, total_days=21, crash_price=2000.0, trough_price=1800.0,
+                             recovery_price=1990.0):
+    """21 jours (verifie empiriquement : TREND_WINDOW_DAYS+1 est le plus
+    court historique qui sort `trend_strength` de son placeholder 0.0,
+    voir test_latest_state_trend_strength_none_at_exactly_window_days_of_history
+    -- et le plus court qui donne des valeurs rondes et verifiables a la
+    main, sans decalage de reference du a un historique plus long) :
+    krach lineaire (jours 0-15, 2000->1800) puis rebond lineaire (jours
+    16-20, 1800->1990) -- meme forme que l'incident reel du 2026-11-06
+    (krach 30/10 puis +5.5% en 4 seances). Cloture du dernier jour
+    (hier) proche du depart (2000) -> tendance LONGUE (20j) faible,
+    mais cloture du creux tres loin de celle d'hier -> tendance COURTE
+    (5j) forte."""
+    out = []
+    crash_days = total_days - 5
+    for d in range(crash_days):
+        day = start_day - timedelta(days=total_days - d)
+        price = crash_price + (trough_price - crash_price) * (d / (crash_days - 1))
+        out.append(_candle(day.strftime("%Y-%m-%d 23:55:00"), price - 0.1, price + 0.1, price - 0.1, price))
+    recovery_days = total_days - crash_days
+    for d in range(recovery_days):
+        day = start_day - timedelta(days=total_days - crash_days - d)
+        price = trough_price + (recovery_price - trough_price) * ((d + 1) / recovery_days)
+        out.append(_candle(day.strftime("%Y-%m-%d 23:55:00"), price - 0.1, price + 0.1, price - 0.1, price))
+    return out
+
+
+def test_latest_state_trend_strength_short_catches_v_shaped_market_long_misses_it():
+    # Verrouille le correctif du 2026-11-06 (voir docs/superpowers/
+    # research/gold_bot_fib_trend_filter_vshape_fix/README.md) : sur un
+    # marche en V, la tendance LONGUE (20j) ne voit presque rien, alors
+    # que la tendance COURTE (5j) capte le rebond frais. Valeurs
+    # verifiees via execution directe de latest_state() (pas une
+    # supposition) : trend_strength=-0.005 (-0.5%, (1990-2000)/2000),
+    # trend_strength_short=0.10555... (+10.56%, (1990-1800)/1800).
+    today = datetime(2026, 11, 6, tzinfo=timezone.utc)
+    historical = _v_shaped_daily_history(today)
+    candles = _series(fib.ATR_PERIOD + fib.FIB_WINDOW + 5, start_price=1990.0, start_dt=today)
+    state = fib.latest_state(candles, historical)
+    assert state["trend_strength"] == -0.005
+    assert abs(state["trend_strength"]) <= fib.TREND_FILTER_THRESHOLD
+    assert state["trend_strength_short"] == (1990.0 - 1800.0) / 1800.0
+    assert abs(state["trend_strength_short"]) > fib.TREND_FILTER_SHORT_THRESHOLD
 
 
 def test_latest_state_trend_strength_ignores_todays_own_partial_close():

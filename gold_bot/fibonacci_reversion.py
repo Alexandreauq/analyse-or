@@ -3,8 +3,21 @@
 # voir docs/superpowers/specs/2026-10-28-gold-bot-fibonacci-ftmo-design.md.
 # Paramètres walk-forward validés (docs/superpowers/research/
 # gold_bot_fibonacci_seasonality/, gold_bot_deepen_winners/,
-# gold_bot_deepen_fibonacci/, gold_bot_validate_fib_trend_filter/) --
-# copiés tels quels, jamais re-optimisés ici.
+# gold_bot_deepen_fibonacci/, gold_bot_validate_fib_trend_filter/,
+# gold_bot_fib_trend_filter_vshape_fix/) -- copiés tels quels, jamais
+# re-optimisés ici. Le filtre de tendance est un OR a deux fenetres
+# independantes (court=5j/8%, long=20j/5%, voir
+# gold_bot_fib_trend_filter_vshape_fix/README.md) depuis le 2026-11-06 :
+# la mesure point-a-point sur 20j seule est structurellement aveugle a
+# un marche en V (krach puis rebond violent, incident reel du 06/11,
+# perte 392.75$) -- la fenetre courte capte une dynamique fraiche meme
+# diluee sur la longue. Walk-forward : generalisation 5/6 (vs 3/6 pour
+# le filtre 20j seul), chiffres FTMO au moins aussi bons. Honnete :
+# n'aurait PAS bloque le trade du 06/11 lui-meme (05/11 mesure 5.48%
+# sur 5j, sous le seuil 8% choisi librement par le walk-forward) --
+# amelioration de robustesse generale, pas un correctif de cet incident
+# precis (resserrer le seuil pour l'attraper degraderait la
+# generalisation, voir le README de la recherche).
 from collections import defaultdict, deque
 from datetime import datetime, timedelta, timezone
 
@@ -18,6 +31,8 @@ FIB_WINDOW = 40
 FIB_PCT = 0.618
 TREND_WINDOW_DAYS = 20
 TREND_FILTER_THRESHOLD = 0.05
+TREND_FILTER_SHORT_WINDOW_DAYS = 5
+TREND_FILTER_SHORT_THRESHOLD = 0.08
 SESSION_END_HOUR_UTC = 22
 MIN_DISTANCE_PCT = 0.002
 CANDLE_INTERVAL_MINUTES = 5
@@ -106,39 +121,48 @@ def daily_trend_strength(candles: list[dict], window_days: int = TREND_WINDOW_DA
 
 
 def _trend_strength_for_filter(candles: list[dict], historical_candles: list[dict] | None,
-                                today: str) -> float | None:
-    """Force de tendance a appliquer au filtre des signaux du jour
-    `today` -- celle du dernier jour calendaire COMPLET avant `today`,
-    jamais celle de `today` lui-meme (qui serait calculee sur une
-    journee encore partielle en production, contrairement a la
-    recherche de validation qui taguait chaque signal avec la cloture
-    FINALE de son propre jour -- un lookahead que seul un backtest peut
-    se permettre). `candles` seul (fenetre glissante recente, ~quelques
-    jours) ne couvre jamais TREND_WINDOW_DAYS jours complets a lui
-    seul -- `historical_candles` (fenetre plus large, deja recuperee
-    par gold_bot.loop pour le filtre de cotes historiques de l'autre
-    moteur) est necessaire pour avoir une vraie mesure. None si
-    l'historique fusionne ne couvre pas STRICTEMENT PLUS de
-    TREND_WINDOW_DAYS jours complets avant `today` -- a exactement
-    TREND_WINDOW_DAYS jours, le jour retenu serait lui-meme le tout
-    premier jour mesurable de daily_trend_strength, qui lui renvoie
-    encore son 0.0 par defaut (historique insuffisant), pas une
-    vraie mesure -- un signal sans mesure fiable de la tendance ne
-    doit jamais etre laisse passer sans filtre."""
+                                today: str) -> tuple[float, float] | None:
+    """Force de tendance (courte 5j, longue 20j) a appliquer au filtre
+    OR des signaux du jour `today` -- celle du dernier jour calendaire
+    COMPLET avant `today`, jamais celle de `today` lui-meme (qui serait
+    calculee sur une journee encore partielle en production, contrairement
+    a la recherche de validation qui taguait chaque signal avec la
+    cloture FINALE de son propre jour -- un lookahead que seul un
+    backtest peut se permettre). `candles` seul (fenetre glissante
+    recente, ~quelques jours) ne couvre jamais TREND_WINDOW_DAYS jours
+    complets a lui seul -- `historical_candles` (fenetre plus large,
+    deja recuperee par gold_bot.loop pour le filtre de cotes historiques
+    de l'autre moteur) est necessaire pour avoir une vraie mesure. None
+    (les DEUX fenetres ensemble, jamais l'une sans l'autre -- meme regle
+    conservatrice que la recherche) si l'historique fusionne ne couvre
+    pas STRICTEMENT PLUS de TREND_WINDOW_DAYS jours complets avant
+    `today` -- a exactement TREND_WINDOW_DAYS jours, le jour retenu
+    serait lui-meme le tout premier jour mesurable de
+    daily_trend_strength, qui lui renvoie encore son 0.0 par defaut
+    (historique insuffisant), pas une vraie mesure -- un signal sans
+    mesure fiable de la tendance ne doit jamais etre laisse passer sans
+    filtre. TREND_WINDOW_DAYS (20j) est la contrainte limitante (toujours
+    > TREND_FILTER_SHORT_WINDOW_DAYS), donc verifiee une seule fois pour
+    les deux fenetres."""
     merged = list(historical_candles or []) + list(candles)
-    strength_by_day = daily_trend_strength(merged, window_days=TREND_WINDOW_DAYS)
-    days_before_today = sorted(d for d in strength_by_day if d < today)
+    short_by_day = daily_trend_strength(merged, window_days=TREND_FILTER_SHORT_WINDOW_DAYS)
+    long_by_day = daily_trend_strength(merged, window_days=TREND_WINDOW_DAYS)
+    days_before_today = sorted(d for d in long_by_day if d < today)
     if len(days_before_today) <= TREND_WINDOW_DAYS:
         return None
-    return strength_by_day[days_before_today[-1]]
+    last_day = days_before_today[-1]
+    return (short_by_day[last_day], long_by_day[last_day])
 
 
 def latest_state(candles: list[dict], historical_candles: list[dict] | None = None) -> dict | None:
     """État de la dernière bougie : prix, niveau/biais Fibonacci, ATR,
-    force de tendance du jour (voir _trend_strength_for_filter), heure
-    UTC. None si l'historique est insuffisant pour l'ATR (le niveau
-    Fibonacci, lui, peut être None individuellement -- c'est un état
-    valide, pas une erreur)."""
+    force de tendance du jour -- longue (20j, `trend_strength`, cle
+    historique conservee pour compat avec ai_shadow) ET courte (5j,
+    `trend_strength_short`, voir _trend_strength_for_filter) --, heure
+    UTC. Les deux sont None ensemble, jamais l'une sans l'autre. None
+    (l'etat entier) si l'historique est insuffisant pour l'ATR (le
+    niveau Fibonacci, lui, peut être None individuellement -- c'est un
+    état valide, pas une erreur)."""
     if not candles:
         return None
     atr = compute_atr(candles)
@@ -149,10 +173,12 @@ def latest_state(candles: list[dict], historical_candles: list[dict] | None = No
     c = candles[i]
     t = datetime.strptime(c["time"], "%Y-%m-%d %H:%M:%S").replace(tzinfo=timezone.utc)
     today = c["time"][:10]
+    trend = _trend_strength_for_filter(candles, historical_candles, today)
     return {
         "close": c["close"], "high": c["high"], "low": c["low"],
         "level": level[i], "bias": bias[i], "atr": atr[i],
-        "trend_strength": _trend_strength_for_filter(candles, historical_candles, today),
+        "trend_strength": trend[1] if trend is not None else None,
+        "trend_strength_short": trend[0] if trend is not None else None,
         "hour_utc": t.hour,
     }
 

@@ -455,7 +455,11 @@ def decide_and_act_fibonacci(candles: list[dict], *, contract_size: float, balan
         return {"action": "aucune", "reason": "atr indisponible"}
     if state["trend_strength"] is None:
         return {"action": "aucune", "reason": "historique insuffisant pour mesurer la tendance"}
-    if abs(state["trend_strength"]) > fibonacci_reversion.TREND_FILTER_THRESHOLD:
+    # OR a deux fenetres independantes (court=5j/8%, long=20j/5%) depuis
+    # le 2026-11-06 -- la mesure 20j seule est aveugle a un marche en V
+    # (incident reel, voir gold_bot_fib_trend_filter_vshape_fix/README.md).
+    if (abs(state["trend_strength"]) > fibonacci_reversion.TREND_FILTER_THRESHOLD
+            or abs(state["trend_strength_short"]) > fibonacci_reversion.TREND_FILTER_SHORT_THRESHOLD):
         return {"action": "aucune", "reason": "tendance trop forte, signal filtre"}
 
     tol = fibonacci_reversion.TOUCH_ATR_MULT * state["atr"]

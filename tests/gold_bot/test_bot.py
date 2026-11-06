@@ -920,9 +920,10 @@ def test_decide_and_act_vwap_no_action_when_size_below_minimum(monkeypatch):
 
 
 def _fib_state(close=2000.0, high=2001.0, low=1999.0, level=1990.0, bias="achat",
-               atr=5.0, trend_strength=0.0, hour_utc=10):
+               atr=5.0, trend_strength=0.0, trend_strength_short=0.0, hour_utc=10):
     return {"close": close, "high": high, "low": low, "level": level, "bias": bias,
-            "atr": atr, "trend_strength": trend_strength, "hour_utc": hour_utc}
+            "atr": atr, "trend_strength": trend_strength, "trend_strength_short": trend_strength_short,
+            "hour_utc": hour_utc}
 
 
 def test_decide_and_act_fibonacci_no_action_when_insufficient_history(monkeypatch):
@@ -1115,6 +1116,37 @@ def test_decide_and_act_fibonacci_filtered_by_strong_trend(monkeypatch):
         balance=10000, equity=10000, open_positions=[], circuit_breaker=_open_circuit_breaker(),
     )
     assert result == {"action": "aucune", "reason": "tendance trop forte, signal filtre"}
+
+
+def test_decide_and_act_fibonacci_filtered_by_strong_short_term_trend_even_when_long_term_is_weak(monkeypatch):
+    # Verrouille le correctif du 2026-11-06 (marche en V, incident reel
+    # du 06/11 -- voir docs/superpowers/research/
+    # gold_bot_fib_trend_filter_vshape_fix/README.md) : tendance LONGUE
+    # (20j) sous son seuil (0.0 <= 5%, aurait passe l'ancien filtre),
+    # mais tendance COURTE (5j) au-dela de son seuil propre (9% > 8%) --
+    # doit bloquer quand meme (OR, pas juste le filtre 20j seul).
+    state = _fib_state(close=1981.0, high=1982.0, low=1974.0, level=1980.0, bias="achat",
+                        atr=20.0, trend_strength=0.0, trend_strength_short=0.09)
+    monkeypatch.setattr(bot.fibonacci_reversion, "latest_state", lambda candles, historical_candles=None: state)
+    result = bot.decide_and_act_fibonacci(
+        [{"dummy": True, "time": "2026-01-05 12:00:00"}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
+        balance=10000, equity=10000, open_positions=[], circuit_breaker=_open_circuit_breaker(),
+    )
+    assert result == {"action": "aucune", "reason": "tendance trop forte, signal filtre"}
+
+
+def test_decide_and_act_fibonacci_not_filtered_when_both_trend_windows_are_weak(monkeypatch):
+    # Non-regression : les deux fenetres sous seuil -> le signal passe
+    # toujours normalement (meme chiffres d'entree que le test
+    # d'ouverture plus bas, pour confirmer qu'il reste bien "simulation").
+    state = _fib_state(close=1981.0, high=1982.0, low=1974.0, level=1980.0, bias="achat",
+                        atr=20.0, trend_strength=0.0, trend_strength_short=0.0)
+    monkeypatch.setattr(bot.fibonacci_reversion, "latest_state", lambda candles, historical_candles=None: state)
+    result = bot.decide_and_act_fibonacci(
+        [{"dummy": True, "time": "2026-01-05 12:00:00"}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
+        balance=10000, equity=10000, open_positions=[], circuit_breaker=_open_circuit_breaker(),
+    )
+    assert result["action"] == "simulation"
 
 
 def test_decide_and_act_fibonacci_no_action_when_level_not_touched(monkeypatch):

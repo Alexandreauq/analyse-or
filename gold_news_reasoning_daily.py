@@ -252,3 +252,136 @@ def call_claude_for_reeval(position: dict, ohlc_rows: list[dict]) -> dict | None
         return _extract_json_block(text, "decision")
     except Exception:
         return None
+
+
+TRACKING_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "docs", "gold_news_reasoning_tracking.json")
+
+
+def _read_tracking(path: str = TRACKING_PATH) -> dict:
+    try:
+        with open(path, "r", encoding="utf-8") as fh:
+            data = json.load(fh)
+    except Exception:
+        return {"positions": []}
+    if not isinstance(data, dict) or not isinstance(data.get("positions"), list):
+        return {"positions": []}
+    return data
+
+
+def _write_tracking(data: dict, path: str = TRACKING_PATH) -> None:
+    dirname = os.path.dirname(path)
+    if dirname:
+        os.makedirs(dirname, exist_ok=True)
+    tmp_path = f"{path}.tmp"
+    with open(tmp_path, "w", encoding="utf-8") as fh:
+        json.dump(data, fh, indent=2, ensure_ascii=False)
+        fh.write("\n")
+    os.replace(tmp_path, path)
+
+
+def _find_open_position(tracking: dict) -> dict | None:
+    for position in tracking["positions"]:
+        if position.get("status") == "open":
+            return position
+    return None
+
+
+def _rows_since(ohlc_rows: list[dict], since_date: str) -> list[dict]:
+    """Lignes dont la date est STRICTEMENT posterieure a since_date --
+    since_date est entry_date (pas encore de journal) ou la date de la
+    derniere entree de journal (deja evaluee, ne pas la re-evaluer)."""
+    return [r for r in ohlc_rows if r["date"] > since_date]
+
+
+def _close_position(position: dict, close_date: str, close_price: float, close_reason: str, market_close_price: float) -> None:
+    position["status"] = "closed"
+    position["close_date"] = close_date
+    position["close_price"] = close_price
+    position["close_reason"] = close_reason
+    position["return_pct"] = compute_return_pct(position["entry_price"], close_price, position["direction"])
+    position["buyhold_price_at_close"] = market_close_price
+    position["buyhold_return_pct"] = compute_buyhold_return_pct(position["entry_price"], market_close_price)
+
+
+def process_open_position(position: dict, ohlc_rows: list[dict], today: date) -> bool:
+    """Reevalue une position ouverte, la mute EN PLACE selon les
+    priorites : (1) stop, (2) delai_max -- deterministes, zero appel
+    modele -- puis (3) reevaluation qualitative SEULEMENT si ni (1) ni
+    (2) ne s'applique. Renvoie True si la position a change (cloturee
+    ou journal modifie)."""
+    since_date = position["journal"][-1]["date"] if position["journal"] else position["entry_date"]
+    new_rows = _rows_since(ohlc_rows, since_date)
+
+    breach = find_stop_breach(position["direction"], position["safety_stop_price"], new_rows)
+    if breach is not None:
+        _close_position(position, breach["date"], position["safety_stop_price"], "stop_securite", breach["close"])
+        return True
+
+    if today.isoformat() >= position["max_close_date"]:
+        last_close = ohlc_rows[-1]["close"] if ohlc_rows else position["entry_price"]
+        _close_position(position, today.isoformat(), last_close, "delai_max", last_close)
+        return True
+
+    verdict = call_claude_for_reeval(position, ohlc_rows)
+    last_close = ohlc_rows[-1]["close"] if ohlc_rows else position["entry_price"]
+    if verdict is not None and verdict.get("decision") == "cloturer":
+        _close_position(position, today.isoformat(), last_close, "cloture_anticipee_ia", last_close)
+        return True
+    raison = verdict.get("raison") if verdict else "echec de l'appel API, position gardee par defaut"
+    position["journal"].append({"date": today.isoformat(), "price": last_close, "decision": "garder", "raison": raison})
+    return True
+
+
+def process_new_entry(ohlc_rows: list[dict], today: date) -> dict | None:
+    """Decide d'ouvrir une nouvelle position ou non. Renvoie le nouveau
+    dict de position (status="open") ou None si l'appel est
+    neutre/non reconnu/l'appel API a echoue."""
+    verdict = call_claude_for_new_entry(ohlc_rows)
+    if verdict is None:
+        return None
+    direction = normalize_direction_call(verdict.get("appel", ""))
+    if direction is None:
+        return None
+    entry_price = ohlc_rows[-1]["close"]
+    raw_stop_pct = verdict.get("stop_pct", MIN_STOP_PCT)
+    if not isinstance(raw_stop_pct, (int, float)) or isinstance(raw_stop_pct, bool):
+        raw_stop_pct = MIN_STOP_PCT
+    safety_stop_price = compute_safety_stop_price(entry_price, direction, raw_stop_pct)
+    safety_stop_pct = compute_safety_stop_pct(entry_price, safety_stop_price, direction)
+    entry_date = today.isoformat()
+    return {
+        "id": f"XAUUSD-{entry_date}", "status": "open",
+        "entry_date": entry_date, "entry_price": entry_price, "direction": direction,
+        "safety_stop_price": safety_stop_price, "safety_stop_pct": safety_stop_pct,
+        "confiance": verdict.get("confiance", ""), "raison_ouverture": verdict.get("raison", ""),
+        "max_close_date": compute_max_close_date(today).isoformat(),
+        "close_date": None, "close_price": None, "close_reason": None, "return_pct": None,
+        "buyhold_price_at_close": None, "buyhold_return_pct": None, "journal": [],
+    }
+
+
+def main() -> None:
+    ohlc_rows = fetch_daily_ohlc()
+    if not ohlc_rows:
+        return  # pas de prix -> aucune action, jamais de repli WebSearch
+    today = date.fromisoformat(ohlc_rows[-1]["date"])
+    tracking = _read_tracking(TRACKING_PATH)
+    changed = False
+
+    open_position = _find_open_position(tracking)
+    if open_position is not None:
+        changed = process_open_position(open_position, ohlc_rows, today) or changed
+        open_position = _find_open_position(tracking)
+
+    if open_position is None:
+        new_position = process_new_entry(ohlc_rows, today)
+        if new_position is not None:
+            tracking["positions"].append(new_position)
+            changed = True
+
+    if changed:
+        _write_tracking(tracking, TRACKING_PATH)
+
+
+if __name__ == "__main__":
+    main()

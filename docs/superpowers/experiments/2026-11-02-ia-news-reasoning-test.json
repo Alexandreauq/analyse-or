@@ -1,0 +1,346 @@
+{
+  "date_test": "2026-11-02",
+  "date_verification_prevue": "2026-11-30",
+  "methodologie": "Test prospectif (pas un backtest), zero appel reseau : donnees de docs/indices.json (prix, stage, score, actus), docs/volume_history.json (ratio volume 5 dernieres dates vs 20 precedentes) et docs/price_history.json (rendements 5j/20j). Raisonnement qualitatif combinant actu, technique, sectoriel, volume ; pari date avant de connaitre le resultat. Candidats : actu 'majeure' sur 10 jours (38 candidats), tickers deja pris exclus ; 13 retenus pour diversite secteur/pays/sens.",
+  "note_resolution": "Aucun pari des runs precedents n'etait a echeance le 2026-11-02 (premiere echeance : 2026-11-08).",
+  "paris": [
+    {
+      "ticker": "HLN.L",
+      "nom": "Haleon",
+      "secteur": "Healthcare",
+      "prix_entree": 3.194,
+      "appel": "neutre_leger_haussier",
+      "confiance": "faible",
+      "dimension_dominante": "volume",
+      "stage_label": "Déclin",
+      "score": 12.0,
+      "sector_profile": "defensif",
+      "rendement_5j_pct": -16.2,
+      "rendement_20j_pct": -2.7,
+      "volume_ratio_5j_vs_20j": 1.57,
+      "actualites_recentes": [
+        "2026-10-30 (+0) Action Haleon plc | Cours HLN Bourse London S.E. - Zonebourse",
+        "2026-10-29 (-1) Haleon, le fabricant de Sensodyne, revoit à la baisse ses prévisions de chiffre d'affaires organique annuel - Boursorama",
+        "2026-10-29 (+0) Consumer Healthcare Giant Haleon Plunges to 52-Week Low - TradingView",
+        "2026-10-29 (+0) Ralentissement de la croissance, objectifs ajustés, Haleon en forte baisse - Zonebourse",
+        "2026-10-29 (+0) Sensodyne maker Haleon cuts annual organic revenue forecast - TradingView"
+      ],
+      "contexte_sectoriel": [
+        "Healthcare: mediane 5j +0.9% sur 125 titres ; extremes ALNY -26.3%, GNFT.PA +25.3%"
+      ],
+      "raison": "Revision a la baisse des previsions : -16.2% en 5j, plus bas 52 semaines, volume 1.6x. Capitulation probable apres un choc de guidance, mais stage Declin et pas de signal de retournement : rebond technique possible sans tendance. Pari faible sur un rebond partiel."
+    },
+    {
+      "ticker": "BSX",
+      "nom": "Boston Scientific",
+      "secteur": "Healthcare",
+      "prix_entree": 41.98,
+      "appel": "baissier",
+      "confiance": "faible",
+      "dimension_dominante": "actu",
+      "stage_label": "Déclin",
+      "score": 31.7,
+      "sector_profile": "defensif",
+      "rendement_5j_pct": -8.1,
+      "rendement_20j_pct": -1.5,
+      "volume_ratio_5j_vs_20j": 1.85,
+      "actualites_recentes": [
+        "2026-11-01 (+0) À propos de Boston Scientific (Stove Tokenized Stock) - Coinbase",
+        "2026-10-30 (+0) Barclays maintains Boston Scientific at Equal-Weight, lowers price target to $45 from $48 - TradingView",
+        "2026-10-30 (+1) Boston Scientific Corporation : Rothschild & Co Redburn reste à l'achat - Zonebourse Suisse",
+        "2026-10-28 (-1) Boston Scientific en baisse après la révision à la baisse de ses prévisions de bénéfices pour 2026 - Boursorama",
+        "2026-10-28 (+0) Boston Scientific décroche à Wall Street après les comptes - Boursier.com"
+      ],
+      "contexte_sectoriel": [
+        "Healthcare: mediane 5j +0.9% sur 125 titres ; extremes ALNY -26.3%, GNFT.PA +25.3%"
+      ],
+      "raison": "Guidance bénéfices 2026 abaissée, objectifs de cours coupés (Barclays 45 vs 48), volume 1.85x, stage Declin. Momentum post-revision (drift) plutôt défavorable, mais -8% deja pris et secteur sante neutre : conviction faible."
+    },
+    {
+      "ticker": "CTSH",
+      "nom": "Cognizant",
+      "secteur": "Technology",
+      "prix_entree": 65.11,
+      "appel": "neutre",
+      "confiance": "tres_faible",
+      "dimension_dominante": "sectoriel",
+      "stage_label": "Achat",
+      "score": 52.9,
+      "sector_profile": "cyclique",
+      "rendement_5j_pct": -7.7,
+      "rendement_20j_pct": 11.3,
+      "volume_ratio_5j_vs_20j": 1.15,
+      "actualites_recentes": [
+        "2026-10-30 (+0) Cognizant mobilise plus de 25 000 professionnels pour le déploiement d'OpenAI, à mesure que les entreprises mettent en œuvre les technologies d'IA de pointe dans leurs processus de production - Yahoo Finance France",
+        "2026-10-30 (+0) Cognizant Technology Solutions annonce la création d’un groupe dédié aux capacités Frontier d’OpenAI - Zonebourse Suisse",
+        "2026-10-29 (+1) Cognizant Technology Solutions Corporation Stock 12‑Month Price Target Raised to $67.91, Implies 2% Upside - TradingView",
+        "2026-10-29 (-1) Cognizant recule après avoir revu à la baisse ses prévisions de chiffre d'affaires pour l'exercice - Boursorama",
+        "2026-10-29 (+0) Les actions Cognizant chutent de 10% en préouverture sur des prévisions décevantes - Investing.com France"
+      ],
+      "contexte_sectoriel": [
+        "Technology: mediane 5j -0.1% sur 157 titres ; extremes NOW -33.9%, ATO.PA +18.0%"
+      ],
+      "raison": "Previsions CA revues a la baisse (-7.7% 5j) mais +11.3% sur 20j, stage Achat, et annonces OpenAI positives. Signaux contradictoires, secteur techno très disperse (NOW -34%, FFIV -26%) : pas d'avantage lisible."
+    },
+    {
+      "ticker": "LITE",
+      "nom": "Lumentum Holdings",
+      "secteur": "Technology",
+      "prix_entree": 840.7,
+      "appel": "neutre",
+      "confiance": "tres_faible",
+      "dimension_dominante": "actu",
+      "stage_label": "Neutre",
+      "score": -76.6,
+      "sector_profile": "cyclique",
+      "rendement_5j_pct": 11.2,
+      "rendement_20j_pct": -22.5,
+      "volume_ratio_5j_vs_20j": 1.31,
+      "actualites_recentes": [
+        "2026-10-30 (+0) Pourquoi l’action Lumentum chute-t-elle aujourd’hui ? - Investing.com France",
+        "2026-10-29 (-1) Marvell décroche avec la rumeur Lumentum... Soitec s'envole ! - Boursier.com",
+        "2026-10-29 (+0) Marvell Technology serait en négociations avancées pour racheter Lumentum Holdings - Zonebourse",
+        "2026-10-29 (+0) Marvell prêt à casser sa tirelire pour Lumentum ? - Bourse Direct",
+        "2026-10-28 (+1) Marvell proche d’un accord pour acquérir le fournisseur optique Lumentum - Yahoo Finance France"
+      ],
+      "contexte_sectoriel": [
+        "Technology: mediane 5j -0.2% sur 157 titres ; extremes NOW -33.9%, ATO.PA +18.0%"
+      ],
+      "raison": "Rumeur d'acquisition par Marvell (rachat avance) mais cours 840 apres -22.5% sur 20j, score -76.6, stage Neutre. Rumeur non confirmee, issue binaire (accord avec prime vs echec) : aucun biais directionnel defendable."
+    },
+    {
+      "ticker": "DTE.DE",
+      "nom": "Deutsche Telekom",
+      "secteur": "Communication Services",
+      "prix_entree": 26.09,
+      "appel": "neutre",
+      "confiance": "tres_faible",
+      "dimension_dominante": "technique",
+      "stage_label": "Déclin",
+      "score": -30.9,
+      "sector_profile": "standard",
+      "rendement_5j_pct": 2.9,
+      "rendement_20j_pct": -1.8,
+      "volume_ratio_5j_vs_20j": 0.86,
+      "actualites_recentes": [
+        "2026-10-30 (+0) Action Deutsche Telekom AG | Cours DTE Bourse Xetra - Zonebourse",
+        "2026-10-29 (+0) Deutsche Telekom suspendrait son projet de fusion avec T-Mobile US - Boursorama",
+        "2026-10-29 (-1) Deutsche Telekom suspendrait son projet de fusion avec T-Mobile US - Bourse Direct",
+        "2026-09-25 (+0) TotalEnergies, Axa, Société Générale, Beneteau, EssilorLuxottica, Publicis mais aussi BP, Deutsche Telekom, KPN et Glencore ailleurs en Europe : toutes les recommandations des analystes - Les Echos",
+        "2026-09-08 (+0) Télécoms : Orange, Vodafone, Telefonica et Deutsche Telekom unis face à Starlink ? - Boursier.com"
+      ],
+      "contexte_sectoriel": [
+        "Communication Services: mediane 5j -0.4% sur 68 titres ; extremes RDDT -36.4%, WBD +11.3%"
+      ],
+      "raison": "Suspension rumeur du projet de fusion avec T-Mobile US : peu de mouvement (+2.9% 5j), volume 0.86x, stage Declin, score -30.9. Pas de catalyseur clair ; technique faiblement baissier mais insuffisant."
+    },
+    {
+      "ticker": "SY1.DE",
+      "nom": "Symrise",
+      "secteur": "Basic Materials",
+      "prix_entree": 93.02,
+      "appel": "neutre_leger_haussier",
+      "confiance": "faible",
+      "dimension_dominante": "sectoriel",
+      "stage_label": "Achat",
+      "score": -15.9,
+      "sector_profile": "cyclique",
+      "rendement_5j_pct": -8.8,
+      "rendement_20j_pct": 2.2,
+      "volume_ratio_5j_vs_20j": 1.42,
+      "actualites_recentes": [
+        "2026-10-31 (+0) Symrise investit 27,5 millions d'euros dans un village du Morbihan - Le nouvel Économiste",
+        "2026-10-30 (+0) Symrise AG: Walter Ribeiro, buy - TradingView",
+        "2026-10-29 (+1) Symrise AG : JP Morgan réitère son opinion positive sur le titre - Zonebourse Suisse",
+        "2026-10-28 (-1) Symrise trébuche, les perspectives mises en cause - Boursorama",
+        "2026-10-27 (+0) Symrise démarre ses nouvelles installations du Morbihan - Les Echos"
+      ],
+      "contexte_sectoriel": [
+        "Basic Materials: mediane 5j +1.5% sur 81 titres ; extremes AVTX.AS -23.2%, NK.PA +18.4%"
+      ],
+      "raison": "-8.8% 5j sur perspectives mises en cause alors que le secteur materiaux est a +1.5% median et que JPM/analystes restent positifs ; stage Achat. Baisse idiosyncratique avec support analyste : leger rebond attendu, faible confiance."
+    },
+    {
+      "ticker": "CCC.L",
+      "nom": "Computacenter",
+      "secteur": "Technology",
+      "prix_entree": 49.38,
+      "appel": "neutre",
+      "confiance": "faible",
+      "dimension_dominante": "technique",
+      "stage_label": "Achat",
+      "score": 86.7,
+      "sector_profile": "cyclique",
+      "rendement_5j_pct": 7.6,
+      "rendement_20j_pct": -8.6,
+      "volume_ratio_5j_vs_20j": 0.95,
+      "actualites_recentes": [
+        "2026-10-27 (+0) Bank of America relève son objectif de cours sur Computacenter - Bourse Direct",
+        "2026-10-27 (+0) Bank of America relève son objectif de cours sur Computacenter - Option Finance",
+        "2026-10-26 (+1) Computacenter s'envole grâce à son relèvement de prévision - Zonebourse",
+        "2026-09-08 (-1) Computacenter délaissé après une publication contrastée - Boursorama",
+        "2026-09-08 (+0) Semestriels Computacenter : l’Europe de l’Ouest se redresse mais la France reste un frein - ChannelNews"
+      ],
+      "contexte_sectoriel": [
+        "Technology: mediane 5j -0.2% sur 157 titres ; extremes NOW -33.9%, ATO.PA +18.0%"
+      ],
+      "raison": "Releve de prevision (+7.6% 5j) apres -8.6% 20j : rebond deja integre, volume 0.95x non confirmant. Stage Achat, score 86.7 mais score fondamental sans valeur predictive demontree. Pas d'avantage."
+    },
+    {
+      "ticker": "MRNA",
+      "nom": "Moderna",
+      "secteur": "Healthcare",
+      "prix_entree": 221.72,
+      "appel": "baissier",
+      "confiance": "faible",
+      "dimension_dominante": "technique",
+      "stage_label": "Achat",
+      "score": -82.6,
+      "sector_profile": "defensif",
+      "rendement_5j_pct": 10.8,
+      "rendement_20j_pct": 16.7,
+      "volume_ratio_5j_vs_20j": 0.67,
+      "actualites_recentes": [
+        "2026-10-30 (+0) MODERNA Cours Action MRNA, Cotation Bourse NASDAQ - Boursorama",
+        "2026-10-30 (+1) Cancer : le vaccin personnalisé de Moderna fonctionne… mais personne ne sait vraiment pourquoi - L'Express",
+        "2026-10-30 (+0) [ESMO 2026] Dans les pipelines : J&J, Moderna, MSD, Bayer - L'Usine Nouvelle",
+        "2026-10-23 (+0) « Nous avons de bons espoirs que notre vaccin fonctionnera avec des nombreux cancers » : le patron de Moderna monte au créneau après la chute du cours de Bourse - Les Echos",
+        "2026-10-12 (+0) L'action de Moderna bondit de plus de 600 % en 2026. - Quartz en Français"
+      ],
+      "contexte_sectoriel": [
+        "Healthcare: mediane 5j +0.8% sur 125 titres ; extremes ALNY -26.3%, GNFT.PA +25.3%"
+      ],
+      "raison": "+600% en 2026, +10.8% 5j, +16.7% 20j sur news pipeline cancer; volume en baisse (0.67x) = hausse sans participation, score -82.6. Extension de momentum extreme: risque de retour a la moyenne, mais le momentum peut persister -> faible confiance."
+    },
+    {
+      "ticker": "CTAS",
+      "nom": "Cintas",
+      "secteur": "Industrials",
+      "prix_entree": 219.82,
+      "appel": "neutre_leger_haussier",
+      "confiance": "faible",
+      "dimension_dominante": "actu",
+      "stage_label": "Achat",
+      "score": 73.2,
+      "sector_profile": "standard",
+      "rendement_5j_pct": -1.9,
+      "rendement_20j_pct": 13.9,
+      "volume_ratio_5j_vs_20j": 1.46,
+      "actualites_recentes": [
+        "2026-10-30 (+0) actualites Cintas WRT 190C 1126 (MR98TE) - Warrant | DE000MR98TE0 - Cotation BOERSE STUTTGART - Bourse Direct",
+        "2026-10-30 (+0) Les actionnaires de Cintas approuvent le transfert au Delaware et le conseil d’administration - Investing.com France",
+        "2026-10-29 (+0) UniFirst/Cintas spread narrows on report FTC hasn't indicated it will block deal - TradingView",
+        "2026-10-28 (+0) Cintas Corporation annonce un dividende trimestriel en numéraire - Yahoo Finance France",
+        "2026-10-27 (-1) Cintas et UniFirst en baisse après l'annonce selon laquelle la FTC compte intenter une action en justice pour - Boursorama"
+      ],
+      "contexte_sectoriel": [
+        "Industrials: mediane 5j +1.8% sur 243 titres ; extremes PLX.PA -20.0%, PNR +19.8%"
+      ],
+      "raison": "Action FTC contre le rachat UniFirst: choc deja absorbe (-1.9% 5j), spread UniFirst se resserre (FTC pas forcement bloquante), stage Achat, +13.9% 20j. Modele d'affaires solide ; pari faiblement haussier."
+    },
+    {
+      "ticker": "DASH",
+      "nom": "DoorDash",
+      "secteur": "Consumer Cyclical",
+      "prix_entree": 178.99,
+      "appel": "neutre",
+      "confiance": "tres_faible",
+      "dimension_dominante": "volume",
+      "stage_label": "Neutre",
+      "score": 46.2,
+      "sector_profile": "cyclique",
+      "rendement_5j_pct": -0.2,
+      "rendement_20j_pct": -5.4,
+      "volume_ratio_5j_vs_20j": 2.33,
+      "actualites_recentes": [
+        "2026-11-01 (+0) DoorDash tempère les agents IA, teste ses propres outils - Brief IA",
+        "2026-10-30 (+0) Barclays maintains DoorDash at Equal-Weight, lowers price target to $205 from $230 - TradingView",
+        "2026-10-30 (+1) Livraisons de courses : après Deliveroo, DoorDash compte s’offrir, pour 17 milliards de $, Instacart, le spécialiste des livraisons par des particuliers - LSA conso",
+        "2026-10-30 (+0) Street View : les analystes sont favorables à l'accord entre DoorDash et Instacart ; les risques réglementaire - Boursorama",
+        "2026-10-29 (+0) L'américain DoorDash se muscle dans la livraison de courses en avalant Instacart - Les Echos"
+      ],
+      "contexte_sectoriel": [
+        "Consumer Cyclical: mediane 5j +1.1% sur 157 titres ; extremes MELI -10.3%, CVNA +18.1%"
+      ],
+      "raison": "Rachat d'Instacart pour 17 Md$ : volume 2.33x (le plus fort du lot), mais prix -0.2% 5j et PT abaisse (Barclays 205 vs 230). Acquereur en M&A historiquement sous pression ; volume eleve sans direction."
+    },
+    {
+      "ticker": "CVC.AS",
+      "nom": "CVC CAPITAL",
+      "secteur": "Financial Services",
+      "prix_entree": 13.42,
+      "appel": "haussier",
+      "confiance": "faible",
+      "dimension_dominante": "sectoriel",
+      "stage_label": "Achat",
+      "score": 97.4,
+      "sector_profile": "standard",
+      "rendement_5j_pct": 5.9,
+      "rendement_20j_pct": 9.6,
+      "volume_ratio_5j_vs_20j": 0.88,
+      "actualites_recentes": [
+        "2026-10-30 (+0) CVC Capital défie le français Lesaffre sur un rachat du néerlandais Corbion - La Lettre",
+        "2026-10-29 (+1) CVC Capital Partners : encours sous commissions à 177 Md€ (+24 %), +11 % en organique - Idéal Investisseur",
+        "2026-10-12 (+0) CVC Capital Partners : Morgan Stanley démarre le suivi à surpondérer avec un objectif de cours de 18 EUR. - Zonebourse",
+        "2026-06-05 (+0) IFF veut revendre ses ingrédients alimentaires à CVC Capital Partners - Process Alimentaire",
+        "2026-02-09 (+0) DSM-Firmenich vend ses activités de nutrition animale à CVC Capital Partners - Boursorama"
+      ],
+      "contexte_sectoriel": [
+        "Financial Services: mediane 5j +1.6% sur 184 titres ; extremes COIN -12.7%, 1398.HK +9.0%"
+      ],
+      "raison": "AUM sous commission +24%, Morgan Stanley surpondere (PT 18 vs 13.4), stage Achat, offre sur Corbion. Services financiers neutres (+1.6% median) ; la dimension actu positive domine mais deja +5.9% 5j : confiance faible."
+    },
+    {
+      "ticker": "BMPS.MI",
+      "nom": "Banca Monte dei Paschi di Siena",
+      "secteur": "Financial Services",
+      "prix_entree": 10.826,
+      "appel": "baissier",
+      "confiance": "faible",
+      "dimension_dominante": "sectoriel",
+      "stage_label": "Achat",
+      "score": -48.3,
+      "sector_profile": "standard",
+      "rendement_5j_pct": 1.7,
+      "rendement_20j_pct": -4.0,
+      "volume_ratio_5j_vs_20j": 0.59,
+      "actualites_recentes": [
+        "2026-10-30 (+0) La victoire d'Intesa sur Monte dei Paschi ouvre une nouvelle phase dans la recomposition du paysage bancaire italien - Les Echos",
+        "2026-10-30 (-1) Banca Monte dei Paschi di Siena (MPS) déclare caduques les offres sur Banco BPM et Banca Generali après le vote des actionnaires - Zonebourse",
+        "2026-10-30 (+0) Les actionnaires de Monte dei Paschi rejettent le plan de défense contre l'offre d'Intesa - Zonebourse",
+        "2026-10-29 (-1) Monte dei Paschi di Siena : les actionnaires rejettent le projet d'acquisition de Banco BPM - Boursier.com",
+        "2026-10-29 (-1) La plus ancienne banque du monde se bat pour son avenir, alors qu’un rival italien se rapproche d’une prise de contrôle - Zonebourse Suisse"
+      ],
+      "contexte_sectoriel": [
+        "Financial Services: mediane 5j +1.6% sur 184 titres ; extremes COIN -12.7%, 1398.HK +9.0%"
+      ],
+      "raison": "OPA Intesa gagnante, offres de MPS sur BPM/Generali caduques ; le titre Intesa/MPS dépendra de la prime d'offre. Cours 10.83 stable (+1.7% 5j), volume 0.59x. Banques italiennes en recomposition ; tilt baissier faible par la perte de la prime speculative."
+    },
+    {
+      "ticker": "9532.T",
+      "nom": "Osaka Gas",
+      "secteur": "Utilities",
+      "prix_entree": 5892.0,
+      "appel": "neutre",
+      "confiance": "tres_faible",
+      "dimension_dominante": "sectoriel",
+      "stage_label": "Neutre",
+      "score": 6.5,
+      "sector_profile": "defensif",
+      "rendement_5j_pct": 1.8,
+      "rendement_20j_pct": 3.4,
+      "volume_ratio_5j_vs_20j": 1.42,
+      "actualites_recentes": [
+        "2026-10-29 (+0) Osaka Gas Co., Ltd. annonce un dividende au titre du deuxième trimestre clos le 31 mars 2027, payable le 30 novembre 2026 - Zonebourse Suisse",
+        "2026-10-29 (+0) Enagás achève l’achat de 20 % de Saggas à Osaka Gas pour 31 millions et porte son contrôle à 92,5 % - Demócrata",
+        "2026-10-29 (+0) Osaka Gas Co., Ltd. révise ses prévisions de résultats consolidés pour l’exercice clos le 31 mars 2027 - Zonebourse",
+        "2026-10-28 (+0) Osaka Gas: Revenue growth and higher sales guidance contrast with lower H1 profit amid cost-adjustment timing pressure - TradingView",
+        "2026-04-06 (+0) Osaka Gas entend profiter de la forte demande d’électricité aux Etats-Unis - L'Agefi"
+      ],
+      "contexte_sectoriel": [
+        "Utilities: mediane 5j +2.0% sur 64 titres ; extremes 9501.T -7.9%, 0836.HK +7.3%"
+      ],
+      "raison": "Revision des previsions sans signe net, volume 1.42x, +1.8% 5j. Utilities japonaises stables, rien de distinctif."
+    }
+  ]
+}

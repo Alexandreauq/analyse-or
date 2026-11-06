@@ -254,3 +254,32 @@ def test_shadow_judge_entry_cooldown_is_per_symbol(tmp_path, monkeypatch):
 
     assert xau is not None
     assert xag is not None
+
+
+def test_shadow_judge_entry_cooldown_is_per_engine_label_too(tmp_path, monkeypatch):
+    """Releve en re-review de la Task 3 : le cooldown etait auparavant
+    cle uniquement sur `symbol`, partage entre tous les moteurs
+    appelants -- un vrai veto (real_decision=True) sur un symbole
+    pourrait echouer-ouvert (None) a tort si un appel fantome sur le
+    MEME symbole avait deja consomme le cooldown, sans que ce soit
+    visible dans les logs applicatifs. Deux moteurs distincts sur le
+    meme symbole doivent avoir des cooldowns independants."""
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-ant-fake")
+    log_path = str(tmp_path / "ai_shadow_log.jsonl")
+    fake_client = _FakeAnthropicClient(response=_FakeResponse([_FakeTextBlock(
+        '{"verdict": "confirme", "confiance": "haute", "raison": "ok"}'
+    )]))
+    monkeypatch.setattr(anthropic, "Anthropic", fake_client)
+    t0 = datetime(2026, 10, 29, 10, 0, 0, tzinfo=timezone.utc)
+
+    fantome = ai_shadow.shadow_judge_entry(
+        "XAUUSD", "achat", _state(), _candles(), engine_label="rebond de retracement de Fibonacci",
+        real_decision=False, log_path=log_path, now=t0,
+    )
+    reel = ai_shadow.shadow_judge_entry(
+        "XAUUSD", "achat", _state(), _candles(), engine_label="autre moteur (vrai veto)",
+        real_decision=True, log_path=log_path, now=t0 + timedelta(minutes=1),
+    )
+
+    assert fantome is not None
+    assert reel is not None

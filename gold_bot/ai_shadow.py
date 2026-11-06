@@ -38,7 +38,7 @@ REQUEST_TIMEOUT_SECONDS = 40.0
 WEB_SEARCH_MAX_USES = 2
 SHADOW_COOLDOWN = timedelta(hours=24)
 
-_last_call_at: dict[str, datetime] = {}
+_last_call_at: dict[tuple[str, str], datetime] = {}  # cle (symbol, engine_label) -- jamais symbol seul
 _cooldown_lock = threading.Lock()
 
 _VERDICT_JSON_RE = re.compile(r"\{[^{}]*\"verdict\"[^{}]*\}")
@@ -126,11 +126,21 @@ def shadow_judge_entry(symbol: str, direction: str, state: dict, candles: list[d
     SHADOW_COOLDOWN) -- dans ce cas, rien n'est journalise non plus,
     pour ne pas saturer le journal de lignes "saute" a chaque cycle."""
     now = now or datetime.now(timezone.utc)
+    # Cle (symbol, engine_label), jamais symbol seul : deux moteurs
+    # distincts peuvent un jour partager un symbole (ex. XAUUSD sur
+    # Fibonacci ET un autre moteur) -- avec une cle symbol seul, un
+    # appel fantome consommerait le cooldown d'un vrai veto (ou
+    # l'inverse) sans que ce soit visible dans les logs applicatifs.
+    # Trouve en re-review de la Task 3 (branchement du premier veto
+    # reel, sur Ichimoku/XAGUSD -- pas de collision aujourd'hui avec
+    # Fibonacci/XAUUSD, mais l'hypothese implicite devenait une vraie
+    # question de securite dès qu'un second consommateur reel existe).
+    cooldown_key = (symbol, engine_label)
     with _cooldown_lock:
-        last = _last_call_at.get(symbol)
+        last = _last_call_at.get(cooldown_key)
         if last is not None and now - last < SHADOW_COOLDOWN:
             return None
-        _last_call_at[symbol] = now
+        _last_call_at[cooldown_key] = now
 
     entry: dict = {
         "timestamp": now.strftime("%Y-%m-%dT%H:%M:%SZ"),

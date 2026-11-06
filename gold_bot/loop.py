@@ -511,6 +511,21 @@ def main():
     # _resolve_symbols et run_cycle. Lue une seule fois ici, même
     # endroit que FTMO_ISC ci-dessus.
     gold_bot_engine = os.environ.get("GOLD_BOT_ENGINE")
+    # Garde-fou de configuration -- releve en re-review de la Task 4 :
+    # sans ce check, GOLD_BOT_ENGINE="ichimoku_xag" ET FTMO_ISC presents
+    # en meme temps feraient tourner le moteur Ichimoku SUR le compte
+    # FTMO reel (ftmo_guard_instance construit plus haut depend
+    # uniquement de FTMO_ISC, pas de gold_bot_engine -- il continuerait
+    # de s'appliquer, emails FTMO inclus, a des decisions Ichimoku) --
+    # exactement ce que ce chantier exclut explicitement (voir plan,
+    # "Hors scope" : pas de compte FTMO reel pour ce moteur). Fail-fast
+    # plutot que de laisser un comportement hybride jamais teste.
+    if gold_bot_engine == "ichimoku_xag" and ftmo_isc is not None:
+        raise ValueError(
+            "GOLD_BOT_ENGINE=ichimoku_xag et FTMO_ISC ne peuvent pas être définis "
+            "ensemble -- ce moteur n'est pas validé pour un compte FTMO réel "
+            "(déploiement prévu sur un checkout dédié, voir le plan Ichimoku)."
+        )
     symbols = _resolve_symbols(ftmo_isc, os.environ.get("FTMO_SYMBOLS"), gold_bot_engine)
 
     while True:

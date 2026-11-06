@@ -466,7 +466,7 @@ def test_minutes_since_blackout_ended_correct_right_after_scalp_window():
     # 13h45 UTC. 13h55 UTC = 10 minutes plus tard -- exactement le cas
     # reel du 2026-11-06.
     result = confluence.minutes_since_blackout_ended(datetime(2026, 11, 6, 13, 55, tzinfo=timezone.utc))
-    assert result == (10.0, confluence.POST_NEWS_GRACE_MINUTES)
+    assert result == (10.0, confluence.POST_NEWS_GRACE_MINUTES, datetime(2026, 11, 6, 13, 45, tzinfo=timezone.utc))
 
 
 def test_minutes_since_blackout_ended_correct_right_after_press_conference_window():
@@ -474,7 +474,7 @@ def test_minutes_since_blackout_ended_correct_right_after_press_conference_windo
     # FOMC du 28/10/2026, 18h00 UTC -- fenetre press-conference (100min)
     # finit a 19h40 UTC. 20h00 UTC = 20 minutes plus tard.
     result = confluence.minutes_since_blackout_ended(datetime(2026, 10, 28, 20, 0, tzinfo=timezone.utc))
-    assert result == (20.0, confluence.PRESS_CONFERENCE_POST_NEWS_GRACE_MINUTES)
+    assert result == (20.0, confluence.PRESS_CONFERENCE_POST_NEWS_GRACE_MINUTES, datetime(2026, 10, 28, 19, 40, tzinfo=timezone.utc))
 
 
 def test_minutes_since_blackout_ended_picks_the_most_recent_window():
@@ -486,7 +486,7 @@ def test_minutes_since_blackout_ended_picks_the_most_recent_window():
     # RECENTE des deux -- doit etre choisi, pas la BCE (bien plus
     # ancienne malgre un type different).
     result = confluence.minutes_since_blackout_ended(datetime(2026, 11, 6, 14, 0, tzinfo=timezone.utc))
-    assert result == (15.0, confluence.POST_NEWS_GRACE_MINUTES)
+    assert result == (15.0, confluence.POST_NEWS_GRACE_MINUTES, datetime(2026, 11, 6, 13, 45, tzinfo=timezone.utc))
 
 
 def test_minutes_since_blackout_ended_still_returns_a_value_long_after_the_grace_period():
@@ -496,7 +496,7 @@ def test_minutes_since_blackout_ended_still_returns_a_value_long_after_the_grace
     # quand meme une valeur : c'est a L'APPELANT de comparer elapsed a
     # grace, pas a cette fonction de trancher.
     result = confluence.minutes_since_blackout_ended(datetime(2026, 11, 6, 20, 0, tzinfo=timezone.utc))
-    assert result == (375.0, confluence.POST_NEWS_GRACE_MINUTES)
+    assert result == (375.0, confluence.POST_NEWS_GRACE_MINUTES, datetime(2026, 11, 6, 13, 45, tzinfo=timezone.utc))
 
 
 def test_is_news_blackout_covers_ecb_press_conference_90min_later():

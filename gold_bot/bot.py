@@ -457,9 +457,9 @@ def decide_and_act_fibonacci(candles: list[dict], *, contract_size: float, balan
     # a chaque cycle -- garde de cout identique au veto d'entree.
     grace_info = confluence.minutes_since_blackout_ended(as_of)
     if grace_info is not None:
-        elapsed, grace = grace_info
+        elapsed, grace, window_end = grace_info
         if elapsed <= grace:
-            news_verdict = ai_news_watch.judge_post_news_calm(symbol, candles, elapsed)
+            news_verdict = ai_news_watch.judge_post_news_calm(symbol, candles, elapsed, window_end)
             if news_verdict is not None and news_verdict.get("verdict") == "encore_agite":
                 return {"action": "aucune", "reason": "prudence post-actualite (IA)"}
     if state["level"] is None or state["bias"] is None:

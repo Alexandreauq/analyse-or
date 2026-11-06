@@ -255,33 +255,38 @@ POST_NEWS_GRACE_MINUTES = 60  # fenetre grise apres la fin d'une fenetre SCALP (
 PRESS_CONFERENCE_POST_NEWS_GRACE_MINUTES = 80  # apres la fin d'une fenetre press-conference (100min)
 
 
-def minutes_since_blackout_ended(date: datetime) -> tuple[float, float] | None:
+def minutes_since_blackout_ended(date: datetime) -> tuple[float, float, datetime] | None:
     """(minutes ecoulees depuis la fin de la derniere fenetre de
     blackout calendaire la plus recente avant `date`, grace applicable
-    en minutes pour CE type d'evenement) -- ou None si `date` est
-    encore DANS une fenetre de blackout (is_news_blackout(date) est
-    True -- rien a faire, le garde-fou existant bloque deja), ou si
-    aucun evenement qualifiant (fenetre deja terminee) n'est trouve
-    avant `date` dans les listes connues. Ne tranche JAMAIS si la
-    fenetre grise est depassee -- renvoie une valeur meme tres au-dela
-    de la grace applicable, c'est a l'appelant de comparer."""
+    en minutes pour CE type d'evenement, instant exact de fin de cette
+    fenetre) -- ou None si `date` est encore DANS une fenetre de
+    blackout (is_news_blackout(date) est True -- rien a faire, le
+    garde-fou existant bloque deja), ou si aucun evenement qualifiant
+    (fenetre deja terminee) n'est trouve avant `date` dans les listes
+    connues. Ne tranche JAMAIS si la fenetre grise est depassee --
+    renvoie une valeur meme tres au-dela de la grace applicable, c'est
+    a l'appelant de comparer. Le 3e element (window_end) identifie de
+    facon stable et exacte LA fenetre retenue -- deux evenements
+    distincts ont des window_end differents meme s'ils tombent a moins
+    de 24h d'ecart, ce qui evite qu'un cooldown cote appelant confonde
+    deux evenements differents (voir gold_bot/ai_news_watch.py)."""
     if is_news_blackout(date):
         return None
-    best: tuple[float, float] | None = None
+    best: tuple[float, float, datetime] | None = None
     for iso in SCALP_HIGH_IMPACT_EVENTS_UTC:
         event = datetime.fromisoformat(iso.replace("Z", "+00:00"))
         window_end = event + timedelta(minutes=SCALP_NEWS_BLACKOUT_MINUTES)
         if window_end <= date:
             elapsed = (date - window_end).total_seconds() / 60
             if best is None or elapsed < best[0]:
-                best = (elapsed, POST_NEWS_GRACE_MINUTES)
+                best = (elapsed, POST_NEWS_GRACE_MINUTES, window_end)
     for iso in PRESS_CONFERENCE_EVENTS_UTC:
         event = datetime.fromisoformat(iso.replace("Z", "+00:00"))
         window_end = event + timedelta(minutes=PRESS_CONFERENCE_BLACKOUT_MINUTES)
         if window_end <= date:
             elapsed = (date - window_end).total_seconds() / 60
             if best is None or elapsed < best[0]:
-                best = (elapsed, PRESS_CONFERENCE_POST_NEWS_GRACE_MINUTES)
+                best = (elapsed, PRESS_CONFERENCE_POST_NEWS_GRACE_MINUTES, window_end)
     return best
 
 

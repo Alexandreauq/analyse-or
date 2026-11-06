@@ -20,6 +20,7 @@ import json
 import os
 import re
 import threading
+import unicodedata
 from datetime import datetime, timedelta, timezone
 
 WATCH_LOG_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "ai_news_watch_log.jsonl")
@@ -29,8 +30,8 @@ REQUEST_TIMEOUT_SECONDS = 40.0
 WEB_SEARCH_MAX_USES = 2
 WATCH_COOLDOWN = timedelta(hours=24)
 
-_last_call_at: dict[str, datetime] = {}  # cle symbol seul -- un seul evenement de marche a la fois par symbole
-_last_verdict: dict[str, dict] = {}
+_last_call_at: dict[tuple[str, datetime], datetime] = {}  # cle (symbol, window_end) -- un cooldown distinct PAR EVENEMENT, pas par symbole seul (deux evenements a moins de 24h d'ecart ne doivent jamais partager un verdict)
+_last_verdict: dict[tuple[str, datetime], dict] = {}
 _cooldown_lock = threading.Lock()
 
 _VERDICT_JSON_RE = re.compile(r"\{[^{}]*\"verdict\"[^{}]*\}")
@@ -68,6 +69,17 @@ def _build_prompt(symbol: str, candles: list[dict], minutes_since_blackout: floa
     )
 
 
+_VALID_VERDICTS = {"calme", "encore_agite"}
+
+
+def _normalize_verdict_token(raw) -> str | None:
+    if not isinstance(raw, str):
+        return None
+    decomposed = unicodedata.normalize("NFKD", raw.strip().lower())
+    without_accents = "".join(ch for ch in decomposed if not unicodedata.combining(ch))
+    return without_accents.replace(" ", "_")
+
+
 def _parse_verdict(text: str) -> dict | None:
     matches = _VERDICT_JSON_RE.findall(text)
     if not matches:
@@ -76,7 +88,13 @@ def _parse_verdict(text: str) -> dict | None:
         parsed = json.loads(matches[-1])
     except json.JSONDecodeError:
         return None
-    return parsed if isinstance(parsed, dict) else None
+    if not isinstance(parsed, dict):
+        return None
+    normalized = _normalize_verdict_token(parsed.get("verdict"))
+    if normalized not in _VALID_VERDICTS:
+        return None
+    parsed["verdict"] = normalized
+    return parsed
 
 
 def _append_log(entry: dict, path: str = WATCH_LOG_PATH) -> None:
@@ -87,7 +105,8 @@ def _append_log(entry: dict, path: str = WATCH_LOG_PATH) -> None:
         pass
 
 
-def judge_post_news_calm(symbol: str, candles: list[dict], minutes_since_blackout: float, *,
+def judge_post_news_calm(symbol: str, candles: list[dict], minutes_since_blackout: float,
+                          window_end: datetime, *,
                           log_path: str = WATCH_LOG_PATH, now: datetime | None = None) -> dict | None:
     """Appelle Claude pour juger si le marche a reellement digere
     l'actualite dont la fenetre de blackout calendaire vient de se
@@ -96,20 +115,22 @@ def judge_post_news_calm(symbol: str, candles: list[dict], minutes_since_blackou
     l'appel reussit et produit un verdict exploitable, None dans tous
     les autres cas (API absente, erreur, timeout, verdict non
     parseable -- jamais d'exception propagee). Pendant le cooldown
-    (WATCH_COOLDOWN), renvoie le dernier verdict REEL obtenu pour ce
-    symbole plutot que None, meme raison que
-    ai_shadow.shadow_judge_entry (eviter qu'un verdict "encore_agite"
-    soit annule en fail-open au cycle suivant). Cooldown par symbole
-    seul (pas de direction/niveau ici, contrairement au veto d'entree :
-    un seul evenement de marche affecte tout le symbole a la fois, pas
-    un trade precis)."""
+    (WATCH_COOLDOWN), renvoie le dernier verdict REEL obtenu pour CET
+    EVENEMENT (meme symbole ET meme window_end) plutot que None, meme
+    raison que ai_shadow.shadow_judge_entry (eviter qu'un verdict
+    "encore_agite" soit annule en fail-open au cycle suivant). Cooldown
+    par (symbol, window_end) -- window_end identifie l'evenement de
+    facon exacte et stable pendant toute sa fenetre grise, deux
+    evenements distincts (meme proches dans le temps) ont des
+    window_end differents et ne partagent donc jamais de cache."""
     now = now or datetime.now(timezone.utc)
+    key = (symbol, window_end)
     with _cooldown_lock:
-        last = _last_call_at.get(symbol)
+        last = _last_call_at.get(key)
         if last is not None and now - last < WATCH_COOLDOWN:
-            return _last_verdict.get(symbol)
-        _last_call_at[symbol] = now
-        _last_verdict.pop(symbol, None)
+            return _last_verdict.get(key)
+        _last_call_at[key] = now
+        _last_verdict.pop(key, None)
 
     entry: dict = {
         "timestamp": now.strftime("%Y-%m-%dT%H:%M:%SZ"),
@@ -141,7 +162,7 @@ def judge_post_news_calm(symbol: str, candles: list[dict], minutes_since_blackou
             entry["error"] = "verdict JSON non trouve ou invalide dans la reponse"
         else:
             with _cooldown_lock:
-                _last_verdict[symbol] = verdict
+                _last_verdict[key] = verdict
         _append_log(entry, log_path)
         return verdict
     except Exception as e:

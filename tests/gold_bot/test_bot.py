@@ -1285,6 +1285,35 @@ def test_decide_and_act_fibonacci_blocks_trade_when_ai_opposes(monkeypatch):
     assert result == {"action": "aucune", "reason": "veto IA (opposition)"}
 
 
+def test_decide_and_act_fibonacci_blocks_vente_trade_when_ai_opposes(monkeypatch):
+    # Symetrique du test achat ci-dessus (releve M-5 en relecture
+    # finale : seul le sens achat etait teste jusqu'ici).
+    monkeypatch.setattr(bot.ai_shadow, "shadow_judge_entry", lambda *a, **k: {"verdict": "opposerait", "confiance": "haute", "raison": "test"})
+    state = _fib_state(close=1979.0, high=1986.0, low=1978.0, level=1980.0, bias="vente", atr=20.0)
+    monkeypatch.setattr(bot.fibonacci_reversion, "latest_state", lambda candles, historical_candles=None: state)
+    result = bot.decide_and_act_fibonacci(
+        [{"dummy": True, "time": "2026-01-05 12:00:00"}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
+        balance=10000, equity=10000, open_positions=[], circuit_breaker=_open_circuit_breaker(),
+    )
+    assert result == {"action": "aucune", "reason": "veto IA (opposition)"}
+
+
+def test_decide_and_act_fibonacci_proceeds_when_ai_verdict_is_malformed(monkeypatch):
+    # Fail-open strict : un dict sans la cle "verdict" (ou avec une
+    # valeur autre que "opposerait") laisse passer le trade -- releve
+    # M-5 en relecture finale, teste jusqu'ici seulement a l'echelle de
+    # shadow_judge_entry (test_ai_shadow.py), pas au niveau de
+    # decide_and_act_fibonacci lui-meme.
+    monkeypatch.setattr(bot.ai_shadow, "shadow_judge_entry", lambda *a, **k: {"confiance": "haute", "raison": "test"})
+    state = _fib_state(close=1981.0, high=1982.0, low=1974.0, level=1980.0, bias="achat", atr=20.0)
+    monkeypatch.setattr(bot.fibonacci_reversion, "latest_state", lambda candles, historical_candles=None: state)
+    result = bot.decide_and_act_fibonacci(
+        [{"dummy": True, "time": "2026-01-05 12:00:00"}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
+        balance=10000, equity=10000, open_positions=[], circuit_breaker=_open_circuit_breaker(),
+    )
+    assert result["action"] == "simulation"
+
+
 def test_decide_and_act_fibonacci_proceeds_when_ai_confirms(monkeypatch):
     monkeypatch.setattr(bot.ai_shadow, "shadow_judge_entry", lambda *a, **k: {"verdict": "confirme", "confiance": "haute", "raison": "test"})
     state = _fib_state(close=1981.0, high=1982.0, low=1974.0, level=1980.0, bias="achat", atr=20.0)

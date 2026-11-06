@@ -627,8 +627,8 @@ def decide_and_act_ichimoku(candles: list[dict], *, contract_size: float, balanc
     if total_size is None:
         return {"action": "aucune", "reason": "compte trop petit pour ce stop (volume sous le minimum du broker)"}
 
-    # Veto IA branche pour de vrai (pas fantome, contrairement a
-    # decide_and_act_fibonacci) -- voir le spec pour la justification du
+    # Veto IA branche pour de vrai (comme decide_and_act_fibonacci
+    # depuis le 2026-11-06) -- voir le spec pour la justification du
     # choix fail-open : a la date de ce chantier, le veto n'a jamais
     # produit un seul verdict exploitable en conditions reelles (0/36
     # tentatives avant le fix du 2026-11-05 -- 28 timeouts, 7 echecs de

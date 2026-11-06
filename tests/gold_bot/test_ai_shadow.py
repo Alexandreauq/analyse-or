@@ -297,6 +297,44 @@ def test_shadow_judge_entry_cooldown_does_not_leak_verdict_across_opposite_direc
     assert len(entries) == 2
 
 
+def test_shadow_judge_entry_cooldown_does_not_leak_verdict_across_different_levels(tmp_path, monkeypatch):
+    """Defaut IMPORTANT trouve en relecture du branchement reel sur
+    decide_and_act_fibonacci (meme jour, 2026-11-06) : sans `level` dans
+    la cle, un "opposerait" sur un signal a 2650.5 bloquerait a tort un
+    signal totalement distinct a 2700.0 (meme direction, meme symbole),
+    quelques heures plus tard dans la meme fenetre de 24h -- exactement
+    le defaut qui aurait empeche le veto de jamais evaluer le second
+    trade perdant du 06/11 s'il avait ete dans la meme direction que le
+    premier. `level` fait maintenant partie de la cle : le second appel
+    (niveau different) doit declencher un VRAI nouvel appel API."""
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-ant-fake")
+    log_path = str(tmp_path / "ai_shadow_log.jsonl")
+    fake_client = _FakeAnthropicClient(response=_FakeResponse([_FakeTextBlock(
+        '{"verdict": "opposerait", "confiance": "haute", "raison": "actualite majeure en cours"}'
+    )]))
+    monkeypatch.setattr(anthropic, "Anthropic", fake_client)
+    t0 = datetime(2026, 11, 6, 10, 0, 0, tzinfo=timezone.utc)
+
+    state_a = dict(_state())
+    state_a["level"] = 2650.5
+    state_b = dict(_state())
+    state_b["level"] = 2700.0
+
+    first = ai_shadow.shadow_judge_entry(
+        "XAUUSD", "achat", state_a, _candles(), engine_label="rebond de retracement de Fibonacci",
+        real_decision=True, log_path=log_path, now=t0,
+    )
+    second = ai_shadow.shadow_judge_entry(
+        "XAUUSD", "achat", state_b, _candles(), engine_label="rebond de retracement de Fibonacci",
+        real_decision=True, log_path=log_path, now=t0 + timedelta(minutes=1),
+    )
+
+    assert first == {"verdict": "opposerait", "confiance": "haute", "raison": "actualite majeure en cours"}
+    assert second is not None  # vrai nouvel appel, pas un echec-ouvert
+    entries = [json.loads(line) for line in open(log_path, encoding="utf-8")]
+    assert len(entries) == 2
+
+
 def test_shadow_judge_entry_cooldown_does_not_reuse_verdict_from_failed_attempt(tmp_path, monkeypatch):
     """Si la tentative qui ouvre une nouvelle fenetre de cooldown
     echoue (verdict non parseable), les appels suivants pendant cette

@@ -6,7 +6,7 @@
 # bloque le trade, None/erreur/timeout/"confirme" laissent passer) --
 # decide_and_act_ichimoku depuis Task 3 du chantier 2026-11-05 (voir le
 # spec de ce chantier), decide_and_act_fibonacci promu du mode FANTOME
-# au mode reel le meme jour (decision utilisateur explicite, sans
+# au mode reel le lendemain, 2026-11-06 (decision utilisateur explicite, sans
 # attendre les semaines de preuve en conditions reelles initialement
 # prevues -- voir docs/superpowers/experiments/*-ia-news-reasoning-test.json
 # pour le meme principe methodologique, initialement applique ici aussi).
@@ -41,8 +41,8 @@ REQUEST_TIMEOUT_SECONDS = 40.0
 WEB_SEARCH_MAX_USES = 2
 SHADOW_COOLDOWN = timedelta(hours=24)
 
-_last_call_at: dict[tuple[str, str, str], datetime] = {}  # cle (symbol, engine_label, direction)
-_last_verdict: dict[tuple[str, str, str], dict] = {}  # dernier verdict REEL (jamais None), reutilise pendant le cooldown
+_last_call_at: dict[tuple, datetime] = {}  # cle (symbol, engine_label, direction, level arrondi)
+_last_verdict: dict[tuple, dict] = {}  # dernier verdict REEL (jamais None), reutilise pendant le cooldown
 _cooldown_lock = threading.Lock()
 
 _VERDICT_JSON_RE = re.compile(r"\{[^{}]*\"verdict\"[^{}]*\}")
@@ -119,10 +119,11 @@ def _append_log(entry: dict, path: str = SHADOW_LOG_PATH) -> None:
 def shadow_judge_entry(symbol: str, direction: str, state: dict, candles: list[dict], *,
                         engine_label: str, real_decision: bool = False,
                         log_path: str = SHADOW_LOG_PATH, now: datetime | None = None) -> dict | None:
-    """Appelle Claude en mode FANTOME pour juger un signal d'entree reel
-    deja confirme par le moteur mecanique -- ne change jamais la vraie
-    decision EN MODE FANTOME, ne doit jamais etre appelee avant que le
-    signal soit confirme. Journalise systematiquement (succes, echec,
+    """Appelle Claude pour juger un signal d'entree reel deja confirme
+    par le moteur mecanique -- en mode FANTOME (`real_decision=False`),
+    ne change jamais la vraie decision ; en mode REEL (`real_decision=True`),
+    peut bloquer le trade (voir le fail-open plus bas). Ne doit jamais
+    etre appelee avant que le signal soit confirme. Journalise systematiquement (succes, echec,
     ou verdict non parseable) dans `log_path`. Renvoie le verdict
     structure ({"verdict", "confiance", "raison"}) si tout s'est bien
     passe, None si l'appel echoue reellement (API absente, erreur,
@@ -138,9 +139,17 @@ def shadow_judge_entry(symbol: str, direction: str, state: dict, candles: list[d
     sans elle, un "opposerait" sur un achat bloquerait a tort un signal
     de vente totalement different sur le meme symbole quelques heures
     plus tard dans la meme fenetre de 24h -- trouve en re-confirmation
-    du correctif precedent, meme jour. Limite acceptee et documentee :
-    deux signaux REELS dans la MEME direction le meme jour (rare, les
-    vrais appels sont deja ~1/semaine/symbole) partageraient encore le
+    du correctif precedent, meme jour. `level` (arrondi a 2 decimales,
+    cle de `state`) en fait aussi partie depuis le branchement reel de
+    decide_and_act_fibonacci (meme jour) : sans lui, un second signal
+    Fibonacci de MEME direction mais a un NIVEAU different (donc un
+    setup reellement distinct, Fibonacci en ouvre ~4/semaine, pas
+    1/semaine comme Ichimoku) reutiliserait a tort le verdict du
+    premier -- trouve en relecture du branchement reel Fibonacci,
+    exactement le defaut qui aurait empeche ce veto de jamais evaluer
+    le second trade perdant du 06/11 s'il avait ete dans la meme
+    direction que le premier. Limite acceptee et documentee :
+    deux signaux REELS au MEME niveau le meme jour (rare) partageraient encore le
     meme verdict en cache -- juge preferable a ne pas boucler sur une
     granularite plus fine (par bougie H1), le cout d'un faux negatif
     (trade manque) etant bien moindre que celui du bug corrige ici
@@ -158,7 +167,8 @@ def shadow_judge_entry(symbol: str, direction: str, state: dict, candles: list[d
     # Fibonacci/XAUUSD, mais l'hypothese implicite devenait une vraie
     # question de securite dès qu'un second consommateur reel existe).
     # `direction` ajoutee en re-confirmation finale -- voir docstring.
-    cooldown_key = (symbol, engine_label, direction)
+    level = state.get("level")
+    cooldown_key = (symbol, engine_label, direction, round(level, 2) if level is not None else None)
     with _cooldown_lock:
         last = _last_call_at.get(cooldown_key)
         if last is not None and now - last < SHADOW_COOLDOWN:
@@ -193,7 +203,7 @@ def shadow_judge_entry(symbol: str, direction: str, state: dict, candles: list[d
         # a chaque timeout -- jusqu'a 3 tentatives reellement facturees
         # pour un seul appel loggue, probablement le plus gros facteur
         # dans l'incident de cout du 2026-10-29 (28 timeouts loggues,
-        # potentiellement ~84 tentatives reelles). Un avis fantome rate
+        # potentiellement ~84 tentatives reelles). Un verdict rate
         # une fois n'a pas besoin d'etre rejoue ici : le prochain vrai
         # trade (ou demain, apres le cooldown) retentera de lui-meme.
         client = anthropic.Anthropic(api_key=api_key, timeout=REQUEST_TIMEOUT_SECONDS, max_retries=0)

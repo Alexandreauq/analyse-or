@@ -1409,7 +1409,10 @@ def test_decide_and_act_ichimoku_closes_runner_leg_at_session_end():
     t = ichimoku_reversion._parse(last["time"])
     hour = t.hour
     delta_hours = (ichimoku_reversion.SESSION_END_HOUR_UTC - hour) % 24
-    last["time"] = (t + timedelta(hours=delta_hours)).strftime("%Y-%m-%d %H:00:00")
+    # :55 (pas :00) -- meme convention que _h1_to_5min, sinon
+    # resample_h1() exclurait cette derniere bougie comme "heure encore
+    # en formation" (voir son garde-fou de causalite).
+    last["time"] = (t + timedelta(hours=delta_hours)).strftime("%Y-%m-%d %H:55:00")
     candles = candles[:-1] + [last]
     position = {"id": "1", "symbol": "XAGUSD", "type": "POSITION_TYPE_BUY", "openPrice": 100.0, "stopLoss": 95.0, "time": candles[0]["time"]}
     result = bot.decide_and_act_ichimoku(

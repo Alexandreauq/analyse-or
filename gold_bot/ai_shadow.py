@@ -1,14 +1,15 @@
 # gold_bot/ai_shadow.py
-# Veto IA en mode FANTOME sur les signaux d'entree Fibonacci -- voir
-# discussion du 2026-10-28 : la seule piste "IA sur le trading" jugee
-# assez solide pour etre construite, et UNIQUEMENT en mode fantome
-# (jamais branchee sur une vraie decision tant qu'elle n'a pas fait ses
-# preuves sur plusieurs semaines en conditions reelles -- un backtest
-# honnete de ce genre de raisonnement est methodologiquement impossible,
-# voir docs/superpowers/experiments/*-ia-news-reasoning-test.json pour
-# le meme principe applique aux actions).
+# Veto IA sur les signaux d'entree reels -- voir discussion du
+# 2026-10-28 : la seule piste "IA sur le trading" jugee assez solide
+# pour etre construite. Deux modes selon l'appelant (`real_decision`) :
+# FANTOME pour decide_and_act_fibonacci (jamais branche sur la vraie
+# decision -- backtest honnete methodologiquement impossible, voir
+# docs/superpowers/experiments/*-ia-news-reasoning-test.json pour le
+# meme principe applique aux actions) ; REEL pour decide_and_act_ichimoku
+# depuis Task 3 du chantier 2026-11-05 (fail-open explicite : seul un
+# verdict "opposerait" bloque le trade -- voir le spec de ce chantier).
 #
-# Appelee quand decide_and_act_fibonacci a DEJA confirme un vrai signal
+# Appelee quand le moteur appelant a DEJA confirme un vrai signal
 # d'entree (direction determinee) -- mais la condition "direction
 # determinee" peut rester vraie cycle apres cycle pendant des heures
 # tant que le prix reste pres du niveau (meme si un autre garde-fou,
@@ -39,6 +40,7 @@ WEB_SEARCH_MAX_USES = 2
 SHADOW_COOLDOWN = timedelta(hours=24)
 
 _last_call_at: dict[tuple[str, str], datetime] = {}  # cle (symbol, engine_label) -- jamais symbol seul
+_last_verdict: dict[tuple[str, str], dict] = {}  # dernier verdict REEL (jamais None), reutilise pendant le cooldown
 _cooldown_lock = threading.Lock()
 
 _VERDICT_JSON_RE = re.compile(r"\{[^{}]*\"verdict\"[^{}]*\}")
@@ -117,14 +119,21 @@ def shadow_judge_entry(symbol: str, direction: str, state: dict, candles: list[d
                         log_path: str = SHADOW_LOG_PATH, now: datetime | None = None) -> dict | None:
     """Appelle Claude en mode FANTOME pour juger un signal d'entree reel
     deja confirme par le moteur mecanique -- ne change jamais la vraie
-    decision, ne doit jamais etre appelee avant que le signal soit
-    confirme. Journalise systematiquement (succes, echec, ou verdict
-    non parseable) dans `log_path`. Renvoie le verdict structure
-    ({"verdict", "confiance", "raison"}) si tout s'est bien passe,
-    None dans tous les autres cas (jamais d'exception propagee), y
-    compris quand l'appel est saute par le cooldown (voir
-    SHADOW_COOLDOWN) -- dans ce cas, rien n'est journalise non plus,
-    pour ne pas saturer le journal de lignes "saute" a chaque cycle."""
+    decision EN MODE FANTOME, ne doit jamais etre appelee avant que le
+    signal soit confirme. Journalise systematiquement (succes, echec,
+    ou verdict non parseable) dans `log_path`. Renvoie le verdict
+    structure ({"verdict", "confiance", "raison"}) si tout s'est bien
+    passe, None si l'appel echoue reellement (API absente, erreur,
+    verdict non parseable -- jamais d'exception propagee). Pendant le
+    cooldown (voir SHADOW_COOLDOWN), renvoie le DERNIER VERDICT REEL
+    obtenu pour ce (symbol, engine_label) plutot que None -- sans ca,
+    un signal qui reste confirme cycle apres cycle (le cas normal pour
+    un croisement Ichimoku, qui dure toute l'heure de la bougie H1)
+    ferait passer un "opposerait" en fail-open dès le cycle suivant,
+    1 minute plus tard, annulant le veto reel qu'il venait de poser --
+    trouve et reproduit en revue finale de branche, 2026-11-06. Rien
+    n'est journalise pour un appel saute, qu'il reutilise un verdict ou
+    renvoie None, pour ne pas saturer le journal a chaque cycle."""
     now = now or datetime.now(timezone.utc)
     # Cle (symbol, engine_label), jamais symbol seul : deux moteurs
     # distincts peuvent un jour partager un symbole (ex. XAUUSD sur
@@ -139,13 +148,21 @@ def shadow_judge_entry(symbol: str, direction: str, state: dict, candles: list[d
     with _cooldown_lock:
         last = _last_call_at.get(cooldown_key)
         if last is not None and now - last < SHADOW_COOLDOWN:
-            return None
+            return _last_verdict.get(cooldown_key)
         _last_call_at[cooldown_key] = now
+        # Nouvelle fenetre de cooldown : efface l'ancien verdict avant la
+        # tentative reelle -- si cette tentative echoue (None), on ne
+        # veut jamais rejouer un verdict d'une fenetre precedente par
+        # erreur (ex. "opposerait" d'hier qui resterait fige si l'appel
+        # du jour timeout).
+        _last_verdict.pop(cooldown_key, None)
 
     entry: dict = {
         "timestamp": now.strftime("%Y-%m-%dT%H:%M:%SZ"),
         "symbol": symbol,
         "direction": direction,
+        "engine_label": engine_label,
+        "real_decision": real_decision,
         "state": state,
     }
     try:
@@ -190,6 +207,9 @@ def shadow_judge_entry(symbol: str, direction: str, state: dict, candles: list[d
         entry["verdict"] = verdict
         if verdict is None:
             entry["error"] = "verdict JSON non trouve ou invalide dans la reponse"
+        else:
+            with _cooldown_lock:
+                _last_verdict[cooldown_key] = verdict
         _append_log(entry, log_path)
         return verdict
     except Exception as e:

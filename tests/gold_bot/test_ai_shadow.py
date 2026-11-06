@@ -157,12 +157,17 @@ def test_shadow_judge_entry_logs_symbol_direction_and_state(tmp_path, monkeypatc
     monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
     log_path = str(tmp_path / "ai_shadow_log.jsonl")
 
-    ai_shadow.shadow_judge_entry("XAUUSD", "vente", _state(), _candles(), engine_label="rebond de retracement de Fibonacci", log_path=log_path)
+    ai_shadow.shadow_judge_entry(
+        "XAUUSD", "vente", _state(), _candles(), engine_label="rebond de retracement de Fibonacci",
+        real_decision=False, log_path=log_path,
+    )
 
     entry = json.loads(open(log_path, encoding="utf-8").readline())
     assert entry["symbol"] == "XAUUSD"
     assert entry["direction"] == "vente"
     assert entry["state"] == _state()
+    assert entry["engine_label"] == "rebond de retracement de Fibonacci"
+    assert entry["real_decision"] is False
     assert "timestamp" in entry
 
 
@@ -195,7 +200,11 @@ def test_shadow_judge_entry_skips_second_call_within_cooldown(tmp_path, monkeypa
     """Incident reel du 2026-10-29 : sans ce garde-fou, un signal qui
     reste confirme cycle apres cycle declenchait un vrai appel facture
     toutes les 1-2 minutes pendant des heures (28 appels, 0 succes,
-    cout reel sans valeur)."""
+    cout reel sans valeur). Le second appel, saute par le cooldown,
+    renvoie le MEME verdict que le premier (pas None) -- voir
+    test_shadow_judge_entry_cooldown_reuses_last_verdict_not_fail_open
+    pour la raison precise (defaut critique trouve en revue finale de
+    branche, 2026-11-06)."""
     monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-ant-fake")
     log_path = str(tmp_path / "ai_shadow_log.jsonl")
     fake_client = _FakeAnthropicClient(response=_FakeResponse([_FakeTextBlock(
@@ -210,11 +219,81 @@ def test_shadow_judge_entry_skips_second_call_within_cooldown(tmp_path, monkeypa
     )
 
     assert first is not None
-    assert second is None
+    assert second == first
     assert fake_client.messages.last_kwargs is not None
     # un seul appel reel a l'API malgre les deux invocations
     entries = [json.loads(line) for line in open(log_path, encoding="utf-8")]
     assert len(entries) == 1
+
+
+def test_shadow_judge_entry_cooldown_reuses_last_verdict_not_fail_open(tmp_path, monkeypatch):
+    """Defaut CRITIQUE trouve en revue finale de branche (2026-11-06),
+    reproduit en execution reelle avant ce correctif : un signal
+    Ichimoku reste confirme toute l'heure de la bougie H1 (cycles
+    toutes les 60s) -- au cycle 1, Claude repond "opposerait", le vrai
+    veto bloque le trade ; au cycle 2 (1 minute plus tard), l'ancien
+    code sautait l'appel reel (cooldown 24h) et renvoyait None, et le
+    fail-open de decide_and_act_ichimoku laissait alors passer le MEME
+    trade que le cycle precedent venait de vetoer -- le veto reel
+    n'avait donc aucun effet pratique. Le second appel doit desormais
+    renvoyer le verdict "opposerait" mis en cache, pas None."""
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-ant-fake")
+    log_path = str(tmp_path / "ai_shadow_log.jsonl")
+    fake_client = _FakeAnthropicClient(response=_FakeResponse([_FakeTextBlock(
+        '{"verdict": "opposerait", "confiance": "haute", "raison": "actualite majeure en cours"}'
+    )]))
+    monkeypatch.setattr(anthropic, "Anthropic", fake_client)
+    t0 = datetime(2026, 11, 6, 10, 0, 0, tzinfo=timezone.utc)
+
+    first = ai_shadow.shadow_judge_entry(
+        "XAGUSD", "achat", _state(), _candles(), engine_label="croisement Tenkan/Kijun confirme par le nuage (Ichimoku)",
+        real_decision=True, log_path=log_path, now=t0,
+    )
+    second = ai_shadow.shadow_judge_entry(
+        "XAGUSD", "achat", _state(), _candles(), engine_label="croisement Tenkan/Kijun confirme par le nuage (Ichimoku)",
+        real_decision=True, log_path=log_path, now=t0 + timedelta(minutes=1),
+    )
+
+    assert first == {"verdict": "opposerait", "confiance": "haute", "raison": "actualite majeure en cours"}
+    assert second == first
+    # toujours un seul appel reel facture malgre les deux invocations
+    entries = [json.loads(line) for line in open(log_path, encoding="utf-8")]
+    assert len(entries) == 1
+
+
+def test_shadow_judge_entry_cooldown_does_not_reuse_verdict_from_failed_attempt(tmp_path, monkeypatch):
+    """Si la tentative qui ouvre une nouvelle fenetre de cooldown
+    echoue (verdict non parseable), les appels suivants pendant cette
+    fenetre doivent rester en fail-open (None), pas rejouer un verdict
+    d'une fenetre PRECEDENTE (ex. un "opposerait" d'hier qui resterait
+    fige a tort si le vrai appel du jour timeout)."""
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-ant-fake")
+    log_path = str(tmp_path / "ai_shadow_log.jsonl")
+    t0 = datetime(2026, 11, 6, 10, 0, 0, tzinfo=timezone.utc)
+
+    ok_client = _FakeAnthropicClient(response=_FakeResponse([_FakeTextBlock(
+        '{"verdict": "opposerait", "confiance": "haute", "raison": "ok"}'
+    )]))
+    monkeypatch.setattr(anthropic, "Anthropic", ok_client)
+    ai_shadow.shadow_judge_entry(
+        "XAGUSD", "achat", _state(), _candles(), engine_label="test-expiry", real_decision=True, log_path=log_path, now=t0,
+    )
+
+    # fenetre de cooldown expiree -- nouvelle tentative, cette fois sans
+    # bloc JSON exploitable (verdict=None cote appelant).
+    bad_client = _FakeAnthropicClient(response=_FakeResponse([_FakeTextBlock("reponse sans JSON")]))
+    monkeypatch.setattr(anthropic, "Anthropic", bad_client)
+    failed = ai_shadow.shadow_judge_entry(
+        "XAGUSD", "achat", _state(), _candles(), engine_label="test-expiry", real_decision=True, log_path=log_path,
+        now=t0 + ai_shadow.SHADOW_COOLDOWN + timedelta(seconds=1),
+    )
+    skipped = ai_shadow.shadow_judge_entry(
+        "XAGUSD", "achat", _state(), _candles(), engine_label="test-expiry", real_decision=True, log_path=log_path,
+        now=t0 + ai_shadow.SHADOW_COOLDOWN + timedelta(seconds=2),
+    )
+
+    assert failed is None
+    assert skipped is None
 
 
 def test_shadow_judge_entry_calls_again_after_cooldown_expires(tmp_path, monkeypatch):

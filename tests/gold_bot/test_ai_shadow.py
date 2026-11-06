@@ -9,13 +9,16 @@ import gold_bot.ai_shadow as ai_shadow
 
 @pytest.fixture(autouse=True)
 def _reset_shadow_cooldown():
-    """`ai_shadow._last_call_at` est un dict au niveau module (meme
-    objet partage entre tous les tests de ce fichier) -- sans ce reset,
-    un test qui appelle shadow_judge_entry("XAUUSD", ...) ferait sauter
-    le cooldown du test suivant qui utilise le meme symbole."""
+    """`ai_shadow._last_call_at`/`_last_verdict` sont des dicts au niveau
+    module (meme objet partage entre tous les tests de ce fichier) --
+    sans ce reset, un test qui appelle shadow_judge_entry("XAUUSD", ...)
+    ferait sauter le cooldown du test suivant qui utilise le meme
+    symbole, ou lui ferait heriter un verdict en cache."""
     ai_shadow._last_call_at.clear()
+    ai_shadow._last_verdict.clear()
     yield
     ai_shadow._last_call_at.clear()
+    ai_shadow._last_verdict.clear()
 
 
 class _FakeTextBlock:
@@ -259,6 +262,39 @@ def test_shadow_judge_entry_cooldown_reuses_last_verdict_not_fail_open(tmp_path,
     # toujours un seul appel reel facture malgre les deux invocations
     entries = [json.loads(line) for line in open(log_path, encoding="utf-8")]
     assert len(entries) == 1
+
+
+def test_shadow_judge_entry_cooldown_does_not_leak_verdict_across_opposite_directions(tmp_path, monkeypatch):
+    """Defaut IMPORTANT trouve en re-confirmation du correctif critique
+    (meme jour, 2026-11-06) : la cle de cooldown/cache (symbol,
+    engine_label) sans `direction` faisait qu'un "opposerait" sur un
+    ACHAT bloquait aussi un signal de VENTE totalement different sur le
+    meme symbole, dans la meme fenetre de 24h -- reproduit par le
+    re-reviewer. `direction` fait maintenant partie de la cle : le
+    second appel (direction opposee) doit declencher un VRAI nouvel
+    appel API, pas reutiliser le verdict du premier."""
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-ant-fake")
+    log_path = str(tmp_path / "ai_shadow_log.jsonl")
+    fake_client = _FakeAnthropicClient(response=_FakeResponse([_FakeTextBlock(
+        '{"verdict": "opposerait", "confiance": "haute", "raison": "actualite majeure en cours"}'
+    )]))
+    monkeypatch.setattr(anthropic, "Anthropic", fake_client)
+    t0 = datetime(2026, 11, 6, 10, 0, 0, tzinfo=timezone.utc)
+
+    achat = ai_shadow.shadow_judge_entry(
+        "XAGUSD", "achat", _state(), _candles(), engine_label="croisement Tenkan/Kijun confirme par le nuage (Ichimoku)",
+        real_decision=True, log_path=log_path, now=t0,
+    )
+    vente = ai_shadow.shadow_judge_entry(
+        "XAGUSD", "vente", _state(), _candles(), engine_label="croisement Tenkan/Kijun confirme par le nuage (Ichimoku)",
+        real_decision=True, log_path=log_path, now=t0 + timedelta(minutes=1),
+    )
+
+    assert achat == {"verdict": "opposerait", "confiance": "haute", "raison": "actualite majeure en cours"}
+    assert vente is not None  # vrai nouvel appel, pas un echec-ouvert
+    # deux appels reels distincts, un par direction
+    entries = [json.loads(line) for line in open(log_path, encoding="utf-8")]
+    assert len(entries) == 2
 
 
 def test_shadow_judge_entry_cooldown_does_not_reuse_verdict_from_failed_attempt(tmp_path, monkeypatch):

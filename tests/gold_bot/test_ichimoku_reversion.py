@@ -1,7 +1,16 @@
 # tests/gold_bot/test_ichimoku_reversion.py
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 import gold_bot.ichimoku_reversion as ichimoku_reversion
+
+
+def _realistic_fill_time(candle_time_str):
+    """Horodatage de remplissage realiste pour un `entry_time_iso` de
+    test : cloture H1 de la bougie (ouverture + 1h) + 30s, jamais
+    l'heure d'ouverture brute -- meme principe que
+    fibonacci_reversion.compute_trailing_stop (le remplissage reel
+    arrive toujours apres la cloture de la bougie d'entree)."""
+    return (ichimoku_reversion._parse(candle_time_str) + timedelta(hours=1, seconds=30)).isoformat()
 
 
 def _candle(time_str, o, h, l, c, vol=100):
@@ -148,7 +157,7 @@ def test_compute_trailing_stop_returns_none_before_1r_excursion():
     # since_entry = [candle idx 79] seul, high=120.5
     # excursion_r = (120.5 - 118.0) / 9.98673949176611 = 0.2503... < 1R => None
     candles_5min = _h1_to_5min(_build_bullish_cross_history())
-    entry_time_iso = candles_5min[78]["time"]
+    entry_time_iso = _realistic_fill_time(candles_5min[78]["time"])
     result = ichimoku_reversion.compute_trailing_stop(
         candles_5min, "achat", entry_time_iso, entry_price=118.0, current_stop_loss=105.0)
     assert result is None
@@ -168,7 +177,7 @@ def test_compute_trailing_stop_tightens_stop_on_achat_happy_path():
     # resserre) => new_stop = max(100.42857142857143, 109.42857142857143)
     #            = 109.42857142857143 (!= current_stop_loss)
     candles_5min = _h1_to_5min(_build_bullish_cross_history())
-    entry_time_iso = candles_5min[70]["time"]
+    entry_time_iso = _realistic_fill_time(candles_5min[70]["time"])
     result = ichimoku_reversion.compute_trailing_stop(
         candles_5min, "achat", entry_time_iso, entry_price=102.0, current_stop_loss=100.42857142857143)
     assert result == 109.42857142857143
@@ -186,7 +195,7 @@ def test_compute_trailing_stop_tightens_stop_on_vente_happy_path():
     # current_stop_loss = 99.57142857142857 (stop initial) => new_stop
     #            = min(99.57142857142857, 90.57142857142857) = 90.57142857142857
     candles_5min = _h1_to_5min(_build_bearish_cross_history())
-    entry_time_iso = candles_5min[70]["time"]
+    entry_time_iso = _realistic_fill_time(candles_5min[70]["time"])
     result = ichimoku_reversion.compute_trailing_stop(
         candles_5min, "vente", entry_time_iso, entry_price=98.0, current_stop_loss=99.57142857142857)
     assert result == 90.57142857142857
@@ -218,7 +227,7 @@ def test_compute_trailing_stop_excludes_entry_candles_own_extreme():
         candles_5min.append(_candle(ts, 100.0, 100.5, 99.5, 100.0))
     entry_idx = 70
     candles_5min[entry_idx] = _candle(candles_5min[entry_idx]["time"], 100.0, 150.0, 99.5, 100.0)
-    entry_time_iso = candles_5min[entry_idx]["time"]
+    entry_time_iso = _realistic_fill_time(candles_5min[entry_idx]["time"])
     result = ichimoku_reversion.compute_trailing_stop(
         candles_5min, "achat", entry_time_iso, entry_price=100.0, current_stop_loss=122.48214285714286)
     assert result is None
@@ -231,7 +240,7 @@ def test_compute_trailing_stop_never_loosens_an_already_tighter_stop():
     # new_stop = max(115.0, 109.42857142857143) = 115.0 == current_stop_loss
     # => aucun changement, la fonction ne doit jamais reculer le stop.
     candles_5min = _h1_to_5min(_build_bullish_cross_history())
-    entry_time_iso = candles_5min[70]["time"]
+    entry_time_iso = _realistic_fill_time(candles_5min[70]["time"])
     result = ichimoku_reversion.compute_trailing_stop(
         candles_5min, "achat", entry_time_iso, entry_price=102.0, current_stop_loss=115.0)
     assert result is None

@@ -12,9 +12,10 @@ deux-jambes repris sans reinterpretation."""
 from __future__ import annotations
 
 from collections import deque
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 SYMBOL = "XAGUSD"
+CANDLE_INTERVAL_MINUTES = 5  # cadence native des bougies fournies par confluence/loop
 CONTRACT_SIZE = 5000.0  # verifie empiriquement via broker.get_symbol_specification
 MAX_VOLUME = 20.0
 VOLUME_STEP = 0.01
@@ -210,10 +211,23 @@ def compute_trailing_stop(candles_5min: list[dict], direction: str, entry_time_i
 
     entry_time = _parse(entry_time_iso) if isinstance(entry_time_iso, str) else entry_time_iso
 
+    # Le remplissage reel (entry_time_iso, horodatage broker) se produit
+    # TOUJOURS apres la cloture de la bougie qui a informe la decision
+    # (quelques secondes a quelques dizaines de secondes plus tard) --
+    # comparer sur l'heure d'OUVERTURE de chaque bougie choisirait donc
+    # systematiquement la bougie suivante, ou ne trouverait jamais de
+    # correspondance EXACTE puisqu'un horodatage de remplissage reel a une
+    # precision sous-seconde qui ne tombe (quasi) jamais pile sur une
+    # limite de bougie. Comparer sur l'heure de CLOTURE (ouverture + duree)
+    # avec <= retrouve la bougie elle-meme -- meme principe deja etabli et
+    # documente dans fibonacci_reversion.compute_trailing_stop/
+    # vwap_reversion.compute_trailing_stop pour exactement la meme raison.
     entry_5min_idx = None
     for idx, c in enumerate(candles_5min):
-        if _parse(c["time"]) == entry_time:
+        c_close = _parse(c["time"]) + timedelta(minutes=CANDLE_INTERVAL_MINUTES)
+        if c_close <= entry_time:
             entry_5min_idx = idx
+        else:
             break
     if entry_5min_idx is None:
         return None
@@ -221,11 +235,12 @@ def compute_trailing_stop(candles_5min: list[dict], direction: str, entry_time_i
     if not since_entry:
         return None
 
-    entry_bucket_key = entry_time.replace(minute=0, second=0, microsecond=0).replace(tzinfo=None).isoformat()
     entry_h1_idx = None
     for idx, c in enumerate(candles_h1):
-        if c["time"] == entry_bucket_key:
+        c_close = _parse(c["time"]) + timedelta(hours=1)
+        if c_close <= entry_time:
             entry_h1_idx = idx
+        else:
             break
     if entry_h1_idx is None:
         return None

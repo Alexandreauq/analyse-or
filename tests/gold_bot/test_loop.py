@@ -1730,3 +1730,20 @@ def test_engine_selection_uses_ichimoku_xag_when_env_set(monkeypatch, tmp_path):
     assert ichimoku_calls[0]["volume_step"] == ichimoku_reversion.VOLUME_STEP
     assert ichimoku_calls[0]["min_volume"] == ichimoku_reversion.MIN_VOLUME
     assert ichimoku_calls[0]["max_volume"] == ichimoku_reversion.MAX_VOLUME
+
+
+def test_main_refuses_ichimoku_xag_combined_with_ftmo_isc(monkeypatch):
+    """Releve en re-review de la Task 4 : sans ce garde-fou,
+    GOLD_BOT_ENGINE=ichimoku_xag ET FTMO_ISC presents en meme temps
+    feraient tourner le moteur Ichimoku SUR le compte FTMO reel
+    (ftmo_guard_instance ne depend que de FTMO_ISC, pas de
+    gold_bot_engine -- il continuerait de s'appliquer, emails FTMO
+    inclus, a des decisions Ichimoku). Ce chantier exclut explicitement
+    un compte FTMO reel pour ce moteur -- fail-fast au demarrage plutot
+    qu'un comportement hybride jamais teste."""
+    monkeypatch.setenv("METAAPI_TRADE_TOKEN", "tok")
+    monkeypatch.setenv("METAAPI_TRADE_ACCOUNT_ID", "acc")
+    monkeypatch.setenv("GOLD_BOT_ENGINE", "ichimoku_xag")
+    monkeypatch.setenv("FTMO_ISC", "10000")
+    with pytest.raises(ValueError, match="GOLD_BOT_ENGINE=ichimoku_xag et FTMO_ISC"):
+        loop.main()

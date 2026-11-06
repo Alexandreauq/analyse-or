@@ -1135,6 +1135,33 @@ def test_decide_and_act_fibonacci_filtered_by_strong_short_term_trend_even_when_
     assert result == {"action": "aucune", "reason": "tendance trop forte, signal filtre"}
 
 
+def test_decide_and_act_fibonacci_filtered_by_negative_short_term_trend(monkeypatch):
+    # Meme filtre OR, mais via abs() cote negatif (krach sur 5j plutot
+    # qu'un rebond) -- releve en relecture finale : seul le cas positif
+    # (+0.09) etait teste jusqu'ici.
+    state = _fib_state(close=1981.0, high=1982.0, low=1974.0, level=1980.0, bias="achat",
+                        atr=20.0, trend_strength=0.0, trend_strength_short=-0.09)
+    monkeypatch.setattr(bot.fibonacci_reversion, "latest_state", lambda candles, historical_candles=None: state)
+    result = bot.decide_and_act_fibonacci(
+        [{"dummy": True, "time": "2026-01-05 12:00:00"}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
+        balance=10000, equity=10000, open_positions=[], circuit_breaker=_open_circuit_breaker(),
+    )
+    assert result == {"action": "aucune", "reason": "tendance trop forte, signal filtre"}
+
+
+def test_decide_and_act_fibonacci_not_filtered_at_exact_short_term_threshold(monkeypatch):
+    # Limite exacte : inegalite stricte (">"), donc pile au seuil (8%)
+    # le signal doit encore passer -- releve en relecture finale.
+    state = _fib_state(close=1981.0, high=1982.0, low=1974.0, level=1980.0, bias="achat",
+                        atr=20.0, trend_strength=0.0, trend_strength_short=bot.fibonacci_reversion.TREND_FILTER_SHORT_THRESHOLD)
+    monkeypatch.setattr(bot.fibonacci_reversion, "latest_state", lambda candles, historical_candles=None: state)
+    result = bot.decide_and_act_fibonacci(
+        [{"dummy": True, "time": "2026-01-05 12:00:00"}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
+        balance=10000, equity=10000, open_positions=[], circuit_breaker=_open_circuit_breaker(),
+    )
+    assert result["action"] == "simulation"
+
+
 def test_decide_and_act_fibonacci_not_filtered_when_both_trend_windows_are_weak(monkeypatch):
     # Non-regression : les deux fenetres sous seuil -> le signal passe
     # toujours normalement (meme chiffres d'entree que le test

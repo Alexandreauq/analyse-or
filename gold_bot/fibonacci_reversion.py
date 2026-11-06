@@ -33,6 +33,11 @@ TREND_WINDOW_DAYS = 20
 TREND_FILTER_THRESHOLD = 0.05
 TREND_FILTER_SHORT_WINDOW_DAYS = 5
 TREND_FILTER_SHORT_THRESHOLD = 0.08
+assert TREND_FILTER_SHORT_WINDOW_DAYS < TREND_WINDOW_DAYS, (
+    "_trend_strength_for_filter suppose la fenetre courte strictement "
+    "plus petite que la longue (verifiabilite au meme jour calendaire, "
+    "garde unique sur TREND_WINDOW_DAYS)"
+)
 SESSION_END_HOUR_UTC = 22
 MIN_DISTANCE_PCT = 0.002
 CANDLE_INTERVAL_MINUTES = 5

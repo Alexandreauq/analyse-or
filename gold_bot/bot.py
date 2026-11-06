@@ -453,7 +453,7 @@ def decide_and_act_fibonacci(candles: list[dict], *, contract_size: float, balan
         return {"action": "aucune", "reason": "aucun niveau de retracement disponible"}
     if state["atr"] is None or state["atr"] <= 0:
         return {"action": "aucune", "reason": "atr indisponible"}
-    if state["trend_strength"] is None:
+    if state["trend_strength"] is None or state["trend_strength_short"] is None:
         return {"action": "aucune", "reason": "historique insuffisant pour mesurer la tendance"}
     # OR a deux fenetres independantes (court=5j/8%, long=20j/5%) depuis
     # le 2026-11-06 -- la mesure 20j seule est aveugle a un marche en V

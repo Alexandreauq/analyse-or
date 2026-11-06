@@ -1321,6 +1321,27 @@ def test_decide_and_act_ichimoku_opens_two_legs_on_entry_signal():
     assert take_profits.count(None) == 1  # une jambe runner (pas de TP), une jambe partielle (TP defini)
 
 
+def test_decide_and_act_ichimoku_falls_back_to_single_leg_when_split_rounds_to_zero():
+    # balance=35000 : total_size arrondi au pas (0.01, le minimum
+    # broker) ; 70%/30% de 0.01 arrondissent chacun independamment sous
+    # le minimum (0.007/0.003 < 0.01), ce qui rejetterait a tort tout le
+    # trade si les deux jambes etaient arrondies independamment --
+    # verifie via gold_bot.risk.round_to_volume_step en console avant
+    # d'ecrire ce test. Le comportement attendu (meme patron que
+    # decide_and_act_fibonacci/decide_and_act_vwap) est un repli sur une
+    # seule jambe runner pleine taille, jamais un abandon du trade.
+    candles = _ichimoku_candles_with_signal()
+    result = bot.decide_and_act_ichimoku(
+        candles, contract_size=5000.0, balance=35000.0, equity=35000.0,
+        volume_step=0.01, min_volume=0.01, max_volume=20.0,
+        open_positions=[], circuit_breaker=_default_circuit_breaker(),
+    )
+    assert result["action"] == "simulation"
+    assert len(result["steps"]) == 1
+    assert result["steps"][0]["volume"] == 0.01
+    assert result["steps"][0]["take_profit"] is None
+
+
 def test_decide_and_act_ichimoku_returns_aucune_when_no_signal():
     candles = _ichimoku_candles_with_signal()
     flat = dict(candles[-1])

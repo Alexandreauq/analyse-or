@@ -1271,3 +1271,118 @@ def test_decide_and_act_fibonacci_opens_single_leg_when_partial_too_small(monkey
     assert result["action"] == "simulation"
     assert len(result["steps"]) == 1
     assert result["steps"][0]["take_profit"] is None
+
+
+import gold_bot.ichimoku_reversion as ichimoku_reversion
+
+
+def _ichimoku_candles_with_signal():
+    """Reutilise l'historique de test de test_ichimoku_reversion.py --
+    78 bougies H1 construisant un croisement haussier confirme par le
+    nuage sur la derniere bougie, converties en bougies 5min."""
+    from tests.gold_bot.test_ichimoku_reversion import _build_bullish_cross_history, _h1_to_5min
+    return _h1_to_5min(_build_bullish_cross_history())
+
+
+def _default_circuit_breaker():
+    import shared_risk
+    return shared_risk.CircuitBreaker(threshold_pct=0.10)
+
+
+def test_decide_and_act_ichimoku_opens_two_legs_on_entry_signal():
+    # Brief d'origine utilisait balance=10000 (comme les autres tests
+    # ichimoku de ce fichier) : avec risk_pct par defaut (0.02) et la
+    # distance entree-stop de ce fixture (~11.02, kijun tire loin du
+    # close par la poussee des 10 dernieres bougies -- voir
+    # _build_bullish_cross_history), risk_amount=200 ne depasse jamais
+    # 0.01 lot (raw_size ~0.0036) : round_to_volume_step renvoie None et
+    # la fonction s'arrete a "compte trop petit pour ce stop" avant meme
+    # d'atteindre la scission partiel/runner -- verifie en executant le
+    # test tel qu'ecrit dans le brief, qui echoue reellement avec
+    # l'implementation de decide_and_act_ichimoku telle que specifiee
+    # (AssertionError: 'aucune' == 'simulation'). balance=200000 est le
+    # plus petit palier qui laisse 0.04 lot a scinder (partiel=0.04,
+    # runner=0.02, tous deux >= min_volume=0.01) sans toucher au
+    # risk_pct par defaut ni au contract_size reel (5000, XAGUSD) --
+    # deviation signalee au controleur dans task-2-report.md plutot
+    # qu'appliquee silencieusement.
+    candles = _ichimoku_candles_with_signal()
+    result = bot.decide_and_act_ichimoku(
+        candles, contract_size=5000.0, balance=200000.0, equity=200000.0,
+        volume_step=0.01, min_volume=0.01, max_volume=20.0,
+        open_positions=[], circuit_breaker=_default_circuit_breaker(),
+    )
+    assert result["action"] == "simulation"
+    directions = {s["direction"] for s in result["steps"]}
+    assert directions == {"achat"}
+    types = [s["type"] for s in result["steps"]]
+    assert types == ["ouverture_simulee", "ouverture_simulee"]
+    take_profits = [s["take_profit"] for s in result["steps"]]
+    assert take_profits.count(None) == 1  # une jambe runner (pas de TP), une jambe partielle (TP defini)
+
+
+def test_decide_and_act_ichimoku_returns_aucune_when_no_signal():
+    candles = _ichimoku_candles_with_signal()
+    flat = dict(candles[-1])
+    flat["high"] = flat["close"] + 0.1
+    flat["low"] = flat["close"] - 0.1
+    candles = candles[:-1] + [flat]
+    result = bot.decide_and_act_ichimoku(
+        candles, contract_size=5000.0, balance=10000.0, equity=10000.0,
+        volume_step=0.01, min_volume=0.01, max_volume=20.0,
+        open_positions=[], circuit_breaker=_default_circuit_breaker(),
+    )
+    assert result["action"] == "aucune"
+
+
+def test_decide_and_act_ichimoku_returns_aucune_when_history_insufficient():
+    candles = _ichimoku_candles_with_signal()[:50]
+    result = bot.decide_and_act_ichimoku(
+        candles, contract_size=5000.0, balance=10000.0, equity=10000.0,
+        volume_step=0.01, min_volume=0.01, max_volume=20.0,
+        open_positions=[], circuit_breaker=_default_circuit_breaker(),
+    )
+    assert result == {"action": "aucune", "reason": "historique insuffisant pour l'ichimoku"}
+
+
+def test_decide_and_act_ichimoku_rejects_when_circuit_breaker_tripped():
+    candles = _ichimoku_candles_with_signal()
+    cb = _default_circuit_breaker()
+    cb.check(10000.0)
+    cb.check(8900.0)  # perte > 10% du solde de depart -> coupe-circuit declenche
+    result = bot.decide_and_act_ichimoku(
+        candles, contract_size=5000.0, balance=8900.0, equity=8900.0,
+        volume_step=0.01, min_volume=0.01, max_volume=20.0,
+        open_positions=[], circuit_breaker=cb,
+    )
+    assert result == {"action": "aucune", "reason": "coupe-circuit journalier déclenché"}
+
+
+def test_decide_and_act_ichimoku_closes_runner_leg_at_session_end():
+    candles = _ichimoku_candles_with_signal()
+    last = dict(candles[-1])
+    from datetime import timedelta
+    t = ichimoku_reversion._parse(last["time"])
+    hour = t.hour
+    delta_hours = (ichimoku_reversion.SESSION_END_HOUR_UTC - hour) % 24
+    last["time"] = (t + timedelta(hours=delta_hours)).strftime("%Y-%m-%d %H:00:00")
+    candles = candles[:-1] + [last]
+    position = {"id": "1", "symbol": "XAGUSD", "type": "POSITION_TYPE_BUY", "openPrice": 100.0, "stopLoss": 95.0, "time": candles[0]["time"]}
+    result = bot.decide_and_act_ichimoku(
+        candles, contract_size=5000.0, balance=10000.0, equity=10000.0,
+        volume_step=0.01, min_volume=0.01, max_volume=20.0,
+        open_positions=[position], circuit_breaker=_default_circuit_breaker(),
+    )
+    assert result["action"] == "simulation"
+    assert result["steps"][0]["type"] == "clôture_simulee"
+
+
+def test_decide_and_act_ichimoku_does_nothing_when_only_partial_leg_open():
+    candles = _ichimoku_candles_with_signal()
+    position = {"id": "1", "symbol": "XAGUSD", "type": "POSITION_TYPE_BUY", "openPrice": 100.0, "stopLoss": 95.0, "takeProfit": 110.0, "time": candles[0]["time"]}
+    result = bot.decide_and_act_ichimoku(
+        candles, contract_size=5000.0, balance=10000.0, equity=10000.0,
+        volume_step=0.01, min_volume=0.01, max_volume=20.0,
+        open_positions=[position], circuit_breaker=_default_circuit_breaker(),
+    )
+    assert result == {"action": "aucune", "reason": "jambe partielle seule ouverte, rien a gerer"}

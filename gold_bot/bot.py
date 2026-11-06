@@ -10,6 +10,7 @@ import gold_bot.ai_shadow as ai_shadow
 import gold_bot.broker as broker
 import gold_bot.confluence as confluence
 import gold_bot.fibonacci_reversion as fibonacci_reversion
+import gold_bot.ichimoku_reversion as ichimoku_reversion
 import gold_bot.macro_signal as macro_signal
 import gold_bot.odds_check as odds_check
 import gold_bot.risk as risk
@@ -525,6 +526,114 @@ def decide_and_act_fibonacci(candles: list[dict], *, contract_size: float, balan
         steps.append({
             "type": "ouverture_simulee", "symbol": symbol, "direction": direction, "volume": runner_volume,
             "entry": entry_price, "stop_loss": stop_loss, "take_profit": None,
+        })
+    return {"action": "simulation", "steps": steps}
+
+
+def decide_and_act_ichimoku(candles: list[dict], *, contract_size: float, balance: float, equity: float,
+                             volume_step: float, min_volume: float, max_volume: float,
+                             open_positions: list[dict], circuit_breaker: "risk.CircuitBreaker",
+                             symbol: str = "XAGUSD", risk_pct: float = 0.02) -> dict:
+    """Moteur Ichimoku deux-jambes (croisement Tenkan/Kijun confirme par
+    le nuage) -- voir docs/superpowers/specs/
+    2026-11-05-gold-bot-ichimoku-xagusd-ai-veto-design.md. Meme contrat
+    d'entree/sortie a deux jambes (prise partielle + runner) que
+    decide_and_act_fibonacci/decide_and_act_vwap. `symbol` par defaut
+    XAGUSD -- seul symbole calibre pour ce moteur. Contrairement a
+    decide_and_act_fibonacci, pas de blackout macro/choc de volatilite
+    (non valide dans la recherche pour ce moteur)."""
+    circuit_breaker.check(equity)
+
+    state = ichimoku_reversion.latest_state(candles)
+    if state is None:
+        return {"action": "aucune", "reason": "historique insuffisant pour l'ichimoku"}
+
+    matching = [p for p in open_positions if p.get("symbol") == symbol]
+    runner_matching = [p for p in matching if not p.get("takeProfit")]
+    partial_matching = [p for p in matching if p.get("takeProfit")]
+
+    if len(runner_matching) > 1 or len(partial_matching) > 1:
+        return {"action": "aucune", "reason": "plusieurs positions ouvertes sur ce symbole, aucune action par prudence"}
+
+    if matching:
+        if state["hour_utc"] >= ichimoku_reversion.SESSION_END_HOUR_UTC:
+            steps = [{"type": "clôture_simulee", "position_id": p.get("id"), "symbol": symbol} for p in matching]
+            return {"action": "simulation", "steps": steps}
+
+        if not runner_matching:
+            return {"action": "aucune", "reason": "jambe partielle seule ouverte, rien a gerer"}
+
+        position = runner_matching[0]
+        raw_type = position.get("type")
+        if raw_type == "POSITION_TYPE_BUY":
+            direction = "achat"
+        elif raw_type == "POSITION_TYPE_SELL":
+            direction = "vente"
+        else:
+            return {"action": "aucune", "reason": "position de type inattendu, aucune action par prudence"}
+
+        entry_price = position.get("openPrice")
+        current_stop_loss = position.get("stopLoss")
+        entry_time_iso = position.get("time")
+        if entry_price is None or current_stop_loss is None or entry_time_iso is None:
+            return {"action": "aucune", "reason": "champs de position manquants, aucune action par prudence"}
+
+        new_stop = ichimoku_reversion.compute_trailing_stop(
+            candles, direction, entry_time_iso, entry_price, current_stop_loss)
+        if new_stop is None:
+            return {"action": "aucune", "reason": "position ouverte, pas de mise a jour du stop suiveur"}
+
+        return {"action": "simulation", "steps": [{
+            "type": "modification_simulee", "position_id": position.get("id"), "symbol": symbol,
+            "new_stop_loss": new_stop,
+        }]}
+
+    if state["hour_utc"] >= ichimoku_reversion.SESSION_END_HOUR_UTC:
+        return {"action": "aucune", "reason": "trop tard dans la session pour ouvrir"}
+
+    direction = ichimoku_reversion.signal(state)
+    if direction is None:
+        return {"action": "aucune", "reason": "pas de signal d'entree"}
+
+    entry_price = state["close"]
+    if direction == "achat":
+        stop_loss = state["kijun"] - ichimoku_reversion.STOP_BUFFER_ATR_MULT * state["atr"]
+    else:
+        stop_loss = state["kijun"] + ichimoku_reversion.STOP_BUFFER_ATR_MULT * state["atr"]
+
+    distance = abs(entry_price - stop_loss)
+    if distance < entry_price * ichimoku_reversion.MIN_DISTANCE_PCT:
+        return {"action": "aucune", "reason": "distance entree-stop trop faible"}
+
+    if not circuit_breaker.can_open_position(equity):
+        return {"action": "aucune", "reason": "coupe-circuit journalier déclenché"}
+
+    raw_size = risk.compute_position_size(balance, entry_price, stop_loss, contract_size, risk_pct=risk_pct)
+    total_size = risk.round_to_volume_step(raw_size, volume_step, min_volume, max_volume)
+    if total_size is None:
+        return {"action": "aucune", "reason": "compte trop petit pour ce stop (volume sous le minimum du broker)"}
+
+    target_r = ichimoku_reversion.TARGET_R
+    target = entry_price + target_r * distance if direction == "achat" else entry_price - target_r * distance
+
+    partial_raw = ichimoku_reversion.PARTIAL_TP_PCT * total_size
+    runner_raw = (1.0 - ichimoku_reversion.PARTIAL_TP_PCT) * total_size
+    partial_volume = risk.round_to_volume_step(partial_raw, volume_step, min_volume, max_volume)
+    runner_volume = risk.round_to_volume_step(runner_raw, volume_step, min_volume, max_volume)
+
+    if partial_volume is None and runner_volume is None:
+        return {"action": "aucune", "reason": "compte trop petit pour scinder en deux jambes"}
+
+    steps = []
+    if partial_volume is not None:
+        steps.append({
+            "type": "ouverture_simulee", "symbol": symbol, "direction": direction,
+            "entry": entry_price, "stop_loss": stop_loss, "take_profit": target, "volume": partial_volume,
+        })
+    if runner_volume is not None:
+        steps.append({
+            "type": "ouverture_simulee", "symbol": symbol, "direction": direction,
+            "entry": entry_price, "stop_loss": stop_loss, "take_profit": None, "volume": runner_volume,
         })
     return {"action": "simulation", "steps": steps}
 

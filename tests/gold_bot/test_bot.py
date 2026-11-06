@@ -1301,11 +1301,21 @@ def test_decide_and_act_ichimoku_opens_two_legs_on_entry_signal():
     # test tel qu'ecrit dans le brief, qui echoue reellement avec
     # l'implementation de decide_and_act_ichimoku telle que specifiee
     # (AssertionError: 'aucune' == 'simulation'). balance=200000 est le
-    # plus petit palier qui laisse 0.04 lot a scinder (partiel=0.04,
-    # runner=0.02, tous deux >= min_volume=0.01) sans toucher au
+    # plus petit palier qui laisse 0.07 lot a scinder sans toucher au
     # risk_pct par defaut ni au contract_size reel (5000, XAGUSD) --
     # deviation signalee au controleur dans task-2-report.md plutot
     # qu'appliquee silencieusement.
+    #
+    # Valeurs attendues (verifiees via gold_bot.risk/gold_bot.ichimoku_reversion
+    # en script jetable, memes fonctions que la production) :
+    # entry_price=120.0 (state["close"]), stop_loss=108.97659904336004
+    # (kijun - 0.5*atr), distance=11.02340095663996,
+    # target=142.04680191327992 (entry + TARGET_R(2.0)*distance).
+    # raw_size=0.07257288409872445 -> total_size=0.07 (floor au pas 0.01).
+    # partial_volume = floor(0.7*0.07, pas 0.01) = 0.04 (0.049 -> 0.04).
+    # runner_volume = reste arithmetique = 0.07 - 0.04 = 0.03 (PAS un
+    # second appel a round_to_volume_step -- voir le correctif de
+    # scission ratifie dans progress.md).
     candles = _ichimoku_candles_with_signal()
     result = bot.decide_and_act_ichimoku(
         candles, contract_size=5000.0, balance=200000.0, equity=200000.0,
@@ -1313,12 +1323,25 @@ def test_decide_and_act_ichimoku_opens_two_legs_on_entry_signal():
         open_positions=[], circuit_breaker=_default_circuit_breaker(),
     )
     assert result["action"] == "simulation"
-    directions = {s["direction"] for s in result["steps"]}
-    assert directions == {"achat"}
-    types = [s["type"] for s in result["steps"]]
-    assert types == ["ouverture_simulee", "ouverture_simulee"]
-    take_profits = [s["take_profit"] for s in result["steps"]]
-    assert take_profits.count(None) == 1  # une jambe runner (pas de TP), une jambe partielle (TP defini)
+    assert len(result["steps"]) == 2
+    partial, runner = result["steps"]
+    entry_price = 120.0
+    stop_loss = 108.97659904336004
+    target = 142.04680191327992
+
+    assert partial["type"] == "ouverture_simulee"
+    assert partial["direction"] == "achat"
+    assert partial["entry"] == pytest.approx(entry_price)
+    assert partial["stop_loss"] == pytest.approx(stop_loss)
+    assert partial["take_profit"] == pytest.approx(target)
+    assert partial["volume"] == pytest.approx(0.04)
+
+    assert runner["type"] == "ouverture_simulee"
+    assert runner["direction"] == "achat"
+    assert runner["entry"] == pytest.approx(entry_price)
+    assert runner["stop_loss"] == pytest.approx(stop_loss)
+    assert runner["take_profit"] is None
+    assert runner["volume"] == pytest.approx(0.03)
 
 
 def test_decide_and_act_ichimoku_falls_back_to_single_leg_when_split_rounds_to_zero():

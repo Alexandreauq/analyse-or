@@ -6,7 +6,7 @@
 
 **Architecture:** Même routine cloud planifiée (`trig_01KzB6rZrwxUW1yoike8KLrP`), mise à jour en place : nouveau cron (quotidien, lundi-vendredi), nouveau prompt qui lit/écrit `docs/gold_news_reasoning_tracking.json` au lieu de produire un nouveau fichier par semaine. Les données de prix (clôtures/plus-hauts/plus-bas) viennent de `yfinance`, jamais de `WebSearch` — `WebSearch` reste réservé au raisonnement qualitatif (actualité).
 
-**Tech Stack:** Routine cloud planifiée (`RemoteTrigger`), `yfinance` (déjà une dépendance du dépôt, `requirements.txt:2`), aucun code Python nouveau dans le dépôt.
+**Tech Stack:** Routine cloud planifiée (`RemoteTrigger`), données de prix récupérées via `WebFetch` (l'API JSON de Yahoo Finance, `query1.finance.yahoo.com/v8/finance/chart/...`) — pas `yfinance`/Bash, dont la requête réseau directe est bloquée par le sandbox de la routine (403 confirmé le 2026-11-06, voir Task 1 Step 1bis). Aucun code Python nouveau dans le dépôt.
 
 **Spec:** `docs/superpowers/specs/2026-11-06-gold-news-reasoning-daily-paper-trading-design.md`
 
@@ -14,7 +14,7 @@
 
 - Jamais d'exécution réelle, jamais de compte réel, aucun lien avec `gold_bot/` ou FTMO (spec §2).
 - Une seule position ouverte à la fois sur XAUUSD.
-- Les prix (clôtures, plus-hauts, plus-bas) viennent TOUJOURS de `yfinance` (ticker `XAUUSD=X`, repli `GC=F`) — `WebSearch` n'est jamais utilisé pour une valeur de prix qui déclenche une décision de clôture, uniquement pour l'actualité qualitative (spec §4.1).
+- Les prix (clôtures, plus-hauts, plus-bas) viennent TOUJOURS de `WebFetch` sur l'API JSON de Yahoo Finance (ticker `GC=F`, repli `XAUUSD=X`) — `yfinance`/Bash est inutilisable dans le sandbox de la routine (403, voir Task 1 Step 1bis) ; `WebSearch` n'est jamais utilisé pour une valeur de prix qui déclenche une décision de clôture, uniquement pour l'actualité qualitative (spec §4.1).
 - Stop de sécurité fixé par l'IA à l'ouverture, borné à une distance de 3% à 15% du prix d'entrée (spec §4.2) — jamais modifié après l'ouverture.
 - `max_close_date` = `entry_date` + 21 jours calendaires (3 semaines), fixée à l'ouverture (spec §3).
 - `close_reason` ∈ `"stop_securite" | "cloture_anticipee_ia" | "delai_max"`, vérifiés dans cet ordre de priorité à chaque réévaluation (spec §4.3).
@@ -37,20 +37,31 @@ docs/superpowers/specs/2026-11-06-gold-news-reasoning-daily-paper-trading-design
 aucune position n'est reelle, aucun compte n'est touche, seul le
 fichier docs/gold_news_reasoning_tracking.json est modifie.
 
-ETAPE 1 -- Donnees de prix (QUANTITATIF, toujours via yfinance, JAMAIS
-via WebSearch pour un prix, un plus-haut ou un plus-bas) :
-Execute via Bash un script Python qui recupere les cours journaliers
-(clotures + plus-hauts + plus-bas) de XAUUSD :
+ETAPE 1 -- Donnees de prix (QUANTITATIF, JAMAIS un prix ou un
+plus-haut/plus-bas sorti d'un resultat WebSearch) :
+Utilise WebFetch (PAS Bash/yfinance -- le reseau sortant du sandbox de
+cette routine est bloque par une politique stricte, confirme le
+2026-11-06 : "CONNECT tunnel failed, response 403" vers Yahoo Finance
+en direct depuis Bash, alors que WebSearch et WebFetch, executes
+cote serveur, ne sont pas soumis a ce blocage) sur cette URL JSON :
 
-    import yfinance as yf
-    data = yf.download("XAUUSD=X", period="2mo", interval="1d")
+    https://query1.finance.yahoo.com/v8/finance/chart/GC=F?range=2mo&interval=1d
 
-Si cette requete echoue ou renvoie une serie vide, reessaie avec le
-ticker "GC=F" (futures COMEX, proxy correct). Si yfinance n'est pas
-installe dans l'environnement, installe-le d'abord
-(pip install -q yfinance) puis reessaie. Garde ces donnees pour les
-etapes suivantes -- elles sont la SEULE source pour toute valeur de
-prix, plus-haut ou plus-bas utilisee dans ce qui suit.
+Si WebFetch echoue ou renvoie des donnees vides, reessaie avec :
+
+    https://query1.finance.yahoo.com/v8/finance/chart/XAUUSD=X?range=2mo&interval=1d
+
+Les donnees utiles sont dans `result[0].timestamp` (epoch secondes, un
+par jour) et `result[0].indicators.quote[0].{open,high,low,close}`
+(listes paralleles, meme longueur). Convertis chaque timestamp en date
+(UTC) pour obtenir les clotures/plus-hauts/plus-bas journaliers. Garde
+ces donnees pour les etapes suivantes -- elles sont la SEULE source
+pour toute valeur de prix, plus-haut ou plus-bas utilisee dans ce qui
+suit. Si WebFetch echoue AUSSI sur les deux URLs : NE FAIS AUCUNE
+action aujourd'hui (pas d'ouverture, pas de reevaluation, pas de
+cloture, aucun commit) -- ne JAMAIS deduire un prix d'un resultat
+WebSearch a la place -- note simplement l'echec dans ta reponse
+finale.
 
 ETAPE 2 -- Lire l'etat actuel :
 Lis docs/gold_news_reasoning_tracking.json (s'il n'existe pas encore,
@@ -85,6 +96,14 @@ PRIORITE (arrete-toi a la premiere condition qui s'applique) :
   3. Sinon, si aujourd'hui >= max_close_date : status="closed",
      close_date=aujourd'hui, close_price=derniere cloture connue,
      close_reason="delai_max". Va a l'ETAPE 4.
+
+  IMPORTANT : dans les 3 cas de cloture ci-dessus (1, 2 ou 3), NE
+  MODIFIE PAS le champ "journal" -- ne lui ajoute AUCUNE entree. Il
+  reste exactement tel qu'il etait avant cette reevaluation. Le jour
+  de la cloture est decrit UNIQUEMENT par les champs close_date/
+  close_price/close_reason/return_pct/buyhold_price_at_close/
+  buyhold_return_pct -- jamais par une entree de journal. Seul le cas
+  "GARDER" du point 2 ci-dessus ajoute une entree au journal.
 
 ETAPE 3B -- SINON (aucune position ouverte), decide d'une nouvelle
 entree. Cherche via WebSearch l'actualite macro/geopolitique la plus
@@ -271,7 +290,7 @@ observées pour chaque vérification ci-dessus.
 `{action: "update", trigger_id: "trig_01KzB6rZrwxUW1yoike8KLrP", body: {...}}` avec :
 - `cron_expression`: `"0 7 * * 1-5"` (inchangé en heure, étendu du lundi seul à lundi-vendredi).
 - Le prompt complet de la section "Le prompt complet de la routine" ci-dessus, inséré dans `job_config.ccr.events[0].data.message.content` (même structure d'événement que l'actuelle — voir le corps JSON de la routine existante, section `job_config.ccr`).
-- `job_config.ccr.session_context.allowed_tools` : inchangé, `["Bash", "Read", "Write", "Glob", "Grep", "WebSearch"]` (déjà suffisant : `Bash` pour `yfinance`/`git`, `WebSearch` pour l'actualité).
+- `job_config.ccr.session_context.allowed_tools` : `["Bash", "Read", "Write", "Glob", "Grep", "WebSearch", "WebFetch"]` — `WebFetch` AJOUTÉ (nécessaire pour l'ÉTAPE 1, `Bash` seul ne peut pas atteindre Yahoo Finance depuis le sandbox de la routine, voir Task 1 Step 1bis), `Bash` pour `git`, `WebSearch` pour l'actualité.
 - `job_config.ccr.session_context.model` : inchangé, `"claude-sonnet-5-5"`.
 - `name` : inchangé, `"Gold bot - test prospectif IA raisonnement actu/prix (or)"`.
 

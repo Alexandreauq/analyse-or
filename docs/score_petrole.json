@@ -1,8 +1,8 @@
 {
-  "date": "2026-11-05",
+  "date": "2026-11-06",
   "commodity": "petrole",
   "label": "Pétrole (WTI)",
-  "composite_score": 0.9,
+  "composite_score": -1.9,
   "interpretation": "Neutre — pas d'action",
   "cftc_percentile": 13.461538461538462,
   "factors": [
@@ -10,7 +10,7 @@
       "name": "Dollar (DXY)",
       "score": -10,
       "weight": 0.26666666666666666,
-      "raw_value": "101.61 (il y a 2 mois : 98.84)"
+      "raw_value": "101.62 (il y a 2 mois : 98.84)"
     },
     {
       "name": "Positionnement CFTC",
@@ -20,9 +20,9 @@
     },
     {
       "name": "Spread WTI-Brent",
-      "score": -8.349990844726562,
+      "score": -9.750022888183594,
       "weight": 0.19999999999999998,
-      "raw_value": "+7.84 $/baril (il y a ~2 mois : +6.17 $/baril)"
+      "raw_value": "+8.12 $/baril (il y a ~2 mois : +6.17 $/baril)"
     },
     {
       "name": "Dynamique récente",
@@ -45,11 +45,6 @@
   },
   "calendar": [
     {
-      "date": "05/11/2026",
-      "label": "Inscriptions chômage (hebdo)",
-      "kind": "Donnée"
-    },
-    {
       "date": "06/11/2026",
       "label": "Emploi US (NFP + chômage)",
       "kind": "Donnée"
@@ -57,6 +52,11 @@
     {
       "date": "10/11/2026",
       "label": "CPI (Indice des prix à la consommation)",
+      "kind": "Donnée"
+    },
+    {
+      "date": "12/11/2026",
+      "label": "Inscriptions chômage (hebdo)",
       "kind": "Donnée"
     },
     {

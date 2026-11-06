@@ -501,7 +501,10 @@ def decide_and_act_fibonacci(candles: list[dict], *, contract_size: float, balan
     # Journalise un avis independant, ne modifie JAMAIS direction/
     # stop_loss/steps ci-dessous, et ne peut jamais faire echouer ce
     # cycle (toute erreur est capturee a l'interieur de shadow_judge_entry).
-    ai_shadow.shadow_judge_entry(symbol, direction, state, candles)
+    ai_shadow.shadow_judge_entry(
+        symbol, direction, state, candles,
+        engine_label="rebond de retracement de Fibonacci", real_decision=False,
+    )
 
     partial_volume = None
     if fibonacci_reversion.PARTIAL_TP_PCT > 0:
@@ -612,6 +615,30 @@ def decide_and_act_ichimoku(candles: list[dict], *, contract_size: float, balanc
     total_size = risk.round_to_volume_step(raw_size, volume_step, min_volume, max_volume)
     if total_size is None:
         return {"action": "aucune", "reason": "compte trop petit pour ce stop (volume sous le minimum du broker)"}
+
+    # Veto IA branche pour de vrai (pas fantome, contrairement a
+    # decide_and_act_fibonacci) -- voir le spec pour la justification du
+    # choix fail-open : a la date de ce chantier, le veto n'a jamais
+    # produit un seul verdict exploitable en conditions reelles (0/36
+    # tentatives avant le fix du 2026-11-05 -- 28 timeouts, 7 echecs de
+    # credits API, 1 reponse mal formee). Bloquer par defaut en cas
+    # d'echec reviendrait quasiment a arreter le moteur -- le signal
+    # technique valide par la recherche prime donc en cas de doute sur
+    # la disponibilite/fiabilite de l'IA. L'IA ne peut qu'AJOUTER une
+    # restriction (veto explicite "opposerait"), jamais remplacer le
+    # signal en cas d'absence de reponse (verdict None).
+    state_for_ai = {
+        "level": state["kijun"], "close": state["close"], "high": state["high"],
+        "low": state["low"], "atr": state["atr"], "trend_strength": None,
+        "hour_utc": state["hour_utc"],
+    }
+    verdict = ai_shadow.shadow_judge_entry(
+        symbol, direction, state_for_ai, candles,
+        engine_label="croisement Tenkan/Kijun confirme par le nuage (Ichimoku)",
+        real_decision=True,
+    )
+    if verdict is not None and verdict.get("verdict") == "opposerait":
+        return {"action": "aucune", "reason": "veto IA (opposition)"}
 
     target_r = ichimoku_reversion.TARGET_R
     target = entry_price + target_r * distance if direction == "achat" else entry_price - target_r * distance

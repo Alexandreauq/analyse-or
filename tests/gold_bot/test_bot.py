@@ -1430,3 +1430,65 @@ def test_decide_and_act_ichimoku_does_nothing_when_only_partial_leg_open():
         open_positions=[position], circuit_breaker=_default_circuit_breaker(),
     )
     assert result == {"action": "aucune", "reason": "jambe partielle seule ouverte, rien a gerer"}
+
+
+def test_decide_and_act_ichimoku_blocks_trade_when_ai_opposes(monkeypatch):
+    # balance=200000 (pas 10000 comme dans le brief d'origine) : avec
+    # risk_pct par defaut (0.02) et la distance entree-stop de ce
+    # fixture (~11.02), balance=10000 fait tomber total_size sous le
+    # minimum broker (round_to_volume_step renvoie None) -- la fonction
+    # s'arrete alors a "compte trop petit pour ce stop" AVANT d'atteindre
+    # le veto IA, quel que soit le verdict mocke. Meme desync deja
+    # rencontree et ratifiee en Task 2 (voir
+    # test_decide_and_act_ichimoku_opens_two_legs_on_entry_signal
+    # ci-dessus) -- deviation signalee au controleur dans
+    # task-3-report.md plutot qu'appliquee silencieusement.
+    monkeypatch.setattr(bot.ai_shadow, "shadow_judge_entry", lambda *a, **k: {"verdict": "opposerait", "confiance": "haute", "raison": "test"})
+    candles = _ichimoku_candles_with_signal()
+    result = bot.decide_and_act_ichimoku(
+        candles, contract_size=5000.0, balance=200000.0, equity=200000.0,
+        volume_step=0.01, min_volume=0.01, max_volume=20.0,
+        open_positions=[], circuit_breaker=_default_circuit_breaker(),
+    )
+    assert result == {"action": "aucune", "reason": "veto IA (opposition)"}
+
+
+def test_decide_and_act_ichimoku_proceeds_when_ai_confirms(monkeypatch):
+    # balance=200000 : voir le commentaire de
+    # test_decide_and_act_ichimoku_blocks_trade_when_ai_opposes ci-dessus.
+    monkeypatch.setattr(bot.ai_shadow, "shadow_judge_entry", lambda *a, **k: {"verdict": "confirme", "confiance": "haute", "raison": "test"})
+    candles = _ichimoku_candles_with_signal()
+    result = bot.decide_and_act_ichimoku(
+        candles, contract_size=5000.0, balance=200000.0, equity=200000.0,
+        volume_step=0.01, min_volume=0.01, max_volume=20.0,
+        open_positions=[], circuit_breaker=_default_circuit_breaker(),
+    )
+    assert result["action"] == "simulation"
+
+
+def test_decide_and_act_ichimoku_proceeds_when_ai_returns_none_fail_open(monkeypatch):
+    # balance=200000 : voir le commentaire de
+    # test_decide_and_act_ichimoku_blocks_trade_when_ai_opposes ci-dessus.
+    monkeypatch.setattr(bot.ai_shadow, "shadow_judge_entry", lambda *a, **k: None)
+    candles = _ichimoku_candles_with_signal()
+    result = bot.decide_and_act_ichimoku(
+        candles, contract_size=5000.0, balance=200000.0, equity=200000.0,
+        volume_step=0.01, min_volume=0.01, max_volume=20.0,
+        open_positions=[], circuit_breaker=_default_circuit_breaker(),
+    )
+    assert result["action"] == "simulation"
+
+
+def test_decide_and_act_ichimoku_calls_ai_shadow_with_real_decision_true(monkeypatch):
+    # balance=200000 : voir le commentaire de
+    # test_decide_and_act_ichimoku_blocks_trade_when_ai_opposes ci-dessus.
+    calls = []
+    monkeypatch.setattr(bot.ai_shadow, "shadow_judge_entry", lambda *a, **k: calls.append(k) or {"verdict": "confirme", "confiance": "haute", "raison": "test"})
+    candles = _ichimoku_candles_with_signal()
+    bot.decide_and_act_ichimoku(
+        candles, contract_size=5000.0, balance=200000.0, equity=200000.0,
+        volume_step=0.01, min_volume=0.01, max_volume=20.0,
+        open_positions=[], circuit_breaker=_default_circuit_breaker(),
+    )
+    assert calls[0]["real_decision"] is True
+    assert calls[0]["engine_label"] == "croisement Tenkan/Kijun confirme par le nuage (Ichimoku)"

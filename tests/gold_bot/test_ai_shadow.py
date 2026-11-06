@@ -65,11 +65,35 @@ def _state():
             "trend_strength": 0.03, "hour_utc": 12}
 
 
+def test_build_prompt_uses_engine_label_instead_of_hardcoded_fibonacci():
+    prompt = ai_shadow._build_prompt("XAGUSD", "achat", _state(), _candles(), engine_label="test-engine-label", real_decision=False)
+    assert "test-engine-label" in prompt
+    assert "retracement de Fibonacci" not in prompt
+
+
+def test_build_prompt_shadow_mode_says_no_real_trade_affected():
+    prompt = ai_shadow._build_prompt("XAGUSD", "achat", _state(), _candles(), engine_label="x", real_decision=False)
+    assert "n'affecte AUCUN trade reel" in prompt
+
+
+def test_build_prompt_real_decision_mode_says_trade_will_be_blocked():
+    prompt = ai_shadow._build_prompt("XAGUSD", "achat", _state(), _candles(), engine_label="x", real_decision=True)
+    assert "n'affecte AUCUN trade reel" not in prompt
+    assert "ne sera PAS execute" in prompt
+
+
+def test_build_prompt_omits_trend_strength_line_when_none():
+    state = dict(_state())
+    state["trend_strength"] = None
+    prompt = ai_shadow._build_prompt("XAGUSD", "achat", state, _candles(), engine_label="x", real_decision=False)
+    assert "force de tendance" not in prompt
+
+
 def test_shadow_judge_entry_returns_none_and_logs_when_api_key_absent(tmp_path, monkeypatch):
     monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
     log_path = str(tmp_path / "ai_shadow_log.jsonl")
 
-    result = ai_shadow.shadow_judge_entry("XAUUSD", "achat", _state(), _candles(), log_path=log_path)
+    result = ai_shadow.shadow_judge_entry("XAUUSD", "achat", _state(), _candles(), engine_label="rebond de retracement de Fibonacci", log_path=log_path)
 
     assert result is None
     entries = [json.loads(line) for line in open(log_path, encoding="utf-8")]
@@ -87,7 +111,7 @@ def test_shadow_judge_entry_parses_verdict_and_logs_on_success(tmp_path, monkeyp
     fake_client = _FakeAnthropicClient(response=_FakeResponse([_FakeTextBlock(response_text)]))
     monkeypatch.setattr(anthropic, "Anthropic", fake_client)
 
-    result = ai_shadow.shadow_judge_entry("XAUUSD", "achat", _state(), _candles(), log_path=log_path)
+    result = ai_shadow.shadow_judge_entry("XAUUSD", "achat", _state(), _candles(), engine_label="rebond de retracement de Fibonacci", log_path=log_path)
 
     assert result == {"verdict": "confirme", "confiance": "haute", "raison": "pas de news majeure"}
     assert fake_client.messages.last_kwargs["model"] == ai_shadow.MODEL
@@ -108,7 +132,7 @@ def test_shadow_judge_entry_returns_none_and_logs_when_verdict_unparseable(tmp_p
     fake_client = _FakeAnthropicClient(response=_FakeResponse([_FakeTextBlock("reponse sans bloc JSON")]))
     monkeypatch.setattr(anthropic, "Anthropic", fake_client)
 
-    result = ai_shadow.shadow_judge_entry("XAUUSD", "vente", _state(), _candles(), log_path=log_path)
+    result = ai_shadow.shadow_judge_entry("XAUUSD", "vente", _state(), _candles(), engine_label="rebond de retracement de Fibonacci", log_path=log_path)
 
     assert result is None
     entries = [json.loads(line) for line in open(log_path, encoding="utf-8")]
@@ -122,7 +146,7 @@ def test_shadow_judge_entry_never_raises_and_logs_on_client_exception(tmp_path, 
     fake_client = _FakeAnthropicClient(error=RuntimeError("boom reseau"))
     monkeypatch.setattr(anthropic, "Anthropic", fake_client)
 
-    result = ai_shadow.shadow_judge_entry("XAUUSD", "achat", _state(), _candles(), log_path=log_path)
+    result = ai_shadow.shadow_judge_entry("XAUUSD", "achat", _state(), _candles(), engine_label="rebond de retracement de Fibonacci", log_path=log_path)
 
     assert result is None
     entries = [json.loads(line) for line in open(log_path, encoding="utf-8")]
@@ -133,7 +157,7 @@ def test_shadow_judge_entry_logs_symbol_direction_and_state(tmp_path, monkeypatc
     monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
     log_path = str(tmp_path / "ai_shadow_log.jsonl")
 
-    ai_shadow.shadow_judge_entry("XAUUSD", "vente", _state(), _candles(), log_path=log_path)
+    ai_shadow.shadow_judge_entry("XAUUSD", "vente", _state(), _candles(), engine_label="rebond de retracement de Fibonacci", log_path=log_path)
 
     entry = json.loads(open(log_path, encoding="utf-8").readline())
     assert entry["symbol"] == "XAUUSD"
@@ -180,9 +204,9 @@ def test_shadow_judge_entry_skips_second_call_within_cooldown(tmp_path, monkeypa
     monkeypatch.setattr(anthropic, "Anthropic", fake_client)
     t0 = datetime(2026, 10, 29, 10, 0, 0, tzinfo=timezone.utc)
 
-    first = ai_shadow.shadow_judge_entry("XAUUSD", "achat", _state(), _candles(), log_path=log_path, now=t0)
+    first = ai_shadow.shadow_judge_entry("XAUUSD", "achat", _state(), _candles(), engine_label="rebond de retracement de Fibonacci", log_path=log_path, now=t0)
     second = ai_shadow.shadow_judge_entry(
-        "XAUUSD", "achat", _state(), _candles(), log_path=log_path, now=t0 + timedelta(minutes=2)
+        "XAUUSD", "achat", _state(), _candles(), engine_label="rebond de retracement de Fibonacci", log_path=log_path, now=t0 + timedelta(minutes=2)
     )
 
     assert first is not None
@@ -202,9 +226,9 @@ def test_shadow_judge_entry_calls_again_after_cooldown_expires(tmp_path, monkeyp
     monkeypatch.setattr(anthropic, "Anthropic", fake_client)
     t0 = datetime(2026, 10, 29, 10, 0, 0, tzinfo=timezone.utc)
 
-    first = ai_shadow.shadow_judge_entry("XAUUSD", "achat", _state(), _candles(), log_path=log_path, now=t0)
+    first = ai_shadow.shadow_judge_entry("XAUUSD", "achat", _state(), _candles(), engine_label="rebond de retracement de Fibonacci", log_path=log_path, now=t0)
     second = ai_shadow.shadow_judge_entry(
-        "XAUUSD", "achat", _state(), _candles(), log_path=log_path,
+        "XAUUSD", "achat", _state(), _candles(), engine_label="rebond de retracement de Fibonacci", log_path=log_path,
         now=t0 + ai_shadow.SHADOW_COOLDOWN + timedelta(seconds=1),
     )
 
@@ -223,9 +247,9 @@ def test_shadow_judge_entry_cooldown_is_per_symbol(tmp_path, monkeypatch):
     monkeypatch.setattr(anthropic, "Anthropic", fake_client)
     t0 = datetime(2026, 10, 29, 10, 0, 0, tzinfo=timezone.utc)
 
-    xau = ai_shadow.shadow_judge_entry("XAUUSD", "achat", _state(), _candles(), log_path=log_path, now=t0)
+    xau = ai_shadow.shadow_judge_entry("XAUUSD", "achat", _state(), _candles(), engine_label="rebond de retracement de Fibonacci", log_path=log_path, now=t0)
     xag = ai_shadow.shadow_judge_entry(
-        "XAGUSD", "achat", _state(), _candles(), log_path=log_path, now=t0 + timedelta(minutes=1)
+        "XAGUSD", "achat", _state(), _candles(), engine_label="rebond de retracement de Fibonacci", log_path=log_path, now=t0 + timedelta(minutes=1)
     )
 
     assert xau is not None

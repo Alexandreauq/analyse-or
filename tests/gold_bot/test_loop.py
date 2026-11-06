@@ -1,8 +1,10 @@
 import json
+import os
 from datetime import datetime, timedelta, timezone
 
 import pytest
 
+import gold_bot.ichimoku_reversion as ichimoku_reversion
 import gold_bot.loop as loop
 
 
@@ -1619,3 +1621,112 @@ def test_run_cycle_never_calls_ftmo_signal_email_without_ftmo_guard(monkeypatch,
     result = loop.run_cycle("tok", "acc", loop.risk.CircuitBreaker(), now=_FRESH_NOW)
 
     assert result["action"] in ("simulation", "simulation_dry_run")
+
+
+def test_engine_selection_unchanged_when_gold_bot_engine_env_absent(monkeypatch, tmp_path):
+    """Non-regression (Task 4) : GOLD_BOT_ENGINE absente de
+    l'environnement -> gold_bot_engine resolu a None -> aucun changement
+    de comportement pour les deux instances existantes. Reprend les
+    montages exacts de test_run_cycle_uses_vwap_engine_for_personal_instance
+    et test_run_cycle_uses_fibonacci_engine_for_ftmo_instance."""
+    monkeypatch.delenv("GOLD_BOT_ENGINE", raising=False)
+    gold_bot_engine = os.environ.get("GOLD_BOT_ENGINE")
+
+    # Instance perso (ftmo_guard_instance=None, valeur par defaut) : le
+    # meme signal que test_run_cycle_uses_vwap_engine_for_personal_instance
+    # -- decide_and_act_vwap est appele, decide_and_act_fibonacci ne doit
+    # jamais l'etre.
+    monkeypatch.setattr(loop.state, "load_state", lambda *a, **k: {"kill_switch": False, "dry_run": True})
+    monkeypatch.setattr(loop, "DECISIONS_LOG_PATH", str(tmp_path / "decisions_log.jsonl"))
+    monkeypatch.setattr(loop, "LATEST_CANDLES_PATH", str(tmp_path / "latest_candles.json"))
+    monkeypatch.setattr(loop, "LATEST_BALANCE_PATH", str(tmp_path / "latest_balance.json"))
+    monkeypatch.setattr(loop, "LATEST_POSITIONS_PATH", str(tmp_path / "latest_positions.json"))
+    monkeypatch.setattr(loop.confluence, "fetch_gold_candles", lambda *a, **k: [_FRESH_CANDLE])
+    monkeypatch.setattr(loop.broker, "get_account_information", lambda *a, **k: {"balance": 10000, "equity": 10000})
+    monkeypatch.setattr(loop.bot, "reconcile_positions", lambda *a, **k: [])
+    monkeypatch.setattr(loop.broker, "get_symbol_specification", lambda *a, **k: {"contractSize": 100, "volumeStep": 0.01, "minVolume": 0.01, "maxVolume": 500})
+    monkeypatch.setattr(
+        loop.bot, "decide_and_act_fibonacci",
+        lambda *a, **k: (_ for _ in ()).throw(AssertionError("decide_and_act_fibonacci ne doit jamais etre appele sans ftmo_guard_instance")))
+    vwap_calls = []
+    monkeypatch.setattr(
+        loop.bot, "decide_and_act_vwap",
+        lambda *a, **k: vwap_calls.append(k) or {"action": "aucune", "reason": "signal neutre"})
+
+    result = loop.run_cycle("tok", "acc", loop.risk.CircuitBreaker(), now=_FRESH_NOW, gold_bot_engine=gold_bot_engine)
+
+    assert result["action"] == "aucune"
+    assert len(vwap_calls) == 1
+
+    # Compte FTMO (ftmo_guard_instance non-None) : le meme signal que
+    # test_run_cycle_uses_fibonacci_engine_for_ftmo_instance --
+    # decide_and_act_fibonacci est appele, decide_and_act_vwap ne doit
+    # jamais l'etre.
+    monkeypatch.setattr(loop.broker, "get_account_information", lambda *a, **k: {"balance": 10000, "equity": 9900})
+    monkeypatch.setattr(
+        loop.bot, "decide_and_act_vwap",
+        lambda *a, **k: (_ for _ in ()).throw(AssertionError("decide_and_act_vwap ne doit jamais etre appele avec ftmo_guard_instance")))
+    fibonacci_calls = []
+    monkeypatch.setattr(
+        loop.bot, "decide_and_act_fibonacci",
+        lambda *a, **k: fibonacci_calls.append(k) or {"action": "aucune", "reason": "pas de signal d'entree"})
+
+    guard = loop.ftmo_guard.FtmoGuard(isc=10000, now_fn=lambda: _FRESH_NOW)
+    result = loop.run_cycle("tok", "acc", loop.risk.CircuitBreaker(), now=_FRESH_NOW,
+                             ftmo_guard_instance=guard, gold_bot_engine=gold_bot_engine)
+
+    assert result["action"] == "aucune"
+    assert len(fibonacci_calls) == 1
+
+
+def test_engine_selection_uses_ichimoku_xag_when_env_set(monkeypatch, tmp_path):
+    """GOLD_BOT_ENGINE=ichimoku_xag (Task 4) : le symbole resolu est
+    ["XAGUSD"] (gold_bot.ichimoku_reversion.SYMBOL) et le cycle appelle
+    bot.decide_and_act_ichimoku, jamais decide_and_act_fibonacci/vwap ni
+    broker.get_symbol_specification (contract_size/volume_step/
+    min_volume/max_volume figes, voir Task 1). Meme montage que
+    test_run_cycle_uses_fibonacci_engine_for_ftmo_instance /
+    test_run_cycle_uses_vwap_engine_for_personal_instance."""
+    monkeypatch.setenv("GOLD_BOT_ENGINE", "ichimoku_xag")
+    gold_bot_engine = os.environ.get("GOLD_BOT_ENGINE")
+
+    assert loop._resolve_symbols(None, None, gold_bot_engine) == [ichimoku_reversion.SYMBOL]
+    # Priorite absolue sur FTMO_ISC/FTMO_SYMBOLS.
+    assert loop._resolve_symbols("10000", "XAUUSD", gold_bot_engine) == [ichimoku_reversion.SYMBOL]
+
+    monkeypatch.setattr(loop.state, "load_state", lambda *a, **k: {"kill_switch": False, "dry_run": True})
+    monkeypatch.setattr(loop, "DECISIONS_LOG_PATH", str(tmp_path / "decisions_log.jsonl"))
+    monkeypatch.setattr(loop, "LATEST_CANDLES_PATH", str(tmp_path / "latest_candles.json"))
+    monkeypatch.setattr(loop, "LATEST_BALANCE_PATH", str(tmp_path / "latest_balance.json"))
+    monkeypatch.setattr(loop, "LATEST_POSITIONS_PATH", str(tmp_path / "latest_positions.json"))
+    # XAGUSD n'est pas le symbole par defaut : meme convention que
+    # test_run_cycle_caches_candles_for_non_default_symbol_at_dedicated_path
+    # pour eviter d'ecrire dans le vrai repertoire gold_bot/.
+    monkeypatch.setattr(loop, "_candles_cache_path", lambda symbol: str(tmp_path / "latest_candles_xagusd.json"))
+    monkeypatch.setattr(loop.confluence, "fetch_gold_candles", lambda *a, **k: [_FRESH_CANDLE])
+    monkeypatch.setattr(loop.broker, "get_account_information", lambda *a, **k: {"balance": 10000, "equity": 10000})
+    monkeypatch.setattr(loop.bot, "reconcile_positions", lambda *a, **k: [])
+    monkeypatch.setattr(
+        loop.broker, "get_symbol_specification",
+        lambda *a, **k: (_ for _ in ()).throw(AssertionError("get_symbol_specification ne doit jamais etre appele pour le moteur ichimoku_xag")))
+    monkeypatch.setattr(
+        loop.bot, "decide_and_act_vwap",
+        lambda *a, **k: (_ for _ in ()).throw(AssertionError("decide_and_act_vwap ne doit jamais etre appele pour le moteur ichimoku_xag")))
+    monkeypatch.setattr(
+        loop.bot, "decide_and_act_fibonacci",
+        lambda *a, **k: (_ for _ in ()).throw(AssertionError("decide_and_act_fibonacci ne doit jamais etre appele pour le moteur ichimoku_xag")))
+    ichimoku_calls = []
+    monkeypatch.setattr(
+        loop.bot, "decide_and_act_ichimoku",
+        lambda *a, **k: ichimoku_calls.append(k) or {"action": "aucune", "reason": "signal neutre"})
+
+    symbols = loop._resolve_symbols(None, None, gold_bot_engine)
+    result = loop.run_cycle("tok", "acc", loop.risk.CircuitBreaker(), now=_FRESH_NOW,
+                             symbol=symbols[0], gold_bot_engine=gold_bot_engine)
+
+    assert result["action"] == "aucune"
+    assert len(ichimoku_calls) == 1
+    assert ichimoku_calls[0]["contract_size"] == ichimoku_reversion.CONTRACT_SIZE
+    assert ichimoku_calls[0]["volume_step"] == ichimoku_reversion.VOLUME_STEP
+    assert ichimoku_calls[0]["min_volume"] == ichimoku_reversion.MIN_VOLUME
+    assert ichimoku_calls[0]["max_volume"] == ichimoku_reversion.MAX_VOLUME

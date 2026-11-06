@@ -15,6 +15,7 @@ import gold_bot.bot as bot
 import gold_bot.broker as broker
 import gold_bot.confluence as confluence
 import gold_bot.ftmo_guard as ftmo_guard
+import gold_bot.ichimoku_reversion as ichimoku_reversion
 import gold_bot.notify_ftmo_inactivity as notify_ftmo_inactivity
 import gold_bot.notify_ftmo_signal as notify_ftmo_signal
 import gold_bot.risk as risk
@@ -77,14 +78,23 @@ HISTORICAL_ODDS_FAILURE_BACKOFF_SECONDS = 3600
 HISTORICAL_ODDS_WINDOW_DAYS = 90
 
 
-def _resolve_symbols(ftmo_isc: str | None, ftmo_symbols_env: str | None) -> list[str]:
+def _resolve_symbols(ftmo_isc: str | None, ftmo_symbols_env: str | None,
+                      gold_bot_engine: str | None = None) -> list[str]:
     """FTMO_ISC absente (déploiement du compte perso actuel) : renvoie
     SYMBOLS inchangée. FTMO_ISC présente : les CGU FTMO (clause 7.5.3,
     lues par l'utilisateur le 2026-10-27) interdisent une exposition
     cumulée sur des symboles corrélés -- XAUUSD et XAGUSD le sont
     fortement -- donc seul XAUUSD est tradé par défaut sur l'instance
     FTMO, sauf surcharge explicite via FTMO_SYMBOLS (liste séparée par
-    des virgules)."""
+    des virgules).
+
+    `gold_bot_engine` (valeur de GOLD_BOT_ENGINE, Task 4) a priorité
+    absolue sur FTMO_ISC/FTMO_SYMBOLS : "ichimoku_xag" déploie une
+    instance dédiée, calibrée empiriquement sur le seul symbole XAGUSD
+    (voir gold_bot.ichimoku_reversion) -- combiner ce moteur avec
+    FTMO_SYMBOLS ou le bot perso multi-symboles n'aurait pas de sens."""
+    if gold_bot_engine == "ichimoku_xag":
+        return [ichimoku_reversion.SYMBOL]
     if ftmo_isc is None:
         return SYMBOLS
     if ftmo_symbols_env:
@@ -265,7 +275,8 @@ def _with_retry(fn, *, attempts: int = NETWORK_RETRY_ATTEMPTS, delay_s: float = 
 def run_cycle(token: str, account_id: str,
               circuit_breaker: "risk.CircuitBreaker", region: str = broker.DEFAULT_MT5_REGION,
               symbol: str = SYMBOL, now: datetime | None = None,
-              ftmo_guard_instance: "ftmo_guard.FtmoGuard | None" = None) -> dict:
+              ftmo_guard_instance: "ftmo_guard.FtmoGuard | None" = None,
+              gold_bot_engine: str | None = None) -> dict:
     """Un cycle complet : interrupteur d'urgence -> bougies -> garde
     marché fermé/données périmées -> reste des données réelles + décision
     (dans un seul bloc try, jamais d'exception non capturée) ->
@@ -283,7 +294,19 @@ def run_cycle(token: str, account_id: str,
     pas seulement celles de ce cycle/symbole) et arme le kill_switch
     existant, puis le cycle s'arrête là -- aucune nouvelle décision
     n'est prise ce cycle. Absent (None), ce bloc ne s'exécute jamais et
-    rien ne change par rapport au comportement du bot sans FTMO."""
+    rien ne change par rapport au comportement du bot sans FTMO.
+
+    `gold_bot_engine` (valeur de GOLD_BOT_ENGINE, Task 4), si égal à
+    "ichimoku_xag", a priorité absolue sur `ftmo_guard_instance` pour
+    le choix du moteur : decide_and_act_ichimoku est appelé au lieu de
+    decide_and_act_fibonacci/decide_and_act_vwap, et contract_size/
+    volume_step/min_volume/max_volume proviennent des constantes figées
+    de gold_bot.ichimoku_reversion plutôt que de
+    broker.get_symbol_specification (déjà vérifiées empiriquement, voir
+    Task 1) -- ce qui évite aussi l'appel réseau correspondant. Absent
+    (None, valeur par défaut), ce bloc ne s'exécute jamais et rien ne
+    change par rapport au comportement existant (sélection uniquement
+    pilotée par `ftmo_guard_instance`)."""
     now_dt = now or datetime.now(timezone.utc)
     current_state = state.load_state(state.STATE_PATH)
     if current_state["kill_switch"]:
@@ -359,16 +382,32 @@ def run_cycle(token: str, account_id: str,
 
         open_positions = _with_retry(lambda: bot.reconcile_positions(token, account_id, region))
         _save_cache({"positions": open_positions, "fetched_at": _now_iso()}, LATEST_POSITIONS_PATH)
-        spec = _with_retry(lambda: broker.get_symbol_specification(token, account_id, symbol, region))
-        contract_size = spec["contractSize"]
-        historical_candles = _load_or_fetch_historical_candles(token, account_id, symbol, region, now_dt)
-        engine = bot.decide_and_act_fibonacci if ftmo_guard_instance is not None else bot.decide_and_act_vwap
-        decision = engine(
-            candles, contract_size=contract_size, balance=balance, equity=equity,
-            volume_step=spec["volumeStep"], min_volume=spec["minVolume"], max_volume=spec["maxVolume"],
-            open_positions=open_positions, circuit_breaker=circuit_breaker, symbol=symbol,
-            risk_pct=profile_params["risk_pct"], historical_candles=historical_candles,
-        )
+        if gold_bot_engine == "ichimoku_xag":
+            # Constantes figées du moteur (Task 1), jamais
+            # broker.get_symbol_specification -- déjà vérifiées
+            # empiriquement, voir gold_bot.ichimoku_reversion. Pas de
+            # historical_candles non plus : decide_and_act_ichimoku ne
+            # fait pas de blackout macro/choc de volatilité (non validé
+            # dans la recherche pour ce moteur, voir sa docstring), donc
+            # pas besoin de l'historique de 90 jours.
+            decision = bot.decide_and_act_ichimoku(
+                candles, contract_size=ichimoku_reversion.CONTRACT_SIZE, balance=balance, equity=equity,
+                volume_step=ichimoku_reversion.VOLUME_STEP, min_volume=ichimoku_reversion.MIN_VOLUME,
+                max_volume=ichimoku_reversion.MAX_VOLUME,
+                open_positions=open_positions, circuit_breaker=circuit_breaker, symbol=symbol,
+                risk_pct=profile_params["risk_pct"],
+            )
+        else:
+            spec = _with_retry(lambda: broker.get_symbol_specification(token, account_id, symbol, region))
+            contract_size = spec["contractSize"]
+            historical_candles = _load_or_fetch_historical_candles(token, account_id, symbol, region, now_dt)
+            engine = bot.decide_and_act_fibonacci if ftmo_guard_instance is not None else bot.decide_and_act_vwap
+            decision = engine(
+                candles, contract_size=contract_size, balance=balance, equity=equity,
+                volume_step=spec["volumeStep"], min_volume=spec["minVolume"], max_volume=spec["maxVolume"],
+                open_positions=open_positions, circuit_breaker=circuit_breaker, symbol=symbol,
+                risk_pct=profile_params["risk_pct"], historical_candles=historical_candles,
+            )
         decision = {**decision, "symbol": symbol}
         if ftmo_guard_instance is not None:
             # Alerte email sur nouveau signal d'entree FTMO -- distincte
@@ -465,12 +504,20 @@ def main():
         ftmo_guard.FtmoGuard(isc=float(ftmo_isc), persist_path=FTMO_GUARD_STATE_PATH)
         if ftmo_isc is not None else None
     )
-    symbols = _resolve_symbols(ftmo_isc, os.environ.get("FTMO_SYMBOLS"))
+    # GOLD_BOT_ENGINE optionnelle -- absente (déploiement perso/FTMO
+    # actuels) : gold_bot_engine reste None, run_cycle/_resolve_symbols
+    # ne changent rien à leur comportement existant. "ichimoku_xag"
+    # (Task 4) : instance dédiée au moteur Ichimoku+XAGUSD, voir
+    # _resolve_symbols et run_cycle. Lue une seule fois ici, même
+    # endroit que FTMO_ISC ci-dessus.
+    gold_bot_engine = os.environ.get("GOLD_BOT_ENGINE")
+    symbols = _resolve_symbols(ftmo_isc, os.environ.get("FTMO_SYMBOLS"), gold_bot_engine)
 
     while True:
         for symbol in symbols:
             try:
-                run_cycle(token, account_id, circuit_breaker, symbol=symbol, ftmo_guard_instance=ftmo_guard_instance)
+                run_cycle(token, account_id, circuit_breaker, symbol=symbol,
+                          ftmo_guard_instance=ftmo_guard_instance, gold_bot_engine=gold_bot_engine)
             except Exception as e:
                 # Filet de sécurité ultime — run_cycle ne devrait jamais
                 # lever (elle capture déjà ses propres erreurs), mais un

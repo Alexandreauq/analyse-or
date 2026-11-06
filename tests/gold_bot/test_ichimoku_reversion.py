@@ -23,6 +23,7 @@ def test_resample_h1_aggregates_5min_bars_into_hourly_buckets():
         _candle("2026-01-05 10:05:00", 100.5, 102, 100, 101.5),
         _candle("2026-01-05 10:55:00", 101.5, 103, 101, 102.0),
         _candle("2026-01-05 11:00:00", 102.0, 102.5, 101.8, 102.2),
+        _candle("2026-01-05 11:55:00", 102.2, 102.6, 101.9, 102.3),  # heure 11h complete
     ]
     h1 = ichimoku_reversion.resample_h1(candles)
     assert len(h1) == 2
@@ -32,6 +33,23 @@ def test_resample_h1_aggregates_5min_bars_into_hourly_buckets():
     assert h1[0]["low"] == 99
     assert h1[0]["close"] == 102.0
     assert h1[1]["time"] == "2026-01-05T11:00:00"
+
+
+def test_resample_h1_excludes_the_last_bucket_when_still_forming():
+    # Defaut IMPORTANT trouve en revue finale de branche (2026-11-06) :
+    # le dernier bucket H1 etait traite comme complet meme quand la
+    # bougie 5min de :55 (derniere de l'heure) n'etait pas encore
+    # arrivee -- causalite reelle differente du moteur de recherche
+    # valide, qui ne decide jamais sur une bougie H1 partielle.
+    candles = [
+        _candle("2026-01-05 10:00:00", 100, 101, 99, 100.5),
+        _candle("2026-01-05 10:55:00", 101.5, 103, 101, 102.0),
+        _candle("2026-01-05 11:00:00", 102.0, 102.5, 101.8, 102.2),
+        _candle("2026-01-05 11:20:00", 102.2, 102.4, 102.0, 102.3),  # heure 11h encore en formation
+    ]
+    h1 = ichimoku_reversion.resample_h1(candles)
+    assert len(h1) == 1
+    assert h1[0]["time"] == "2026-01-05T10:00:00"
 
 
 def test_compute_atr_h1_is_none_before_warmup_then_positive():
@@ -81,11 +99,15 @@ def _build_bullish_cross_history():
 def _h1_to_5min(candles_h1):
     """Convertit une liste de bougies H1 en bougies 5min equivalentes
     (une seule bougie 5min par heure, au prorata de l'OHLC) -- suffisant
-    pour que resample_h1() reconstruise exactement les memes buckets."""
+    pour que resample_h1() reconstruise exactement les memes buckets.
+    Horodatee a :55 (derniere bougie 5min de l'heure), pas :00 -- sinon
+    resample_h1() exclurait desormais TOUJOURS le dernier bucket comme
+    "encore en formation" (voir son garde-fou de causalite, ajoute en
+    revue finale de branche)."""
     out = []
     for c in candles_h1:
         t = ichimoku_reversion._parse(c["time"])
-        out.append(_candle(t.strftime("%Y-%m-%d %H:00:00"), c["open"], c["high"], c["low"], c["close"]))
+        out.append(_candle(t.strftime("%Y-%m-%d %H:55:00"), c["open"], c["high"], c["low"], c["close"]))
     return out
 
 

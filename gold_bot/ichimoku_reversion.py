@@ -46,13 +46,22 @@ def _parse(ts: str) -> datetime:
 
 def resample_h1(candles_5min: list[dict]) -> list[dict]:
     """Reechantillonne des bougies 5min en bougies H1 (bucket = heure
-    UTC). Causal : `candles_5min` est toujours une fenetre glissante de
-    bougies DEJA closes (gold_bot.loop ne fournit jamais de bougie en
-    formation) -- le dernier bucket H1 produit ici est donc toujours
-    complet, jamais partiel."""
+    UTC). Causal : chaque bougie 5min individuelle est DEJA close
+    (gold_bot.loop ne fournit jamais de bougie en formation), mais rien
+    ne garantit que l'heure CALENDAIRE courante ait deja recu ses 12
+    bougies 5min -- le dernier bucket H1 serait alors PARTIEL (ex. a
+    14h27, le bucket "14:00" n'a vu que les bougies jusqu'a 14h25), et
+    le traiter comme complet divergerait du moteur de recherche valide
+    qui ne decide jamais sur une bougie H1 en formation. Defaut trouve
+    en revue finale de branche, 2026-11-06. Le dernier bucket est donc
+    EXCLU du resultat tant que la bougie 5min de :55 (derniere de
+    l'heure) n'est pas encore arrivee."""
     buckets: dict[str, dict] = {}
+    latest_5min_time: datetime | None = None
     for c in candles_5min:
         t = _parse(c["time"])
+        if latest_5min_time is None or t > latest_5min_time:
+            latest_5min_time = t
         bucket_t = t.replace(minute=0, second=0, microsecond=0)
         key = bucket_t.replace(tzinfo=None).isoformat()
         b = buckets.setdefault(key, {
@@ -63,7 +72,10 @@ def resample_h1(candles_5min: list[dict]) -> list[dict]:
         b["low"] = min(b["low"], c["low"])
         b["close"] = c["close"]
         b["tick_volume"] += c.get("tick_volume", 0)
-    return [buckets[key] for key in sorted(buckets.keys())]
+    ordered = [buckets[key] for key in sorted(buckets.keys())]
+    if ordered and latest_5min_time is not None and latest_5min_time.minute < 60 - CANDLE_INTERVAL_MINUTES:
+        ordered = ordered[:-1]
+    return ordered
 
 
 def compute_atr_h1(candles_h1: list[dict], period: int = ATR_PERIOD) -> list[float | None]:

@@ -6,6 +6,8 @@ import pytest
 
 import gold_bot.ai_news_watch as ai_news_watch
 
+_WINDOW_END = datetime(2026, 11, 6, 13, 45, 0, tzinfo=timezone.utc)
+
 
 @pytest.fixture(autouse=True)
 def _reset_watch_cooldown():
@@ -61,7 +63,7 @@ def _candles():
 def test_judge_post_news_calm_returns_none_and_logs_when_api_key_absent(tmp_path, monkeypatch):
     monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
     log_path = str(tmp_path / "ai_news_watch_log.jsonl")
-    result = ai_news_watch.judge_post_news_calm("XAUUSD", _candles(), 10.0, log_path=log_path)
+    result = ai_news_watch.judge_post_news_calm("XAUUSD", _candles(), 10.0, _WINDOW_END, log_path=log_path)
     assert result is None
     entries = [json.loads(line) for line in open(log_path, encoding="utf-8")]
     assert len(entries) == 1
@@ -75,7 +77,7 @@ def test_judge_post_news_calm_parses_verdict_and_logs_on_success(tmp_path, monke
         '{"verdict": "encore_agite", "confiance": "haute", "raison": "le marche digere encore le NFP"}'
     )]))
     monkeypatch.setattr(anthropic, "Anthropic", fake_client)
-    result = ai_news_watch.judge_post_news_calm("XAUUSD", _candles(), 10.0, log_path=log_path)
+    result = ai_news_watch.judge_post_news_calm("XAUUSD", _candles(), 10.0, _WINDOW_END, log_path=log_path)
     assert result == {"verdict": "encore_agite", "confiance": "haute", "raison": "le marche digere encore le NFP"}
     entries = [json.loads(line) for line in open(log_path, encoding="utf-8")]
     assert entries[0]["symbol"] == "XAUUSD"
@@ -88,7 +90,7 @@ def test_judge_post_news_calm_returns_none_and_logs_when_verdict_unparseable(tmp
     log_path = str(tmp_path / "ai_news_watch_log.jsonl")
     fake_client = _FakeAnthropicClient(response=_FakeResponse([_FakeTextBlock("reponse sans JSON exploitable")]))
     monkeypatch.setattr(anthropic, "Anthropic", fake_client)
-    result = ai_news_watch.judge_post_news_calm("XAUUSD", _candles(), 10.0, log_path=log_path)
+    result = ai_news_watch.judge_post_news_calm("XAUUSD", _candles(), 10.0, _WINDOW_END, log_path=log_path)
     assert result is None
     entries = [json.loads(line) for line in open(log_path, encoding="utf-8")]
     assert entries[0]["error"] == "verdict JSON non trouve ou invalide dans la reponse"
@@ -99,7 +101,7 @@ def test_judge_post_news_calm_never_raises_and_logs_on_client_exception(tmp_path
     log_path = str(tmp_path / "ai_news_watch_log.jsonl")
     fake_client = _FakeAnthropicClient(error=TimeoutError("boom"))
     monkeypatch.setattr(anthropic, "Anthropic", fake_client)
-    result = ai_news_watch.judge_post_news_calm("XAUUSD", _candles(), 10.0, log_path=log_path)
+    result = ai_news_watch.judge_post_news_calm("XAUUSD", _candles(), 10.0, _WINDOW_END, log_path=log_path)
     assert result is None
     entries = [json.loads(line) for line in open(log_path, encoding="utf-8")]
     assert "TimeoutError" in entries[0]["error"]
@@ -113,8 +115,8 @@ def test_judge_post_news_calm_skips_second_call_within_cooldown_reusing_verdict(
     )]))
     monkeypatch.setattr(anthropic, "Anthropic", fake_client)
     t0 = datetime(2026, 11, 6, 13, 55, 0, tzinfo=timezone.utc)
-    first = ai_news_watch.judge_post_news_calm("XAUUSD", _candles(), 10.0, log_path=log_path, now=t0)
-    second = ai_news_watch.judge_post_news_calm("XAUUSD", _candles(), 11.0, log_path=log_path, now=t0 + timedelta(minutes=1))
+    first = ai_news_watch.judge_post_news_calm("XAUUSD", _candles(), 10.0, _WINDOW_END, log_path=log_path, now=t0)
+    second = ai_news_watch.judge_post_news_calm("XAUUSD", _candles(), 11.0, _WINDOW_END, log_path=log_path, now=t0 + timedelta(minutes=1))
     assert first is not None
     assert second == first
     entries = [json.loads(line) for line in open(log_path, encoding="utf-8")]
@@ -129,9 +131,9 @@ def test_judge_post_news_calm_calls_again_after_cooldown_expires(tmp_path, monke
     )]))
     monkeypatch.setattr(anthropic, "Anthropic", fake_client)
     t0 = datetime(2026, 11, 6, 13, 55, 0, tzinfo=timezone.utc)
-    first = ai_news_watch.judge_post_news_calm("XAUUSD", _candles(), 10.0, log_path=log_path, now=t0)
+    first = ai_news_watch.judge_post_news_calm("XAUUSD", _candles(), 10.0, _WINDOW_END, log_path=log_path, now=t0)
     second = ai_news_watch.judge_post_news_calm(
-        "XAUUSD", _candles(), 10.0, log_path=log_path, now=t0 + ai_news_watch.WATCH_COOLDOWN + timedelta(seconds=1),
+        "XAUUSD", _candles(), 10.0, _WINDOW_END, log_path=log_path, now=t0 + ai_news_watch.WATCH_COOLDOWN + timedelta(seconds=1),
     )
     assert first is not None and second is not None
     entries = [json.loads(line) for line in open(log_path, encoding="utf-8")]
@@ -146,8 +148,61 @@ def test_judge_post_news_calm_cooldown_is_per_symbol(tmp_path, monkeypatch):
     )]))
     monkeypatch.setattr(anthropic, "Anthropic", fake_client)
     t0 = datetime(2026, 11, 6, 13, 55, 0, tzinfo=timezone.utc)
-    xau = ai_news_watch.judge_post_news_calm("XAUUSD", _candles(), 10.0, log_path=log_path, now=t0)
-    xag = ai_news_watch.judge_post_news_calm("XAGUSD", _candles(), 10.0, log_path=log_path, now=t0 + timedelta(minutes=1))
+    xau = ai_news_watch.judge_post_news_calm("XAUUSD", _candles(), 10.0, _WINDOW_END, log_path=log_path, now=t0)
+    xag = ai_news_watch.judge_post_news_calm("XAGUSD", _candles(), 10.0, _WINDOW_END, log_path=log_path, now=t0 + timedelta(minutes=1))
     assert xau is not None and xag is not None
     entries = [json.loads(line) for line in open(log_path, encoding="utf-8")]
     assert len(entries) == 2
+
+
+def test_judge_post_news_calm_cooldown_is_per_window_end_not_shared_across_events(tmp_path, monkeypatch):
+    # Reproduit le finding Important de la revue finale : FOMC puis BOE (ou
+    # BCE puis CPI) a moins de 24h d'ecart ne doivent JAMAIS partager un
+    # verdict -- chaque evenement (window_end distinct) doit declencher son
+    # propre appel reel, meme si le symbole et le cooldown de 24h sont les
+    # memes.
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-ant-fake")
+    log_path = str(tmp_path / "ai_news_watch_log.jsonl")
+    fake_client = _FakeAnthropicClient(response=_FakeResponse([_FakeTextBlock(
+        '{"verdict": "calme", "confiance": "haute", "raison": "test"}'
+    )]))
+    monkeypatch.setattr(anthropic, "Anthropic", fake_client)
+    t0 = datetime(2026, 11, 6, 13, 55, 0, tzinfo=timezone.utc)
+    window_end_a = datetime(2026, 11, 6, 13, 45, 0, tzinfo=timezone.utc)
+    window_end_b = datetime(2026, 11, 7, 2, 0, 0, tzinfo=timezone.utc)  # evenement different, moins de 24h apres
+    first = ai_news_watch.judge_post_news_calm("XAUUSD", _candles(), 10.0, window_end_a, log_path=log_path, now=t0)
+    second = ai_news_watch.judge_post_news_calm(
+        "XAUUSD", _candles(), 5.0, window_end_b, log_path=log_path, now=t0 + timedelta(hours=12),
+    )
+    assert first is not None and second is not None
+    entries = [json.loads(line) for line in open(log_path, encoding="utf-8")]
+    assert len(entries) == 2  # deux appels reels, pas un verdict reutilise a tort
+
+
+def test_judge_post_news_calm_normalizes_accented_verdict(tmp_path, monkeypatch):
+    # Reproduit le 2e finding Important : un verdict accentue/mal-casse ne
+    # doit pas etre ignore silencieusement.
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-ant-fake")
+    log_path = str(tmp_path / "ai_news_watch_log.jsonl")
+    fake_client = _FakeAnthropicClient(response=_FakeResponse([_FakeTextBlock(
+        '{"verdict": "Encore_Agité", "confiance": "haute", "raison": "le marche digere encore"}'
+    )]))
+    monkeypatch.setattr(anthropic, "Anthropic", fake_client)
+    result = ai_news_watch.judge_post_news_calm("XAUUSD", _candles(), 10.0, _WINDOW_END, log_path=log_path)
+    assert result is not None
+    assert result["verdict"] == "encore_agite"
+
+
+def test_judge_post_news_calm_returns_none_for_unrecognized_verdict_value(tmp_path, monkeypatch):
+    # Une valeur qui ne normalise vers AUCUN des deux verdicts connus doit
+    # echouer proprement (fail-open), pas etre acceptee telle quelle.
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-ant-fake")
+    log_path = str(tmp_path / "ai_news_watch_log.jsonl")
+    fake_client = _FakeAnthropicClient(response=_FakeResponse([_FakeTextBlock(
+        '{"verdict": "incertain", "confiance": "faible", "raison": "test"}'
+    )]))
+    monkeypatch.setattr(anthropic, "Anthropic", fake_client)
+    result = ai_news_watch.judge_post_news_calm("XAUUSD", _candles(), 10.0, _WINDOW_END, log_path=log_path)
+    assert result is None
+    entries = [json.loads(line) for line in open(log_path, encoding="utf-8")]
+    assert entries[0]["error"] == "verdict JSON non trouve ou invalide dans la reponse"

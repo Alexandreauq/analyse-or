@@ -192,6 +192,38 @@ def test_compute_trailing_stop_tightens_stop_on_vente_happy_path():
     assert result == 90.57142857142857
 
 
+def test_compute_trailing_stop_excludes_entry_candles_own_extreme():
+    # Verrouille la regression du defaut 3 (since_entry incluait avant la
+    # bougie d'entree elle-meme) : construit une bougie H1 d'entree avec
+    # un high extreme (150.0) PLUS GRAND que tout ce qui suit, sur un
+    # historique sinon totalement plat (100.0 partout). Verifie
+    # independamment (script jetable, memes fonctions que la production) :
+    # kijun_entry=124.75, atr_entry=4.535714285714286 (la bougie spike
+    # elle-meme entre dans la fenetre glissante kijun/ATR, incluse par
+    # definition -- cf. _rolling_high_low).
+    # initial_stop (achat) = 124.75 - 0.5*4.535714285714286 = 122.48214285714286
+    # r_distance = |100.0 - 122.48214285714286| = 22.48214285714286
+    # since_entry STRICTEMENT APRES l'entree (code corrige) : best high
+    # = 100.5 (bougies plates) => excursion_r = 0.5/22.48 = 0.022 < 1R => None.
+    # Si since_entry incluait encore la bougie d'entree (ancien bug,
+    # `>=` au lieu du slice `entry_5min_idx+1:`), best high serait 150.0
+    # (la bougie d'entree elle-meme) => excursion_r = 50/22.48 = 2.22 >= 1R,
+    # et la fonction renverrait un nouveau stop au lieu de None -- ce test
+    # echouerait si le defaut 3 etait reintroduit.
+    from datetime import timedelta
+    base = datetime(2026, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
+    candles_5min = []
+    for h in range(80):
+        ts = (base + timedelta(hours=h)).strftime("%Y-%m-%d %H:00:00")
+        candles_5min.append(_candle(ts, 100.0, 100.5, 99.5, 100.0))
+    entry_idx = 70
+    candles_5min[entry_idx] = _candle(candles_5min[entry_idx]["time"], 100.0, 150.0, 99.5, 100.0)
+    entry_time_iso = candles_5min[entry_idx]["time"]
+    result = ichimoku_reversion.compute_trailing_stop(
+        candles_5min, "achat", entry_time_iso, entry_price=100.0, current_stop_loss=122.48214285714286)
+    assert result is None
+
+
 def test_compute_trailing_stop_never_loosens_an_already_tighter_stop():
     # Meme scenario que le chemin heureux achat (candidate=109.42857142857143
     # au lieu du candidat calcule), mais current_stop_loss=115.0 est DEJA

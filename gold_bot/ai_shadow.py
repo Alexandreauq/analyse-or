@@ -57,13 +57,27 @@ def _describe_candles(candles: list[dict], limit: int = MAX_CANDLES_IN_PROMPT) -
     return "\n".join(lines)
 
 
-def _build_prompt(symbol: str, direction: str, state: dict, candles: list[dict]) -> str:
+def _build_prompt(symbol: str, direction: str, state: dict, candles: list[dict], *,
+                   engine_label: str, real_decision: bool) -> str:
+    trend_line = (
+        f"force de tendance glissante 20 jours={state.get('trend_strength')}, "
+        if state.get("trend_strength") is not None else ""
+    )
+    consequence_line = (
+        "Ceci est une VRAIE decision : si tu juges qu'il faut t'opposer (verdict "
+        '"opposerait"), ce trade ne sera PAS execute. Sois honnete et direct, dis '
+        "clairement si tu n'as rien trouve de pertinent -- ne t'oppose pas par excès "
+        "de prudence sans raison concrete."
+        if real_decision else
+        "Ceci est un TEST EN MODE FANTOME : ton avis n'affecte AUCUN trade reel, "
+        "sois honnete et direct, dis clairement si tu n'as rien trouve de pertinent."
+    )
     return (
-        f"Un moteur de trading mecanique sur l'or ({symbol}) vient de detecter un signal "
-        f"d'entree reel ({direction}) sur un rebond de retracement de Fibonacci.\n\n"
+        f"Un moteur de trading mecanique sur l'or/l'argent ({symbol}) vient de detecter "
+        f"un signal d'entree reel ({direction}) sur {engine_label}.\n\n"
         f"Contexte chiffre : niveau={state.get('level')}, cloture={state.get('close')}, "
         f"plus haut={state.get('high')}, plus bas={state.get('low')}, ATR={state.get('atr')}, "
-        f"force de tendance glissante 20 jours={state.get('trend_strength')}, "
+        f"{trend_line}"
         f"heure UTC={state.get('hour_utc')}.\n\n"
         f"Dernieres bougies 5min (plus recente en dernier) :\n{_describe_candles(candles)}\n\n"
         f"Cherche s'il y a une actualite majeure en cours ou tres recente qui pourrait "
@@ -72,8 +86,7 @@ def _build_prompt(symbol: str, direction: str, state: dict, candles: list[dict])
         f"ou a du bruit cause par une actualite -- meme principe que l'incident reel du "
         f"2026-10-28 (un signal technique authentique declenche par une conference de "
         f"presse de la Fed, pas un vrai retournement).\n\n"
-        f"Ceci est un TEST EN MODE FANTOME : ton avis n'affecte AUCUN trade reel, "
-        f"sois honnete et direct, dis clairement si tu n'as rien trouve de pertinent.\n\n"
+        f"{consequence_line}\n\n"
         f"Termine ta reponse par un bloc JSON seul sur sa derniere ligne, exactement sous "
         f'cette forme : {{"verdict": "confirme ou opposerait", "confiance": "faible ou '
         f'moyenne ou haute", "raison": "une phrase"}}'
@@ -99,7 +112,8 @@ def _append_log(entry: dict, path: str = SHADOW_LOG_PATH) -> None:
         pass
 
 
-def shadow_judge_entry(symbol: str, direction: str, state: dict, candles: list[dict],
+def shadow_judge_entry(symbol: str, direction: str, state: dict, candles: list[dict], *,
+                        engine_label: str, real_decision: bool = False,
                         log_path: str = SHADOW_LOG_PATH, now: datetime | None = None) -> dict | None:
     """Appelle Claude en mode FANTOME pour juger un signal d'entree reel
     deja confirme par le moteur mecanique -- ne change jamais la vraie
@@ -156,7 +170,9 @@ def shadow_judge_entry(symbol: str, direction: str, state: dict, candles: list[d
             max_tokens=4096,
             output_config={"effort": "medium"},
             tools=[{"type": "web_search_20260209", "name": "web_search", "max_uses": WEB_SEARCH_MAX_USES}],
-            messages=[{"role": "user", "content": _build_prompt(symbol, direction, state, candles)}],
+            messages=[{"role": "user", "content": _build_prompt(
+                symbol, direction, state, candles, engine_label=engine_label, real_decision=real_decision,
+            )}],
         )
         text = "".join(block.text for block in response.content if block.type == "text")
         verdict = _parse_verdict(text)

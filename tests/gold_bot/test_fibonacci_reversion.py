@@ -150,7 +150,14 @@ def test_latest_state_trend_strength_none_at_exactly_window_days_of_history():
     today = datetime(2026, 10, 1, tzinfo=timezone.utc)
     candles = _series(fib.ATR_PERIOD + fib.FIB_WINDOW + 5, start_price=1960.0, start_dt=today)
     historical_exactly_20 = _daily_history(fib.TREND_WINDOW_DAYS, start_price=1900.0, daily_delta=2.0, start_day=today)
-    assert fib.latest_state(candles, historical_exactly_20)["trend_strength"] is None
+    state_20 = fib.latest_state(candles, historical_exactly_20)
+    assert state_20["trend_strength"] is None
+    assert state_20["trend_strength_short"] is None  # les deux ensemble -- meme si 20j suffirait pour la fenetre courte (5j) seule
+
+    historical_10 = _daily_history(10, start_price=1900.0, daily_delta=2.0, start_day=today)
+    state_10 = fib.latest_state(candles, historical_10)
+    assert state_10["trend_strength"] is None
+    assert state_10["trend_strength_short"] is None  # 10j suffiraient pour la fenetre courte seule, mais pas pour la longue
 
     historical_21 = _daily_history(fib.TREND_WINDOW_DAYS + 1, start_price=1900.0, daily_delta=2.0, start_day=today)
     assert fib.latest_state(candles, historical_21)["trend_strength"] is not None
@@ -173,11 +180,16 @@ def _v_shaped_daily_history(start_day, total_days=21, crash_price=2000.0, trough
     -- et le plus court qui donne des valeurs rondes et verifiables a la
     main, sans decalage de reference du a un historique plus long) :
     krach lineaire (jours 0-15, 2000->1800) puis rebond lineaire (jours
-    16-20, 1800->1990) -- meme forme que l'incident reel du 2026-11-06
-    (krach 30/10 puis +5.5% en 4 seances). Cloture du dernier jour
-    (hier) proche du depart (2000) -> tendance LONGUE (20j) faible,
-    mais cloture du creux tres loin de celle d'hier -> tendance COURTE
-    (5j) forte."""
+    16-20, 1800->1990) -- MEME FORME que l'incident reel du 2026-11-06
+    (krach 30/10 puis rebond), mais amplitude du rebond VOLONTAIREMENT
+    PLUS FORTE (+10.6% sur 5j ici, contre +5.48% le vrai 05/11) pour
+    depasser clairement le seuil de 8% -- le vrai rebond du 06/11,
+    sous ce seuil, n'aurait PAS ete bloque par ce correctif (voir
+    docs/superpowers/research/gold_bot_fib_trend_filter_vshape_fix/README.md,
+    releve en relecture finale : ne pas confondre ce test avec un
+    correctif de l'incident precis, c'est une amelioration de
+    robustesse generale sur la FORME du defaut, pas sur son amplitude
+    exacte)."""
     out = []
     crash_days = total_days - 5
     for d in range(crash_days):

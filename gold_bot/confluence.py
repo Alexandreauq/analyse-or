@@ -6,7 +6,7 @@
 # l'ancien moteur contre-tendance sur chandelier qu'il utilisait avant
 # cette date.
 import math
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 import gold_bot.broker as broker
 import gold_bot.chart_patterns as chart_patterns
@@ -249,6 +249,40 @@ def is_volatility_shock(candles: list[dict], baseline_window: int = 100, lag: in
     last = candles[-1]
     current_range = last["high"] - last["low"]
     return current_range > shock_mult * baseline
+
+
+POST_NEWS_GRACE_MINUTES = 60  # fenetre grise apres la fin d'une fenetre SCALP (15min)
+PRESS_CONFERENCE_POST_NEWS_GRACE_MINUTES = 80  # apres la fin d'une fenetre press-conference (100min)
+
+
+def minutes_since_blackout_ended(date: datetime) -> tuple[float, float] | None:
+    """(minutes ecoulees depuis la fin de la derniere fenetre de
+    blackout calendaire la plus recente avant `date`, grace applicable
+    en minutes pour CE type d'evenement) -- ou None si `date` est
+    encore DANS une fenetre de blackout (is_news_blackout(date) est
+    True -- rien a faire, le garde-fou existant bloque deja), ou si
+    aucun evenement qualifiant (fenetre deja terminee) n'est trouve
+    avant `date` dans les listes connues. Ne tranche JAMAIS si la
+    fenetre grise est depassee -- renvoie une valeur meme tres au-dela
+    de la grace applicable, c'est a l'appelant de comparer."""
+    if is_news_blackout(date):
+        return None
+    best: tuple[float, float] | None = None
+    for iso in SCALP_HIGH_IMPACT_EVENTS_UTC:
+        event = datetime.fromisoformat(iso.replace("Z", "+00:00"))
+        window_end = event + timedelta(minutes=SCALP_NEWS_BLACKOUT_MINUTES)
+        if window_end <= date:
+            elapsed = (date - window_end).total_seconds() / 60
+            if best is None or elapsed < best[0]:
+                best = (elapsed, POST_NEWS_GRACE_MINUTES)
+    for iso in PRESS_CONFERENCE_EVENTS_UTC:
+        event = datetime.fromisoformat(iso.replace("Z", "+00:00"))
+        window_end = event + timedelta(minutes=PRESS_CONFERENCE_BLACKOUT_MINUTES)
+        if window_end <= date:
+            elapsed = (date - window_end).total_seconds() / 60
+            if best is None or elapsed < best[0]:
+                best = (elapsed, PRESS_CONFERENCE_POST_NEWS_GRACE_MINUTES)
+    return best
 
 
 def is_market_closed(date: datetime) -> bool:

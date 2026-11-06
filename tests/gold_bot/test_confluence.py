@@ -447,6 +447,58 @@ def test_is_news_blackout_covers_fomc_press_conference_90min_later():
     assert confluence.is_news_blackout(datetime(2026, 10, 28, 19, 30, tzinfo=timezone.utc)) is True
 
 
+def test_minutes_since_blackout_ended_none_during_active_blackout():
+    from datetime import datetime, timezone
+    # CPI du 11/09/2026, 12h30 UTC -- exactement dans la fenetre (voir
+    # test_is_news_blackout_exactly_at_event existant).
+    assert confluence.minutes_since_blackout_ended(datetime(2026, 9, 11, 12, 30, tzinfo=timezone.utc)) is None
+
+
+def test_minutes_since_blackout_ended_none_before_any_known_event():
+    from datetime import datetime, timezone
+    # Avant le tout premier evenement connu (NFP du 09/01/2026).
+    assert confluence.minutes_since_blackout_ended(datetime(2026, 1, 1, 0, 0, tzinfo=timezone.utc)) is None
+
+
+def test_minutes_since_blackout_ended_correct_right_after_scalp_window():
+    from datetime import datetime, timezone
+    # NFP du 06/11/2026, 13h30 UTC -- fenetre SCALP (15min) finit a
+    # 13h45 UTC. 13h55 UTC = 10 minutes plus tard -- exactement le cas
+    # reel du 2026-11-06.
+    result = confluence.minutes_since_blackout_ended(datetime(2026, 11, 6, 13, 55, tzinfo=timezone.utc))
+    assert result == (10.0, confluence.POST_NEWS_GRACE_MINUTES)
+
+
+def test_minutes_since_blackout_ended_correct_right_after_press_conference_window():
+    from datetime import datetime, timezone
+    # FOMC du 28/10/2026, 18h00 UTC -- fenetre press-conference (100min)
+    # finit a 19h40 UTC. 20h00 UTC = 20 minutes plus tard.
+    result = confluence.minutes_since_blackout_ended(datetime(2026, 10, 28, 20, 0, tzinfo=timezone.utc))
+    assert result == (20.0, confluence.PRESS_CONFERENCE_POST_NEWS_GRACE_MINUTES)
+
+
+def test_minutes_since_blackout_ended_picks_the_most_recent_window():
+    from datetime import datetime, timezone
+    # BCE du 29/10/2026 13h15 UTC (press-conference, fenetre finit a
+    # 14h55 UTC le 29/10) est BIEN avant le NFP du 06/11/2026 13h30 UTC
+    # (SCALP, fenetre finit a 13h45 UTC). A 14h00 UTC le 06/11 (15min
+    # apres la fin de la fenetre NFP), le NFP est la fenetre la PLUS
+    # RECENTE des deux -- doit etre choisi, pas la BCE (bien plus
+    # ancienne malgre un type different).
+    result = confluence.minutes_since_blackout_ended(datetime(2026, 11, 6, 14, 0, tzinfo=timezone.utc))
+    assert result == (15.0, confluence.POST_NEWS_GRACE_MINUTES)
+
+
+def test_minutes_since_blackout_ended_still_returns_a_value_long_after_the_grace_period():
+    from datetime import datetime, timezone
+    # 6h15 apres la fin de la fenetre NFP du 06/11 (13h45 UTC) -- bien
+    # au-dela de POST_NEWS_GRACE_MINUTES(60), mais la fonction renvoie
+    # quand meme une valeur : c'est a L'APPELANT de comparer elapsed a
+    # grace, pas a cette fonction de trancher.
+    result = confluence.minutes_since_blackout_ended(datetime(2026, 11, 6, 20, 0, tzinfo=timezone.utc))
+    assert result == (375.0, confluence.POST_NEWS_GRACE_MINUTES)
+
+
 def test_is_news_blackout_covers_ecb_press_conference_90min_later():
     from datetime import datetime, timezone
     # Décision BCE du 29/10/2026, 13h15 UTC + 90 min = 14h45 UTC.

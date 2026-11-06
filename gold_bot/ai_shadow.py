@@ -39,8 +39,8 @@ REQUEST_TIMEOUT_SECONDS = 40.0
 WEB_SEARCH_MAX_USES = 2
 SHADOW_COOLDOWN = timedelta(hours=24)
 
-_last_call_at: dict[tuple[str, str], datetime] = {}  # cle (symbol, engine_label) -- jamais symbol seul
-_last_verdict: dict[tuple[str, str], dict] = {}  # dernier verdict REEL (jamais None), reutilise pendant le cooldown
+_last_call_at: dict[tuple[str, str, str], datetime] = {}  # cle (symbol, engine_label, direction)
+_last_verdict: dict[tuple[str, str, str], dict] = {}  # dernier verdict REEL (jamais None), reutilise pendant le cooldown
 _cooldown_lock = threading.Lock()
 
 _VERDICT_JSON_RE = re.compile(r"\{[^{}]*\"verdict\"[^{}]*\}")
@@ -126,25 +126,37 @@ def shadow_judge_entry(symbol: str, direction: str, state: dict, candles: list[d
     passe, None si l'appel echoue reellement (API absente, erreur,
     verdict non parseable -- jamais d'exception propagee). Pendant le
     cooldown (voir SHADOW_COOLDOWN), renvoie le DERNIER VERDICT REEL
-    obtenu pour ce (symbol, engine_label) plutot que None -- sans ca,
-    un signal qui reste confirme cycle apres cycle (le cas normal pour
-    un croisement Ichimoku, qui dure toute l'heure de la bougie H1)
-    ferait passer un "opposerait" en fail-open dès le cycle suivant,
-    1 minute plus tard, annulant le veto reel qu'il venait de poser --
-    trouve et reproduit en revue finale de branche, 2026-11-06. Rien
-    n'est journalise pour un appel saute, qu'il reutilise un verdict ou
-    renvoie None, pour ne pas saturer le journal a chaque cycle."""
+    obtenu pour ce (symbol, engine_label, direction) plutot que None --
+    sans ca, un signal qui reste confirme cycle apres cycle (le cas
+    normal pour un croisement Ichimoku, qui dure toute l'heure de la
+    bougie H1) ferait passer un "opposerait" en fail-open dès le cycle
+    suivant, 1 minute plus tard, annulant le veto reel qu'il venait de
+    poser -- trouve et reproduit en revue finale de branche, 2026-11-06.
+    `direction` fait partie de la cle (pas seulement symbol/engine_label) :
+    sans elle, un "opposerait" sur un achat bloquerait a tort un signal
+    de vente totalement different sur le meme symbole quelques heures
+    plus tard dans la meme fenetre de 24h -- trouve en re-confirmation
+    du correctif precedent, meme jour. Limite acceptee et documentee :
+    deux signaux REELS dans la MEME direction le meme jour (rare, les
+    vrais appels sont deja ~1/semaine/symbole) partageraient encore le
+    meme verdict en cache -- juge preferable a ne pas boucler sur une
+    granularite plus fine (par bougie H1), le cout d'un faux negatif
+    (trade manque) etant bien moindre que celui du bug corrige ici
+    (trade perdant execute malgre un vrai veto). Rien n'est journalise
+    pour un appel saute, qu'il reutilise un verdict ou renvoie None,
+    pour ne pas saturer le journal a chaque cycle."""
     now = now or datetime.now(timezone.utc)
-    # Cle (symbol, engine_label), jamais symbol seul : deux moteurs
-    # distincts peuvent un jour partager un symbole (ex. XAUUSD sur
-    # Fibonacci ET un autre moteur) -- avec une cle symbol seul, un
+    # Cle (symbol, engine_label, direction), jamais symbol seul : deux
+    # moteurs distincts peuvent un jour partager un symbole (ex. XAUUSD
+    # sur Fibonacci ET un autre moteur) -- avec une cle symbol seul, un
     # appel fantome consommerait le cooldown d'un vrai veto (ou
     # l'inverse) sans que ce soit visible dans les logs applicatifs.
     # Trouve en re-review de la Task 3 (branchement du premier veto
     # reel, sur Ichimoku/XAGUSD -- pas de collision aujourd'hui avec
     # Fibonacci/XAUUSD, mais l'hypothese implicite devenait une vraie
     # question de securite dès qu'un second consommateur reel existe).
-    cooldown_key = (symbol, engine_label)
+    # `direction` ajoutee en re-confirmation finale -- voir docstring.
+    cooldown_key = (symbol, engine_label, direction)
     with _cooldown_lock:
         last = _last_call_at.get(cooldown_key)
         if last is not None and now - last < SHADOW_COOLDOWN:

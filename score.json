@@ -1,26 +1,26 @@
 {
-  "date": "2026-11-05",
-  "composite_score": -1.5,
+  "date": "2026-11-06",
+  "composite_score": -1.4,
   "interpretation": "Neutre — pas d'action",
   "cftc_percentile": 26.282051282051285,
   "factors": [
     {
       "name": "Taux réels US 10 ans",
-      "score": -0.40000000000000036,
+      "score": -0.20000000000000462,
       "weight": 0.3,
-      "raw_value": "2.64% (il y a ~45j : 2.62%)"
+      "raw_value": "2.64% (il y a ~45j : 2.63%)"
     },
     {
       "name": "Dollar (DXY)",
       "score": -10,
       "weight": 0.15,
-      "raw_value": "101.61 (il y a 2 mois : 98.84)"
+      "raw_value": "101.62 (il y a 2 mois : 98.84)"
     },
     {
       "name": "Anticipations d'inflation",
-      "score": -2.6666666666666696,
+      "score": -2.9999999999999956,
       "weight": 0.15,
-      "raw_value": "2.26% (il y a ~45j : 2.34%)"
+      "raw_value": "2.24% (il y a ~45j : 2.33%)"
     },
     {
       "name": "Ton de la Fed",
@@ -48,16 +48,11 @@
     }
   ],
   "technical": {
-    "note": "Cours en-dessous de la MM200 (-9.0%) — tendance baissière",
-    "spot": 4100.2001953125,
-    "ma200": 4505.621497802735
+    "note": "Cours en-dessous de la MM200 (-9.6%) — tendance baissière",
+    "spot": 4073.800048828125,
+    "ma200": 4505.489497070313
   },
   "calendar": [
-    {
-      "date": "05/11/2026",
-      "label": "Inscriptions chômage (hebdo)",
-      "kind": "Donnée"
-    },
     {
       "date": "06/11/2026",
       "label": "Emploi US (NFP + chômage)",
@@ -66,6 +61,11 @@
     {
       "date": "10/11/2026",
       "label": "CPI (Indice des prix à la consommation)",
+      "kind": "Donnée"
+    },
+    {
+      "date": "12/11/2026",
+      "label": "Inscriptions chômage (hebdo)",
       "kind": "Donnée"
     },
     {
@@ -99,7 +99,7 @@
       "kind": "info",
       "title": "Pas de signal actif",
       "detail": "Aucune des conditions de veille, d'entrée ou de risque n'est réunie aujourd'hui.",
-      "date": "05/11/2026"
+      "date": "06/11/2026"
     }
   ],
   "news": [

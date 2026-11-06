@@ -616,21 +616,33 @@ def decide_and_act_ichimoku(candles: list[dict], *, contract_size: float, balanc
     target_r = ichimoku_reversion.TARGET_R
     target = entry_price + target_r * distance if direction == "achat" else entry_price - target_r * distance
 
-    partial_raw = ichimoku_reversion.PARTIAL_TP_PCT * total_size
-    runner_raw = (1.0 - ichimoku_reversion.PARTIAL_TP_PCT) * total_size
-    partial_volume = risk.round_to_volume_step(partial_raw, volume_step, min_volume, max_volume)
-    runner_volume = risk.round_to_volume_step(runner_raw, volume_step, min_volume, max_volume)
+    # Seule la jambe partielle est arrondie depuis une fraction de
+    # total_size ; la jambe runner est le RESTE arithmetique (jamais
+    # re-arrondie independamment), et si la partielle elle-meme tombe
+    # sous le minimum broker, tout le volume part en jambe runner seule
+    # -- jamais d'abandon du trade pour "trop petit a scinder en deux"
+    # quand total_size etait deja valide. Meme patron que
+    # decide_and_act_fibonacci/decide_and_act_vwap (ligne ~330) ; trouve
+    # en relisant la Task 2 : le brief arrondissait les deux jambes
+    # independamment, ce qui pouvait rejeter un trade entier valide si
+    # les deux fractions tombaient sous le minimum (ex. total_size au
+    # pas minimum du broker, 70%/30% tombant chacun sous ce pas).
+    partial_volume = risk.round_to_volume_step(
+        ichimoku_reversion.PARTIAL_TP_PCT * total_size, volume_step, min_volume, max_volume)
 
-    if partial_volume is None and runner_volume is None:
-        return {"action": "aucune", "reason": "compte trop petit pour scinder en deux jambes"}
-
-    steps = []
-    if partial_volume is not None:
-        steps.append({
+    if partial_volume is None:
+        return {"action": "simulation", "steps": [{
             "type": "ouverture_simulee", "symbol": symbol, "direction": direction,
-            "entry": entry_price, "stop_loss": stop_loss, "take_profit": target, "volume": partial_volume,
-        })
-    if runner_volume is not None:
+            "entry": entry_price, "stop_loss": stop_loss, "take_profit": None, "volume": total_size,
+        }]}
+
+    runner_volume = round(total_size - partial_volume, 2)
+
+    steps = [{
+        "type": "ouverture_simulee", "symbol": symbol, "direction": direction,
+        "entry": entry_price, "stop_loss": stop_loss, "take_profit": target, "volume": partial_volume,
+    }]
+    if runner_volume >= volume_step:
         steps.append({
             "type": "ouverture_simulee", "symbol": symbol, "direction": direction,
             "entry": entry_price, "stop_loss": stop_loss, "take_profit": None, "volume": runner_volume,

@@ -88,10 +88,12 @@ verdict = ai_shadow.shadow_judge_entry(
 )
 if verdict is not None and verdict.get("verdict") == "opposerait":
     return {"action": "aucune", "reason": "veto IA (opposition)"}
-# verdict is None (erreur, timeout, cooldown) OU verdict confirme : le trade se fait normalement
+# verdict is None (erreur reelle, timeout, verdict non parseable) OU verdict confirme : le trade se fait normalement
 ```
 
 **Justification, à documenter en commentaire dans le code** : le veto IA n'a, à la date de ce chantier, jamais produit un seul verdict exploitable en conditions réelles (0/36 tentatives historiques avant le fix du 2026-11-05 — 28 timeouts, 7 échecs de crédits API, 1 réponse mal formée). Bloquer par défaut en cas d'échec reviendrait quasiment à arrêter le moteur. Le signal technique validé par la recherche prime donc en cas de doute sur la disponibilité/fiabilité de l'IA — l'IA ne peut qu'ajouter une restriction (veto explicite), jamais remplacer le signal en cas d'absence de réponse.
+
+**Correctif du 2026-11-06 (revue finale de branche)** : le cooldown (`SHADOW_COOLDOWN`) N'est PLUS un cas `None` — `shadow_judge_entry` met en cache le dernier verdict RÉEL obtenu pour `(symbol, engine_label)` et le réutilise tant que le cooldown court, au lieu de renvoyer `None`. Sans ça, un signal qui reste confirmé cycle après cycle (le cas normal pour un croisement Ichimoku, qui dure toute l'heure de la bougie H1) ferait passer un "opposerait" en fail-open dès le cycle suivant (1 minute plus tard), annulant le veto réel qu'il venait de poser — reproduit en exécution réelle, corrigé le même jour. `None` ne survient donc plus que pour un échec RÉEL (API absente, timeout, verdict non parseable) sur la tentative qui ouvre une nouvelle fenêtre de cooldown.
 
 `state_for_ai` : construire un dict compatible avec `_build_prompt` (`level` n'a pas de sens pour Ichimoku — utiliser par exemple `state["kijun"]` comme `level` ou ajuster `_build_prompt` pour qu'il accepte des champs optionnels selon `engine_label`, à trancher au moment de l'implémentation en gardant le prompt lisible pour un humain qui relirait le log).
 

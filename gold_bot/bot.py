@@ -6,6 +6,7 @@
 # docs/superpowers/specs/2026-09-10-bot-trading-or-design.md.
 from datetime import datetime, timezone
 
+import gold_bot.ai_news_watch as ai_news_watch
 import gold_bot.ai_shadow as ai_shadow
 import gold_bot.broker as broker
 import gold_bot.confluence as confluence
@@ -449,6 +450,18 @@ def decide_and_act_fibonacci(candles: list[dict], *, contract_size: float, balan
         return {"action": "aucune", "reason": "trop tard dans la session pour ouvrir"}
     if confluence.is_volatility_shock(candles) is not False:
         return {"action": "aucune", "reason": "volatilite anormale (actualite probable), signal ignore par prudence"}
+    # Fenetre grise post-blackout (voir gold_bot/ai_news_watch.py) --
+    # trouve le 2026-11-06 : le blackout calendaire fixe (is_news_blackout
+    # ci-dessus) peut finir avant que le marche ait reellement digere
+    # l'actualite. Ne se declenche QUE dans cette fenetre grise, jamais
+    # a chaque cycle -- garde de cout identique au veto d'entree.
+    grace_info = confluence.minutes_since_blackout_ended(as_of)
+    if grace_info is not None:
+        elapsed, grace = grace_info
+        if elapsed <= grace:
+            news_verdict = ai_news_watch.judge_post_news_calm(symbol, candles, elapsed)
+            if news_verdict is not None and news_verdict.get("verdict") == "encore_agite":
+                return {"action": "aucune", "reason": "prudence post-actualite (IA)"}
     if state["level"] is None or state["bias"] is None:
         return {"action": "aucune", "reason": "aucun niveau de retracement disponible"}
     if state["atr"] is None or state["atr"] <= 0:

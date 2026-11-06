@@ -973,6 +973,60 @@ def test_decide_and_act_fibonacci_no_action_during_volatility_shock(monkeypatch)
     assert result == {"action": "aucune", "reason": "volatilite anormale (actualite probable), signal ignore par prudence"}
 
 
+def test_decide_and_act_fibonacci_blocked_by_ai_when_still_agitated_after_blackout(monkeypatch):
+    # Reproduction DIRECTE de l'incident reel du 2026-11-06 : NFP a
+    # 13h30 UTC, fenetre fixe (15min) finit a 13h45 UTC, candle a 13h55
+    # UTC (comme le vrai trade perdant) -- 10 minutes dans la fenetre
+    # grise (60min). Avec l'IA qui juge "encore_agite", ce trade doit
+    # maintenant etre bloque, contrairement au comportement actuel.
+    monkeypatch.setattr(bot.ai_news_watch, "judge_post_news_calm", lambda *a, **k: {"verdict": "encore_agite", "confiance": "haute", "raison": "test"})
+    state = _fib_state(close=1981.0, high=1982.0, low=1974.0, level=1980.0, bias="achat", atr=20.0)
+    monkeypatch.setattr(bot.fibonacci_reversion, "latest_state", lambda candles, historical_candles=None: state)
+    result = bot.decide_and_act_fibonacci(
+        [{"dummy": True, "time": "2026-11-06 13:55:00"}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
+        balance=10000, equity=10000, open_positions=[], circuit_breaker=_open_circuit_breaker(),
+    )
+    assert result == {"action": "aucune", "reason": "prudence post-actualite (IA)"}
+
+
+def test_decide_and_act_fibonacci_proceeds_when_ai_says_calm_after_blackout(monkeypatch):
+    monkeypatch.setattr(bot.ai_news_watch, "judge_post_news_calm", lambda *a, **k: {"verdict": "calme", "confiance": "haute", "raison": "test"})
+    state = _fib_state(close=1981.0, high=1982.0, low=1974.0, level=1980.0, bias="achat", atr=20.0)
+    monkeypatch.setattr(bot.fibonacci_reversion, "latest_state", lambda candles, historical_candles=None: state)
+    result = bot.decide_and_act_fibonacci(
+        [{"dummy": True, "time": "2026-11-06 13:55:00"}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
+        balance=10000, equity=10000, open_positions=[], circuit_breaker=_open_circuit_breaker(),
+    )
+    assert result["action"] == "simulation"
+
+
+def test_decide_and_act_fibonacci_proceeds_when_ai_news_watch_fails_open(monkeypatch):
+    monkeypatch.setattr(bot.ai_news_watch, "judge_post_news_calm", lambda *a, **k: None)
+    state = _fib_state(close=1981.0, high=1982.0, low=1974.0, level=1980.0, bias="achat", atr=20.0)
+    monkeypatch.setattr(bot.fibonacci_reversion, "latest_state", lambda candles, historical_candles=None: state)
+    result = bot.decide_and_act_fibonacci(
+        [{"dummy": True, "time": "2026-11-06 13:55:00"}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
+        balance=10000, equity=10000, open_positions=[], circuit_breaker=_open_circuit_breaker(),
+    )
+    assert result["action"] == "simulation"
+
+
+def test_decide_and_act_fibonacci_does_not_call_ai_news_watch_outside_grace_window(monkeypatch):
+    # Garde-fou de cout : hors de toute fenetre grise, judge_post_news_calm
+    # ne doit JAMAIS etre appelee -- une bougie datee loin de tout
+    # evenement connu (ex. un dimanche calme) suffit a le prouver.
+    monkeypatch.setattr(
+        bot.ai_news_watch, "judge_post_news_calm",
+        lambda *a, **k: (_ for _ in ()).throw(AssertionError("judge_post_news_calm ne doit pas etre appele hors fenetre grise")))
+    state = _fib_state(close=1981.0, high=1982.0, low=1974.0, level=1980.0, bias="achat", atr=20.0)
+    monkeypatch.setattr(bot.fibonacci_reversion, "latest_state", lambda candles, historical_candles=None: state)
+    result = bot.decide_and_act_fibonacci(
+        [{"dummy": True, "time": "2026-09-13 12:30:00"}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
+        balance=10000, equity=10000, open_positions=[], circuit_breaker=_open_circuit_breaker(),
+    )
+    assert result["action"] == "simulation"
+
+
 def test_decide_and_act_fibonacci_closes_both_legs_at_session_end(monkeypatch):
     state = _fib_state(hour_utc=bot.fibonacci_reversion.SESSION_END_HOUR_UTC)
     monkeypatch.setattr(bot.fibonacci_reversion, "latest_state", lambda candles, historical_candles=None: state)

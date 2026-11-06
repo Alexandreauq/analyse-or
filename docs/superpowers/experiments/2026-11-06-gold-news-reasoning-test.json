@@ -1,0 +1,14 @@
+{
+  "date_test": "2026-11-06",
+  "date_verification_prevue": "2026-11-27",
+  "methodologie": "Test prospectif (pas un backtest) : lecture reelle d'actualites + prix/volume du jour pour l'or, raisonnement IA sans formule mecanique, pari directionnel date et enregistre avant de connaitre le resultat. Meme methodologie que docs/superpowers/experiments/*-ia-news-reasoning-test.json (actions), appliquee a XAUUSD. Objectif : verifier si ce raisonnement contextuel a une vraie valeur predictive sur 2-4 semaines pour l'or specifiquement, avant d'envisager un futur moteur de trading autour de ce raisonnement.",
+  "paris": [
+    {
+      "ticker": "XAUUSD",
+      "prix_entree": 4087.62,
+      "appel": "neutre_prudent",
+      "confiance": "faible",
+      "raison": "Le rebond en V sur fort volume depuis 3873 montre un vrai support, mais les bons chiffres de l'emploi americain (taux reels, dollar) et la tendance corrective depuis le record de 5608 limitent la hausse ; fourchette probable 3900-4150 sur 3 semaines."
+    }
+  ]
+}

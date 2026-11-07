@@ -8,7 +8,9 @@ aucun compte reel, aucune execution de trade."""
 import json
 import os
 import re
-from datetime import date, timedelta
+import unicodedata
+from datetime import date, datetime, timedelta, timezone
+from zoneinfo import ZoneInfo
 
 import requests
 import yfinance as yf
@@ -96,7 +98,7 @@ YF_PRIMARY_TICKER = "GC=F"
 YF_FALLBACK_TICKER = "XAUUSD=X"
 
 
-def fetch_daily_ohlc(period: str = "2mo") -> list[dict] | None:
+def fetch_daily_ohlc(period: str = "2mo", *, now: datetime | None = None) -> list[dict] | None:
     """Recupere les clotures/plus-hauts/plus-bas journaliers de l'or via
     yfinance (GC=F en premier -- confirme fonctionnel le 2026-11-06,
     XAUUSD=X a echoue seul lors du test manuel -- repli quand meme
@@ -105,7 +107,21 @@ def fetch_daily_ohlc(period: str = "2mo") -> list[dict] | None:
     deux tickers echouent/renvoient une serie vide -- jamais
     d'exception (dialogue avec un service tiers dont on ne peut pas
     enumerer precisement tous les modes d'echec, meme philosophie que
-    indices_score.py:fetch_article_text)."""
+    indices_score.py:fetch_article_text).
+
+    GC=F trade en quasi-continu (session Globex ~18h-17h heure de New
+    York, 5 jours sur 7) -- la barre du jour calendaire de New York en
+    cours peut donc etre PARTIELLE (seule la portion de session deja
+    ecoulee au moment du fetch), ce qui sous-estimerait un
+    franchissement de stop survenu plus tard dans la journee (trouve
+    le 2026-11-07 lors de la revue finale -- le workflow s'execute a
+    07h00 UTC = 02h00 heure de New York en hiver, une session a peine
+    commencee). Exclut donc toute barre dont la date n'est pas
+    STRICTEMENT anterieure a la date calendaire de New York au moment
+    du fetch (parametre `now`, defaut : l'heure reelle -- injectable
+    pour les tests)."""
+    reference = now or datetime.now(timezone.utc)
+    ny_today = reference.astimezone(ZoneInfo("America/New_York")).date()
     for ticker in (YF_PRIMARY_TICKER, YF_FALLBACK_TICKER):
         try:
             data = yf.download(ticker, period=period, interval="1d", progress=False)
@@ -119,8 +135,11 @@ def fetch_daily_ohlc(period: str = "2mo") -> list[dict] | None:
         rows = []
         for ts, row in data.iterrows():
             try:
+                bar_date = ts.date()
+                if bar_date >= ny_today:
+                    continue  # barre potentiellement partielle, exclue
                 rows.append({
-                    "date": ts.date().isoformat(),
+                    "date": bar_date.isoformat(),
                     "open": float(row["Open"]), "high": float(row["High"]),
                     "low": float(row["Low"]), "close": float(row["Close"]),
                 })
@@ -204,6 +223,8 @@ def call_claude_for_new_entry(ohlc_rows: list[dict]) -> dict | None:
         )
         resp.raise_for_status()
         data = resp.json()
+        tool_uses = sum(1 for block in data.get("content", []) if block.get("type") == "server_tool_use")
+        print(f"call_claude_for_new_entry : stop_reason={data.get('stop_reason')} web_search_tool_uses={tool_uses}")
         text = "".join(block.get("text", "") for block in data.get("content", []) if block.get("type") == "text")
         return _extract_json_block(text, "appel")
     except Exception:
@@ -248,6 +269,8 @@ def call_claude_for_reeval(position: dict, ohlc_rows: list[dict]) -> dict | None
         )
         resp.raise_for_status()
         data = resp.json()
+        tool_uses = sum(1 for block in data.get("content", []) if block.get("type") == "server_tool_use")
+        print(f"call_claude_for_reeval : stop_reason={data.get('stop_reason')} web_search_tool_uses={tool_uses}")
         text = "".join(block.get("text", "") for block in data.get("content", []) if block.get("type") == "text")
         return _extract_json_block(text, "decision")
     except Exception:
@@ -303,14 +326,33 @@ def _close_position(position: dict, close_date: str, close_price: float, close_r
     position["buyhold_return_pct"] = compute_buyhold_return_pct(position["entry_price"], market_close_price)
 
 
+def _is_cloturer_decision(decision) -> bool:
+    """Normalise la decision du modele (accents, casse, espaces) avant
+    de la comparer -- "cloturer"/"Clôturer"/"CLOTURER " doivent tous
+    etre reconnus, meme patron que normalize_direction_call et le
+    correctif applique le 2026-11-06 a ai_news_watch.py pour le meme
+    type de risque (un verdict francais accentue ignore silencieusement)."""
+    if not isinstance(decision, str):
+        return False
+    decomposed = unicodedata.normalize("NFKD", decision.strip().lower())
+    without_accents = "".join(ch for ch in decomposed if not unicodedata.combining(ch))
+    return "clotur" in without_accents
+
+
 def process_open_position(position: dict, ohlc_rows: list[dict], today: date) -> bool:
     """Reevalue une position ouverte, la mute EN PLACE selon les
-    priorites : (1) stop, (2) delai_max -- deterministes, zero appel
-    modele -- puis (3) reevaluation qualitative SEULEMENT si ni (1) ni
-    (2) ne s'applique. Renvoie True si la position a change (cloturee
-    ou journal modifie)."""
+    priorites : (0) aucune nouvelle barre complete depuis la derniere
+    verification -> rien a faire (evite un appel modele et une entree
+    de journal dupliquee les jours sans nouvelle barre complete --
+    week-end, jour ferie, ou barre du jour encore partielle, voir
+    fetch_daily_ohlc) ; (1) stop, (2) delai_max -- deterministes, zero
+    appel modele -- puis (3) reevaluation qualitative SEULEMENT si ni
+    (1) ni (2) ne s'applique. Renvoie True si la position a change
+    (cloturee ou journal modifie)."""
     since_date = position["journal"][-1]["date"] if position["journal"] else position["entry_date"]
     new_rows = _rows_since(ohlc_rows, since_date)
+    if not new_rows:
+        return False
 
     breach = find_stop_breach(position["direction"], position["safety_stop_price"], new_rows)
     if breach is not None:
@@ -324,7 +366,7 @@ def process_open_position(position: dict, ohlc_rows: list[dict], today: date) ->
 
     verdict = call_claude_for_reeval(position, ohlc_rows)
     last_close = ohlc_rows[-1]["close"] if ohlc_rows else position["entry_price"]
-    if verdict is not None and verdict.get("decision") == "cloturer":
+    if verdict is not None and _is_cloturer_decision(verdict.get("decision")):
         _close_position(position, today.isoformat(), last_close, "cloture_anticipee_ia", last_close)
         return True
     raison = verdict.get("raison") if verdict else "echec de l'appel API, position gardee par defaut"

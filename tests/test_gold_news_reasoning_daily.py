@@ -1,6 +1,6 @@
 # tests/test_gold_news_reasoning_daily.py
 import json
-from datetime import date
+from datetime import date, datetime, timezone
 from unittest.mock import MagicMock
 
 import pandas as pd
@@ -158,7 +158,7 @@ def test_fetch_daily_ohlc_success_with_primary_ticker(monkeypatch):
         return _fake_yf_dataframe(rows)
 
     monkeypatch.setattr(g.yf, "download", fake_download)
-    result = g.fetch_daily_ohlc()
+    result = g.fetch_daily_ohlc(now=datetime(2026, 11, 7, 12, 0, tzinfo=timezone.utc))
     assert result == rows
 
 
@@ -171,12 +171,12 @@ def test_fetch_daily_ohlc_falls_back_to_second_ticker_when_primary_empty(monkeyp
         return _fake_yf_dataframe(rows)
 
     monkeypatch.setattr(g.yf, "download", fake_download)
-    assert g.fetch_daily_ohlc() == rows
+    assert g.fetch_daily_ohlc(now=datetime(2026, 11, 7, 12, 0, tzinfo=timezone.utc)) == rows
 
 
 def test_fetch_daily_ohlc_returns_none_when_both_tickers_fail(monkeypatch):
     monkeypatch.setattr(g.yf, "download", lambda *a, **k: pd.DataFrame())
-    assert g.fetch_daily_ohlc() is None
+    assert g.fetch_daily_ohlc(now=datetime(2026, 11, 7, 12, 0, tzinfo=timezone.utc)) is None
 
 
 def test_fetch_daily_ohlc_returns_none_on_exception(monkeypatch):
@@ -184,7 +184,7 @@ def test_fetch_daily_ohlc_returns_none_on_exception(monkeypatch):
         raise ConnectionError("boom")
 
     monkeypatch.setattr(g.yf, "download", raising)
-    assert g.fetch_daily_ohlc() is None
+    assert g.fetch_daily_ohlc(now=datetime(2026, 11, 7, 12, 0, tzinfo=timezone.utc)) is None
 
 
 def test_fetch_daily_ohlc_sorted_by_date(monkeypatch):
@@ -193,8 +193,34 @@ def test_fetch_daily_ohlc_sorted_by_date(monkeypatch):
         {"date": "2026-11-05", "open": 4070.0, "high": 4080.0, "low": 4060.0, "close": 4075.0},
     ]
     monkeypatch.setattr(g.yf, "download", lambda *a, **k: _fake_yf_dataframe(rows))
-    result = g.fetch_daily_ohlc()
+    result = g.fetch_daily_ohlc(now=datetime(2026, 11, 7, 12, 0, tzinfo=timezone.utc))
     assert [r["date"] for r in result] == ["2026-11-05", "2026-11-06"]
+
+
+def test_fetch_daily_ohlc_excludes_partial_bar_dated_today_in_new_york(monkeypatch):
+    rows = [
+        {"date": "2026-11-06", "open": 4098.5, "high": 4116.2, "low": 4037.0, "close": 4079.5},
+        {"date": "2026-11-09", "open": 4080.0, "high": 4085.0, "low": 4078.0, "close": 4082.0},
+    ]
+    monkeypatch.setattr(g.yf, "download", lambda *a, **k: _fake_yf_dataframe(rows))
+    now = datetime(2026, 11, 9, 12, 0, tzinfo=timezone.utc)  # 07h00 ET le 09/11, session du 09/11 a peine commencee
+    result = g.fetch_daily_ohlc(now=now)
+    assert [r["date"] for r in result] == ["2026-11-06"]
+
+
+def test_fetch_daily_ohlc_keeps_bar_strictly_before_ny_today(monkeypatch):
+    rows = [{"date": "2026-11-08", "open": 4080.0, "high": 4085.0, "low": 4078.0, "close": 4082.0}]
+    monkeypatch.setattr(g.yf, "download", lambda *a, **k: _fake_yf_dataframe(rows))
+    now = datetime(2026, 11, 9, 12, 0, tzinfo=timezone.utc)
+    result = g.fetch_daily_ohlc(now=now)
+    assert result == rows
+
+
+def test_fetch_daily_ohlc_returns_none_if_only_partial_bar_available(monkeypatch):
+    rows = [{"date": "2026-11-09", "open": 4080.0, "high": 4085.0, "low": 4078.0, "close": 4082.0}]
+    monkeypatch.setattr(g.yf, "download", lambda *a, **k: _fake_yf_dataframe(rows))
+    now = datetime(2026, 11, 9, 12, 0, tzinfo=timezone.utc)
+    assert g.fetch_daily_ohlc(now=now) is None
 
 
 def _fake_response(status_ok=True, json_body=None, raise_exc=None):
@@ -449,3 +475,46 @@ def test_main_does_nothing_and_writes_no_file_on_neutral_call_with_no_open_posit
     monkeypatch.setattr(g, "TRACKING_PATH", str(tracking_path))
     g.main()
     assert not tracking_path.exists()
+
+
+def test_is_cloturer_decision_recognizes_plain():
+    assert g._is_cloturer_decision("cloturer") is True
+
+
+def test_is_cloturer_decision_recognizes_accented_and_cased():
+    assert g._is_cloturer_decision("Clôturer") is True
+    assert g._is_cloturer_decision("CLÔTURER") is True
+    assert g._is_cloturer_decision("  cloturer  ") is True
+
+
+def test_is_cloturer_decision_rejects_garder():
+    assert g._is_cloturer_decision("garder") is False
+
+
+def test_is_cloturer_decision_rejects_non_string_or_empty():
+    assert g._is_cloturer_decision(None) is False
+    assert g._is_cloturer_decision(123) is False
+    assert g._is_cloturer_decision("") is False
+
+
+def test_process_open_position_closes_via_ai_anticipated_when_cloturer_is_accented(monkeypatch):
+    monkeypatch.setattr(g, "call_claude_for_reeval", lambda pos, rows: {"decision": "Clôturer", "raison": "retournement"})
+    position = _open_position(max_close_date="2026-12-01")
+    ohlc = _ohlc([("2026-11-06", 4070, 4090, 4060, 4080)])
+    changed = g.process_open_position(position, ohlc, _date(2026, 11, 6))
+    assert changed is True
+    assert position["close_reason"] == "cloture_anticipee_ia"
+
+
+def test_process_open_position_does_nothing_when_no_new_bar_since_last_check(monkeypatch):
+    def fail_if_called(*a, **k):
+        raise AssertionError("call_claude_for_reeval ne doit pas etre appele sans nouvelle barre")
+
+    monkeypatch.setattr(g, "call_claude_for_reeval", fail_if_called)
+    position = _open_position(max_close_date="2026-12-01")
+    position["journal"] = [{"date": "2026-11-06", "price": 4080.0, "decision": "garder", "raison": "test anterieur"}]
+    ohlc = _ohlc([("2026-11-06", 4070, 4090, 4060, 4080)])  # meme date que le dernier journal -- aucune barre NOUVELLE
+    changed = g.process_open_position(position, ohlc, _date(2026, 11, 6))
+    assert changed is False
+    assert position["status"] == "open"
+    assert len(position["journal"]) == 1  # pas de doublon ajoute

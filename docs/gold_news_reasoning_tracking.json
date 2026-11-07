@@ -1,0 +1,23 @@
+{
+  "positions": [
+    {
+      "id": "XAUUSD-2026-11-06",
+      "status": "open",
+      "entry_date": "2026-11-06",
+      "entry_price": 4079.5,
+      "direction": "achat",
+      "safety_stop_price": 3834.7299999999996,
+      "safety_stop_pct": -0.06000000000000005,
+      "confiance": "faible",
+      "raison_ouverture": "La chute du 30/10 a été entièrement rachetée et le prix a fait un nouveau plus-haut à 4155, ce qui penche à la hausse, mais la volatilité est forte et je n'ai pas pu vérifier l'actualité macro, donc la confiance reste faible.",
+      "max_close_date": "2026-11-27",
+      "close_date": null,
+      "close_price": null,
+      "close_reason": null,
+      "return_pct": null,
+      "buyhold_price_at_close": null,
+      "buyhold_return_pct": null,
+      "journal": []
+    }
+  ]
+}

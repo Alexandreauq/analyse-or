@@ -1,0 +1,42 @@
+name: Paper-trading quotidien IA or (test prospectif)
+
+on:
+  schedule:
+    - cron: "0 7 * * 1-5"
+  workflow_dispatch: {}
+
+concurrency:
+  group: gold-news-reasoning-daily
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Récupérer le dépôt
+        uses: actions/checkout@v4
+
+      - name: Installer Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Installer les dépendances
+        run: pip install -r requirements.txt
+
+      - name: Paper-trading quotidien sur l'or
+        run: python3 gold_news_reasoning_daily.py
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.CLAUDE_API_KEY }}
+
+      - name: Publier le suivi mis à jour
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          [ -f docs/gold_news_reasoning_tracking.json ] && git add docs/gold_news_reasoning_tracking.json || true
+          git diff --staged --quiet || git commit -m "chore(gold-bot): suivi quotidien test prospectif IA or"
+          git pull --rebase --autostash
+          git push

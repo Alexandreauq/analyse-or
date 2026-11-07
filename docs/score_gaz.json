@@ -1,8 +1,8 @@
 {
-  "date": "2026-11-06",
+  "date": "2026-11-07",
   "commodity": "gaz",
   "label": "Gaz naturel",
-  "composite_score": -31.9,
+  "composite_score": -27.6,
   "interpretation": "Défavorable — pas d'entrée même sur signal technique",
   "cftc_percentile": 0.641025641025641,
   "factors": [
@@ -20,15 +20,15 @@
     },
     {
       "name": "Dynamique récente",
-      "score": -4.342832203848849,
+      "score": -2.7084057642340795,
       "weight": 0.26666666666666666,
-      "raw_value": "-2.2% vs MM200"
+      "raw_value": "-1.4% vs MM200"
     },
     {
       "name": "Dollar (DXY)",
       "score": -10,
       "weight": 0.13333333333333333,
-      "raw_value": "102.29 (il y a 2 mois : 98.84)"
+      "raw_value": "102.28 (il y a 2 mois : 98.84)"
     },
     {
       "name": "Stocks EIA",
@@ -38,17 +38,12 @@
     }
   ],
   "technical": {
-    "note": "Cours en-dessous de la MM200 (-2.2%) — tendance baissière",
-    "spot": 2.9779999256134033,
-    "ma200": 3.0441000032424927,
+    "note": "Cours en-dessous de la MM200 (-1.4%) — tendance baissière",
+    "spot": 3.003000020980835,
+    "ma200": 3.0442250037193297,
     "unite": "$ / MMBtu"
   },
   "calendar": [
-    {
-      "date": "06/11/2026",
-      "label": "Emploi US (NFP + chômage)",
-      "kind": "Donnée"
-    },
     {
       "date": "10/11/2026",
       "label": "CPI (Indice des prix à la consommation)",
@@ -77,6 +72,11 @@
     {
       "date": "25/11/2026",
       "label": "PIB (GDP)",
+      "kind": "Donnée"
+    },
+    {
+      "date": "04/12/2026",
+      "label": "Emploi US (NFP + chômage)",
       "kind": "Donnée"
     },
     {

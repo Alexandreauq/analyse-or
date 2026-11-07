@@ -1,8 +1,8 @@
 {
-  "date": "2026-11-06",
+  "date": "2026-11-07",
   "commodity": "petrole",
   "label": "Pétrole (WTI)",
-  "composite_score": -0.1,
+  "composite_score": -1.1,
   "interpretation": "Neutre — pas d'action",
   "cftc_percentile": 10.256410256410255,
   "factors": [
@@ -10,7 +10,7 @@
       "name": "Dollar (DXY)",
       "score": -10,
       "weight": 0.26666666666666666,
-      "raw_value": "102.29 (il y a 2 mois : 98.84)"
+      "raw_value": "102.28 (il y a 2 mois : 98.84)"
     },
     {
       "name": "Positionnement CFTC",
@@ -26,9 +26,9 @@
     },
     {
       "name": "Dynamique récente",
-      "score": 7.6744306418315595,
+      "score": 7.30916595414601,
       "weight": 0.26666666666666666,
-      "raw_value": "+3.8% vs MM200"
+      "raw_value": "+3.7% vs MM200"
     },
     {
       "name": "Stocks EIA",
@@ -38,17 +38,12 @@
     }
   ],
   "technical": {
-    "note": "Cours au-dessus de la MM200 (+3.8%) — tendance haussière",
-    "spot": 90.5,
-    "ma200": 87.15565004348755,
+    "note": "Cours au-dessus de la MM200 (+3.7%) — tendance haussière",
+    "spot": 90.33999633789062,
+    "ma200": 87.154850025177,
     "unite": "$ / baril"
   },
   "calendar": [
-    {
-      "date": "06/11/2026",
-      "label": "Emploi US (NFP + chômage)",
-      "kind": "Donnée"
-    },
     {
       "date": "10/11/2026",
       "label": "CPI (Indice des prix à la consommation)",
@@ -77,6 +72,11 @@
     {
       "date": "25/11/2026",
       "label": "PIB (GDP)",
+      "kind": "Donnée"
+    },
+    {
+      "date": "04/12/2026",
+      "label": "Emploi US (NFP + chômage)",
       "kind": "Donnée"
     },
     {

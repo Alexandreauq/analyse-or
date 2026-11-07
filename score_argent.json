@@ -1,22 +1,22 @@
 {
-  "date": "2026-11-06",
+  "date": "2026-11-07",
   "commodity": "argent",
   "label": "Argent",
-  "composite_score": -27.8,
+  "composite_score": -17.6,
   "interpretation": "Défavorable — pas d'entrée même sur signal technique",
   "cftc_percentile": 4.487179487179487,
   "factors": [
     {
       "name": "Taux réels US 10 ans",
-      "score": -0.20000000000000462,
+      "score": 3.199999999999994,
       "weight": 0.3,
-      "raw_value": "2.64% (il y a ~45j : 2.63%)"
+      "raw_value": "2.60% (il y a ~45j : 2.76%)"
     },
     {
       "name": "Dollar (DXY)",
       "score": -10,
       "weight": 0.2,
-      "raw_value": "102.29 (il y a 2 mois : 98.84)"
+      "raw_value": "102.28 (il y a 2 mois : 98.84)"
     },
     {
       "name": "Positionnement CFTC",
@@ -28,7 +28,7 @@
       "name": "Ratio or/argent",
       "score": -4.342541436464088,
       "weight": 0.25,
-      "raw_value": "78.4 — 28e percentile (3 ans)"
+      "raw_value": "78.5 — 28e percentile (3 ans)"
     },
     {
       "name": "Dynamique récente",
@@ -39,16 +39,11 @@
   ],
   "technical": {
     "note": "Cours en-dessous de la MM200 (-25.6%) — tendance baissière",
-    "spot": 51.94499969482422,
-    "ma200": 69.85307989120483,
+    "spot": 51.96500015258789,
+    "ma200": 69.85317989349365,
     "unite": "$ / oz"
   },
   "calendar": [
-    {
-      "date": "06/11/2026",
-      "label": "Emploi US (NFP + chômage)",
-      "kind": "Donnée"
-    },
     {
       "date": "10/11/2026",
       "label": "CPI (Indice des prix à la consommation)",
@@ -77,6 +72,11 @@
     {
       "date": "25/11/2026",
       "label": "PIB (GDP)",
+      "kind": "Donnée"
+    },
+    {
+      "date": "04/12/2026",
+      "label": "Emploi US (NFP + chômage)",
       "kind": "Donnée"
     },
     {

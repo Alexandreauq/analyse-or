@@ -10,9 +10,11 @@ import os
 from datetime import datetime, timezone
 
 MODEL_OPUS_5_5 = "claude-opus-5-5"
+MODEL_SONNET_5_5 = "claude-sonnet-5-5"
 DAILY_BUDGET_USD = 5.0
 PRICE_PER_MTOK_USD = {
     MODEL_OPUS_5_5: {"input": 4.0, "output": 20.0},
+    MODEL_SONNET_5_5: {"input": 2.0, "output": 10.0},
 }
 USAGE_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "usage_today.json")
 

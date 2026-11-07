@@ -11,7 +11,15 @@ import assistant_ia.news as news
 import assistant_ia.tools as tools
 import assistant_ia.usage as usage
 
-MODEL = "claude-opus-5-5"
+# claude-sonnet-5-5 (2026-11-07) : passage depuis claude-opus-5-5 pour
+# reduire le cout d'environ 50% (Sonnet 5.5 = 2$/10$ par MTok contre
+# 4$/20$ pour Opus 5.5, memes deux axes). Decision prise apres un test
+# de qualite comparatif sur des questions reelles (donnees d'outils
+# identiques, meme prompt systeme) sans ecart juge significatif pour ce
+# type de tache (donnees structurees + regles explicites), suite a
+# l'episode du 2026-11-07 ou le compte Anthropic de ce service est
+# tombe a sec apres seulement 6 questions a 0,47$/question en moyenne.
+MODEL = "claude-sonnet-5-5"
 MAX_TOOL_ITERATIONS = 6
 # Recherche web server-side (meme outil que gold_bot/ai_shadow.py) : utilisee
 # pour que le raisonnement de secours (voir SYSTEM_PROMPT, quand les outils

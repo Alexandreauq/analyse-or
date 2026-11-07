@@ -363,24 +363,35 @@ def process_new_entry(ohlc_rows: list[dict], today: date) -> dict | None:
 def main() -> None:
     ohlc_rows = fetch_daily_ohlc()
     if not ohlc_rows:
+        print("fetch_daily_ohlc a echoue (GC=F et XAUUSD=X indisponibles) -- aucune action aujourd'hui.")
         return  # pas de prix -> aucune action, jamais de repli WebSearch
+    print(f"Prix recuperes : {len(ohlc_rows)} jours, dernier = {ohlc_rows[-1]}")
     today = date.fromisoformat(ohlc_rows[-1]["date"])
     tracking = _read_tracking(TRACKING_PATH)
     changed = False
 
     open_position = _find_open_position(tracking)
     if open_position is not None:
+        print(f"Position ouverte trouvee : {open_position['id']} ({open_position['direction']})")
         changed = process_open_position(open_position, ohlc_rows, today) or changed
+        print(f"Apres reevaluation : status={open_position['status']} close_reason={open_position.get('close_reason')}")
         open_position = _find_open_position(tracking)
 
     if open_position is None:
+        print("Aucune position ouverte -- interrogation du modele pour une nouvelle entree.")
         new_position = process_new_entry(ohlc_rows, today)
         if new_position is not None:
+            print(f"Nouvelle position ouverte : {new_position['id']} ({new_position['direction']})")
             tracking["positions"].append(new_position)
             changed = True
+        else:
+            print("Appel neutre, non reconnu, ou echec de l'appel API -- aucune position ouverte.")
 
     if changed:
         _write_tracking(tracking, TRACKING_PATH)
+        print("Fichier de suivi mis a jour.")
+    else:
+        print("Rien n'a change -- aucune ecriture.")
 
 
 if __name__ == "__main__":

@@ -31,3 +31,10 @@ ibkr_bot/circuit_breaker_state.json
 # Scratch de travail subagent-driven-development / brainstorming
 # (superpowers) — jamais destine a etre commite
 .superpowers/
+
+# Permissions locales Claude Code : peut accumuler des secrets reels
+# captures depuis des commandes Bash approuvees, jamais a commiter
+# (protection deja assuree par un gitignore global sur cette machine,
+# dupliquee ici au niveau du repo pour ne pas en dependre)
+.claude/settings.local.json
+.claude/settings.json.graphify-bak

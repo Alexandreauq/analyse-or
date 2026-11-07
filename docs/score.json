@@ -1,26 +1,26 @@
 {
-  "date": "2026-11-06",
-  "composite_score": -0.6,
+  "date": "2026-11-07",
+  "composite_score": 8.1,
   "interpretation": "Neutre — pas d'action",
   "cftc_percentile": 22.435897435897438,
   "factors": [
     {
       "name": "Taux réels US 10 ans",
-      "score": -0.20000000000000462,
+      "score": 3.199999999999994,
       "weight": 0.3,
-      "raw_value": "2.64% (il y a ~45j : 2.63%)"
+      "raw_value": "2.60% (il y a ~45j : 2.76%)"
     },
     {
       "name": "Dollar (DXY)",
       "score": -10,
       "weight": 0.15,
-      "raw_value": "102.30 (il y a 2 mois : 98.84)"
+      "raw_value": "102.28 (il y a 2 mois : 98.84)"
     },
     {
       "name": "Anticipations d'inflation",
-      "score": -2.9999999999999956,
+      "score": -4.0000000000000036,
       "weight": 0.15,
-      "raw_value": "2.24% (il y a ~45j : 2.33%)"
+      "raw_value": "2.23% (il y a ~45j : 2.35%)"
     },
     {
       "name": "Ton de la Fed",
@@ -48,16 +48,11 @@
     }
   ],
   "technical": {
-    "note": "Cours en-dessous de la MM200 (-9.5%) — tendance baissière",
-    "spot": 4074.39990234375,
-    "ma200": 4501.492996826172
+    "note": "Cours en-dessous de la MM200 (-9.4%) — tendance baissière",
+    "spot": 4079.5,
+    "ma200": 4501.518497314453
   },
   "calendar": [
-    {
-      "date": "06/11/2026",
-      "label": "Emploi US (NFP + chômage)",
-      "kind": "Donnée"
-    },
     {
       "date": "10/11/2026",
       "label": "CPI (Indice des prix à la consommation)",
@@ -89,6 +84,11 @@
       "kind": "Donnée"
     },
     {
+      "date": "04/12/2026",
+      "label": "Emploi US (NFP + chômage)",
+      "kind": "Donnée"
+    },
+    {
       "date": "08/12–09/12/2026",
       "label": "Réunion FOMC",
       "kind": "Fed"
@@ -99,7 +99,7 @@
       "kind": "info",
       "title": "Pas de signal actif",
       "detail": "Aucune des conditions de veille, d'entrée ou de risque n'est réunie aujourd'hui.",
-      "date": "06/11/2026"
+      "date": "07/11/2026"
     }
   ],
   "news": [

@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-07T07:11:04Z",
+  "generated_at": "2026-11-08T07:13:39Z",
   "healthy": true,
-  "summary_fr": "Le bot est actuellement actif et fonctionne normalement : sa dernière analyse date de quelques instants. Sur les 7 derniers jours, il a évalué 9 021 situations de marché et ouvert 8 positions, en restant volontairement prudent le reste du temps (tendance trop forte, absence de signal clair, volatilité anormale ou publications économiques). Aujourd'hui, aucune position n'a été ouverte pour l'instant."
+  "summary_fr": "Le robot est actuellement actif et surveille le marché de l'or en continu : il a évalué 9 024 situations de marché au cours des 7 derniers jours (dont 434 aujourd'hui), et a ouvert 8 positions sur cette période. La grande majorité des cycles se terminent sans trade, ce qui est voulu : le robot n'intervient que lorsque les conditions sont jugées favorables et reste prudent lors des fortes tendances ou des annonces économiques. Aucun arrêt d'urgence n'est activé et le dernier cycle date de quelques instants."
 }

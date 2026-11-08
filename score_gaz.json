@@ -1,5 +1,5 @@
 {
-  "date": "2026-11-07",
+  "date": "2026-11-08",
   "commodity": "gaz",
   "label": "Gaz naturel",
   "composite_score": -28.4,
@@ -16,7 +16,7 @@
       "name": "Saisonnalité (Henry Hub)",
       "score": -10,
       "weight": 0.3333333333333333,
-      "raw_value": "2.63 $/MMBtu (moyenne saisonnière du mois : 3.73 $/MMBtu)"
+      "raw_value": "2.63 $/MMBtu (moyenne saisonnière du mois : 3.71 $/MMBtu)"
     },
     {
       "name": "Dynamique récente",

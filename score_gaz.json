@@ -2,7 +2,7 @@
   "date": "2026-11-09",
   "commodity": "gaz",
   "label": "Gaz naturel",
-  "composite_score": -24.9,
+  "composite_score": -26.3,
   "interpretation": "Défavorable — pas d'entrée même sur signal technique",
   "cftc_percentile": 0.641025641025641,
   "factors": [
@@ -20,15 +20,15 @@
     },
     {
       "name": "Dynamique récente",
-      "score": -1.7053232271724263,
+      "score": -2.230262957881967,
       "weight": 0.26666666666666666,
-      "raw_value": "-0.9% vs MM200"
+      "raw_value": "-1.1% vs MM200"
     },
     {
       "name": "Dollar (DXY)",
       "score": -10,
       "weight": 0.13333333333333333,
-      "raw_value": "102.21 (il y a 2 mois : 98.84)"
+      "raw_value": "102.05 (il y a 2 mois : 98.77)"
     },
     {
       "name": "Stocks EIA",
@@ -38,9 +38,9 @@
     }
   ],
   "technical": {
-    "note": "Cours proche de la MM200 (-0.9%) — zone de décision",
-    "spot": 3.006999969482422,
-    "ma200": 3.0328600025177,
+    "note": "Cours en-dessous de la MM200 (-1.1%) — tendance baissière",
+    "spot": 2.999000072479248,
+    "ma200": 3.0328200030326844,
     "unite": "$ / MMBtu"
   },
   "calendar": [
@@ -106,6 +106,15 @@
       "importance": "mineure"
     },
     {
+      "title": "Les prix du gaz naturel américain progressent de 2 %, les approvisionnements des terminaux de GNL étant en passe d’atteindre un record quotidien - Zonebourse Suisse",
+      "date": "2026-11-06",
+      "link": "https://news.google.com/rss/articles/CBMi7gFBVV95cUxOSUJ1WjFCYk5jQmZnUndDWWpWWnM0Y0RIYW9zMDZyU3NzN3RzNzRmTTNTLVNXZG8yMVFYNTlIT0NvVDc4d1puN3dYYkpmRTJDNzBYT2pid0YwYWV0c2JJSjdYZ3BhOC11Z0VvdEVQMUwzOW5IQjRHc1JZa0lXVVNhRlJkOHhDYXREbWpESG1CNkJCYWNZUGQzTldjNU16ekpFbTdwaXRWSDRYTFpuNTBCVE92Y0UtNUUzTWpQN1RzV3VYQ1h4enhaS1BldkpYV29fY1M1cWVSQnk2TXJ2bVkzRVNjU1Z3dExZeUY2VVZB?oc=5",
+      "source": "Zonebourse Suisse",
+      "summary": "",
+      "sentiment": 0,
+      "importance": "mineure"
+    },
+    {
       "title": "Prix du gaz novembre 2026 en France : 0,1828€/kWh (+6,3%) - LesFurets.com",
       "date": "2026-11-01",
       "link": "https://news.google.com/rss/articles/CBMiW0FVX3lxTE5mUGtMczhZb2FGVUxhdjhJcW10TFRGQmNxVk9fY2NvVE5wbHFWSEFEcHd2MGlSZ2Y5ckNxWFZ0NFkwXzM2eWdmb0NUaWtuWXR0NlBnNk5mOHNOVk0?oc=5",
@@ -122,18 +131,9 @@
       "summary": "",
       "sentiment": 0,
       "importance": "mineure"
-    },
-    {
-      "title": "ÉNERGIE – Gaz naturel liquéfié (GNL) : un marché pas si liquide mais très inflammable… - Le Diplomate",
-      "date": "2026-11-07",
-      "link": "https://news.google.com/rss/articles/CBMidEFVX3lxTE5WMnhsWkRFcHpVdFRJbkRjSURkaHZBc05ObElVNUItQ05iWncyVFNBUkhsS0s0WGFUMW1lUXVhdjlNRlA1bnFiMXh4ME9FMVAtekdzeGJCQVg2VzZtMnZHb2gyeDNmVkp1dUhfTTgzR1FTUDdJ?oc=5",
-      "source": "Le Diplomate",
-      "summary": "",
-      "sentiment": 0,
-      "importance": "mineure"
     }
   ],
-  "analysis_html": "<h3>Contexte récent</h3><p>Le gaz naturel américain (Henry Hub) cote 2,63 $/MMBtu, soit environ 29 % sous sa moyenne saisonnière du mois (3,71 $/MMBtu). Le prix évolue légèrement sous sa moyenne mobile 200 jours (-1,5 %), ce qui traduit une tendance hésitante plutôt qu'une chute marquée. Dans le même temps, le positionnement des investisseurs spéculatifs atteint un extrême vendeur rarement observé sur les trois dernières années.</p><h3>Facteurs déterminants</h3><ul><li><strong>Saisonnalité (poids 33 %, score -10,0) :</strong> c'est le facteur le plus lourd et il pèse au maximum de son échelle à la baisse. Le prix se situe nettement sous ses niveaux habituels pour la période, ce qui signale une faiblesse relative du marché par rapport à son comportement saisonnier normal. Sa contribution pondérée est la plus négative du score, d'environ -3,3 points.</li><li><strong>Positionnement CFTC (poids 27 %, score +9,9) :</strong> c'est le principal contrepoids haussier. La position nette de -225 359 contrats se situe au 1er percentile sur trois ans. Le score interprète cet excès de positions vendeuses de manière contrarienne : un marché aussi unilatéralement short est exposé à des rachats de couverture en cas de surprise haussière. Sa contribution pondérée est d'environ +2,7 points.</li><li><strong>Dollar DXY (poids 13 %, score -10,0) :</strong> l'indice dollar est passé de 98,84 à 102,30 en deux mois, soit une hausse d'environ 3,5 %. Un dollar plus fort est généralement défavorable aux matières premières libellées en dollars, et ce facteur pèse au maximum de son échelle, avec une contribution pondérée d'environ -1,3 point.</li><li><strong>Dynamique récente (poids 27 %, score -3,0) :</strong> avec un écart modeste de -1,5 % sous la MM200, ce facteur est négatif mais d'intensité limitée. Sa contribution pondérée est d'environ -0,8 point.</li><li><strong>Stocks EIA (poids 0 %) :</strong> ce facteur est indisponible faute de clé API configurée. Le score ne tient donc pas compte du niveau des stocks, pourtant central pour le gaz naturel. Cette absence constitue une limite importante de l'analyse.</li></ul><p>Au total, les facteurs baissiers (saisonnalité, dollar, dynamique) l'emportent sur le seul signal haussier, le positionnement. Le solde pondéré penche donc du côté négatif.</p><h3>Actualités à retenir</h3><p>Aucune actualité classée notable ou majeure n'est remontée : les cinq titres sont classés mineurs. Ils portent pour l'essentiel sur les prix de détail du gaz en France et en Europe, avec par exemple un tarif de 0,1828 €/kWh annoncé en hausse de 6,3 % pour novembre, ainsi que sur les tensions géopolitiques et le marché du GNL. Leur lien direct avec le Henry Hub reste faible. On relève néanmoins un contraste entre des prix de détail européens orientés à la hausse et un gaz américain qui cote sous ses normes saisonnières. Les enjeux liés au GNL évoqués dans ces articles constituent le principal canal potentiel de transmission entre les deux marchés, mais ils ne modifient pas le score à ce stade.</p><h3>Synthèse</h3><p>Le score composite reflète un gaz naturel américain fragilisé. Cette faiblesse tient avant tout à un prix très inférieur à sa norme saisonnière, renforcée par un dollar en nette appréciation et une dynamique légèrement négative. Elle est en partie compensée par un positionnement spéculatif vendeur extrême, que le modèle lit comme un facteur de risque haussier contrarien. Les actualités, toutes mineures et centrées sur le marché européen de détail, n'apportent pas d'élément susceptible d'infléchir ce diagnostic. L'absence de données sur les stocks EIA invite enfin à considérer cette lecture avec prudence.</p>",
+  "analysis_html": "<h3>Contexte récent</h3><p>Le gaz naturel américain (Henry Hub) se négocie autour de <strong>2,63 $/MMBtu</strong>, nettement sous la moyenne saisonnière du mois (3,70 $/MMBtu). Le prix évolue légèrement sous sa moyenne mobile à 200 jours (-1,1 %), ce qui traduit une tendance de fond plutôt neutre à légèrement baissière. Ce mouvement se produit alors que le dollar s'est renforcé sur les deux derniers mois.</p><h3>Facteurs déterminants</h3><ul><li><strong>Saisonnalité (poids 33 %, score -10,0)</strong> : c'est le facteur le plus lourd du score et il est à son niveau le plus négatif. Le prix spot se situe environ 1 $/MMBtu sous sa norme saisonnière, soit près de 29 % de décote. Le marché ne valorise donc pas la prime habituellement observée à cette période de l'année, ce qui constitue le principal frein du score.</li><li><strong>Positionnement CFTC (poids 27 %, score +9,9)</strong> : c'est le seul contrepoids significatif. La position nette des spéculateurs (-225 359 contrats) se situe au 1er percentile sur trois ans, un niveau de pessimisme extrême. Ce facteur est lu comme un signal contrarien : un positionnement vendeur aussi concentré laisse peu de place à de nouvelles ventes et expose le marché à des rachats de couverture. Sa contribution pondérée compense en grande partie celle de la saisonnalité.</li><li><strong>Dollar DXY (poids 13 %, score -10,0)</strong> : le DXY est passé de 98,77 à 102,05 en deux mois, soit environ +3,3 %. Ce raffermissement pèse au maximum sur ce facteur. Son poids plus modeste limite toutefois son impact sur le score global.</li><li><strong>Dynamique récente (poids 27 %, score -2,2)</strong> : l'écart limité sous la MM200 n'apporte qu'une contribution légèrement négative. La tendance n'est ni franchement haussière ni en décrochage marqué.</li><li><strong>Stocks EIA (poids 0 %)</strong> : ce facteur est indisponible faute de clé API configurée. L'analyse ne tient donc pas compte du niveau des stocks par rapport à leur moyenne historique, un élément fondamental clé pour le gaz naturel. C'est une limite importante de la lecture actuelle.</li></ul><h3>Actualités à retenir</h3><p>Aucune actualité n'est classée comme notable ou majeure : les cinq informations récentes sont toutes jugées <strong>mineures</strong>. Deux points méritent néanmoins d'être signalés :</p><ul><li><strong>Approvisionnement record des terminaux de GNL et hausse de 2 % des prix américains</strong> : c'est l'information la plus directement liée au Henry Hub. Une demande d'exportation soutenue constitue un élément de soutien fondamental. Elle reste toutefois ponctuelle et ne modifie pas, à ce stade, la décote saisonnière ni la dynamique de moyen terme captées par le score.</li><li><strong>Hausse des prix de détail en France et tensions géopolitiques en Europe</strong> : ces articles portent sur les tarifs aux consommateurs européens (par exemple 0,1828 €/kWh, +6,3 %) et sur le contexte géopolitique. Leur lien avec le prix de gros américain est indirect, surtout via la demande de GNL, et ils n'influencent pas les facteurs du score.</li></ul><h3>Synthèse</h3><p>Le score composite ressort globalement <strong>légèrement négatif</strong>. Cette orientation tient surtout à deux éléments : la forte décote du prix par rapport à sa norme saisonnière et le renforcement du dollar. Le positionnement spéculatif extrêmement vendeur agit comme un contrepoids notable, avec un potentiel de retournement technique si le pessimisme se dissipe. La dynamique de prix, elle, reste quasi neutre. Les actualités récentes, toutes mineures, n'apportent pas de signal de nature à infléchir cette lecture, même si la vigueur des flux vers les terminaux de GNL constitue un élément de soutien à surveiller. L'absence des données de stocks EIA invite enfin à la prudence dans l'interprétation, car ce facteur fondamental pourrait renforcer ou nuancer le diagnostic actuel.</p>",
   "news_classifications": {
     "https://news.google.com/rss/articles/CBMimAFBVV95cUxNZHVieDNocGFRWUhCem9kSnBXSzNSMUNMSWkzcDNfTkpIUENQSjcwNXN6NmxPd1Vta0F2bFZ6YUNZekUzWHFUanFtOEswYzNTRmZ6QmRoX3NDN09NMGlyOElFYmlaMmN6NE1PM0VkRTY1d2NwbzU2TjVhbVZycXdGcHBodkFaMXJPLXhrcDdPNHdUUmxvZmJ3Tw?oc=5": {
       "summary": "",
@@ -145,17 +145,17 @@
       "sentiment": 0,
       "importance": "mineure"
     },
+    "https://news.google.com/rss/articles/CBMi7gFBVV95cUxOSUJ1WjFCYk5jQmZnUndDWWpWWnM0Y0RIYW9zMDZyU3NzN3RzNzRmTTNTLVNXZG8yMVFYNTlIT0NvVDc4d1puN3dYYkpmRTJDNzBYT2pid0YwYWV0c2JJSjdYZ3BhOC11Z0VvdEVQMUwzOW5IQjRHc1JZa0lXVVNhRlJkOHhDYXREbWpESG1CNkJCYWNZUGQzTldjNU16ekpFbTdwaXRWSDRYTFpuNTBCVE92Y0UtNUUzTWpQN1RzV3VYQ1h4enhaS1BldkpYV29fY1M1cWVSQnk2TXJ2bVkzRVNjU1Z3dExZeUY2VVZB?oc=5": {
+      "summary": "",
+      "sentiment": 0,
+      "importance": "mineure"
+    },
     "https://news.google.com/rss/articles/CBMiW0FVX3lxTE5mUGtMczhZb2FGVUxhdjhJcW10TFRGQmNxVk9fY2NvVE5wbHFWSEFEcHd2MGlSZ2Y5ckNxWFZ0NFkwXzM2eWdmb0NUaWtuWXR0NlBnNk5mOHNOVk0?oc=5": {
       "summary": "",
       "sentiment": 0,
       "importance": "mineure"
     },
     "https://news.google.com/rss/articles/CBMiywFBVV95cUxNaFZxYk12elVYdy1ZcFE2eThXczlYa0UxVXBVdzE4MU42UjNIdGl5RXlkU1JpbkUzNmVheXhvMGpLU0JKQlVvTmdSSFJxMVFod2lSYmhldFl6ZHI1YUp3Mk9sNUdoWFJURVJFWDlDVGJRZ3ZxanpsQWhqMUcxcGpJX1VIaUYyaTY5UjdmYVF1V1NLYlhUYk9GbEE2aktPdW1LQmtmb3FPQlZyYkdKVlBKSnV3dmJKbm9VLXhPY2hSNUtwY29NWWlFdWRESQ?oc=5": {
-      "summary": "",
-      "sentiment": 0,
-      "importance": "mineure"
-    },
-    "https://news.google.com/rss/articles/CBMidEFVX3lxTE5WMnhsWkRFcHpVdFRJbkRjSURkaHZBc05ObElVNUItQ05iWncyVFNBUkhsS0s0WGFUMW1lUXVhdjlNRlA1bnFiMXh4ME9FMVAtekdzeGJCQVg2VzZtMnZHb2gyeDNmVkp1dUhfTTgzR1FTUDdJ?oc=5": {
       "summary": "",
       "sentiment": 0,
       "importance": "mineure"

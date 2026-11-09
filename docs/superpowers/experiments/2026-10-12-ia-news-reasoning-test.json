@@ -11,7 +11,13 @@
    "confiance": "moyenne",
    "dimension_dominante": "actu",
    "volume": "volume non disponible (docs/volume_history.json vide)",
-   "raison": "Rachat par Zurich finalise (autorisations 22/09, closing 02/10) : cours colle au prix d'offre, peu de mouvement attendu. Stage Neutre, score 66 sans effet."
+   "raison": "Rachat par Zurich finalise (autorisations 22/09, closing 02/10) : cours colle au prix d'offre, peu de mouvement attendu. Stage Neutre, score 66 sans effet.",
+   "resultats": {
+    "prix_sortie": 13.085,
+    "rendement_pct_reel": null,
+    "appel_correct": null,
+    "avertissement_donnees": "Titre rachete par Zurich (closing 02/10) : prix fige, plus de cotation informative; exclu des moyennes."
+   }
   },
   {
    "ticker": "ENT.L",
@@ -20,7 +26,12 @@
    "confiance": "faible",
    "dimension_dominante": "technique",
    "volume": "volume non disponible (docs/volume_history.json vide)",
-   "raison": "Interdiction des paris en ligne au Bresil (28/09) + hausse de taxes UK attendue au budget ; -14.5% sur 20j, phase Declin, score -98. Rebond technique possible apres une chute deja forte."
+   "raison": "Interdiction des paris en ligne au Bresil (28/09) + hausse de taxes UK attendue au budget ; -14.5% sur 20j, phase Declin, score -98. Rebond technique possible apres une chute deja forte.",
+   "resultats": {
+    "prix_sortie": 4.707999877929687,
+    "rendement_pct_reel": 9.69,
+    "appel_correct": false
+   }
   },
   {
    "ticker": "ANA.MC",
@@ -29,7 +40,13 @@
    "confiance": "faible",
    "dimension_dominante": "sectoriel",
    "volume": "volume non disponible (docs/volume_history.json vide)",
-   "raison": "Offre EQT/Norges sur Acciona Energia (15/09) ; +9.8% sur 20j, deja integre en bonne partie. Industrials: forte activite d'actu dans le secteur."
+   "raison": "Offre EQT/Norges sur Acciona Energia (15/09) ; +9.8% sur 20j, deja integre en bonne partie. Industrials: forte activite d'actu dans le secteur.",
+   "resultats": {
+    "prix_sortie": 218.0,
+    "rendement_pct_reel": 1.11,
+    "appel_correct": null,
+    "lecture_biais_leger_haussier_signe_positif": true
+   }
   },
   {
    "ticker": "9502.T",
@@ -38,7 +55,12 @@
    "confiance": "faible",
    "dimension_dominante": "actu",
    "volume": "volume non disponible (docs/volume_history.json vide)",
-   "raison": "Scandale de falsification de donnees sismiques (3 articles majeurs negatifs, demissions) qui freine le redemarrage nucleaire ; -8.2% sur 20j, mais une partie est deja dans le prix."
+   "raison": "Scandale de falsification de donnees sismiques (3 articles majeurs negatifs, demissions) qui freine le redemarrage nucleaire ; -8.2% sur 20j, mais une partie est deja dans le prix.",
+   "resultats": {
+    "prix_sortie": 2333.0,
+    "rendement_pct_reel": -12.57,
+    "appel_correct": true
+   }
   },
   {
    "ticker": "7004.T",
@@ -47,7 +69,12 @@
    "confiance": "faible",
    "dimension_dominante": "technique",
    "volume": "volume non disponible (docs/volume_history.json vide)",
-   "raison": "Fin des discussions d'integration avec Nippon Steel (29/09) ; -6.2% sur 20j, -3.5% sur 5j, score -78 : momentum negatif persistant."
+   "raison": "Fin des discussions d'integration avec Nippon Steel (29/09) ; -6.2% sur 20j, -3.5% sur 5j, score -78 : momentum negatif persistant.",
+   "resultats": {
+    "prix_sortie": 916.0,
+    "rendement_pct_reel": -17.85,
+    "appel_correct": true
+   }
   },
   {
    "ticker": "285A.T",
@@ -56,7 +83,13 @@
    "confiance": "tres_faible",
    "dimension_dominante": "technique",
    "volume": "volume non disponible (docs/volume_history.json vide)",
-   "raison": "Chute de ~68% sur 20j (a verifier : possible artefact de donnees ou IPO US envisagee) ; actu non explicative. Aucun pari directionnel fiable."
+   "raison": "Chute de ~68% sur 20j (a verifier : possible artefact de donnees ou IPO US envisagee) ; actu non explicative. Aucun pari directionnel fiable.",
+   "resultats": {
+    "prix_sortie": 8511.0,
+    "rendement_pct_reel": null,
+    "appel_correct": null,
+    "avertissement_donnees": "Chute de -51% non expliquee par l'actu, deja suspectee artefact/volatilite extreme a l'entree : exclu des moyennes, a ne pas interpreter."
+   }
   },
   {
    "ticker": "6503.T",
@@ -65,7 +98,12 @@
    "confiance": "faible",
    "dimension_dominante": "sectoriel",
    "volume": "volume non disponible (docs/volume_history.json vide)",
-   "raison": "Interet pour les actifs europeens de TK Elevator (06/10) : acquisition, effet ambigu ; -8.2% sur 20j, phase Declin, tendance japonaise industrielle faible."
+   "raison": "Interet pour les actifs europeens de TK Elevator (06/10) : acquisition, effet ambigu ; -8.2% sur 20j, phase Declin, tendance japonaise industrielle faible.",
+   "resultats": {
+    "prix_sortie": 4497.0,
+    "rendement_pct_reel": -12.56,
+    "appel_correct": null
+   }
   },
   {
    "ticker": "COFA.PA",
@@ -74,7 +112,12 @@
    "confiance": "tres_faible",
    "dimension_dominante": "actu",
    "volume": "volume non disponible (docs/volume_history.json vide)",
-   "raison": "Rumeur de rachat CNP (18/09) puis prudence des investisseurs ; prix -1.4% sur 20j : la rumeur est retombee. Rien de solide."
+   "raison": "Rumeur de rachat CNP (18/09) puis prudence des investisseurs ; prix -1.4% sur 20j : la rumeur est retombee. Rien de solide.",
+   "resultats": {
+    "prix_sortie": 15.869999885559082,
+    "rendement_pct_reel": 1.41,
+    "appel_correct": null
+   }
   },
   {
    "ticker": "ARCAD.AS",
@@ -83,7 +126,13 @@
    "confiance": "faible",
    "dimension_dominante": "actu",
    "volume": "volume non disponible (docs/volume_history.json vide)",
-   "raison": "Plan strategique : cession de l'architecture et 1000 postes supprimes (29/09) + partenariat IA Autodesk ; stage Achat, score 54, -5.9% sur 20j : marche sceptique mais restructuration souvent bien recue."
+   "raison": "Plan strategique : cession de l'architecture et 1000 postes supprimes (29/09) + partenariat IA Autodesk ; stage Achat, score 54, -5.9% sur 20j : marche sceptique mais restructuration souvent bien recue.",
+   "resultats": {
+    "prix_sortie": 46.20000076293945,
+    "rendement_pct_reel": 13.07,
+    "appel_correct": null,
+    "lecture_biais_leger_haussier_signe_positif": true
+   }
   },
   {
    "ticker": "WDP.BR",
@@ -92,7 +141,12 @@
    "confiance": "faible",
    "dimension_dominante": "actu",
    "volume": "volume non disponible (docs/volume_history.json vide)",
-   "raison": "Fusion Argan/WDP au menu de l'AG, couverture abondante mais neutre ; +2.1% sur 5j apres -8.5% sur 20j."
+   "raison": "Fusion Argan/WDP au menu de l'AG, couverture abondante mais neutre ; +2.1% sur 5j apres -8.5% sur 20j.",
+   "resultats": {
+    "prix_sortie": 19.399999618530273,
+    "rendement_pct_reel": 1.04,
+    "appel_correct": null
+   }
   },
   {
    "ticker": "EBAY",
@@ -101,7 +155,12 @@
    "confiance": "faible",
    "dimension_dominante": "technique",
    "volume": "volume non disponible (docs/volume_history.json vide)",
-   "raison": "OPA hostile GameStop (~55 Md$) toujours en toile de fond ; +10.6% sur 5j, +8.7% sur 20j : forte hausse deja faite, risque de retracement."
+   "raison": "OPA hostile GameStop (~55 Md$) toujours en toile de fond ; +10.6% sur 5j, +8.7% sur 20j : forte hausse deja faite, risque de retracement.",
+   "resultats": {
+    "prix_sortie": 121.95999908447266,
+    "rendement_pct_reel": 2.95,
+    "appel_correct": null
+   }
   },
   {
    "ticker": "ETN",
@@ -110,7 +169,13 @@
    "confiance": "faible",
    "dimension_dominante": "sectoriel",
    "volume": "volume non disponible (docs/volume_history.json vide)",
-   "raison": "Acquisition COL Group (28/09) ; +9.8% sur 20j, stage Achat, score 60 ; secteur industriel tres couvert. Actu peu decisive."
+   "raison": "Acquisition COL Group (28/09) ; +9.8% sur 20j, stage Achat, score 60 ; secteur industriel tres couvert. Actu peu decisive.",
+   "resultats": {
+    "prix_sortie": 341.7200012207031,
+    "rendement_pct_reel": -20.83,
+    "appel_correct": null,
+    "lecture_biais_leger_haussier_signe_positif": false
+   }
   },
   {
    "ticker": "BG",
@@ -119,7 +184,25 @@
    "confiance": "tres_faible",
    "dimension_dominante": "technique",
    "volume": "volume non disponible (docs/volume_history.json vide)",
-   "raison": "BP envisagerait de se separer de Bunge (29/09) : article ambigu ; -13.8% sur 20j, score -92, phase Declin. Appel de continuation de momentum, faible conviction."
+   "raison": "BP envisagerait de se separer de Bunge (29/09) : article ambigu ; -13.8% sur 20j, score -92, phase Declin. Appel de continuation de momentum, faible conviction.",
+   "resultats": {
+    "prix_sortie": 99.0999984741211,
+    "rendement_pct_reel": -5.21,
+    "appel_correct": true
+   }
   }
- ]
+ ],
+ "resume_resolution": {
+  "date_resolution": "2026-11-09",
+  "source_prix": "docs/indices.json current_price (maj 2026-11-08)",
+  "paris_directionnels_corrects": "3/4",
+  "rendement_moyen_pct_par_type_appel": {
+   "baissier": -6.49,
+   "neutre_leger_haussier": -2.22,
+   "neutre": -1.79
+  },
+  "rendement_moyen_pct_tous": -3.61,
+  "lecture_honnete": "Echantillon minuscule (a peine quelques paris directionnels, rendements non ajustes du marche) : aucune conclusion statistique possible a ce stade.",
+  "exclusions_moyennes": "Tickers avec avertissement_donnees exclus des moyennes."
+ }
 }

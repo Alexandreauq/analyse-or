@@ -1,20 +1,169 @@
 {
-  "date_test": "2026-10-11",
-  "date_verification_prevue": "2026-11-08",
-  "methodologie": "Test prospectif (pas un backtest) : lecture reelle d'actualites + volume du jour, raisonnement humain/IA sans formule mecanique, pari directionnel date et enregistre avant de connaitre le resultat. Objectif : verifier si un raisonnement contextuel (actu + volume) a une vraie valeur predictive sur 2-4 semaines, contrairement au score fondamental et aux signaux techniques deja testes (tous nuls ou negatifs face au buy & hold).",
-  "paris": [
-    {"ticker": "CHRW", "prix_entree": 142.31, "appel": "baissier", "confiance": "moyenne", "raison": "Rachat RXO annonce, -9.8% sur 5j avec volume 2.22x la moyenne - reaction negative confirmee par le volume, signal credible"},
-    {"ticker": "UNI.MC", "prix_entree": 3.21, "appel": "baissier", "confiance": "moyenne", "raison": "Demission du president, incertitude de gouvernance"},
-    {"ticker": "LDO.MI", "prix_entree": 46.81, "appel": "neutre_prudent", "confiance": "faible", "raison": "Fusion spatiale Airbus/Thales annoncee mais prix legerement negatif - scepticisme possible sur l'execution"},
-    {"ticker": "SBRY.L", "prix_entree": 335.60, "appel": "incertain", "confiance": "tres_faible", "raison": "Rumeur de fusion Morrisons non confirmee, risque reglementaire UK"},
-    {"ticker": "APO", "prix_entree": 118.65, "appel": "neutre_leger_haussier", "confiance": "faible", "raison": "Rachat easyJet deja integre par le marche, volume normal"},
-    {"ticker": "KDP", "prix_entree": 31.76, "appel": "leger_haussier", "confiance": "faible", "raison": "Nouveau DG scission cafe, mais volume sous la moyenne malgre la hausse"},
-    {"ticker": "ZURN.SW", "prix_entree": 576.00, "appel": "neutre", "confiance": "aucune", "raison": "Finalisation d'un rachat deja connu, pure formalite"},
-    {"ticker": "HEN3.DE", "prix_entree": 74.46, "appel": "neutre", "confiance": "faible", "raison": "Hausse sur volume faible, peu convaincant"},
-    {"ticker": "CRBN.AS", "prix_entree": 22.28, "appel": "neutre", "confiance": "faible", "raison": "Divergence : actu presentee comme negative (depart DG) mais prix monte sur volume faible - marche indifferent"},
-    {"ticker": "8766.T", "prix_entree": 525.70, "appel": "neutre", "confiance": "aucune", "raison": "Actu mal ciblee (concerne Suncorp, pas vraiment Tokio Marine)"},
-    {"ticker": "4755.T", "prix_entree": 659.60, "appel": "neutre", "confiance": "faible", "raison": "Actu trop peripherique pour ce geant"},
-    {"ticker": "PHARM.AS", "prix_entree": 0.876, "appel": "neutre", "confiance": "aucune", "raison": "Marche ignore completement cette actu, volume tres faible"}
-  ],
-  "constat_immediat_avant_verification": "2 cas (CRBN.AS, 8766.T) montrent que l'actualite 'majeure' etiquetee par le systeme ne correspond pas a ce qui bouge reellement le prix - angle mort d'un systeme texte-seul sans croisement volume. CHRW est le seul cas ou actu+prix+volume racontent une histoire coherente."
+ "date_test": "2026-10-11",
+ "date_verification_prevue": "2026-11-08",
+ "methodologie": "Test prospectif (pas un backtest) : lecture reelle d'actualites + volume du jour, raisonnement humain/IA sans formule mecanique, pari directionnel date et enregistre avant de connaitre le resultat. Objectif : verifier si un raisonnement contextuel (actu + volume) a une vraie valeur predictive sur 2-4 semaines, contrairement au score fondamental et aux signaux techniques deja testes (tous nuls ou negatifs face au buy & hold).",
+ "paris": [
+  {
+   "ticker": "CHRW",
+   "prix_entree": 142.31,
+   "appel": "baissier",
+   "confiance": "moyenne",
+   "raison": "Rachat RXO annonce, -9.8% sur 5j avec volume 2.22x la moyenne - reaction negative confirmee par le volume, signal credible",
+   "resultats": {
+    "prix_sortie": 125.33000183105469,
+    "rendement_pct_reel": -11.93,
+    "appel_correct": true
+   }
+  },
+  {
+   "ticker": "UNI.MC",
+   "prix_entree": 3.21,
+   "appel": "baissier",
+   "confiance": "moyenne",
+   "raison": "Demission du president, incertitude de gouvernance",
+   "resultats": {
+    "prix_sortie": 3.305999994277954,
+    "rendement_pct_reel": 2.99,
+    "appel_correct": false
+   }
+  },
+  {
+   "ticker": "LDO.MI",
+   "prix_entree": 46.81,
+   "appel": "neutre_prudent",
+   "confiance": "faible",
+   "raison": "Fusion spatiale Airbus/Thales annoncee mais prix legerement negatif - scepticisme possible sur l'execution",
+   "resultats": {
+    "prix_sortie": 48.06999969482422,
+    "rendement_pct_reel": 2.69,
+    "appel_correct": null
+   }
+  },
+  {
+   "ticker": "SBRY.L",
+   "prix_entree": 335.6,
+   "appel": "incertain",
+   "confiance": "tres_faible",
+   "raison": "Rumeur de fusion Morrisons non confirmee, risque reglementaire UK",
+   "resultats": {
+    "prix_sortie": 3.5470001220703127,
+    "rendement_pct_reel": null,
+    "appel_correct": null,
+    "avertissement_donnees": "Rupture d'unite probable (entree 335.6 en pence, sortie 3.547 en livres => 354.7p, soit ~+5.7%) : rendement non fiable, exclu des moyennes."
+   }
+  },
+  {
+   "ticker": "APO",
+   "prix_entree": 118.65,
+   "appel": "neutre_leger_haussier",
+   "confiance": "faible",
+   "raison": "Rachat easyJet deja integre par le marche, volume normal",
+   "resultats": {
+    "prix_sortie": 116.75,
+    "rendement_pct_reel": -1.6,
+    "appel_correct": null,
+    "lecture_biais_leger_haussier_signe_positif": false
+   }
+  },
+  {
+   "ticker": "KDP",
+   "prix_entree": 31.76,
+   "appel": "leger_haussier",
+   "confiance": "faible",
+   "raison": "Nouveau DG scission cafe, mais volume sous la moyenne malgre la hausse",
+   "resultats": {
+    "prix_sortie": 36.630001068115234,
+    "rendement_pct_reel": 15.33,
+    "appel_correct": true
+   }
+  },
+  {
+   "ticker": "ZURN.SW",
+   "prix_entree": 576.0,
+   "appel": "neutre",
+   "confiance": "aucune",
+   "raison": "Finalisation d'un rachat deja connu, pure formalite",
+   "resultats": {
+    "prix_sortie": 630.2000122070312,
+    "rendement_pct_reel": 9.41,
+    "appel_correct": null
+   }
+  },
+  {
+   "ticker": "HEN3.DE",
+   "prix_entree": 74.46,
+   "appel": "neutre",
+   "confiance": "faible",
+   "raison": "Hausse sur volume faible, peu convaincant",
+   "resultats": {
+    "prix_sortie": 83.22000122070312,
+    "rendement_pct_reel": 11.76,
+    "appel_correct": null
+   }
+  },
+  {
+   "ticker": "CRBN.AS",
+   "prix_entree": 22.28,
+   "appel": "neutre",
+   "confiance": "faible",
+   "raison": "Divergence : actu presentee comme negative (depart DG) mais prix monte sur volume faible - marche indifferent",
+   "resultats": {
+    "prix_sortie": 26.84000015258789,
+    "rendement_pct_reel": 20.47,
+    "appel_correct": null
+   }
+  },
+  {
+   "ticker": "8766.T",
+   "prix_entree": 525.7,
+   "appel": "neutre",
+   "confiance": "aucune",
+   "raison": "Actu mal ciblee (concerne Suncorp, pas vraiment Tokio Marine)",
+   "resultats": {
+    "prix_sortie": 569.7999877929688,
+    "rendement_pct_reel": 8.39,
+    "appel_correct": null
+   }
+  },
+  {
+   "ticker": "4755.T",
+   "prix_entree": 659.6,
+   "appel": "neutre",
+   "confiance": "faible",
+   "raison": "Actu trop peripherique pour ce geant",
+   "resultats": {
+    "prix_sortie": 620.0,
+    "rendement_pct_reel": -6.0,
+    "appel_correct": null
+   }
+  },
+  {
+   "ticker": "PHARM.AS",
+   "prix_entree": 0.876,
+   "appel": "neutre",
+   "confiance": "aucune",
+   "raison": "Marche ignore completement cette actu, volume tres faible",
+   "resultats": {
+    "prix_sortie": 1.1015000343322754,
+    "rendement_pct_reel": 25.74,
+    "appel_correct": null
+   }
+  }
+ ],
+ "constat_immediat_avant_verification": "2 cas (CRBN.AS, 8766.T) montrent que l'actualite 'majeure' etiquetee par le systeme ne correspond pas a ce qui bouge reellement le prix - angle mort d'un systeme texte-seul sans croisement volume. CHRW est le seul cas ou actu+prix+volume racontent une histoire coherente.",
+ "resume_resolution": {
+  "date_resolution": "2026-11-09",
+  "source_prix": "docs/indices.json current_price (maj 2026-11-08)",
+  "paris_directionnels_corrects": "2/3",
+  "rendement_moyen_pct_par_type_appel": {
+   "baissier": -4.47,
+   "neutre_prudent": 2.69,
+   "neutre_leger_haussier": -1.6,
+   "leger_haussier": 15.33,
+   "neutre": 11.63
+  },
+  "rendement_moyen_pct_tous": 7.02,
+  "lecture_honnete": "Echantillon minuscule (a peine quelques paris directionnels, rendements non ajustes du marche) : aucune conclusion statistique possible a ce stade.",
+  "exclusions_moyennes": "Tickers avec avertissement_donnees exclus des moyennes."
+ }
 }

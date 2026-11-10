@@ -17,7 +17,14 @@
       "return_pct": null,
       "buyhold_price_at_close": null,
       "buyhold_return_pct": null,
-      "journal": []
+      "journal": [
+        {
+          "date": "2026-11-09",
+          "price": 4114.5,
+          "decision": "garder",
+          "raison": "echec de l'appel API, position gardee par defaut"
+        }
+      ]
     }
   ]
 }

@@ -2,21 +2,21 @@
   "date": "2026-11-10",
   "commodity": "argent",
   "label": "Argent",
-  "composite_score": -10.9,
+  "composite_score": -12.7,
   "interpretation": "Neutre — pas d'action",
   "cftc_percentile": 4.487179487179487,
   "factors": [
     {
       "name": "Taux réels US 10 ans",
-      "score": 5.4,
+      "score": 4.799999999999995,
       "weight": 0.3,
-      "raw_value": "2.63% (il y a ~45j : 2.90%)"
+      "raw_value": "2.66% (il y a ~45j : 2.90%)"
     },
     {
       "name": "Dollar (DXY)",
       "score": -10,
       "weight": 0.2,
-      "raw_value": "102.38 (il y a 2 mois : 99.09)"
+      "raw_value": "102.25 (il y a 2 mois : 99.09)"
     },
     {
       "name": "Positionnement CFTC",
@@ -28,19 +28,19 @@
       "name": "Ratio or/argent",
       "score": -4.314159292035398,
       "weight": 0.25,
-      "raw_value": "78.5 — 28e percentile (3 ans)"
+      "raw_value": "78.4 — 28e percentile (3 ans)"
     },
     {
       "name": "Dynamique récente",
       "score": -10.0,
       "weight": 0.1,
-      "raw_value": "-25.8% vs MM200"
+      "raw_value": "-25.7% vs MM200"
     }
   ],
   "technical": {
-    "note": "Cours en-dessous de la MM200 (-25.8%) — tendance baissière",
-    "spot": 51.3849983215332,
-    "ma200": 69.29208986282349,
+    "note": "Cours en-dessous de la MM200 (-25.7%) — tendance baissière",
+    "spot": 51.5099983215332,
+    "ma200": 69.29271486282349,
     "unite": "$ / oz"
   },
   "calendar": [

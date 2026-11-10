@@ -14,7 +14,7 @@
       "name": "Dollar (DXY)",
       "score": -10,
       "weight": 0.15,
-      "raw_value": "101.70 (il y a 2 mois : 98.77)"
+      "raw_value": "101.52 (il y a 2 mois : 99.09)"
     },
     {
       "name": "Anticipations d'inflation",
@@ -48,9 +48,9 @@
     }
   ],
   "technical": {
-    "note": "Cours en-dessous de la MM200 (-8.0%) — tendance baissière",
-    "spot": 4138.60009765625,
-    "ma200": 4497.28999633789
+    "note": "Cours en-dessous de la MM200 (-8.2%) — tendance baissière",
+    "spot": 4125.2998046875,
+    "ma200": 4492.383494873047
   },
   "calendar": [
     {
@@ -104,10 +104,28 @@
   ],
   "news": [
     {
-      "title": "Dong vietnamien, cours de l’or – 9 novembre - Zonebourse Suisse",
-      "date": "2026-11-09",
-      "link": "https://news.google.com/rss/articles/CBMipgFBVV95cUxQZG9LMDA5N05vRV9WeUFiYnJkY1VKNHpYQWttMVhKcmZNWXNGVm1YanJNdFJmUFR0bld3cG42WlJCcXlsbV95NGxHZTdDQktfYmNVb3RHR0xtM2tFc09DTlU1MTdVOFdQd0tzVTBKUUpiRF9ZbFYwd0FzclVLdGFKQTJHVHQ4aVJtQ3hpTnQ5dWZPTk9YbkgxSzBnc3ZaOGZJQ0h0ekl3?oc=5",
+      "title": "Dong vietnamien, cours de l’or – 10 novembre - Zonebourse Suisse",
+      "date": "2026-11-10",
+      "link": "https://news.google.com/rss/articles/CBMipwFBVV95cUxQaDNVMjdJVHh0UkY5MEtSbmN3QmdjZWptWEt1Z0ExeGhtcGdKVDVkbzJJd0VuaWhka09tTkdmYmtONktDOEZMVTFGajJkN3Y2cURkSTJGSFhFcWhoblktc1ZBS3cyZTNsN2ozbEZFaGctTnQwa0RKZXRqbEI1aEVOQnNIYU5IYnpxUGdkZWR0bnpUTml0a29zcHV5d0hRMzhyUVB5TEpDcw?oc=5",
       "source": "Zonebourse Suisse",
+      "summary": "",
+      "sentiment": 0,
+      "importance": "mineure"
+    },
+    {
+      "title": "Cours de l'or : 4 116 dollars l'once, +6 % depuis le 30 octobre - Mediaterranee.com",
+      "date": "2026-11-10",
+      "link": "https://news.google.com/rss/articles/CBMinwFBVV95cUxOcFBiRks3QVZCdWtuR1JESmZOVVcxTGQyV1U4V0NZemFLaWNFa3VDbjlXZGZ4bjFjZmFraGFGREtnaWotTEdDdTlSVnBTNHhjSm1jMUNaVWVDZkJ3ZUhlaVF0LXZnTnJZOGh2alpLVUpvRTViT3BDbXhCcmQyb0ZycUoyTnVYSnFqMjJEbWl3RjdsR3FLLVRqUzhCTlk4X00?oc=5",
+      "source": "Mediaterranee.com",
+      "summary": "",
+      "sentiment": 0,
+      "importance": "mineure"
+    },
+    {
+      "title": "La thèse du doublement du cours de l’or : 11 200 dollars en 2027, 22 400 dollars d’ici 2034 - Investing.com France",
+      "date": "2026-11-09",
+      "link": "https://news.google.com/rss/articles/CBMiywFBVV95cUxOQ25VbmVka0Jqc2MyMmRaOUlxMlJtYkVBTGM0NlBKWGtLRFBLMzRNNXdhRjF3ZmdDaGVSSm1RTWtpQVJodjIxamlwcXJqeWJxWjlTRy1uWERWNk5rYzJPTExEUV9qTEV1RFd3QTVUV0FXaHUxM2l4MUlVam9XRkZaeHlSQW9mR0ZjSFRjYnRBbWwxRjZfclBucmVnVjVReXBhSUpURTVNZ19Ta2x0bmU2a1g5N2lGVGwxd2hxNzl1aVA0VGw0SkJJUWFtNA?oc=5",
+      "source": "Investing.com France",
       "summary": "",
       "sentiment": 0,
       "importance": "mineure"
@@ -122,28 +140,10 @@
       "importance": "mineure"
     },
     {
-      "title": "Bilan de l’or T3 2026 & perspectives pour la fin d’année - Allnews",
+      "title": "09/11 L'or progresse alors que le scandale... | De L'Or - Actualités et analyses - BullionVault FR",
       "date": "2026-11-09",
-      "link": "https://news.google.com/rss/articles/CBMivgFBVV95cUxOaUZjdkJJYzB1emJSdXhEeUNMUExoOFdZSFF6UWlOVkw0T0hSbTFxZEQyelF6UTZRNHJkN3ZyQXlVbU1jY2t0SDh3cGNGRlZqbThHQmthVUxrUVpOcHJZTHN4V3dScW03d09rU0N1RlFRd1FSRTdTanZGX0FGNnNFc2lVLU1fYU1HZWcxeDhodXJkTTlCODdOSGN6MDhvdkhrQjNMVGdjT1laeU1tX3ZjaG5kVjhhSERhcmNZbXBn?oc=5",
-      "source": "Allnews",
-      "summary": "",
-      "sentiment": 0,
-      "importance": "mineure"
-    },
-    {
-      "title": "Cours de l'or le 9 novembre : stables dans les deux sens. - Vietnam.vn",
-      "date": "2026-11-09",
-      "link": "https://news.google.com/rss/articles/CBMic0FVX3lxTFB6azJzcW9WMDRiTUFveHFLX2xnOG92eXFDQXNHTmYyRThRM1U2Z3oyRGdxY2QyT0o3Q2ZNUUxWdGFOanZvY0hBcFdpeXI3aTJXQVZiNlJHbUZzTWtNTTFoSW1OY2dhaERmZ0RISklWLVg3Wmc?oc=5",
-      "source": "Vietnam.vn",
-      "summary": "Cet article suggère qu'il s'agit d'un point quotidien sur le cours de l'or au 9 novembre, décrivant un marché sans variation marquée dans un sens ou dans l'autre, sans que le titre seul permette d'en confirmer les causes ni les niveaux de prix.",
-      "sentiment": 0,
-      "importance": "mineure"
-    },
-    {
-      "title": "Pourquoi l’or baisse-t-il malgré les achats des ETF et des banques centrales? - Morningstar",
-      "date": "2026-10-19",
-      "link": "https://news.google.com/rss/articles/CBMitwFBVV95cUxQSmVLNUJ0RG9EUTdPcFRFdndPOXJYUFRFaGs5OGFvYm5Rd3JwcDh5VVU1cC14bFlXNjBGZGo5MnFHUWJ0RkFQd3NmNUpBSGFmVWVQTU1FWmVXOUpkYm1GRDZlRUtGVTV6Qk9oVjFPV0tlZFlhQUFGaU54U0R3d2pyQnppQ2xMZjRocGFXN2UtdjdPUnZ5UzVrMy1ZNzNsM0VyZm5lbzdIWkpreWxTY19QdGZHLTdYLTA?oc=5",
-      "source": "Morningstar",
+      "link": "https://news.google.com/rss/articles/CBMijwFBVV95cUxPUEZEb1ZXQ0djV0hhTkNPYWl2NXNOSXNsWWF5TWtUU2ZwcFBreklDTWNEVGNxVGlBTFBFOVYtMTU4VE0xM3M1cFdWYTFjemlldVdJUGtjOEllV0pBOTNWNDRqUDA5Y2lCMUJlR3EtU2hWak5xNkRKRk9tMnFoN1lvS3FHS1BsS1pMZjRWQkNQTQ?oc=5",
+      "source": "BullionVault FR",
       "summary": "",
       "sentiment": 0,
       "importance": "mineure"
@@ -151,7 +151,17 @@
   ],
   "analysis_html": "<h3>Contexte récent</h3><p>Les données disponibles ne fournissent pas de série de prix de l'or. Les titres d'actualité évoquent toutefois un repli récent du métal jaune, malgré des achats soutenus des ETF et des banques centrales (Morningstar), puis une stabilisation autour du 9 novembre. Sur les deux derniers mois, l'environnement macro est contrasté : le dollar s'est nettement apprécié, tandis que les taux réels américains ont reculé.</p><h3>Facteurs déterminants</h3><ul><li><strong>Dollar (DXY), principal frein :</strong> le DXY passe de 98,77 à 102,05 en deux mois, soit une hausse d'environ 3,3 %. Le facteur obtient le score le plus défavorable de la grille (-10, poids 15 %). Sa contribution pondérée (environ -1,5 point) est la plus forte en valeur absolue. Un dollar plus fort renchérit l'or pour les acheteurs hors zone dollar, ce qui est cohérent avec la pression baissière évoquée dans l'actualité.</li><li><strong>Taux réels US 10 ans, principal soutien :</strong> ils reculent de 2,83 % à 2,60 %, soit environ 23 points de base en 45 jours. Le score modérément positif (+4,6) porte sur le facteur le plus lourd (30 %), d'où une contribution d'environ +1,4 point, presque équivalente à celle du dollar mais de sens opposé. La baisse des taux réels réduit le coût d'opportunité de détenir un actif sans rendement.</li><li><strong>Anticipations d'inflation, frein secondaire :</strong> elles reculent de 2,34 % à 2,23 %. Le score négatif (-3,7, poids 15 %) traduit un affaiblissement de la demande de couverture contre l'inflation, avec une contribution d'environ -0,6 point.</li><li><strong>Ton de la Fed, soutien notable :</strong> le score de +5 (poids 15 %, saisie manuelle) reflète une orientation jugée accommodante. Il contribue pour environ +0,75 point et reste cohérent avec la détente des taux réels.</li><li><strong>Positionnement CFTC :</strong> la position nette des investisseurs non commerciaux (179 548 contrats) se situe au 22e percentile sur trois ans. Ce positionnement relativement allégé est interprété comme un signal favorable (+5,5, poids 10 %) : il laisse une marge de reconstitution des positions longues. Contribution d'environ +0,55 point.</li><li><strong>Flux ETF et banques centrales :</strong> les scores sont positifs (+3 et +7, saisies manuelles), mais leurs poids sont faibles (10 % et 5 %). Leurs contributions restent modestes (environ +0,3 et +0,35 point). Ces achats n'ont manifestement pas suffi à compenser l'effet dollar à court terme.</li></ul><h3>Actualités à retenir</h3><p>Aucune actualité n'est classée notable ou majeure : les cinq titres relèvent de la catégorie mineure et n'ont donc pas d'impact identifié sur le score. Deux éléments méritent néanmoins d'être signalés :</p><ul><li>Le titre de Morningstar (<strong>Pourquoi l'or baisse-t-il malgré les achats des ETF et des banques centrales ?</strong>) illustre précisément la tension visible dans le score : des facteurs de demande physique et financière positifs, mais faiblement pondérés, face à un dollar en forte hausse.</li><li>Le point quotidien du 9 novembre (Vietnam.vn) suggère un marché stable à cette date. Le titre seul ne permet pas d'en tirer de conclusion sur les causes ou les niveaux.</li></ul><p>Les autres articles (bilan du T3 2026, perspectives or/argent pour 2027, cotation en dong vietnamien) relèvent du commentaire général ou de la cotation locale. Leur contenu n'est pas confirmé au-delà des titres.</p><h3>Synthèse</h3><p>La lecture du score composite fait ressortir un équilibre fragile entre deux forces majeures de sens opposé :</p><ul><li><strong>Côté défavorable :</strong> l'appréciation marquée du dollar, renforcée par le recul des anticipations d'inflation.</li><li><strong>Côté favorable :</strong> la baisse des taux réels, appuyée par un ton de la Fed jugé accommodant et un positionnement spéculatif peu chargé.</li></ul><p>La somme des contributions pondérées penche légèrement du côté positif. Toutefois, une part significative des soutiens repose sur des saisies manuelles (Fed, ETF, banques centrales), ce qui introduit une part de jugement dans le résultat. Les actualités disponibles, toutes mineures, n'apportent pas d'élément nouveau susceptible de modifier ce diagnostic. Elles confirment seulement le décalage entre une demande structurelle soutenue et une pression de court terme liée au dollar.</p>",
   "news_classifications": {
-    "https://news.google.com/rss/articles/CBMipgFBVV95cUxQZG9LMDA5N05vRV9WeUFiYnJkY1VKNHpYQWttMVhKcmZNWXNGVm1YanJNdFJmUFR0bld3cG42WlJCcXlsbV95NGxHZTdDQktfYmNVb3RHR0xtM2tFc09DTlU1MTdVOFdQd0tzVTBKUUpiRF9ZbFYwd0FzclVLdGFKQTJHVHQ4aVJtQ3hpTnQ5dWZPTk9YbkgxSzBnc3ZaOGZJQ0h0ekl3?oc=5": {
+    "https://news.google.com/rss/articles/CBMipwFBVV95cUxQaDNVMjdJVHh0UkY5MEtSbmN3QmdjZWptWEt1Z0ExeGhtcGdKVDVkbzJJd0VuaWhka09tTkdmYmtONktDOEZMVTFGajJkN3Y2cURkSTJGSFhFcWhoblktc1ZBS3cyZTNsN2ozbEZFaGctTnQwa0RKZXRqbEI1aEVOQnNIYU5IYnpxUGdkZWR0bnpUTml0a29zcHV5d0hRMzhyUVB5TEpDcw?oc=5": {
+      "summary": "",
+      "sentiment": 0,
+      "importance": "mineure"
+    },
+    "https://news.google.com/rss/articles/CBMinwFBVV95cUxOcFBiRks3QVZCdWtuR1JESmZOVVcxTGQyV1U4V0NZemFLaWNFa3VDbjlXZGZ4bjFjZmFraGFGREtnaWotTEdDdTlSVnBTNHhjSm1jMUNaVWVDZkJ3ZUhlaVF0LXZnTnJZOGh2alpLVUpvRTViT3BDbXhCcmQyb0ZycUoyTnVYSnFqMjJEbWl3RjdsR3FLLVRqUzhCTlk4X00?oc=5": {
+      "summary": "",
+      "sentiment": 0,
+      "importance": "mineure"
+    },
+    "https://news.google.com/rss/articles/CBMiywFBVV95cUxOQ25VbmVka0Jqc2MyMmRaOUlxMlJtYkVBTGM0NlBKWGtLRFBLMzRNNXdhRjF3ZmdDaGVSSm1RTWtpQVJodjIxamlwcXJqeWJxWjlTRy1uWERWNk5rYzJPTExEUV9qTEV1RFd3QTVUV0FXaHUxM2l4MUlVam9XRkZaeHlSQW9mR0ZjSFRjYnRBbWwxRjZfclBucmVnVjVReXBhSUpURTVNZ19Ta2x0bmU2a1g5N2lGVGwxd2hxNzl1aVA0VGw0SkJJUWFtNA?oc=5": {
       "summary": "",
       "sentiment": 0,
       "importance": "mineure"
@@ -161,17 +171,7 @@
       "sentiment": 0,
       "importance": "mineure"
     },
-    "https://news.google.com/rss/articles/CBMivgFBVV95cUxOaUZjdkJJYzB1emJSdXhEeUNMUExoOFdZSFF6UWlOVkw0T0hSbTFxZEQyelF6UTZRNHJkN3ZyQXlVbU1jY2t0SDh3cGNGRlZqbThHQmthVUxrUVpOcHJZTHN4V3dScW03d09rU0N1RlFRd1FSRTdTanZGX0FGNnNFc2lVLU1fYU1HZWcxeDhodXJkTTlCODdOSGN6MDhvdkhrQjNMVGdjT1laeU1tX3ZjaG5kVjhhSERhcmNZbXBn?oc=5": {
-      "summary": "",
-      "sentiment": 0,
-      "importance": "mineure"
-    },
-    "https://news.google.com/rss/articles/CBMic0FVX3lxTFB6azJzcW9WMDRiTUFveHFLX2xnOG92eXFDQXNHTmYyRThRM1U2Z3oyRGdxY2QyT0o3Q2ZNUUxWdGFOanZvY0hBcFdpeXI3aTJXQVZiNlJHbUZzTWtNTTFoSW1OY2dhaERmZ0RISklWLVg3Wmc?oc=5": {
-      "summary": "Cet article suggère qu'il s'agit d'un point quotidien sur le cours de l'or au 9 novembre, décrivant un marché sans variation marquée dans un sens ou dans l'autre, sans que le titre seul permette d'en confirmer les causes ni les niveaux de prix.",
-      "sentiment": 0,
-      "importance": "mineure"
-    },
-    "https://news.google.com/rss/articles/CBMitwFBVV95cUxQSmVLNUJ0RG9EUTdPcFRFdndPOXJYUFRFaGs5OGFvYm5Rd3JwcDh5VVU1cC14bFlXNjBGZGo5MnFHUWJ0RkFQd3NmNUpBSGFmVWVQTU1FWmVXOUpkYm1GRDZlRUtGVTV6Qk9oVjFPV0tlZFlhQUFGaU54U0R3d2pyQnppQ2xMZjRocGFXN2UtdjdPUnZ5UzVrMy1ZNzNsM0VyZm5lbzdIWkpreWxTY19QdGZHLTdYLTA?oc=5": {
+    "https://news.google.com/rss/articles/CBMijwFBVV95cUxPUEZEb1ZXQ0djV0hhTkNPYWl2NXNOSXNsWWF5TWtUU2ZwcFBreklDTWNEVGNxVGlBTFBFOVYtMTU4VE0xM3M1cFdWYTFjemlldVdJUGtjOEllV0pBOTNWNDRqUDA5Y2lCMUJlR3EtU2hWak5xNkRKRk9tMnFoN1lvS3FHS1BsS1pMZjRWQkNQTQ?oc=5": {
       "summary": "",
       "sentiment": 0,
       "importance": "mineure"

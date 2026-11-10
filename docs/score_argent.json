@@ -2,7 +2,7 @@
   "date": "2026-11-10",
   "commodity": "argent",
   "label": "Argent",
-  "composite_score": -11.4,
+  "composite_score": -11.2,
   "interpretation": "Neutre — pas d'action",
   "cftc_percentile": 4.487179487179487,
   "factors": [
@@ -16,7 +16,7 @@
       "name": "Dollar (DXY)",
       "score": -10,
       "weight": 0.2,
-      "raw_value": "101.70 (il y a 2 mois : 98.77)"
+      "raw_value": "101.52 (il y a 2 mois : 99.09)"
     },
     {
       "name": "Positionnement CFTC",
@@ -26,21 +26,21 @@
     },
     {
       "name": "Ratio or/argent",
-      "score": -4.491150442477875,
+      "score": -4.424778761061948,
       "weight": 0.25,
-      "raw_value": "77.5 — 28e percentile (3 ans)"
+      "raw_value": "78.1 — 28e percentile (3 ans)"
     },
     {
       "name": "Dynamique récente",
       "score": -10.0,
       "weight": 0.1,
-      "raw_value": "-23.3% vs MM200"
+      "raw_value": "-23.8% vs MM200"
     }
   ],
   "technical": {
-    "note": "Cours en-dessous de la MM200 (-23.3%) — tendance baissière",
-    "spot": 53.36000061035156,
-    "ma200": 69.61454488754272,
+    "note": "Cours en-dessous de la MM200 (-23.8%) — tendance baissière",
+    "spot": 52.84000015258789,
+    "ma200": 69.29936487197875,
     "unite": "$ / oz"
   },
   "calendar": [
@@ -106,15 +106,6 @@
       "importance": "mineure"
     },
     {
-      "title": "Cours de l’argent : 51,89 $ après +5,75 % sur la semaine, IPC le 10 novembre, haussier 55 $, baissier 49 $ - FinanceFeeds",
-      "date": "2026-11-08",
-      "link": "https://news.google.com/rss/articles/CBMid0FVX3lxTE1EdEpYQklmZVpFYnl6V3NCMWpSVjVXY2Job3g3RmpHc0xlYVRwNENMNklzSGNBNklFTTljMW83aWtKZWx3SGZPQWIybjdRRjlPaDlMaU9jeHl4cUJicWZPM0ZLbkFrVjdkTW1PZ3E3azQ1Vkg1YWlF?oc=5",
-      "source": "FinanceFeeds",
-      "summary": "",
-      "sentiment": 0,
-      "importance": "mineure"
-    },
-    {
       "title": "Pourquoi, malgré une correction à la baisse, le marché de l'argent se maintient à des niveaux élevés? - RFI",
       "date": "2026-09-24",
       "link": "https://news.google.com/rss/articles/CBMitgJBVV95cUxQRlZNeG9jaEZLQXY1TXl5b0dUZktCcDFSbTBMZi1jY3FGSU11Z3Q1UzdFTWFQTEp2a0wzWll3TkNoR1ZFR3ZHMjJnSk5iWlV4TVNhdjhHVzZlb3M5M1FyZjRyUnVJaktkS3BtWnNjZURsRWxmaVZaMVlFSjNfYi0xWWQ2aVQtVHVaTzE0QkNxQ2RTUi11MmpncGhld0dZNXFaM2I1bXpXYnp0WEg1N1ZfSmxJdHdMdldsQTItSGR4ZmhqODk0MVpBbC1LRl9xWndqTl9hMGpxSF9RRTU0bkJrVDB4WFJyOS1xaEQyWmtQcXFnTkw5dG5RWEFVcnNuZVplTFRIUzVnUTRIN1NuemVUN2xkdzVSVDRfbHdrQUpGRG1ab0VWLUNMT3NTd3luRThDV1M3RHFn?oc=5",
@@ -124,10 +115,19 @@
       "importance": "mineure"
     },
     {
-      "title": "Cours de l'argent aujourd'hui, 5 novembre 2026 : Inversion de tendance et reprise. - Vietnam.vn",
-      "date": "2026-11-04",
-      "link": "https://news.google.com/rss/articles/CBMiekFVX3lxTE1UdmFOek14ZFJXTEFfbFlOYzZNUU5ock9fR3R5cU9uLWNlMDNtTGZ1SVVfcTg0NGxqdGlIRU1GakJXQUk4WDBvWHBWVzZzUjBhNlBXSUlJcGN5UnhZYi1QY2tReVZpV2ZnMG1ZXzBBTXh3d2pSWWdwTDZR?oc=5",
-      "source": "Vietnam.vn",
+      "title": "L’argent cherche son nouvel équilibre après une année complètement folle - Le Comptoir National de l'Or",
+      "date": "2026-09-09",
+      "link": "https://news.google.com/rss/articles/CBMirAFBVV95cUxQN25UeVBOS2xRVzJJRExHZ3ZNU2Q2bjhHVWRPeEFBcG1DRmZDRW4zTF9HMlZ1dm9hN3JGUGNlQlhrYTJRU2x4NTJRdFk0Ri03eWc5bjdTYm14OHFPUDBSenk3di02cWtGS2N1eXcwU09xVXlUNzBLMFg2NGJzZ1lFMmU2QmYzTjJiazY5QTVRNENzZHZaZnFfanFPUDB1S3NvS3ZhWUVyUXdtaGhX0gGyAUFVX3lxTE1iekFBN0tfQVBNZWVxY0R2SnNjMktBXzhxclctcGp6eVJIb0ZCXzZjdGhQbmJzQ3F0RkFBNDZCU3o3bmpMRVRDeFVnM0hrQjJ6LUpLYk54M09ycDcwd1NkYjhrU290UnlCN1FSZnhDYlgxWk83ODljMEI4VlBFVklYaFR0ZHEtLTBUb3VHTWhoNm5xb19EVHJZeWpZLW0zWlJrN0hOU3FpWDJUcW05Wk1lYnc?oc=5",
+      "source": "Le Comptoir National de l'Or",
+      "summary": "",
+      "sentiment": 0,
+      "importance": "mineure"
+    },
+    {
+      "title": "Cours de l’argent : 51,89 $ après +5,75 % sur la semaine, IPC le 10 novembre, haussier 55 $, baissier 49 $ - FinanceFeeds",
+      "date": "2026-11-08",
+      "link": "https://news.google.com/rss/articles/CBMid0FVX3lxTE1EdEpYQklmZVpFYnl6V3NCMWpSVjVXY2Job3g3RmpHc0xlYVRwNENMNklzSGNBNklFTTljMW83aWtKZWx3SGZPQWIybjdRRjlPaDlMaU9jeHl4cUJicWZPM0ZLbkFrVjdkTW1PZ3E3azQ1Vkg1YWlF?oc=5",
+      "source": "FinanceFeeds",
       "summary": "",
       "sentiment": 0,
       "importance": "mineure"
@@ -145,17 +145,17 @@
       "sentiment": 1,
       "importance": "mineure"
     },
-    "https://news.google.com/rss/articles/CBMid0FVX3lxTE1EdEpYQklmZVpFYnl6V3NCMWpSVjVXY2Job3g3RmpHc0xlYVRwNENMNklzSGNBNklFTTljMW83aWtKZWx3SGZPQWIybjdRRjlPaDlMaU9jeHl4cUJicWZPM0ZLbkFrVjdkTW1PZ3E3azQ1Vkg1YWlF?oc=5": {
-      "summary": "",
-      "sentiment": 0,
-      "importance": "mineure"
-    },
     "https://news.google.com/rss/articles/CBMitgJBVV95cUxQRlZNeG9jaEZLQXY1TXl5b0dUZktCcDFSbTBMZi1jY3FGSU11Z3Q1UzdFTWFQTEp2a0wzWll3TkNoR1ZFR3ZHMjJnSk5iWlV4TVNhdjhHVzZlb3M5M1FyZjRyUnVJaktkS3BtWnNjZURsRWxmaVZaMVlFSjNfYi0xWWQ2aVQtVHVaTzE0QkNxQ2RTUi11MmpncGhld0dZNXFaM2I1bXpXYnp0WEg1N1ZfSmxJdHdMdldsQTItSGR4ZmhqODk0MVpBbC1LRl9xWndqTl9hMGpxSF9RRTU0bkJrVDB4WFJyOS1xaEQyWmtQcXFnTkw5dG5RWEFVcnNuZVplTFRIUzVnUTRIN1NuemVUN2xkdzVSVDRfbHdrQUpGRG1ab0VWLUNMT3NTd3luRThDV1M3RHFn?oc=5": {
       "summary": "",
       "sentiment": 0,
       "importance": "mineure"
     },
-    "https://news.google.com/rss/articles/CBMiekFVX3lxTE1UdmFOek14ZFJXTEFfbFlOYzZNUU5ock9fR3R5cU9uLWNlMDNtTGZ1SVVfcTg0NGxqdGlIRU1GakJXQUk4WDBvWHBWVzZzUjBhNlBXSUlJcGN5UnhZYi1QY2tReVZpV2ZnMG1ZXzBBTXh3d2pSWWdwTDZR?oc=5": {
+    "https://news.google.com/rss/articles/CBMirAFBVV95cUxQN25UeVBOS2xRVzJJRExHZ3ZNU2Q2bjhHVWRPeEFBcG1DRmZDRW4zTF9HMlZ1dm9hN3JGUGNlQlhrYTJRU2x4NTJRdFk0Ri03eWc5bjdTYm14OHFPUDBSenk3di02cWtGS2N1eXcwU09xVXlUNzBLMFg2NGJzZ1lFMmU2QmYzTjJiazY5QTVRNENzZHZaZnFfanFPUDB1S3NvS3ZhWUVyUXdtaGhX0gGyAUFVX3lxTE1iekFBN0tfQVBNZWVxY0R2SnNjMktBXzhxclctcGp6eVJIb0ZCXzZjdGhQbmJzQ3F0RkFBNDZCU3o3bmpMRVRDeFVnM0hrQjJ6LUpLYk54M09ycDcwd1NkYjhrU290UnlCN1FSZnhDYlgxWk83ODljMEI4VlBFVklYaFR0ZHEtLTBUb3VHTWhoNm5xb19EVHJZeWpZLW0zWlJrN0hOU3FpWDJUcW05Wk1lYnc?oc=5": {
+      "summary": "",
+      "sentiment": 0,
+      "importance": "mineure"
+    },
+    "https://news.google.com/rss/articles/CBMid0FVX3lxTE1EdEpYQklmZVpFYnl6V3NCMWpSVjVXY2Job3g3RmpHc0xlYVRwNENMNklzSGNBNklFTTljMW83aWtKZWx3SGZPQWIybjdRRjlPaDlMaU9jeHl4cUJicWZPM0ZLbkFrVjdkTW1PZ3E3azQ1Vkg1YWlF?oc=5": {
       "summary": "",
       "sentiment": 0,
       "importance": "mineure"

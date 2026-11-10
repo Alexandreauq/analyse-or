@@ -2,7 +2,7 @@
   "date": "2026-11-10",
   "commodity": "petrole",
   "label": "Pétrole (WTI)",
-  "composite_score": -20.2,
+  "composite_score": -33.1,
   "interpretation": "Défavorable — pas d'entrée même sur signal technique",
   "cftc_percentile": 10.256410256410255,
   "factors": [
@@ -10,7 +10,7 @@
       "name": "Dollar (DXY)",
       "score": -10,
       "weight": 0.26666666666666666,
-      "raw_value": "101.70 (il y a 2 mois : 98.77)"
+      "raw_value": "101.51 (il y a 2 mois : 99.09)"
     },
     {
       "name": "Positionnement CFTC",
@@ -20,15 +20,15 @@
     },
     {
       "name": "Spread WTI-Brent",
-      "score": -5.050048828125,
+      "score": -5.649986267089844,
       "weight": 0.19999999999999998,
-      "raw_value": "+5.74 $/baril (il y a ~2 mois : +4.73 $/baril)"
+      "raw_value": "+5.56 $/baril (il y a ~2 mois : +4.43 $/baril)"
     },
     {
       "name": "Dynamique récente",
-      "score": -1.7518642050401168,
+      "score": -6.124694558367158,
       "weight": 0.26666666666666666,
-      "raw_value": "-0.9% vs MM200"
+      "raw_value": "-3.1% vs MM200"
     },
     {
       "name": "Stocks EIA",
@@ -38,9 +38,9 @@
     }
   ],
   "technical": {
-    "note": "Cours proche de la MM200 (-0.9%) — zone de décision",
-    "spot": 86.5199966430664,
-    "ma200": 87.28455003738404,
+    "note": "Cours en-dessous de la MM200 (-3.1%) — tendance baissière",
+    "spot": 84.7300033569336,
+    "ma200": 87.4067000579834,
     "unite": "$ / baril"
   },
   "calendar": [
@@ -88,6 +88,15 @@
   "alerts": [],
   "news": [
     {
+      "title": "Le Brent glisse vers 91 dollars, la diplomatie Iran-États-Unis pèse - Prix du baril",
+      "date": "2026-11-10",
+      "link": "https://news.google.com/rss/articles/CBMitAFBVV95cUxNc3JtTGgwSE1TTG4xbk1xNV9fRlJoTkhBdUtRVFpWNWlmTlBCRnFLUVhVSDJaOTNMQmFwWGFkRjZJd0dPeXdrakhybjBFUmU2NHhERElHRTNCT3BXQU5PdFJxNlhrODFKem5YQTBjVmloRTFHbmZsX20ySklFamxfbkFFcGE4bU9KcWJFY0duVkpkWlpBVldKSTFEZzl6VGlFNVF6QUVFOWpLOVpFdnVjWEF3RzE?oc=5",
+      "source": "Prix du baril",
+      "summary": "",
+      "sentiment": 0,
+      "importance": "mineure"
+    },
+    {
       "title": "Pétrole : qu’appelle-t-on le « Brent » ? - Connaissance des Énergies",
       "date": "2026-11-06",
       "link": "https://news.google.com/rss/articles/CBMioAFBVV95cUxQaGZ5UXlieFRjUEozT3kyc0s1Nzlqem5JT3FFVWhCU01nQi1kR2M2azNqRFU5RWVKelBac01mRFhEQTE0d0NRMTZjN1FjZURpSHdGbDdLMEtqbmxHekpZTTIyc1JxRkdaWFhYN0ptX2JaNTFDWkZoZElkNlVMdFdkLVd1Vl9JcUtIZ0xZRFdiaEhuS3kzbDdnTGV5ZklQM25L?oc=5",
@@ -97,10 +106,10 @@
       "importance": "mineure"
     },
     {
-      "title": "Légère baisse des prix du pétrole après les déclarations de Trump sur l’Iran - سانا",
-      "date": "2026-11-09",
-      "link": "https://news.google.com/rss/articles/CBMiS0FVX3lxTE44ZUt0dWZ4Q0cwNVY5SlR3WXc4N1dzRVoyQ1JORHBCd1N4cWlsQUpNYWk4dG5UcFNfaHh0eFdWZEdSTnZUeXNXVjIzaw?oc=5",
-      "source": "سانا",
+      "title": "Le WTI passe sous les 85,50 dollars sur fond d’espoirs croissants d’avancée diplomatique entre les États-Unis et l’Iran - www.tmgm.com",
+      "date": "2026-11-10",
+      "link": "https://news.google.com/rss/articles/CBMiugFBVV95cUxNVk44V3lSWktsTW1PZS03LWFnaFFCbUlEdEwzeldHOW50SVg1RS1wcU5FRmFPbEFnb1pNRUZiX0pjQ2pUMVVvY2VxQkhvN011TGVtM25xY243aVBFWWJTbk5lTG1BSXlzR0tETkUwdXZOWHM3Sy00amF6Zm56dFNGUy1Cdng1VnZwZ3BlMGQxa3U5QXhRdVV4UmE2bFRYQ3pFOFoyOGxDUzh1dTVzemNDWWRXdnNadU9RWFE?oc=5",
+      "source": "www.tmgm.com",
       "summary": "",
       "sentiment": 0,
       "importance": "mineure"
@@ -110,15 +119,6 @@
       "date": "2026-11-02",
       "link": "https://news.google.com/rss/articles/CBMigAFBVV95cUxNcUtMQXZXa1NoaGxQZkJxU1hMSXBhUnlCWWloV2U3NE8tX1o2MFJESDg4ckd1amR0WW5BZWxyQ3hzQ1VwcXpGTEhxc1ZndDJHNi1iaTB2RHg0aDFYR0VaSElZY18wVUotS2dqUDEzaExCLXpyeU55amZkeHpwbnNhQQ?oc=5",
       "source": "IFPEN",
-      "summary": "",
-      "sentiment": 0,
-      "importance": "mineure"
-    },
-    {
-      "title": "Les prix mondiaux du pétrole poursuivent leur plus forte baisse depuis 2020 - IDNFinancials",
-      "date": "2026-11-09",
-      "link": "https://news.google.com/rss/articles/CBMiwgFBVV95cUxOUlJCZmw1YTZXM09JSWk4dTNjSTJJZ0JXUW9nY2RjM2VXNjJldE9nWF9zRVZTMEdYSXFqZ2VxNnVBLU05NXlRQW1qWXJpNFQxLTNFTVRRUGdrS0hlY0U4THJFQW1iS29DVzBpNzRTMWc3WHU5THJXV0duV3otQjljdzBHZl8wTjZiaHhoUmdOSkNTZ2NxSEdOajRKci05MXJRZ3gxNjhOTVZXZjV5NzRNU0N5aXJwX3dMM3ZxeE55MGRiZw?oc=5",
-      "source": "IDNFinancials",
       "summary": "",
       "sentiment": 0,
       "importance": "mineure"
@@ -135,22 +135,22 @@
   ],
   "analysis_html": "<h3>Contexte récent</h3><p>Le WTI évolue dans un environnement géopolitique très chargé, marqué par la guerre au Moyen-Orient et les tensions autour de l'Iran. Les titres récents décrivent de fortes variations dans les deux sens : un pic à 115 dollars le baril d'un côté, une baisse présentée comme la plus forte depuis 2020 de l'autre. Malgré cette volatilité, le cours reste au-dessus de sa moyenne mobile à 200 jours (+3,3 %). Le dollar s'est nettement apprécié, et la prime du WTI sur le Brent s'est élargie.</p><h3>Facteurs déterminants</h3><ul><li><strong>Dollar (DXY), score -10,0, poids 27 %</strong> : c'est l'un des deux principaux freins. Le DXY est passé de 98,77 à 102,06 en deux mois. Un dollar plus fort renchérit le baril pour les acheteurs hors zone dollar, ce qui pèse traditionnellement sur la demande et les prix. Le facteur atteint son score le plus défavorable.</li><li><strong>Spread WTI-Brent, score -10,0, poids 20 %</strong> : la prime du WTI sur le Brent est passée d'environ +4,73 $ à +6,82 $ par baril. Cette configuration rend le brut américain relativement cher par rapport à la référence internationale, ce que le modèle interprète comme un signal défavorable pour le WTI. Ce facteur est lui aussi au plancher de son échelle.</li><li><strong>Positionnement CFTC, score +7,9, poids 27 %</strong> : la position nette spéculative (21 728 contrats) se situe au 10e percentile sur trois ans. Ce niveau d'exposition acheteuse très faible est lu de manière contrariante : un marché déjà peu positionné à la hausse a un potentiel de rachats et une moindre vulnérabilité à des liquidations. C'est le principal soutien du score.</li><li><strong>Dynamique récente, score +6,6, poids 27 %</strong> : un cours supérieur de 3,3 % à sa moyenne mobile à 200 jours traduit une tendance de fond encore positive, ce qui soutient le score.</li><li><strong>Stocks EIA, poids 0 %</strong> : ce facteur est indisponible faute de clé API configurée. Le score ne reflète donc pas l'état de l'offre physique américaine, une limite notable de l'analyse.</li></ul><p>Au total, deux facteurs négatifs à leur extrême (dollar et spread) font face à deux facteurs positifs d'intensité modérée (positionnement et dynamique). Il en ressort un score composite proche de l'équilibre.</p><h3>Actualités à retenir</h3><p>Aucune actualité récente n'est classée comme notable ou majeure : toutes sont jugées mineures. Elles éclairent toutefois le contexte :</p><ul><li>Les titres évoquant un baril à 115 dollars et la guerre au Moyen-Orient d'un côté, la plus forte baisse depuis 2020 et un repli après des déclarations de Donald Trump sur l'Iran de l'autre, illustrent une forte sensibilité des prix à l'actualité géopolitique.</li><li>Ces mouvements ne sont pas intégrés directement comme facteurs du score. Ils se retrouvent indirectement dans la dynamique de prix et, potentiellement, dans le positionnement des spéculateurs.</li><li>Les autres articles (définition du Brent, tableau de bord de l'IFPEN) sont de nature pédagogique ou descriptive et n'apportent pas d'élément susceptible de modifier le score.</li></ul><h3>Synthèse</h3><p>Le score composite du WTI reflète un équilibre entre deux types de forces :</p><ul><li><strong>Vents contraires macro et relatifs</strong> : un dollar en nette hausse et une prime élargie du WTI sur le Brent, tous deux au niveau le plus défavorable de leur échelle.</li><li><strong>Soutiens techniques et de positionnement</strong> : une tendance de fond encore haussière et un positionnement spéculatif très bas, lu comme un signal contrariant.</li></ul><p>L'environnement géopolitique génère une forte volatilité, mais aucune actualité récente n'est classée comme déterminante. L'absence des données de stocks EIA prive par ailleurs l'analyse d'un indicateur clé des fondamentaux d'offre, ce qui invite à interpréter ce score avec prudence.</p>",
   "news_classifications": {
+    "https://news.google.com/rss/articles/CBMitAFBVV95cUxNc3JtTGgwSE1TTG4xbk1xNV9fRlJoTkhBdUtRVFpWNWlmTlBCRnFLUVhVSDJaOTNMQmFwWGFkRjZJd0dPeXdrakhybjBFUmU2NHhERElHRTNCT3BXQU5PdFJxNlhrODFKem5YQTBjVmloRTFHbmZsX20ySklFamxfbkFFcGE4bU9KcWJFY0duVkpkWlpBVldKSTFEZzl6VGlFNVF6QUVFOWpLOVpFdnVjWEF3RzE?oc=5": {
+      "summary": "",
+      "sentiment": 0,
+      "importance": "mineure"
+    },
     "https://news.google.com/rss/articles/CBMioAFBVV95cUxQaGZ5UXlieFRjUEozT3kyc0s1Nzlqem5JT3FFVWhCU01nQi1kR2M2azNqRFU5RWVKelBac01mRFhEQTE0d0NRMTZjN1FjZURpSHdGbDdLMEtqbmxHekpZTTIyc1JxRkdaWFhYN0ptX2JaNTFDWkZoZElkNlVMdFdkLVd1Vl9JcUtIZ0xZRFdiaEhuS3kzbDdnTGV5ZklQM25L?oc=5": {
       "summary": "",
       "sentiment": 0,
       "importance": "mineure"
     },
-    "https://news.google.com/rss/articles/CBMiS0FVX3lxTE44ZUt0dWZ4Q0cwNVY5SlR3WXc4N1dzRVoyQ1JORHBCd1N4cWlsQUpNYWk4dG5UcFNfaHh0eFdWZEdSTnZUeXNXVjIzaw?oc=5": {
+    "https://news.google.com/rss/articles/CBMiugFBVV95cUxNVk44V3lSWktsTW1PZS03LWFnaFFCbUlEdEwzeldHOW50SVg1RS1wcU5FRmFPbEFnb1pNRUZiX0pjQ2pUMVVvY2VxQkhvN011TGVtM25xY243aVBFWWJTbk5lTG1BSXlzR0tETkUwdXZOWHM3Sy00amF6Zm56dFNGUy1Cdng1VnZwZ3BlMGQxa3U5QXhRdVV4UmE2bFRYQ3pFOFoyOGxDUzh1dTVzemNDWWRXdnNadU9RWFE?oc=5": {
       "summary": "",
       "sentiment": 0,
       "importance": "mineure"
     },
     "https://news.google.com/rss/articles/CBMigAFBVV95cUxNcUtMQXZXa1NoaGxQZkJxU1hMSXBhUnlCWWloV2U3NE8tX1o2MFJESDg4ckd1amR0WW5BZWxyQ3hzQ1VwcXpGTEhxc1ZndDJHNi1iaTB2RHg0aDFYR0VaSElZY18wVUotS2dqUDEzaExCLXpyeU55amZkeHpwbnNhQQ?oc=5": {
-      "summary": "",
-      "sentiment": 0,
-      "importance": "mineure"
-    },
-    "https://news.google.com/rss/articles/CBMiwgFBVV95cUxOUlJCZmw1YTZXM09JSWk4dTNjSTJJZ0JXUW9nY2RjM2VXNjJldE9nWF9zRVZTMEdYSXFqZ2VxNnVBLU05NXlRQW1qWXJpNFQxLTNFTVRRUGdrS0hlY0U4THJFQW1iS29DVzBpNzRTMWc3WHU5THJXV0duV3otQjljdzBHZl8wTjZiaHhoUmdOSkNTZ2NxSEdOajRKci05MXJRZ3gxNjhOTVZXZjV5NzRNU0N5aXJwX3dMM3ZxeE55MGRiZw?oc=5": {
       "summary": "",
       "sentiment": 0,
       "importance": "mineure"

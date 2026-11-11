@@ -2952,10 +2952,11 @@ function portfolioFormHtml(companies) {
     <optgroup label="${indexNames[key] || key}${INDEX_COUNTRY_BY_KEY[key] ? ` (${INDEX_COUNTRY_BY_KEY[key]})` : ''}">
       ${grouped[key]
         .slice().sort((a, b) => a.name.localeCompare(b.name, 'fr'))
-        .map(c => `<option value="${c.ticker}">${c.name} (${c.ticker})</option>`).join('')}
+        .map(c => `<option value="${c.ticker}" data-search="${(c.name + ' ' + c.ticker).toLowerCase()}">${c.name} (${c.ticker})</option>`).join('')}
     </optgroup>`).join('');
   return `
     <form class="portfolio-form" id="portfolioAddForm">
+      <input type="search" class="list-search" id="portfolioFormSearch" placeholder="Rechercher (nom, ticker)…">
       <select class="list-sort" id="portfolioFormTicker" required>
         <option value="" disabled selected>Choisir une entreprise…</option>
         ${optionsHtml}
@@ -3924,6 +3925,17 @@ function wireFtmoDashboardSection() {
 
 function wirePortfolioForm() {
   const form = document.getElementById('portfolioAddForm');
+  const searchInput = document.getElementById('portfolioFormSearch');
+  const tickerSelect = document.getElementById('portfolioFormTicker');
+  searchInput.addEventListener('input', () => {
+    const q = searchInput.value.trim().toLowerCase();
+    tickerSelect.querySelectorAll('option[data-search]').forEach(opt => {
+      opt.hidden = q !== '' && !opt.dataset.search.includes(q);
+    });
+    tickerSelect.querySelectorAll('optgroup').forEach(group => {
+      group.hidden = !Array.from(group.querySelectorAll('option')).some(opt => !opt.hidden);
+    });
+  });
   form.addEventListener('submit', (e) => {
     e.preventDefault();
     const ticker = document.getElementById('portfolioFormTicker').value;

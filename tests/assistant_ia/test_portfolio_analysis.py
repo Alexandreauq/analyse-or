@@ -218,6 +218,14 @@ def test_build_prompt_requests_a_json_code_block():
     assert '"par_ligne"' in prompt
 
 
+def test_build_prompt_requests_sante_globale_and_analyse_not_justification():
+    prompt = portfolio_analysis._build_prompt([], {}, None)
+    assert "sante_globale" in prompt
+    assert '"analyse"' in prompt
+    assert '"justification"' not in prompt
+    assert '"points_attention"' not in prompt
+
+
 def test_build_prompt_includes_attribution_pnl_per_position():
     metriques = {"attribution": [
         {"ticker": "MC.PA", "name": "LVMH", "index": "CAC40", "pnlAbs": 123.456, "pnlPct": 5.67},
@@ -245,7 +253,7 @@ def test_build_prompt_omits_the_current_price_when_the_fiche_has_none():
                   "alerts": [], "current_price": None},
     }]
     prompt = portfolio_analysis._build_prompt(positions_enrichies, {}, None)
-    assert "prix actuel" not in prompt
+    assert "prix actuel=" not in prompt
 
 
 def test_build_prompt_treats_an_info_only_alert_as_no_active_alert():

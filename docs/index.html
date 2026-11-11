@@ -1350,6 +1350,7 @@
 
   .portfolio-totals { display: flex; gap: 12px; margin: 4px 0 20px; flex-wrap: wrap; }
   .portfolio-ai-cards { display: flex; gap: 12px; margin: 4px 0 20px; flex-wrap: wrap; }
+  .portfolio-ai-cards .portfolio-total-card { min-width: 280px; }
   .portfolio-total-card {
     display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 140px;
     background: var(--bg-2); border: 1px solid var(--border); border-radius: var(--radius-lg);
@@ -2800,12 +2801,22 @@ function wirePortfolioAiSubsection(positions, closedPositions, companiesByTicker
   const tokenDejaMemorise = localStorage.getItem('aiAssistantToken');
   if (tokenDejaMemorise) {
     fetch('https://goldbot.fr:8445/portfolio-analysis/last', { headers: { 'X-Bot-Token': tokenDejaMemorise } })
-      .then(res => res.ok ? res.json() : null)
+      .then(res => {
+        // 401 = jeton perime/invalide : on l'oublie (meme convention que
+        // fetchIbkrBotDashboard), sinon "Aucune analyse encore." mentirait
+        // a chaque rechargement. Toute autre panne : message vide.
+        if (res.status === 401) localStorage.removeItem('aiAssistantToken');
+        if (!res.ok) {
+          if (freshnessEl) freshnessEl.textContent = '';
+          return null;
+        }
+        return res.json();
+      })
       .then(data => {
         if (data && data.disponible) {
           renderResult(data.resultat);
           btn.textContent = 'Relancer l\'analyse IA';
-        } else if (freshnessEl) {
+        } else if (data !== null && freshnessEl) {
           freshnessEl.textContent = 'Aucune analyse encore.';
         }
       })

@@ -21,7 +21,11 @@ import assistant_ia.tools as tools
 import assistant_ia.usage as usage
 
 MODEL = usage.MODEL_SONNET_5_5
-MAX_TOKENS = 8000
+# 16000 et non 8000 (v1) : chaque ligne demande maintenant un paragraphe
+# d'analyse, jusqu'a MAX_POSITIONS lignes. C'est un plafond, pas un cout --
+# seuls les tokens reellement generes sont factures. Une troncature reste
+# detectee via stop_reason == "max_tokens" dans run_portfolio_analysis.
+MAX_TOKENS = 16000
 # Large : jusqu'a WEB_SEARCH_MAX_USES recherches + MAX_TOKENS de sortie sur
 # MAX_POSITIONS lignes peuvent depasser la minute. Un timeout cote client
 # n'annule pas la facturation cote Anthropic mais saute usage.record_usage
@@ -150,7 +154,7 @@ def historique_sante(path: str = HISTORY_PATH, limite: int = 200) -> list[dict]:
             "horodatage": entree.get("horodatage"),
             "sante_globale": resultat.get("sante_globale") if isinstance(resultat, dict) else None,
         })
-    return points[-limite:]
+    return points[-limite:] if limite > 0 else []
 
 
 def _append_history(entry: dict, path: str = HISTORY_PATH) -> bool:
@@ -273,7 +277,8 @@ def _build_prompt(positions_enrichies: list[dict], metriques: dict, derniere_ana
         "Pour chaque position, donne :\n"
         "- une recommandation parmi exactement ces quatre valeurs : \"garder\", "
         "\"renforcer\", \"alleger\", \"vendre\" ;\n"
-        "- une analyse complete (plusieurs phrases, pas une seule) qui repond "
+        "- une analyse complete (plusieurs phrases, pas une seule, mais 3 a 5 "
+        "phrases maximum) qui repond "
         "explicitement a la question : au prix d'achat de l'utilisateur compare au "
         "prix actuel, est-ce toujours une bonne idee de garder cette ligne a ce "
         "niveau ? Mentionne les actualites negatives recentes que tu as trouvees "
@@ -340,6 +345,10 @@ def run_portfolio_analysis(
         return {"disponible": False, "erreur": f"{type(e).__name__}: {e}", "resultat": None}
 
     usage.record_usage(response.usage.input_tokens, response.usage.output_tokens, model=MODEL)
+    # Troncature par la limite de sortie : distincte d'un JSON mal forme,
+    # sinon un vrai manque de budget tokens serait invisible en production.
+    if response.stop_reason == "max_tokens":
+        return {"disponible": False, "erreur": "reponse IA tronquee (trop longue), reessaie", "resultat": None}
     texte = "".join(bloc.text for bloc in response.content if bloc.type == "text")
     resultat = _parse_resultat(texte)
     if resultat is None:

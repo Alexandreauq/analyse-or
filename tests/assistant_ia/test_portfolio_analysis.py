@@ -238,6 +238,14 @@ def test_historique_sante_skips_a_corrupted_line(tmp_path):
     assert points == [{"horodatage": "2026-11-05T00:00:00Z", "sante_globale": 30}]
 
 
+def test_historique_sante_returns_empty_list_when_limite_is_zero(tmp_path):
+    chemin = tmp_path / "historique.jsonl"
+    chemin.write_text(
+        json.dumps({"horodatage": "2026-11-05T00:00:00Z", "resultat": {"sante_globale": 30}}) + "\n",
+        encoding="utf-8")
+    assert portfolio_analysis.historique_sante(str(chemin), limite=0) == []
+
+
 def test_append_history_adds_a_line_to_the_file(tmp_path):
     chemin = tmp_path / "historique.jsonl"
     assert portfolio_analysis._append_history({"horodatage": "2026-11-11T00:00:00Z"}, str(chemin)) is True
@@ -301,6 +309,11 @@ def test_build_prompt_requests_sante_globale_and_analyse_not_justification():
     assert '"points_attention"' not in prompt
 
 
+def test_build_prompt_bounds_the_length_of_each_line_analysis():
+    prompt = portfolio_analysis._build_prompt([], {}, None)
+    assert "3 a 5 phrases maximum" in prompt
+
+
 def test_build_prompt_includes_attribution_pnl_per_position():
     metriques = {"attribution": [
         {"ticker": "MC.PA", "name": "LVMH", "index": "CAC40", "pnlAbs": 123.456, "pnlPct": 5.67},
@@ -355,9 +368,10 @@ class _FakeUsage:
 
 
 class _FakeResponse:
-    def __init__(self, content, usage=None):
+    def __init__(self, content, usage=None, stop_reason="end_turn"):
         self.content = content
         self.usage = usage or _FakeUsage()
+        self.stop_reason = stop_reason
 
 
 class _FakeMessages:
@@ -475,6 +489,26 @@ def test_run_portfolio_analysis_calls_record_usage_with_the_response_tokens(tmp_
         history_path=historique)
 
     assert enregistres == [(100, 200, portfolio_analysis.MODEL)]
+
+
+def test_run_portfolio_analysis_reports_truncation_distinctly_and_still_records_usage(tmp_path, monkeypatch):
+    enregistres = []
+    monkeypatch.setattr(portfolio_analysis.usage, "record_usage",
+                         lambda i, o, model=None: enregistres.append((i, o, model)))
+    reponse = _reponse_valide()
+    reponse.stop_reason = "max_tokens"
+    client = _FakeAnthropicClient(response=reponse)
+    historique = str(tmp_path / "historique.jsonl")
+
+    resultat = portfolio_analysis.run_portfolio_analysis(
+        _PAYLOAD_SIMPLE, client=client, indices_source=lambda: {"companies": []},
+        history_path=historique)
+
+    assert resultat == {"disponible": False,
+                        "erreur": "reponse IA tronquee (trop longue), reessaie",
+                        "resultat": None}
+    assert enregistres == [(100, 200, portfolio_analysis.MODEL)]
+    assert portfolio_analysis.derniere_analyse_complete(historique) is None
 
 
 def test_run_portfolio_analysis_returns_disponible_false_when_indices_source_raises(tmp_path, monkeypatch):

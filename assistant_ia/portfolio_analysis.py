@@ -55,8 +55,13 @@ def _parse_resultat(texte: str) -> dict | None:
         return None
     if "resume_global" not in parsed or "par_ligne" not in parsed:
         return None
-    parsed.setdefault("points_attention", [])
     parsed.setdefault("comparaison_precedente", None)
+    sante = parsed.get("sante_globale")
+    if not isinstance(sante, (int, float)) or isinstance(sante, bool):
+        sante = None
+    elif isinstance(sante, float):
+        sante = int(sante)
+    parsed["sante_globale"] = sante
     if not isinstance(parsed["par_ligne"], list):
         return None
     # Les entrees non-dict (ex. chaine nue emise par erreur) sont retirees,

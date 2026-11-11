@@ -9,7 +9,7 @@ def test_parse_resultat_extracts_the_last_json_block():
     texte = (
         "Du texte de raisonnement avant.\n"
         "```json\n"
-        '{"resume_global": "ok", "par_ligne": [], "points_attention": []}\n'
+        '{"resume_global": "ok", "par_ligne": []}\n'
         "```\n"
     )
     resultat = portfolio_analysis._parse_resultat(texte)
@@ -34,14 +34,36 @@ def test_parse_resultat_returns_none_when_required_keys_missing():
 def test_parse_resultat_fills_in_missing_optional_keys():
     texte = '```json\n{"resume_global": "ok", "par_ligne": []}\n```'
     resultat = portfolio_analysis._parse_resultat(texte)
-    assert resultat["points_attention"] == []
     assert resultat["comparaison_precedente"] is None
+    assert resultat["sante_globale"] is None
+
+
+def test_parse_resultat_keeps_a_valid_sante_globale():
+    texte = '```json\n{"resume_global": "ok", "par_ligne": [], "sante_globale": 42}\n```'
+    resultat = portfolio_analysis._parse_resultat(texte)
+    assert resultat["sante_globale"] == 42
+
+
+def test_parse_resultat_replaces_a_non_integer_sante_globale_with_none():
+    texte = '```json\n{"resume_global": "ok", "par_ligne": [], "sante_globale": "haute"}\n```'
+    resultat = portfolio_analysis._parse_resultat(texte)
+    assert resultat["sante_globale"] is None
+
+
+def test_parse_resultat_replaces_a_boolean_sante_globale_with_none():
+    # bool est un sous-type de int en Python -- piege deja connu dans ce
+    # fichier (voir les gardes isinstance(x, (int, float)) and not
+    # isinstance(x, bool) ailleurs) : True/False ne doivent jamais passer
+    # pour un score valide.
+    texte = '```json\n{"resume_global": "ok", "par_ligne": [], "sante_globale": true}\n```'
+    resultat = portfolio_analysis._parse_resultat(texte)
+    assert resultat["sante_globale"] is None
 
 
 def test_parse_resultat_normalizes_reco_case_and_whitespace():
     texte = (
         '```json\n{"resume_global": "ok", "par_ligne": '
-        '[{"ticker": "MC.PA", "reco": " Garder ", "justification": "x"}]}\n```'
+        '[{"ticker": "MC.PA", "reco": " Garder ", "analyse": "x"}]}\n```'
     )
     resultat = portfolio_analysis._parse_resultat(texte)
     assert resultat["par_ligne"][0]["reco"] == "garder"
@@ -50,7 +72,7 @@ def test_parse_resultat_normalizes_reco_case_and_whitespace():
 def test_parse_resultat_replaces_an_invalid_reco_value_with_a_verifier():
     texte = (
         '```json\n{"resume_global": "ok", "par_ligne": '
-        '[{"ticker": "MC.PA", "reco": "acheter_plus", "justification": "x"}]}\n```'
+        '[{"ticker": "MC.PA", "reco": "acheter_plus", "analyse": "x"}]}\n```'
     )
     resultat = portfolio_analysis._parse_resultat(texte)
     assert resultat["par_ligne"][0]["reco"] == "a_verifier"
@@ -59,10 +81,10 @@ def test_parse_resultat_replaces_an_invalid_reco_value_with_a_verifier():
 def test_parse_resultat_removes_non_dict_par_ligne_entries():
     texte = (
         '```json\n{"resume_global": "ok", "par_ligne": '
-        '[{"ticker": "MC.PA", "reco": "garder", "justification": "x"}, "entree parasite"]}\n```'
+        '[{"ticker": "MC.PA", "reco": "garder", "analyse": "x"}, "entree parasite"]}\n```'
     )
     resultat = portfolio_analysis._parse_resultat(texte)
-    assert resultat["par_ligne"] == [{"ticker": "MC.PA", "reco": "garder", "justification": "x"}]
+    assert resultat["par_ligne"] == [{"ticker": "MC.PA", "reco": "garder", "analyse": "x"}]
     assert "entree parasite" not in resultat["par_ligne"]
 
 

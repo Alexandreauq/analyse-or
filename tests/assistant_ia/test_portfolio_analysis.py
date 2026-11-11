@@ -64,3 +64,29 @@ def test_parse_resultat_uses_the_last_block_when_several_are_present():
     )
     resultat = portfolio_analysis._parse_resultat(texte)
     assert resultat["resume_global"] == "dernier"
+
+
+def _indices_source_factory(companies):
+    return lambda: {"companies": companies}
+
+
+def test_enrichit_positions_attaches_the_fiche_for_a_known_ticker():
+    companies = [{"ticker": "MC.PA", "name": "LVMH", "index": "CAC40",
+                  "sector": "Consumer Cyclical", "score": 42, "alerts": []}]
+    positions = [{"ticker": "MC.PA", "quantity": 3, "buy_price": 700.0, "buy_date": "2026-01-01"}]
+
+    enrichies = portfolio_analysis._enrichit_positions(
+        positions, indices_source=_indices_source_factory(companies))
+
+    assert enrichies[0]["position"] == positions[0]
+    assert enrichies[0]["fiche"]["name"] == "LVMH"
+
+
+def test_enrichit_positions_keeps_the_position_when_ticker_is_unknown():
+    positions = [{"ticker": "INCONNU.XX", "quantity": 1, "buy_price": 10.0, "buy_date": "2026-01-01"}]
+
+    enrichies = portfolio_analysis._enrichit_positions(
+        positions, indices_source=_indices_source_factory([]))
+
+    assert enrichies[0]["position"] == positions[0]
+    assert "erreur" in enrichies[0]["fiche"]

@@ -65,3 +65,16 @@ def _parse_resultat(texte: str) -> dict | None:
         else:
             ligne["reco"] = "a_verifier"
     return parsed
+
+
+def _enrichit_positions(positions: list[dict], *, indices_source) -> list[dict]:
+    """Associe a chaque position sa fiche societe a jour (score, secteur,
+    alertes) -- reutilise fiche_entreprise tel quel, jamais reimplemente.
+    Un ticker introuvable (retire du site) donne la fiche d'erreur deja
+    renvoyee par fiche_entreprise ; la position est quand meme incluse
+    (voir _describe_positions), jamais exclue silencieusement."""
+    enrichies = []
+    for position in positions:
+        fiche = tools.fiche_entreprise(position.get("ticker", ""), indices_source=indices_source)
+        enrichies.append({"position": position, "fiche": fiche})
+    return enrichies

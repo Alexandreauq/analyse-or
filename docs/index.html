@@ -2679,6 +2679,129 @@ function portfolioAnalysisHtml(positions, companiesByTicker, currencyByIndex, pr
   `;
 }
 
+function portfolioAiAnalysisSectionHtml() {
+  return `
+    <div id="portfolioAiFreshness" class="hero-sub">Chargement…</div>
+    <button class="toggle-btn" type="button" id="portfolioAiAnalysisBtn">Lancer l'analyse IA</button>
+    <div id="portfolioAiAnalysisResult"></div>
+  `;
+}
+
+function _portfolioAiFreshnessLabel(horodatage) {
+  if (!horodatage) return 'Aucune analyse encore.';
+  const jours = Math.floor((Date.now() - new Date(horodatage).getTime()) / 86400000);
+  if (jours <= 0) return 'Dernière analyse : aujourd\'hui.';
+  return `Dernière analyse : il y a ${jours} jour${jours > 1 ? 's' : ''}.`;
+}
+
+function _portfolioAiRecoLabel(reco) {
+  const labels = { garder: 'Garder', renforcer: 'Renforcer', alleger: 'Alléger', vendre: 'Vendre', a_verifier: 'À vérifier' };
+  return labels[reco] || reco;
+}
+
+function _portfolioAiAnalysisResultHtml(resultat) {
+  const pointsHtml = (resultat.points_attention || []).length
+    ? (resultat.points_attention || []).map(p => `
+        <div class="price-row"><span class="price-label">${escHtml(p.ticker)}</span><span class="price-value">${escHtml(p.raison)}</span></div>`).join('')
+    : '<div class="list-empty">Aucun point d\'attention particulier.</div>';
+  const ligneHtml = (resultat.par_ligne || []).map(l => `
+      <div class="price-row">
+        <span class="price-label"><a href="#indices/${encodeURIComponent(l.ticker)}">${escHtml(l.ticker)}</a> — ${_portfolioAiRecoLabel(l.reco)}</span>
+        <span class="price-value">${escHtml(l.justification || '')}</span>
+      </div>`).join('');
+  const comparaisonHtml = resultat.comparaison_precedente
+    ? `<h3 class="portfolio-analysis-title">Depuis la dernière fois</h3><div class="hero-sub">${escHtml(resultat.comparaison_precedente)}</div>`
+    : '';
+  return `
+    <h3 class="portfolio-analysis-title">Résumé</h3>
+    <div class="hero-sub">${escHtml(resultat.resume_global || '')}</div>
+    <h3 class="portfolio-analysis-title">Points d'attention</h3>
+    <div class="signal-stats">${pointsHtml}</div>
+    <h3 class="portfolio-analysis-title">Recommandations par ligne</h3>
+    <div class="signal-stats">${ligneHtml}</div>
+    ${comparaisonHtml}
+  `;
+}
+
+function wirePortfolioAiAnalysisSection(positions, closedPositions, companiesByTicker, currencyByIndex, dividendHistoryByTicker) {
+  const freshnessEl = document.getElementById('portfolioAiFreshness');
+  const btn = document.getElementById('portfolioAiAnalysisBtn');
+  const resultEl = document.getElementById('portfolioAiAnalysisResult');
+  if (!btn || !resultEl) return;
+
+  const refreshFreshness = async (token) => {
+    if (!freshnessEl) return;
+    try {
+      const res = await fetch('https://goldbot.fr:8445/portfolio-analysis/last', {
+        headers: { 'X-Bot-Token': token },
+      });
+      if (!res.ok) { freshnessEl.textContent = ''; return; }
+      const data = await res.json();
+      freshnessEl.textContent = _portfolioAiFreshnessLabel(data.horodatage);
+    } catch (e) {
+      freshnessEl.textContent = '';
+    }
+  };
+
+  // Jamais de prompt() force a l'ouverture du panneau (meme convention
+  // que fetchIbkrBotDashboard, L3239) : on ne lit le jeton que s'il est
+  // deja memorise, le bouton seul declenche getAiAssistantToken().
+  const tokenDejaMemorise = localStorage.getItem('aiAssistantToken');
+  if (tokenDejaMemorise) refreshFreshness(tokenDejaMemorise);
+  else if (freshnessEl) freshnessEl.textContent = 'Aucune analyse encore.';
+
+  btn.addEventListener('click', async () => {
+    const jeton = getAiAssistantToken();
+    if (!jeton) return;
+    btn.disabled = true;
+    const texteInitial = btn.textContent;
+    btn.textContent = 'Analyse en cours…';
+    resultEl.innerHTML = '';
+    try {
+      const concentration = computePortfolioConcentration(positions, companiesByTicker, currencyByIndex);
+      const health = computePortfolioHealth(positions, companiesByTicker);
+      const attribution = computePortfolioAttribution(positions, companiesByTicker);
+      const dividendsReceived = computeDividendsReceived(
+        [...positions, ...closedPositions], dividendHistoryByTicker, companiesByTicker, currencyByIndex);
+      const projectedIncome = computeProjectedDividendIncome(
+        positions, dividendHistoryByTicker, companiesByTicker, currencyByIndex);
+      const totals = computePortfolioTotals(positions, companiesByTicker, currencyByIndex);
+      const payload = buildPortfolioAnalysisPayload(
+        positions, totals, concentration, health, attribution, dividendsReceived, projectedIncome);
+
+      const res = await fetch('https://goldbot.fr:8445/portfolio-analysis', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Bot-Token': jeton },
+        body: JSON.stringify(payload),
+      });
+      if (res.status === 401) {
+        localStorage.removeItem('aiAssistantToken');
+        resultEl.innerHTML = '<div class="empty">Ton jeton d\'accès est invalide. Recharge la page pour en saisir un nouveau.</div>';
+        return;
+      }
+      if (res.status === 429 || res.status === 503 || res.status === 400) {
+        let detail = "L'analyse n'est pas possible pour le moment.";
+        try { const corps = await res.json(); if (corps && corps.detail) detail = corps.detail; } catch (e) { /* message par défaut */ }
+        resultEl.innerHTML = `<div class="empty">${escHtml(detail)}</div>`;
+        return;
+      }
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      if (!data.disponible) {
+        resultEl.innerHTML = `<div class="empty">${escHtml(data.erreur || "Analyse indisponible pour le moment.")}</div>`;
+        return;
+      }
+      resultEl.innerHTML = _portfolioAiAnalysisResultHtml(data.resultat);
+      if (freshnessEl) freshnessEl.textContent = _portfolioAiFreshnessLabel(data.resultat.horodatage);
+    } catch (e) {
+      resultEl.innerHTML = '<div class="empty">Analyse indisponible pour le moment.</div>';
+    } finally {
+      btn.disabled = false;
+      btn.textContent = texteInitial;
+    }
+  });
+}
+
 // Onglet "Actions" : suivi manuel des positions actions (localStorage, voir
 // portfolio.js) — 4 sections en carrousel : ajout, positions détenues,
 // opportunités, analyse.
@@ -2714,6 +2837,12 @@ function renderPortfolioActionsTab(companiesByTicker, currencyByIndex) {
       desc: 'Concentration, santé du portefeuille selon le modèle, contribution de chaque ligne au P&L et revenu de dividendes.',
       html: portfolioAnalysisHtml(positions, companiesByTicker, currencyByIndex, priceHistoryByTicker, dividendHistoryByTicker),
       wire: () => wirePortfolioPerformanceBenchmarkSelectors(positions, closedPositions, companiesByTicker, currencyByIndex, priceHistoryByTicker),
+    },
+    {
+      title: 'Analyse IA',
+      desc: 'Lance une analyse par l\'assistant IA : vue d\'ensemble, points d\'attention et une recommandation (garder/renforcer/alléger/vendre) pour chaque ligne détenue.',
+      html: portfolioAiAnalysisSectionHtml(),
+      wire: () => wirePortfolioAiAnalysisSection(positions, closedPositions, companiesByTicker, currencyByIndex, dividendHistoryByTicker),
     },
     {
       title: 'Bot Actions',

@@ -17,6 +17,7 @@ from fastapi.responses import StreamingResponse
 import assistant_ia.assistant as assistant
 import assistant_ia.limits as limits
 import assistant_ia.usage as usage
+import assistant_ia.portfolio_analysis as portfolio_analysis
 
 app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
 
@@ -61,6 +62,16 @@ ANALYSE_SUBPROCESS_TIMEOUT_S = 150  # generate_financial_analysis a son propre t
 
 _concurrence_analyse = limits.ConcurrencyLimiter(ANALYSE_MAX_CONCURRENT)
 _frequence_analyse = limits.RateLimiter(ANALYSE_RATE_MAX_PAR_MINUTE, 60)
+
+# Garde-fous dedies a /portfolio-analysis -- separes de /ask et
+# /financial-analysis (profil d'abus different : un seul utilisateur
+# legitime derriere le jeton, mais un appel plus lourd -- plusieurs
+# tickers, recherche web multiple -- qu'une question simple de /ask).
+PORTFOLIO_MAX_CONCURRENT = int(os.environ.get("AI_PORTFOLIO_ANALYSIS_MAX_CONCURRENT", "1"))
+PORTFOLIO_RATE_MAX_PAR_MINUTE = int(os.environ.get("AI_PORTFOLIO_ANALYSIS_RATE_PAR_MINUTE", "5"))
+
+_concurrence_portefeuille = limits.ConcurrencyLimiter(PORTFOLIO_MAX_CONCURRENT)
+_frequence_portefeuille = limits.RateLimiter(PORTFOLIO_RATE_MAX_PAR_MINUTE, 60)
 
 _REPO_ROOT = os.path.dirname(os.path.abspath(os.path.dirname(__file__)))
 
@@ -147,3 +158,31 @@ def financial_analysis(ticker: str, request: Request):
     finally:
         _concurrence_analyse.libere()
     return {"html": html, "disponible": disponible}
+
+
+@app.post("/portfolio-analysis")
+async def portfolio_analysis_route(request: Request, x_bot_token: str | None = Header(default=None)):
+    _check_token(x_bot_token)
+    if usage.budget_exceeded():
+        raise HTTPException(status_code=429, detail="Plafond quotidien de l'assistant atteint, reessaie demain")
+    adresse = request.client.host if request.client else "inconnue"
+    if not _frequence_portefeuille.autorise(adresse):
+        raise HTTPException(status_code=429, detail="Trop de demandes en peu de temps : reessaie dans une minute.")
+    payload = await request.json()
+    positions = payload.get("positions")
+    if not isinstance(positions, list) or not positions:
+        raise HTTPException(status_code=400, detail="Aucune position fournie.")
+    if len(positions) > portfolio_analysis.MAX_POSITIONS:
+        raise HTTPException(status_code=400, detail=f"Trop de positions ({portfolio_analysis.MAX_POSITIONS} maximum).")
+    if not _concurrence_portefeuille.tente():
+        raise HTTPException(status_code=503, detail="Une analyse est deja en cours : reessaie dans un instant.")
+    try:
+        return portfolio_analysis.run_portfolio_analysis(payload)
+    finally:
+        _concurrence_portefeuille.libere()
+
+
+@app.get("/portfolio-analysis/last")
+def portfolio_analysis_last(x_bot_token: str | None = Header(default=None)):
+    _check_token(x_bot_token)
+    return {"horodatage": portfolio_analysis.last_analysis_timestamp()}

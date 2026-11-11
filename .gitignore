@@ -12,6 +12,10 @@ gold_bot/historical_candles_cache_xauusd.json
 gold_bot/historical_candles_cache_xagusd.json
 gold_bot/odds_verdict_cache_xauusd_achat.json
 indices_ai_usage_today.json
+# Historique des analyses IA du portefeuille manuel : genere uniquement
+# sur le VPS (assistant_ia/portfolio_analysis.py), jamais une donnee de
+# reference a versionner -- meme famille que indices_ai_usage_today.json.
+assistant_ia/portfolio_analysis_history.jsonl
 indices_ai_usage_week.json
 indices_ai_usage_month.json
 indices_ai_ticker_cooldown.json

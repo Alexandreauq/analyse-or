@@ -530,6 +530,16 @@ def decide_and_act_fibonacci(candles: list[dict], *, contract_size: float, balan
     if verdict is not None and verdict.get("verdict") == "opposerait":
         return {"action": "aucune", "reason": "veto IA (opposition)"}
 
+    if verdict is not None and verdict.get("confiance") == "faible":
+        # Incident du 2026-11-10 : l'IA avait elle-meme recommande de
+        # reduire la taille faute de pouvoir verifier l'actualite --
+        # jamais applique avant ce correctif (voir ai_shadow.py).
+        reduced_size = risk.round_to_volume_step(
+            total_size * ai_shadow.LOW_CONFIDENCE_SIZE_FACTOR, volume_step, min_volume, max_volume)
+        if reduced_size is None:
+            return {"action": "aucune", "reason": "taille reduite (confiance IA faible) sous le minimum du broker"}
+        total_size = reduced_size
+
     partial_volume = None
     if fibonacci_reversion.PARTIAL_TP_PCT > 0:
         partial_volume = risk.round_to_volume_step(
@@ -663,6 +673,15 @@ def decide_and_act_ichimoku(candles: list[dict], *, contract_size: float, balanc
     )
     if verdict is not None and verdict.get("verdict") == "opposerait":
         return {"action": "aucune", "reason": "veto IA (opposition)"}
+
+    if verdict is not None and verdict.get("confiance") == "faible":
+        # Meme correctif que decide_and_act_fibonacci (incident du
+        # 2026-11-10) -- voir ai_shadow.py.
+        reduced_size = risk.round_to_volume_step(
+            total_size * ai_shadow.LOW_CONFIDENCE_SIZE_FACTOR, volume_step, min_volume, max_volume)
+        if reduced_size is None:
+            return {"action": "aucune", "reason": "taille reduite (confiance IA faible) sous le minimum du broker"}
+        total_size = reduced_size
 
     target_r = ichimoku_reversion.TARGET_R
     target = entry_price + target_r * distance if direction == "achat" else entry_price - target_r * distance

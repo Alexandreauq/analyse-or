@@ -41,6 +41,16 @@ REQUEST_TIMEOUT_SECONDS = 40.0
 WEB_SEARCH_MAX_USES = 2
 SHADOW_COOLDOWN = timedelta(hours=24)
 
+# Incident du 2026-11-10 (perte -8,3% du compte FTMO) : un verdict
+# "confirme" avec confiance "faible" avait explicitement recommande en
+# texte libre de reduire la taille ("reduisez la taille ou verifiez
+# manuellement"), mais rien ne traduisait cette recommandation en
+# action -- seul le champ "verdict" (confirme/opposerait) etait lu,
+# "confiance" etait capture puis jamais utilise. Les appelants
+# (bot.py) reduisent desormais la taille de moitie quand confiance ==
+# "faible", au lieu de l'ignorer.
+LOW_CONFIDENCE_SIZE_FACTOR = 0.5
+
 _last_call_at: dict[tuple, datetime] = {}  # cle (symbol, engine_label, direction, level arrondi)
 _last_verdict: dict[tuple, dict] = {}  # dernier verdict REEL (jamais None), reutilise pendant le cooldown
 _cooldown_lock = threading.Lock()

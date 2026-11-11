@@ -1395,6 +1395,74 @@ def test_decide_and_act_fibonacci_proceeds_when_ai_confirms(monkeypatch):
     assert result["action"] == "simulation"
 
 
+def _fib_total_volume(result):
+    return round(sum(step["volume"] for step in result["steps"]), 8)
+
+
+def test_decide_and_act_fibonacci_halves_size_when_ai_confidence_is_low(monkeypatch):
+    state = _fib_state(close=1981.0, high=1982.0, low=1974.0, level=1980.0, bias="achat", atr=20.0)
+    monkeypatch.setattr(bot.fibonacci_reversion, "latest_state", lambda candles, historical_candles=None: state)
+
+    monkeypatch.setattr(bot.ai_shadow, "shadow_judge_entry", lambda *a, **k: {"verdict": "confirme", "confiance": "haute", "raison": "test"})
+    baseline = bot.decide_and_act_fibonacci(
+        [{"dummy": True, "time": "2026-01-05 12:00:00"}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
+        balance=10000, equity=10000, open_positions=[], circuit_breaker=_open_circuit_breaker(),
+    )
+    baseline_volume = _fib_total_volume(baseline)
+
+    monkeypatch.setattr(bot.ai_shadow, "shadow_judge_entry", lambda *a, **k: {"verdict": "confirme", "confiance": "faible", "raison": "test"})
+    reduced = bot.decide_and_act_fibonacci(
+        [{"dummy": True, "time": "2026-01-05 12:00:00"}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
+        balance=10000, equity=10000, open_positions=[], circuit_breaker=_open_circuit_breaker(),
+    )
+    reduced_volume = _fib_total_volume(reduced)
+
+    expected = bot.risk.round_to_volume_step(
+        baseline_volume * bot.ai_shadow.LOW_CONFIDENCE_SIZE_FACTOR, 0.01, 0.01, 500)
+    assert reduced_volume == expected
+    assert reduced_volume < baseline_volume
+
+
+def test_decide_and_act_fibonacci_does_not_reduce_size_for_moyenne_confidence(monkeypatch):
+    state = _fib_state(close=1981.0, high=1982.0, low=1974.0, level=1980.0, bias="achat", atr=20.0)
+    monkeypatch.setattr(bot.fibonacci_reversion, "latest_state", lambda candles, historical_candles=None: state)
+
+    monkeypatch.setattr(bot.ai_shadow, "shadow_judge_entry", lambda *a, **k: {"verdict": "confirme", "confiance": "haute", "raison": "test"})
+    baseline = bot.decide_and_act_fibonacci(
+        [{"dummy": True, "time": "2026-01-05 12:00:00"}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
+        balance=10000, equity=10000, open_positions=[], circuit_breaker=_open_circuit_breaker(),
+    )
+
+    monkeypatch.setattr(bot.ai_shadow, "shadow_judge_entry", lambda *a, **k: {"verdict": "confirme", "confiance": "moyenne", "raison": "test"})
+    moyenne = bot.decide_and_act_fibonacci(
+        [{"dummy": True, "time": "2026-01-05 12:00:00"}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
+        balance=10000, equity=10000, open_positions=[], circuit_breaker=_open_circuit_breaker(),
+    )
+    assert _fib_total_volume(moyenne) == _fib_total_volume(baseline)
+
+
+def test_decide_and_act_fibonacci_returns_aucune_when_halved_size_below_minimum(monkeypatch):
+    state = _fib_state(close=1981.0, high=1982.0, low=1974.0, level=1980.0, bias="achat", atr=20.0)
+    monkeypatch.setattr(bot.fibonacci_reversion, "latest_state", lambda candles, historical_candles=None: state)
+    monkeypatch.setattr(bot.ai_shadow, "shadow_judge_entry", lambda *a, **k: {"verdict": "confirme", "confiance": "haute", "raison": "test"})
+    baseline = bot.decide_and_act_fibonacci(
+        [{"dummy": True, "time": "2026-01-05 12:00:00"}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
+        balance=10000, equity=10000, open_positions=[], circuit_breaker=_open_circuit_breaker(),
+    )
+    baseline_volume = _fib_total_volume(baseline)
+    # min_volume choisi strictement entre la moitie et le total de la
+    # taille de base : la taille pleine passe, la taille reduite de
+    # moitie tombe en dessous.
+    min_volume = round(baseline_volume * 0.75, 2)
+
+    monkeypatch.setattr(bot.ai_shadow, "shadow_judge_entry", lambda *a, **k: {"verdict": "confirme", "confiance": "faible", "raison": "test"})
+    result = bot.decide_and_act_fibonacci(
+        [{"dummy": True, "time": "2026-01-05 12:00:00"}], contract_size=100, volume_step=0.01, min_volume=min_volume, max_volume=500,
+        balance=10000, equity=10000, open_positions=[], circuit_breaker=_open_circuit_breaker(),
+    )
+    assert result == {"action": "aucune", "reason": "taille reduite (confiance IA faible) sous le minimum du broker"}
+
+
 def test_decide_and_act_fibonacci_proceeds_when_ai_returns_none_fail_open(monkeypatch):
     monkeypatch.setattr(bot.ai_shadow, "shadow_judge_entry", lambda *a, **k: None)
     state = _fib_state(close=1981.0, high=1982.0, low=1974.0, level=1980.0, bias="achat", atr=20.0)
@@ -1674,6 +1742,32 @@ def test_decide_and_act_ichimoku_proceeds_when_ai_confirms(monkeypatch):
         open_positions=[], circuit_breaker=_default_circuit_breaker(),
     )
     assert result["action"] == "simulation"
+
+
+def test_decide_and_act_ichimoku_halves_size_when_ai_confidence_is_low(monkeypatch):
+    # balance=200000 : voir le commentaire de
+    # test_decide_and_act_ichimoku_blocks_trade_when_ai_opposes ci-dessus.
+    # Meme correctif (incident du 2026-11-10) que decide_and_act_fibonacci.
+    monkeypatch.setattr(bot.ai_shadow, "shadow_judge_entry", lambda *a, **k: {"verdict": "confirme", "confiance": "haute", "raison": "test"})
+    baseline = bot.decide_and_act_ichimoku(
+        _ichimoku_candles_with_signal(), contract_size=5000.0, balance=200000.0, equity=200000.0,
+        volume_step=0.01, min_volume=0.01, max_volume=20.0,
+        open_positions=[], circuit_breaker=_default_circuit_breaker(),
+    )
+    baseline_volume = round(sum(step["volume"] for step in baseline["steps"]), 8)
+
+    monkeypatch.setattr(bot.ai_shadow, "shadow_judge_entry", lambda *a, **k: {"verdict": "confirme", "confiance": "faible", "raison": "test"})
+    reduced = bot.decide_and_act_ichimoku(
+        _ichimoku_candles_with_signal(), contract_size=5000.0, balance=200000.0, equity=200000.0,
+        volume_step=0.01, min_volume=0.01, max_volume=20.0,
+        open_positions=[], circuit_breaker=_default_circuit_breaker(),
+    )
+    reduced_volume = round(sum(step["volume"] for step in reduced["steps"]), 8)
+
+    expected = bot.risk.round_to_volume_step(
+        baseline_volume * bot.ai_shadow.LOW_CONFIDENCE_SIZE_FACTOR, 0.01, 0.01, 20.0)
+    assert reduced_volume == expected
+    assert reduced_volume < baseline_volume
 
 
 def test_decide_and_act_ichimoku_proceeds_when_ai_returns_none_fail_open(monkeypatch):

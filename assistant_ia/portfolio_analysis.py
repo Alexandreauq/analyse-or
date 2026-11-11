@@ -221,3 +221,55 @@ def _build_prompt(positions_enrichies: list[dict], metriques: dict, derniere_ana
         "}\n"
         "```"
     )
+
+
+def run_portfolio_analysis(
+    payload: dict, *, client=None, indices_source=data_sources.fetch_indices_data,
+    history_path: str = HISTORY_PATH,
+) -> dict:
+    """Point d'entree appele par la route POST /portfolio-analysis.
+    `client` injectable (jamais de vrai appel reseau dans les tests, meme
+    principe que assistant.run_assistant_loop). Toute panne reseau/API est
+    capturee ici, jamais propagee -- la route n'a jamais a gerer une
+    exception venant de ce module."""
+    positions = payload.get("positions") or []
+    metriques = {
+        "totals": payload.get("totals"),
+        "concentration": payload.get("concentration"),
+        "health": payload.get("health"),
+        "attribution": payload.get("attribution"),
+        "dividends_received": payload.get("dividends_received"),
+        "projected_dividend_income": payload.get("projected_dividend_income"),
+    }
+    positions_enrichies = _enrichit_positions(positions, indices_source=indices_source)
+    derniere_analyse = _lit_derniere_analyse(history_path)
+    prompt = _build_prompt(positions_enrichies, metriques, derniere_analyse)
+
+    if client is None:
+        import anthropic
+        client = anthropic.Anthropic(timeout=REQUEST_TIMEOUT_SECONDS, max_retries=0)
+
+    try:
+        response = client.messages.create(
+            model=MODEL,
+            max_tokens=MAX_TOKENS,
+            output_config={"effort": "medium"},
+            tools=[{"type": "web_search_20260209", "name": "web_search", "max_uses": WEB_SEARCH_MAX_USES}],
+            messages=[{"role": "user", "content": prompt}],
+        )
+    except Exception as e:
+        return {"disponible": False, "erreur": f"{type(e).__name__}: {e}", "resultat": None}
+
+    usage.record_usage(response.usage.input_tokens, response.usage.output_tokens, model=MODEL)
+    texte = "".join(bloc.text for bloc in response.content if bloc.type == "text")
+    resultat = _parse_resultat(texte)
+    if resultat is None:
+        return {"disponible": False, "erreur": "reponse IA non interpretable, reessaie", "resultat": None}
+
+    resultat["horodatage"] = now_iso()
+    _append_history({
+        "horodatage": resultat["horodatage"],
+        "positions_snapshot": positions,
+        "resultat": resultat,
+    }, history_path)
+    return {"disponible": True, "erreur": None, "resultat": resultat}

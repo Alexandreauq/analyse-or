@@ -184,3 +184,138 @@ def test_build_prompt_requests_a_json_code_block():
     prompt = portfolio_analysis._build_prompt([], {}, None)
     assert "```json" in prompt
     assert '"par_ligne"' in prompt
+
+
+class _FakeTextBlock:
+    def __init__(self, text):
+        self.type = "text"
+        self.text = text
+
+
+class _FakeUsage:
+    def __init__(self, input_tokens=100, output_tokens=200):
+        self.input_tokens = input_tokens
+        self.output_tokens = output_tokens
+
+
+class _FakeResponse:
+    def __init__(self, content, usage=None):
+        self.content = content
+        self.usage = usage or _FakeUsage()
+
+
+class _FakeMessages:
+    def __init__(self, response=None, error=None):
+        self._response = response
+        self._error = error
+        self.last_kwargs = None
+
+    def create(self, **kwargs):
+        self.last_kwargs = kwargs
+        if self._error is not None:
+            raise self._error
+        return self._response
+
+
+class _FakeAnthropicClient:
+    def __init__(self, response=None, error=None):
+        self.messages = _FakeMessages(response=response, error=error)
+
+
+_PAYLOAD_SIMPLE = {
+    "positions": [{"ticker": "MC.PA", "quantity": 3, "buy_price": 700.0, "buy_date": "2026-01-01"}],
+    "totals": {}, "concentration": {}, "health": {}, "attribution": [],
+    "dividends_received": {}, "projected_dividend_income": {},
+}
+
+
+def _reponse_valide(resume="ok"):
+    texte = (
+        f'```json\n{{"resume_global": "{resume}", "par_ligne": '
+        '[{"ticker": "MC.PA", "reco": "garder", "justification": "stable"}]}\n```'
+    )
+    return _FakeResponse([_FakeTextBlock(texte)])
+
+
+def test_run_portfolio_analysis_returns_disponible_true_on_success(tmp_path, monkeypatch):
+    monkeypatch.setattr(portfolio_analysis.usage, "record_usage", lambda *a, **k: None)
+    client = _FakeAnthropicClient(response=_reponse_valide())
+    historique = str(tmp_path / "historique.jsonl")
+
+    resultat = portfolio_analysis.run_portfolio_analysis(
+        _PAYLOAD_SIMPLE, client=client, indices_source=lambda: {"companies": []},
+        history_path=historique)
+
+    assert resultat["disponible"] is True
+    assert resultat["resultat"]["resume_global"] == "ok"
+    assert resultat["resultat"]["horodatage"]
+
+
+def test_run_portfolio_analysis_appends_to_history_on_success(tmp_path, monkeypatch):
+    monkeypatch.setattr(portfolio_analysis.usage, "record_usage", lambda *a, **k: None)
+    client = _FakeAnthropicClient(response=_reponse_valide())
+    historique = str(tmp_path / "historique.jsonl")
+
+    portfolio_analysis.run_portfolio_analysis(
+        _PAYLOAD_SIMPLE, client=client, indices_source=lambda: {"companies": []},
+        history_path=historique)
+
+    assert portfolio_analysis.last_analysis_timestamp(historique) is not None
+
+
+def test_run_portfolio_analysis_returns_disponible_false_on_api_error(tmp_path, monkeypatch):
+    monkeypatch.setattr(portfolio_analysis.usage, "record_usage", lambda *a, **k: None)
+    client = _FakeAnthropicClient(error=RuntimeError("timeout"))
+    historique = str(tmp_path / "historique.jsonl")
+
+    resultat = portfolio_analysis.run_portfolio_analysis(
+        _PAYLOAD_SIMPLE, client=client, indices_source=lambda: {"companies": []},
+        history_path=historique)
+
+    assert resultat["disponible"] is False
+    assert "RuntimeError" in resultat["erreur"]
+    assert portfolio_analysis.last_analysis_timestamp(historique) is None
+
+
+def test_run_portfolio_analysis_returns_disponible_false_when_response_not_parseable(tmp_path, monkeypatch):
+    monkeypatch.setattr(portfolio_analysis.usage, "record_usage", lambda *a, **k: None)
+    client = _FakeAnthropicClient(response=_FakeResponse([_FakeTextBlock("pas de JSON ici")]))
+    historique = str(tmp_path / "historique.jsonl")
+
+    resultat = portfolio_analysis.run_portfolio_analysis(
+        _PAYLOAD_SIMPLE, client=client, indices_source=lambda: {"companies": []},
+        history_path=historique)
+
+    assert resultat["disponible"] is False
+    assert portfolio_analysis.last_analysis_timestamp(historique) is None
+
+
+def test_run_portfolio_analysis_includes_previous_summary_in_the_prompt(tmp_path, monkeypatch):
+    monkeypatch.setattr(portfolio_analysis.usage, "record_usage", lambda *a, **k: None)
+    historique = tmp_path / "historique.jsonl"
+    historique.write_text(
+        json.dumps({"horodatage": "2026-11-05T00:00:00Z",
+                    "resultat": {"resume_global": "analyse precedente unique"}}) + "\n",
+        encoding="utf-8")
+    client = _FakeAnthropicClient(response=_reponse_valide())
+
+    portfolio_analysis.run_portfolio_analysis(
+        _PAYLOAD_SIMPLE, client=client, indices_source=lambda: {"companies": []},
+        history_path=str(historique))
+
+    prompt_envoye = client.messages.last_kwargs["messages"][0]["content"]
+    assert "analyse precedente unique" in prompt_envoye
+
+
+def test_run_portfolio_analysis_calls_record_usage_with_the_response_tokens(tmp_path, monkeypatch):
+    enregistres = []
+    monkeypatch.setattr(portfolio_analysis.usage, "record_usage",
+                         lambda i, o, model=None: enregistres.append((i, o, model)))
+    client = _FakeAnthropicClient(response=_reponse_valide())
+    historique = str(tmp_path / "historique.jsonl")
+
+    portfolio_analysis.run_portfolio_analysis(
+        _PAYLOAD_SIMPLE, client=client, indices_source=lambda: {"companies": []},
+        history_path=historique)
+
+    assert enregistres == [(100, 200, portfolio_analysis.MODEL)]

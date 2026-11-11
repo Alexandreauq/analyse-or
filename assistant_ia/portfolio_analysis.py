@@ -110,9 +110,44 @@ def _lit_derniere_analyse(path: str = HISTORY_PATH) -> dict | None:
     return None
 
 
-def last_analysis_timestamp(path: str = HISTORY_PATH) -> str | None:
+def derniere_analyse_complete(path: str = HISTORY_PATH) -> dict | None:
+    """Le resultat complet (pas seulement l'horodatage) de la derniere
+    analyse reussie, ou None si aucune n'existe encore. Reutilise
+    _lit_derniere_analyse, deja tolerante aux fichiers absents/corrompus."""
     derniere = _lit_derniere_analyse(path)
-    return derniere.get("horodatage") if derniere else None
+    return derniere.get("resultat") if derniere else None
+
+
+def historique_sante(path: str = HISTORY_PATH, limite: int = 200) -> list[dict]:
+    """Liste chronologique (plus ancienne en premier) de
+    {"horodatage": str, "sante_globale": int | None} pour chaque analyse
+    du journal -- lecture seule, jamais les champs lourds (texte, snapshot
+    de positions). Une ligne corrompue est ignoree (meme contrat que
+    _lit_derniere_analyse), jamais une exception. `limite` borne le volume
+    renvoye (les plus recentes), pas de pagination necessaire pour un usage
+    personnel a cette frequence."""
+    try:
+        with open(path, "r", encoding="utf-8") as fh:
+            lignes = fh.readlines()
+    except Exception:
+        return []
+    points = []
+    for ligne in lignes:
+        ligne = ligne.strip()
+        if not ligne:
+            continue
+        try:
+            entree = json.loads(ligne)
+        except json.JSONDecodeError:
+            continue
+        if not isinstance(entree, dict):
+            continue
+        resultat = entree.get("resultat") or {}
+        points.append({
+            "horodatage": entree.get("horodatage"),
+            "sante_globale": resultat.get("sante_globale") if isinstance(resultat, dict) else None,
+        })
+    return points[-limite:]
 
 
 def _append_history(entry: dict, path: str = HISTORY_PATH) -> bool:

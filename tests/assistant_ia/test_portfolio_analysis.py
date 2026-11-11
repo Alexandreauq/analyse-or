@@ -151,16 +151,56 @@ def test_lit_derniere_analyse_skips_a_corrupted_last_line(tmp_path):
     assert derniere["resultat"]["resume_global"] == "valide"
 
 
-def test_last_analysis_timestamp_returns_none_without_history(tmp_path):
+def test_derniere_analyse_complete_returns_none_without_history(tmp_path):
     chemin = str(tmp_path / "absent.jsonl")
-    assert portfolio_analysis.last_analysis_timestamp(chemin) is None
+    assert portfolio_analysis.derniere_analyse_complete(chemin) is None
 
 
-def test_last_analysis_timestamp_returns_the_last_horodatage(tmp_path):
+def test_derniere_analyse_complete_returns_the_last_resultat(tmp_path):
     chemin = tmp_path / "historique.jsonl"
     chemin.write_text(
-        json.dumps({"horodatage": "2026-11-05T00:00:00Z", "resultat": {}}) + "\n", encoding="utf-8")
-    assert portfolio_analysis.last_analysis_timestamp(str(chemin)) == "2026-11-05T00:00:00Z"
+        json.dumps({"horodatage": "2026-11-05T00:00:00Z",
+                    "resultat": {"resume_global": "ok", "sante_globale": 42}}) + "\n",
+        encoding="utf-8")
+    resultat = portfolio_analysis.derniere_analyse_complete(str(chemin))
+    assert resultat == {"resume_global": "ok", "sante_globale": 42}
+
+
+def test_historique_sante_returns_empty_list_without_history(tmp_path):
+    chemin = str(tmp_path / "absent.jsonl")
+    assert portfolio_analysis.historique_sante(chemin) == []
+
+
+def test_historique_sante_returns_points_in_chronological_order(tmp_path):
+    chemin = tmp_path / "historique.jsonl"
+    chemin.write_text(
+        json.dumps({"horodatage": "2026-11-01T00:00:00Z", "resultat": {"sante_globale": 10}}) + "\n"
+        + json.dumps({"horodatage": "2026-11-05T00:00:00Z", "resultat": {"sante_globale": 30}}) + "\n",
+        encoding="utf-8")
+    points = portfolio_analysis.historique_sante(str(chemin))
+    assert points == [
+        {"horodatage": "2026-11-01T00:00:00Z", "sante_globale": 10},
+        {"horodatage": "2026-11-05T00:00:00Z", "sante_globale": 30},
+    ]
+
+
+def test_historique_sante_uses_none_when_sante_globale_is_missing(tmp_path):
+    chemin = tmp_path / "historique.jsonl"
+    chemin.write_text(
+        json.dumps({"horodatage": "2026-11-01T00:00:00Z", "resultat": {"resume_global": "ancien format"}}) + "\n",
+        encoding="utf-8")
+    points = portfolio_analysis.historique_sante(str(chemin))
+    assert points == [{"horodatage": "2026-11-01T00:00:00Z", "sante_globale": None}]
+
+
+def test_historique_sante_skips_a_corrupted_line(tmp_path):
+    chemin = tmp_path / "historique.jsonl"
+    chemin.write_text(
+        "{ligne corrompue\n"
+        + json.dumps({"horodatage": "2026-11-05T00:00:00Z", "resultat": {"sante_globale": 30}}) + "\n",
+        encoding="utf-8")
+    points = portfolio_analysis.historique_sante(str(chemin))
+    assert points == [{"horodatage": "2026-11-05T00:00:00Z", "sante_globale": 30}]
 
 
 def test_append_history_adds_a_line_to_the_file(tmp_path):
@@ -312,8 +352,8 @@ _PAYLOAD_SIMPLE = {
 
 def _reponse_valide(resume="ok"):
     texte = (
-        f'```json\n{{"resume_global": "{resume}", "par_ligne": '
-        '[{"ticker": "MC.PA", "reco": "garder", "justification": "stable"}]}\n```'
+        f'```json\n{{"resume_global": "{resume}", "sante_globale": 10, "par_ligne": '
+        '[{"ticker": "MC.PA", "reco": "garder", "analyse": "stable"}]}\n```'
     )
     return _FakeResponse([_FakeTextBlock(texte)])
 
@@ -341,7 +381,7 @@ def test_run_portfolio_analysis_appends_to_history_on_success(tmp_path, monkeypa
         _PAYLOAD_SIMPLE, client=client, indices_source=lambda: {"companies": []},
         history_path=historique)
 
-    assert portfolio_analysis.last_analysis_timestamp(historique) is not None
+    assert portfolio_analysis.derniere_analyse_complete(historique) is not None
 
 
 def test_run_portfolio_analysis_returns_disponible_false_on_api_error(tmp_path, monkeypatch):
@@ -355,7 +395,7 @@ def test_run_portfolio_analysis_returns_disponible_false_on_api_error(tmp_path, 
 
     assert resultat["disponible"] is False
     assert "RuntimeError" in resultat["erreur"]
-    assert portfolio_analysis.last_analysis_timestamp(historique) is None
+    assert portfolio_analysis.derniere_analyse_complete(historique) is None
 
 
 def test_run_portfolio_analysis_returns_disponible_false_when_response_not_parseable(tmp_path, monkeypatch):
@@ -368,7 +408,7 @@ def test_run_portfolio_analysis_returns_disponible_false_when_response_not_parse
         history_path=historique)
 
     assert resultat["disponible"] is False
-    assert portfolio_analysis.last_analysis_timestamp(historique) is None
+    assert portfolio_analysis.derniere_analyse_complete(historique) is None
 
 
 def test_run_portfolio_analysis_includes_previous_summary_in_the_prompt(tmp_path, monkeypatch):
@@ -420,4 +460,4 @@ def test_run_portfolio_analysis_returns_disponible_false_when_indices_source_rai
     assert resultat["erreur"] == "RuntimeError: panne reseau"
     assert resultat["resultat"] is None
     assert client.messages.last_kwargs is None
-    assert portfolio_analysis.last_analysis_timestamp(historique) is None
+    assert portfolio_analysis.derniere_analyse_complete(historique) is None

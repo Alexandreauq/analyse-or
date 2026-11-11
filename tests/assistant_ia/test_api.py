@@ -284,6 +284,19 @@ def test_portfolio_analysis_returns_the_result_from_run_portfolio_analysis(clien
     assert response.json() == attendu
 
 
+def test_portfolio_analysis_returns_503_when_a_concurrent_analysis_is_already_running(client, monkeypatch):
+    monkeypatch.setattr(api.usage, "budget_exceeded", lambda **kwargs: False)
+    monkeypatch.setattr(api, "_frequence_portefeuille", api.limits.RateLimiter(100, 60))
+    monkeypatch.setattr(api, "_concurrence_portefeuille", api.limits.ConcurrencyLimiter(1))
+    api._concurrence_portefeuille.tente()  # une analyse déjà en cours occupe la seule place
+
+    response = client.post(
+        "/portfolio-analysis", json={"positions": [{"ticker": "MC.PA"}]},
+        headers={"X-Bot-Token": "secret-token"})
+
+    assert response.status_code == 503
+
+
 def test_portfolio_analysis_last_rejects_a_missing_token(client):
     response = client.get("/portfolio-analysis/last")
     assert response.status_code == 401

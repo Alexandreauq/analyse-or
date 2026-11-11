@@ -241,7 +241,10 @@ def run_portfolio_analysis(
         "dividends_received": payload.get("dividends_received"),
         "projected_dividend_income": payload.get("projected_dividend_income"),
     }
-    positions_enrichies = _enrichit_positions(positions, indices_source=indices_source)
+    try:
+        positions_enrichies = _enrichit_positions(positions, indices_source=indices_source)
+    except Exception as e:
+        return {"disponible": False, "erreur": f"{type(e).__name__}: {e}", "resultat": None}
     derniere_analyse = _lit_derniere_analyse(history_path)
     prompt = _build_prompt(positions_enrichies, metriques, derniere_analyse)
 

@@ -319,3 +319,24 @@ def test_run_portfolio_analysis_calls_record_usage_with_the_response_tokens(tmp_
         history_path=historique)
 
     assert enregistres == [(100, 200, portfolio_analysis.MODEL)]
+
+
+def test_run_portfolio_analysis_returns_disponible_false_when_indices_source_raises(tmp_path, monkeypatch):
+    # Panne reseau sur indices.json : l'erreur doit etre capturee ici (contrat
+    # "jamais propagee"), pas remontee a la route FastAPI.
+    monkeypatch.setattr(portfolio_analysis.usage, "record_usage", lambda *a, **k: None)
+    client = _FakeAnthropicClient(response=_reponse_valide())
+    historique = str(tmp_path / "historique.jsonl")
+
+    def indices_en_panne():
+        raise RuntimeError("panne reseau")
+
+    resultat = portfolio_analysis.run_portfolio_analysis(
+        _PAYLOAD_SIMPLE, client=client, indices_source=indices_en_panne,
+        history_path=historique)
+
+    assert resultat["disponible"] is False
+    assert resultat["erreur"] == "RuntimeError: panne reseau"
+    assert resultat["resultat"] is None
+    assert client.messages.last_kwargs is None
+    assert portfolio_analysis.last_analysis_timestamp(historique) is None

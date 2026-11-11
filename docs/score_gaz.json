@@ -22,13 +22,13 @@
       "name": "Dynamique récente",
       "score": 10.0,
       "weight": 0.26666666666666666,
-      "raw_value": "+9.7% vs MM200"
+      "raw_value": "+10.4% vs MM200"
     },
     {
       "name": "Dollar (DXY)",
       "score": -10,
       "weight": 0.13333333333333333,
-      "raw_value": "102.24 (il y a 2 mois : 99.09)"
+      "raw_value": "102.47 (il y a 2 mois : 99.12)"
     },
     {
       "name": "Stocks EIA",
@@ -38,9 +38,9 @@
     }
   ],
   "technical": {
-    "note": "Cours au-dessus de la MM200 (+9.7%) — tendance haussière",
-    "spot": 3.308000087738037,
-    "ma200": 3.0164550018310545,
+    "note": "Cours au-dessus de la MM200 (+10.4%) — tendance haussière",
+    "spot": 3.309999942779541,
+    "ma200": 2.9981750011444093,
     "unite": "$ / MMBtu"
   },
   "calendar": [
@@ -88,46 +88,46 @@
   "alerts": [],
   "news": [
     {
-      "title": "Prix du gaz : les tarifs vont encore augmenter au 1er décembre - Le Parisien",
-      "date": "2026-11-09",
-      "link": "https://news.google.com/rss/articles/CBMi0wFBVV95cUxOUmFYSHE5QVljNlFKUTdyZzhkbWVjUUpwOXpoNE93TEZDVk1fQmxoWkZPLUIyZy1JZkxpWkM5d3Q4eEFDWDhmY0V4bWNBRkFPcGQ5QkxLdVRqMFl0SnQ5c05KQ2hRWDl6VDBfUlBlQTl2SWoycE05Wk05SU96MmM5SDFZZkRieTRyRDFNelBiTTZCZDFIQVdDS25sa0RyZnR6ZmlvVTh5bW5BTkh3bWdNb2ZOM1JZSGZ0bS1TMjFiOXdaUTNMVU1BTkZxVXhYc01LOFNN?oc=5",
-      "source": "Le Parisien",
-      "summary": "",
-      "sentiment": 0,
-      "importance": "mineure"
-    },
-    {
-      "title": "La CRE relèvera le prix repère du gaz à 206,26 €/MWh en décembre - energynews.pro",
+      "title": "Décembre 2026 : augmentation de 5,8% TTC du prix repère du gaz - énergie-info",
       "date": "2026-11-10",
-      "link": "https://news.google.com/rss/articles/CBMijAFBVV95cUxQRldJc2tBSFVWWlNWNlVyd1NPVTRXX0Q0NW1LcnQwdUdLQ1k4RjZZaExlenNLODNyNmN1bHFJbkN1OVhFRmNFLU51N3R0WkVONmtfSG9OdklVVGlnWXFadHJTX1FaeGhNMjhTRkZGT2dleUdiSk80Ynk4SjQ5Q3lUMHcza0tWMnpZaFZFVg?oc=5",
+      "link": "https://news.google.com/rss/articles/CBMikAFBVV95cUxQMTFVdGFfYXFFeEdJajcxeFNjUVF0amFaYWZ6VzZEVk5DNy0xOEJPbGpjYzBDN1FuUlNMYWF5UldiUnBlMUwzeTRfeFNlNWVIU1dydnVldGJkVy15aVlhWWpOYnBrTkVwc1BSUW1RczY3Q3BxYkc1Q0FpN2MwYS1TVlNqTmEwWm45VzRZSDIzcEM?oc=5",
+      "source": "énergie-info",
+      "summary": "",
+      "sentiment": 0,
+      "importance": "mineure"
+    },
+    {
+      "title": "Prix de l'énergie - Le prix du gaz à nouveau à la hausse mercredi - La Libre.be",
+      "date": "2026-11-11",
+      "link": "https://news.google.com/rss/articles/CBMi2wFBVV95cUxPUlV0UG5IUEhaTUgzdTgzSVdHd3JTRmdzU3V1dXRQTlpTeGFIdzRieXJCc3BDSThPSFBTeU40WHFrUW5wZmF0Z2Z6ZFRXZkx2bDhkSGYxb2dYVzM1TG14Z0h6VmRpUDNaaG9tZEdyT2REQWt6SXBCcVhiV2JTcVZFc2JnbjBmSEFNWExMcmQ3VVhkYTBiVU9icVhFdDgxLWVGX0RvSG56NTdtVTJ0YVpOSVlfLWw0SUxqdDE1SUN0dldYeDEzcUs1MGpzTmxiQ2x6SS1XRW9LdVhaNUU?oc=5",
+      "source": "La Libre.be",
+      "summary": "",
+      "sentiment": 0,
+      "importance": "mineure"
+    },
+    {
+      "title": "Le prix du gaz de nouveau à la hausse mercredi - 7sur7.be",
+      "date": "2026-11-11",
+      "link": "https://news.google.com/rss/articles/CBMijwFBVV95cUxQM2N3WGQwOVo3QmtxbUVTYTlQcnpRcUxKRmdjU3llU0ZQRnZheFhLLWhXX1FuNzhlMFZoanpxcy05RUtrWHAwWTVGemplNzRDZkVTWXVYMzRXQmIxakw1VHVySnJ6aWVOUHJ5aGc4N25WaE1hTGpvY0l3eXBna3BHRXNFZm1Ickg5bTZSbzk3SQ?oc=5",
+      "source": "7sur7.be",
+      "summary": "",
+      "sentiment": 0,
+      "importance": "mineure"
+    },
+    {
+      "title": "Gaz : l’EIA abaisse sa prévision de prix aux États-Unis pour l’hiver 2026-2027 - L'Energeek",
+      "date": "2026-11-10",
+      "link": "https://news.google.com/rss/articles/CBMimgFBVV95cUxOYTdaS2lEbkhtUUR2enN1czRGb1EycVl1ZG9YX29JUHQ3TUdUN1FjdTU0T29uWThmSVNWM0JHOFRGOW9CSDB0X3VtTHFRalZtQTRsTl9Hd2pYZHJDVVItU1pheGE0QXZZZ2xkM051eUlnazZBMXQwT2VXbFp0NWwyNDBob19LeXU5enduQ0xaTlVsWUZOeFZwaDlR?oc=5",
+      "source": "L'Energeek",
+      "summary": "",
+      "sentiment": 0,
+      "importance": "mineure"
+    },
+    {
+      "title": "Le prix repère du gaz augmente de 5,8 % TTC au 1er décembre - energynews.pro",
+      "date": "2026-11-10",
+      "link": "https://news.google.com/rss/articles/CBMihgFBVV95cUxPWEhtWFZQcDhQZXE3SndmNVZMY3RPY1RCcElCLWN0bVFVYzRUSlU2TC1DMkY3WWN5ODc4clhGemZOVVc0dm05WUhtamgyTXI4cUNuTGFoUlFabU9xeEVXbFJKVEEzZXJfWFZUY2JldDJkQWNSY2E1NjFlUXBLbmp1QW1zME14dw?oc=5",
       "source": "energynews.pro",
-      "summary": "",
-      "sentiment": 0,
-      "importance": "mineure"
-    },
-    {
-      "title": "Gaz : le prix repère va encore augmenter en décembre - Ouest-France",
-      "date": "2026-11-09",
-      "link": "https://news.google.com/rss/articles/CBMi0wFBVV95cUxPclFfcVo5VW9xXzZEdER6MmU5di1ySHVJa2VFSmxlcnZEWEpGZmp5QmpobmlxQU1GYUd1dUdObUxuTXJLbHFtNHZTVHYyQ2k0RmY2X0twNHAxNGhGSC1DSy1weGV3UlJUdU5HamhnOXdYMlpNOWlkeVBobGdzM0p4cmdJOW02VWVTdVFpVERkTWhFS2xvWWxTeXBmOFVjaEgzaC1xZ1V5LThpSlM5ZmRDQTR4MFR6LWNFUWZxTUtNM3IzY2plZHN2V2dSR1pXdDVFSlRN?oc=5",
-      "source": "Ouest-France",
-      "summary": "",
-      "sentiment": 0,
-      "importance": "mineure"
-    },
-    {
-      "title": "Anthropic utiliserait du gaz naturel pour alimenter Claude…et ça risque de faire débat - 01net.com",
-      "date": "2026-11-09",
-      "link": "https://news.google.com/rss/articles/CBMiwgFBVV95cUxNZ191RjJLclhPR0xGZGU2U25NZVpSc1Ntb1pJWl9SM0gxbUxMZndNcjExcHRNa05OV3plT1lOZXJ4aUdpNWp2ZGRKLUtBWDlGaUdsWFU1T283S2UwMTZQYjdMQXUtdF9JYmc4bEpFV3liT3Q3Tjlpbmk3TXRwa05WSzgxSjVQb1FBUXRiaUhVUnB2WndhRDhBODk5TDg5ZGRJeVhxaGwxVUtlLTRlQi1tWFpOeFVpcWN4dFQ1YkpXMUVhUQ?oc=5",
-      "source": "01net.com",
-      "summary": "",
-      "sentiment": 0,
-      "importance": "mineure"
-    },
-    {
-      "title": "Prix du gaz : nouvelle hausse de +5,8 % au 1er décembre 2026 - FranceTransactions.com",
-      "date": "2026-11-09",
-      "link": "https://news.google.com/rss/articles/CBMipwFBVV95cUxObXhkdXVyNWpiOFZxMFIteGl1TExZWjJNZVdnTEJWUE42T1ZSamVrczNvWXExbHNIaTFRdk5UdW9nRFhaYzZEQnAzS1lHTWNTVzA4VUZ5aVpYZU1adUNTcXZkQ2dXUVYwOEdQR0xHbzlGMmZMT05NU1BEdmFwam8xNkprTUJMdXlnc0tadDhzc2g4RjQzSDlQZGgxaWdyWXliUEg4S0xoQQ?oc=5",
-      "source": "FranceTransactions.com",
       "summary": "",
       "sentiment": 0,
       "importance": "mineure"
@@ -135,27 +135,27 @@
   ],
   "analysis_html": "<h3>Contexte récent</h3><p>Le gaz naturel américain (Henry Hub) se négocie autour de <strong>2,63 $/MMBtu</strong>, nettement sous la moyenne saisonnière du mois (3,70 $/MMBtu). Le prix évolue légèrement sous sa moyenne mobile à 200 jours (-1,1 %), ce qui traduit une tendance de fond plutôt neutre à légèrement baissière. Ce mouvement se produit alors que le dollar s'est renforcé sur les deux derniers mois.</p><h3>Facteurs déterminants</h3><ul><li><strong>Saisonnalité (poids 33 %, score -10,0)</strong> : c'est le facteur le plus lourd du score et il est à son niveau le plus négatif. Le prix spot se situe environ 1 $/MMBtu sous sa norme saisonnière, soit près de 29 % de décote. Le marché ne valorise donc pas la prime habituellement observée à cette période de l'année, ce qui constitue le principal frein du score.</li><li><strong>Positionnement CFTC (poids 27 %, score +9,9)</strong> : c'est le seul contrepoids significatif. La position nette des spéculateurs (-225 359 contrats) se situe au 1er percentile sur trois ans, un niveau de pessimisme extrême. Ce facteur est lu comme un signal contrarien : un positionnement vendeur aussi concentré laisse peu de place à de nouvelles ventes et expose le marché à des rachats de couverture. Sa contribution pondérée compense en grande partie celle de la saisonnalité.</li><li><strong>Dollar DXY (poids 13 %, score -10,0)</strong> : le DXY est passé de 98,77 à 102,05 en deux mois, soit environ +3,3 %. Ce raffermissement pèse au maximum sur ce facteur. Son poids plus modeste limite toutefois son impact sur le score global.</li><li><strong>Dynamique récente (poids 27 %, score -2,2)</strong> : l'écart limité sous la MM200 n'apporte qu'une contribution légèrement négative. La tendance n'est ni franchement haussière ni en décrochage marqué.</li><li><strong>Stocks EIA (poids 0 %)</strong> : ce facteur est indisponible faute de clé API configurée. L'analyse ne tient donc pas compte du niveau des stocks par rapport à leur moyenne historique, un élément fondamental clé pour le gaz naturel. C'est une limite importante de la lecture actuelle.</li></ul><h3>Actualités à retenir</h3><p>Aucune actualité n'est classée comme notable ou majeure : les cinq informations récentes sont toutes jugées <strong>mineures</strong>. Deux points méritent néanmoins d'être signalés :</p><ul><li><strong>Approvisionnement record des terminaux de GNL et hausse de 2 % des prix américains</strong> : c'est l'information la plus directement liée au Henry Hub. Une demande d'exportation soutenue constitue un élément de soutien fondamental. Elle reste toutefois ponctuelle et ne modifie pas, à ce stade, la décote saisonnière ni la dynamique de moyen terme captées par le score.</li><li><strong>Hausse des prix de détail en France et tensions géopolitiques en Europe</strong> : ces articles portent sur les tarifs aux consommateurs européens (par exemple 0,1828 €/kWh, +6,3 %) et sur le contexte géopolitique. Leur lien avec le prix de gros américain est indirect, surtout via la demande de GNL, et ils n'influencent pas les facteurs du score.</li></ul><h3>Synthèse</h3><p>Le score composite ressort globalement <strong>légèrement négatif</strong>. Cette orientation tient surtout à deux éléments : la forte décote du prix par rapport à sa norme saisonnière et le renforcement du dollar. Le positionnement spéculatif extrêmement vendeur agit comme un contrepoids notable, avec un potentiel de retournement technique si le pessimisme se dissipe. La dynamique de prix, elle, reste quasi neutre. Les actualités récentes, toutes mineures, n'apportent pas de signal de nature à infléchir cette lecture, même si la vigueur des flux vers les terminaux de GNL constitue un élément de soutien à surveiller. L'absence des données de stocks EIA invite enfin à la prudence dans l'interprétation, car ce facteur fondamental pourrait renforcer ou nuancer le diagnostic actuel.</p>",
   "news_classifications": {
-    "https://news.google.com/rss/articles/CBMi0wFBVV95cUxOUmFYSHE5QVljNlFKUTdyZzhkbWVjUUpwOXpoNE93TEZDVk1fQmxoWkZPLUIyZy1JZkxpWkM5d3Q4eEFDWDhmY0V4bWNBRkFPcGQ5QkxLdVRqMFl0SnQ5c05KQ2hRWDl6VDBfUlBlQTl2SWoycE05Wk05SU96MmM5SDFZZkRieTRyRDFNelBiTTZCZDFIQVdDS25sa0RyZnR6ZmlvVTh5bW5BTkh3bWdNb2ZOM1JZSGZ0bS1TMjFiOXdaUTNMVU1BTkZxVXhYc01LOFNN?oc=5": {
+    "https://news.google.com/rss/articles/CBMikAFBVV95cUxQMTFVdGFfYXFFeEdJajcxeFNjUVF0amFaYWZ6VzZEVk5DNy0xOEJPbGpjYzBDN1FuUlNMYWF5UldiUnBlMUwzeTRfeFNlNWVIU1dydnVldGJkVy15aVlhWWpOYnBrTkVwc1BSUW1RczY3Q3BxYkc1Q0FpN2MwYS1TVlNqTmEwWm45VzRZSDIzcEM?oc=5": {
       "summary": "",
       "sentiment": 0,
       "importance": "mineure"
     },
-    "https://news.google.com/rss/articles/CBMijAFBVV95cUxQRldJc2tBSFVWWlNWNlVyd1NPVTRXX0Q0NW1LcnQwdUdLQ1k4RjZZaExlenNLODNyNmN1bHFJbkN1OVhFRmNFLU51N3R0WkVONmtfSG9OdklVVGlnWXFadHJTX1FaeGhNMjhTRkZGT2dleUdiSk80Ynk4SjQ5Q3lUMHcza0tWMnpZaFZFVg?oc=5": {
+    "https://news.google.com/rss/articles/CBMi2wFBVV95cUxPUlV0UG5IUEhaTUgzdTgzSVdHd3JTRmdzU3V1dXRQTlpTeGFIdzRieXJCc3BDSThPSFBTeU40WHFrUW5wZmF0Z2Z6ZFRXZkx2bDhkSGYxb2dYVzM1TG14Z0h6VmRpUDNaaG9tZEdyT2REQWt6SXBCcVhiV2JTcVZFc2JnbjBmSEFNWExMcmQ3VVhkYTBiVU9icVhFdDgxLWVGX0RvSG56NTdtVTJ0YVpOSVlfLWw0SUxqdDE1SUN0dldYeDEzcUs1MGpzTmxiQ2x6SS1XRW9LdVhaNUU?oc=5": {
       "summary": "",
       "sentiment": 0,
       "importance": "mineure"
     },
-    "https://news.google.com/rss/articles/CBMi0wFBVV95cUxPclFfcVo5VW9xXzZEdER6MmU5di1ySHVJa2VFSmxlcnZEWEpGZmp5QmpobmlxQU1GYUd1dUdObUxuTXJLbHFtNHZTVHYyQ2k0RmY2X0twNHAxNGhGSC1DSy1weGV3UlJUdU5HamhnOXdYMlpNOWlkeVBobGdzM0p4cmdJOW02VWVTdVFpVERkTWhFS2xvWWxTeXBmOFVjaEgzaC1xZ1V5LThpSlM5ZmRDQTR4MFR6LWNFUWZxTUtNM3IzY2plZHN2V2dSR1pXdDVFSlRN?oc=5": {
+    "https://news.google.com/rss/articles/CBMijwFBVV95cUxQM2N3WGQwOVo3QmtxbUVTYTlQcnpRcUxKRmdjU3llU0ZQRnZheFhLLWhXX1FuNzhlMFZoanpxcy05RUtrWHAwWTVGemplNzRDZkVTWXVYMzRXQmIxakw1VHVySnJ6aWVOUHJ5aGc4N25WaE1hTGpvY0l3eXBna3BHRXNFZm1Ickg5bTZSbzk3SQ?oc=5": {
       "summary": "",
       "sentiment": 0,
       "importance": "mineure"
     },
-    "https://news.google.com/rss/articles/CBMiwgFBVV95cUxNZ191RjJLclhPR0xGZGU2U25NZVpSc1Ntb1pJWl9SM0gxbUxMZndNcjExcHRNa05OV3plT1lOZXJ4aUdpNWp2ZGRKLUtBWDlGaUdsWFU1T283S2UwMTZQYjdMQXUtdF9JYmc4bEpFV3liT3Q3Tjlpbmk3TXRwa05WSzgxSjVQb1FBUXRiaUhVUnB2WndhRDhBODk5TDg5ZGRJeVhxaGwxVUtlLTRlQi1tWFpOeFVpcWN4dFQ1YkpXMUVhUQ?oc=5": {
+    "https://news.google.com/rss/articles/CBMimgFBVV95cUxOYTdaS2lEbkhtUUR2enN1czRGb1EycVl1ZG9YX29JUHQ3TUdUN1FjdTU0T29uWThmSVNWM0JHOFRGOW9CSDB0X3VtTHFRalZtQTRsTl9Hd2pYZHJDVVItU1pheGE0QXZZZ2xkM051eUlnazZBMXQwT2VXbFp0NWwyNDBob19LeXU5enduQ0xaTlVsWUZOeFZwaDlR?oc=5": {
       "summary": "",
       "sentiment": 0,
       "importance": "mineure"
     },
-    "https://news.google.com/rss/articles/CBMipwFBVV95cUxObXhkdXVyNWpiOFZxMFIteGl1TExZWjJNZVdnTEJWUE42T1ZSamVrczNvWXExbHNIaTFRdk5UdW9nRFhaYzZEQnAzS1lHTWNTVzA4VUZ5aVpYZU1adUNTcXZkQ2dXUVYwOEdQR0xHbzlGMmZMT05NU1BEdmFwam8xNkprTUJMdXlnc0tadDhzc2g4RjQzSDlQZGgxaWdyWXliUEg4S0xoQQ?oc=5": {
+    "https://news.google.com/rss/articles/CBMihgFBVV95cUxPWEhtWFZQcDhQZXE3SndmNVZMY3RPY1RCcElCLWN0bVFVYzRUSlU2TC1DMkY3WWN5ODc4clhGemZOVVc0dm05WUhtamgyTXI4cUNuTGFoUlFabU9xeEVXbFJKVEEzZXJfWFZUY2JldDJkQWNSY2E1NjFlUXBLbmp1QW1zME14dw?oc=5": {
       "summary": "",
       "sentiment": 0,
       "importance": "mineure"

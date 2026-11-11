@@ -16,6 +16,7 @@ const {
   computeYieldOnCost,
   resampleCurveWeekly, computePeriodicChanges, computePortfolioVolatility,
   computeMaxDrawdown, computeSharpeRatio, computePortfolioRiskMetrics,
+  buildPortfolioAnalysisPayload,
 } = require('./portfolio.js');
 
 // Mock localStorage minimal — Node n'a pas cet objet nativement.
@@ -834,6 +835,34 @@ function test_compute_portfolio_risk_metrics_computes_sharpe_when_risk_free_rate
   console.log('OK: test_compute_portfolio_risk_metrics_computes_sharpe_when_risk_free_rate_given');
 }
 
+function test_build_portfolio_analysis_payload_maps_dividend_keys_to_snake_case() {
+  const positions = [{ id: 'p1', ticker: 'MC.PA', quantity: 3, buy_price: 700, buy_date: '2026-01-01' }];
+  const totals = { EUR: { value: 2100, pnlAbs: 0 }, USD: { value: 0, pnlAbs: 0 } };
+  const concentration = { totalPositions: 1, byIndex: { CAC40: 1 }, bySector: {}, byCurrency: { EUR: 2100 } };
+  const health = { avgScore: 10, scoredPositions: 1, riskAlertCount: 0, majorNewsAlertCount: 0 };
+  const attribution = [{ ticker: 'MC.PA', name: 'LVMH', index: 'CAC40', pnlAbs: 0, pnlPct: 0 }];
+  const dividendsReceived = { EUR: 15, USD: 0 };
+  const projectedDividendIncome = { EUR: { annual: 20, monthly: 1.67 }, USD: { annual: 0, monthly: 0 } };
+
+  const payload = buildPortfolioAnalysisPayload(
+    positions, totals, concentration, health, attribution,
+    dividendsReceived, projectedDividendIncome);
+
+  assert.deepStrictEqual(payload.positions, positions);
+  assert.deepStrictEqual(payload.totals, totals);
+  assert.deepStrictEqual(payload.concentration, concentration);
+  assert.deepStrictEqual(payload.health, health);
+  assert.deepStrictEqual(payload.attribution, attribution);
+  assert.deepStrictEqual(payload.dividends_received, dividendsReceived);
+  assert.deepStrictEqual(payload.projected_dividend_income, projectedDividendIncome);
+  assert.strictEqual(payload.dividendsReceived, undefined);
+  assert.deepStrictEqual(Object.keys(payload).sort(), [
+    'attribution', 'concentration', 'dividends_received', 'health',
+    'positions', 'projected_dividend_income', 'totals',
+  ]);
+  console.log('OK: test_build_portfolio_analysis_payload_maps_dividend_keys_to_snake_case');
+}
+
 function main() {
   test_validatePositionInput_accepts_positive_numbers();
   test_validatePositionInput_rejects_non_positive_quantity();
@@ -915,6 +944,7 @@ function main() {
   test_compute_sharpe_ratio_returns_null_with_insufficient_data();
   test_compute_portfolio_risk_metrics_returns_null_sharpe_without_risk_free_rate();
   test_compute_portfolio_risk_metrics_computes_sharpe_when_risk_free_rate_given();
+  test_build_portfolio_analysis_payload_maps_dividend_keys_to_snake_case();
   console.log('Tous les tests portfolio.test.js sont passés.');
 }
 

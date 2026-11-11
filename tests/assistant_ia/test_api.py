@@ -225,3 +225,95 @@ def test_financial_analysis_answers_503_when_a_generation_is_already_running(cli
     response = client.get("/financial-analysis/AAA")
 
     assert response.status_code == 503
+
+
+def test_portfolio_analysis_rejects_a_missing_token(client):
+    response = client.post("/portfolio-analysis", json={"positions": [{"ticker": "MC.PA"}]})
+    assert response.status_code == 401
+
+
+def test_portfolio_analysis_rejects_a_wrong_token(client):
+    response = client.post(
+        "/portfolio-analysis", json={"positions": [{"ticker": "MC.PA"}]},
+        headers={"X-Bot-Token": "mauvais"})
+    assert response.status_code == 401
+
+
+def test_portfolio_analysis_rejects_empty_positions(client, monkeypatch):
+    monkeypatch.setattr(api.usage, "budget_exceeded", lambda **kwargs: False)
+    monkeypatch.setattr(api, "_frequence_portefeuille", api.limits.RateLimiter(100, 60))
+    response = client.post(
+        "/portfolio-analysis", json={"positions": []},
+        headers={"X-Bot-Token": "secret-token"})
+    assert response.status_code == 400
+
+
+def test_portfolio_analysis_rejects_missing_positions_field(client, monkeypatch):
+    monkeypatch.setattr(api.usage, "budget_exceeded", lambda **kwargs: False)
+    monkeypatch.setattr(api, "_frequence_portefeuille", api.limits.RateLimiter(100, 60))
+    response = client.post(
+        "/portfolio-analysis", json={}, headers={"X-Bot-Token": "secret-token"})
+    assert response.status_code == 400
+
+
+def test_portfolio_analysis_rejects_too_many_positions(client, monkeypatch):
+    monkeypatch.setattr(api.usage, "budget_exceeded", lambda **kwargs: False)
+    monkeypatch.setattr(api, "_frequence_portefeuille", api.limits.RateLimiter(100, 60))
+    trop = [{"ticker": f"T{i}"} for i in range(api.portfolio_analysis.MAX_POSITIONS + 1)]
+    response = client.post(
+        "/portfolio-analysis", json={"positions": trop},
+        headers={"X-Bot-Token": "secret-token"})
+    assert response.status_code == 400
+
+
+def test_portfolio_analysis_refuses_when_the_daily_budget_is_exceeded(client, monkeypatch):
+    monkeypatch.setattr(api.usage, "budget_exceeded", lambda **kwargs: True)
+    response = client.post(
+        "/portfolio-analysis", json={"positions": [{"ticker": "MC.PA"}]},
+        headers={"X-Bot-Token": "secret-token"})
+    assert response.status_code == 429
+
+
+def test_portfolio_analysis_returns_the_result_from_run_portfolio_analysis(client, monkeypatch):
+    monkeypatch.setattr(api.usage, "budget_exceeded", lambda **kwargs: False)
+    monkeypatch.setattr(api, "_frequence_portefeuille", api.limits.RateLimiter(100, 60))
+    attendu = {"disponible": True, "erreur": None, "resultat": {"resume_global": "ok"}}
+    monkeypatch.setattr(api.portfolio_analysis, "run_portfolio_analysis", lambda payload: attendu)
+
+    response = client.post(
+        "/portfolio-analysis", json={"positions": [{"ticker": "MC.PA"}]},
+        headers={"X-Bot-Token": "secret-token"})
+
+    assert response.status_code == 200
+    assert response.json() == attendu
+
+
+def test_portfolio_analysis_returns_503_when_a_concurrent_analysis_is_already_running(client, monkeypatch):
+    monkeypatch.setattr(api.usage, "budget_exceeded", lambda **kwargs: False)
+    monkeypatch.setattr(api, "_frequence_portefeuille", api.limits.RateLimiter(100, 60))
+    monkeypatch.setattr(api, "_concurrence_portefeuille", api.limits.ConcurrencyLimiter(1))
+    api._concurrence_portefeuille.tente()  # une analyse déjà en cours occupe la seule place
+
+    response = client.post(
+        "/portfolio-analysis", json={"positions": [{"ticker": "MC.PA"}]},
+        headers={"X-Bot-Token": "secret-token"})
+
+    assert response.status_code == 503
+
+
+def test_portfolio_analysis_last_rejects_a_missing_token(client):
+    response = client.get("/portfolio-analysis/last")
+    assert response.status_code == 401
+
+
+def test_portfolio_analysis_last_returns_null_without_history(client, monkeypatch):
+    monkeypatch.setattr(api.portfolio_analysis, "last_analysis_timestamp", lambda **kwargs: None)
+    response = client.get("/portfolio-analysis/last", headers={"X-Bot-Token": "secret-token"})
+    assert response.status_code == 200
+    assert response.json() == {"horodatage": None}
+
+
+def test_portfolio_analysis_last_returns_the_stored_timestamp(client, monkeypatch):
+    monkeypatch.setattr(api.portfolio_analysis, "last_analysis_timestamp", lambda **kwargs: "2026-11-11T00:00:00Z")
+    response = client.get("/portfolio-analysis/last", headers={"X-Bot-Token": "secret-token"})
+    assert response.json() == {"horodatage": "2026-11-11T00:00:00Z"}

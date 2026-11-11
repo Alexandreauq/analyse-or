@@ -115,7 +115,19 @@ def _parse_verdict(text: str) -> dict | None:
         parsed = json.loads(matches[-1])
     except json.JSONDecodeError:
         return None
-    return parsed if isinstance(parsed, dict) else None
+    if not isinstance(parsed, dict):
+        return None
+    # Normalise ici, une seule fois, plutot que de laisser chaque
+    # appelant (bot.py) comparer le texte brut du modele : une variante
+    # de casse/espaces sur "verdict"/"confiance" (ex. "Faible", " faible")
+    # ferait sinon echouer silencieusement une comparaison =="faible" --
+    # exactement la classe de bug de l'incident du 2026-11-10 (une
+    # recommandation capturee mais jamais appliquee), un niveau plus bas.
+    for key in ("verdict", "confiance"):
+        value = parsed.get(key)
+        if isinstance(value, str):
+            parsed[key] = value.strip().lower()
+    return parsed
 
 
 def _append_log(entry: dict, path: str = SHADOW_LOG_PATH) -> None:

@@ -189,6 +189,18 @@ def test_parse_verdict_takes_last_json_block_when_several_present():
     }
 
 
+def test_parse_verdict_normalizes_case_and_whitespace():
+    # Trouve en revue (correctif confiance->taille du 2026-11-10) :
+    # une variante de casse/espaces du modele (" Faible ", "OPPOSERAIT")
+    # ferait sinon echouer silencieusement une comparaison =="faible"/
+    # =="opposerait" cote appelant (bot.py), exactement la classe de
+    # bug que ce correctif existe pour fermer.
+    text = '{"verdict": " OPPOSERAIT", "confiance": "Faible ", "raison": "test"}'
+    assert ai_shadow._parse_verdict(text) == {
+        "verdict": "opposerait", "confiance": "faible", "raison": "test"
+    }
+
+
 def test_describe_candles_skips_malformed_entries():
     candles = [
         {"time": "2026-10-28 12:00:00", "open": 1.0, "high": 2.0, "low": 0.5, "close": 1.5},

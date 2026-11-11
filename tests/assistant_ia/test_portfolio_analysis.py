@@ -90,3 +90,57 @@ def test_enrichit_positions_keeps_the_position_when_ticker_is_unknown():
 
     assert enrichies[0]["position"] == positions[0]
     assert "erreur" in enrichies[0]["fiche"]
+
+
+def test_lit_derniere_analyse_returns_none_when_file_absent(tmp_path):
+    chemin = str(tmp_path / "absent.jsonl")
+    assert portfolio_analysis._lit_derniere_analyse(chemin) is None
+
+
+def test_lit_derniere_analyse_returns_the_last_valid_line(tmp_path):
+    chemin = tmp_path / "historique.jsonl"
+    chemin.write_text(
+        json.dumps({"horodatage": "2026-11-01T00:00:00Z", "resultat": {"resume_global": "premiere"}}) + "\n"
+        + json.dumps({"horodatage": "2026-11-05T00:00:00Z", "resultat": {"resume_global": "derniere"}}) + "\n",
+        encoding="utf-8",
+    )
+    derniere = portfolio_analysis._lit_derniere_analyse(str(chemin))
+    assert derniere["resultat"]["resume_global"] == "derniere"
+
+
+def test_lit_derniere_analyse_skips_a_corrupted_last_line(tmp_path):
+    chemin = tmp_path / "historique.jsonl"
+    chemin.write_text(
+        json.dumps({"horodatage": "2026-11-01T00:00:00Z", "resultat": {"resume_global": "valide"}}) + "\n"
+        + "{ligne corrompue\n",
+        encoding="utf-8",
+    )
+    derniere = portfolio_analysis._lit_derniere_analyse(str(chemin))
+    assert derniere["resultat"]["resume_global"] == "valide"
+
+
+def test_last_analysis_timestamp_returns_none_without_history(tmp_path):
+    chemin = str(tmp_path / "absent.jsonl")
+    assert portfolio_analysis.last_analysis_timestamp(chemin) is None
+
+
+def test_last_analysis_timestamp_returns_the_last_horodatage(tmp_path):
+    chemin = tmp_path / "historique.jsonl"
+    chemin.write_text(
+        json.dumps({"horodatage": "2026-11-05T00:00:00Z", "resultat": {}}) + "\n", encoding="utf-8")
+    assert portfolio_analysis.last_analysis_timestamp(str(chemin)) == "2026-11-05T00:00:00Z"
+
+
+def test_append_history_adds_a_line_to_the_file(tmp_path):
+    chemin = tmp_path / "historique.jsonl"
+    assert portfolio_analysis._append_history({"horodatage": "2026-11-11T00:00:00Z"}, str(chemin)) is True
+    contenu = chemin.read_text(encoding="utf-8")
+    assert json.loads(contenu.strip())["horodatage"] == "2026-11-11T00:00:00Z"
+
+
+def test_append_history_returns_false_without_raising_when_write_fails(tmp_path):
+    # Un dossier a la place du fichier fait echouer open(..., "a") -- cas
+    # improbable en production, mais verifie le contrat "jamais lever".
+    chemin = tmp_path / "un_dossier"
+    chemin.mkdir()
+    assert portfolio_analysis._append_history({"horodatage": "x"}, str(chemin)) is False

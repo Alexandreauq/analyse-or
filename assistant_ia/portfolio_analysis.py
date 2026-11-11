@@ -78,3 +78,41 @@ def _enrichit_positions(positions: list[dict], *, indices_source) -> list[dict]:
         fiche = tools.fiche_entreprise(position.get("ticker", ""), indices_source=indices_source)
         enrichies.append({"position": position, "fiche": fiche})
     return enrichies
+
+
+def _lit_derniere_analyse(path: str = HISTORY_PATH) -> dict | None:
+    """Derniere ligne valide du journal, ou None si absent/vide/toutes les
+    lignes corrompues -- jamais d'exception (meme contrat que
+    ibkr_bot.journal.read_runs)."""
+    try:
+        with open(path, "r", encoding="utf-8") as fh:
+            lignes = fh.readlines()
+    except Exception:
+        return None
+    for ligne in reversed(lignes):
+        ligne = ligne.strip()
+        if not ligne:
+            continue
+        try:
+            return json.loads(ligne)
+        except json.JSONDecodeError:
+            continue
+    return None
+
+
+def last_analysis_timestamp(path: str = HISTORY_PATH) -> str | None:
+    derniere = _lit_derniere_analyse(path)
+    return derniere.get("horodatage") if derniere else None
+
+
+def _append_history(entry: dict, path: str = HISTORY_PATH) -> bool:
+    """Ajoute une ligne JSON au journal append-only. Renvoie False (sans
+    jamais lever) si l'ecriture echoue -- meme contrat que
+    ibkr_bot.journal.append_run."""
+    try:
+        with open(path, "a", encoding="utf-8") as fh:
+            fh.write(json.dumps(entry, ensure_ascii=False) + "\n")
+        return True
+    except Exception as e:
+        print(f"Erreur journalisation analyse portefeuille : {e}")
+        return False

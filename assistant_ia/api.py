@@ -189,4 +189,11 @@ async def portfolio_analysis_route(request: Request, x_bot_token: str | None = H
 @app.get("/portfolio-analysis/last")
 def portfolio_analysis_last(x_bot_token: str | None = Header(default=None)):
     _check_token(x_bot_token)
-    return {"horodatage": portfolio_analysis.last_analysis_timestamp()}
+    resultat = portfolio_analysis.derniere_analyse_complete()
+    return {"disponible": resultat is not None, "resultat": resultat}
+
+
+@app.get("/portfolio-analysis/history")
+def portfolio_analysis_history(x_bot_token: str | None = Header(default=None)):
+    _check_token(x_bot_token)
+    return {"historique": portfolio_analysis.historique_sante()}

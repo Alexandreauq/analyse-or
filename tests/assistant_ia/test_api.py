@@ -306,14 +306,28 @@ def test_portfolio_analysis_last_rejects_a_missing_token(client):
     assert response.status_code == 401
 
 
-def test_portfolio_analysis_last_returns_null_without_history(client, monkeypatch):
-    monkeypatch.setattr(api.portfolio_analysis, "last_analysis_timestamp", lambda **kwargs: None)
+def test_portfolio_analysis_last_returns_disponible_false_without_history(client, monkeypatch):
+    monkeypatch.setattr(api.portfolio_analysis, "derniere_analyse_complete", lambda **kwargs: None)
     response = client.get("/portfolio-analysis/last", headers={"X-Bot-Token": "secret-token"})
     assert response.status_code == 200
-    assert response.json() == {"horodatage": None}
+    assert response.json() == {"disponible": False, "resultat": None}
 
 
-def test_portfolio_analysis_last_returns_the_stored_timestamp(client, monkeypatch):
-    monkeypatch.setattr(api.portfolio_analysis, "last_analysis_timestamp", lambda **kwargs: "2026-11-11T00:00:00Z")
+def test_portfolio_analysis_last_returns_the_stored_resultat(client, monkeypatch):
+    resultat_stocke = {"resume_global": "ok", "sante_globale": 42, "par_ligne": [], "comparaison_precedente": None, "horodatage": "2026-11-11T00:00:00Z"}
+    monkeypatch.setattr(api.portfolio_analysis, "derniere_analyse_complete", lambda **kwargs: resultat_stocke)
     response = client.get("/portfolio-analysis/last", headers={"X-Bot-Token": "secret-token"})
-    assert response.json() == {"horodatage": "2026-11-11T00:00:00Z"}
+    assert response.json() == {"disponible": True, "resultat": resultat_stocke}
+
+
+def test_portfolio_analysis_history_rejects_a_missing_token(client):
+    response = client.get("/portfolio-analysis/history")
+    assert response.status_code == 401
+
+
+def test_portfolio_analysis_history_returns_the_points(client, monkeypatch):
+    points = [{"horodatage": "2026-11-01T00:00:00Z", "sante_globale": 10}]
+    monkeypatch.setattr(api.portfolio_analysis, "historique_sante", lambda **kwargs: points)
+    response = client.get("/portfolio-analysis/history", headers={"X-Bot-Token": "secret-token"})
+    assert response.status_code == 200
+    assert response.json() == {"historique": points}

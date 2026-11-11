@@ -2964,7 +2964,7 @@ function portfolioFormHtml(companies) {
       <div class="portfolio-form-row">
         <input class="list-search" type="number" id="portfolioFormQuantity" placeholder="Quantité" min="0" step="any" required>
         <input class="list-search" type="number" id="portfolioFormPrice" placeholder="Prix d'achat" min="0" step="any" required>
-        <input class="list-search" type="date" id="portfolioFormDate" required>
+        <input class="list-search" type="date" id="portfolioFormDate">
       </div>
       <p class="portfolio-form-error" id="portfolioFormError" hidden></p>
       <button class="toggle-btn" type="submit">Ajouter</button>
@@ -3941,7 +3941,7 @@ function wirePortfolioForm() {
     const ticker = document.getElementById('portfolioFormTicker').value;
     const quantity = parseFloat(document.getElementById('portfolioFormQuantity').value);
     const buyPrice = parseFloat(document.getElementById('portfolioFormPrice').value);
-    const buyDate = document.getElementById('portfolioFormDate').value;
+    const buyDate = document.getElementById('portfolioFormDate').value || new Date().toISOString().slice(0, 10);
     const errorEl = document.getElementById('portfolioFormError');
     if (!ticker) {
       errorEl.textContent = 'Choisis une entreprise.';

@@ -23,6 +23,12 @@
           "price": 4114.5,
           "decision": "garder",
           "raison": "echec de l'appel API, position gardee par defaut"
+        },
+        {
+          "date": "2026-11-10",
+          "price": 4030.199951171875,
+          "decision": "garder",
+          "raison": "echec de l'appel API, position gardee par defaut"
         }
       ]
     }

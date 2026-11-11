@@ -116,3 +116,108 @@ def _append_history(entry: dict, path: str = HISTORY_PATH) -> bool:
     except Exception as e:
         print(f"Erreur journalisation analyse portefeuille : {e}")
         return False
+
+
+def _describe_positions(positions_enrichies: list[dict]) -> str:
+    lignes = []
+    for item in positions_enrichies:
+        position = item["position"]
+        fiche = item["fiche"]
+        ticker = position.get("ticker", "?")
+        if "erreur" in fiche:
+            lignes.append(
+                f"- {ticker} : quantite={position.get('quantity')}, "
+                f"prix d'achat={position.get('buy_price')}, "
+                f"date d'achat={position.get('buy_date')} -- donnee indice "
+                f"indisponible (ticker retire du site)."
+            )
+            continue
+        alertes = fiche.get("alerts") or []
+        alertes_txt = ", ".join(a.get("kind", "?") for a in alertes) if alertes else "aucune"
+        lignes.append(
+            f"- {ticker} ({fiche.get('name')}, {fiche.get('index')}, "
+            f"secteur {fiche.get('sector')}) : quantite={position.get('quantity')}, "
+            f"prix d'achat={position.get('buy_price')}, "
+            f"date d'achat={position.get('buy_date')}, "
+            f"score actuel={fiche.get('score')}, alertes actives={alertes_txt}."
+        )
+    return "\n".join(lignes) if lignes else "Aucune position."
+
+
+def _describe_metriques(metriques: dict) -> str:
+    lignes = []
+    totals = metriques.get("totals")
+    if isinstance(totals, dict):
+        for devise in ("EUR", "USD"):
+            t = totals.get(devise)
+            if isinstance(t, dict) and (t.get("value") or t.get("pnlAbs")):
+                lignes.append(
+                    f"Valeur totale {devise} : {t.get('value')}, "
+                    f"P&L latent {devise} : {t.get('pnlAbs')}"
+                )
+    health = metriques.get("health")
+    if isinstance(health, dict):
+        lignes.append(
+            f"Score moyen du portefeuille (parts egales) : {health.get('avgScore')}, "
+            f"positions avec alerte risque : {health.get('riskAlertCount')}, "
+            f"positions avec actu majeure : {health.get('majorNewsAlertCount')}"
+        )
+    concentration = metriques.get("concentration")
+    if isinstance(concentration, dict):
+        if concentration.get("byIndex"):
+            lignes.append(f"Repartition par indice : {concentration.get('byIndex')}")
+        if concentration.get("bySector"):
+            lignes.append(f"Repartition par secteur : {concentration.get('bySector')}")
+    dividendes = metriques.get("dividends_received")
+    if isinstance(dividendes, dict) and (dividendes.get("EUR") or dividendes.get("USD")):
+        lignes.append(f"Dividendes deja encaisses : {dividendes}")
+    projection = metriques.get("projected_dividend_income")
+    if isinstance(projection, dict):
+        lignes.append(f"Revenu de dividendes projete (TTM) : {projection}")
+    return "\n".join(lignes) if lignes else "Aucune metrique transmise."
+
+
+def _build_prompt(positions_enrichies: list[dict], metriques: dict, derniere_analyse: dict | None) -> str:
+    if derniere_analyse:
+        resume_precedent = derniere_analyse.get("resultat", {}).get("resume_global", "")
+        comparaison_consigne = (
+            f"Voici le resume de ta derniere analyse de ce portefeuille, du "
+            f"{derniere_analyse.get('horodatage')} : \"{resume_precedent}\". Compare "
+            f"la situation actuelle a cette derniere analyse dans le champ "
+            f"\"comparaison_precedente\" (ce qui a change : nouvelles lignes, lignes "
+            f"sorties, evolution du risque ou de l'actualite)."
+        )
+    else:
+        comparaison_consigne = (
+            "Aucune analyse precedente de ce portefeuille n'existe : mets le champ "
+            "\"comparaison_precedente\" a null."
+        )
+    return (
+        "Tu analyses le portefeuille actions personnel d'un utilisateur du site "
+        "\"AI Investment\" (analyse-or). Voici ses positions actuellement detenues, "
+        "avec les donnees du site pour chacune :\n\n"
+        f"{_describe_positions(positions_enrichies)}\n\n"
+        "Metriques globales deja calculees pour ce portefeuille :\n"
+        f"{_describe_metriques(metriques)}\n\n"
+        f"{comparaison_consigne}\n\n"
+        "Pour les lignes qui te semblent les plus exposees (alerte active, forte "
+        "concentration, mouvement de prix marque), utilise web_search pour verifier "
+        "s'il y a une actualite recente pertinente -- ne cherche pas systematiquement "
+        "sur chaque ligne, concentre les recherches sur ce qui le merite vraiment.\n\n"
+        "Pour chaque position, donne une recommandation parmi exactement ces quatre "
+        "valeurs : \"garder\", \"renforcer\", \"alleger\", \"vendre\", avec une "
+        "justification d'une phrase. Donne aussi un resume global de 2 a 3 phrases sur "
+        "l'equilibre du portefeuille (concentration, risque, qualite generale), et une "
+        "liste des points d'attention (lignes avec une alerte active ou une actualite "
+        "negative trouvee).\n\n"
+        "Termine ta reponse par un bloc JSON seul, delimite par des balises de bloc de "
+        "code json (```json puis ```), exactement sous cette forme :\n"
+        "```json\n"
+        "{\n"
+        "  \"resume_global\": \"...\",\n"
+        "  \"points_attention\": [{\"ticker\": \"...\", \"raison\": \"...\"}],\n"
+        "  \"par_ligne\": [{\"ticker\": \"...\", \"reco\": \"garder\", \"justification\": \"...\"}],\n"
+        "  \"comparaison_precedente\": \"...\"\n"
+        "}\n"
+        "```"
+    )

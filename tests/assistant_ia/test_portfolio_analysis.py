@@ -144,3 +144,43 @@ def test_append_history_returns_false_without_raising_when_write_fails(tmp_path)
     chemin = tmp_path / "un_dossier"
     chemin.mkdir()
     assert portfolio_analysis._append_history({"horodatage": "x"}, str(chemin)) is False
+
+
+def test_build_prompt_includes_each_position_ticker_and_quantity():
+    positions_enrichies = [{
+        "position": {"ticker": "MC.PA", "quantity": 3, "buy_price": 700.0, "buy_date": "2026-01-01"},
+        "fiche": {"name": "LVMH", "index": "CAC40", "sector": "Consumer Cyclical", "score": 42, "alerts": []},
+    }]
+    prompt = portfolio_analysis._build_prompt(positions_enrichies, {}, None)
+    assert "MC.PA" in prompt
+    assert "quantite=3" in prompt
+
+
+def test_build_prompt_marks_unknown_ticker_data_as_unavailable():
+    positions_enrichies = [{
+        "position": {"ticker": "INCONNU.XX", "quantity": 1, "buy_price": 10.0, "buy_date": "2026-01-01"},
+        "fiche": {"erreur": "ticker introuvable"},
+    }]
+    prompt = portfolio_analysis._build_prompt(positions_enrichies, {}, None)
+    assert "donnee indice indisponible" in prompt
+
+
+def test_build_prompt_tells_the_model_to_output_null_comparison_without_history():
+    prompt = portfolio_analysis._build_prompt([], {}, None)
+    assert "comparaison_precedente" in prompt
+    assert "null" in prompt
+
+
+def test_build_prompt_includes_the_previous_summary_when_history_exists():
+    derniere_analyse = {
+        "horodatage": "2026-11-05T00:00:00Z",
+        "resultat": {"resume_global": "portefeuille equilibre, aucune alerte"},
+    }
+    prompt = portfolio_analysis._build_prompt([], {}, derniere_analyse)
+    assert "portefeuille equilibre, aucune alerte" in prompt
+
+
+def test_build_prompt_requests_a_json_code_block():
+    prompt = portfolio_analysis._build_prompt([], {}, None)
+    assert "```json" in prompt
+    assert '"par_ligne"' in prompt

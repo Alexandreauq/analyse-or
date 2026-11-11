@@ -643,6 +643,23 @@ function computePortfolioRiskMetrics(curve, riskFreeRatePct) {
   };
 }
 
+/**
+ * Assemble le payload envoye a POST /portfolio-analysis -- une seule
+ * fonction pour que index.html n'ait jamais a construire cet objet a la
+ * main (donc jamais a desynchroniser ses cles de celles lues par
+ * assistant_ia/portfolio_analysis.py).
+ */
+function buildPortfolioAnalysisPayload(
+  positions, totals, concentration, health, attribution,
+  dividendsReceived, projectedDividendIncome,
+) {
+  return {
+    positions, totals, concentration, health, attribution,
+    dividends_received: dividendsReceived,
+    projected_dividend_income: projectedDividendIncome,
+  };
+}
+
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
     PORTFOLIO_STORAGE_KEY, validatePositionInput, createPosition,
@@ -657,5 +674,6 @@ if (typeof module !== 'undefined' && module.exports) {
     computeYieldOnCost,
     resampleCurveWeekly, computePeriodicChanges, computePortfolioVolatility,
     computeMaxDrawdown, computeSharpeRatio, computePortfolioRiskMetrics,
+    buildPortfolioAnalysisPayload,
   };
 }

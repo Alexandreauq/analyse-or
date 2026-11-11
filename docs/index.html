@@ -2704,11 +2704,13 @@ function _portfolioAiAnalysisResultHtml(resultat) {
     ? (resultat.points_attention || []).map(p => `
         <div class="price-row"><span class="price-label">${escHtml(p.ticker)}</span><span class="price-value">${escHtml(p.raison)}</span></div>`).join('')
     : '<div class="list-empty">Aucun point d\'attention particulier.</div>';
-  const ligneHtml = (resultat.par_ligne || []).map(l => `
+  const ligneHtml = (resultat.par_ligne || []).length
+    ? (resultat.par_ligne || []).map(l => `
       <div class="price-row">
-        <span class="price-label"><a href="#indices/${encodeURIComponent(l.ticker)}">${escHtml(l.ticker)}</a> — ${_portfolioAiRecoLabel(l.reco)}</span>
+        <span class="price-label"><a href="#indices/${encodeURIComponent(l.ticker)}">${escHtml(l.ticker)}</a> — ${escHtml(_portfolioAiRecoLabel(l.reco))}</span>
         <span class="price-value">${escHtml(l.justification || '')}</span>
-      </div>`).join('');
+      </div>`).join('')
+    : '<div class="list-empty">Aucune recommandation disponible.</div>';
   const comparaisonHtml = resultat.comparaison_precedente
     ? `<h3 class="portfolio-analysis-title">Depuis la dernière fois</h3><div class="hero-sub">${escHtml(resultat.comparaison_precedente)}</div>`
     : '';

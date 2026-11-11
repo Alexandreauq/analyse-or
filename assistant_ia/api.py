@@ -13,6 +13,7 @@ import sys
 from fastapi import FastAPI, Header, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
+from starlette.concurrency import run_in_threadpool
 
 import assistant_ia.assistant as assistant
 import assistant_ia.limits as limits
@@ -177,7 +178,10 @@ async def portfolio_analysis_route(request: Request, x_bot_token: str | None = H
     if not _concurrence_portefeuille.tente():
         raise HTTPException(status_code=503, detail="Une analyse est deja en cours : reessaie dans un instant.")
     try:
-        return portfolio_analysis.run_portfolio_analysis(payload)
+        # Appel synchrone lent (requete Anthropic jusqu'a plusieurs minutes) :
+        # execute hors de la boucle d'evenements pour ne pas geler les autres
+        # routes du service pendant ce temps.
+        return await run_in_threadpool(portfolio_analysis.run_portfolio_analysis, payload)
     finally:
         _concurrence_portefeuille.libere()
 

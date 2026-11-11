@@ -21,7 +21,11 @@ import assistant_ia.usage as usage
 
 MODEL = usage.MODEL_SONNET_5_5
 MAX_TOKENS = 8000
-REQUEST_TIMEOUT_SECONDS = 60.0
+# Large : jusqu'a WEB_SEARCH_MAX_USES recherches + MAX_TOKENS de sortie sur
+# MAX_POSITIONS lignes peuvent depasser la minute. Un timeout cote client
+# n'annule pas la facturation cote Anthropic mais saute usage.record_usage
+# -> le budget quotidien partage sous-compterait la depense reelle.
+REQUEST_TIMEOUT_SECONDS = 180.0
 WEB_SEARCH_MAX_USES = 4
 MAX_POSITIONS = 50
 HISTORY_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "portfolio_analysis_history.jsonl")
@@ -55,9 +59,10 @@ def _parse_resultat(texte: str) -> dict | None:
     parsed.setdefault("comparaison_precedente", None)
     if not isinstance(parsed["par_ligne"], list):
         return None
+    # Les entrees non-dict (ex. chaine nue emise par erreur) sont retirees,
+    # pas seulement ignorees : sinon elles atteindraient le front tel quel.
+    parsed["par_ligne"] = [ligne for ligne in parsed["par_ligne"] if isinstance(ligne, dict)]
     for ligne in parsed["par_ligne"]:
-        if not isinstance(ligne, dict):
-            continue
         reco = ligne.get("reco")
         if isinstance(reco, str):
             reco = reco.strip().lower()
@@ -132,12 +137,19 @@ def _describe_positions(positions_enrichies: list[dict]) -> str:
                 f"indisponible (ticker retire du site)."
             )
             continue
-        alertes = fiche.get("alerts") or []
+        # kind "info" = marqueur neutre "aucun signal actif" -- pas une alerte.
+        alertes = [a for a in (fiche.get("alerts") or []) if isinstance(a, dict) and a.get("kind") != "info"]
         alertes_txt = ", ".join(a.get("kind", "?") for a in alertes) if alertes else "aucune"
+        prix_actuel = fiche.get("current_price")
+        prix_actuel_txt = (
+            f", prix actuel={prix_actuel}"
+            if isinstance(prix_actuel, (int, float)) and not isinstance(prix_actuel, bool)
+            else ""
+        )
         lignes.append(
             f"- {ticker} ({fiche.get('name')}, {fiche.get('index')}, "
             f"secteur {fiche.get('sector')}) : quantite={position.get('quantity')}, "
-            f"prix d'achat={position.get('buy_price')}, "
+            f"prix d'achat={position.get('buy_price')}{prix_actuel_txt}, "
             f"date d'achat={position.get('buy_date')}, "
             f"score actuel={fiche.get('score')}, alertes actives={alertes_txt}."
         )
@@ -168,6 +180,17 @@ def _describe_metriques(metriques: dict) -> str:
             lignes.append(f"Repartition par indice : {concentration.get('byIndex')}")
         if concentration.get("bySector"):
             lignes.append(f"Repartition par secteur : {concentration.get('bySector')}")
+    attribution = metriques.get("attribution")
+    if isinstance(attribution, list):
+        for entree in attribution:
+            if not isinstance(entree, dict):
+                continue
+            pnl_abs, pnl_pct = entree.get("pnlAbs"), entree.get("pnlPct")
+            if isinstance(pnl_abs, (int, float)) and isinstance(pnl_pct, (int, float)):
+                lignes.append(
+                    f"Attribution de performance : {entree.get('ticker')} : "
+                    f"P&L {pnl_abs:+.2f} ({pnl_pct:+.1f}%)"
+                )
     dividendes = metriques.get("dividends_received")
     if isinstance(dividendes, dict) and (dividendes.get("EUR") or dividendes.get("USD")):
         lignes.append(f"Dividendes deja encaisses : {dividendes}")

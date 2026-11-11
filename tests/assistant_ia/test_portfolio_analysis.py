@@ -56,6 +56,16 @@ def test_parse_resultat_replaces_an_invalid_reco_value_with_a_verifier():
     assert resultat["par_ligne"][0]["reco"] == "a_verifier"
 
 
+def test_parse_resultat_removes_non_dict_par_ligne_entries():
+    texte = (
+        '```json\n{"resume_global": "ok", "par_ligne": '
+        '[{"ticker": "MC.PA", "reco": "garder", "justification": "x"}, "entree parasite"]}\n```'
+    )
+    resultat = portfolio_analysis._parse_resultat(texte)
+    assert resultat["par_ligne"] == [{"ticker": "MC.PA", "reco": "garder", "justification": "x"}]
+    assert "entree parasite" not in resultat["par_ligne"]
+
+
 def test_parse_resultat_uses_the_last_block_when_several_are_present():
     texte = (
         '```json\n{"resume_global": "premier", "par_ligne": []}\n```\n'
@@ -184,6 +194,47 @@ def test_build_prompt_requests_a_json_code_block():
     prompt = portfolio_analysis._build_prompt([], {}, None)
     assert "```json" in prompt
     assert '"par_ligne"' in prompt
+
+
+def test_build_prompt_includes_attribution_pnl_per_position():
+    metriques = {"attribution": [
+        {"ticker": "MC.PA", "name": "LVMH", "index": "CAC40", "pnlAbs": 123.456, "pnlPct": 5.67},
+        {"ticker": "AAPL", "name": "Apple", "index": "SP500", "pnlAbs": -40.0, "pnlPct": -2.04},
+    ]}
+    prompt = portfolio_analysis._build_prompt([], metriques, None)
+    assert "Attribution de performance : MC.PA : P&L +123.46 (+5.7%)" in prompt
+    assert "Attribution de performance : AAPL : P&L -40.00 (-2.0%)" in prompt
+
+
+def test_build_prompt_includes_the_current_price_when_the_fiche_has_one():
+    positions_enrichies = [{
+        "position": {"ticker": "MC.PA", "quantity": 3, "buy_price": 700.0, "buy_date": "2026-01-01"},
+        "fiche": {"name": "LVMH", "index": "CAC40", "sector": "Consumer Cyclical", "score": 42,
+                  "alerts": [], "current_price": 655.4},
+    }]
+    prompt = portfolio_analysis._build_prompt(positions_enrichies, {}, None)
+    assert "prix actuel=655.4" in prompt
+
+
+def test_build_prompt_omits_the_current_price_when_the_fiche_has_none():
+    positions_enrichies = [{
+        "position": {"ticker": "MC.PA", "quantity": 3, "buy_price": 700.0, "buy_date": "2026-01-01"},
+        "fiche": {"name": "LVMH", "index": "CAC40", "sector": "Consumer Cyclical", "score": 42,
+                  "alerts": [], "current_price": None},
+    }]
+    prompt = portfolio_analysis._build_prompt(positions_enrichies, {}, None)
+    assert "prix actuel" not in prompt
+
+
+def test_build_prompt_treats_an_info_only_alert_as_no_active_alert():
+    positions_enrichies = [{
+        "position": {"ticker": "MC.PA", "quantity": 3, "buy_price": 700.0, "buy_date": "2026-01-01"},
+        "fiche": {"name": "LVMH", "index": "CAC40", "sector": "Consumer Cyclical", "score": 42,
+                  "alerts": [{"kind": "info", "title": "Pas de signal actif"}]},
+    }]
+    prompt = portfolio_analysis._build_prompt(positions_enrichies, {}, None)
+    assert "alertes actives=aucune" in prompt
+    assert "alertes actives=info" not in prompt
 
 
 class _FakeTextBlock:

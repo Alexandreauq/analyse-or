@@ -241,6 +241,7 @@ def test_portfolio_analysis_rejects_a_wrong_token(client):
 
 def test_portfolio_analysis_rejects_empty_positions(client, monkeypatch):
     monkeypatch.setattr(api.usage, "budget_exceeded", lambda **kwargs: False)
+    monkeypatch.setattr(api, "_frequence_portefeuille", api.limits.RateLimiter(100, 60))
     response = client.post(
         "/portfolio-analysis", json={"positions": []},
         headers={"X-Bot-Token": "secret-token"})
@@ -249,6 +250,7 @@ def test_portfolio_analysis_rejects_empty_positions(client, monkeypatch):
 
 def test_portfolio_analysis_rejects_missing_positions_field(client, monkeypatch):
     monkeypatch.setattr(api.usage, "budget_exceeded", lambda **kwargs: False)
+    monkeypatch.setattr(api, "_frequence_portefeuille", api.limits.RateLimiter(100, 60))
     response = client.post(
         "/portfolio-analysis", json={}, headers={"X-Bot-Token": "secret-token"})
     assert response.status_code == 400
@@ -256,6 +258,7 @@ def test_portfolio_analysis_rejects_missing_positions_field(client, monkeypatch)
 
 def test_portfolio_analysis_rejects_too_many_positions(client, monkeypatch):
     monkeypatch.setattr(api.usage, "budget_exceeded", lambda **kwargs: False)
+    monkeypatch.setattr(api, "_frequence_portefeuille", api.limits.RateLimiter(100, 60))
     trop = [{"ticker": f"T{i}"} for i in range(api.portfolio_analysis.MAX_POSITIONS + 1)]
     response = client.post(
         "/portfolio-analysis", json={"positions": trop},
@@ -273,6 +276,7 @@ def test_portfolio_analysis_refuses_when_the_daily_budget_is_exceeded(client, mo
 
 def test_portfolio_analysis_returns_the_result_from_run_portfolio_analysis(client, monkeypatch):
     monkeypatch.setattr(api.usage, "budget_exceeded", lambda **kwargs: False)
+    monkeypatch.setattr(api, "_frequence_portefeuille", api.limits.RateLimiter(100, 60))
     attendu = {"disponible": True, "erreur": None, "resultat": {"resume_global": "ok"}}
     monkeypatch.setattr(api.portfolio_analysis, "run_portfolio_analysis", lambda payload: attendu)
 

@@ -856,6 +856,10 @@ function test_build_portfolio_analysis_payload_maps_dividend_keys_to_snake_case(
   assert.deepStrictEqual(payload.dividends_received, dividendsReceived);
   assert.deepStrictEqual(payload.projected_dividend_income, projectedDividendIncome);
   assert.strictEqual(payload.dividendsReceived, undefined);
+  assert.deepStrictEqual(Object.keys(payload).sort(), [
+    'attribution', 'concentration', 'dividends_received', 'health',
+    'positions', 'projected_dividend_income', 'totals',
+  ]);
   console.log('OK: test_build_portfolio_analysis_payload_maps_dividend_keys_to_snake_case');
 }
 

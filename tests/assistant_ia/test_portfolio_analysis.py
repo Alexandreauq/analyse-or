@@ -60,6 +60,41 @@ def test_parse_resultat_replaces_a_boolean_sante_globale_with_none():
     assert resultat["sante_globale"] is None
 
 
+def test_parse_resultat_replaces_a_non_finite_sante_globale_with_none():
+    # json.loads accepte NaN/Infinity par defaut (hors-standard JSON) --
+    # int(float("nan")) leve ValueError et int(float("inf")) leve
+    # OverflowError : sans garde explicite, cette exception remonterait
+    # jusqu'a run_portfolio_analysis, qui n'a pas de try/except autour de
+    # cet appel precis, violant le contrat "jamais d'exception propagee".
+    texte = '```json\n{"resume_global": "ok", "par_ligne": [], "sante_globale": NaN}\n```'
+    resultat = portfolio_analysis._parse_resultat(texte)
+    assert resultat["sante_globale"] is None
+
+    texte_inf = '```json\n{"resume_global": "ok", "par_ligne": [], "sante_globale": Infinity}\n```'
+    resultat_inf = portfolio_analysis._parse_resultat(texte_inf)
+    assert resultat_inf["sante_globale"] is None
+
+
+def test_parse_resultat_replaces_an_out_of_range_sante_globale_with_none():
+    texte_haut = '```json\n{"resume_global": "ok", "par_ligne": [], "sante_globale": 500}\n```'
+    resultat_haut = portfolio_analysis._parse_resultat(texte_haut)
+    assert resultat_haut["sante_globale"] is None
+
+    texte_bas = '```json\n{"resume_global": "ok", "par_ligne": [], "sante_globale": -500}\n```'
+    resultat_bas = portfolio_analysis._parse_resultat(texte_bas)
+    assert resultat_bas["sante_globale"] is None
+
+
+def test_parse_resultat_keeps_sante_globale_at_the_exact_boundaries():
+    texte_haut = '```json\n{"resume_global": "ok", "par_ligne": [], "sante_globale": 100}\n```'
+    resultat_haut = portfolio_analysis._parse_resultat(texte_haut)
+    assert resultat_haut["sante_globale"] == 100
+
+    texte_bas = '```json\n{"resume_global": "ok", "par_ligne": [], "sante_globale": -100}\n```'
+    resultat_bas = portfolio_analysis._parse_resultat(texte_bas)
+    assert resultat_bas["sante_globale"] == -100
+
+
 def test_parse_resultat_normalizes_reco_case_and_whitespace():
     texte = (
         '```json\n{"resume_global": "ok", "par_ligne": '

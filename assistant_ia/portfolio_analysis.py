@@ -11,6 +11,7 @@
 from __future__ import annotations
 
 import json
+import math
 import os
 import re
 from datetime import datetime, timezone
@@ -60,7 +61,9 @@ def _parse_resultat(texte: str) -> dict | None:
     if not isinstance(sante, (int, float)) or isinstance(sante, bool):
         sante = None
     elif isinstance(sante, float):
-        sante = int(sante)
+        sante = int(sante) if math.isfinite(sante) else None
+    if isinstance(sante, int) and not (-100 <= sante <= 100):
+        sante = None
     parsed["sante_globale"] = sante
     if not isinstance(parsed["par_ligne"], list):
         return None

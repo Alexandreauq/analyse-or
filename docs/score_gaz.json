@@ -1,5 +1,5 @@
 {
-  "date": "2026-11-10",
+  "date": "2026-11-11",
   "commodity": "gaz",
   "label": "Gaz naturel",
   "composite_score": 6.3,
@@ -16,19 +16,19 @@
       "name": "Saisonnalité (Henry Hub)",
       "score": -10,
       "weight": 0.3333333333333333,
-      "raw_value": "2.63 $/MMBtu (moyenne saisonnière du mois : 3.69 $/MMBtu)"
+      "raw_value": "2.63 $/MMBtu (moyenne saisonnière du mois : 3.67 $/MMBtu)"
     },
     {
       "name": "Dynamique récente",
       "score": 10.0,
       "weight": 0.26666666666666666,
-      "raw_value": "+9.4% vs MM200"
+      "raw_value": "+9.7% vs MM200"
     },
     {
       "name": "Dollar (DXY)",
       "score": -10,
       "weight": 0.13333333333333333,
-      "raw_value": "102.25 (il y a 2 mois : 99.09)"
+      "raw_value": "102.24 (il y a 2 mois : 99.09)"
     },
     {
       "name": "Stocks EIA",
@@ -38,17 +38,12 @@
     }
   ],
   "technical": {
-    "note": "Cours au-dessus de la MM200 (+9.4%) — tendance haussière",
-    "spot": 3.299999952316284,
-    "ma200": 3.016415001153946,
+    "note": "Cours au-dessus de la MM200 (+9.7%) — tendance haussière",
+    "spot": 3.308000087738037,
+    "ma200": 3.0164550018310545,
     "unite": "$ / MMBtu"
   },
   "calendar": [
-    {
-      "date": "10/11/2026",
-      "label": "CPI (Indice des prix à la consommation)",
-      "kind": "Donnée"
-    },
     {
       "date": "12/11/2026",
       "label": "Inscriptions chômage (hebdo)",
@@ -83,6 +78,11 @@
       "date": "08/12–09/12/2026",
       "label": "Réunion FOMC",
       "kind": "Fed"
+    },
+    {
+      "date": "10/12/2026",
+      "label": "CPI (Indice des prix à la consommation)",
+      "kind": "Donnée"
     }
   ],
   "alerts": [],

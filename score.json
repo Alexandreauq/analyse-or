@@ -1,6 +1,6 @@
 {
-  "date": "2026-11-10",
-  "composite_score": 12.9,
+  "date": "2026-11-11",
+  "composite_score": 11.9,
   "interpretation": "Neutre — pas d'action",
   "cftc_percentile": 22.435897435897438,
   "factors": [
@@ -14,13 +14,13 @@
       "name": "Dollar (DXY)",
       "score": -10,
       "weight": 0.15,
-      "raw_value": "102.25 (il y a 2 mois : 99.09)"
+      "raw_value": "102.23 (il y a 2 mois : 99.09)"
     },
     {
       "name": "Anticipations d'inflation",
-      "score": -3.9999999999999893,
+      "score": -4.666666666666656,
       "weight": 0.15,
-      "raw_value": "2.22% (il y a ~45j : 2.34%)"
+      "raw_value": "2.20% (il y a ~45j : 2.34%)"
     },
     {
       "name": "Ton de la Fed",
@@ -48,16 +48,11 @@
     }
   ],
   "technical": {
-    "note": "Cours en-dessous de la MM200 (-10.1%) — tendance baissière",
-    "spot": 4039.699951171875,
-    "ma200": 4491.955495605469
+    "note": "Cours en-dessous de la MM200 (-9.9%) — tendance baissière",
+    "spot": 4049.0,
+    "ma200": 4492.00199584961
   },
   "calendar": [
-    {
-      "date": "10/11/2026",
-      "label": "CPI (Indice des prix à la consommation)",
-      "kind": "Donnée"
-    },
     {
       "date": "12/11/2026",
       "label": "Inscriptions chômage (hebdo)",
@@ -92,6 +87,11 @@
       "date": "08/12–09/12/2026",
       "label": "Réunion FOMC",
       "kind": "Fed"
+    },
+    {
+      "date": "10/12/2026",
+      "label": "CPI (Indice des prix à la consommation)",
+      "kind": "Donnée"
     }
   ],
   "alerts": [
@@ -99,7 +99,7 @@
       "kind": "info",
       "title": "Pas de signal actif",
       "detail": "Aucune des conditions de veille, d'entrée ou de risque n'est réunie aujourd'hui.",
-      "date": "10/11/2026"
+      "date": "11/11/2026"
     }
   ],
   "news": [

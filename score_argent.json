@@ -1,8 +1,8 @@
 {
-  "date": "2026-11-10",
+  "date": "2026-11-11",
   "commodity": "argent",
   "label": "Argent",
-  "composite_score": -12.7,
+  "composite_score": -13.2,
   "interpretation": "Neutre — pas d'action",
   "cftc_percentile": 4.487179487179487,
   "factors": [
@@ -16,7 +16,7 @@
       "name": "Dollar (DXY)",
       "score": -10,
       "weight": 0.2,
-      "raw_value": "102.25 (il y a 2 mois : 99.09)"
+      "raw_value": "102.24 (il y a 2 mois : 99.09)"
     },
     {
       "name": "Positionnement CFTC",
@@ -26,29 +26,24 @@
     },
     {
       "name": "Ratio or/argent",
-      "score": -4.314159292035398,
+      "score": -4.491150442477875,
       "weight": 0.25,
-      "raw_value": "78.4 — 28e percentile (3 ans)"
+      "raw_value": "77.6 — 28e percentile (3 ans)"
     },
     {
       "name": "Dynamique récente",
       "score": -10.0,
       "weight": 0.1,
-      "raw_value": "-25.7% vs MM200"
+      "raw_value": "-24.7% vs MM200"
     }
   ],
   "technical": {
-    "note": "Cours en-dessous de la MM200 (-25.7%) — tendance baissière",
-    "spot": 51.5099983215332,
-    "ma200": 69.29271486282349,
+    "note": "Cours en-dessous de la MM200 (-24.7%) — tendance baissière",
+    "spot": 52.20000076293945,
+    "ma200": 69.29616487503051,
     "unite": "$ / oz"
   },
   "calendar": [
-    {
-      "date": "10/11/2026",
-      "label": "CPI (Indice des prix à la consommation)",
-      "kind": "Donnée"
-    },
     {
       "date": "12/11/2026",
       "label": "Inscriptions chômage (hebdo)",
@@ -83,6 +78,11 @@
       "date": "08/12–09/12/2026",
       "label": "Réunion FOMC",
       "kind": "Fed"
+    },
+    {
+      "date": "10/12/2026",
+      "label": "CPI (Indice des prix à la consommation)",
+      "kind": "Donnée"
     }
   ],
   "alerts": [],

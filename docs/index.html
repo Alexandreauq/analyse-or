@@ -2679,11 +2679,66 @@ function portfolioAnalysisHtml(positions, companiesByTicker, currencyByIndex, pr
   `;
 }
 
-function portfolioAiAnalysisSectionHtml() {
+function portfolioAiSubsectionHtml() {
   return `
-    <div id="portfolioAiFreshness" class="hero-sub">Chargement…</div>
+    <h3 class="portfolio-analysis-title">Avis de l'IA</h3>
+    <div id="portfolioAiFreshness" class="hero-sub"></div>
     <button class="toggle-btn" type="button" id="portfolioAiAnalysisBtn">Lancer l'analyse IA</button>
+    <div id="portfolioAiChart"></div>
     <div id="portfolioAiAnalysisResult"></div>
+  `;
+}
+
+function _portfolioAiRecoLabel(reco) {
+  const labels = { garder: 'Garder', renforcer: 'Renforcer', alleger: 'Alléger', vendre: 'Vendre', a_verifier: 'À vérifier' };
+  return labels[reco] || reco;
+}
+
+function _portfolioAiSanteLabel(sante) {
+  if (typeof sante !== 'number') return '';
+  const color = sante >= 0 ? 'var(--green-500)' : 'var(--rust)';
+  return `<span class="price-value" style="color:${color}">${sante > 0 ? '+' : ''}${sante}</span>`;
+}
+
+function _portfolioAiCardsHtml(parLigne, positionsByTicker, companiesByTicker, currencyByIndex) {
+  if (!parLigne.length) {
+    return '<div class="list-empty">Aucune recommandation disponible.</div>';
+  }
+  return parLigne.map(l => {
+    const position = positionsByTicker.get(l.ticker);
+    const company = companiesByTicker[l.ticker];
+    const currency = company ? (currencyByIndex[company.index] || 'EUR') : 'EUR';
+    const symbol = CURRENCY_SYMBOL[currency] || currency;
+    const prixHtml = position && company
+      ? `<span class="hero-sub">Achat ${position.buy_price.toLocaleString('fr-FR')} ${symbol} — actuel ${(company.current_price ?? 0).toLocaleString('fr-FR')} ${symbol}</span>`
+      : '';
+    return `
+      <div class="portfolio-total-card">
+        <div class="portfolio-position-main">
+          <a class="company-name" href="#indices/${encodeURIComponent(l.ticker)}">${escHtml(company ? company.name : l.ticker)}</a>
+          ${prixHtml}
+        </div>
+        <span class="price-value">${escHtml(_portfolioAiRecoLabel(l.reco))}</span>
+        <p class="hero-sub">${escHtml(l.analyse || l.justification || '')}</p>
+      </div>`;
+  }).join('');
+}
+
+function _portfolioAiAnalysisResultHtml(resultat, positionsByTicker, companiesByTicker, currencyByIndex) {
+  const comparaisonHtml = resultat.comparaison_precedente
+    ? `<h3 class="portfolio-analysis-title">Depuis la dernière fois</h3><div class="hero-sub">${escHtml(resultat.comparaison_precedente)}</div>`
+    : '';
+  return `
+    <div class="portfolio-totals">
+      <div class="portfolio-total-card">
+        <span class="portfolio-total-label">Résumé</span>
+        <div class="hero-sub">${escHtml(resultat.resume_global || '')}</div>
+        ${typeof resultat.sante_globale === 'number' ? `<span class="portfolio-total-label">Santé jugée par l'IA</span>${_portfolioAiSanteLabel(resultat.sante_globale)}` : ''}
+      </div>
+    </div>
+    <h3 class="portfolio-analysis-title">Par entreprise</h3>
+    <div class="portfolio-ai-cards">${_portfolioAiCardsHtml(resultat.par_ligne || [], positionsByTicker, companiesByTicker, currencyByIndex)}</div>
+    ${comparaisonHtml}
   `;
 }
 
@@ -2694,63 +2749,70 @@ function _portfolioAiFreshnessLabel(horodatage) {
   return `Dernière analyse : il y a ${jours} jour${jours > 1 ? 's' : ''}.`;
 }
 
-function _portfolioAiRecoLabel(reco) {
-  const labels = { garder: 'Garder', renforcer: 'Renforcer', alleger: 'Alléger', vendre: 'Vendre', a_verifier: 'À vérifier' };
-  return labels[reco] || reco;
-}
-
-function _portfolioAiAnalysisResultHtml(resultat) {
-  const pointsHtml = (resultat.points_attention || []).length
-    ? (resultat.points_attention || []).map(p => `
-        <div class="price-row"><span class="price-label">${escHtml(p.ticker)}</span><span class="price-value">${escHtml(p.raison)}</span></div>`).join('')
-    : '<div class="list-empty">Aucun point d\'attention particulier.</div>';
-  const ligneHtml = (resultat.par_ligne || []).length
-    ? (resultat.par_ligne || []).map(l => `
-      <div class="price-row">
-        <span class="price-label"><a href="#indices/${encodeURIComponent(l.ticker)}">${escHtml(l.ticker)}</a> — ${escHtml(_portfolioAiRecoLabel(l.reco))}</span>
-        <span class="price-value">${escHtml(l.justification || '')}</span>
-      </div>`).join('')
-    : '<div class="list-empty">Aucune recommandation disponible.</div>';
-  const comparaisonHtml = resultat.comparaison_precedente
-    ? `<h3 class="portfolio-analysis-title">Depuis la dernière fois</h3><div class="hero-sub">${escHtml(resultat.comparaison_precedente)}</div>`
-    : '';
+function aiJudgmentCurveSvg(points) {
+  const usable = points.filter(p => typeof p.sante_globale === 'number' && p.horodatage);
+  if (usable.length < 2) {
+    return '<div class="empty">Pas encore assez d\'analyses passées pour tracer une évolution (au moins deux nécessaires).</div>';
+  }
+  const width = 600, height = 160, padding = 28;
+  const minVal = -100, maxVal = 100, range = maxVal - minVal;
+  const minDate = usable[0].horodatage, maxDate = usable[usable.length - 1].horodatage;
+  const dateSpanMs = new Date(maxDate) - new Date(minDate) || 1;
+  const x = d => padding + ((new Date(d) - new Date(minDate)) / dateSpanMs) * (width - padding * 2);
+  const y = v => padding + (height - padding * 2) - ((v - minVal) / range) * (height - padding * 2);
+  const pointsAttr = usable.map(p => `${x(p.horodatage).toFixed(1)},${y(p.sante_globale).toFixed(1)}`).join(' ');
+  const last = usable[usable.length - 1];
+  const color = last.sante_globale >= 0 ? 'var(--green-500)' : 'var(--rust)';
+  const zeroY = y(0).toFixed(1);
   return `
-    <h3 class="portfolio-analysis-title">Résumé</h3>
-    <div class="hero-sub">${escHtml(resultat.resume_global || '')}</div>
-    <h3 class="portfolio-analysis-title">Points d'attention</h3>
-    <div class="signal-stats">${pointsHtml}</div>
-    <h3 class="portfolio-analysis-title">Recommandations par ligne</h3>
-    <div class="signal-stats">${ligneHtml}</div>
-    ${comparaisonHtml}
-  `;
+    <svg viewBox="0 0 ${width} ${height}" class="portfolio-perf-chart" role="img" aria-label="Évolution du jugement IA sur le portefeuille">
+      <line x1="${padding}" y1="${zeroY}" x2="${width - padding}" y2="${zeroY}" stroke="var(--muted)" stroke-dasharray="4 3" />
+      <polyline points="${pointsAttr}" fill="none" stroke="${color}" stroke-width="2" />
+    </svg>
+    <div class="portfolio-perf-legend"><span style="color:${color}">● Santé jugée par l'IA (${last.sante_globale > 0 ? '+' : ''}${last.sante_globale})</span></div>`;
 }
 
-function wirePortfolioAiAnalysisSection(positions, closedPositions, companiesByTicker, currencyByIndex, dividendHistoryByTicker) {
+function wirePortfolioAiSubsection(positions, closedPositions, companiesByTicker, currencyByIndex, dividendHistoryByTicker) {
   const freshnessEl = document.getElementById('portfolioAiFreshness');
+  const chartEl = document.getElementById('portfolioAiChart');
   const btn = document.getElementById('portfolioAiAnalysisBtn');
   const resultEl = document.getElementById('portfolioAiAnalysisResult');
   if (!btn || !resultEl) return;
 
-  const refreshFreshness = async (token) => {
-    if (!freshnessEl) return;
-    try {
-      const res = await fetch('https://goldbot.fr:8445/portfolio-analysis/last', {
-        headers: { 'X-Bot-Token': token },
-      });
-      if (!res.ok) { freshnessEl.textContent = ''; return; }
-      const data = await res.json();
-      freshnessEl.textContent = _portfolioAiFreshnessLabel(data.horodatage);
-    } catch (e) {
-      freshnessEl.textContent = '';
-    }
+  const positionsByTicker = new Map(positions.map(p => [p.ticker, p]));
+
+  const renderResult = (resultat) => {
+    resultEl.innerHTML = _portfolioAiAnalysisResultHtml(resultat, positionsByTicker, companiesByTicker, currencyByIndex);
+    if (freshnessEl) freshnessEl.textContent = _portfolioAiFreshnessLabel(resultat.horodatage);
   };
 
-  // Jamais de prompt() force a l'ouverture du panneau (meme convention
-  // que fetchIbkrBotDashboard, L3239) : on ne lit le jeton que s'il est
-  // deja memorise, le bouton seul declenche getAiAssistantToken().
+  const refreshChart = async (token) => {
+    if (!chartEl) return;
+    try {
+      const res = await fetch('https://goldbot.fr:8445/portfolio-analysis/history', { headers: { 'X-Bot-Token': token } });
+      if (!res.ok) return;
+      const data = await res.json();
+      chartEl.innerHTML = aiJudgmentCurveSvg(data.historique || []);
+    } catch (e) { /* le reste de la sous-section reste utilisable sans le graphique */ }
+  };
+
   const tokenDejaMemorise = localStorage.getItem('aiAssistantToken');
-  if (tokenDejaMemorise) refreshFreshness(tokenDejaMemorise);
-  else if (freshnessEl) freshnessEl.textContent = 'Aucune analyse encore.';
+  if (tokenDejaMemorise) {
+    fetch('https://goldbot.fr:8445/portfolio-analysis/last', { headers: { 'X-Bot-Token': tokenDejaMemorise } })
+      .then(res => res.ok ? res.json() : null)
+      .then(data => {
+        if (data && data.disponible) {
+          renderResult(data.resultat);
+          btn.textContent = 'Relancer l\'analyse IA';
+        } else if (freshnessEl) {
+          freshnessEl.textContent = 'Aucune analyse encore.';
+        }
+      })
+      .catch(() => { if (freshnessEl) freshnessEl.textContent = ''; });
+    refreshChart(tokenDejaMemorise);
+  } else if (freshnessEl) {
+    freshnessEl.textContent = 'Aucune analyse encore.';
+  }
 
   btn.addEventListener('click', async () => {
     const jeton = getAiAssistantToken();
@@ -2758,7 +2820,6 @@ function wirePortfolioAiAnalysisSection(positions, closedPositions, companiesByT
     btn.disabled = true;
     const texteInitial = btn.textContent;
     btn.textContent = 'Analyse en cours…';
-    resultEl.innerHTML = '';
     try {
       const concentration = computePortfolioConcentration(positions, companiesByTicker, currencyByIndex);
       const health = computePortfolioHealth(positions, companiesByTicker);
@@ -2793,13 +2854,14 @@ function wirePortfolioAiAnalysisSection(positions, closedPositions, companiesByT
         resultEl.innerHTML = `<div class="empty">${escHtml(data.erreur || "Analyse indisponible pour le moment.")}</div>`;
         return;
       }
-      resultEl.innerHTML = _portfolioAiAnalysisResultHtml(data.resultat);
-      if (freshnessEl) freshnessEl.textContent = _portfolioAiFreshnessLabel(data.resultat.horodatage);
+      renderResult(data.resultat);
+      btn.textContent = 'Relancer l\'analyse IA';
+      refreshChart(jeton);
     } catch (e) {
       resultEl.innerHTML = '<div class="empty">Analyse indisponible pour le moment.</div>';
     } finally {
       btn.disabled = false;
-      btn.textContent = texteInitial;
+      if (btn.textContent === 'Analyse en cours…') btn.textContent = texteInitial;
     }
   });
 }
@@ -2836,15 +2898,12 @@ function renderPortfolioActionsTab(companiesByTicker, currencyByIndex) {
     },
     {
       title: 'Analyse',
-      desc: 'Concentration, santé du portefeuille selon le modèle, contribution de chaque ligne au P&L et revenu de dividendes.',
-      html: portfolioAnalysisHtml(positions, companiesByTicker, currencyByIndex, priceHistoryByTicker, dividendHistoryByTicker),
-      wire: () => wirePortfolioPerformanceBenchmarkSelectors(positions, closedPositions, companiesByTicker, currencyByIndex, priceHistoryByTicker),
-    },
-    {
-      title: 'Analyse IA',
-      desc: 'Lance une analyse par l\'assistant IA : vue d\'ensemble, points d\'attention et une recommandation (garder/renforcer/alléger/vendre) pour chaque ligne détenue.',
-      html: portfolioAiAnalysisSectionHtml(),
-      wire: () => wirePortfolioAiAnalysisSection(positions, closedPositions, companiesByTicker, currencyByIndex, dividendHistoryByTicker),
+      desc: 'Concentration, santé du portefeuille selon le modèle, attribution de performance, dividendes, et l\'avis de l\'assistant IA sur chaque ligne.',
+      html: portfolioAnalysisHtml(positions, companiesByTicker, currencyByIndex, priceHistoryByTicker, dividendHistoryByTicker) + portfolioAiSubsectionHtml(),
+      wire: () => {
+        wirePortfolioPerformanceBenchmarkSelectors(positions, closedPositions, companiesByTicker, currencyByIndex, priceHistoryByTicker);
+        wirePortfolioAiSubsection(positions, closedPositions, companiesByTicker, currencyByIndex, dividendHistoryByTicker);
+      },
     },
     {
       title: 'Bot Actions',

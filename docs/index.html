@@ -60,6 +60,13 @@
     --gold: #b99a68;
     --gold-100: #e8dcc0; --gold-700: #8a6d3f;
 
+    /* Repartition du portefeuille (camembert "Tes positions") -- 7 teintes
+       categorielles validees (CVD-safe, voir skill dataviz/palette.md),
+       ordre fixe partage entre les deux themes : seule la clarte/saturation
+       change pour rester lisible sur chaque fond, jamais la teinte. */
+    --chart-1: #9c7f2e; --chart-2: #2f9e8f; --chart-3: #c76a45; --chart-4: #3a6fc9;
+    --chart-5: #7a9142; --chart-6: #8b6fcf; --chart-7: #c25a7a;
+
     /* Espacement (base 4px) */
     --space-1: .25rem; --space-2: .5rem; --space-3: .75rem; --space-4: 1rem;
     --space-5: 1.5rem; --space-6: 2rem; --space-7: 3rem; --space-8: 4rem;
@@ -123,6 +130,11 @@
     --rust-300: #7a4531; --rust-700: #5c331f;
     --gold: #8a6d3f;
     --gold-100: #5c4a2a; --gold-700: #3d3018;
+
+    /* Repartition du portefeuille -- memes 7 teintes/ordre que le theme
+       sombre, validees separement pour ce fond clair. */
+    --chart-1: #8a5e0e; --chart-2: #00836c; --chart-3: #a85536; --chart-4: #2f5aa3;
+    --chart-5: #5c7a1a; --chart-6: #5a4fae; --chart-7: #a83a5a;
 
     /* Accent général découplé de l'or (réservé à la marque du module Or) —
        Emerald Ink, assorti au vert "positif" ci-dessus. */
@@ -1367,10 +1379,49 @@
     padding: 14px 16px;
   }
   .portfolio-position-degraded { opacity: .7; }
-  .portfolio-position-main { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .portfolio-position-main { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
   .portfolio-position-pnl { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; font-size: var(--text-sm); }
   .portfolio-position-actions { display: flex; gap: 8px; }
   .portfolio-position-actions .toggle-btn { flex: none; padding: 6px 12px; font-size: var(--text-xs); }
+
+  /* Identite (logo + nom/ticker) en tete de chaque ligne de position --
+     logo plus petit que .hero-logo-wrap (fiche entreprise), jamais
+     reutilise tel quel pour ne pas changer son rendu la-bas (meme
+     principe que .hero-index-badge vs .index-badge, voir plus haut). */
+  .portfolio-position-identity { display: flex; align-items: center; gap: 10px; }
+  .portfolio-position-logo-wrap {
+    width: 36px; height: 36px; border-radius: 9px; flex-shrink: 0; overflow: hidden;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--taupe-soft); font-family: 'Newsreader', serif; font-size: var(--text-md); color: var(--gold);
+  }
+  .portfolio-position-logo { width: 100%; height: 100%; object-fit: contain; display: block; }
+
+  /* Detail titres / cout d'achat / cout de revient par ligne (remplace
+     l'ancienne ligne "qte x prix (date)"). */
+  .portfolio-detail-grid { display: flex; flex-wrap: wrap; gap: 14px 22px; }
+  .portfolio-detail-item { display: flex; flex-direction: column; gap: 1px; }
+  .portfolio-detail-label { color: var(--muted); font-size: var(--text-2xs); }
+  .portfolio-detail-value { font-family: 'Newsreader', serif; font-size: var(--text-md); }
+
+  /* Camembert de repartition par devise, au-dessus de la liste de
+     positions -- memes conventions SVG que performanceCurveSvg (coord.
+     calculees en JS, pas de lib de graphique). */
+  .portfolio-donut-row { display: flex; gap: 12px; flex-wrap: wrap; margin: 4px 0 20px; }
+  .portfolio-donut-card {
+    flex: 1; min-width: 220px; background: var(--bg-2); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); padding: 16px;
+  }
+  .portfolio-donut-card-head { display: flex; align-items: baseline; justify-content: space-between; margin: 0 0 12px; }
+  .portfolio-donut-body { display: flex; align-items: center; gap: 16px; }
+  .portfolio-donut-svg { flex-shrink: 0; }
+  .portfolio-legend { display: flex; flex-direction: column; gap: 7px; min-width: 0; flex: 1; }
+  .portfolio-legend-row { display: flex; align-items: center; gap: 8px; min-width: 0; }
+  .portfolio-legend-swatch { width: 9px; height: 9px; border-radius: 2px; flex-shrink: 0; }
+  .portfolio-legend-name {
+    flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    font-size: var(--text-sm); color: var(--text); font-weight: 500;
+  }
+  .portfolio-legend-pct { font-family: 'Newsreader', serif; font-size: var(--text-sm); color: var(--muted); flex-shrink: 0; }
 
   .portfolio-form {
     display: flex; flex-direction: column; gap: 10px; margin: 4px 0 24px;
@@ -2899,8 +2950,8 @@ function renderPortfolioActionsTab(companiesByTicker, currencyByIndex) {
     },
     {
       title: 'Tes positions',
-      desc: 'Vue d\'ensemble de ton portefeuille : totaux séparés EUR/USD, P&L latent et score de chaque ligne détenue.',
-      html: `${portfolioTotalsHtml(totals)}${portfolioPositionsHtml(positions, companiesByTicker, currencyByIndex)}`,
+      desc: 'Vue d\'ensemble de ton portefeuille : totaux séparés EUR/USD, répartition par entreprise, P&L latent et score de chaque ligne détenue.',
+      html: `${portfolioTotalsHtml(totals)}${portfolioDonutRowHtml(positions, companiesByTicker, currencyByIndex, totals)}${portfolioPositionsHtml(positions, companiesByTicker, currencyByIndex)}`,
       wire: () => wirePortfolioPositionActions(companiesByTicker),
     },
     {
@@ -2971,6 +3022,93 @@ function portfolioTotalsHtml(totals) {
     </div>`;
 }
 
+// Petit camembert SVG -- memes conventions que performanceCurveSvg
+// (coordonnees calculees en JS, pas de lib de graphique).
+function donutSvg(slices, colors) {
+  const size = 92, r = 36, cx = size / 2, cy = size / 2, stroke = 16;
+  const total = slices.reduce((s, x) => s + x.value, 0);
+  let angle = -90;
+  const paths = slices.map((slice, i) => {
+    const frac = total > 0 ? slice.value / total : 0;
+    const start = angle;
+    const end = angle + frac * 360;
+    angle = end;
+    const toXY = deg => {
+      const rad = (deg * Math.PI) / 180;
+      return [cx + r * Math.cos(rad), cy + r * Math.sin(rad)];
+    };
+    const [x1, y1] = toXY(start);
+    const [x2, y2] = toXY(end);
+    const largeArc = end - start > 180 ? 1 : 0;
+    return `<path d="M ${x1.toFixed(2)} ${y1.toFixed(2)} A ${r} ${r} 0 ${largeArc} 1 ${x2.toFixed(2)} ${y2.toFixed(2)}" fill="none" stroke="${colors[i % colors.length]}" stroke-width="${stroke}" />`;
+  }).join('');
+  return `<svg class="portfolio-donut-svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" role="img" aria-label="Répartition">${paths}</svg>`;
+}
+
+const PORTFOLIO_CHART_COLORS = ['var(--chart-1)', 'var(--chart-2)', 'var(--chart-3)', 'var(--chart-4)', 'var(--chart-5)', 'var(--chart-6)', 'var(--chart-7)'];
+
+// Jamais plus de 7 parts nommees (meme limite que la palette categorielle
+// validee, voir --chart-1..7 plus haut) -- au-dela, les positions les plus
+// petites sont regroupees dans "Autres" plutot que de cycler les couleurs.
+function portfolioDonutSlices(positions, companiesByTicker) {
+  const withValue = positions
+    .map(p => {
+      const company = companiesByTicker[p.ticker];
+      if (!company) return null;
+      const price = Number.isFinite(company.current_price) ? company.current_price : p.buy_price;
+      return { name: company.name, value: price * p.quantity };
+    })
+    .filter(Boolean)
+    .sort((a, b) => b.value - a.value);
+  if (withValue.length <= 7) return withValue;
+  const top = withValue.slice(0, 6);
+  const autres = withValue.slice(6).reduce((s, p) => s + p.value, 0);
+  return [...top, { name: 'Autres', value: autres }];
+}
+
+function portfolioDonutCardHtml(title, totalLabel, slices) {
+  if (!slices.length) return '';
+  const total = slices.reduce((s, p) => s + p.value, 0);
+  const legend = slices.map((p, i) => `
+    <div class="portfolio-legend-row">
+      <span class="portfolio-legend-swatch" style="background:${PORTFOLIO_CHART_COLORS[i % PORTFOLIO_CHART_COLORS.length]}"></span>
+      <span class="portfolio-legend-name">${p.name}</span>
+      <span class="portfolio-legend-pct">${total > 0 ? ((p.value / total) * 100).toFixed(1) : '0.0'}%</span>
+    </div>`).join('');
+  return `
+    <div class="portfolio-donut-card">
+      <div class="portfolio-donut-card-head">
+        <span class="portfolio-total-label">${title}</span>
+        <span class="portfolio-total-value">${totalLabel}</span>
+      </div>
+      <div class="portfolio-donut-body">
+        ${donutSvg(slices, PORTFOLIO_CHART_COLORS)}
+        <div class="portfolio-legend">${legend}</div>
+      </div>
+    </div>`;
+}
+
+// Un camembert par devise detenue (jamais de conversion entre devises,
+// meme principe que computePortfolioTotals/portfolioTotalsHtml) --
+// n'affiche rien si aucune position n'a de cours connu.
+function portfolioDonutRowHtml(positions, companiesByTicker, currencyByIndex, totals) {
+  const byCurrency = { EUR: [], USD: [] };
+  positions.forEach(p => {
+    const company = companiesByTicker[p.ticker];
+    if (!company) return;
+    const currency = currencyByIndex[company.index] === 'USD' ? 'USD' : 'EUR';
+    byCurrency[currency].push(p);
+  });
+  const cardsHtml = ['EUR', 'USD']
+    .filter(currency => byCurrency[currency].length)
+    .map(currency => {
+      const slices = portfolioDonutSlices(byCurrency[currency], companiesByTicker);
+      const fmt = currency === 'USD' ? formatPriceUsd : formatPrice;
+      return portfolioDonutCardHtml(`Répartition ${currency}`, fmt(totals[currency].value), slices);
+    }).join('');
+  return cardsHtml ? `<h3 class="portfolio-analysis-title">Répartition</h3><div class="portfolio-donut-row">${cardsHtml}</div>` : '';
+}
+
 function portfolioPositionsHtml(positions, companiesByTicker, currencyByIndex) {
   if (!positions.length) {
     return '<div class="empty">Aucune position pour l\'instant — ajoute ta première ligne ci-dessous.</div>';
@@ -2996,9 +3134,19 @@ function portfolioPositionsHtml(positions, companiesByTicker, currencyByIndex) {
     return `
       <div class="portfolio-position-row" data-id="${position.id}">
         <div class="portfolio-position-main">
-          <a class="company-name" href="#indices/${company.ticker}">${company.name}</a>
-          <span class="company-ticker">${company.ticker}${company.is_financial ? '<span class="financial-tag">Profil financier</span>' : ''}${hasMajorNewsAlert(company) ? '<span class="financial-tag majeure-tag">Actu majeure</span>' : ''}${allIndicesBadgesHtml(company)}</span>
-          <span class="hero-sub">${position.quantity} × ${fmt(position.buy_price)} (${position.buy_date})</span>
+          <div class="portfolio-position-identity">
+            <div class="portfolio-position-logo-wrap"><img class="portfolio-position-logo" src="${companyLogoUrl(company.ticker)}" alt="" loading="lazy" onerror="this.parentElement.style.display='none'"></div>
+            <div>
+              <a class="company-name" href="#indices/${company.ticker}">${company.name}</a>
+              <span class="company-ticker">${company.ticker}${company.is_financial ? '<span class="financial-tag">Profil financier</span>' : ''}${hasMajorNewsAlert(company) ? '<span class="financial-tag majeure-tag">Actu majeure</span>' : ''}${allIndicesBadgesHtml(company)}</span>
+            </div>
+          </div>
+          <div class="portfolio-detail-grid">
+            <div class="portfolio-detail-item"><span class="portfolio-detail-label">Titres</span><span class="portfolio-detail-value">${position.quantity}</span></div>
+            <div class="portfolio-detail-item"><span class="portfolio-detail-label">Coût d'achat</span><span class="portfolio-detail-value">${fmt(position.quantity * position.buy_price)}</span></div>
+            <div class="portfolio-detail-item"><span class="portfolio-detail-label">Coût de revient</span><span class="portfolio-detail-value">${fmt(position.buy_price)}</span></div>
+          </div>
+          <span class="hero-sub">Acheté le ${position.buy_date}</span>
           <span class="hero-sub">Cours actuel : ${fmt(company.current_price)}</span>
         </div>
         <div class="portfolio-position-pnl">

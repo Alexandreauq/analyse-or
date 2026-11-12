@@ -864,6 +864,14 @@
   .ai-reco-alleger, .ai-reco-a_verifier { background: var(--taupe-soft); color: var(--taupe-500); }
   .ai-reco-vendre { background: var(--rust-soft); color: var(--rust); }
   .portfolio-ai-error { color: var(--rust); font-size: var(--text-sm); margin: 6px 0 0; }
+  /* Le détail (performance, concentration, devises, attribution,
+     dividendes) garde les libellés en --muted partout ailleurs sur le
+     site, mais passe en blanc ici -- et le lien nom d'entreprise de
+     l'attribution (seul endroit du détail à en avoir un) n'a jamais eu de
+     couleur déclarée, donc il prenait le bleu/violet par défaut du
+     navigateur (visité ou non) au lieu d'hériter de --muted. */
+  #portfolioAiDetailWrap .price-label, #portfolioAiDetailWrap .concentration-label { color: var(--text); }
+  #portfolioAiDetailWrap .price-label a { color: inherit; }
   @media (max-width: 420px) {
     .portfolio-ai-hero { flex-direction: column; align-items: flex-start; }
     .portfolio-ai-gauge-wrap { width: 100%; }

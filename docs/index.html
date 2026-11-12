@@ -846,6 +846,29 @@
     font-size: var(--text-xs); margin-top: 10px;
   }
 
+  /* Avis de l'IA sur le portefeuille (onglet Analyse) : jauge santé + bascule
+     cartes/note. Réutilise .score-gauge (ci-dessus) et .ui-seg (plus haut). */
+  .portfolio-ai-hero { display: flex; gap: 18px; align-items: center; margin-bottom: 14px; }
+  .portfolio-ai-gauge-wrap { width: 160px; flex-shrink: 0; margin: 0; }
+  .portfolio-ai-hero-text { flex: 1; min-width: 0; }
+  .portfolio-ai-hero-text .portfolio-analysis-title { margin-bottom: 4px; }
+  .portfolio-ai-quick-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 10px 0 16px; }
+  .portfolio-ai-quick-tile {
+    background: var(--bg-2); border: 1px solid var(--border); border-radius: var(--radius-md);
+    padding: 10px 12px; display: flex; flex-direction: column; gap: 2px;
+  }
+  .portfolio-ai-quick-label { color: var(--muted); font-size: var(--text-2xs); text-transform: uppercase; letter-spacing: .03em; }
+  .ai-reco-chip { font-size: var(--text-xs); font-weight: 600; padding: 3px 10px; border-radius: var(--radius-pill); white-space: nowrap; }
+  .ai-reco-renforcer { background: var(--green-soft); color: var(--green-500); }
+  .ai-reco-garder { background: var(--bg-3); color: var(--muted); }
+  .ai-reco-alleger, .ai-reco-a_verifier { background: var(--taupe-soft); color: var(--taupe-500); }
+  .ai-reco-vendre { background: var(--rust-soft); color: var(--rust); }
+  .portfolio-ai-error { color: var(--rust); font-size: var(--text-sm); margin: 6px 0 0; }
+  @media (max-width: 420px) {
+    .portfolio-ai-hero { flex-direction: column; align-items: flex-start; }
+    .portfolio-ai-gauge-wrap { width: 100%; }
+  }
+
   .divider { height: 1px; background: var(--border); margin: 4px 0 20px; }
   h2 { font-family: 'Newsreader', serif; font-weight: 400; font-size: 20px; letter-spacing: 0.02em; margin: 0 0 12px; }
 
@@ -2645,10 +2668,35 @@ function wirePortfolioPerformanceBenchmarkSelectors(positions, closedPositions, 
   });
 }
 
+// Grille compacte des 3 indicateurs "modèle" (était la section "Santé selon
+// le modèle" de l'ancien empilement à plat) — affichée au-dessus des cartes
+// par entreprise dans la vue "Cartes" de l'avis de l'IA.
+function portfolioAnalysisQuickGridHtml(health) {
+  return `
+    <div class="portfolio-ai-quick-grid">
+      <div class="portfolio-ai-quick-tile">
+        <span class="portfolio-ai-quick-label">Score modèle</span>
+        <span class="price-value ${pctClass(health.avgScore)}">${health.avgScore != null ? (health.avgScore > 0 ? '+' : '') + health.avgScore.toFixed(1) : '—'}</span>
+      </div>
+      <div class="portfolio-ai-quick-tile">
+        <span class="portfolio-ai-quick-label">Alertes risque</span>
+        <span class="price-value">${health.riskAlertCount}</span>
+      </div>
+      <div class="portfolio-ai-quick-tile">
+        <span class="portfolio-ai-quick-label">Alertes actu majeure</span>
+        <span class="price-value">${health.majorNewsAlertCount}</span>
+      </div>
+    </div>`;
+}
+
+// Retourne {quickGridHtml, diagnosisHtml, detailHtml} plutôt qu'une seule
+// chaîne : la grille rapide va sous la jauge de l'avis IA (vue "Cartes"), le
+// diagnostic texte va dans la vue "Note", le détail reste repliable sous les
+// deux (voir portfolioAiSectionHtml) — jamais caché par une erreur d'appel IA.
 function portfolioAnalysisHtml(positions, companiesByTicker, currencyByIndex, priceHistoryByTicker, dividendHistoryByTicker) {
   const closedPositions = loadClosedPortfolio();
   if (!positions.length && !closedPositions.length) {
-    return '<div class="empty">Ajoute des positions pour voir apparaître une analyse ici.</div>';
+    return { quickGridHtml: '', diagnosisHtml: '', detailHtml: '<div class="empty">Ajoute des positions pour voir apparaître une analyse ici.</div>' };
   }
   const concentration = computePortfolioConcentration(positions, companiesByTicker, currencyByIndex);
   const health = computePortfolioHealth(positions, companiesByTicker);
@@ -2686,7 +2734,7 @@ function portfolioAnalysisHtml(positions, companiesByTicker, currencyByIndex, pr
         </div>
       </div>`;
   }).join('');
-  const diagnosis = portfolioDiagnosisHtml(concentration, health, attribution);
+  const diagnosisHtml = portfolioDiagnosisHtml(concentration, health, attribution);
   const indexNames = { ...INDEX_DISPLAY_NAMES, ...(indicesData.index_names || {}) };
 
   const currencyHtml = Object.entries(concentration.byCurrency).sort((a, b) => b[1] - a[1]).map(([currency, value]) => `
@@ -2725,15 +2773,10 @@ function portfolioAnalysisHtml(positions, companiesByTicker, currencyByIndex, pr
     </div>`;
   }).join('') : (hasAnyDividendData ? '<div class="list-empty">Aucune position ne verse actuellement de dividende.</div>' : '');
 
-  return `
+  const detailHtml = `
     ${performanceHtml}
-    ${diagnosis}
-    <h3 class="portfolio-analysis-title">Santé selon le modèle</h3>
-    <div class="signal-stats">
-      <div class="price-row"><span class="price-label">Score moyen (parts égales)</span><span class="price-value ${pctClass(health.avgScore)}">${health.avgScore != null ? (health.avgScore > 0 ? '+' : '') + health.avgScore.toFixed(1) : '—'}</span></div>
-      <div class="price-row"><span class="price-label">Positions avec alerte "risque"</span><span class="price-value">${health.riskAlertCount}</span></div>
-      <div class="price-row"><span class="price-label">Positions avec actu majeure</span><span class="price-value">${health.majorNewsAlertCount}</span></div>
-    </div>
+    <h3 class="portfolio-analysis-title">Évolution du jugement IA</h3>
+    <div id="portfolioAiChart"></div>
     <h3 class="portfolio-analysis-title">Concentration par indice</h3>
     <div class="concentration-list">${concentrationBarsHtml(concentration.byIndex, key => indexNames[key] || key)}</div>
     <h3 class="portfolio-analysis-title">Concentration par secteur</h3>
@@ -2746,15 +2789,43 @@ function portfolioAnalysisHtml(positions, companiesByTicker, currencyByIndex, pr
     ${dividendSummaryHtml}
     <div class="signal-stats">${dividendRowsHtml}</div>
   `;
+  return { quickGridHtml: portfolioAnalysisQuickGridHtml(health), diagnosisHtml, detailHtml };
 }
 
-function portfolioAiSubsectionHtml() {
+// Composition de l'ensemble "Avis de l'IA" : jauge santé + résumé (remplis
+// par JS une fois l'analyse chargée), bascule Cartes/Note, puis le détail
+// chiffré (analysis.detailHtml) toujours visible en dessous des deux vues —
+// jamais caché par une erreur d'appel IA (voir wirePortfolioAiSubsection).
+function portfolioAiSectionHtml(analysis) {
   return `
-    <h3 class="portfolio-analysis-title">Avis de l'IA</h3>
-    <div id="portfolioAiFreshness" class="hero-sub"></div>
+    <div class="portfolio-ai-hero">
+      <div class="score-gauge-wrap portfolio-ai-gauge-wrap" id="portfolioAiGaugeWrap" hidden>
+        <div class="score-gauge">
+          <div class="score-gauge-tick" style="left:25%;"></div>
+          <div class="score-gauge-tick" style="left:50%;"></div>
+          <div class="score-gauge-tick" style="left:75%;"></div>
+          <div class="score-gauge-marker portfolio-ai-gauge-marker" style="left:50%;"></div>
+        </div>
+        <div class="score-gauge-labels"><span>Fragile</span><span>Neutre</span><span>Solide</span></div>
+      </div>
+      <div class="portfolio-ai-hero-text">
+        <h3 class="portfolio-analysis-title">Avis de l'IA</h3>
+        <p class="hero-sub" id="portfolioAiResume">Lance une première analyse pour voir le jugement de l'IA sur ton portefeuille.</p>
+        <p class="hero-sub" id="portfolioAiDelta" hidden></p>
+        <p class="hero-sub" id="portfolioAiFreshness"></p>
+      </div>
+    </div>
     <button class="toggle-btn" type="button" id="portfolioAiAnalysisBtn">Lancer l'analyse IA</button>
-    <div id="portfolioAiChart"></div>
-    <div id="portfolioAiAnalysisResult"></div>
+    <p class="portfolio-ai-error" id="portfolioAiError" hidden></p>
+    <div class="ui-seg" id="portfolioAiViewSeg">
+      <button type="button" data-view="cards" aria-pressed="true">Cartes</button>
+      <button type="button" data-view="note" aria-pressed="false">Note</button>
+    </div>
+    <div id="portfolioAiViewBody"></div>
+    <button class="toggle-btn" type="button" id="portfolioAiDetailToggle" aria-expanded="false">
+      Voir le détail <span class="chevron">▾</span>
+    </button>
+    <div class="section-wrap" id="portfolioAiDetailWrap">${analysis.detailHtml}</div>
   `;
 }
 
@@ -2763,15 +2834,13 @@ function _portfolioAiRecoLabel(reco) {
   return labels[reco] || reco;
 }
 
-function _portfolioAiSanteLabel(sante) {
-  if (typeof sante !== 'number') return '';
-  const color = sante >= 0 ? 'var(--green-500)' : 'var(--rust)';
-  return `<span class="price-value" style="color:${color}">${sante > 0 ? '+' : ''}${sante}</span>`;
+function _portfolioAiRecoChipHtml(reco) {
+  return `<span class="ai-reco-chip ai-reco-${reco}">${escHtml(_portfolioAiRecoLabel(reco))}</span>`;
 }
 
 function _portfolioAiCardsHtml(parLigne, positionsByTicker, companiesByTicker, currencyByIndex) {
   if (!parLigne.length) {
-    return '<div class="list-empty">Aucune recommandation disponible.</div>';
+    return '<div class="list-empty">Lance l\'analyse IA pour voir l\'avis par entreprise.</div>';
   }
   return parLigne.map(l => {
     const position = positionsByTicker.get(l.ticker);
@@ -2787,26 +2856,38 @@ function _portfolioAiCardsHtml(parLigne, positionsByTicker, companiesByTicker, c
           <a class="company-name" href="#indices/${encodeURIComponent(l.ticker)}">${escHtml(company ? company.name : l.ticker)}</a>
           ${prixHtml}
         </div>
-        <span class="price-value">${escHtml(_portfolioAiRecoLabel(l.reco))}</span>
+        ${_portfolioAiRecoChipHtml(l.reco)}
         <p class="hero-sub">${escHtml(l.analyse || l.justification || '')}</p>
       </div>`;
   }).join('');
 }
 
-function _portfolioAiAnalysisResultHtml(resultat, positionsByTicker, companiesByTicker, currencyByIndex) {
-  const comparaisonHtml = resultat.comparaison_precedente
-    ? `<h3 class="portfolio-analysis-title">Depuis la dernière fois</h3><div class="hero-sub">${escHtml(resultat.comparaison_precedente)}</div>`
-    : '';
+// Même donnée que _portfolioAiCardsHtml, en paragraphes continus (vue
+// "Note") plutôt qu'en cartes — deux lectures du même par_ligne.
+function _portfolioAiNoteParLigneHtml(parLigne, companiesByTicker) {
+  if (!parLigne.length) {
+    return '<p class="hero-sub">Lance l\'analyse IA pour voir l\'avis détaillé par entreprise.</p>';
+  }
+  return parLigne.map(l => {
+    const company = companiesByTicker[l.ticker];
+    return `<p class="hero-sub"><strong>${escHtml(company ? company.name : l.ticker)}</strong> — ${_portfolioAiRecoChipHtml(l.reco)} ${escHtml(l.analyse || l.justification || '')}</p>`;
+  }).join('');
+}
+
+function _portfolioAiCardsViewHtml(quickGridHtml, cardsHtml) {
   return `
-    <div class="portfolio-totals">
-      <div class="portfolio-total-card">
-        <span class="portfolio-total-label">Résumé</span>
-        <div class="hero-sub">${escHtml(resultat.resume_global || '')}</div>
-        ${typeof resultat.sante_globale === 'number' ? `<span class="portfolio-total-label">Santé jugée par l'IA</span>${_portfolioAiSanteLabel(resultat.sante_globale)}` : ''}
-      </div>
-    </div>
+    ${quickGridHtml}
     <h3 class="portfolio-analysis-title">Par entreprise</h3>
-    <div class="portfolio-ai-cards">${_portfolioAiCardsHtml(resultat.par_ligne || [], positionsByTicker, companiesByTicker, currencyByIndex)}</div>
+    <div class="portfolio-ai-cards">${cardsHtml}</div>
+  `;
+}
+
+function _portfolioAiNoteViewHtml(noteParLigneHtml, diagnosisHtml, comparaisonHtml) {
+  return `
+    <h3 class="portfolio-analysis-title">Par entreprise</h3>
+    ${noteParLigneHtml}
+    <h3 class="portfolio-analysis-title">Diagnostic</h3>
+    ${diagnosisHtml || '<p class="hero-sub">Ajoute des positions pour voir apparaître un diagnostic ici.</p>'}
     ${comparaisonHtml}
   `;
 }
@@ -2841,27 +2922,108 @@ function aiJudgmentCurveSvg(points) {
     <div class="portfolio-perf-legend"><span style="color:${color}">● Santé jugée par l'IA (${last.sante_globale > 0 ? '+' : ''}${last.sante_globale})</span></div>`;
 }
 
-function wirePortfolioAiSubsection(positions, closedPositions, companiesByTicker, currencyByIndex, dividendHistoryByTicker) {
+function wirePortfolioAiSubsection(positions, closedPositions, companiesByTicker, currencyByIndex, dividendHistoryByTicker, diagnosisHtml) {
+  const gaugeWrap = document.getElementById('portfolioAiGaugeWrap');
+  const resumeEl = document.getElementById('portfolioAiResume');
+  const deltaEl = document.getElementById('portfolioAiDelta');
   const freshnessEl = document.getElementById('portfolioAiFreshness');
-  const chartEl = document.getElementById('portfolioAiChart');
+  const errorEl = document.getElementById('portfolioAiError');
   const btn = document.getElementById('portfolioAiAnalysisBtn');
-  const resultEl = document.getElementById('portfolioAiAnalysisResult');
-  if (!btn || !resultEl) return;
+  const seg = document.getElementById('portfolioAiViewSeg');
+  const viewBodyEl = document.getElementById('portfolioAiViewBody');
+  if (!btn || !viewBodyEl) return;
+
+  wireAccordionGroup([['portfolioAiDetailToggle', 'portfolioAiDetailWrap']]);
 
   const positionsByTicker = new Map(positions.map(p => [p.ticker, p]));
+  const quickGridHtml = portfolioAnalysisQuickGridHtml(computePortfolioHealth(positions, companiesByTicker));
+  let currentView = 'cards';
+  let lastResultat = null;
+  let lastHistorique = [];
 
-  const renderResult = (resultat) => {
-    resultEl.innerHTML = _portfolioAiAnalysisResultHtml(resultat, positionsByTicker, companiesByTicker, currencyByIndex);
+  const setError = (message) => {
+    if (!errorEl) return;
+    errorEl.hidden = !message;
+    errorEl.textContent = message || '';
+  };
+
+  const renderGauge = (sante) => {
+    if (!gaugeWrap) return;
+    if (typeof sante !== 'number') { gaugeWrap.hidden = true; return; }
+    gaugeWrap.hidden = false;
+    const pct = Math.max(0, Math.min(100, (sante + 100) / 2));
+    requestAnimationFrame(() => {
+      const marker = gaugeWrap.querySelector('.portfolio-ai-gauge-marker');
+      if (marker) marker.style.left = pct + '%';
+    });
+  };
+
+  // Delta vs l'analyse precedente : derive de /history (meme endpoint que
+  // le graphique de jugement) plutot que du backend, qui ne renvoie pas de
+  // delta pre-calcule — voir le contrat v2 de /portfolio-analysis/history.
+  const renderDelta = () => {
+    if (!deltaEl) return;
+    if (!lastResultat || typeof lastResultat.sante_globale !== 'number' || lastHistorique.length < 2) {
+      deltaEl.hidden = true;
+      return;
+    }
+    const previous = lastHistorique[lastHistorique.length - 2];
+    if (!previous || typeof previous.sante_globale !== 'number') { deltaEl.hidden = true; return; }
+    const diff = lastResultat.sante_globale - previous.sante_globale;
+    if (diff === 0) { deltaEl.hidden = true; return; }
+    deltaEl.hidden = false;
+    deltaEl.textContent = `${diff > 0 ? '▲' : '▼'} ${diff > 0 ? '+' : ''}${diff} pt${Math.abs(diff) > 1 ? 's' : ''} depuis la dernière analyse`;
+    deltaEl.style.color = diff > 0 ? 'var(--green-500)' : 'var(--rust)';
+  };
+
+  const renderView = () => {
+    if (currentView === 'cards') {
+      const cardsHtml = lastResultat
+        ? _portfolioAiCardsHtml(lastResultat.par_ligne || [], positionsByTicker, companiesByTicker, currencyByIndex)
+        : '<div class="list-empty">Lance l\'analyse IA pour voir l\'avis par entreprise.</div>';
+      viewBodyEl.innerHTML = _portfolioAiCardsViewHtml(quickGridHtml, cardsHtml);
+    } else {
+      const noteParLigneHtml = lastResultat
+        ? _portfolioAiNoteParLigneHtml(lastResultat.par_ligne || [], companiesByTicker)
+        : '<p class="hero-sub">Lance l\'analyse IA pour voir l\'avis détaillé par entreprise.</p>';
+      const comparaisonHtml = lastResultat && lastResultat.comparaison_precedente
+        ? `<h3 class="portfolio-analysis-title">Depuis la dernière fois</h3><p class="hero-sub">${escHtml(lastResultat.comparaison_precedente)}</p>`
+        : '';
+      viewBodyEl.innerHTML = _portfolioAiNoteViewHtml(noteParLigneHtml, diagnosisHtml, comparaisonHtml);
+    }
+  };
+
+  renderView();
+
+  if (seg) {
+    seg.addEventListener('click', (e) => {
+      const b = e.target.closest('button[data-view]');
+      if (!b) return;
+      currentView = b.dataset.view;
+      seg.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+      renderView();
+    });
+  }
+
+  const applyResultat = (resultat) => {
+    lastResultat = resultat;
+    if (resumeEl) resumeEl.textContent = resultat.resume_global || '';
+    renderGauge(resultat.sante_globale);
+    renderDelta();
     if (freshnessEl) freshnessEl.textContent = _portfolioAiFreshnessLabel(resultat.horodatage);
+    setError(null);
+    renderView();
   };
 
   const refreshChart = async (token) => {
-    if (!chartEl) return;
     try {
       const res = await fetch('https://goldbot.fr:8445/portfolio-analysis/history', { headers: { 'X-Bot-Token': token } });
       if (!res.ok) return;
       const data = await res.json();
-      chartEl.innerHTML = aiJudgmentCurveSvg(data.historique || []);
+      lastHistorique = data.historique || [];
+      const chartEl = document.getElementById('portfolioAiChart');
+      if (chartEl) chartEl.innerHTML = aiJudgmentCurveSvg(lastHistorique);
+      renderDelta();
     } catch (e) { /* le reste de la sous-section reste utilisable sans le graphique */ }
   };
 
@@ -2881,7 +3043,7 @@ function wirePortfolioAiSubsection(positions, closedPositions, companiesByTicker
       })
       .then(data => {
         if (data && data.disponible) {
-          renderResult(data.resultat);
+          applyResultat(data.resultat);
           btn.textContent = 'Relancer l\'analyse IA';
         } else if (data !== null && freshnessEl) {
           freshnessEl.textContent = 'Aucune analyse encore.';
@@ -2899,6 +3061,7 @@ function wirePortfolioAiSubsection(positions, closedPositions, companiesByTicker
     btn.disabled = true;
     const texteInitial = btn.textContent;
     btn.textContent = 'Analyse en cours…';
+    setError(null);
     try {
       const concentration = computePortfolioConcentration(positions, companiesByTicker, currencyByIndex);
       const health = computePortfolioHealth(positions, companiesByTicker);
@@ -2918,26 +3081,26 @@ function wirePortfolioAiSubsection(positions, closedPositions, companiesByTicker
       });
       if (res.status === 401) {
         localStorage.removeItem('aiAssistantToken');
-        resultEl.innerHTML = '<div class="empty">Ton jeton d\'accès est invalide. Recharge la page pour en saisir un nouveau.</div>';
+        setError('Ton jeton d\'accès est invalide. Recharge la page pour en saisir un nouveau.');
         return;
       }
       if (res.status === 429 || res.status === 503 || res.status === 400) {
         let detail = "L'analyse n'est pas possible pour le moment.";
         try { const corps = await res.json(); if (corps && corps.detail) detail = corps.detail; } catch (e) { /* message par défaut */ }
-        resultEl.innerHTML = `<div class="empty">${escHtml(detail)}</div>`;
+        setError(detail);
         return;
       }
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       if (!data.disponible) {
-        resultEl.innerHTML = `<div class="empty">${escHtml(data.erreur || "Analyse indisponible pour le moment.")}</div>`;
+        setError(data.erreur || "Analyse indisponible pour le moment.");
         return;
       }
-      renderResult(data.resultat);
+      applyResultat(data.resultat);
       btn.textContent = 'Relancer l\'analyse IA';
       refreshChart(jeton);
     } catch (e) {
-      resultEl.innerHTML = '<div class="empty">Analyse indisponible pour le moment.</div>';
+      setError('Analyse indisponible pour le moment.');
     } finally {
       btn.disabled = false;
       if (btn.textContent === 'Analyse en cours…') btn.textContent = texteInitial;
@@ -2957,6 +3120,7 @@ function renderPortfolioActionsTab(companiesByTicker, currencyByIndex) {
 
   const heldTickers = new Set(positions.map(p => p.ticker));
   const opportunities = findOpportunities(indicesData.companies, heldTickers);
+  const portfolioAiAnalysis = portfolioAnalysisHtml(positions, companiesByTicker, currencyByIndex, priceHistoryByTicker, dividendHistoryByTicker);
 
   portfolioActionsSections = [
     {
@@ -2977,11 +3141,11 @@ function renderPortfolioActionsTab(companiesByTicker, currencyByIndex) {
     },
     {
       title: 'Analyse',
-      desc: 'Concentration, santé du portefeuille selon le modèle, attribution de performance, dividendes, et l\'avis de l\'assistant IA sur chaque ligne.',
-      html: portfolioAnalysisHtml(positions, companiesByTicker, currencyByIndex, priceHistoryByTicker, dividendHistoryByTicker) + portfolioAiSubsectionHtml(),
+      desc: 'Le jugement de l\'IA sur ton portefeuille (en cartes ou en note), et le détail : concentration, attribution de performance, dividendes.',
+      html: portfolioAiSectionHtml(portfolioAiAnalysis),
       wire: () => {
         wirePortfolioPerformanceBenchmarkSelectors(positions, closedPositions, companiesByTicker, currencyByIndex, priceHistoryByTicker);
-        wirePortfolioAiSubsection(positions, closedPositions, companiesByTicker, currencyByIndex, dividendHistoryByTicker);
+        wirePortfolioAiSubsection(positions, closedPositions, companiesByTicker, currencyByIndex, dividendHistoryByTicker, portfolioAiAnalysis.diagnosisHtml);
       },
     },
     {

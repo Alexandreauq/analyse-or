@@ -4866,12 +4866,12 @@ def test_main_payload_includes_index_metadata(monkeypatch, tmp_path):
         "FTSE": "FTSE 100", "SMI": "SMI", "IBEX35": "IBEX 35", "FTSEMIB": "FTSE MIB",
         "NIKKEI225": "Nikkei 225", "HANGSENG": "Hang Seng", "EUROSTOXX50": "Euro Stoxx 50",
         "SBF120": "SBF 120", "AEXALL": "AEX All-Share",
-        "SP500": "S&P 500",
+        "SP500": "S&P 500", "ETF": "ETF",
     }
     assert written["index_currency"] == {
         "CAC40": "EUR", "DAX": "EUR", "NASDAQ": "USD", "DOW": "USD", "FTSE": "GBP",
         "SMI": "CHF", "IBEX35": "EUR", "FTSEMIB": "EUR", "NIKKEI225": "JPY", "HANGSENG": "HKD",
-        "EUROSTOXX50": "EUR", "SBF120": "EUR", "AEXALL": "EUR", "SP500": "USD",
+        "EUROSTOXX50": "EUR", "SBF120": "EUR", "AEXALL": "EUR", "SP500": "USD", "ETF": "EUR",
     }
     assert written["index_prices"] == fake_index_prices
     written_by_ticker = {c["ticker"]: c["index"] for c in written["companies"]}
@@ -8047,6 +8047,10 @@ def test_fetch_index_prices_returns_latest_close_per_index(monkeypatch):
         "CAC40": 7850.0, "DAX": 7850.0, "NASDAQ": 7850.0, "DOW": 7850.0,
         "FTSE": 7850.0, "SMI": 7850.0, "IBEX35": 7850.0, "FTSEMIB": 7850.0,
         "NIKKEI225": 7850.0, "HANGSENG": 7850.0, "EUROSTOXX50": 7850.0, "SBF120": 7850.0, "AEXALL": 7850.0, "SP500": 7850.0,
+        "MSCI World": 7850.0, "MSCI Emerging Markets": 7850.0, "MSCI Europe": 7850.0,
+        "TOPIX": 7850.0, "MSCI EMU": 7850.0, "Or (LBMA Gold Price PM, USD)": 7850.0,
+        "STOXX Europe 600 Health Care": 7850.0, "STOXX Europe 600 Technology": 7850.0,
+        "STOXX Europe 600 Banks": 7850.0, "STOXX Europe 600": 7850.0, "Russell 2000": 7850.0,
     }
 
 
@@ -8075,6 +8079,10 @@ def test_fetch_index_prices_returns_all_none_when_yfinance_unavailable(monkeypat
         "CAC40": None, "DAX": None, "NASDAQ": None, "DOW": None, "FTSE": None,
         "SMI": None, "IBEX35": None, "FTSEMIB": None, "NIKKEI225": None, "HANGSENG": None,
         "EUROSTOXX50": None, "SBF120": None, "AEXALL": None, "SP500": None,
+        "MSCI World": None, "MSCI Emerging Markets": None, "MSCI Europe": None,
+        "TOPIX": None, "MSCI EMU": None, "Or (LBMA Gold Price PM, USD)": None,
+        "STOXX Europe 600 Health Care": None, "STOXX Europe 600 Technology": None,
+        "STOXX Europe 600 Banks": None, "STOXX Europe 600": None, "Russell 2000": None,
     }
 
 

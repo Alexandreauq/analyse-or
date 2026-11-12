@@ -1788,6 +1788,7 @@ INDEX_NAMES = {
     "CAC40": "CAC 40", "DAX": "DAX", "NASDAQ": "Nasdaq 100", "DOW": "Dow Jones",
     "FTSE": "FTSE 100", "SMI": "SMI", "IBEX35": "IBEX 35", "FTSEMIB": "FTSE MIB",
     "NIKKEI225": "Nikkei 225", "HANGSENG": "Hang Seng", "EUROSTOXX50": "Euro Stoxx 50", "SBF120": "SBF 120", "AEXALL": "AEX All-Share", "SP500": "S&P 500",
+    "ETF": "ETF",
 }
 
 # Devise native de chaque indice — CAC40/DAX publient en euros, le
@@ -1799,6 +1800,7 @@ INDEX_CURRENCY = {
     "CAC40": "EUR", "DAX": "EUR", "NASDAQ": "USD", "DOW": "USD",
     "FTSE": "GBP", "SMI": "CHF", "IBEX35": "EUR", "FTSEMIB": "EUR",
     "NIKKEI225": "JPY", "HANGSENG": "HKD", "EUROSTOXX50": "EUR", "SBF120": "EUR", "AEXALL": "EUR", "SP500": "USD",
+    "ETF": "EUR",
 }
 
 # Même mapping que CURRENCY_SYMBOL côté frontend (docs/index.html) — pour
@@ -4777,6 +4779,30 @@ INDEX_YFINANCE_TICKERS = {
     "NIKKEI225": "^N225", "HANGSENG": "^HSI", "EUROSTOXX50": "^STOXX50E", "SBF120": "^SBF120",
     # Pas de ticker Yahoo pour l'AEX All-Share : l'AEX (25 valeurs) sert de proxy.
     "AEXALL": "^AEX", "SP500": "^GSPC",
+    # Benchmarks ETF (voir etf_catalog.py, "benchmark_name"/"benchmark_ticker",
+    # vérifiés le 2026-11-12) — clés alignées sur benchmark_name pour que la
+    # Tâche 6 puisse réutiliser la valeur telle quelle comme clé d'indice.
+    "MSCI World": "^990100-USD-STRD",
+    # Proxy : iShares MSCI Emerging Markets ETF (USD) -- l'indice lui-même
+    # (^891800-USD-STRD) existe sur Yahoo mais sans historique exploitable.
+    "MSCI Emerging Markets": "EEM",
+    "MSCI Europe": "^990500-EUR-STRD",
+    # Proxy : NEXT FUNDS TOPIX ETF (Tokyo, JPY) -- pas de ticker Yahoo pour
+    # l'indice TOPIX lui-même.
+    "TOPIX": "1306.T",
+    # Proxy : iShares Core MSCI EMU UCITS ETF EUR (Acc), Xetra -- pas de
+    # ticker Yahoo pour l'indice MSCI EMU lui-même.
+    "MSCI EMU": "SXR7.DE",
+    # Proxy : future or COMEX (USD) -- pas de ticker Yahoo pour le fixing
+    # LBMA lui-même.
+    "Or (LBMA Gold Price PM, USD)": "GC=F",
+    # Pas de ticker Yahoo pour les indices sectoriels STOXX Europe 600 :
+    # proxy = l'ETF iShares (DE) en EUR sur Xetra qui suit le même indice.
+    "STOXX Europe 600 Health Care": "EXV4.DE",
+    "STOXX Europe 600 Technology": "EXV3.DE",
+    "STOXX Europe 600 Banks": "EXV1.DE",
+    "STOXX Europe 600": "^STOXX",
+    "Russell 2000": "^RUT",
 }
 SIGNAL_STOP_LOSS_PCT = -20.0     # % perte déclenchant une clôture anticipée
 SIGNAL_SHADOW_DELAY_MONTHS = 6   # délai max avant clôture forcée du signal

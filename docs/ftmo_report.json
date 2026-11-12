@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-09T07:21:07Z",
-  "healthy": true,
-  "summary_fr": "Le bot est actuellement actif et fonctionne normalement : sa dernière analyse date de quelques minutes. Sur les 7 derniers jours, il a évalué 9 031 situations de marché et ouvert 8 positions ; aujourd'hui, 441 évaluations ont eu lieu et aucune position n'a encore été ouverte, faute de signal d'entrée suffisamment convaincant. Cette prudence est normale : le bot n'intervient que lorsque les conditions sont favorables."
+  "generated_at": "2026-11-12T07:13:00Z",
+  "healthy": false,
+  "summary_fr": "Le robot continue d'analyser le marché : 433 cycles d'évaluation aujourd'hui et 9 074 sur les 7 derniers jours, pour 6 positions ouvertes sur cette période. En revanche, son interrupteur de sécurité est actuellement activé : le robot n'ouvre donc aucune nouvelle position tant qu'il n'est pas relancé. Il s'agit d'une mesure de protection volontaire du capital, pas d'une panne technique."
 }

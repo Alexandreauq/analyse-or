@@ -1,8 +1,8 @@
 {
-  "date": "2026-11-11",
+  "date": "2026-11-12",
   "commodity": "argent",
   "label": "Argent",
-  "composite_score": -13.6,
+  "composite_score": -13.2,
   "interpretation": "Neutre — pas d'action",
   "cftc_percentile": 4.487179487179487,
   "factors": [
@@ -16,7 +16,7 @@
       "name": "Dollar (DXY)",
       "score": -10,
       "weight": 0.2,
-      "raw_value": "102.90 (il y a 2 mois : 99.12)"
+      "raw_value": "102.89 (il y a 2 mois : 99.46)"
     },
     {
       "name": "Positionnement CFTC",
@@ -26,21 +26,21 @@
     },
     {
       "name": "Ratio or/argent",
-      "score": -4.674033149171271,
+      "score": -4.519337016574586,
       "weight": 0.25,
-      "raw_value": "77.0 — 27e percentile (3 ans)"
+      "raw_value": "77.3 — 27e percentile (3 ans)"
     },
     {
       "name": "Dynamique récente",
       "score": -10.0,
       "weight": 0.1,
-      "raw_value": "-24.7% vs MM200"
+      "raw_value": "-25.7% vs MM200"
     }
   ],
   "technical": {
-    "note": "Cours en-dessous de la MM200 (-24.7%) — tendance baissière",
-    "spot": 51.959999084472656,
-    "ma200": 69.02285486221314,
+    "note": "Cours en-dessous de la MM200 (-25.7%) — tendance baissière",
+    "spot": 51.025001525878906,
+    "ma200": 68.71202987670898,
     "unite": "$ / oz"
   },
   "calendar": [
@@ -106,19 +106,19 @@
       "importance": "mineure"
     },
     {
-      "title": "Cours de l’argent : 51,89 $ après +5,75 % sur la semaine, IPC le 10 novembre, haussier 55 $, baissier 49 $ - FinanceFeeds",
-      "date": "2026-11-08",
-      "link": "https://news.google.com/rss/articles/CBMid0FVX3lxTE1EdEpYQklmZVpFYnl6V3NCMWpSVjVXY2Job3g3RmpHc0xlYVRwNENMNklzSGNBNklFTTljMW83aWtKZWx3SGZPQWIybjdRRjlPaDlMaU9jeHl4cUJicWZPM0ZLbkFrVjdkTW1PZ3E3azQ1Vkg1YWlF?oc=5",
-      "source": "FinanceFeeds",
+      "title": "Pourquoi, malgré une correction à la baisse, le marché de l'argent se maintient à des niveaux élevés? - RFI",
+      "date": "2026-09-24",
+      "link": "https://news.google.com/rss/articles/CBMitgJBVV95cUxQRlZNeG9jaEZLQXY1TXl5b0dUZktCcDFSbTBMZi1jY3FGSU11Z3Q1UzdFTWFQTEp2a0wzWll3TkNoR1ZFR3ZHMjJnSk5iWlV4TVNhdjhHVzZlb3M5M1FyZjRyUnVJaktkS3BtWnNjZURsRWxmaVZaMVlFSjNfYi0xWWQ2aVQtVHVaTzE0QkNxQ2RTUi11MmpncGhld0dZNXFaM2I1bXpXYnp0WEg1N1ZfSmxJdHdMdldsQTItSGR4ZmhqODk0MVpBbC1LRl9xWndqTl9hMGpxSF9RRTU0bkJrVDB4WFJyOS1xaEQyWmtQcXFnTkw5dG5RWEFVcnNuZVplTFRIUzVnUTRIN1NuemVUN2xkdzVSVDRfbHdrQUpGRG1ab0VWLUNMT3NTd3luRThDV1M3RHFn?oc=5",
+      "source": "RFI",
       "summary": "",
       "sentiment": 0,
       "importance": "mineure"
     },
     {
-      "title": "Pourquoi, malgré une correction à la baisse, le marché de l'argent se maintient à des niveaux élevés? - RFI",
-      "date": "2026-09-24",
-      "link": "https://news.google.com/rss/articles/CBMitgJBVV95cUxQRlZNeG9jaEZLQXY1TXl5b0dUZktCcDFSbTBMZi1jY3FGSU11Z3Q1UzdFTWFQTEp2a0wzWll3TkNoR1ZFR3ZHMjJnSk5iWlV4TVNhdjhHVzZlb3M5M1FyZjRyUnVJaktkS3BtWnNjZURsRWxmaVZaMVlFSjNfYi0xWWQ2aVQtVHVaTzE0QkNxQ2RTUi11MmpncGhld0dZNXFaM2I1bXpXYnp0WEg1N1ZfSmxJdHdMdldsQTItSGR4ZmhqODk0MVpBbC1LRl9xWndqTl9hMGpxSF9RRTU0bkJrVDB4WFJyOS1xaEQyWmtQcXFnTkw5dG5RWEFVcnNuZVplTFRIUzVnUTRIN1NuemVUN2xkdzVSVDRfbHdrQUpGRG1ab0VWLUNMT3NTd3luRThDV1M3RHFn?oc=5",
-      "source": "RFI",
+      "title": "Cours de l’argent : 51,89 $ après +5,75 % sur la semaine, IPC le 10 novembre, haussier 55 $, baissier 49 $ - FinanceFeeds",
+      "date": "2026-11-08",
+      "link": "https://news.google.com/rss/articles/CBMid0FVX3lxTE1EdEpYQklmZVpFYnl6V3NCMWpSVjVXY2Job3g3RmpHc0xlYVRwNENMNklzSGNBNklFTTljMW83aWtKZWx3SGZPQWIybjdRRjlPaDlMaU9jeHl4cUJicWZPM0ZLbkFrVjdkTW1PZ3E3azQ1Vkg1YWlF?oc=5",
+      "source": "FinanceFeeds",
       "summary": "",
       "sentiment": 0,
       "importance": "mineure"
@@ -133,7 +133,7 @@
       "importance": "mineure"
     }
   ],
-  "analysis_html": "<h3>Contexte récent</h3><p>L’argent se traite nettement sous sa tendance de long terme : son cours se situe <strong>24,8 % sous sa moyenne mobile à 200 jours</strong>, ce qui témoigne d’une correction marquée. Cette baisse intervient dans un environnement macro contrasté. Le dollar s’est sensiblement raffermi (DXY de 98,77 à 102,05 en deux mois), tandis que les taux réels américains à 10 ans ont reculé (de 2,83 % à 2,60 % en environ 45 jours).</p><h3>Facteurs déterminants</h3><ul><li><strong>Dollar (DXY), score -10,0, poids 20 %</strong> : c’est le facteur défavorable le plus lourd une fois les pondérations prises en compte. La hausse d’environ 3,3 % du dollar en deux mois renchérit le métal pour les détenteurs d’autres devises et pèse traditionnellement sur les métaux précieux. Le score atteint ici son niveau le plus négatif.</li><li><strong>Taux réels US 10 ans, score +4,6, poids 30 %</strong> : c’est le facteur le plus pondéré. Il joue modérément en faveur de l’argent : la baisse d’environ 23 points de base des taux réels réduit le coût d’opportunité de détenir un actif sans rendement. Son niveau absolu reste toutefois élevé, ce qui limite l’ampleur du signal.</li><li><strong>Positionnement CFTC, score +9,1, poids 15 %</strong> : la position spéculative nette (21 251 contrats) se situe au <strong>4e percentile sur trois ans</strong>, soit un positionnement très allégé. Ce facteur est interprété comme un signal contrarien favorable, car il laisse peu de vendeurs supplémentaires potentiels. C’est le score positif le plus élevé du composite.</li><li><strong>Ratio or/argent, score -4,3, poids 25 %</strong> : à 78,5, au 28e percentile sur trois ans, le ratio indique que l’argent n’est pas particulièrement bon marché relativement à l’or au regard de l’historique récent. Ce facteur pèse donc négativement, avec une intensité modérée mais un poids important.</li><li><strong>Dynamique récente, score -10,0, poids 10 %</strong> : l’écart de -24,8 % par rapport à la MM200 traduit une tendance technique dégradée. Le score est à son minimum, mais son poids limité en réduit l’impact sur l’ensemble.</li></ul><p>Au total, les facteurs défavorables (dollar, ratio or/argent, dynamique) l’emportent légèrement sur les facteurs favorables (taux réels, positionnement). Le dollar et la tendance de prix constituent les principaux freins.</p><h3>Actualités à retenir</h3><p><strong>Aucune actualité classée notable ou majeure</strong> ne figure parmi les éléments fournis : les cinq articles sont tous classés mineurs. Plusieurs d’entre eux évoquent une reprise ou une progression ponctuelle du cours. FinanceFeeds mentionne notamment 51,89 $ après +5,75 % sur la semaine, avec une publication de l’IPC attendue le 10 novembre. Vietnam.vn parle d’une inversion de tendance et RFI d’un marché qui se maintient à des niveaux élevés malgré une correction. Ces éléments suggèrent un possible rebond de court terme, mais ils restent peu détaillés et leurs dates ne permettent pas de les relier avec certitude à l’évolution du score. Ils ne modifient donc pas la lecture des facteurs fondamentaux. Les prévisions de long terme (LiteFinance) n’apportent pas d’information sur la dynamique actuelle.</p><h3>Synthèse</h3><p>Le score composite reflète un équilibre légèrement défavorable à l’argent. D’un côté, le raffermissement du dollar, un ratio or/argent peu attractif et une tendance technique nettement baissière pèsent sur le métal. De l’autre, la détente des taux réels et un positionnement spéculatif historiquement bas constituent des soutiens partiels. Les actualités récentes, toutes mineures, évoquent des tentatives de rebond sans que celles-ci puissent être confirmées par les données disponibles. L’évolution du dollar et des taux réels, notamment à l’approche de la publication de l’inflation américaine, reste le principal élément à suivre pour l’interprétation du score.</p>",
+  "analysis_html": "<h3>Contexte récent</h3><p>L'argent traverse une phase de correction marquée. Le cours évolue <strong>25,7 % sous sa moyenne mobile à 200 jours</strong>, après ce que plusieurs sources décrivent comme une année exceptionnelle de hausse. Sur les deux derniers mois, le raffermissement du dollar s'est combiné à cette dynamique baissière, tandis que la détente des taux réels américains et un positionnement spéculatif très allégé offrent des éléments de soutien.</p><h3>Facteurs déterminants</h3><ul><li><strong>Dollar (DXY), score -10,0, poids 20 %</strong> : c'est le principal frein du score. Le DXY est passé de 99,46 à 102,89 en deux mois, soit environ +3,4 %. Un dollar plus fort renchérit le métal pour les acheteurs hors zone dollar et pèse traditionnellement sur les métaux précieux. Le score atteint sa valeur la plus défavorable.</li><li><strong>Taux réels US 10 ans, score +4,8, poids 30 %</strong> : c'est le facteur le plus pondéré et il est favorable. Le taux réel a reculé de 2,90 % à 2,66 % en environ 45 jours, ce qui réduit le coût d'opportunité de la détention d'un actif sans rendement. Le soutien reste toutefois modéré, car le niveau absolu des taux réels demeure élevé.</li><li><strong>Positionnement CFTC, score +9,1, poids 15 %</strong> : la position nette spéculative (21 251 contrats) se situe au <strong>4e percentile sur 3 ans</strong>. Ce niveau très bas est interprété de façon contrariante : une grande partie des positions acheteuses a déjà été liquidée, ce qui limite le potentiel de ventes forcées supplémentaires.</li><li><strong>Ratio or/argent, score -4,5, poids 25 %</strong> : à 77,3, le ratio se situe au 27e percentile sur 3 ans. L'argent apparaît donc relativement cher face à l'or au regard de son historique récent, ce qui réduit l'argument de rattrapage relatif. Compte tenu de son poids élevé, ce facteur pèse de manière sensible.</li><li><strong>Dynamique récente, score -10,0, poids 10 %</strong> : l'écart de -25,7 % par rapport à la MM200 traduit une tendance baissière prononcée et donne au facteur sa valeur la plus défavorable. Son poids reste cependant limité.</li></ul><p>Au total, le score oppose deux forces. Le dollar, la dynamique de prix et la cherté relative face à l'or pèsent à la baisse. La baisse des taux réels et un positionnement spéculatif déprimé jouent en sens inverse.</p><h3>Actualités à retenir</h3><p>Aucune actualité n'est classée notable ou majeure. Les cinq articles disponibles sont tous jugés mineurs et ne modifient pas l'interprétation du score. Ils dressent néanmoins un tableau qualitatif cohérent avec une phase de consolidation après une forte hausse :</p><ul><li>RFI et Le Comptoir National de l'Or évoquent un marché qui <strong>se maintient à des niveaux élevés malgré la correction</strong> et qui cherche un nouvel équilibre après une année jugée hors norme.</li><li>FinanceFeeds mentionne un cours de 51,89 $ après une hausse hebdomadaire de 5,75 % et désigne la publication de l'IPC américain comme un catalyseur potentiel. Cette donnée, liée à une date précise, ne correspond pas nécessairement à la situation actuelle reflétée par l'écart à la MM200. Elle doit donc être lue avec prudence.</li><li>Les autres articles, consacrés à des prévisions de long terme et à une progression ponctuelle du cours, n'apportent pas d'élément explicatif exploitable.</li></ul><h3>Synthèse</h3><p>Le score composite de l'argent reflète un équilibre tendu entre des vents contraires et des soutiens. Les vents contraires de court terme sont le <strong>dollar en nette hausse</strong>, la <strong>dynamique de prix dégradée</strong> et un <strong>ratio or/argent peu favorable</strong>. Les soutiens plus structurels sont la <strong>détente des taux réels</strong> et un <strong>positionnement spéculatif au plus bas sur trois ans</strong>. Les actualités, toutes mineures, décrivent une correction intervenant après une hausse exceptionnelle, sans événement marquant identifié. L'évolution du dollar et des données d'inflation américaines apparaît comme le principal élément à surveiller pour la suite de ces facteurs.</p>",
   "news_classifications": {
     "https://news.google.com/rss/articles/CBMiggFBVV95cUxQMzJNaUdZQlVJajk1cHlxaTdsN3FaS1IwRUxzcXR3OGhWVFJLMTBOc1ZwcUE2OHN6aVNPaFpJX1FIampDakphX0UtXzhfdm9IVDNYVVlNYTFhcHQtSEpCcENzVi1Ib0dxOGM0SlFxNHJVWjV5ejRHWEgzVDBiNkxudkJn?oc=5": {
       "summary": "",
@@ -145,12 +145,12 @@
       "sentiment": 1,
       "importance": "mineure"
     },
-    "https://news.google.com/rss/articles/CBMid0FVX3lxTE1EdEpYQklmZVpFYnl6V3NCMWpSVjVXY2Job3g3RmpHc0xlYVRwNENMNklzSGNBNklFTTljMW83aWtKZWx3SGZPQWIybjdRRjlPaDlMaU9jeHl4cUJicWZPM0ZLbkFrVjdkTW1PZ3E3azQ1Vkg1YWlF?oc=5": {
+    "https://news.google.com/rss/articles/CBMitgJBVV95cUxQRlZNeG9jaEZLQXY1TXl5b0dUZktCcDFSbTBMZi1jY3FGSU11Z3Q1UzdFTWFQTEp2a0wzWll3TkNoR1ZFR3ZHMjJnSk5iWlV4TVNhdjhHVzZlb3M5M1FyZjRyUnVJaktkS3BtWnNjZURsRWxmaVZaMVlFSjNfYi0xWWQ2aVQtVHVaTzE0QkNxQ2RTUi11MmpncGhld0dZNXFaM2I1bXpXYnp0WEg1N1ZfSmxJdHdMdldsQTItSGR4ZmhqODk0MVpBbC1LRl9xWndqTl9hMGpxSF9RRTU0bkJrVDB4WFJyOS1xaEQyWmtQcXFnTkw5dG5RWEFVcnNuZVplTFRIUzVnUTRIN1NuemVUN2xkdzVSVDRfbHdrQUpGRG1ab0VWLUNMT3NTd3luRThDV1M3RHFn?oc=5": {
       "summary": "",
       "sentiment": 0,
       "importance": "mineure"
     },
-    "https://news.google.com/rss/articles/CBMitgJBVV95cUxQRlZNeG9jaEZLQXY1TXl5b0dUZktCcDFSbTBMZi1jY3FGSU11Z3Q1UzdFTWFQTEp2a0wzWll3TkNoR1ZFR3ZHMjJnSk5iWlV4TVNhdjhHVzZlb3M5M1FyZjRyUnVJaktkS3BtWnNjZURsRWxmaVZaMVlFSjNfYi0xWWQ2aVQtVHVaTzE0QkNxQ2RTUi11MmpncGhld0dZNXFaM2I1bXpXYnp0WEg1N1ZfSmxJdHdMdldsQTItSGR4ZmhqODk0MVpBbC1LRl9xWndqTl9hMGpxSF9RRTU0bkJrVDB4WFJyOS1xaEQyWmtQcXFnTkw5dG5RWEFVcnNuZVplTFRIUzVnUTRIN1NuemVUN2xkdzVSVDRfbHdrQUpGRG1ab0VWLUNMT3NTd3luRThDV1M3RHFn?oc=5": {
+    "https://news.google.com/rss/articles/CBMid0FVX3lxTE1EdEpYQklmZVpFYnl6V3NCMWpSVjVXY2Job3g3RmpHc0xlYVRwNENMNklzSGNBNklFTTljMW83aWtKZWx3SGZPQWIybjdRRjlPaDlMaU9jeHl4cUJicWZPM0ZLbkFrVjdkTW1PZ3E3azQ1Vkg1YWlF?oc=5": {
       "summary": "",
       "sentiment": 0,
       "importance": "mineure"

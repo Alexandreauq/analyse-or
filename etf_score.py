@@ -44,3 +44,43 @@ def fetch_etf_data(ticker: str) -> dict:
         "price_history": price_history,
         "dividend_yield": float(dividend_yield) if dividend_yield is not None else None,
     }
+
+
+def build_etf_entry(catalog_entry: dict, benchmark_price_history: list[dict] | None) -> dict:
+    """Assemble l'entree finale d'un ETF pour docs/indices.json. Jamais de
+    score/factors/sector/is_financial/is_trust/alerts (voir Global
+    Constraints du plan) -- etf_info porte les metriques reelles a la
+    place. `_price_history_daily` suit la forme {date, ticker, price}
+    produite par extract_ratios/attendue par update_price_history dans
+    indices_score.py -- pas {ticker, date, close}, qui n'est que la forme
+    interne de fetch_etf_data()["price_history"]."""
+    data = fetch_etf_data(catalog_entry["ticker"])
+    etf_prices = [p["close"] for p in data["price_history"]]
+    benchmark_prices = (
+        [p["close"] for p in benchmark_price_history] if benchmark_price_history else None
+    )
+    tracking_difference = (
+        compute_tracking_difference(etf_prices, benchmark_prices)
+        if benchmark_prices else None
+    )
+    return {
+        "ticker": catalog_entry["ticker"],
+        "name": catalog_entry["name"],
+        "index": "ETF",
+        "current_price": data["current_price"],
+        "news": [],
+        "is_etf": True,
+        "etf_info": {
+            "benchmark_name": catalog_entry["benchmark_name"],
+            "ter_pct": catalog_entry["ter_pct"],
+            "replication": catalog_entry["replication"],
+            "distribution": catalog_entry["distribution"],
+            "pea_eligible": catalog_entry["pea_eligible"],
+            "dividend_yield": data["dividend_yield"],
+            "tracking_difference_pct": tracking_difference,
+        },
+        "_price_history_daily": [
+            {"date": p["date"], "ticker": catalog_entry["ticker"], "price": p["close"]}
+            for p in data["price_history"]
+        ],
+    }

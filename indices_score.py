@@ -4783,8 +4783,18 @@ INDEX_YFINANCE_TICKERS = {
     # Pas de ticker Yahoo pour l'AEX All-Share : l'AEX (25 valeurs) sert de proxy.
     "AEXALL": "^AEX", "SP500": "^GSPC",
     # Benchmarks ETF (voir etf_catalog.py, "benchmark_name"/"benchmark_ticker",
-    # vérifiés le 2026-11-12) — clés alignées sur benchmark_name pour que la
-    # Tâche 6 puisse réutiliser la valeur telle quelle comme clé d'indice.
+    # vérifiés le 2026-11-12). Attention : les clés de ce dict ne suivent PAS
+    # une convention unique — un mix de codes courts hérités (SP500, NASDAQ,
+    # CAC40, EUROSTOXX50…, pré-existants, réutilisés tels quels par les
+    # entrées etf_catalog.py dont benchmark_name est "S&P 500"/"Nasdaq-100"/
+    # "CAC 40"/"Euro Stoxx 50") et de benchmark_name complets pour les clés
+    # ajoutées ici qui n'avaient pas encore d'équivalent (MSCI World, MSCI
+    # Emerging Markets, MSCI Europe, MSCI EMU, TOPIX, Or…). Un futur lookup
+    # qui joint sur ce dict ne doit donc jamais dériver sa clé depuis
+    # benchmark_name (`INDEX_YFINANCE_TICKERS[entry["benchmark_name"]]` casse
+    # pour S&P 500/Nasdaq-100/CAC 40/Euro Stoxx 50) — utiliser
+    # directement entry["benchmark_ticker"] à la place, déjà le bon ticker
+    # yfinance dans tous les cas.
     "MSCI World": "^990100-USD-STRD",
     # Proxy : iShares MSCI Emerging Markets ETF (USD) -- l'indice lui-même
     # (^891800-USD-STRD) existe sur Yahoo mais sans historique exploitable.
@@ -6926,8 +6936,17 @@ def main():
     etf_companies = []
     for etf in ETF_CATALOG:
         try:
-            # v1 : pas de lookup/fetch de benchmark, voir plan
-            etf_companies.append(build_etf_entry(etf, None))
+            # v1 : pas de lookup/fetch de benchmark, voir plan. NE PAS
+            # remplacer ce None par fetch_index_price_history()[benchmark]
+            # sans lire d'abord l'avertissement sur
+            # etf_score.compute_tracking_difference : les deux series
+            # (historique ETF et historique benchmark) ne sont alignees
+            # sur AUCUNE date commune ailleurs dans ce depot (une peut
+            # couvrir 6 ans, l'autre 2 ans) -- cabler un historique reel
+            # ici sans etape d'alignement produirait un
+            # tracking_difference_pct silencieusement faux, pas une erreur.
+            benchmark_history = None
+            etf_companies.append(build_etf_entry(etf, benchmark_history))
         except Exception as e:
             print(f"Erreur pour {etf['ticker']} ({etf['name']}) : {e}")
             traceback.print_exc()

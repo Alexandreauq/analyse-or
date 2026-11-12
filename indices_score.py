@@ -41,6 +41,9 @@ import pandas as pd
 import requests
 import trafilatura
 
+from etf_catalog import ETF_CATALOG
+from etf_score import build_etf_entry
+
 
 WEIGHTS = {
     "rentabilite": 0.24,
@@ -6749,6 +6752,15 @@ def _compute_health_summary(companies: list[dict]) -> dict:
     }
 
 
+def _merge_etf_entries(companies: list[dict], etf_companies: list[dict]) -> list[dict]:
+    """Fusionne les entrees ETF dans la liste finale -- a n'appeler
+    qu'APRES recalibrate_scores_by_profile/_attach_alerts_and_update_history/
+    _compute_health_summary (voir Tache 6 du plan ETF) : ces trois
+    fonctions font des acces directs a des cles absentes d'une entree
+    ETF (score, score_raw, entry_price) et leveraient une KeyError."""
+    return companies + etf_companies
+
+
 _REPO_ROOT = os.path.dirname(os.path.abspath(__file__))
 
 
@@ -6905,8 +6917,25 @@ def main():
             print(f"Erreur pour {company['ticker']} ({company['name']}) : {e}")
             traceback.print_exc()
 
+    # ETF (voir Tache 6 du plan ETF) : construits dans une liste separee
+    # (etf_companies) et fusionnes dans companies seulement apres
+    # recalibrate_scores_by_profile/_attach_alerts_and_update_history/
+    # _compute_health_summary -- ces trois fonctions font des acces directs
+    # a des cles absentes d'une entree ETF et leveraient une KeyError si une
+    # entree ETF s'y trouvait avant la fusion.
+    etf_companies = []
+    for etf in ETF_CATALOG:
+        try:
+            benchmark_history = None  # v1 : pas de lookup/fetch de benchmark, voir plan
+            etf_companies.append(build_etf_entry(etf, benchmark_history))
+        except Exception as e:
+            print(f"Erreur pour {etf['ticker']} ({etf['name']}) : {e}")
+            traceback.print_exc()
+
     price_history_entries = []
     for c in companies:
+        price_history_entries.extend(c.pop("_price_history_daily", []))
+    for c in etf_companies:
         price_history_entries.extend(c.pop("_price_history_daily", []))
     price_history_entries.extend(fetch_index_price_history())
     update_price_history(price_history_entries)
@@ -6925,6 +6954,17 @@ def main():
 
     newly_triggered_entree, newly_triggered_major_news = _attach_alerts_and_update_history(companies)
 
+    # _compute_health_summary compare companies a COMPANIES (actions
+    # uniquement) : calcule ICI, sur companies encore stock-only, avant la
+    # fusion ETF qui suit -- sinon chaque ETF apparaitrait comme un ticker
+    # "inattendu", faussant le resume de completude (voir Tache 6 du plan ETF).
+    health_summary = _compute_health_summary(companies)
+
+    # Fusion ETF : seulement maintenant, apres recalibrate_scores_by_profile/
+    # _attach_alerts_and_update_history/_compute_health_summary -- jamais avant
+    # (voir _merge_etf_entries).
+    companies = _merge_etf_entries(companies, etf_companies)
+
     payload = {
         "updated": datetime.today().strftime("%Y-%m-%d"),
         "index_names": INDEX_NAMES,
@@ -6940,7 +6980,7 @@ def main():
         # gratuit pour Nasdaq/Dow Jones, contrairement à CAC40/DAX).
         "index_prices": fetch_index_prices(),
         "companies": companies,
-        "health": _compute_health_summary(companies),
+        "health": health_summary,
         # Liste STATIQUE complete de tous les tickers que main() a vocation
         # a suivre (COMPANIES), independamment du succes/echec du run du
         # jour pour chacun -- distincte de "companies" qui ne contient que
@@ -6977,7 +7017,15 @@ def main():
 
     print(f"Données exportées vers : {OUTPUT_JSON_PATH}")
     for c in companies:
-        print(f"  {c['ticker']:<8} {c['name']:<20} score {c['score']:+.1f}  ({c['interpretation']})")
+        # Decouvert pendant le branchement des ETF (Tache 6, hors perimetre
+        # des trois fonctions auditees par le plan) : une entree ETF n'a ni
+        # "score" ni "interpretation" -- brancher sur is_etf plutot que de
+        # planter main() APRES l'ecriture de indices.json (ce qui coupait
+        # silencieusement l'email/signal-tracking/Nikkei du jour).
+        if c.get("is_etf"):
+            print(f"  {c['ticker']:<8} {c['name']:<20} ETF (prix {c['current_price']:.2f})")
+        else:
+            print(f"  {c['ticker']:<8} {c['name']:<20} score {c['score']:+.1f}  ({c['interpretation']})")
 
     send_daily_digest_email(newly_triggered_entree, newly_triggered_major_news)
     update_signal_tracking(companies, newly_triggered_entree)

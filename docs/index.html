@@ -2583,7 +2583,7 @@ function scoreQualifier(score) {
 // — ce site est entièrement statique côté client, mais la FORME imite le
 // style d'une analyse manuelle (constat + pourquoi) plutôt qu'un relevé
 // de stats brutes.
-function portfolioDiagnosisHtml(concentration, health, attribution) {
+function portfolioDiagnosisHtml(concentration, health, factorDiagnosis) {
   if (!concentration.totalPositions) return '';
   const good = [];
   const bad = [];
@@ -2633,18 +2633,26 @@ function portfolioDiagnosisHtml(concentration, health, attribution) {
     good.push(`Aucune position ne porte d'alerte "risque" active pour le moment : le modèle ne détecte aujourd'hui aucun signal préoccupant sur l'ensemble des lignes détenues.`);
   }
 
-  if (attribution.length) {
-    const best = attribution[0];
-    const worst = attribution[attribution.length - 1];
-    if (best.pnlAbs > 0) good.push(`${best.name} est la meilleure ligne (${formatPct(best.pnlPct)}) et tire le P&L vers le haut — elle compense une partie des moins-values latentes des autres positions.`);
-    if (worst.pnlAbs < 0 && worst.ticker !== best.ticker) bad.push(`${worst.name} pèse le plus vers le bas (${formatPct(worst.pnlPct)}) : c'est la ligne qui amenuise le plus le résultat global du portefeuille en ce moment.`);
+  // Facteurs fondamentaux (Vernimmen-style, voir computePortfolioFactorDiagnosis)
+  // plutôt qu'un simple "meilleure/pire ligne" sur le P&L -- ce dernier ne dit
+  // rien de la qualité financière sous-jacente, juste du mouvement de cours.
+  if (factorDiagnosis.length) {
+    const byAvg = factorDiagnosis.slice().sort((a, b) => b.avgScore - a.avgScore);
+    const best = byAvg[0];
+    const worst = byAvg[byAvg.length - 1];
+    if (best.avgScore > 0) {
+      good.push(`Le facteur fondamental le plus solide du portefeuille est "${best.name}" (score moyen ${best.avgScore > 0 ? '+' : ''}${best.avgScore.toFixed(1)}/10) : ${best.strongest.name} s'y distingue particulièrement — ${best.strongest.rawValue}.`);
+    }
+    if (worst.avgScore < 0 && worst.name !== best.name) {
+      bad.push(`Le facteur fondamental le plus fragile est "${worst.name}" (score moyen ${worst.avgScore.toFixed(1)}/10) : ${worst.weakest.name} y pèse le plus — ${worst.weakest.rawValue}.`);
+    }
   }
 
   const section = (title, items) => items.length
     ? `<div class="portfolio-diagnosis-section"><strong>${title}</strong><ul>${items.map(item => `<li>${item}</li>`).join('')}</ul></div>`
     : '';
   const intro = (good.length || bad.length)
-    ? '<p class="portfolio-diagnosis-intro">Calculé directement à partir de tes positions (concentration, devises, score du modèle, P&L) — un complément chiffré à l\'avis de l\'IA ci-dessus, pas une opinion de l\'IA elle-même.</p>'
+    ? '<p class="portfolio-diagnosis-intro">Calculé directement à partir de tes positions (concentration, devises, score du modèle, facteurs fondamentaux) — un complément chiffré à l\'avis de l\'IA ci-dessus, pas une opinion de l\'IA elle-même.</p>'
     : '';
   return intro + section('Ce qui va bien —', good) + section('Ce qui pêche —', bad);
 }
@@ -2743,6 +2751,7 @@ function portfolioAnalysisHtml(positions, companiesByTicker, currencyByIndex, pr
   const concentration = computePortfolioConcentration(positions, companiesByTicker, currencyByIndex);
   const health = computePortfolioHealth(positions, companiesByTicker);
   const attribution = computePortfolioAttribution(positions, companiesByTicker);
+  const factorDiagnosis = computePortfolioFactorDiagnosis(positions, companiesByTicker);
   const dividendsReceived = computeDividendsReceived(
     [...positions, ...closedPositions], dividendHistoryByTicker, companiesByTicker, currencyByIndex);
   const projectedIncome = computeProjectedDividendIncome(
@@ -2776,7 +2785,7 @@ function portfolioAnalysisHtml(positions, companiesByTicker, currencyByIndex, pr
         </div>
       </div>`;
   }).join('');
-  const diagnosisHtml = portfolioDiagnosisHtml(concentration, health, attribution);
+  const diagnosisHtml = portfolioDiagnosisHtml(concentration, health, factorDiagnosis);
   const indexNames = { ...INDEX_DISPLAY_NAMES, ...(indicesData.index_names || {}) };
 
   const currencyHtml = Object.entries(concentration.byCurrency).sort((a, b) => b[1] - a[1]).map(([currency, value]) => `
@@ -2859,6 +2868,10 @@ function portfolioAiSectionHtml(analysis) {
     </div>
     <button class="toggle-btn" type="button" id="portfolioAiAnalysisBtn">Lancer l'analyse IA</button>
     <p class="portfolio-ai-error" id="portfolioAiError" hidden></p>
+    <div class="ui-seg" id="portfolioAiViewSeg">
+      <button type="button" data-view="cards" aria-pressed="true">Cartes</button>
+      <button type="button" data-view="diagnostic" aria-pressed="false">Diagnostic</button>
+    </div>
     <div id="portfolioAiViewBody"></div>
     <button class="toggle-btn" type="button" id="portfolioAiDetailToggle" aria-expanded="false">
       Voir le détail <span class="chevron">▾</span>
@@ -2900,18 +2913,22 @@ function _portfolioAiCardsHtml(parLigne, positionsByTicker, companiesByTicker, c
   }).join('');
 }
 
-// Une seule présentation pour "Par entreprise" (plus de bascule Cartes/Note
-// -- les deux répétaient la même donnée par_ligne sous deux formes). Le
-// diagnostic et la comparaison, qui n'existaient auparavant que dans la vue
-// "Note", sont repris ici pour ne rien perdre de ce contenu.
-function _portfolioAiCardsViewHtml(quickGridHtml, cardsHtml, diagnosisHtml, comparaisonHtml) {
+// Bascule Cartes/Diagnostic : contrairement à l'ancienne Cartes/Note, les
+// deux vues ne répètent plus la même donnée -- "Cartes" reste l'avis par
+// entreprise (par_ligne), "Diagnostic" est l'analyse fondamentale du
+// portefeuille dans son ensemble (voir portfolioDiagnosisHtml).
+function _portfolioAiCardsViewHtml(quickGridHtml, cardsHtml) {
   return `
     ${quickGridHtml}
-    <h3 class="portfolio-analysis-title">Diagnostic</h3>
-    ${diagnosisHtml || '<p class="hero-sub">Ajoute des positions pour voir apparaître un diagnostic ici.</p>'}
-    ${comparaisonHtml}
     <h3 class="portfolio-analysis-title">Par entreprise</h3>
     <div class="portfolio-ai-cards">${cardsHtml}</div>
+  `;
+}
+
+function _portfolioAiDiagnosticViewHtml(diagnosisHtml, comparaisonHtml) {
+  return `
+    ${diagnosisHtml || '<p class="hero-sub">Ajoute des positions pour voir apparaître un diagnostic ici.</p>'}
+    ${comparaisonHtml}
   `;
 }
 
@@ -2952,6 +2969,7 @@ function wirePortfolioAiSubsection(positions, closedPositions, companiesByTicker
   const freshnessEl = document.getElementById('portfolioAiFreshness');
   const errorEl = document.getElementById('portfolioAiError');
   const btn = document.getElementById('portfolioAiAnalysisBtn');
+  const seg = document.getElementById('portfolioAiViewSeg');
   const viewBodyEl = document.getElementById('portfolioAiViewBody');
   if (!btn || !viewBodyEl) return;
 
@@ -2959,6 +2977,7 @@ function wirePortfolioAiSubsection(positions, closedPositions, companiesByTicker
 
   const positionsByTicker = new Map(positions.map(p => [p.ticker, p]));
   const quickGridHtml = portfolioAnalysisQuickGridHtml(computePortfolioHealth(positions, companiesByTicker));
+  let currentView = 'cards';
   let lastResultat = null;
   let lastHistorique = [];
 
@@ -2998,16 +3017,30 @@ function wirePortfolioAiSubsection(positions, closedPositions, companiesByTicker
   };
 
   const renderView = () => {
-    const cardsHtml = lastResultat
-      ? _portfolioAiCardsHtml(lastResultat.par_ligne || [], positionsByTicker, companiesByTicker, currencyByIndex)
-      : '<div class="list-empty">Lance l\'analyse IA pour voir l\'avis par entreprise.</div>';
-    const comparaisonHtml = lastResultat && lastResultat.comparaison_precedente
-      ? `<h3 class="portfolio-analysis-title">Depuis la dernière fois</h3><p class="hero-sub">${escHtml(lastResultat.comparaison_precedente)}</p>`
-      : '';
-    viewBodyEl.innerHTML = _portfolioAiCardsViewHtml(quickGridHtml, cardsHtml, diagnosisHtml, comparaisonHtml);
+    if (currentView === 'cards') {
+      const cardsHtml = lastResultat
+        ? _portfolioAiCardsHtml(lastResultat.par_ligne || [], positionsByTicker, companiesByTicker, currencyByIndex)
+        : '<div class="list-empty">Lance l\'analyse IA pour voir l\'avis par entreprise.</div>';
+      viewBodyEl.innerHTML = _portfolioAiCardsViewHtml(quickGridHtml, cardsHtml);
+    } else {
+      const comparaisonHtml = lastResultat && lastResultat.comparaison_precedente
+        ? `<h3 class="portfolio-analysis-title">Depuis la dernière fois</h3><p class="hero-sub">${escHtml(lastResultat.comparaison_precedente)}</p>`
+        : '';
+      viewBodyEl.innerHTML = _portfolioAiDiagnosticViewHtml(diagnosisHtml, comparaisonHtml);
+    }
   };
 
   renderView();
+
+  if (seg) {
+    seg.addEventListener('click', (e) => {
+      const b = e.target.closest('button[data-view]');
+      if (!b) return;
+      currentView = b.dataset.view;
+      seg.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+      renderView();
+    });
+  }
 
   const applyResultat = (resultat) => {
     lastResultat = resultat;

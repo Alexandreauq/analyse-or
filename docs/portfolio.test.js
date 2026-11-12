@@ -8,6 +8,7 @@ const {
   loadPortfolio, savePortfolio, addPosition, updatePosition, removePosition,
   computePositionPnL, computePortfolioTotals, findOpportunities,
   computePortfolioConcentration, computePortfolioHealth, computePortfolioAttribution,
+  computePortfolioFactorDiagnosis,
   PORTFOLIO_CLOSED_STORAGE_KEY, loadClosedPortfolio, saveClosedPortfolio, closePosition,
   groupPriceHistoryByTicker, priceAtOrBefore, isPositionActiveOn, realValueForPosition,
   benchmarkValueForPosition, computePerformanceCurve, computePortfolioPerformanceCurves,
@@ -409,6 +410,50 @@ function test_computePortfolioAttribution_skips_position_without_price() {
   const result = computePortfolioAttribution(positions, companiesByTicker);
   assert.strictEqual(result.length, 0);
   console.log('OK: test_computePortfolioAttribution_skips_position_without_price');
+}
+
+function test_computePortfolioFactorDiagnosis_averages_per_factor_and_finds_extremes() {
+  const positions = [
+    { id: 'p1', ticker: 'MC.PA', quantity: 1, buy_price: 600, buy_date: '2026-07-01' },
+    { id: 'p2', ticker: 'TTE.PA', quantity: 1, buy_price: 50, buy_date: '2026-07-01' },
+  ];
+  const companiesByTicker = {
+    'MC.PA': {
+      ticker: 'MC.PA', name: 'LVMH',
+      factors: [
+        { name: 'Valorisation relative', score: -6, weight: 0.2, raw_value: 'PER 28.0x (moy. 5 ans 22.0x)' },
+        { name: 'Structure financière / solvabilité', score: 4, weight: 0.2, raw_value: 'Dette nette/EBITDA 1.5x' },
+      ],
+    },
+    'TTE.PA': {
+      ticker: 'TTE.PA', name: 'TotalEnergies',
+      factors: [
+        { name: 'Valorisation relative', score: 2, weight: 0.2, raw_value: 'PER 8.0x (moy. 5 ans 9.0x)' },
+        { name: 'Structure financière / solvabilité', score: 6, weight: 0.2, raw_value: 'Dette nette/EBITDA 0.8x' },
+      ],
+    },
+  };
+  const result = computePortfolioFactorDiagnosis(positions, companiesByTicker);
+  const valorisation = result.find(f => f.name === 'Valorisation relative');
+  const structure = result.find(f => f.name === 'Structure financière / solvabilité');
+  assert.strictEqual(valorisation.avgScore, -2);
+  assert.strictEqual(valorisation.weakest.name, 'LVMH');
+  assert.strictEqual(valorisation.strongest.name, 'TotalEnergies');
+  assert.strictEqual(structure.avgScore, 5);
+  assert.strictEqual(structure.weakest.name, 'LVMH');
+  assert.strictEqual(structure.strongest.name, 'TotalEnergies');
+  console.log('OK: test_computePortfolioFactorDiagnosis_averages_per_factor_and_finds_extremes');
+}
+
+function test_computePortfolioFactorDiagnosis_skips_unknown_ticker_and_missing_factors() {
+  const positions = [
+    { id: 'p1', ticker: 'DELISTED', quantity: 1, buy_price: 1, buy_date: '2026-07-01' },
+    { id: 'p2', ticker: 'NOFACTORS', quantity: 1, buy_price: 1, buy_date: '2026-07-01' },
+  ];
+  const companiesByTicker = { 'NOFACTORS': { ticker: 'NOFACTORS', name: 'Sans facteurs' } };
+  const result = computePortfolioFactorDiagnosis(positions, companiesByTicker);
+  assert.deepStrictEqual(result, []);
+  console.log('OK: test_computePortfolioFactorDiagnosis_skips_unknown_ticker_and_missing_factors');
 }
 
 function test_group_price_history_by_ticker_sorts_each_group_by_date() {
@@ -905,6 +950,8 @@ function main() {
   test_computePortfolioHealth_null_avg_score_when_no_scored_positions();
   test_computePortfolioAttribution_sorts_by_pnl_desc();
   test_computePortfolioAttribution_skips_position_without_price();
+  test_computePortfolioFactorDiagnosis_averages_per_factor_and_finds_extremes();
+  test_computePortfolioFactorDiagnosis_skips_unknown_ticker_and_missing_factors();
   test_group_price_history_by_ticker_sorts_each_group_by_date();
   test_group_dividend_history_by_ticker_sorts_each_group_by_date();
   test_price_at_or_before_returns_the_latest_entry_not_after_the_date();

@@ -549,6 +549,42 @@ function computePortfolioAttribution(positions, companiesByTicker) {
 }
 
 /**
+ * Agrège les facteurs fondamentaux (company.factors -- les 7 facteurs
+ * Vernimmen-style déjà calculés par indices_score.py pour chaque société :
+ * rentabilité/création de valeur, structure financière/solvabilité,
+ * croissance, génération de cash, valorisation relative, dynamique
+ * récente, actualité récente) à l'échelle du portefeuille. Score moyen par
+ * facteur à parts égales entre positions (même convention que
+ * computePortfolioHealth), plus -- pour citer du concret plutôt qu'un
+ * chiffre abstrait -- la position la moins bonne et la meilleure sur ce
+ * facteur, avec leur raw_value (ex. "Dette nette/EBITDA 4.8x (seuil
+ * confort 3.0x)...").
+ */
+function computePortfolioFactorDiagnosis(positions, companiesByTicker) {
+  const byFactor = {};
+  positions.forEach(position => {
+    const company = companiesByTicker[position.ticker];
+    if (!company) return;
+    (company.factors || []).forEach(f => {
+      if (!Number.isFinite(f.score)) return;
+      if (!byFactor[f.name]) byFactor[f.name] = [];
+      byFactor[f.name].push({
+        ticker: position.ticker, name: company.name, score: f.score, rawValue: f.raw_value,
+      });
+    });
+  });
+  return Object.entries(byFactor).map(([name, entries]) => {
+    const sorted = entries.slice().sort((a, b) => a.score - b.score);
+    return {
+      name,
+      avgScore: entries.reduce((sum, e) => sum + e.score, 0) / entries.length,
+      weakest: sorted[0],
+      strongest: sorted[sorted.length - 1],
+    };
+  });
+}
+
+/**
  * Un point par tranche de 7 jours calendaires (le plus recent de la
  * tranche), a partir d'une courbe {date, pnlPct}[] deja triee par date
  * croissante (meme forme que computePerformanceCurve). Necessaire pour
@@ -666,6 +702,7 @@ if (typeof module !== 'undefined' && module.exports) {
     loadPortfolio, savePortfolio, addPosition, updatePosition, removePosition,
     computePositionPnL, computePortfolioTotals, findOpportunities,
     computePortfolioConcentration, computePortfolioHealth, computePortfolioAttribution,
+    computePortfolioFactorDiagnosis,
     PORTFOLIO_CLOSED_STORAGE_KEY, loadClosedPortfolio, saveClosedPortfolio, closePosition,
     groupPriceHistoryByTicker, priceAtOrBefore, isPositionActiveOn, realValueForPosition,
     benchmarkValueForPosition, computePerformanceCurve, computePortfolioPerformanceCurves,

@@ -3368,7 +3368,9 @@ function portfolioPositionsHtml(positions, companiesByTicker, currencyByIndex) {
         <div class="portfolio-position-pnl">
           <span class="price-value">${pnl ? fmt(pnl.value) : 'Cours indisponible'}</span>
           ${pnl ? `<span style="color:${pnl.pnlAbs >= 0 ? 'var(--gold)' : 'var(--rust)'}">${pnl.pnlAbs >= 0 ? '+' : ''}${fmt(pnl.pnlAbs)} (${formatPct(pnl.pnlPct)})</span>` : ''}
-          <span class="company-score" style="color:${company.score >= 0 ? 'var(--gold)' : 'var(--rust)'};">${company.score > 0 ? '+' : ''}${company.score}</span>
+          ${typeof company.score === 'number'
+            ? `<span class="company-score" style="color:${company.score >= 0 ? 'var(--gold)' : 'var(--rust)'};">${company.score > 0 ? '+' : ''}${company.score}</span>`
+            : (company.is_etf ? `<span class="company-score" style="color:var(--muted);font-size:var(--text-xs);">TER ${company.etf_info && company.etf_info.ter_pct != null ? company.etf_info.ter_pct.toLocaleString('fr-FR') + '%' : '—'}</span>` : '')}
         </div>
         <div class="portfolio-position-actions">
           <button class="toggle-btn portfolio-sell-btn" type="button" data-id="${position.id}">Vendre</button>
@@ -6444,7 +6446,7 @@ function peekRowsHtml(companies) {
       <span class="index-card-peek-name">${c.name}</span>
       ${typeof c.score === 'number'
         ? `<span class="index-card-peek-score" style="color:${c.score >= 0 ? 'var(--green-500)' : 'var(--rust)'}">${c.score > 0 ? '+' : ''}${c.score}</span>`
-        : (c.is_etf ? `<span class="index-card-peek-score" style="color:var(--muted)">TER ${c.etf_info.ter_pct}%</span>` : '')}
+        : (c.is_etf ? `<span class="index-card-peek-score" style="color:var(--muted)">TER ${c.etf_info.ter_pct.toLocaleString('fr-FR')}%</span>` : '')}
     </a>`).join('');
 }
 
@@ -6820,11 +6822,12 @@ function renderIndicesRows(companies, rowsContainerId) {
   const visible = sortedFilteredCompanies(companies);
   panel.innerHTML = visible.length ? visible.map(c => `
     <div class="company-row-wrap">
+      ${c.is_etf ? '' : `
       <label class="company-row-checkbox">
         <input type="checkbox" data-compare-ticker="${c.ticker}"
           ${indicesCompareSelection.has(c.ticker) ? 'checked' : ''}
           ${!indicesCompareSelection.has(c.ticker) && indicesCompareSelection.size >= INDICES_COMPARE_MAX ? 'disabled' : ''}>
-      </label>
+      </label>`}
       <a class="company-row" href="#indices/${c.ticker}">
         <div class="company-row-left">
           <span class="company-name">${c.name}</span>
@@ -6832,7 +6835,7 @@ function renderIndicesRows(companies, rowsContainerId) {
         </div>
         ${typeof c.score === 'number'
           ? `<span class="company-score" style="color:${c.score >= 0 ? 'var(--green-500)' : 'var(--rust)'};">${c.score > 0 ? '+' : ''}${c.score}</span>`
-          : (c.is_etf ? `<span class="company-score" style="color:var(--muted);font-size:var(--text-xs);">TER ${c.etf_info.ter_pct}%</span>` : '')}
+          : (c.is_etf ? `<span class="company-score" style="color:var(--muted);font-size:var(--text-xs);">TER ${c.etf_info.ter_pct.toLocaleString('fr-FR')}%</span>` : '')}
       </a>
     </div>`).join('') : '<div class="list-empty">Aucun résultat pour cette recherche.</div>';
   panel.querySelectorAll('input[data-compare-ticker]').forEach(input => {
@@ -7511,9 +7514,15 @@ function renderGrahamCriteria(company) {
  */
 function renderCompanyComparison(tickers) {
   const content = document.getElementById('indicesContent');
+  // Un ETF n'a ni score/factors/interpretation (voir etf_score.py
+  // build_etf_entry) -- les colonnes ci-dessous plantent sur
+  // c.factors.map(...) si une entree ETF s'y glisse. La case à cocher est
+  // déjà retirée pour les ETF dans renderIndicesRows, mais un ticker ETF
+  // hand-tapé dans #indices/compare/... doit aussi être filtré ici plutôt
+  // que de faire confiance à l'UI pour empêcher ce chemin.
   const companies = tickers
     .map(t => indicesData.companies.find(c => c.ticker === t))
-    .filter(Boolean);
+    .filter(c => c && !c.is_etf);
   if (companies.length < 2) {
     content.innerHTML = `
       <a href="#indices" class="back-link">← Indices</a>
@@ -7570,7 +7579,7 @@ function renderEtfDetail(company) {
     <h2>Caractéristiques</h2>
     <div class="signal-stats">
       <div class="price-row"><span class="price-label">Indice suivi</span><span class="price-value">${info.benchmark_name || '—'}</span></div>
-      <div class="price-row"><span class="price-label">Frais de gestion (TER)</span><span class="price-value">${info.ter_pct != null ? info.ter_pct + '%' : '—'}</span></div>
+      <div class="price-row"><span class="price-label">Frais de gestion (TER)</span><span class="price-value">${info.ter_pct != null ? info.ter_pct.toLocaleString('fr-FR') + '%' : '—'}</span></div>
       <div class="price-row"><span class="price-label">Réplication</span><span class="price-value">${info.replication || '—'}</span></div>
       <div class="price-row"><span class="price-label">Distribution</span><span class="price-value">${info.distribution || '—'}</span></div>
       <div class="price-row"><span class="price-label">Éligible PEA</span><span class="price-value">${info.pea_eligible ? 'Oui' : 'Non'}</span></div>

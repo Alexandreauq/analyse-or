@@ -870,8 +870,8 @@
      l'attribution (seul endroit du détail à en avoir un) n'a jamais eu de
      couleur déclarée, donc il prenait le bleu/violet par défaut du
      navigateur (visité ou non) au lieu d'hériter de --muted. */
-  #portfolioAiDetailWrap .price-label, #portfolioAiDetailWrap .concentration-label { color: var(--text); }
-  #portfolioAiDetailWrap .price-label a { color: inherit; }
+  .ana-grid .price-label, .ana-grid .concentration-label { color: var(--text); }
+  .ana-grid .price-label a { color: inherit; }
   @media (max-width: 420px) {
     .portfolio-ai-hero { flex-direction: column; align-items: flex-start; }
     .portfolio-ai-gauge-wrap { width: 100%; }
@@ -1049,11 +1049,13 @@
      ci-dessus n'a toujours que 2-4 libellés courts, mais les sections du
      portefeuille peuvent en avoir 5 dont un plus long ("Opportunités"). */
   .gold-seg {
-    display: flex; flex-wrap: wrap; gap: 4px; margin: 8px 20px 14px; padding: 4px;
+    display: flex; flex-wrap: nowrap; gap: 4px; margin: 8px 20px 14px; padding: 4px;
+    width: max-content; max-width: 100%; overflow-x: auto; scrollbar-width: none;
     background: var(--bg-2); border: 1px solid var(--border); border-radius: var(--radius-pill);
   }
+  .gold-seg::-webkit-scrollbar { display: none; }
   .gold-seg button {
-    flex: 0 0 auto; background: none; border: none; border-radius: var(--radius-pill); min-height: 40px; padding: 0 16px;
+    flex: 0 0 auto; white-space: nowrap; background: none; border: none; border-radius: var(--radius-pill); min-height: 40px; padding: 0 16px;
     color: var(--muted); font-size: 13px; font-weight: 600; transition: background .15s ease, color .15s ease;
   }
   .gold-seg button:hover { color: var(--text); }
@@ -1087,6 +1089,8 @@
   .cmd-fold summary .chevron { color: var(--muted); transition: transform .15s ease; }
   .cmd-fold[open] summary .chevron { color: var(--gold); transform: rotate(180deg); }
   .cmd-fold .ai-analysis { padding: 0 14px 14px; animation: none; }
+  .cmd-fold.is-wide { order: -1; grid-column: 1 / -1; border-color: var(--gold-700); }
+  .cmd-fold-body { overflow: hidden; }
 
   /* Mobile : lignes dépliables avec aperçu, tout le sommaire tient à l'écran. */
   .cmd-cards { display: flex; flex-direction: column; border-top: 1px solid var(--border); }
@@ -1232,6 +1236,9 @@
   .portfolio-layout .portfolio-toc-mobile, .portfolio-layout .portfolio-pager-nav,
   #pfActionsTocSidebar, #pfOrTocSidebar { display: none; }
   @media (max-width: 1023px) {
+    /* Capsule à pleine largeur : les sections se partagent la ligne. */
+    .gold-seg { width: 100%; }
+    .gold-seg button { flex: 1 1 auto; padding: 0 8px; font-size: 12.5px; }
     .gold-panel:not(.is-active) { display: none; }
     .gold-tile-main { background: none; border: none; padding: 0; }
     .gold-tile-main b { font-size: 40px; }
@@ -1251,10 +1258,12 @@
     #portefeuille.pf-wide-layout #portefeuilleOrView, #portefeuille.pf-wide-layout #portefeuilleContent {
       grid-column: 1 / -1; align-self: stretch; padding: 12px 20px 0;
     }
-    #pfOrContent, #pfActionsContent { padding-right: 0; }
+    /* Scrollbar décalée de 32px vers l'extérieur : le contenu garde son
+       alignement sur l'en-tête, la barre ne le touche plus. */
+    #pfOrContent, #pfActionsContent { padding-right: 32px; margin-right: -32px; }
     .gold-head { display: flex; flex-wrap: wrap; align-items: center; gap: 20px; margin-bottom: 10px; }
     .gold-head-status { flex: 1 1 320px; min-width: 0; }
-    .gold-seg-slot { flex: 0 1 320px; min-width: 240px; }
+    .gold-seg-slot { flex: 0 0 auto; max-width: 100%; }
     .gold-seg { margin: 0; }
     .gold-status { margin: 0; }
     .gold-status .gold-action { border: 1px solid var(--border-strong); border-radius: 10px; padding: 0 16px; color: var(--text); font-size: 15px; }
@@ -1420,6 +1429,85 @@
 
   .portfolio-totals { display: flex; gap: 12px; margin: 4px 0 20px; flex-wrap: wrap; }
   .portfolio-ai-cards { display: flex; gap: 12px; margin: 4px 0 20px; flex-wrap: wrap; }
+  /* Onglet Analyse : un seul DOM. Mobile = une section à la fois (onglets),
+     desktop = bilan complet en grille (maquette A). */
+  /* Bot Actions : journal des runs. Desktop = liste des jours + détail du
+     jour choisi ; mobile = jours dépliables. */
+  .ibkr-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; margin-bottom: 12px; }
+  .ibkr-head-right { margin-left: auto; }
+  .ibkr-chip { display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 12px; border-radius: var(--radius-pill); background: var(--bg-3); font-size: 13px; font-weight: 600; }
+  .ibkr-chip i { width: 8px; height: 8px; border-radius: 50%; display: block; }
+  .ibkr-dots { display: inline-flex; gap: 4px; flex-shrink: 0; }
+  .ibkr-dots i { width: 8px; height: 8px; border-radius: 50%; display: block; }
+  .ibkr-split { display: none; }
+  .ibkr-tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-bottom: 12px; }
+  .ibkr-tile { border: 1px solid var(--border); border-radius: var(--radius-md); padding: 8px 10px; }
+  .ibkr-tile span { display: block; color: var(--muted); font-size: var(--text-xs); }
+  .ibkr-tile b { font-family: 'Newsreader', serif; font-weight: 400; font-size: 22px; }
+  .ibkr-row { display: grid; grid-template-columns: 64px minmax(0, 1fr) auto; gap: 4px 12px; padding: 9px 0; border-top: 1px solid var(--border); font-size: 14px; align-items: baseline; }
+  .ibkr-row-name { color: var(--text); }
+  .ibkr-row-qty { color: var(--muted); text-align: right; }
+  .ibkr-row-reason { grid-column: 2 / -1; font-size: var(--text-xs); }
+  .ibkr-detail-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 10px; }
+  .ibkr-detail-head .portfolio-analysis-title { margin: 0; }
+  .ibkr-acc-body { padding: 0 0 12px 10px; border-left: 2px solid var(--border); }
+  .ibkr-acc .gold-day summary { gap: 10px; }
+  .ibkr-positions { margin-top: 12px; }
+  .ibkr-positions-body { padding: 0 14px 10px; }
+  @media (min-width: 1024px) {
+    .ibkr-acc { display: none; }
+    .ibkr-split { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 12px; align-items: start; }
+    .ibkr-split > .panel { margin: 0; }
+    .ibkr-days { padding: 10px; display: flex; flex-direction: column; gap: 2px; }
+    .ibkr-days .hero-sub { padding: 2px 10px 6px; }
+    .ibkr-day {
+      width: 100%; min-height: 56px; display: flex; align-items: center; justify-content: space-between; gap: 10px;
+      padding: 8px 12px; border: none; border-radius: var(--radius-md); background: none; color: var(--text); text-align: left;
+    }
+    .ibkr-day b { display: block; font-weight: 600; }
+    .ibkr-day .hero-sub { display: block; padding: 0; }
+    .ibkr-day:hover { background: var(--bg-3); }
+    .ibkr-day.is-active { background: var(--bg-3); box-shadow: inset 3px 0 0 var(--gold); }
+    .ibkr-tiles { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .ibkr-row { grid-template-columns: 70px minmax(0, 1fr) 150px 150px; }
+    .ibkr-row-reason { grid-column: auto; text-align: right; font-size: 13px; }
+  }
+
+  .ana-tabs { overflow-x: auto; scrollbar-width: none; }
+  .ana-tabs::-webkit-scrollbar { display: none; }
+  .ana-tabs .gold-tab { flex: 0 0 auto; padding: 0 12px; }
+  .ana-grid { display: flex; flex-direction: column; gap: 12px; }
+  .ana-panel { min-width: 0; }
+  .ana-panel > .panel { margin: 0; }
+  .ana-panel .portfolio-analysis-title:first-child { margin-top: 0; }
+  .ana-hero { display: flex; flex-direction: column; gap: 10px; }
+  .ana-hero-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; }
+  .ana-hero-head .toggle-btn { margin: 0; }
+  .ana-kicker { color: var(--muted); font-size: var(--text-xs); }
+  .ana-score-line { display: flex; align-items: baseline; flex-wrap: wrap; gap: 10px; }
+  .ana-score { font-family: 'Newsreader', serif; font-size: 52px; line-height: 1; color: var(--gold); }
+  .ana-resume { font-size: var(--text-md); line-height: var(--lh-relaxed); margin: 0; }
+  .ana-tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .ana-tile { background: var(--bg-2); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 12px 14px; min-width: 0; }
+  .ana-tile span { display: block; color: var(--muted); font-size: var(--text-xs); }
+  .ana-tile b { display: block; font-family: 'Newsreader', serif; font-weight: 400; font-size: 26px; line-height: 1.2; }
+  .ana-div .price-row { flex-wrap: wrap; gap: 2px 10px; }
+  .ana-div .price-value { text-align: left; }
+  @media (max-width: 1023px) {
+    .ana-panel:not(.is-active) { display: none; }
+    .ana-tile b { font-size: 21px; }
+    .ibkr-head-right { margin-left: 0; }
+  }
+  @media (min-width: 1024px) {
+    .ana-tabs { display: none; }
+    .ana-grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); align-items: start; }
+    .ana-verdict { grid-column: span 7; }
+    .ana-tiles-panel { grid-column: span 5; }
+    .ana-lines, .ana-fund { grid-column: 1 / -1; }
+    .ana-risk, .ana-perf, .ana-div { grid-column: span 4; }
+    .ana-lines .portfolio-ai-cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .ana-lines .portfolio-ai-cards .portfolio-total-card { min-width: 0; }
+  }
   .portfolio-ai-cards .portfolio-total-card { min-width: 280px; }
   .portfolio-total-card {
     display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 140px;
@@ -2059,10 +2147,10 @@
     .index-card-list { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
     /* Opportunités : filtres dans la section, repliés à toutes les largeurs,
        contrairement au panneau toujours déplié de la page Indices. */
-    .indices-filters.portfolio-opp-filter { position: static; margin: 10px 0 14px; }
-    .indices-filters.portfolio-opp-filter > .index-card-header { cursor: pointer; }
-    .indices-filters.portfolio-opp-filter > .index-card-header .chevron { display: inline; }
-    .portfolio-opp-filter .indices-filters-body:not(.is-open) { padding: 0 14px; max-height: 0; opacity: 0; overflow: hidden; }
+    /* Opportunités : même disposition que la page Indices, filtres dépliés
+       en colonne gauche, collés en haut pendant le défilement de la liste. */
+    .portfolio-opp-layout { display: grid; grid-template-columns: 260px minmax(0, 1fr); gap: 28px; align-items: start; margin-top: 12px; }
+    .indices-filters.portfolio-opp-filter { position: sticky; top: 0; margin: 0; }
   }
 
   .alert-row {
@@ -2739,14 +2827,16 @@ function portfolioAnalysisQuickGridHtml(health) {
     </div>`;
 }
 
-// Retourne {quickGridHtml, diagnosisHtml, detailHtml} plutôt qu'une seule
+// Retourne les blocs du bilan (quickGridHtml, diagnosisHtml, tilesHtml,
+// riskHtml, perfHtml, dividendHtml) plutôt qu'une seule
 // chaîne : la grille rapide va sous la jauge de l'avis IA (vue "Cartes"), le
 // diagnostic texte va dans la vue "Note", le détail reste repliable sous les
 // deux (voir portfolioAiSectionHtml) — jamais caché par une erreur d'appel IA.
 function portfolioAnalysisHtml(positions, companiesByTicker, currencyByIndex, priceHistoryByTicker, dividendHistoryByTicker) {
   const closedPositions = loadClosedPortfolio();
   if (!positions.length && !closedPositions.length) {
-    return { quickGridHtml: '', diagnosisHtml: '', detailHtml: '<div class="empty">Ajoute des positions pour voir apparaître une analyse ici.</div>' };
+    const empty = '<div class="empty">Ajoute des positions pour voir apparaître une analyse ici.</div>';
+    return { quickGridHtml: '', diagnosisHtml: '', tilesHtml: '', riskHtml: empty, perfHtml: `${empty}<div id="portfolioAiChart"></div>`, dividendHtml: empty };
   }
   const concentration = computePortfolioConcentration(positions, companiesByTicker, currencyByIndex);
   const health = computePortfolioHealth(positions, companiesByTicker);
@@ -2765,6 +2855,7 @@ function portfolioAnalysisHtml(positions, companiesByTicker, currencyByIndex, pr
       ${Object.entries(INDEX_BENCHMARK_TICKERS).map(([key, yfTicker]) => `
         <option value="${yfTicker}" ${key === 'CAC40' ? 'selected' : ''}>${indexNamesForBenchmark[key] || key}</option>`).join('')}
     </select>`;
+  let headline = null;
   const performanceHtml = ['EUR', 'USD'].filter(currency => performanceCurves[currency].length).map(currency => {
     const defaultBenchmarkTicker = INDEX_BENCHMARK_TICKERS.CAC40;
     const positionsForCurrency = [...positions, ...closedPositions].filter(p => {
@@ -2773,6 +2864,12 @@ function portfolioAnalysisHtml(positions, companiesByTicker, currencyByIndex, pr
     });
     const benchmarkCurve = computeBenchmarkPerformanceCurve(positionsForCurrency, defaultBenchmarkTicker, priceHistoryByTicker);
     const riskMetrics = computePortfolioRiskMetrics(performanceCurves[currency], riskFreeRateByCurrency[currency]);
+    if (!headline) {
+      const curve = performanceCurves[currency];
+      const last = curve[curve.length - 1];
+      const lastBench = benchmarkCurve[benchmarkCurve.length - 1];
+      headline = { currency, riskMetrics, vsBenchmark: last && lastBench ? last.pnlPct - lastBench.pnlPct : null };
+    }
     return `
       <h3 class="portfolio-analysis-title">Performance (${currency})</h3>
       <div class="portfolio-perf-block" data-currency="${currency}">
@@ -2824,60 +2921,87 @@ function portfolioAnalysisHtml(positions, companiesByTicker, currencyByIndex, pr
     </div>`;
   }).join('') : (hasAnyDividendData ? '<div class="list-empty">Aucune position ne verse actuellement de dividende.</div>' : '');
 
-  const detailHtml = `
-    ${performanceHtml}
-    <h3 class="portfolio-analysis-title">Évolution du jugement IA</h3>
-    <div id="portfolioAiChart"></div>
-    <h3 class="portfolio-analysis-title">Concentration par indice</h3>
-    <div class="concentration-list">${concentrationBarsHtml(concentration.byIndex, key => indexNames[key] || key)}</div>
+  // Chiffres clés du bilan (maquette A) : valeur et P&L latent par devise,
+  // écart avec le CAC 40, volatilité et baisse maximale de la première
+  // devise qui a une courbe de performance.
+  const totals = computePortfolioTotals(positions, companiesByTicker, currencyByIndex);
+  const totalCurrencies = ['EUR', 'USD'].filter(c => totals[c].value !== 0 || totals[c].pnlAbs !== 0);
+  const money = (v, c) => (c === 'USD' ? formatPriceUsd(v) : formatPrice(v));
+  const signedMoney = (v, c) => `${v >= 0 ? '+' : ''}${money(v, c)}`;
+  const m = headline ? headline.riskMetrics : {};
+  const tilesHtml = `
+    <div class="ana-tile"><span>Valeur</span><b>${totalCurrencies.length ? money(totals[totalCurrencies[0]].value, totalCurrencies[0]) : '—'}</b>
+      <span>${totalCurrencies.map(c => `<span class="${pctClass(totals[c].pnlAbs)}">${signedMoney(totals[c].pnlAbs, c)}</span> latent${c !== totalCurrencies[0] ? ` (${money(totals[c].value, c)})` : ''}`).join(' · ') || 'Aucun cours disponible'}</span></div>
+    <div class="ana-tile"><span>Vs ${escHtml(indexNamesForBenchmark.CAC40 || 'CAC 40')}${headline ? ` (${headline.currency})` : ''}</span><b class="${pctClass(headline && headline.vsBenchmark)}">${headline && headline.vsBenchmark != null ? `${headline.vsBenchmark > 0 ? '+' : ''}${headline.vsBenchmark.toFixed(1).replace('.', ',')} pts` : '—'}</b><span>depuis tes premiers achats</span></div>
+    <div class="ana-tile"><span>Volatilité annualisée</span><b>${m.volatility != null ? m.volatility.toFixed(1).replace('.', ',') + ' %' : '—'}</b><span>Sharpe ${m.sharpe != null ? m.sharpe.toFixed(2).replace('.', ',') : '—'}</span></div>
+    <div class="ana-tile"><span>Baisse maximale</span><b class="${pctClass(m.maxDrawdown)}">${m.maxDrawdown != null ? formatPct(m.maxDrawdown) : '—'}</b><span>sur la période suivie</span></div>`;
+  const riskHtml = `
     <h3 class="portfolio-analysis-title">Concentration par secteur</h3>
     <div class="concentration-list">${concentrationBarsHtml(concentration.bySector, key => SECTOR_LABELS_FR[key] || key)}</div>
+    <h3 class="portfolio-analysis-title">Concentration par indice</h3>
+    <div class="concentration-list">${concentrationBarsHtml(concentration.byIndex, key => indexNames[key] || key)}</div>
     <h3 class="portfolio-analysis-title">Exposition devises</h3>
-    <div class="signal-stats">${currencyHtml}</div>
+    <div class="signal-stats">${currencyHtml}</div>`;
+  const perfHtml = `
+    ${performanceHtml}
     <h3 class="portfolio-analysis-title">Attribution de performance</h3>
     <div class="signal-stats">${attributionHtml}</div>
+    <h3 class="portfolio-analysis-title">Évolution du jugement IA</h3>
+    <div id="portfolioAiChart"></div>`;
+  const dividendHtml = `
     <h3 class="portfolio-analysis-title">Dividendes</h3>
     ${dividendSummaryHtml}
-    <div class="signal-stats">${dividendRowsHtml}</div>
-  `;
-  return { quickGridHtml: portfolioAnalysisQuickGridHtml(health), diagnosisHtml, detailHtml };
+    <div class="signal-stats">${dividendRowsHtml}</div>`;
+  return { quickGridHtml: portfolioAnalysisQuickGridHtml(health), diagnosisHtml, tilesHtml, riskHtml, perfHtml, dividendHtml };
 }
 
-// Composition de l'ensemble "Avis de l'IA" : jauge santé + résumé (remplis
-// par JS une fois l'analyse chargée), bascule Cartes/Note, puis le détail
-// chiffré (analysis.detailHtml) toujours visible en dessous des deux vues —
-// jamais caché par une erreur d'appel IA (voir wirePortfolioAiSubsection).
+// Bilan de l'onglet Analyse : verdict de l'IA (jauge, résumé, remplis par JS
+// une fois l'analyse chargée), chiffres clés, avis par ligne, risque,
+// performance, dividendes et fondamentaux. Les sections chiffrées ne
+// dépendent jamais de l'appel IA (voir wirePortfolioAiSubsection).
+let portfolioAnaTab = 'verdict';
+
 function portfolioAiSectionHtml(analysis) {
+  const tabs = [['verdict', 'Verdict'], ['lines', 'Lignes'], ['risk', 'Risque'], ['perf', 'Performance'], ['div', 'Dividendes'], ['fund', 'Fondamentaux']];
+  const panel = (tab, cls, inner) => `<section class="ana-panel ${cls}${portfolioAnaTab === tab ? ' is-active' : ''}" data-ana-panel="${tab}">${inner}</section>`;
   return `
-    <div class="portfolio-ai-hero">
-      <div class="score-gauge-wrap portfolio-ai-gauge-wrap" id="portfolioAiGaugeWrap" hidden>
-        <div class="score-gauge">
-          <div class="score-gauge-tick" style="left:25%;"></div>
-          <div class="score-gauge-tick" style="left:50%;"></div>
-          <div class="score-gauge-tick" style="left:75%;"></div>
-          <div class="score-gauge-marker portfolio-ai-gauge-marker" style="left:50%;"></div>
-        </div>
-        <div class="score-gauge-labels"><span>Fragile</span><span>Neutre</span><span>Solide</span></div>
-      </div>
-      <div class="portfolio-ai-hero-text">
-        <h3 class="portfolio-analysis-title">Avis de l'IA</h3>
-        <p class="hero-sub" id="portfolioAiResume">Lance une première analyse pour voir le jugement de l'IA sur ton portefeuille.</p>
-        <p class="hero-sub" id="portfolioAiDelta" hidden></p>
-        <p class="hero-sub" id="portfolioAiFreshness"></p>
-      </div>
+    <div class="gold-tabs ana-tabs" role="tablist">
+      ${tabs.map(([key, label]) => `<button class="gold-tab" type="button" role="tab" data-ana-tab="${key}" aria-selected="${portfolioAnaTab === key}">${label}</button>`).join('')}
     </div>
-    <button class="toggle-btn" type="button" id="portfolioAiAnalysisBtn">Lancer l'analyse IA</button>
-    <p class="portfolio-ai-error" id="portfolioAiError" hidden></p>
-    <div class="ui-seg" id="portfolioAiViewSeg">
-      <button type="button" data-view="cards" aria-pressed="true">Cartes</button>
-      <button type="button" data-view="diagnostic" aria-pressed="false">Diagnostic</button>
-    </div>
-    <div id="portfolioAiViewBody"></div>
-    <button class="toggle-btn" type="button" id="portfolioAiDetailToggle" aria-expanded="false">
-      Voir le détail <span class="chevron">▾</span>
-    </button>
-    <div class="section-wrap" id="portfolioAiDetailWrap">${analysis.detailHtml}</div>
-  `;
+    <div class="ana-grid">
+      ${panel('verdict', 'ana-verdict', `
+        <div class="panel ana-hero">
+          <div class="ana-hero-head">
+            <div>
+              <div class="ana-kicker">Santé du portefeuille · avis de l'IA</div>
+              <div class="ana-score-line">
+                <span class="ana-score" id="portfolioAiScore">—</span>
+                <span class="hero-sub">sur 100</span>
+                <span class="hero-sub" id="portfolioAiDelta" hidden></span>
+              </div>
+            </div>
+            <button class="toggle-btn" type="button" id="portfolioAiAnalysisBtn">Lancer l'analyse IA</button>
+          </div>
+          <div class="score-gauge-wrap portfolio-ai-gauge-wrap" id="portfolioAiGaugeWrap" hidden>
+            <div class="score-gauge">
+              <div class="score-gauge-tick" style="left:25%;"></div>
+              <div class="score-gauge-tick" style="left:50%;"></div>
+              <div class="score-gauge-tick" style="left:75%;"></div>
+              <div class="score-gauge-marker portfolio-ai-gauge-marker" style="left:50%;"></div>
+            </div>
+            <div class="score-gauge-labels"><span>Fragile</span><span>Neutre</span><span>Solide</span></div>
+          </div>
+          <p class="ana-resume" id="portfolioAiResume">Lance une première analyse pour voir le jugement de l'IA sur ton portefeuille.</p>
+          <p class="hero-sub" id="portfolioAiFreshness"></p>
+          <p class="portfolio-ai-error" id="portfolioAiError" hidden></p>
+        </div>`)}
+      ${analysis.tilesHtml ? panel('verdict', 'ana-tiles-panel', `<div class="ana-tiles">${analysis.tilesHtml}</div>`) : ''}
+      ${panel('lines', 'ana-lines', `<div class="panel"><div id="portfolioAiViewBody"></div></div>`)}
+      ${panel('risk', 'ana-risk', `<div class="panel">${analysis.riskHtml}</div>`)}
+      ${panel('perf', 'ana-perf', `<div class="panel">${analysis.perfHtml}</div>`)}
+      ${panel('div', 'ana-div', `<div class="panel">${analysis.dividendHtml}</div>`)}
+      ${panel('fund', 'ana-fund', `<div class="panel"><div id="portfolioAiDiagnosticBody"></div></div>`)}
+    </div>`;
 }
 
 function _portfolioAiRecoLabel(reco) {
@@ -2920,7 +3044,7 @@ function _portfolioAiCardsHtml(parLigne, positionsByTicker, companiesByTicker, c
 function _portfolioAiCardsViewHtml(quickGridHtml, cardsHtml) {
   return `
     ${quickGridHtml}
-    <h3 class="portfolio-analysis-title">Par entreprise</h3>
+    <h3 class="portfolio-analysis-title">Avis par ligne</h3>
     <div class="portfolio-ai-cards">${cardsHtml}</div>
   `;
 }
@@ -2971,9 +3095,17 @@ function wirePortfolioAiSubsection(positions, closedPositions, companiesByTicker
   const btn = document.getElementById('portfolioAiAnalysisBtn');
   const seg = document.getElementById('portfolioAiViewSeg');
   const viewBodyEl = document.getElementById('portfolioAiViewBody');
+  const diagnosticBodyEl = document.getElementById('portfolioAiDiagnosticBody');
+  const scoreEl = document.getElementById('portfolioAiScore');
   if (!btn || !viewBodyEl) return;
 
-  wireAccordionGroup([['portfolioAiDetailToggle', 'portfolioAiDetailWrap']]);
+  document.querySelectorAll('.ana-tabs .gold-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      portfolioAnaTab = tab.dataset.anaTab;
+      document.querySelectorAll('.ana-tabs .gold-tab').forEach(t => t.setAttribute('aria-selected', String(t === tab)));
+      document.querySelectorAll('.ana-panel').forEach(p => p.classList.toggle('is-active', p.dataset.anaPanel === portfolioAnaTab));
+    });
+  });
 
   const positionsByTicker = new Map(positions.map(p => [p.ticker, p]));
   const quickGridHtml = portfolioAnalysisQuickGridHtml(computePortfolioHealth(positions, companiesByTicker));
@@ -2988,6 +3120,10 @@ function wirePortfolioAiSubsection(positions, closedPositions, companiesByTicker
   };
 
   const renderGauge = (sante) => {
+    if (scoreEl) {
+      scoreEl.textContent = typeof sante === 'number' ? `${sante > 0 ? '+' : ''}${sante}` : '—';
+      scoreEl.style.color = typeof sante !== 'number' ? '' : (sante >= 0 ? 'var(--gold)' : 'var(--rust)');
+    }
     if (!gaugeWrap) return;
     if (typeof sante !== 'number') { gaugeWrap.hidden = true; return; }
     gaugeWrap.hidden = false;
@@ -3016,17 +3152,18 @@ function wirePortfolioAiSubsection(positions, closedPositions, companiesByTicker
     deltaEl.style.color = diff > 0 ? 'var(--green-500)' : 'var(--rust)';
   };
 
+  // Avis par ligne et fondamentaux sont maintenant affichés ensemble (deux
+  // sections du bilan), plus en bascule l'un ou l'autre.
   const renderView = () => {
-    if (currentView === 'cards') {
-      const cardsHtml = lastResultat
-        ? _portfolioAiCardsHtml(lastResultat.par_ligne || [], positionsByTicker, companiesByTicker, currencyByIndex)
-        : '<div class="list-empty">Lance l\'analyse IA pour voir l\'avis par entreprise.</div>';
-      viewBodyEl.innerHTML = _portfolioAiCardsViewHtml(quickGridHtml, cardsHtml);
-    } else {
+    const cardsHtml = lastResultat
+      ? _portfolioAiCardsHtml(lastResultat.par_ligne || [], positionsByTicker, companiesByTicker, currencyByIndex)
+      : '<div class="list-empty">Lance l\'analyse IA pour voir l\'avis par entreprise.</div>';
+    viewBodyEl.innerHTML = _portfolioAiCardsViewHtml(quickGridHtml, cardsHtml);
+    if (diagnosticBodyEl) {
       const comparaisonHtml = lastResultat && lastResultat.comparaison_precedente
         ? `<h3 class="portfolio-analysis-title">Depuis la dernière fois</h3><p class="hero-sub">${escHtml(lastResultat.comparaison_precedente)}</p>`
         : '';
-      viewBodyEl.innerHTML = _portfolioAiDiagnosticViewHtml(diagnosisHtml, comparaisonHtml);
+      diagnosticBodyEl.innerHTML = _portfolioAiDiagnosticViewHtml(diagnosisHtml, comparaisonHtml);
     }
   };
 
@@ -3469,8 +3606,10 @@ function portfolioOpportunitiesHtml(opportunities) {
   if (!opportunities.length) return '<div class="empty">Aucune opportunité pour l\'instant — reviens plus tard.</div>';
   return `
     <p class="hero-sub">Entreprises suivies avec un signal d'entrée actif que tu ne détiens pas encore.</p>
-    <div class="indices-filters portfolio-opp-filter" id="pfOppFilter">${filterAccordionHtml(portfolioOppFilterIds(), portfolioOppFilterState(), { sectors: portfolioOppSectors(opportunities) })}</div>
-    <div class="index-card-list" id="pfOppList"></div>`;
+    <div class="portfolio-opp-layout">
+      <div class="indices-filters portfolio-opp-filter" id="pfOppFilter">${filterAccordionHtml(portfolioOppFilterIds(), portfolioOppFilterState(), { sectors: portfolioOppSectors(opportunities) })}</div>
+      <div class="index-card-list" id="pfOppList"></div>
+    </div>`;
 }
 
 function renderPortfolioOppList(opportunities) {
@@ -3598,11 +3737,16 @@ const IBKR_BOT_STATUS_LABELS = {
   donnees_perimees: 'Données périmées',
 };
 let ibkrBotStatusData = null;
+let ibkrBotStatusError = null;
 let ibkrBotDashboardData = null;
 let ibkrBotDashboardError = null;
+// Jour affiché dans le journal (desktop) et jours dépliés (mobile).
+let ibkrJournalDay = null;
+const ibkrJournalOpenDays = new Set();
 
 function ibkrBotDashboardSectionHtml() {
   return `
+    <div class="ibkr-head" id="ibkrBotHead"></div>
     <main id="ibkrBotContent">
       <div class="skeleton">
         <div class="skeleton-line"></div>
@@ -3631,9 +3775,10 @@ async function loadIbkrBotStatus() {
     // a quitté la section entre-temps (carrousel) — même garde que
     // fetchBotDashboard côté Bot Or.
     if (!document.getElementById('ibkrBotContent')) return;
+    ibkrBotStatusError = null;
   } catch (e) {
-    if (el) el.innerHTML = `<div class="empty">Statut indisponible pour l'instant — le bot n'a peut-être pas encore publié son premier statut.<br>${e.message}</div>`;
-    return;
+    ibkrBotStatusData = null;
+    ibkrBotStatusError = e.message;
   }
   renderIbkrBotStatus();
 }
@@ -3694,33 +3839,159 @@ function ibkrBotPositionsHtml(positions) {
     </div>`).join('');
 }
 
+// Journal des runs (maquette B) : un jour par ligne, construit à partir des
+// actions du tableau de bord (achats/ventes datés) et du statut public, qui
+// ne décrit que le DERNIER run (compteurs dont signaux écartés et
+// anomalies, absents de l'historique).
+function ibkrJournalDays() {
+  const byDate = new Map();
+  const day = (date) => {
+    if (!byDate.has(date)) byDate.set(date, { date, actions: [], counts: null });
+    return byDate.get(date);
+  };
+  ((ibkrBotDashboardData && ibkrBotDashboardData.actions) || []).forEach(a => {
+    if (a && a.date) day(a.date).actions.push(a);
+  });
+  const st = ibkrBotStatusData;
+  if (st && st.date) day(st.date).counts = st;
+  return [...byDate.values()].sort((a, b) => (a.date < b.date ? 1 : -1));
+}
+
+function ibkrJournalDayLabel(date) {
+  const d = new Date(date + 'T12:00:00Z');
+  if (Number.isNaN(d.getTime())) return date;
+  const label = d.toLocaleDateString('fr-FR', { weekday: 'short', day: '2-digit', month: '2-digit', timeZone: 'UTC' });
+  return label.charAt(0).toUpperCase() + label.slice(1);
+}
+
+function ibkrJournalSummary(day) {
+  const buys = day.actions.filter(a => a.sens === 'BUY').length;
+  const sells = day.actions.filter(a => a.sens === 'SELL').length;
+  const anomalies = day.counts ? (day.counts.anomalies_count || 0) + (day.counts.erreurs_count || 0) : 0;
+  const parts = [];
+  if (buys) parts.push(`${buys} achat${buys > 1 ? 's' : ''}`);
+  if (sells) parts.push(`${sells} vente${sells > 1 ? 's' : ''}`);
+  if (anomalies) parts.push(`${anomalies} anomalie${anomalies > 1 ? 's' : ''}`);
+  const dots = [
+    ...Array(buys).fill('var(--green-500)'),
+    ...Array(sells).fill('var(--gold)'),
+    ...(anomalies ? ['var(--rust)'] : []),
+  ];
+  return { text: parts.join(' · ') || 'Aucune action', dots };
+}
+
+function ibkrJournalDetailHtml(day) {
+  const companiesByTicker = {};
+  (indicesData.companies || []).forEach(c => { companiesByTicker[c.ticker] = c; });
+  const c = day.counts;
+  const buys = day.actions.filter(a => a.sens === 'BUY').length;
+  const sells = day.actions.filter(a => a.sens === 'SELL').length;
+  const tile = (label, value, color) => `<div class="ibkr-tile"><span>${label}</span><b${color ? ` style="color:${color}"` : ''}>${value ?? '—'}</b></div>`;
+  const anomalies = c ? (c.anomalies_count || 0) + (c.erreurs_count || 0) : null;
+  const tilesHtml = `
+    <div class="ibkr-tiles">
+      ${tile('Achats', c ? c.entrees_count : buys, 'var(--green-500)')}
+      ${tile('Ventes', c ? c.sorties_count : sells)}
+      ${tile('Signaux écartés', c ? c.signaux_rejetes_count : null)}
+      ${tile('Anomalies', anomalies, anomalies ? 'var(--rust)' : '')}
+    </div>`;
+  const rowsHtml = day.actions.length ? day.actions.map(a => {
+    const company = companiesByTicker[a.ticker];
+    const isBuy = a.sens === 'BUY';
+    const price = a.prix_execution != null
+      ? (company ? formatPriceForIndex(a.prix_execution, company.index) : formatPrice(a.prix_execution))
+      : '—';
+    const reason = isBuy ? 'Signal d\u2019entrée' : (CLOSE_REASON_LABELS[a.close_reason] || a.close_reason || 'Sortie');
+    const reasonColor = a.close_reason === 'stop_loss' ? 'var(--rust)' : (a.close_reason === 'objectif_atteint' ? 'var(--green-500)' : 'var(--muted)');
+    return `
+      <div class="ibkr-row">
+        <b style="color:${isBuy ? 'var(--green-500)' : 'var(--gold)'}">${isBuy ? 'Achat' : 'Vente'}</b>
+        <a class="ibkr-row-name" href="#indices/${encodeURIComponent(a.ticker)}">${escHtml(company ? company.name : a.ticker)}</a>
+        <span class="ibkr-row-qty">${a.quantite != null ? `${a.quantite} · ` : ''}${price}</span>
+        <span class="ibkr-row-reason" style="color:${reasonColor}">${escHtml(reason)}</span>
+      </div>`;
+  }).join('') : `<p class="hero-sub">${ibkrBotDashboardData ? 'Aucun achat ni vente ce jour-là.' : 'Le détail des achats et ventes demande le jeton (bouton ci-dessous).'}</p>`;
+  const statusHtml = c ? `<span class="ibkr-chip" style="color:${ibkrBotStatusColor(c)}">${escHtml(IBKR_BOT_STATUS_LABELS[c.statut] || c.statut || '—')}</span>` : '';
+  return `
+    <div class="ibkr-detail-head"><h3 class="portfolio-analysis-title">Run du ${ibkrJournalDayLabel(day.date)}</h3>${statusHtml}</div>
+    ${tilesHtml}
+    ${rowsHtml}`;
+}
+
 function renderIbkrBotStatus() {
+  const head = document.getElementById('ibkrBotHead');
   const el = document.getElementById('ibkrBotContent');
-  if (!el || !ibkrBotStatusData) return;
+  if (!el) return;
   const s = ibkrBotStatusData;
-  const label = IBKR_BOT_STATUS_LABELS[s.statut] || s.statut || '—';
-  const color = ibkrBotStatusColor(s);
-  const when = s.timestamp ? new Date(s.timestamp).toLocaleString('fr-FR', {
-    day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'UTC',
-  }) + ' UTC' : '—';
+  const positions = (ibkrBotDashboardData && ibkrBotDashboardData.positions) || (s && s.positions) || [];
+  const latent = positions.reduce((sum, p) => sum + (p.pnl_eur ?? 0), 0);
+  const hasLatent = positions.some(p => p.pnl_eur != null);
+
+  if (head) {
+    const when = s && s.timestamp ? new Date(s.timestamp).toLocaleString('fr-FR', {
+      day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit', timeZone: 'UTC',
+    }) + ' UTC' : null;
+    head.innerHTML = `
+      <span class="ibkr-chip"><i style="background:${s && s.mode === 'reel' ? 'var(--green-500)' : 'var(--gold)'}"></i>${s ? (s.mode === 'reel' ? 'Mode réel' : 'Simulation') : 'Statut indisponible'}</span>
+      ${when ? `<span class="hero-sub">Dernier run ${when} · <span style="color:${ibkrBotStatusColor(s)}">${escHtml(IBKR_BOT_STATUS_LABELS[s.statut] || s.statut || '—')}</span></span>` : ''}
+      <span class="hero-sub ibkr-head-right">${positions.length} position${positions.length > 1 ? 's' : ''}${hasLatent ? ` · <b class="${pctClass(latent)}">${latent >= 0 ? '+' : ''}${formatPrice(latent)}</b> latent` : ''}${ibkrBotDashboardData && ibkrBotDashboardData.balance != null ? ` · solde ${formatPrice(ibkrBotDashboardData.balance)}` : ''}</span>`;
+  }
+
+  const days = ibkrJournalDays();
+  if (!days.length) {
+    el.innerHTML = ibkrBotStatusError
+      ? `<div class="empty">Statut indisponible pour l'instant — le bot n'a peut-être pas encore publié son premier statut.<br>${escHtml(ibkrBotStatusError)}</div>`
+      : `<div class="empty">Aucun run enregistré pour l'instant.</div>`;
+    return;
+  }
+  if (!days.some(d => d.date === ibkrJournalDay)) ibkrJournalDay = days[0].date;
+  if (!ibkrJournalOpenDays.size) ibkrJournalOpenDays.add(days[0].date);
+  const current = days.find(d => d.date === ibkrJournalDay);
+  const dotsHtml = dots => `<span class="ibkr-dots" aria-hidden="true">${dots.map(c => `<i style="background:${c}"></i>`).join('')}</span>`;
+
   el.innerHTML = `
-    <h2>Statut</h2>
-    <div class="portfolio-position-row">
-      <div class="portfolio-position-main">
-        <span class="company-name" style="color:${color}">${label}</span>
-        <span class="hero-sub">${s.mode === 'reel' ? 'Mode réel' : 'Mode simulation — aucun ordre réel'}</span>
-      </div>
-      <div class="portfolio-position-pnl">
-        <span class="hero-sub">${when}</span>
-      </div>
+    <div class="ibkr-split">
+      <aside class="panel ibkr-days">
+        <p class="hero-sub">Un run par jour ouvré, vers 14:45 UTC.</p>
+        ${days.map(d => {
+          const sum = ibkrJournalSummary(d);
+          return `
+          <button class="ibkr-day${d.date === ibkrJournalDay ? ' is-active' : ''}" type="button" data-day="${d.date}" aria-pressed="${d.date === ibkrJournalDay}">
+            <span><b>${ibkrJournalDayLabel(d.date)}</b><span class="hero-sub">${sum.text}</span></span>
+            ${dotsHtml(sum.dots)}
+          </button>`;
+        }).join('')}
+      </aside>
+      <section class="panel ibkr-detail">${ibkrJournalDetailHtml(current)}</section>
     </div>
-    ${s.positions && !ibkrBotDashboardData ? `<h2>Positions ouvertes</h2>${ibkrBotPositionsHtml(s.positions)}` : ''}
-    <h2>Compteurs du jour</h2>
-    ${ibkrBotCountersHtml(s)}
-    <p class="hero-sub" style="margin-top:12px;">Publié après chaque exécution quotidienne (vers 14h45 UTC en semaine) — pas un flux en direct, contrairement au Bot Or.</p>
-    <button class="toggle-btn" type="button" id="ibkrBotRefreshBtn">Actualiser</button>
-  `;
-  wireIbkrBotRefresh();
+    <div class="ibkr-acc">
+      ${days.map(d => {
+        const sum = ibkrJournalSummary(d);
+        return `
+        <details class="gold-day" data-day="${d.date}"${ibkrJournalOpenDays.has(d.date) ? ' open' : ''}>
+          <summary>
+            <span>${ibkrJournalDayLabel(d.date)}<span class="gold-day-sub">${sum.text}</span></span>
+            ${dotsHtml(sum.dots)}
+            <span class="chevron">▾</span>
+          </summary>
+          <div class="ibkr-acc-body">${ibkrJournalDetailHtml(d)}</div>
+        </details>`;
+      }).join('')}
+    </div>
+    <details class="cmd-fold ibkr-positions">
+      <summary>Positions ouvertes (${positions.length}) <span class="chevron">▾</span></summary>
+      <div class="ibkr-positions-body">${ibkrBotPositionsHtml(positions)}</div>
+    </details>
+    <p class="hero-sub" style="margin-top:12px;">Publié après chaque exécution quotidienne (vers 14h45 UTC en semaine). Arrêt d'urgence : par SSH sur le VPS.</p>`;
+
+  el.querySelectorAll('.ibkr-day').forEach(btn => btn.addEventListener('click', () => {
+    ibkrJournalDay = btn.dataset.day;
+    renderIbkrBotStatus();
+  }));
+  el.querySelectorAll('.ibkr-acc .gold-day').forEach(d => d.addEventListener('toggle', () => {
+    if (d.open) ibkrJournalOpenDays.add(d.dataset.day);
+    else ibkrJournalOpenDays.delete(d.dataset.day);
+  }));
 }
 
 function wireIbkrBotRefresh() {
@@ -3801,7 +4072,7 @@ function renderIbkrBotDashboardBlock() {
   if (!ibkrBotDashboardData) {
     el.innerHTML = ibkrBotDashboardError
       ? `<div class="empty">${escHtml(ibkrBotDashboardError)}</div>${ibkrBotUnlockHtml('Réessayer')}`
-      : ibkrBotUnlockHtml();
+      : ibkrBotUnlockHtml('Voir l\u2019historique des achats et ventes (jeton requis)');
     const unlockBtn = document.getElementById('ibkrBotUnlockBtn');
     if (unlockBtn) unlockBtn.addEventListener('click', () => {
       const token = getIbkrBotToken();
@@ -3809,17 +4080,9 @@ function renderIbkrBotDashboardBlock() {
     });
     return;
   }
-  el.innerHTML = `
-    <h2>Solde</h2>
-    ${ibkrBotBalanceHtml(ibkrBotDashboardData)}
-    <h2>Positions ouvertes</h2>
-    ${ibkrBotPositionsHtml(ibkrBotDashboardData.positions)}
-    <h2>Actions récentes</h2>
-    ${ibkrBotActionsHtml(ibkrBotDashboardData.actions)}
-    <button class="toggle-btn" type="button" id="ibkrBotDashboardRefreshBtn">Actualiser</button>
-  `;
+  el.innerHTML = `<button class="toggle-btn" type="button" id="ibkrBotDashboardRefreshBtn">Actualiser</button>`;
   const refreshBtn = document.getElementById('ibkrBotDashboardRefreshBtn');
-  if (refreshBtn) refreshBtn.addEventListener('click', () => fetchIbkrBotDashboard());
+  if (refreshBtn) refreshBtn.addEventListener('click', () => { loadIbkrBotStatus(); fetchIbkrBotDashboard(); });
 }
 
 // Jamais de prompt() force a l'ouverture du panneau (contrairement au Bot
@@ -3853,7 +4116,7 @@ async function fetchIbkrBotDashboard() {
     ibkrBotDashboardError = 'tableau de bord indisponible pour l\'instant';
   }
   if (!document.getElementById('ibkrBotDashboardBlock')) return;
-  if (ibkrBotStatusData) renderIbkrBotStatus();
+  renderIbkrBotStatus();
   renderIbkrBotDashboardBlock();
 }
 
@@ -5025,6 +5288,68 @@ function animateFactorBars() {
   });
 }
 
+// Blocs d'analyse de la vue Actus : un seul ouvert à la fois. À l'ouverture,
+// le bloc glisse en première position (animation FLIP : on mesure les
+// positions avant/après le changement d'ordre, puis on anime l'écart),
+// passe sur toute la largeur, puis son contenu se déroule. La fermeture
+// joue l'inverse. Sans animation si l'utilisateur a réduit les mouvements.
+function wireCmdFolds(container) {
+  const folds = [...container.querySelectorAll('.cmd-fold')];
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const ease = 'cubic-bezier(.22,1,.36,1)';
+  let busy = false;
+
+  const flip = (change) => {
+    const before = new Map(folds.map(f => [f, f.getBoundingClientRect()]));
+    change();
+    if (reduced) return Promise.resolve();
+    const anims = folds.map(f => {
+      const a = before.get(f), b = f.getBoundingClientRect();
+      const dx = a.left - b.left, dy = a.top - b.top;
+      if (!dx && !dy && a.width === b.width) return null;
+      return f.animate([
+        { transform: `translate(${dx}px, ${dy}px)`, width: `${a.width}px` },
+        { transform: 'none', width: `${b.width}px` },
+      ], { duration: 380, easing: ease }).finished;
+    }).filter(Boolean);
+    return Promise.all(anims);
+  };
+  const unroll = (fold, opening) => {
+    const body = fold.querySelector('.cmd-fold-body');
+    if (reduced || !body) return Promise.resolve();
+    const h = body.scrollHeight;
+    return body.animate(
+      opening ? [{ height: '0px', opacity: 0 }, { height: `${h}px`, opacity: 1 }]
+              : [{ height: `${h}px`, opacity: 1 }, { height: '0px', opacity: 0 }],
+      { duration: opening ? 320 : 220, easing: ease }).finished;
+  };
+  const close = async (fold) => {
+    await unroll(fold, false);
+    fold.open = false;
+    await flip(() => fold.classList.remove('is-wide'));
+  };
+  const open = async (fold) => {
+    await flip(() => fold.classList.add('is-wide'));
+    fold.open = true;
+    await unroll(fold, true);
+  };
+
+  folds.forEach(fold => {
+    fold.querySelector('summary').addEventListener('click', async (e) => {
+      e.preventDefault();
+      if (busy) return;
+      busy = true;
+      try {
+        const current = folds.find(f => f.open);
+        if (current) await close(current);
+        if (current !== fold) await open(fold);
+      } finally {
+        busy = false;
+      }
+    });
+  });
+}
+
 // Sépare la Synthèse (affichée en tête) des autres blocs de l'analyse IA,
 // découpés sur les <h3> du HTML généré par commodity_news.
 function splitCommodityAnalysis(html) {
@@ -5140,7 +5465,7 @@ function render(data) {
     <div class="cmd-folds">${analysis.sections.map(sec => `
       <details class="cmd-fold">
         <summary>${sec.title} <span class="chevron">▾</span></summary>
-        <div class="ai-analysis">${sec.html}</div>
+        <div class="cmd-fold-body"><div class="ai-analysis">${sec.html}</div></div>
       </details>`).join('')}</div>
     <div class="panel">
       <h2>Dernières actualités</h2>
@@ -5218,6 +5543,8 @@ function render(data) {
     });
     loadCommodityMiniWidget(activeCommodity, true);
   }
+
+  content.querySelectorAll('.cmd-folds').forEach(wireCmdFolds);
 
   const synthesisMore = document.getElementById('cmdSynthesisMore');
   if (synthesisMore) synthesisMore.addEventListener('click', () => {

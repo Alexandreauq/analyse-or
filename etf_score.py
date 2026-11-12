@@ -14,7 +14,21 @@ def compute_tracking_difference(etf_prices: list[float], benchmark_prices: list[
     sur la meme periode (premier point vs dernier point des deux series),
     en points de pourcentage. None si l'une des deux series a moins de 2
     points ou si le prix de depart de l'indice est nul/negatif -- jamais
-    une valeur approximee (voir Global Constraints)."""
+    une valeur approximee (voir Global Constraints).
+
+    ATTENTION -- ALIGNEMENT DE DATES NON FAIT ICI, A FAIRE AVANT TOUT APPEL REEL :
+    cette fonction compare bêtement etf_prices[0]/[-1] a benchmark_prices[0]/[-1],
+    sans jamais regarder les dates. Les deux series DOIVENT etre alignees sur la
+    meme plage de dates (idealement intersectees sur les memes dates exactes)
+    AVANT d'etre passees ici -- sinon le resultat est un nombre silencieusement
+    faux, pas une erreur. Rien dans ce depot ne fait cet alignement aujourd'hui :
+    indices_score.py::main() passe toujours benchmark_history=None a
+    build_etf_entry (voir le commentaire au point d'appel), donc ce bug n'a
+    aucun effet en v1. Mais fetch_index_price_history() recupere maintenant, par
+    construction, l'historique des bons tickers de benchmark (INDEX_YFINANCE_TICKERS
+    etendu en Tache 5) -- NE PAS cabler cet historique reel dans build_etf_entry
+    sans ajouter d'abord une etape d'alignement (ex. intersection des dates
+    communes aux deux series avant d'en extraire les listes de close)."""
     if len(etf_prices) < 2 or len(benchmark_prices) < 2:
         return None
     if benchmark_prices[0] <= 0 or etf_prices[0] <= 0:
@@ -32,7 +46,6 @@ def fetch_etf_data(ticker: str) -> dict:
     d'echec (meme convention que fetch_company_financials) ; c'est a
     l'appelant (boucle main()) de capturer par ticker."""
     t = yf.Ticker(ticker)
-    info = t.info
     history_df = t.history(period="2y")
     if history_df.empty:
         raise ValueError(f"Historique de prix vide pour {ticker}")
@@ -50,14 +63,26 @@ def fetch_etf_data(ticker: str) -> dict:
         {"date": ts.strftime("%Y-%m-%d"), "close": float(close)}
         for ts, close in close_series.items()
     ]
-    dividend_yield = info.get("dividendYield")
-    if dividend_yield is not None:
-        dividend_yield = float(dividend_yield)
-        if not math.isfinite(dividend_yield):
-            # Meme precaution que pour price_history ci-dessus : un
-            # rendement non fini ne doit jamais atteindre le payload
-            # (allow_nan=False dans main() le ferait planter sans ca).
-            dividend_yield = None
+    # .info est une proprietee reseau a part (requete differente du
+    # price_history ci-dessus) : une panne specifique a .info (timeout,
+    # endpoint yfinance qui change) ne doit pas faire echouer tout le
+    # fetch alors que le prix/historique, l'essentiel pour l'onglet
+    # Indices, a reussi -- degradation vers dividend_yield=None plutot
+    # que de propager l'exception (seul ce bloc est concerne, pas le
+    # "leve telle quelle" ci-dessus qui reste la convention pour le
+    # prix/historique).
+    dividend_yield = None
+    try:
+        dividend_yield = t.info.get("dividendYield")
+        if dividend_yield is not None:
+            dividend_yield = float(dividend_yield)
+            if not math.isfinite(dividend_yield):
+                # Meme precaution que pour price_history ci-dessus : un
+                # rendement non fini ne doit jamais atteindre le payload
+                # (allow_nan=False dans main() le ferait planter sans ca).
+                dividend_yield = None
+    except Exception:
+        dividend_yield = None
     return {
         "current_price": price_history[-1]["close"],
         "price_history": price_history,

@@ -104,6 +104,36 @@ def test_fetch_etf_data_raises_when_history_entirely_nan(monkeypatch):
         fetch_etf_data("CW8.PA")
 
 
+class _FakeEtfTickerInfoRaises:
+    """.info leve une exception a l'acces (ex. timeout/panne reseau sur cet
+    endpoint specifique) alors que .history() reussit -- doit degrader vers
+    dividend_yield=None plutot que de faire echouer tout fetch_etf_data
+    (Fix 6 : un hic sur le dividende ne doit pas faire tomber l'ETF entier)."""
+
+    def __init__(self, history_df):
+        self._history_df = history_df
+
+    @property
+    def info(self):
+        raise RuntimeError("panne reseau sur .info")
+
+    def history(self, period=None):
+        return self._history_df
+
+
+def test_fetch_etf_data_degrades_dividend_yield_when_info_raises(monkeypatch):
+    history_df = _fake_history_df([("2026-11-01", 100.0), ("2026-11-02", 101.5)])
+    fake = _FakeEtfTickerInfoRaises(history_df)
+    monkeypatch.setattr(etf_score.yf, "Ticker", lambda t: fake)
+    result = fetch_etf_data("CW8.PA")
+    assert result["dividend_yield"] is None
+    assert result["current_price"] == pytest.approx(101.5)
+    assert result["price_history"] == [
+        {"date": "2026-11-01", "close": pytest.approx(100.0)},
+        {"date": "2026-11-02", "close": pytest.approx(101.5)},
+    ]
+
+
 def test_fetch_etf_data_rejects_non_finite_dividend_yield(monkeypatch):
     # Un dividend_yield NaN/inf renvoye par yfinance ne doit jamais
     # atteindre le payload tel quel (json.dump(..., allow_nan=False) dans

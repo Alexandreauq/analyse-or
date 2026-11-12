@@ -2798,6 +2798,28 @@
       "shadow_resolved": false,
       "shadow_price": null,
       "shadow_return_pct": null
+    },
+    {
+      "id": "III.L-2026-11-12",
+      "ticker": "III.L",
+      "name": "3i Group",
+      "index": "FTSE",
+      "status": "open",
+      "entry_date": "2026-11-12",
+      "entry_price": 27.1,
+      "target_exit_price": 47.08066507819649,
+      "index_price_at_entry": 10863.08984375,
+      "methodology_version": "05d96aa8e86033bdf3064ddd17e7f478bf686d84",
+      "close_date": null,
+      "close_price": null,
+      "close_reason": null,
+      "return_pct": null,
+      "index_price_at_close": null,
+      "index_return_pct": null,
+      "shadow_close_date": "2027-05-12",
+      "shadow_resolved": false,
+      "shadow_price": null,
+      "shadow_return_pct": null
     }
   ]
 }

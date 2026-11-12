@@ -864,8 +864,6 @@
   .ai-reco-alleger, .ai-reco-a_verifier { background: var(--taupe-soft); color: var(--taupe-500); }
   .ai-reco-vendre { background: var(--rust-soft); color: var(--rust); }
   .portfolio-ai-error { color: var(--rust); font-size: var(--text-sm); margin: 6px 0 0; }
-  .portfolio-ai-card-news { display: flex; flex-direction: column; gap: 3px; margin-top: 8px; }
-  .portfolio-ai-card-news .news-title { font-size: var(--text-xs); }
   @media (max-width: 420px) {
     .portfolio-ai-hero { flex-direction: column; align-items: flex-start; }
     .portfolio-ai-gauge-wrap { width: 100%; }
@@ -2840,19 +2838,6 @@ function _portfolioAiRecoChipHtml(reco) {
   return `<span class="ai-reco-chip ai-reco-${reco}">${escHtml(_portfolioAiRecoLabel(reco))}</span>`;
 }
 
-// Les 2 actus les plus récentes déjà connues pour cette entreprise (même
-// champ company.news que la fiche détaillée, alimenté par la pipeline de
-// score — voir indices_score.py) : à côté de l'avis de l'IA, pour que
-// l'utilisateur puisse vérifier à quoi l'IA fait référence ("annonce de
-// contrat non confirmée", etc.) sans que l'IA ait besoin de citer ses
-// sources elle-même.
-function _portfolioAiCardNewsHtml(company) {
-  const items = ((company && company.news) || []).slice(0, 2);
-  if (!items.length) return '';
-  return `<div class="portfolio-ai-card-news">${items.map(n => `
-    <a class="news-title" href="${n.link}" target="_blank" rel="noopener">${escHtml(n.title)}</a>`).join('')}</div>`;
-}
-
 function _portfolioAiCardsHtml(parLigne, positionsByTicker, companiesByTicker, currencyByIndex) {
   if (!parLigne.length) {
     return '<div class="list-empty">Lance l\'analyse IA pour voir l\'avis par entreprise.</div>';
@@ -2873,7 +2858,6 @@ function _portfolioAiCardsHtml(parLigne, positionsByTicker, companiesByTicker, c
         </div>
         ${_portfolioAiRecoChipHtml(l.reco)}
         <p class="hero-sub">${escHtml(l.analyse || l.justification || '')}</p>
-        ${_portfolioAiCardNewsHtml(company)}
       </div>`;
   }).join('');
 }
@@ -2886,7 +2870,7 @@ function _portfolioAiNoteParLigneHtml(parLigne, companiesByTicker) {
   }
   return parLigne.map(l => {
     const company = companiesByTicker[l.ticker];
-    return `<p class="hero-sub"><strong>${escHtml(company ? company.name : l.ticker)}</strong> — ${_portfolioAiRecoChipHtml(l.reco)} ${escHtml(l.analyse || l.justification || '')}</p>${_portfolioAiCardNewsHtml(company)}`;
+    return `<p class="hero-sub"><strong>${escHtml(company ? company.name : l.ticker)}</strong> — ${_portfolioAiRecoChipHtml(l.reco)} ${escHtml(l.analyse || l.justification || '')}</p>`;
   }).join('');
 }
 

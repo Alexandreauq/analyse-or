@@ -3161,15 +3161,14 @@ function renderPortfolioActionsTab(companiesByTicker, currencyByIndex) {
 
   portfolioActionsSections = [
     {
-      title: 'Ajouter une position', short: 'Ajouter',
-      desc: 'Enregistre un nouvel achat : choisis l\'entreprise, la quantité, le prix payé et la date, ton portefeuille se met à jour aussitôt.',
-      html: portfolioFormHtml(indicesData.companies), wire: wirePortfolioForm,
-    },
-    {
       title: 'Tes positions', short: 'Positions',
-      desc: 'Vue d\'ensemble de ton portefeuille : totaux séparés EUR/USD, répartition par entreprise, P&L latent et score de chaque ligne détenue.',
-      html: `${portfolioTotalsHtml(totals)}${portfolioDonutRowHtml(positions, companiesByTicker, currencyByIndex, totals)}${portfolioPositionsHtml(positions, companiesByTicker, currencyByIndex)}`,
-      wire: () => wirePortfolioPositionActions(companiesByTicker),
+      desc: 'Ajoute un nouvel achat et retrouve aussitôt ton portefeuille : totaux séparés EUR/USD, répartition par entreprise, P&L latent et score de chaque ligne détenue.',
+      html: `
+        <h3 class="portfolio-analysis-title">Ajouter une position</h3>
+        ${portfolioFormHtml(indicesData.companies)}
+        <h3 class="portfolio-analysis-title">Tes positions</h3>
+        ${portfolioTotalsHtml(totals)}${portfolioDonutRowHtml(positions, companiesByTicker, currencyByIndex, totals)}${portfolioPositionsHtml(positions, companiesByTicker, currencyByIndex)}`,
+      wire: () => { wirePortfolioForm(); wirePortfolioPositionActions(companiesByTicker); },
     },
     {
       title: 'Opportunités', short: 'Opportunités',

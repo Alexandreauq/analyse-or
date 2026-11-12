@@ -7538,7 +7538,58 @@ function renderCompanyComparison(tickers) {
   animateFactorBars();
 }
 
+// Fiche détail dédiée pour un ETF (company.is_etf === true) : un ETF n'a
+// ni score/factors/alertes/Graham (voir etf_score.py build_etf_entry,
+// jamais remplis pour ce type d'entrée) -- renderCompanyDetail planterait
+// immédiatement sur company.factors.map(...) sans ce branchement séparé.
+// Classes CSS copiées de renderCompanyDetail ci-dessous (back-link, hero-*,
+// signal-stats/price-row, #real-price-chart/#real-price-chart-note,
+// news-item/news-title/news-meta/news-summary) plutôt qu'inventées.
+function renderEtfDetail(company) {
+  const info = company.etf_info || {};
+
+  const newsHtml = (company.news || []).map(n => `
+    <div class="news-item">
+      <a class="news-title" href="${n.link}" target="_blank" rel="noopener">${n.title}</a>
+      <div class="news-meta">${[n.source, n.date].filter(Boolean).join(' · ')}</div>
+      ${n.summary ? `<p class="news-summary">${n.summary}</p>` : ''}
+    </div>`).join('');
+
+  document.getElementById('indicesContent').innerHTML = `
+    <a href="${companyBackTarget.hash}" class="back-link">← ${companyBackTarget.label}</a>
+
+    <section class="hero">
+      <div class="hero-name-meta">
+        <span class="hero-ticker-sector">${company.ticker} · ETF</span>
+      </div>
+      <h1 class="hero-name">${company.name}</h1>
+      <div class="hero-accent"></div>
+      <p class="hero-sub">Cours actuel : ${formatPriceForIndex(company.current_price, company.index)}</p>
+    </section>
+
+    <h2>Caractéristiques</h2>
+    <div class="signal-stats">
+      <div class="price-row"><span class="price-label">Indice suivi</span><span class="price-value">${info.benchmark_name || '—'}</span></div>
+      <div class="price-row"><span class="price-label">Frais de gestion (TER)</span><span class="price-value">${info.ter_pct != null ? info.ter_pct + '%' : '—'}</span></div>
+      <div class="price-row"><span class="price-label">Réplication</span><span class="price-value">${info.replication || '—'}</span></div>
+      <div class="price-row"><span class="price-label">Distribution</span><span class="price-value">${info.distribution || '—'}</span></div>
+      <div class="price-row"><span class="price-label">Éligible PEA</span><span class="price-value">${info.pea_eligible ? 'Oui' : 'Non'}</span></div>
+      <div class="price-row"><span class="price-label">Écart de suivi (vs indice)</span><span class="price-value ${pctClass(info.tracking_difference_pct)}">${info.tracking_difference_pct != null ? formatPct(info.tracking_difference_pct) : 'Indisponible'}</span></div>
+    </div>
+
+    <h2>Cours en direct</h2>
+    <div id="real-price-chart"><div class="index-price-fallback">${formatPriceForIndex(company.current_price, company.index)}</div></div>
+    <p class="scalp-note" id="real-price-chart-note">Cours au dernier calcul (${company.ticker}) — pas de widget temps réel disponible pour cet ETF.</p>
+
+    <h2>Actualités récentes</h2>
+    ${newsHtml || '<p class="hero-sub">Aucune actualité récente.</p>'}
+  `;
+
+  loadRealPriceChart(company);
+}
+
 function renderCompanyDetail(company) {
+  if (company.is_etf) { renderEtfDetail(company); return; }
   // Résolu une seule fois ici (pas dans loadSideQuoteWidget) pour que le
   // template ci-dessous et l'appel de chargement du widget restent
   // cohérents entre eux — voir docs/company_quote_widget.js pour le détail

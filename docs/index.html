@@ -1308,8 +1308,12 @@
     padding: 14px 16px; font-size: var(--text-sm); line-height: var(--lh-relaxed); color: var(--text);
     margin: 0 0 12px;
   }
-  .portfolio-diagnosis-section strong { display: block; margin-bottom: 4px; color: var(--muted); font-size: var(--text-xs); text-transform: uppercase; letter-spacing: .03em; }
+  .portfolio-diagnosis-section strong { display: block; margin-bottom: 6px; color: var(--muted); font-size: var(--text-xs); text-transform: uppercase; letter-spacing: .03em; }
   .portfolio-diagnosis-section:last-of-type { margin-bottom: 24px; }
+  .portfolio-diagnosis-section ul { margin: 0; padding-left: 18px; }
+  .portfolio-diagnosis-section li { margin-bottom: 8px; }
+  .portfolio-diagnosis-section li:last-child { margin-bottom: 0; }
+  .portfolio-diagnosis-intro { color: var(--muted); font-size: var(--text-xs); margin: 0 0 10px; }
   .portfolio-analysis-title {
     font-family: 'Newsreader', serif; font-weight: 400; font-size: var(--text-lg);
     margin: 28px 0 10px;
@@ -2624,22 +2628,25 @@ function portfolioDiagnosisHtml(concentration, health, attribution) {
   }
 
   if (health.riskAlertCount > 0) {
-    bad.push(`${health.riskAlertCount} position${health.riskAlertCount > 1 ? 's portent' : ' porte'} une alerte "risque" active en ce moment — à surveiller de près.`);
+    bad.push(`${health.riskAlertCount} position${health.riskAlertCount > 1 ? 's portent' : ' porte'} une alerte "risque" active en ce moment : le modèle a détecté sur ${health.riskAlertCount > 1 ? 'ces lignes' : 'cette ligne'} un signal qu'il juge préoccupant (dégradation fondamentale, valorisation tendue, etc.) — à revérifier de près avant de renforcer.`);
   } else {
-    good.push(`Aucune position ne porte d'alerte "risque" active pour le moment.`);
+    good.push(`Aucune position ne porte d'alerte "risque" active pour le moment : le modèle ne détecte aujourd'hui aucun signal préoccupant sur l'ensemble des lignes détenues.`);
   }
 
   if (attribution.length) {
     const best = attribution[0];
     const worst = attribution[attribution.length - 1];
-    if (best.pnlAbs > 0) good.push(`${best.name} est la meilleure ligne (${formatPct(best.pnlPct)}) et tire le P&L vers le haut.`);
-    if (worst.pnlAbs < 0 && worst.ticker !== best.ticker) bad.push(`${worst.name} pèse le plus vers le bas (${formatPct(worst.pnlPct)}).`);
+    if (best.pnlAbs > 0) good.push(`${best.name} est la meilleure ligne (${formatPct(best.pnlPct)}) et tire le P&L vers le haut — elle compense une partie des moins-values latentes des autres positions.`);
+    if (worst.pnlAbs < 0 && worst.ticker !== best.ticker) bad.push(`${worst.name} pèse le plus vers le bas (${formatPct(worst.pnlPct)}) : c'est la ligne qui amenuise le plus le résultat global du portefeuille en ce moment.`);
   }
 
   const section = (title, items) => items.length
-    ? `<p class="portfolio-diagnosis-section"><strong>${title}</strong> ${items.join(' ')}</p>`
+    ? `<div class="portfolio-diagnosis-section"><strong>${title}</strong><ul>${items.map(item => `<li>${item}</li>`).join('')}</ul></div>`
     : '';
-  return section('Ce qui va bien —', good) + section('Ce qui pêche —', bad);
+  const intro = (good.length || bad.length)
+    ? '<p class="portfolio-diagnosis-intro">Calculé directement à partir de tes positions (concentration, devises, score du modèle, P&L) — un complément chiffré à l\'avis de l\'IA ci-dessus, pas une opinion de l\'IA elle-même.</p>'
+    : '';
+  return intro + section('Ce qui va bien —', good) + section('Ce qui pêche —', bad);
 }
 
 // Barres de répartition (indice/secteur) — proportion en % du nombre de
@@ -2900,11 +2907,11 @@ function _portfolioAiCardsHtml(parLigne, positionsByTicker, companiesByTicker, c
 function _portfolioAiCardsViewHtml(quickGridHtml, cardsHtml, diagnosisHtml, comparaisonHtml) {
   return `
     ${quickGridHtml}
-    <h3 class="portfolio-analysis-title">Par entreprise</h3>
-    <div class="portfolio-ai-cards">${cardsHtml}</div>
     <h3 class="portfolio-analysis-title">Diagnostic</h3>
     ${diagnosisHtml || '<p class="hero-sub">Ajoute des positions pour voir apparaître un diagnostic ici.</p>'}
     ${comparaisonHtml}
+    <h3 class="portfolio-analysis-title">Par entreprise</h3>
+    <div class="portfolio-ai-cards">${cardsHtml}</div>
   `;
 }
 

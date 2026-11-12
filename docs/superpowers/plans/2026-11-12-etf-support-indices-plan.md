@@ -65,7 +65,7 @@ framework, pas de convention de test pour ce fichier).
   navigateur (serveur local `python -m http.server` + capture d'écran),
   pas par un test automatisé.
 
-## Tâche 1 : Catalogue ETF vérifié (`etf_catalog.py`)
+## Task 1: Catalogue ETF vérifié (`etf_catalog.py`)
 
 **Fichiers :**
 - Créer : `etf_catalog.py`
@@ -158,7 +158,7 @@ framework, pas de convention de test pour ce fichier).
   git commit -m "feat(etf): catalogue statique vérifié des ETF suivis"
   ```
 
-## Tâche 2 : `etf_score.py::compute_tracking_difference`
+## Task 2: `etf_score.py::compute_tracking_difference`
 
 **Fichiers :**
 - Créer : `etf_score.py`
@@ -241,7 +241,7 @@ framework, pas de convention de test pour ce fichier).
   git commit -m "feat(etf): calcul de l'ecart de suivi (tracking difference)"
   ```
 
-## Tâche 3 : `etf_score.py::fetch_etf_data`
+## Task 3: `etf_score.py::fetch_etf_data`
 
 **Fichiers :**
 - Modifier : `etf_score.py`
@@ -364,7 +364,7 @@ framework, pas de convention de test pour ce fichier).
   git commit -m "feat(etf): fetch_etf_data -- prix, historique, dividende"
   ```
 
-## Tâche 4 : `etf_score.py::build_etf_entry`
+## Task 4: `etf_score.py::build_etf_entry`
 
 **Fichiers :**
 - Modifier : `etf_score.py`
@@ -515,7 +515,7 @@ framework, pas de convention de test pour ce fichier).
   git commit -m "feat(etf): build_etf_entry -- assemble l'entree finale sans score invente"
   ```
 
-## Tâche 5 : Benchmarks manquants + clés d'index (`indices_score.py`)
+## Task 5: Benchmarks manquants + clés d'index (`indices_score.py`)
 
 **Fichiers :**
 - Modifier : `indices_score.py`
@@ -567,7 +567,7 @@ framework, pas de convention de test pour ce fichier).
   git commit -m "feat(etf): etend INDEX_YFINANCE_TICKERS/INDEX_NAMES/INDEX_CURRENCY pour les benchmarks ETF"
   ```
 
-## Tâche 6 : Brancher les ETF dans `main()` (`indices_score.py`)
+## Task 6: Brancher les ETF dans `main()` (`indices_score.py`)
 
 **Fichiers :**
 - Modifier : `indices_score.py`
@@ -709,7 +709,7 @@ pipeline `update_price_history` existant), mais **fusionnées dans
   git commit -m "feat(etf): branche les ETF dans main() sans jamais les exposer au scoring actions"
   ```
 
-## Tâche 7 : Frontend — rendre les listes/tri sûrs pour une entrée sans score
+## Task 7: Frontend — rendre les listes/tri sûrs pour une entrée sans score
 
 **Fichiers :**
 - Modifier : `docs/index.html`
@@ -796,7 +796,7 @@ pipeline `update_price_history` existant), mais **fusionnées dans
   git commit -m "fix(indices): rend le tri et les badges de score surs pour une entree sans score (ETF)"
   ```
 
-## Tâche 8 : Frontend — fiche détail ETF
+## Task 8: Frontend — fiche détail ETF
 
 **Fichiers :**
 - Modifier : `docs/index.html`
@@ -882,7 +882,7 @@ pipeline `update_price_history` existant), mais **fusionnées dans
   git commit -m "feat(indices): fiche detail dediee pour un ETF (sans score invente)"
   ```
 
-## Tâche 9 : Revue finale + vérification de bout en bout
+## Task 9: Revue finale + vérification de bout en bout
 
 - [ ] **Étape 1 : Revue de branche complète**
 

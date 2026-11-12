@@ -41,6 +41,9 @@ import pandas as pd
 import requests
 import trafilatura
 
+from etf_catalog import ETF_CATALOG
+from etf_score import build_etf_entry
+
 
 WEIGHTS = {
     "rentabilite": 0.24,
@@ -1788,6 +1791,7 @@ INDEX_NAMES = {
     "CAC40": "CAC 40", "DAX": "DAX", "NASDAQ": "Nasdaq 100", "DOW": "Dow Jones",
     "FTSE": "FTSE 100", "SMI": "SMI", "IBEX35": "IBEX 35", "FTSEMIB": "FTSE MIB",
     "NIKKEI225": "Nikkei 225", "HANGSENG": "Hang Seng", "EUROSTOXX50": "Euro Stoxx 50", "SBF120": "SBF 120", "AEXALL": "AEX All-Share", "SP500": "S&P 500",
+    "ETF": "ETF",
 }
 
 # Devise native de chaque indice — CAC40/DAX publient en euros, le
@@ -1799,6 +1803,7 @@ INDEX_CURRENCY = {
     "CAC40": "EUR", "DAX": "EUR", "NASDAQ": "USD", "DOW": "USD",
     "FTSE": "GBP", "SMI": "CHF", "IBEX35": "EUR", "FTSEMIB": "EUR",
     "NIKKEI225": "JPY", "HANGSENG": "HKD", "EUROSTOXX50": "EUR", "SBF120": "EUR", "AEXALL": "EUR", "SP500": "USD",
+    "ETF": "EUR",
 }
 
 # Même mapping que CURRENCY_SYMBOL côté frontend (docs/index.html) — pour
@@ -4777,6 +4782,40 @@ INDEX_YFINANCE_TICKERS = {
     "NIKKEI225": "^N225", "HANGSENG": "^HSI", "EUROSTOXX50": "^STOXX50E", "SBF120": "^SBF120",
     # Pas de ticker Yahoo pour l'AEX All-Share : l'AEX (25 valeurs) sert de proxy.
     "AEXALL": "^AEX", "SP500": "^GSPC",
+    # Benchmarks ETF (voir etf_catalog.py, "benchmark_name"/"benchmark_ticker",
+    # vérifiés le 2026-11-12). Attention : les clés de ce dict ne suivent PAS
+    # une convention unique — un mix de codes courts hérités (SP500, NASDAQ,
+    # CAC40, EUROSTOXX50…, pré-existants, réutilisés tels quels par les
+    # entrées etf_catalog.py dont benchmark_name est "S&P 500"/"Nasdaq-100"/
+    # "CAC 40"/"Euro Stoxx 50") et de benchmark_name complets pour les clés
+    # ajoutées ici qui n'avaient pas encore d'équivalent (MSCI World, MSCI
+    # Emerging Markets, MSCI Europe, MSCI EMU, TOPIX, Or…). Un futur lookup
+    # qui joint sur ce dict ne doit donc jamais dériver sa clé depuis
+    # benchmark_name (`INDEX_YFINANCE_TICKERS[entry["benchmark_name"]]` casse
+    # pour S&P 500/Nasdaq-100/CAC 40/Euro Stoxx 50) — utiliser
+    # directement entry["benchmark_ticker"] à la place, déjà le bon ticker
+    # yfinance dans tous les cas.
+    "MSCI World": "^990100-USD-STRD",
+    # Proxy : iShares MSCI Emerging Markets ETF (USD) -- l'indice lui-même
+    # (^891800-USD-STRD) existe sur Yahoo mais sans historique exploitable.
+    "MSCI Emerging Markets": "EEM",
+    "MSCI Europe": "^990500-EUR-STRD",
+    # Proxy : NEXT FUNDS TOPIX ETF (Tokyo, JPY) -- pas de ticker Yahoo pour
+    # l'indice TOPIX lui-même.
+    "TOPIX": "1306.T",
+    # Proxy : iShares Core MSCI EMU UCITS ETF EUR (Acc), Xetra -- pas de
+    # ticker Yahoo pour l'indice MSCI EMU lui-même.
+    "MSCI EMU": "SXR7.DE",
+    # Proxy : future or COMEX (USD) -- pas de ticker Yahoo pour le fixing
+    # LBMA lui-même.
+    "Or (LBMA Gold Price PM, USD)": "GC=F",
+    # Pas de ticker Yahoo pour les indices sectoriels STOXX Europe 600 :
+    # proxy = l'ETF iShares (DE) en EUR sur Xetra qui suit le même indice.
+    "STOXX Europe 600 Health Care": "EXV4.DE",
+    "STOXX Europe 600 Technology": "EXV3.DE",
+    "STOXX Europe 600 Banks": "EXV1.DE",
+    "STOXX Europe 600": "^STOXX",
+    "Russell 2000": "^RUT",
 }
 SIGNAL_STOP_LOSS_PCT = -20.0     # % perte déclenchant une clôture anticipée
 SIGNAL_SHADOW_DELAY_MONTHS = 6   # délai max avant clôture forcée du signal
@@ -6723,6 +6762,15 @@ def _compute_health_summary(companies: list[dict]) -> dict:
     }
 
 
+def _merge_etf_entries(companies: list[dict], etf_companies: list[dict]) -> list[dict]:
+    """Fusionne les entrees ETF dans la liste finale -- a n'appeler
+    qu'APRES recalibrate_scores_by_profile/_attach_alerts_and_update_history/
+    _compute_health_summary (voir Tache 6 du plan ETF) : ces trois
+    fonctions font des acces directs a des cles absentes d'une entree
+    ETF (score, score_raw, entry_price) et leveraient une KeyError."""
+    return companies + etf_companies
+
+
 _REPO_ROOT = os.path.dirname(os.path.abspath(__file__))
 
 
@@ -6879,8 +6927,34 @@ def main():
             print(f"Erreur pour {company['ticker']} ({company['name']}) : {e}")
             traceback.print_exc()
 
+    # ETF (voir Tache 6 du plan ETF) : construits dans une liste separee
+    # (etf_companies) et fusionnes dans companies seulement apres
+    # recalibrate_scores_by_profile/_attach_alerts_and_update_history/
+    # _compute_health_summary -- ces trois fonctions font des acces directs
+    # a des cles absentes d'une entree ETF et leveraient une KeyError si une
+    # entree ETF s'y trouvait avant la fusion.
+    etf_companies = []
+    for etf in ETF_CATALOG:
+        try:
+            # v1 : pas de lookup/fetch de benchmark, voir plan. NE PAS
+            # remplacer ce None par fetch_index_price_history()[benchmark]
+            # sans lire d'abord l'avertissement sur
+            # etf_score.compute_tracking_difference : les deux series
+            # (historique ETF et historique benchmark) ne sont alignees
+            # sur AUCUNE date commune ailleurs dans ce depot (une peut
+            # couvrir 6 ans, l'autre 2 ans) -- cabler un historique reel
+            # ici sans etape d'alignement produirait un
+            # tracking_difference_pct silencieusement faux, pas une erreur.
+            benchmark_history = None
+            etf_companies.append(build_etf_entry(etf, benchmark_history))
+        except Exception as e:
+            print(f"Erreur pour {etf['ticker']} ({etf['name']}) : {e}")
+            traceback.print_exc()
+
     price_history_entries = []
     for c in companies:
+        price_history_entries.extend(c.pop("_price_history_daily", []))
+    for c in etf_companies:
         price_history_entries.extend(c.pop("_price_history_daily", []))
     price_history_entries.extend(fetch_index_price_history())
     update_price_history(price_history_entries)
@@ -6899,6 +6973,17 @@ def main():
 
     newly_triggered_entree, newly_triggered_major_news = _attach_alerts_and_update_history(companies)
 
+    # _compute_health_summary compare companies a COMPANIES (actions
+    # uniquement) : calcule ICI, sur companies encore stock-only, avant la
+    # fusion ETF qui suit -- sinon chaque ETF apparaitrait comme un ticker
+    # "inattendu", faussant le resume de completude (voir Tache 6 du plan ETF).
+    health_summary = _compute_health_summary(companies)
+
+    # Fusion ETF : seulement maintenant, apres recalibrate_scores_by_profile/
+    # _attach_alerts_and_update_history/_compute_health_summary -- jamais avant
+    # (voir _merge_etf_entries).
+    companies = _merge_etf_entries(companies, etf_companies)
+
     payload = {
         "updated": datetime.today().strftime("%Y-%m-%d"),
         "index_names": INDEX_NAMES,
@@ -6914,7 +6999,7 @@ def main():
         # gratuit pour Nasdaq/Dow Jones, contrairement à CAC40/DAX).
         "index_prices": fetch_index_prices(),
         "companies": companies,
-        "health": _compute_health_summary(companies),
+        "health": health_summary,
         # Liste STATIQUE complete de tous les tickers que main() a vocation
         # a suivre (COMPANIES), independamment du succes/echec du run du
         # jour pour chacun -- distincte de "companies" qui ne contient que
@@ -6951,7 +7036,15 @@ def main():
 
     print(f"Données exportées vers : {OUTPUT_JSON_PATH}")
     for c in companies:
-        print(f"  {c['ticker']:<8} {c['name']:<20} score {c['score']:+.1f}  ({c['interpretation']})")
+        # Decouvert pendant le branchement des ETF (Tache 6, hors perimetre
+        # des trois fonctions auditees par le plan) : une entree ETF n'a ni
+        # "score" ni "interpretation" -- brancher sur is_etf plutot que de
+        # planter main() APRES l'ecriture de indices.json (ce qui coupait
+        # silencieusement l'email/signal-tracking/Nikkei du jour).
+        if c.get("is_etf"):
+            print(f"  {c['ticker']:<8} {c['name']:<20} ETF (prix {c['current_price']:.2f})")
+        else:
+            print(f"  {c['ticker']:<8} {c['name']:<20} score {c['score']:+.1f}  ({c['interpretation']})")
 
     send_daily_digest_email(newly_triggered_entree, newly_triggered_major_news)
     update_signal_tracking(companies, newly_triggered_entree)

@@ -1,4 +1,5 @@
 import email
+import functools
 import os
 import pytest
 import requests
@@ -4816,6 +4817,11 @@ def test_main_writes_alerts_key_for_every_company(monkeypatch, tmp_path):
     monkeypatch.setattr(indices_score, "load_risk_free_rate_cache", lambda path=None: _cache)
     monkeypatch.setattr(indices_score, "save_risk_free_rate_cache", lambda rates, path=None: _cache.update(rates))
 
+    # Isolation de test (pas "hors scope") : ce test, ecrit avant le support
+    # ETF, ne veut parler que des actions -- sans ce monkeypatch du vrai
+    # ETF_CATALOG, main() ferait de vrais appels reseau (yfinance) pour
+    # chaque ETF reel pendant ce test.
+    monkeypatch.setattr(indices_score, "ETF_CATALOG", [])
     indices_score.main()
 
     written = json.loads(output_path.read_text(encoding="utf-8"))
@@ -4858,6 +4864,11 @@ def test_main_payload_includes_index_metadata(monkeypatch, tmp_path):
     monkeypatch.setattr(indices_score, "load_risk_free_rate_cache", lambda path=None: _cache)
     monkeypatch.setattr(indices_score, "save_risk_free_rate_cache", lambda rates, path=None: _cache.update(rates))
 
+    # Isolation de test (pas "hors scope") : ce test, ecrit avant le support
+    # ETF, ne veut parler que des actions -- sans ce monkeypatch du vrai
+    # ETF_CATALOG, main() ferait de vrais appels reseau (yfinance) pour
+    # chaque ETF reel pendant ce test.
+    monkeypatch.setattr(indices_score, "ETF_CATALOG", [])
     indices_score.main()
 
     written = json.loads(output_path.read_text(encoding="utf-8"))
@@ -4866,12 +4877,12 @@ def test_main_payload_includes_index_metadata(monkeypatch, tmp_path):
         "FTSE": "FTSE 100", "SMI": "SMI", "IBEX35": "IBEX 35", "FTSEMIB": "FTSE MIB",
         "NIKKEI225": "Nikkei 225", "HANGSENG": "Hang Seng", "EUROSTOXX50": "Euro Stoxx 50",
         "SBF120": "SBF 120", "AEXALL": "AEX All-Share",
-        "SP500": "S&P 500",
+        "SP500": "S&P 500", "ETF": "ETF",
     }
     assert written["index_currency"] == {
         "CAC40": "EUR", "DAX": "EUR", "NASDAQ": "USD", "DOW": "USD", "FTSE": "GBP",
         "SMI": "CHF", "IBEX35": "EUR", "FTSEMIB": "EUR", "NIKKEI225": "JPY", "HANGSENG": "HKD",
-        "EUROSTOXX50": "EUR", "SBF120": "EUR", "AEXALL": "EUR", "SP500": "USD",
+        "EUROSTOXX50": "EUR", "SBF120": "EUR", "AEXALL": "EUR", "SP500": "USD", "ETF": "EUR",
     }
     assert written["index_prices"] == fake_index_prices
     written_by_ticker = {c["ticker"]: c["index"] for c in written["companies"]}
@@ -4916,6 +4927,11 @@ def test_main_payload_includes_full_static_roster(monkeypatch, tmp_path):
     monkeypatch.setattr(indices_score, "load_risk_free_rate_cache", lambda path=None: _cache)
     monkeypatch.setattr(indices_score, "save_risk_free_rate_cache", lambda rates, path=None: _cache.update(rates))
 
+    # Isolation de test (pas "hors scope") : ce test, ecrit avant le support
+    # ETF, ne veut parler que des actions -- sans ce monkeypatch du vrai
+    # ETF_CATALOG, main() ferait de vrais appels reseau (yfinance) pour
+    # chaque ETF reel pendant ce test.
+    monkeypatch.setattr(indices_score, "ETF_CATALOG", [])
     indices_score.main()
 
     written = json.loads(output_path.read_text(encoding="utf-8"))
@@ -4975,6 +4991,11 @@ def test_main_payload_exposes_risk_free_rate_by_currency(monkeypatch, tmp_path):
     monkeypatch.setattr(indices_score, "load_risk_free_rate_cache", lambda path=None: _cache)
     monkeypatch.setattr(indices_score, "save_risk_free_rate_cache", lambda rates, path=None: _cache.update(rates))
 
+    # Isolation de test (pas "hors scope") : ce test, ecrit avant le support
+    # ETF, ne veut parler que des actions -- sans ce monkeypatch du vrai
+    # ETF_CATALOG, main() ferait de vrais appels reseau (yfinance) pour
+    # chaque ETF reel pendant ce test.
+    monkeypatch.setattr(indices_score, "ETF_CATALOG", [])
     indices_score.main()
 
     written = json.loads(output_path.read_text(encoding="utf-8"))
@@ -5037,6 +5058,11 @@ def test_main_routes_risk_free_rate_by_currency(monkeypatch, tmp_path):
     monkeypatch.setattr(indices_score, "load_risk_free_rate_cache", lambda path=None: _cache)
     monkeypatch.setattr(indices_score, "save_risk_free_rate_cache", lambda rates, path=None: _cache.update(rates))
 
+    # Isolation de test (pas "hors scope") : ce test, ecrit avant le support
+    # ETF, ne veut parler que des actions -- sans ce monkeypatch du vrai
+    # ETF_CATALOG, main() ferait de vrais appels reseau (yfinance) pour
+    # chaque ETF reel pendant ce test.
+    monkeypatch.setattr(indices_score, "ETF_CATALOG", [])
     indices_score.main()
 
     cac40_ticker = indices_score.CAC40_COMPANIES[0]["ticker"]
@@ -8047,6 +8073,10 @@ def test_fetch_index_prices_returns_latest_close_per_index(monkeypatch):
         "CAC40": 7850.0, "DAX": 7850.0, "NASDAQ": 7850.0, "DOW": 7850.0,
         "FTSE": 7850.0, "SMI": 7850.0, "IBEX35": 7850.0, "FTSEMIB": 7850.0,
         "NIKKEI225": 7850.0, "HANGSENG": 7850.0, "EUROSTOXX50": 7850.0, "SBF120": 7850.0, "AEXALL": 7850.0, "SP500": 7850.0,
+        "MSCI World": 7850.0, "MSCI Emerging Markets": 7850.0, "MSCI Europe": 7850.0,
+        "TOPIX": 7850.0, "MSCI EMU": 7850.0, "Or (LBMA Gold Price PM, USD)": 7850.0,
+        "STOXX Europe 600 Health Care": 7850.0, "STOXX Europe 600 Technology": 7850.0,
+        "STOXX Europe 600 Banks": 7850.0, "STOXX Europe 600": 7850.0, "Russell 2000": 7850.0,
     }
 
 
@@ -8075,6 +8105,10 @@ def test_fetch_index_prices_returns_all_none_when_yfinance_unavailable(monkeypat
         "CAC40": None, "DAX": None, "NASDAQ": None, "DOW": None, "FTSE": None,
         "SMI": None, "IBEX35": None, "FTSEMIB": None, "NIKKEI225": None, "HANGSENG": None,
         "EUROSTOXX50": None, "SBF120": None, "AEXALL": None, "SP500": None,
+        "MSCI World": None, "MSCI Emerging Markets": None, "MSCI Europe": None,
+        "TOPIX": None, "MSCI EMU": None, "Or (LBMA Gold Price PM, USD)": None,
+        "STOXX Europe 600 Health Care": None, "STOXX Europe 600 Technology": None,
+        "STOXX Europe 600 Banks": None, "STOXX Europe 600": None, "Russell 2000": None,
     }
 
 
@@ -8511,6 +8545,11 @@ def test_main_calls_update_signal_tracking(monkeypatch, tmp_path):
     monkeypatch.setattr(indices_score, "load_risk_free_rate_cache", lambda path=None: _cache)
     monkeypatch.setattr(indices_score, "save_risk_free_rate_cache", lambda rates, path=None: _cache.update(rates))
 
+    # Isolation de test (pas "hors scope") : ce test, ecrit avant le support
+    # ETF, ne veut parler que des actions -- sans ce monkeypatch du vrai
+    # ETF_CATALOG, main() ferait de vrais appels reseau (yfinance) pour
+    # chaque ETF reel pendant ce test.
+    monkeypatch.setattr(indices_score, "ETF_CATALOG", [])
     indices_score.main()
 
     assert "companies" in called_with
@@ -8564,6 +8603,11 @@ def test_main_writes_indices_json_before_email_and_signal_tracking(monkeypatch, 
     monkeypatch.setattr(indices_score, "load_risk_free_rate_cache", lambda path=None: _cache)
     monkeypatch.setattr(indices_score, "save_risk_free_rate_cache", lambda rates, path=None: _cache.update(rates))
 
+    # Isolation de test (pas "hors scope") : ce test, ecrit avant le support
+    # ETF, ne veut parler que des actions -- sans ce monkeypatch du vrai
+    # ETF_CATALOG, main() ferait de vrais appels reseau (yfinance) pour
+    # chaque ETF reel pendant ce test.
+    monkeypatch.setattr(indices_score, "ETF_CATALOG", [])
     indices_score.main()
 
     assert file_existed_at["email"] is True
@@ -8624,6 +8668,11 @@ def test_main_recalibrates_scores_before_alerts_and_signal_tracking(monkeypatch,
     monkeypatch.setattr(indices_score, "load_risk_free_rate_cache", lambda path=None: _cache)
     monkeypatch.setattr(indices_score, "save_risk_free_rate_cache", lambda rates, path=None: _cache.update(rates))
 
+    # Isolation de test (pas "hors scope") : ce test, ecrit avant le support
+    # ETF, ne veut parler que des actions -- sans ce monkeypatch du vrai
+    # ETF_CATALOG, main() ferait de vrais appels reseau (yfinance) pour
+    # chaque ETF reel pendant ce test.
+    monkeypatch.setattr(indices_score, "ETF_CATALOG", [])
     indices_score.main()
 
     scores = called_with["scores_at_call_time"]
@@ -8686,6 +8735,11 @@ def test_main_persists_price_history_from_companies_and_indices(monkeypatch, tmp
     monkeypatch.setattr(indices_score, "load_risk_free_rate_cache", lambda path=None: _cache)
     monkeypatch.setattr(indices_score, "save_risk_free_rate_cache", lambda rates, path=None: _cache.update(rates))
 
+    # Isolation de test (pas "hors scope") : ce test, ecrit avant le support
+    # ETF, ne veut parler que des actions -- sans ce monkeypatch du vrai
+    # ETF_CATALOG, main() ferait de vrais appels reseau (yfinance) pour
+    # chaque ETF reel pendant ce test.
+    monkeypatch.setattr(indices_score, "ETF_CATALOG", [])
     indices_score.main()
 
     tickers = {e["ticker"] for e in captured["entries"]}
@@ -8731,6 +8785,11 @@ def test_main_never_writes_the_internal_price_history_key_to_indices_json(monkey
     monkeypatch.setattr(indices_score, "load_risk_free_rate_cache", lambda path=None: _cache)
     monkeypatch.setattr(indices_score, "save_risk_free_rate_cache", lambda rates, path=None: _cache.update(rates))
 
+    # Isolation de test (pas "hors scope") : ce test, ecrit avant le support
+    # ETF, ne veut parler que des actions -- sans ce monkeypatch du vrai
+    # ETF_CATALOG, main() ferait de vrais appels reseau (yfinance) pour
+    # chaque ETF reel pendant ce test.
+    monkeypatch.setattr(indices_score, "ETF_CATALOG", [])
     indices_score.main()
 
     with open(indices_score.OUTPUT_JSON_PATH, encoding="utf-8") as fh:
@@ -8782,6 +8841,11 @@ def test_main_persists_dividend_history_from_companies(monkeypatch, tmp_path):
     monkeypatch.setattr(indices_score, "load_risk_free_rate_cache", lambda path=None: _cache)
     monkeypatch.setattr(indices_score, "save_risk_free_rate_cache", lambda rates, path=None: _cache.update(rates))
 
+    # Isolation de test (pas "hors scope") : ce test, ecrit avant le support
+    # ETF, ne veut parler que des actions -- sans ce monkeypatch du vrai
+    # ETF_CATALOG, main() ferait de vrais appels reseau (yfinance) pour
+    # chaque ETF reel pendant ce test.
+    monkeypatch.setattr(indices_score, "ETF_CATALOG", [])
     indices_score.main()
 
     assert captured["entries"] == [{"date": "2026-06-15", "ticker": "MC.PA", "amount": 1.5}]
@@ -8825,6 +8889,11 @@ def test_main_never_writes_the_internal_dividend_history_key_to_indices_json(mon
     monkeypatch.setattr(indices_score, "load_risk_free_rate_cache", lambda path=None: _cache)
     monkeypatch.setattr(indices_score, "save_risk_free_rate_cache", lambda rates, path=None: _cache.update(rates))
 
+    # Isolation de test (pas "hors scope") : ce test, ecrit avant le support
+    # ETF, ne veut parler que des actions -- sans ce monkeypatch du vrai
+    # ETF_CATALOG, main() ferait de vrais appels reseau (yfinance) pour
+    # chaque ETF reel pendant ce test.
+    monkeypatch.setattr(indices_score, "ETF_CATALOG", [])
     indices_score.main()
 
     with open(indices_score.OUTPUT_JSON_PATH, encoding="utf-8") as fh:
@@ -9274,3 +9343,138 @@ def test_git_commit_and_push_pulls_before_committing(monkeypatch):
     assert len(appels) == 5
     for cmd, kwargs in appels:
         assert kwargs.get("capture_output") is True, f"{cmd} ne capture pas stdout/stderr"
+
+
+from indices_score import _merge_etf_entries
+
+
+def test_merge_etf_entries_appends_without_mutating_inputs():
+    companies = [{"ticker": "MC.PA", "score": 10}]
+    etf_companies = [{"ticker": "CW8.PA", "is_etf": True}]
+    result = _merge_etf_entries(companies, etf_companies)
+    assert result == [{"ticker": "MC.PA", "score": 10}, {"ticker": "CW8.PA", "is_etf": True}]
+    assert companies == [{"ticker": "MC.PA", "score": 10}]  # inchangee
+    assert etf_companies == [{"ticker": "CW8.PA", "is_etf": True}]  # inchangee
+
+
+def test_main_end_to_end_with_one_real_etf_entry(monkeypatch, tmp_path):
+    """Preuve bout-en-bout (contrairement aux 12 tests precedents qui
+    isolent delibrement ETF_CATALOG a [] pour rester actions-seules) que
+    main() respecte reellement l'ordre de fusion ETF decrit par
+    _merge_etf_entries/_compute_health_summary : avec un ETF_CATALOG non
+    vide, l'ETF doit atteindre docs/indices.json et
+    update_price_history, sans jamais etre compte dans le resume de
+    completude (qui ne porte que sur COMPANIES, actions uniquement) ni
+    laisser fuiter sa cle interne _price_history_daily dans le payload
+    publie.
+
+    update_signal_tracking et update_nikkei_hangseng_price_history
+    tournent ici pour de vrai (pas mockes) : les deux recoivent `companies`
+    APRES la fusion ETF (voir main()), donc une entree ETF -- lecture du
+    code reel de ces deux fonctions avant ce test, elles n'utilisent que
+    des acces `.get()`/`company.get("index")` sur chaque entree, jamais
+    d'acces direct a une cle absente d'une entree ETF (score/score_raw/
+    entry_price). Ce test verrouille ce constat plutot que de le supposer
+    vrai indefiniment. Rendu hermetique via SIGNAL_TRACKING_PATH/
+    NIKKEI_HANGSENG_PRICE_HISTORY_PATH pointes vers tmp_path (aucune
+    ecriture reelle) et fetch_index_prices/fetch_risk_free_rate/
+    fetch_fx_rate_to_usd stubbes (aucun appel reseau reel)."""
+    signal_tracking_path = tmp_path / "signal_tracking.json"
+    nikkei_hangseng_path = tmp_path / "nikkei_hangseng_price_history.json"
+    monkeypatch.setattr(indices_score, "SIGNAL_TRACKING_PATH", str(signal_tracking_path))
+    monkeypatch.setattr(indices_score, "COMPANIES", [
+        {"ticker": "MC.PA", "name": "LVMH", "index": "CAC40"},
+    ])
+    monkeypatch.setattr(indices_score, "fetch_risk_free_rate", lambda series_id: 3.68)
+    monkeypatch.setattr(indices_score, "fetch_fx_rate_to_usd", lambda currency: 1.0)
+    monkeypatch.setattr(indices_score, "load_previous_company_analyses", lambda: {})
+    monkeypatch.setattr(
+        indices_score, "build_company_entry",
+        lambda ticker, name, risk_free_rate, previous_analyses, index_key="CAC40", also_indices=None, fx_rate_to_usd=1.0: {
+            "ticker": ticker, "name": name, "index": index_key,
+            "score": 10.0, "score_raw": 10.0, "interpretation": "Neutre",
+            "current_price": 50.0, "entry_price": 50.0,
+        },
+    )
+    monkeypatch.setattr(indices_score, "load_indices_history", lambda: [])
+    monkeypatch.setattr(indices_score, "append_indices_history", lambda entries: entries)
+    # update_signal_tracking et update_nikkei_hangseng_price_history ne
+    # sont PAS mockees (Fix 4, voir docstring ci-dessus) : elles tournent
+    # pour de vrai sur `companies` deja fusionne avec l'ETF. Seul
+    # fetch_index_prices (reseau, appele par update_signal_tracking) est
+    # stubbe ; update_nikkei_hangseng_price_history est redirigee vers un
+    # fichier tmp_path via functools.partial (son parametre `path` est lie
+    # a NIKKEI_HANGSENG_PRICE_HISTORY_PATH au moment de sa definition, donc
+    # monkeypatcher la constante du module ne suffirait pas).
+    monkeypatch.setattr(
+        indices_score, "update_nikkei_hangseng_price_history",
+        functools.partial(
+            indices_score.update_nikkei_hangseng_price_history,
+            path=str(nikkei_hangseng_path),
+        ),
+    )
+    monkeypatch.setattr(indices_score, "fetch_index_prices", lambda: {"CAC40": None, "DAX": None, "NASDAQ": None, "DOW": None})
+    monkeypatch.setattr(indices_score, "update_dividend_history", lambda entries, **kwargs: entries)
+    monkeypatch.setattr(indices_score, "fetch_index_price_history", lambda: [])
+    output_path = tmp_path / "indices.json"
+    monkeypatch.setattr(indices_score, "OUTPUT_JSON_PATH", str(output_path))
+    # Stub cache functions to avoid polluting the production cache file
+    _cache = {}
+    monkeypatch.setattr(indices_score, "load_risk_free_rate_cache", lambda path=None: _cache)
+    monkeypatch.setattr(indices_score, "save_risk_free_rate_cache", lambda rates, path=None: _cache.update(rates))
+
+    captured = {}
+    def _fake_update_price_history(entries, **kwargs):
+        captured["entries"] = entries
+        return entries
+    monkeypatch.setattr(indices_score, "update_price_history", _fake_update_price_history)
+
+    # ETF_CATALOG non vide (le point de ce test) : un seul faux ETF, et
+    # build_etf_entry stubbe pour eviter tout vrai appel yfinance --
+    # fetch_etf_data lui-meme est couvert separement par
+    # tests/test_etf_score.py.
+    monkeypatch.setattr(indices_score, "ETF_CATALOG", [
+        {"ticker": "CW8.PA", "name": "Amundi MSCI World", "benchmark_name": "MSCI World",
+         "ter_pct": 0.38, "replication": "physique", "distribution": "capitalisant",
+         "pea_eligible": True},
+    ])
+    monkeypatch.setattr(
+        indices_score, "build_etf_entry",
+        lambda catalog_entry, benchmark_price_history=None: {
+            "ticker": catalog_entry["ticker"], "name": catalog_entry["name"],
+            "index": "ETF", "is_etf": True, "current_price": 450.0, "news": [],
+            "etf_info": {"ter_pct": catalog_entry["ter_pct"]},
+            "_price_history_daily": [
+                {"date": "2026-11-11", "ticker": catalog_entry["ticker"], "price": 450.0},
+            ],
+        },
+    )
+
+    indices_score.main()  # ne doit lever aucune exception
+
+    written = json.loads(output_path.read_text(encoding="utf-8"))
+    etf_entries = [c for c in written["companies"] if c.get("is_etf")]
+    assert len(etf_entries) == 1
+    etf_entry = etf_entries[0]
+    assert etf_entry["ticker"] == "CW8.PA"
+
+    # Le resume de completude ne compte jamais l'ETF : il ne porte que
+    # sur COMPANIES (actions), calcule avant la fusion ETF dans main().
+    assert written["health"]["returned"] == len(indices_score.COMPANIES)
+
+    # La ligne de prix de l'ETF a bien atteint update_price_history.
+    price_history_tickers = {e["ticker"] for e in captured["entries"]}
+    assert "CW8.PA" in price_history_tickers
+
+    # _price_history_daily est retiree (.pop) avant publication, meme
+    # traitement que pour une action.
+    assert "_price_history_daily" not in etf_entry
+
+    # Fix 4 : update_signal_tracking et update_nikkei_hangseng_price_history
+    # ont bien tourne pour de vrai (pas mockees) sur `companies`, deja
+    # fusionne avec l'entree ETF a ce stade de main() -- sans lever de
+    # KeyError/TypeError sur cette entree, et en ecrivant reellement leur
+    # fichier (preuve qu'elles sont allees jusqu'au bout, pas juste
+    # qu'elles n'ont pas plante avant le premier acces a une cle ETF).
+    assert signal_tracking_path.exists()
+    assert nikkei_hangseng_path.exists()

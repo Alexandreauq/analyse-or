@@ -3505,7 +3505,9 @@ function portfolioPositionsHtml(positions, companiesByTicker, currencyByIndex) {
         <div class="portfolio-position-pnl">
           <span class="price-value">${pnl ? fmt(pnl.value) : 'Cours indisponible'}</span>
           ${pnl ? `<span style="color:${pnl.pnlAbs >= 0 ? 'var(--gold)' : 'var(--rust)'}">${pnl.pnlAbs >= 0 ? '+' : ''}${fmt(pnl.pnlAbs)} (${formatPct(pnl.pnlPct)})</span>` : ''}
-          <span class="company-score" style="color:${company.score >= 0 ? 'var(--gold)' : 'var(--rust)'};">${company.score > 0 ? '+' : ''}${company.score}</span>
+          ${typeof company.score === 'number'
+            ? `<span class="company-score" style="color:${company.score >= 0 ? 'var(--gold)' : 'var(--rust)'};">${company.score > 0 ? '+' : ''}${company.score}</span>`
+            : (company.is_etf ? `<span class="company-score" style="color:var(--muted);font-size:var(--text-xs);">TER ${company.etf_info && company.etf_info.ter_pct != null ? company.etf_info.ter_pct.toLocaleString('fr-FR') + '%' : '—'}</span>` : '')}
         </div>
         <div class="portfolio-position-actions">
           <button class="toggle-btn portfolio-sell-btn" type="button" data-id="${position.id}">Vendre</button>
@@ -6636,8 +6638,14 @@ function sortedFilteredCompanies(companies, state) {
   if (s.sectorProfile) visible = visible.filter(c => c.sector_profile === s.sectorProfile);
   if (s.alertKind) visible = visible.filter(c => (c.alerts || []).some(a => a.kind === s.alertKind));
   visible = [...visible];
-  if (s.sort === 'score_desc') visible.sort((a, b) => b.score - a.score);
-  else if (s.sort === 'score_asc') visible.sort((a, b) => a.score - b.score);
+  if (s.sort === 'score_desc') visible.sort((a, b) => {
+    if (typeof a.score !== 'number' && typeof b.score !== 'number') return 0;
+    return (b.score ?? -Infinity) - (a.score ?? -Infinity);
+  });
+  else if (s.sort === 'score_asc') visible.sort((a, b) => {
+    if (typeof a.score !== 'number' && typeof b.score !== 'number') return 0;
+    return (a.score ?? Infinity) - (b.score ?? Infinity);
+  });
   else if (s.sort === 'alpha') visible.sort((a, b) => a.name.localeCompare(b.name, 'fr'));
   return visible;
 }
@@ -6763,7 +6771,9 @@ function peekRowsHtml(companies) {
   return top3.map(c => `
     <a class="index-card-peek-row" href="#indices/${c.ticker}">
       <span class="index-card-peek-name">${c.name}</span>
-      <span class="index-card-peek-score" style="color:${c.score >= 0 ? 'var(--green-500)' : 'var(--rust)'}">${c.score > 0 ? '+' : ''}${c.score}</span>
+      ${typeof c.score === 'number'
+        ? `<span class="index-card-peek-score" style="color:${c.score >= 0 ? 'var(--green-500)' : 'var(--rust)'}">${c.score > 0 ? '+' : ''}${c.score}</span>`
+        : (c.is_etf ? `<span class="index-card-peek-score" style="color:var(--muted)">TER ${c.etf_info.ter_pct.toLocaleString('fr-FR')}%</span>` : '')}
     </a>`).join('');
 }
 
@@ -7139,19 +7149,20 @@ function renderIndicesRows(companies, rowsContainerId) {
   const visible = sortedFilteredCompanies(companies);
   panel.innerHTML = visible.length ? visible.map(c => `
     <div class="company-row-wrap">
+      ${c.is_etf ? '' : `
       <label class="company-row-checkbox">
         <input type="checkbox" data-compare-ticker="${c.ticker}"
           ${indicesCompareSelection.has(c.ticker) ? 'checked' : ''}
           ${!indicesCompareSelection.has(c.ticker) && indicesCompareSelection.size >= INDICES_COMPARE_MAX ? 'disabled' : ''}>
-      </label>
+      </label>`}
       <a class="company-row" href="#indices/${c.ticker}">
         <div class="company-row-left">
           <span class="company-name">${c.name}</span>
           <span class="company-ticker">${c.ticker}${c.is_financial ? '<span class="financial-tag">Profil financier</span>' : ''}${hasMajorNewsAlert(c) ? '<span class="financial-tag majeure-tag">Actu majeure</span>' : ''}${alsoIndicesBadgesHtml(c)}</span>
         </div>
-        <span class="company-score" style="color:${c.score >= 0 ? 'var(--green-500)' : 'var(--rust)'};">
-          ${c.score > 0 ? '+' : ''}${c.score}
-        </span>
+        ${typeof c.score === 'number'
+          ? `<span class="company-score" style="color:${c.score >= 0 ? 'var(--green-500)' : 'var(--rust)'};">${c.score > 0 ? '+' : ''}${c.score}</span>`
+          : (c.is_etf ? `<span class="company-score" style="color:var(--muted);font-size:var(--text-xs);">TER ${c.etf_info.ter_pct.toLocaleString('fr-FR')}%</span>` : '')}
       </a>
     </div>`).join('') : '<div class="list-empty">Aucun résultat pour cette recherche.</div>';
   panel.querySelectorAll('input[data-compare-ticker]').forEach(input => {
@@ -7830,9 +7841,15 @@ function renderGrahamCriteria(company) {
  */
 function renderCompanyComparison(tickers) {
   const content = document.getElementById('indicesContent');
+  // Un ETF n'a ni score/factors/interpretation (voir etf_score.py
+  // build_etf_entry) -- les colonnes ci-dessous plantent sur
+  // c.factors.map(...) si une entree ETF s'y glisse. La case à cocher est
+  // déjà retirée pour les ETF dans renderIndicesRows, mais un ticker ETF
+  // hand-tapé dans #indices/compare/... doit aussi être filtré ici plutôt
+  // que de faire confiance à l'UI pour empêcher ce chemin.
   const companies = tickers
     .map(t => indicesData.companies.find(c => c.ticker === t))
-    .filter(Boolean);
+    .filter(c => c && !c.is_etf);
   if (companies.length < 2) {
     content.innerHTML = `
       <a href="#indices" class="back-link">← Indices</a>
@@ -7857,7 +7874,58 @@ function renderCompanyComparison(tickers) {
   animateFactorBars();
 }
 
+// Fiche détail dédiée pour un ETF (company.is_etf === true) : un ETF n'a
+// ni score/factors/alertes/Graham (voir etf_score.py build_etf_entry,
+// jamais remplis pour ce type d'entrée) -- renderCompanyDetail planterait
+// immédiatement sur company.factors.map(...) sans ce branchement séparé.
+// Classes CSS copiées de renderCompanyDetail ci-dessous (back-link, hero-*,
+// signal-stats/price-row, #real-price-chart/#real-price-chart-note,
+// news-item/news-title/news-meta/news-summary) plutôt qu'inventées.
+function renderEtfDetail(company) {
+  const info = company.etf_info || {};
+
+  const newsHtml = (company.news || []).map(n => `
+    <div class="news-item">
+      <a class="news-title" href="${n.link}" target="_blank" rel="noopener">${n.title}</a>
+      <div class="news-meta">${[n.source, n.date].filter(Boolean).join(' · ')}</div>
+      ${n.summary ? `<p class="news-summary">${n.summary}</p>` : ''}
+    </div>`).join('');
+
+  document.getElementById('indicesContent').innerHTML = `
+    <a href="${companyBackTarget.hash}" class="back-link">← ${companyBackTarget.label}</a>
+
+    <section class="hero">
+      <div class="hero-name-meta">
+        <span class="hero-ticker-sector">${company.ticker} · ETF</span>
+      </div>
+      <h1 class="hero-name">${company.name}</h1>
+      <div class="hero-accent"></div>
+      <p class="hero-sub">Cours actuel : ${formatPriceForIndex(company.current_price, company.index)}</p>
+    </section>
+
+    <h2>Caractéristiques</h2>
+    <div class="signal-stats">
+      <div class="price-row"><span class="price-label">Indice suivi</span><span class="price-value">${info.benchmark_name || '—'}</span></div>
+      <div class="price-row"><span class="price-label">Frais de gestion (TER)</span><span class="price-value">${info.ter_pct != null ? info.ter_pct.toLocaleString('fr-FR') + '%' : '—'}</span></div>
+      <div class="price-row"><span class="price-label">Réplication</span><span class="price-value">${info.replication || '—'}</span></div>
+      <div class="price-row"><span class="price-label">Distribution</span><span class="price-value">${info.distribution || '—'}</span></div>
+      <div class="price-row"><span class="price-label">Éligible PEA</span><span class="price-value">${info.pea_eligible ? 'Oui' : 'Non'}</span></div>
+      <div class="price-row"><span class="price-label">Écart de suivi (vs indice)</span><span class="price-value ${pctClass(info.tracking_difference_pct)}">${info.tracking_difference_pct != null ? formatPct(info.tracking_difference_pct) : 'Indisponible'}</span></div>
+    </div>
+
+    <h2>Cours en direct</h2>
+    <div id="real-price-chart"><div class="index-price-fallback">${formatPriceForIndex(company.current_price, company.index)}</div></div>
+    <p class="scalp-note" id="real-price-chart-note">Cours au dernier calcul (${company.ticker}) — pas de widget temps réel disponible pour cet ETF.</p>
+
+    <h2>Actualités récentes</h2>
+    ${newsHtml || '<p class="hero-sub">Aucune actualité récente.</p>'}
+  `;
+
+  loadRealPriceChart(company);
+}
+
 function renderCompanyDetail(company) {
+  if (company.is_etf) { renderEtfDetail(company); return; }
   // Résolu une seule fois ici (pas dans loadSideQuoteWidget) pour que le
   // template ci-dessous et l'appel de chargement du widget restent
   // cohérents entre eux — voir docs/company_quote_widget.js pour le détail

@@ -4,6 +4,8 @@ chemin entierement separe de la logique de score des actions
 resultat ni bilan exploitable de la meme facon, voir
 docs/superpowers/specs/2026-11-12-etf-support-indices-design.md."""
 
+import math
+
 import yfinance as yf
 
 
@@ -34,15 +36,32 @@ def fetch_etf_data(ticker: str) -> dict:
     history_df = t.history(period="2y")
     if history_df.empty:
         raise ValueError(f"Historique de prix vide pour {ticker}")
+    # dropna() ici, meme raisonnement que history.dropna() dans
+    # fetch_company_financials (indices_score.py, incident du
+    # 2026-09-19) : un seul NaN qui atteint price_history/current_price
+    # fait echouer json.dump(..., allow_nan=False) dans main() -- pas
+    # seulement pour cet ETF, pour TOUT le run (plus d'indices.json du
+    # tout ce jour-la), et fait retomber update_price_history sur [] en
+    # silence pour les ~710 actions suivies en plus de l'ETF concerne.
+    close_series = history_df["Close"].dropna()
+    if close_series.empty:
+        raise ValueError(f"Historique de prix vide pour {ticker}")
     price_history = [
         {"date": ts.strftime("%Y-%m-%d"), "close": float(close)}
-        for ts, close in history_df["Close"].items()
+        for ts, close in close_series.items()
     ]
     dividend_yield = info.get("dividendYield")
+    if dividend_yield is not None:
+        dividend_yield = float(dividend_yield)
+        if not math.isfinite(dividend_yield):
+            # Meme precaution que pour price_history ci-dessus : un
+            # rendement non fini ne doit jamais atteindre le payload
+            # (allow_nan=False dans main() le ferait planter sans ca).
+            dividend_yield = None
     return {
         "current_price": price_history[-1]["close"],
         "price_history": price_history,
-        "dividend_yield": float(dividend_yield) if dividend_yield is not None else None,
+        "dividend_yield": dividend_yield,
     }
 
 

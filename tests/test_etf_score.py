@@ -1,3 +1,5 @@
+import math
+
 import pytest
 import pandas as pd
 
@@ -66,6 +68,52 @@ def test_fetch_etf_data_raises_when_history_empty(monkeypatch):
     monkeypatch.setattr(etf_score.yf, "Ticker", lambda t: fake)
     with pytest.raises(ValueError):
         fetch_etf_data("CW8.PA")
+
+
+def test_fetch_etf_data_drops_nan_rows_from_history(monkeypatch):
+    # Un seul point NaN au milieu d'une serie par ailleurs valide : meme
+    # convention que history.dropna() dans fetch_company_financials
+    # (indices_score.py) -- la ligne NaN est ecartee, pas propagee, et le
+    # reste de la serie (toujours >= 1 point valide) est conserve.
+    history_df = _fake_history_df([
+        ("2026-11-01", 100.0), ("2026-11-02", float("nan")), ("2026-11-03", 102.0),
+    ])
+    fake = _FakeEtfTicker({}, history_df)
+    monkeypatch.setattr(etf_score.yf, "Ticker", lambda t: fake)
+    result = fetch_etf_data("CW8.PA")
+    assert result["price_history"] == [
+        {"date": "2026-11-01", "close": pytest.approx(100.0)},
+        {"date": "2026-11-03", "close": pytest.approx(102.0)},
+    ]
+    assert result["current_price"] == pytest.approx(102.0)
+    assert math.isfinite(result["current_price"])
+    for point in result["price_history"]:
+        assert math.isfinite(point["close"])
+
+
+def test_fetch_etf_data_raises_when_history_entirely_nan(monkeypatch):
+    # Toute la serie est inutilisable une fois les NaN retires -- meme
+    # garde que l'historique vide avant nettoyage (le "vide" doit aussi
+    # couvrir "vide apres nettoyage", pas seulement "vide au depart").
+    history_df = _fake_history_df([
+        ("2026-11-01", float("nan")), ("2026-11-02", float("nan")),
+    ])
+    fake = _FakeEtfTicker({}, history_df)
+    monkeypatch.setattr(etf_score.yf, "Ticker", lambda t: fake)
+    with pytest.raises(ValueError):
+        fetch_etf_data("CW8.PA")
+
+
+def test_fetch_etf_data_rejects_non_finite_dividend_yield(monkeypatch):
+    # Un dividend_yield NaN/inf renvoye par yfinance ne doit jamais
+    # atteindre le payload tel quel (json.dump(..., allow_nan=False) dans
+    # main() planterait sinon) -- traite comme None, meme convention que
+    # l'absence pure et simple de la cle dividendYield.
+    history_df = _fake_history_df([("2026-11-01", 100.0), ("2026-11-02", 101.5)])
+    fake = _FakeEtfTicker({"dividendYield": float("nan")}, history_df)
+    monkeypatch.setattr(etf_score.yf, "Ticker", lambda t: fake)
+    result = fetch_etf_data("CW8.PA")
+    assert result["dividend_yield"] is None
 
 
 _CATALOG_ENTRY = {

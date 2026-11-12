@@ -6926,8 +6926,8 @@ def main():
     etf_companies = []
     for etf in ETF_CATALOG:
         try:
-            benchmark_history = None  # v1 : pas de lookup/fetch de benchmark, voir plan
-            etf_companies.append(build_etf_entry(etf, benchmark_history))
+            # v1 : pas de lookup/fetch de benchmark, voir plan
+            etf_companies.append(build_etf_entry(etf, None))
         except Exception as e:
             print(f"Erreur pour {etf['ticker']} ({etf['name']}) : {e}")
             traceback.print_exc()

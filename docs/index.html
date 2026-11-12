@@ -858,7 +858,8 @@
     padding: 10px 12px; display: flex; flex-direction: column; gap: 2px;
   }
   .portfolio-ai-quick-label { color: var(--muted); font-size: var(--text-2xs); text-transform: uppercase; letter-spacing: .03em; }
-  .ai-reco-chip { font-size: var(--text-xs); font-weight: 600; padding: 3px 10px; border-radius: var(--radius-pill); white-space: nowrap; }
+  .ai-reco-chip { font-size: var(--text-2xs); font-weight: 600; padding: 2px 7px; border-radius: var(--radius-pill); white-space: nowrap; flex-shrink: 0; }
+  .ai-reco-card-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
   .ai-reco-renforcer { background: var(--green-soft); color: var(--green-500); }
   .ai-reco-garder { background: var(--bg-3); color: var(--muted); }
   .ai-reco-alleger, .ai-reco-a_verifier { background: var(--taupe-soft); color: var(--taupe-500); }
@@ -1508,7 +1509,7 @@
     .ana-lines .portfolio-ai-cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
     .ana-lines .portfolio-ai-cards .portfolio-total-card { min-width: 0; }
   }
-  .portfolio-ai-cards .portfolio-total-card { min-width: 280px; }
+  .portfolio-ai-cards .portfolio-total-card { min-width: 280px; padding: 10px 12px; gap: 4px; }
   .portfolio-total-card {
     display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 140px;
     background: var(--bg-2); border: 1px solid var(--border); border-radius: var(--radius-lg);
@@ -3027,11 +3028,11 @@ function _portfolioAiCardsHtml(parLigne, positionsByTicker, companiesByTicker, c
       : '';
     return `
       <div class="portfolio-total-card">
-        <div class="portfolio-position-main">
+        <div class="ai-reco-card-head">
           <a class="company-name" href="#indices/${encodeURIComponent(l.ticker)}">${escHtml(company ? company.name : l.ticker)}</a>
-          ${prixHtml}
+          ${_portfolioAiRecoChipHtml(l.reco)}
         </div>
-        ${_portfolioAiRecoChipHtml(l.reco)}
+        ${prixHtml}
         <p class="hero-sub">${escHtml(l.analyse || l.justification || '')}</p>
       </div>`;
   }).join('');

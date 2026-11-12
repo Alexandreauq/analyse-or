@@ -2852,10 +2852,6 @@ function portfolioAiSectionHtml(analysis) {
     </div>
     <button class="toggle-btn" type="button" id="portfolioAiAnalysisBtn">Lancer l'analyse IA</button>
     <p class="portfolio-ai-error" id="portfolioAiError" hidden></p>
-    <div class="ui-seg" id="portfolioAiViewSeg">
-      <button type="button" data-view="cards" aria-pressed="true">Cartes</button>
-      <button type="button" data-view="note" aria-pressed="false">Note</button>
-    </div>
     <div id="portfolioAiViewBody"></div>
     <button class="toggle-btn" type="button" id="portfolioAiDetailToggle" aria-expanded="false">
       Voir le détail <span class="chevron">▾</span>
@@ -2897,30 +2893,15 @@ function _portfolioAiCardsHtml(parLigne, positionsByTicker, companiesByTicker, c
   }).join('');
 }
 
-// Même donnée que _portfolioAiCardsHtml, en paragraphes continus (vue
-// "Note") plutôt qu'en cartes — deux lectures du même par_ligne.
-function _portfolioAiNoteParLigneHtml(parLigne, companiesByTicker) {
-  if (!parLigne.length) {
-    return '<p class="hero-sub">Lance l\'analyse IA pour voir l\'avis détaillé par entreprise.</p>';
-  }
-  return parLigne.map(l => {
-    const company = companiesByTicker[l.ticker];
-    return `<p class="hero-sub"><strong>${escHtml(company ? company.name : l.ticker)}</strong> — ${_portfolioAiRecoChipHtml(l.reco)} ${escHtml(l.analyse || l.justification || '')}</p>`;
-  }).join('');
-}
-
-function _portfolioAiCardsViewHtml(quickGridHtml, cardsHtml) {
+// Une seule présentation pour "Par entreprise" (plus de bascule Cartes/Note
+// -- les deux répétaient la même donnée par_ligne sous deux formes). Le
+// diagnostic et la comparaison, qui n'existaient auparavant que dans la vue
+// "Note", sont repris ici pour ne rien perdre de ce contenu.
+function _portfolioAiCardsViewHtml(quickGridHtml, cardsHtml, diagnosisHtml, comparaisonHtml) {
   return `
     ${quickGridHtml}
     <h3 class="portfolio-analysis-title">Par entreprise</h3>
     <div class="portfolio-ai-cards">${cardsHtml}</div>
-  `;
-}
-
-function _portfolioAiNoteViewHtml(noteParLigneHtml, diagnosisHtml, comparaisonHtml) {
-  return `
-    <h3 class="portfolio-analysis-title">Par entreprise</h3>
-    ${noteParLigneHtml}
     <h3 class="portfolio-analysis-title">Diagnostic</h3>
     ${diagnosisHtml || '<p class="hero-sub">Ajoute des positions pour voir apparaître un diagnostic ici.</p>'}
     ${comparaisonHtml}
@@ -2964,7 +2945,6 @@ function wirePortfolioAiSubsection(positions, closedPositions, companiesByTicker
   const freshnessEl = document.getElementById('portfolioAiFreshness');
   const errorEl = document.getElementById('portfolioAiError');
   const btn = document.getElementById('portfolioAiAnalysisBtn');
-  const seg = document.getElementById('portfolioAiViewSeg');
   const viewBodyEl = document.getElementById('portfolioAiViewBody');
   if (!btn || !viewBodyEl) return;
 
@@ -2972,7 +2952,6 @@ function wirePortfolioAiSubsection(positions, closedPositions, companiesByTicker
 
   const positionsByTicker = new Map(positions.map(p => [p.ticker, p]));
   const quickGridHtml = portfolioAnalysisQuickGridHtml(computePortfolioHealth(positions, companiesByTicker));
-  let currentView = 'cards';
   let lastResultat = null;
   let lastHistorique = [];
 
@@ -3012,33 +2991,16 @@ function wirePortfolioAiSubsection(positions, closedPositions, companiesByTicker
   };
 
   const renderView = () => {
-    if (currentView === 'cards') {
-      const cardsHtml = lastResultat
-        ? _portfolioAiCardsHtml(lastResultat.par_ligne || [], positionsByTicker, companiesByTicker, currencyByIndex)
-        : '<div class="list-empty">Lance l\'analyse IA pour voir l\'avis par entreprise.</div>';
-      viewBodyEl.innerHTML = _portfolioAiCardsViewHtml(quickGridHtml, cardsHtml);
-    } else {
-      const noteParLigneHtml = lastResultat
-        ? _portfolioAiNoteParLigneHtml(lastResultat.par_ligne || [], companiesByTicker)
-        : '<p class="hero-sub">Lance l\'analyse IA pour voir l\'avis détaillé par entreprise.</p>';
-      const comparaisonHtml = lastResultat && lastResultat.comparaison_precedente
-        ? `<h3 class="portfolio-analysis-title">Depuis la dernière fois</h3><p class="hero-sub">${escHtml(lastResultat.comparaison_precedente)}</p>`
-        : '';
-      viewBodyEl.innerHTML = _portfolioAiNoteViewHtml(noteParLigneHtml, diagnosisHtml, comparaisonHtml);
-    }
+    const cardsHtml = lastResultat
+      ? _portfolioAiCardsHtml(lastResultat.par_ligne || [], positionsByTicker, companiesByTicker, currencyByIndex)
+      : '<div class="list-empty">Lance l\'analyse IA pour voir l\'avis par entreprise.</div>';
+    const comparaisonHtml = lastResultat && lastResultat.comparaison_precedente
+      ? `<h3 class="portfolio-analysis-title">Depuis la dernière fois</h3><p class="hero-sub">${escHtml(lastResultat.comparaison_precedente)}</p>`
+      : '';
+    viewBodyEl.innerHTML = _portfolioAiCardsViewHtml(quickGridHtml, cardsHtml, diagnosisHtml, comparaisonHtml);
   };
 
   renderView();
-
-  if (seg) {
-    seg.addEventListener('click', (e) => {
-      const b = e.target.closest('button[data-view]');
-      if (!b) return;
-      currentView = b.dataset.view;
-      seg.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
-      renderView();
-    });
-  }
 
   const applyResultat = (resultat) => {
     lastResultat = resultat;

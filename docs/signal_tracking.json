@@ -2776,6 +2776,28 @@
       "shadow_resolved": false,
       "shadow_price": null,
       "shadow_return_pct": null
+    },
+    {
+      "id": "WDC-2026-11-12",
+      "ticker": "WDC",
+      "name": "Western Digital",
+      "index": "NASDAQ",
+      "status": "open",
+      "entry_date": "2026-11-12",
+      "entry_price": 313.30999755859375,
+      "target_exit_price": 629.1844092376041,
+      "index_price_at_entry": 28534.357421875,
+      "methodology_version": "356bc68982934949857871a54c602b631dda6062",
+      "close_date": null,
+      "close_price": null,
+      "close_reason": null,
+      "return_pct": null,
+      "index_price_at_close": null,
+      "index_return_pct": null,
+      "shadow_close_date": "2027-05-12",
+      "shadow_resolved": false,
+      "shadow_price": null,
+      "shadow_return_pct": null
     }
   ]
 }

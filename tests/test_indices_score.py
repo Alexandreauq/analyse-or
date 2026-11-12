@@ -1,4 +1,5 @@
 import email
+import functools
 import os
 import pytest
 import requests
@@ -9365,7 +9366,22 @@ def test_main_end_to_end_with_one_real_etf_entry(monkeypatch, tmp_path):
     update_price_history, sans jamais etre compte dans le resume de
     completude (qui ne porte que sur COMPANIES, actions uniquement) ni
     laisser fuiter sa cle interne _price_history_daily dans le payload
-    publie."""
+    publie.
+
+    update_signal_tracking et update_nikkei_hangseng_price_history
+    tournent ici pour de vrai (pas mockes) : les deux recoivent `companies`
+    APRES la fusion ETF (voir main()), donc une entree ETF -- lecture du
+    code reel de ces deux fonctions avant ce test, elles n'utilisent que
+    des acces `.get()`/`company.get("index")` sur chaque entree, jamais
+    d'acces direct a une cle absente d'une entree ETF (score/score_raw/
+    entry_price). Ce test verrouille ce constat plutot que de le supposer
+    vrai indefiniment. Rendu hermetique via SIGNAL_TRACKING_PATH/
+    NIKKEI_HANGSENG_PRICE_HISTORY_PATH pointes vers tmp_path (aucune
+    ecriture reelle) et fetch_index_prices/fetch_risk_free_rate/
+    fetch_fx_rate_to_usd stubbes (aucun appel reseau reel)."""
+    signal_tracking_path = tmp_path / "signal_tracking.json"
+    nikkei_hangseng_path = tmp_path / "nikkei_hangseng_price_history.json"
+    monkeypatch.setattr(indices_score, "SIGNAL_TRACKING_PATH", str(signal_tracking_path))
     monkeypatch.setattr(indices_score, "COMPANIES", [
         {"ticker": "MC.PA", "name": "LVMH", "index": "CAC40"},
     ])
@@ -9382,8 +9398,21 @@ def test_main_end_to_end_with_one_real_etf_entry(monkeypatch, tmp_path):
     )
     monkeypatch.setattr(indices_score, "load_indices_history", lambda: [])
     monkeypatch.setattr(indices_score, "append_indices_history", lambda entries: entries)
-    monkeypatch.setattr(indices_score, "update_signal_tracking", lambda companies, newly_triggered_entree: [])
-    monkeypatch.setattr(indices_score, "update_nikkei_hangseng_price_history", lambda companies: [])
+    # update_signal_tracking et update_nikkei_hangseng_price_history ne
+    # sont PAS mockees (Fix 4, voir docstring ci-dessus) : elles tournent
+    # pour de vrai sur `companies` deja fusionne avec l'ETF. Seul
+    # fetch_index_prices (reseau, appele par update_signal_tracking) est
+    # stubbe ; update_nikkei_hangseng_price_history est redirigee vers un
+    # fichier tmp_path via functools.partial (son parametre `path` est lie
+    # a NIKKEI_HANGSENG_PRICE_HISTORY_PATH au moment de sa definition, donc
+    # monkeypatcher la constante du module ne suffirait pas).
+    monkeypatch.setattr(
+        indices_score, "update_nikkei_hangseng_price_history",
+        functools.partial(
+            indices_score.update_nikkei_hangseng_price_history,
+            path=str(nikkei_hangseng_path),
+        ),
+    )
     monkeypatch.setattr(indices_score, "fetch_index_prices", lambda: {"CAC40": None, "DAX": None, "NASDAQ": None, "DOW": None})
     monkeypatch.setattr(indices_score, "update_dividend_history", lambda entries, **kwargs: entries)
     monkeypatch.setattr(indices_score, "fetch_index_price_history", lambda: [])
@@ -9440,3 +9469,12 @@ def test_main_end_to_end_with_one_real_etf_entry(monkeypatch, tmp_path):
     # _price_history_daily est retiree (.pop) avant publication, meme
     # traitement que pour une action.
     assert "_price_history_daily" not in etf_entry
+
+    # Fix 4 : update_signal_tracking et update_nikkei_hangseng_price_history
+    # ont bien tourne pour de vrai (pas mockees) sur `companies`, deja
+    # fusionne avec l'entree ETF a ce stade de main() -- sans lever de
+    # KeyError/TypeError sur cette entree, et en ecrivant reellement leur
+    # fichier (preuve qu'elles sont allees jusqu'au bout, pas juste
+    # qu'elles n'ont pas plante avant le premier acces a une cle ETF).
+    assert signal_tracking_path.exists()
+    assert nikkei_hangseng_path.exists()

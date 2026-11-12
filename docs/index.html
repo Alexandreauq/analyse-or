@@ -6309,8 +6309,14 @@ function sortedFilteredCompanies(companies, state) {
   if (s.sectorProfile) visible = visible.filter(c => c.sector_profile === s.sectorProfile);
   if (s.alertKind) visible = visible.filter(c => (c.alerts || []).some(a => a.kind === s.alertKind));
   visible = [...visible];
-  if (s.sort === 'score_desc') visible.sort((a, b) => (b.score ?? -Infinity) - (a.score ?? -Infinity));
-  else if (s.sort === 'score_asc') visible.sort((a, b) => (a.score ?? Infinity) - (b.score ?? Infinity));
+  if (s.sort === 'score_desc') visible.sort((a, b) => {
+    if (typeof a.score !== 'number' && typeof b.score !== 'number') return 0;
+    return (b.score ?? -Infinity) - (a.score ?? -Infinity);
+  });
+  else if (s.sort === 'score_asc') visible.sort((a, b) => {
+    if (typeof a.score !== 'number' && typeof b.score !== 'number') return 0;
+    return (a.score ?? Infinity) - (b.score ?? Infinity);
+  });
   else if (s.sort === 'alpha') visible.sort((a, b) => a.name.localeCompare(b.name, 'fr'));
   return visible;
 }

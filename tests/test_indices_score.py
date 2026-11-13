@@ -9478,3 +9478,136 @@ def test_main_end_to_end_with_one_real_etf_entry(monkeypatch, tmp_path):
     # qu'elles n'ont pas plante avant le premier acces a une cle ETF).
     assert signal_tracking_path.exists()
     assert nikkei_hangseng_path.exists()
+
+
+def test_main_passes_matching_benchmark_history_to_build_etf_entry(monkeypatch, tmp_path):
+    """L'ecart de suivi a besoin de l'historique du benchmark de chaque
+    ETF -- main() doit extraire, pour un ETF donne, UNIQUEMENT les
+    entrees de fetch_index_price_history() dont le ticker correspond a
+    son benchmark_ticker (pas tout l'historique combine de tous les
+    benchmarks, qui casserait l'alignement par date de etf_score.
+    _align_by_date avec des prix d'un autre indice), et ne doit appeler
+    fetch_index_price_history() qu'UNE SEULE FOIS (reutilise aussi pour
+    price_history_entries un peu plus loin dans main() -- sans ca,
+    chaque run interrogerait yfinance deux fois pour les memes ~19
+    tickers de benchmark)."""
+    monkeypatch.setattr(indices_score, "COMPANIES", [
+        {"ticker": "MC.PA", "name": "LVMH", "index": "CAC40"},
+    ])
+    monkeypatch.setattr(indices_score, "fetch_risk_free_rate", lambda series_id: 3.68)
+    monkeypatch.setattr(indices_score, "fetch_fx_rate_to_usd", lambda currency: 1.0)
+    monkeypatch.setattr(indices_score, "load_previous_company_analyses", lambda: {})
+    monkeypatch.setattr(
+        indices_score, "build_company_entry",
+        lambda ticker, name, risk_free_rate, previous_analyses, index_key="CAC40", also_indices=None, fx_rate_to_usd=1.0: {
+            "ticker": ticker, "name": name, "index": index_key,
+            "score": 10.0, "score_raw": 10.0, "interpretation": "Neutre",
+            "current_price": 50.0, "entry_price": 50.0,
+        },
+    )
+    monkeypatch.setattr(indices_score, "load_indices_history", lambda: [])
+    monkeypatch.setattr(indices_score, "append_indices_history", lambda entries: entries)
+    monkeypatch.setattr(indices_score, "update_signal_tracking", lambda companies, newly_triggered_entree: [])
+    monkeypatch.setattr(indices_score, "update_nikkei_hangseng_price_history", lambda companies: [])
+    monkeypatch.setattr(indices_score, "fetch_index_prices", lambda: {"CAC40": None, "DAX": None, "NASDAQ": None, "DOW": None})
+    monkeypatch.setattr(indices_score, "update_dividend_history", lambda entries, **kwargs: entries)
+    monkeypatch.setattr(indices_score, "update_price_history", lambda entries, **kwargs: entries)
+    output_path = tmp_path / "indices.json"
+    monkeypatch.setattr(indices_score, "OUTPUT_JSON_PATH", str(output_path))
+    _cache = {}
+    monkeypatch.setattr(indices_score, "load_risk_free_rate_cache", lambda path=None: _cache)
+    monkeypatch.setattr(indices_score, "save_risk_free_rate_cache", lambda rates, path=None: _cache.update(rates))
+
+    fetch_calls = []
+    def _fake_fetch_index_price_history():
+        fetch_calls.append(1)
+        return [
+            {"date": "2026-11-01", "ticker": "^990100-USD-STRD", "price": 1000.0},
+            {"date": "2026-11-02", "ticker": "^990100-USD-STRD", "price": 1010.0},
+            # Un autre benchmark, melange dans le meme flux -- ne doit
+            # jamais atteindre l'ETF ci-dessous (benchmark_ticker different).
+            {"date": "2026-11-01", "ticker": "^GSPC", "price": 5000.0},
+        ]
+    monkeypatch.setattr(indices_score, "fetch_index_price_history", _fake_fetch_index_price_history)
+
+    monkeypatch.setattr(indices_score, "ETF_CATALOG", [
+        {"ticker": "CW8.PA", "name": "Amundi MSCI World", "isin": "LU1681043599",
+         "benchmark_name": "MSCI World", "benchmark_ticker": "^990100-USD-STRD",
+         "ter_pct": 0.38, "replication": "synthetique", "distribution": "capitalisant",
+         "pea_eligible": True},
+    ])
+    captured_benchmark_args = []
+    monkeypatch.setattr(
+        indices_score, "build_etf_entry",
+        lambda catalog_entry, benchmark_price_history=None: (
+            captured_benchmark_args.append(benchmark_price_history) or {
+                "ticker": catalog_entry["ticker"], "name": catalog_entry["name"],
+                "index": "ETF", "is_etf": True, "current_price": 450.0, "news": [],
+                "etf_info": {"ter_pct": catalog_entry["ter_pct"]},
+            }
+        ),
+    )
+
+    indices_score.main()
+
+    assert len(fetch_calls) == 1
+    assert captured_benchmark_args == [[
+        {"date": "2026-11-01", "ticker": "^990100-USD-STRD", "price": 1000.0},
+        {"date": "2026-11-02", "ticker": "^990100-USD-STRD", "price": 1010.0},
+    ]]
+
+
+def test_main_passes_none_benchmark_history_when_no_matching_ticker(monkeypatch, tmp_path):
+    """Un ETF dont le benchmark_ticker n'a aucune entree dans
+    fetch_index_price_history() (fetch rate pour ce ticker precis, ou
+    absent du dict INDEX_YFINANCE_TICKERS) recoit None -- jamais une
+    liste vide [] qui serait truthy-ambigue, et jamais de KeyError meme
+    si l'entree catalogue ne porte pas du tout de cle benchmark_ticker."""
+    monkeypatch.setattr(indices_score, "COMPANIES", [
+        {"ticker": "MC.PA", "name": "LVMH", "index": "CAC40"},
+    ])
+    monkeypatch.setattr(indices_score, "fetch_risk_free_rate", lambda series_id: 3.68)
+    monkeypatch.setattr(indices_score, "fetch_fx_rate_to_usd", lambda currency: 1.0)
+    monkeypatch.setattr(indices_score, "load_previous_company_analyses", lambda: {})
+    monkeypatch.setattr(
+        indices_score, "build_company_entry",
+        lambda ticker, name, risk_free_rate, previous_analyses, index_key="CAC40", also_indices=None, fx_rate_to_usd=1.0: {
+            "ticker": ticker, "name": name, "index": index_key,
+            "score": 10.0, "score_raw": 10.0, "interpretation": "Neutre",
+            "current_price": 50.0, "entry_price": 50.0,
+        },
+    )
+    monkeypatch.setattr(indices_score, "load_indices_history", lambda: [])
+    monkeypatch.setattr(indices_score, "append_indices_history", lambda entries: entries)
+    monkeypatch.setattr(indices_score, "update_signal_tracking", lambda companies, newly_triggered_entree: [])
+    monkeypatch.setattr(indices_score, "update_nikkei_hangseng_price_history", lambda companies: [])
+    monkeypatch.setattr(indices_score, "fetch_index_prices", lambda: {"CAC40": None, "DAX": None, "NASDAQ": None, "DOW": None})
+    monkeypatch.setattr(indices_score, "update_dividend_history", lambda entries, **kwargs: entries)
+    monkeypatch.setattr(indices_score, "update_price_history", lambda entries, **kwargs: entries)
+    output_path = tmp_path / "indices.json"
+    monkeypatch.setattr(indices_score, "OUTPUT_JSON_PATH", str(output_path))
+    _cache = {}
+    monkeypatch.setattr(indices_score, "load_risk_free_rate_cache", lambda path=None: _cache)
+    monkeypatch.setattr(indices_score, "save_risk_free_rate_cache", lambda rates, path=None: _cache.update(rates))
+    monkeypatch.setattr(indices_score, "fetch_index_price_history", lambda: [])
+
+    monkeypatch.setattr(indices_score, "ETF_CATALOG", [
+        {"ticker": "CW8.PA", "name": "Amundi MSCI World", "isin": "LU1681043599",
+         "benchmark_name": "MSCI World inconnu", "ter_pct": 0.38, "replication": "synthetique",
+         "distribution": "capitalisant", "pea_eligible": True},  # pas de benchmark_ticker du tout
+    ])
+    captured_benchmark_args = []
+    monkeypatch.setattr(
+        indices_score, "build_etf_entry",
+        lambda catalog_entry, benchmark_price_history=None: (
+            captured_benchmark_args.append(benchmark_price_history) or {
+                "ticker": catalog_entry["ticker"], "name": catalog_entry["name"],
+                "index": "ETF", "is_etf": True, "current_price": 450.0, "news": [],
+                "etf_info": {"ter_pct": catalog_entry["ter_pct"]},
+            }
+        ),
+    )
+
+    indices_score.main()  # ne doit lever aucune exception (pas de KeyError sur benchmark_ticker absent)
+
+    assert captured_benchmark_args == [None]

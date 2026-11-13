@@ -6933,19 +6933,28 @@ def main():
     # _compute_health_summary -- ces trois fonctions font des acces directs
     # a des cles absentes d'une entree ETF et leveraient une KeyError si une
     # entree ETF s'y trouvait avant la fusion.
+    # Recupere une seule fois ici (au lieu de l'appel plus bas, pres de
+    # price_history_entries) pour pouvoir en extraire la tranche de
+    # chaque benchmark avant la fusion des entrees ETF -- un deuxieme
+    # appel re-interrogerait yfinance pour les ~19 tickers de benchmark.
+    index_price_history = fetch_index_price_history()
+    benchmark_history_by_ticker = {}
+    for entry in index_price_history:
+        benchmark_history_by_ticker.setdefault(entry["ticker"], []).append(entry)
+
     etf_companies = []
     for etf in ETF_CATALOG:
         try:
-            # v1 : pas de lookup/fetch de benchmark, voir plan. NE PAS
-            # remplacer ce None par fetch_index_price_history()[benchmark]
-            # sans lire d'abord l'avertissement sur
-            # etf_score.compute_tracking_difference : les deux series
-            # (historique ETF et historique benchmark) ne sont alignees
-            # sur AUCUNE date commune ailleurs dans ce depot (une peut
-            # couvrir 6 ans, l'autre 2 ans) -- cabler un historique reel
-            # ici sans etape d'alignement produirait un
-            # tracking_difference_pct silencieusement faux, pas une erreur.
-            benchmark_history = None
+            # L'alignement par date reel se fait dans
+            # etf_score._align_by_date (appelee par build_etf_entry) --
+            # ici on ne fait que selectionner, par ticker, la tranche du
+            # benchmark de CET ETF dans l'historique combine de tous les
+            # benchmarks (sinon l'alignement par date melangerait les prix
+            # d'un autre indice). .get() des deux cotes : un ETF du
+            # catalogue sans benchmark_ticker, ou dont le ticker n'a
+            # aucune entree dans index_price_history, doit degrader vers
+            # None (tracking_difference_pct indisponible) et non lever.
+            benchmark_history = benchmark_history_by_ticker.get(etf.get("benchmark_ticker"))
             etf_companies.append(build_etf_entry(etf, benchmark_history))
         except Exception as e:
             print(f"Erreur pour {etf['ticker']} ({etf['name']}) : {e}")
@@ -6956,7 +6965,7 @@ def main():
         price_history_entries.extend(c.pop("_price_history_daily", []))
     for c in etf_companies:
         price_history_entries.extend(c.pop("_price_history_daily", []))
-    price_history_entries.extend(fetch_index_price_history())
+    price_history_entries.extend(index_price_history)
     update_price_history(price_history_entries)
 
     volume_history_entries = []

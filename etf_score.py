@@ -16,19 +16,16 @@ def compute_tracking_difference(etf_prices: list[float], benchmark_prices: list[
     points ou si le prix de depart de l'indice est nul/negatif -- jamais
     une valeur approximee (voir Global Constraints).
 
-    ATTENTION -- ALIGNEMENT DE DATES NON FAIT ICI, A FAIRE AVANT TOUT APPEL REEL :
-    cette fonction compare bêtement etf_prices[0]/[-1] a benchmark_prices[0]/[-1],
-    sans jamais regarder les dates. Les deux series DOIVENT etre alignees sur la
-    meme plage de dates (idealement intersectees sur les memes dates exactes)
-    AVANT d'etre passees ici -- sinon le resultat est un nombre silencieusement
-    faux, pas une erreur. Rien dans ce depot ne fait cet alignement aujourd'hui :
-    indices_score.py::main() passe toujours benchmark_history=None a
-    build_etf_entry (voir le commentaire au point d'appel), donc ce bug n'a
-    aucun effet en v1. Mais fetch_index_price_history() recupere maintenant, par
-    construction, l'historique des bons tickers de benchmark (INDEX_YFINANCE_TICKERS
-    etendu en Tache 5) -- NE PAS cabler cet historique reel dans build_etf_entry
-    sans ajouter d'abord une etape d'alignement (ex. intersection des dates
-    communes aux deux series avant d'en extraire les listes de close)."""
+    Cette fonction elle-meme compare etf_prices[0]/[-1] a
+    benchmark_prices[0]/[-1] sans jamais regarder les dates -- les deux
+    series DOIVENT etre alignees sur les memes dates AVANT d'etre
+    passees ici, sinon le resultat est un nombre silencieusement faux,
+    pas une erreur. L'alignement reel se fait dans _align_by_date,
+    appelee par build_etf_entry avant tout appel a cette fonction -- ne
+    jamais l'appeler directement avec des series brutes non alignees
+    (ETF ~2 ans d'historique, benchmark ~6 ans : des longueurs
+    differentes a elles seules prouvent que les dates ne correspondent
+    pas terme a terme)."""
     if len(etf_prices) < 2 or len(benchmark_prices) < 2:
         return None
     if benchmark_prices[0] <= 0 or etf_prices[0] <= 0:
@@ -90,6 +87,23 @@ def fetch_etf_data(ticker: str) -> dict:
     }
 
 
+def _align_by_date(etf_price_history: list[dict], benchmark_price_history: list[dict]) -> tuple[list[float], list[float]]:
+    """Intersecte deux series de prix sur leurs dates communes (cle
+    "date", chaine ISO %Y-%m-%d dans les deux sources) et renvoie deux
+    listes paralleles de valeurs, triees par date croissante, restreintes
+    a cette intersection. `etf_price_history` porte la cle "close"
+    (forme de fetch_etf_data()["price_history"]), `benchmark_price_history`
+    la cle "price" (forme de indices_score.fetch_index_price_history()) --
+    deux formes differentes par construction, jamais harmonisees ailleurs
+    dans ce depot. ([], []) si aucune date commune -- compute_tracking_
+    difference traite deja une serie de longueur < 2 comme indisponible,
+    pas la peine de dupliquer cette garde ici."""
+    etf_by_date = {p["date"]: p["close"] for p in etf_price_history}
+    benchmark_by_date = {p["date"]: p["price"] for p in benchmark_price_history}
+    common_dates = sorted(set(etf_by_date) & set(benchmark_by_date))
+    return [etf_by_date[d] for d in common_dates], [benchmark_by_date[d] for d in common_dates]
+
+
 def build_etf_entry(catalog_entry: dict, benchmark_price_history: list[dict] | None) -> dict:
     """Assemble l'entree finale d'un ETF pour docs/indices.json. Jamais de
     score/factors/sector/is_financial/is_trust/alerts (voir Global
@@ -99,14 +113,11 @@ def build_etf_entry(catalog_entry: dict, benchmark_price_history: list[dict] | N
     indices_score.py -- pas {ticker, date, close}, qui n'est que la forme
     interne de fetch_etf_data()["price_history"]."""
     data = fetch_etf_data(catalog_entry["ticker"])
-    etf_prices = [p["close"] for p in data["price_history"]]
-    benchmark_prices = (
-        [p["close"] for p in benchmark_price_history] if benchmark_price_history else None
-    )
-    tracking_difference = (
-        compute_tracking_difference(etf_prices, benchmark_prices)
-        if benchmark_prices else None
-    )
+    if benchmark_price_history:
+        etf_prices, benchmark_prices = _align_by_date(data["price_history"], benchmark_price_history)
+        tracking_difference = compute_tracking_difference(etf_prices, benchmark_prices)
+    else:
+        tracking_difference = None
     return {
         "ticker": catalog_entry["ticker"],
         "name": catalog_entry["name"],
@@ -115,6 +126,7 @@ def build_etf_entry(catalog_entry: dict, benchmark_price_history: list[dict] | N
         "news": [],
         "is_etf": True,
         "etf_info": {
+            "isin": catalog_entry["isin"],
             "benchmark_name": catalog_entry["benchmark_name"],
             "ter_pct": catalog_entry["ter_pct"],
             "replication": catalog_entry["replication"],

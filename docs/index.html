@@ -1395,6 +1395,28 @@
     text-transform: uppercase; letter-spacing: .04em; margin: 18px 4px 8px;
   }
   .etf-benchmark-group-label:first-child { margin-top: 4px; }
+
+  /* Fiche détail ETF (renderEtfDetail) : deux blocs séparés ("Le fonds" /
+     "Coûts & suivi", maquette D2 approuvée) au lieu d'une seule liste
+     plate -- sépare ce qu'est le fonds de ce qu'il coûte/rapporte. */
+  .etf-detail-block {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); padding: 16px; margin: 0 0 16px;
+  }
+  .etf-detail-block .price-row { padding: 6px 0; }
+  .etf-ter-value { color: var(--gold); font-size: var(--text-base); font-weight: 600; }
+  .etf-isin { font-family: monospace; font-size: var(--text-sm); }
+  /* Liste "Autres trackers du même indice" : chips cliquables vers les
+     ETF soeurs (même etf_info.benchmark_name), absente du DOM quand
+     aucune autre entrée du catalogue ne partage ce benchmark. */
+  .etf-sibling-list { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 20px; }
+  .etf-sibling-chip {
+    display: inline-flex; align-items: center; background: var(--bg-2);
+    border: 1px solid var(--border); color: var(--muted); font-size: var(--text-xs);
+    font-weight: 500; padding: 5px 12px; border-radius: var(--radius-pill);
+    text-decoration: none;
+  }
+  .etf-sibling-chip:hover { border-color: var(--border-strong); color: var(--text); }
   .company-row-checkbox { display: flex; align-items: center; padding: 8px 4px; cursor: pointer; }
   .company-row-checkbox input { width: 18px; height: 18px; accent-color: var(--gold); cursor: pointer; }
   .company-row-checkbox input:disabled { cursor: not-allowed; opacity: .35; }
@@ -7953,27 +7975,56 @@ function renderEtfDetail(company) {
       ${n.summary ? `<p class="news-summary">${n.summary}</p>` : ''}
     </div>`).join('');
 
+  // yfinance renvoie souvent 0 (pas null) pour un ETF capitalisant --
+  // une vraie mesure, pas une donnée manquante, donc affichée telle
+  // quelle avec juste un indice du pourquoi. null reste le seul cas
+  // "indisponible" (échec de .info, voir etf_score.fetch_etf_data).
+  const dividendValueHtml = info.dividend_yield != null
+    ? `<span class="price-value">${formatPct(info.dividend_yield * 100)}${!info.dividend_yield && info.distribution === 'capitalisant' ? ' (capitalisant)' : ''}</span>`
+    : `<span class="price-value" style="color:var(--text-faint)">— ${info.distribution === 'capitalisant' ? '(capitalisant, pas de distribution)' : '(indisponible)'}</span>`;
+
+  // Autres ETF du catalogue suivant le même indice (même etf_info.
+  // benchmark_name) -- indicesData.companies est déjà chargé par
+  // renderIndices avant tout appel à renderCompanyDetail/renderEtfDetail.
+  const siblingEtfs = (indicesData.companies || []).filter(c =>
+    c.is_etf && c.ticker !== company.ticker && c.etf_info &&
+    c.etf_info.benchmark_name === info.benchmark_name
+  );
+  const siblingEtfsHtml = siblingEtfs.map(c =>
+    `<a class="etf-sibling-chip" href="#indices/${c.ticker}">${c.name} · ${c.ticker}</a>`
+  ).join('');
+
   document.getElementById('indicesContent').innerHTML = `
     <a href="${companyBackTarget.hash}" class="back-link">← ${companyBackTarget.label}</a>
 
     <section class="hero">
       <div class="hero-name-meta">
         <span class="hero-ticker-sector">${company.ticker} · ETF</span>
+        ${info.pea_eligible ? '<span class="financial-tag graham-tag">PEA éligible</span>' : ''}
       </div>
       <h1 class="hero-name">${company.name}</h1>
       <div class="hero-accent"></div>
       <p class="hero-sub">Cours actuel : ${formatPriceForIndex(company.current_price, company.index)}</p>
     </section>
 
-    <h2>Caractéristiques</h2>
-    <div class="signal-stats">
+    <h2>Le fonds</h2>
+    <div class="etf-detail-block signal-stats">
       <div class="price-row"><span class="price-label">Indice suivi</span><span class="price-value">${info.benchmark_name || '—'}</span></div>
-      <div class="price-row"><span class="price-label">Frais de gestion (TER)</span><span class="price-value">${info.ter_pct != null ? info.ter_pct.toLocaleString('fr-FR') + '%' : '—'}</span></div>
+      <div class="price-row"><span class="price-label">ISIN</span><span class="price-value etf-isin">${info.isin || '—'}</span></div>
       <div class="price-row"><span class="price-label">Réplication</span><span class="price-value">${info.replication || '—'}</span></div>
       <div class="price-row"><span class="price-label">Distribution</span><span class="price-value">${info.distribution || '—'}</span></div>
-      <div class="price-row"><span class="price-label">Éligible PEA</span><span class="price-value">${info.pea_eligible ? 'Oui' : 'Non'}</span></div>
-      <div class="price-row"><span class="price-label">Écart de suivi (vs indice)</span><span class="price-value ${pctClass(info.tracking_difference_pct)}">${info.tracking_difference_pct != null ? formatPct(info.tracking_difference_pct) : 'Indisponible'}</span></div>
     </div>
+
+    <h2>Coûts &amp; suivi</h2>
+    <div class="etf-detail-block signal-stats">
+      <div class="price-row"><span class="price-label">Frais de gestion (TER)</span><span class="etf-ter-value">${info.ter_pct != null ? info.ter_pct.toLocaleString('fr-FR') + '%' : '—'}</span></div>
+      <div class="price-row"><span class="price-label">Écart de suivi (vs indice)</span><span class="price-value ${pctClass(info.tracking_difference_pct)}">${info.tracking_difference_pct != null ? formatPct(info.tracking_difference_pct) : 'Indisponible'}</span></div>
+      <div class="price-row"><span class="price-label">Rendement du dividende</span>${dividendValueHtml}</div>
+    </div>
+
+    ${siblingEtfsHtml ? `
+    <h2>Autres trackers du même indice</h2>
+    <div class="etf-sibling-list">${siblingEtfsHtml}</div>` : ''}
 
     <h2>Cours en direct</h2>
     <div id="real-price-chart"><div class="index-price-fallback">${formatPriceForIndex(company.current_price, company.index)}</div></div>

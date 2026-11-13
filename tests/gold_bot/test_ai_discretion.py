@@ -417,6 +417,27 @@ def test_judge_fibonacci_entry_logs_regle_contrefactuelle_for_comparison(monkeyp
     assert entries[0]["verdict"]["action"] == "vente"
 
 
+def test_judge_fibonacci_entry_returns_none_when_level_is_not_roundable(monkeypatch, tmp_path):
+    # level="pas-un-nombre" fait planter round(level, 2) avec un
+    # TypeError au moment du calcul de la cle de cooldown, AVANT tout
+    # appel reseau -- doit rester fail-closed (None, jamais d'exception
+    # propagee), meme si ce calcul plante avant que le client Anthropic
+    # ne soit meme construit.
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-ant-fake")
+    log_path = str(tmp_path / "ai_discretion_log.jsonl")
+
+    result = ai_discretion.judge_fibonacci_entry(
+        "XAUUSD", _state(level="pas-un-nombre"), _candles(),
+        baseline_stop_loss_distance=10.0, baseline_take_profit_distance=15.0,
+        ftmo_buffer=_buffer(), log_path=log_path,
+    )
+
+    assert result is None
+    entries = [json.loads(line) for line in open(log_path, encoding="utf-8")]
+    assert entries[0]["action_reelle"] == "erreur"
+    assert "TypeError" in entries[0]["error"]
+
+
 def test_judge_fibonacci_entry_never_raises_on_unexpected_exception(monkeypatch, tmp_path):
     log_path = str(tmp_path / "ai_discretion_log.jsonl")
 

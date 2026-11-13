@@ -187,28 +187,29 @@ def judge_fibonacci_entry(
     tous les autres cas (echec API, verdict invalide, action "rien",
     garde-fou R:R rejete, cooldown actif) -- l'appelant traite toujours
     None comme "aucun trade ce cycle", sans jamais se rabattre sur le
-    sens des regles. Jamais d'exception propagee."""
+    sens des regles. Jamais d'exception propagee -- y compris depuis le
+    calcul de la cle de cooldown lui-meme (state mal forme, level non
+    arrondissable), qui est donc a l'INTERIEUR du try/except ci-dessous,
+    pas avant."""
     now = now or datetime.now(timezone.utc)
-    level = state.get("level")
-    cooldown_key = (symbol, round(level, 2) if level is not None else None)
-    with _cooldown_lock:
-        last = _last_call_at.get(cooldown_key)
-        if last is not None and now - last < DISCRETION_COOLDOWN:
-            return None
-        _last_call_at[cooldown_key] = now
-
-    entry: dict = {
-        "timestamp": now.strftime("%Y-%m-%dT%H:%M:%SZ"),
-        "symbol": symbol,
-        "state": state,
-        "ftmo_buffer": ftmo_buffer,
-        "regle_contrefactuelle": {
+    entry: dict = {"timestamp": now.strftime("%Y-%m-%dT%H:%M:%SZ"), "symbol": symbol}
+    try:
+        entry["state"] = state
+        entry["ftmo_buffer"] = ftmo_buffer
+        entry["regle_contrefactuelle"] = {
             "direction": state.get("bias"),
             "stop_loss_distance": baseline_stop_loss_distance,
             "take_profit_distance": baseline_take_profit_distance,
-        },
-    }
-    try:
+        }
+
+        level = state.get("level")
+        cooldown_key = (symbol, round(level, 2) if level is not None else None)
+        with _cooldown_lock:
+            last = _last_call_at.get(cooldown_key)
+            if last is not None and now - last < DISCRETION_COOLDOWN:
+                return None
+            _last_call_at[cooldown_key] = now
+
         import anthropic
 
         api_key = os.environ.get("ANTHROPIC_API_KEY")

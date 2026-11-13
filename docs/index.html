@@ -1386,6 +1386,15 @@
      sa navigation au clic sur la case. */
   .company-row-wrap { display: flex; align-items: center; gap: 4px; }
   .company-row-wrap .company-row { flex: 1 1 auto; min-width: 0; }
+
+  /* Sous-groupes par indice suivi, carte ETF uniquement (voir
+     etfGroupedRowsHtml) -- jamais utilisé pour les autres cartes
+     d'indice (CAC 40, DAX...), qui gardent leur liste plate. */
+  .etf-benchmark-group-label {
+    color: var(--muted); font-size: var(--text-2xs); font-weight: 600;
+    text-transform: uppercase; letter-spacing: .04em; margin: 18px 4px 8px;
+  }
+  .etf-benchmark-group-label:first-child { margin-top: 4px; }
   .company-row-checkbox { display: flex; align-items: center; padding: 8px 4px; cursor: pointer; }
   .company-row-checkbox input { width: 18px; height: 18px; accent-color: var(--gold); cursor: pointer; }
   .company-row-checkbox input:disabled { cursor: not-allowed; opacity: .35; }
@@ -7144,11 +7153,39 @@ function companyLogoZoom(ticker) {
   return COMPANY_LOGO_ZOOM_OVERRIDE_BY_TICKER[ticker] || 1;
 }
 
-function renderIndicesRows(companies, rowsContainerId) {
-  const panel = document.getElementById(rowsContainerId);
-  if (!panel) return;
-  const visible = sortedFilteredCompanies(companies);
-  panel.innerHTML = visible.length ? visible.map(c => `
+// Table de regroupement des ETF par indice suivi (maquette "Option C",
+// validée par l'utilisateur le 2026-11-13) -- clés = etf_info.benchmark_name
+// exact, voir etf_catalog.py pour les 19 valeurs réelles. Un benchmark non
+// répertorié ici (futur ajout au catalogue) tombe dans "Autres" plutôt que
+// de planter ou d'être mal classé.
+const ETF_BENCHMARK_GROUP_BY_NAME = {
+  'MSCI World': 'Actions mondiales',
+  'S&P 500': 'États-Unis',
+  'Nasdaq-100': 'États-Unis',
+  'Russell 2000': 'États-Unis',
+  'CAC 40': 'Europe',
+  'Euro Stoxx 50': 'Europe',
+  'MSCI EMU': 'Europe',
+  'STOXX Europe 600': 'Europe',
+  'DAX': 'Europe',
+  'MSCI Europe': 'Europe',
+  'MSCI Emerging Markets': 'Marchés émergents & Japon',
+  'TOPIX': 'Marchés émergents & Japon',
+  'STOXX Europe 600 Health Care': 'Secteurs',
+  'STOXX Europe 600 Technology': 'Secteurs',
+  'STOXX Europe 600 Banks': 'Secteurs',
+  'Or (LBMA Gold Price PM, USD)': 'Matières premières',
+};
+const ETF_BENCHMARK_GROUP_ORDER = [
+  'Actions mondiales', 'États-Unis', 'Europe', 'Marchés émergents & Japon', 'Secteurs', 'Matières premières', 'Autres',
+];
+
+function etfBenchmarkGroupLabel(benchmarkName) {
+  return ETF_BENCHMARK_GROUP_BY_NAME[benchmarkName] || 'Autres';
+}
+
+function companyRowHtml(c) {
+  return `
     <div class="company-row-wrap">
       ${c.is_etf ? '' : `
       <label class="company-row-checkbox">
@@ -7165,7 +7202,31 @@ function renderIndicesRows(companies, rowsContainerId) {
           ? `<span class="company-score" style="color:${c.score >= 0 ? 'var(--green-500)' : 'var(--rust)'};">${c.score > 0 ? '+' : ''}${c.score}</span>`
           : (c.is_etf ? `<span class="company-score" style="color:var(--muted);font-size:var(--text-xs);">TER ${c.etf_info.ter_pct.toLocaleString('fr-FR')}%</span>` : '')}
       </a>
-    </div>`).join('') : '<div class="list-empty">Aucun résultat pour cette recherche.</div>';
+    </div>`;
+}
+
+// Regroupement par indice suivi, carte ETF uniquement -- renderIndicesRows
+// n'appelle ceci que lorsque TOUTES les entreprises affichées sont des ETF
+// (voir plus bas), jamais pour une carte d'indice normale (CAC 40, DAX...).
+function etfGroupedRowsHtml(companies) {
+  const byGroup = {};
+  companies.forEach(c => {
+    const label = etfBenchmarkGroupLabel(c.etf_info && c.etf_info.benchmark_name);
+    (byGroup[label] = byGroup[label] || []).push(c);
+  });
+  return ETF_BENCHMARK_GROUP_ORDER
+    .filter(label => byGroup[label] && byGroup[label].length)
+    .map(label => `<div class="etf-benchmark-group-label">${label}</div>${byGroup[label].map(companyRowHtml).join('')}`)
+    .join('');
+}
+
+function renderIndicesRows(companies, rowsContainerId) {
+  const panel = document.getElementById(rowsContainerId);
+  if (!panel) return;
+  const visible = sortedFilteredCompanies(companies);
+  panel.innerHTML = !visible.length
+    ? '<div class="list-empty">Aucun résultat pour cette recherche.</div>'
+    : (visible.every(c => c.is_etf) ? etfGroupedRowsHtml(visible) : visible.map(companyRowHtml).join(''));
   panel.querySelectorAll('input[data-compare-ticker]').forEach(input => {
     input.addEventListener('change', () => {
       const ticker = input.dataset.compareTicker;

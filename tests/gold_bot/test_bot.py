@@ -1353,13 +1353,14 @@ def _fib_total_volume(result):
     return round(sum(step["volume"] for step in result["steps"]), 8)
 
 
-def test_decide_and_act_fibonacci_does_not_call_ai_shadow_veto_when_distance_too_small(monkeypatch):
+def test_decide_and_act_fibonacci_does_not_call_ai_discretion_when_distance_too_small(monkeypatch):
     """C'est exactement ce scenario (signal persistant, jamais assez de
     distance pour ouvrir) qui a fait tourner le veto IA toutes les 1-2
     minutes pendant des heures le 2026-10-29, facturant 28 appels reels
-    pour 0 trade reellement ouvert."""
+    pour 0 trade reellement ouvert -- garde-fou desormais devant
+    ai_discretion.judge_fibonacci_entry (voir ce chantier)."""
     calls = []
-    monkeypatch.setattr(bot.ai_shadow, "shadow_judge_entry", lambda *a, **k: calls.append(a) or None)
+    monkeypatch.setattr(bot.ai_discretion, "judge_fibonacci_entry", lambda *a, **k: calls.append(a) or None)
     state = _fib_state(close=2000.001, high=2000.002, low=1999.999, level=2000.0, bias="achat", atr=0.0001)
     monkeypatch.setattr(bot.fibonacci_reversion, "latest_state", lambda candles, historical_candles=None: state)
     bot.decide_and_act_fibonacci(
@@ -1380,6 +1381,25 @@ def test_decide_and_act_fibonacci_blocked_by_circuit_breaker(monkeypatch):
         balance=10000, equity=8900, open_positions=[], circuit_breaker=cb,  # -11%, coupe-circuit declenche
     )
     assert result == {"action": "aucune", "reason": "coupe-circuit journalier déclenché"}
+
+
+def test_decide_and_act_fibonacci_does_not_call_ai_discretion_when_circuit_breaker_blocked(monkeypatch):
+    """Meme garde-fou de cout que le test ci-dessus pour la distance trop
+    faible, mais pour l'autre garde gratuit qui precede l'appel IA
+    payant : le coupe-circuit journalier. Si le coupe-circuit bloque,
+    ai_discretion.judge_fibonacci_entry ne doit jamais etre appele."""
+    calls = []
+    monkeypatch.setattr(bot.ai_discretion, "judge_fibonacci_entry", lambda *a, **k: calls.append(a) or None)
+    state = _fib_state(close=1981.0, high=1982.0, low=1974.0, level=1980.0, bias="achat", atr=20.0)
+    monkeypatch.setattr(bot.fibonacci_reversion, "latest_state", lambda candles, historical_candles=None: state)
+    from datetime import datetime, timezone
+    cb = risk.CircuitBreaker(threshold_pct=0.10, now_fn=lambda: datetime(2026, 9, 10, tzinfo=timezone.utc))
+    cb.check(10000)
+    bot.decide_and_act_fibonacci(
+        [{"dummy": True, "time": "2026-01-05 12:00:00"}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
+        balance=10000, equity=8900, open_positions=[], circuit_breaker=cb,  # -11%, coupe-circuit declenche
+    )
+    assert calls == []
 
 
 def test_decide_and_act_fibonacci_no_action_when_size_below_minimum(monkeypatch):

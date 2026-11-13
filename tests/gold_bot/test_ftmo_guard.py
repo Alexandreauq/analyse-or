@@ -203,3 +203,14 @@ def test_custom_profit_target_pct_is_respected():
     assert guard.target_equity == pytest.approx(10500)
     assert guard.check(balance=10000, equity=10499) is None
     assert guard.check(balance=10000, equity=10500) == "target"
+
+
+def test_daily_floor_is_none_before_first_check():
+    guard = ftmo_guard.FtmoGuard(isc=10000)
+    assert guard.daily_floor is None
+
+
+def test_daily_floor_returns_value_after_check():
+    guard = ftmo_guard.FtmoGuard(isc=10000, now_fn=lambda: datetime(2026, 11, 13, 10, 0, tzinfo=timezone.utc))
+    guard.check(balance=10000, equity=10000)
+    assert guard.daily_floor == pytest.approx(9600.0)

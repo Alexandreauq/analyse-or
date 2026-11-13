@@ -6,11 +6,13 @@
 # docs/superpowers/specs/2026-09-10-bot-trading-or-design.md.
 from datetime import datetime, timezone
 
+import gold_bot.ai_discretion as ai_discretion
 import gold_bot.ai_news_watch as ai_news_watch
 import gold_bot.ai_shadow as ai_shadow
 import gold_bot.broker as broker
 import gold_bot.confluence as confluence
 import gold_bot.fibonacci_reversion as fibonacci_reversion
+import gold_bot.ftmo_guard as ftmo_guard
 import gold_bot.ichimoku_reversion as ichimoku_reversion
 import gold_bot.macro_signal as macro_signal
 import gold_bot.odds_check as odds_check
@@ -203,7 +205,8 @@ def decide_and_act_vwap(candles: list[dict], *, contract_size: float, balance: f
                          volume_step: float, min_volume: float, max_volume: float,
                          open_positions: list[dict], circuit_breaker: "risk.CircuitBreaker",
                          symbol: str = "XAUUSD", risk_pct: float = 0.05,
-                         historical_candles: list[dict] | None = None) -> dict:
+                         historical_candles: list[dict] | None = None,
+                         ftmo_guard_instance: "ftmo_guard.FtmoGuard | None" = None) -> dict:
     """Moteur scalping retour-à-la-VWAP + filtre EMA200 + stop suiveur
     EMA50 -- voir docs/superpowers/specs/2026-09-30-gold-bot-vwap-
     reversion-design.md et son addendum (stop suiveur + recalibrage
@@ -363,7 +366,8 @@ def decide_and_act_fibonacci(candles: list[dict], *, contract_size: float, balan
                               volume_step: float, min_volume: float, max_volume: float,
                               open_positions: list[dict], circuit_breaker: "risk.CircuitBreaker",
                               symbol: str = "XAUUSD", risk_pct: float = 0.05,
-                              historical_candles: list[dict] | None = None) -> dict:
+                              historical_candles: list[dict] | None = None,
+                              ftmo_guard_instance: "ftmo_guard.FtmoGuard | None" = None) -> dict:
     """Moteur de rebond sur retracement de Fibonacci + filtre de force
     de tendance + stop suiveur ATR -- voir docs/superpowers/specs/
     2026-10-28-gold-bot-fibonacci-ftmo-design.md. Même contrat
@@ -502,40 +506,55 @@ def decide_and_act_fibonacci(candles: list[dict], *, contract_size: float, balan
     if not circuit_breaker.can_open_position(equity):
         return {"action": "aucune", "reason": "coupe-circuit journalier déclenché"}
 
+    # Decision IA discretionnaire branchee ici depuis ce chantier (voir
+    # docs/superpowers/specs/2026-11-13-gold-bot-ai-discretionary-
+    # fibonacci-entry-design.md), a la place de l'ancien veto ai_shadow.
+    # AVANT le calcul de taille (contrairement a l'ancien veto) : le
+    # sens et les distances TP/SL reellement utilises peuvent differer
+    # de ceux que les regles viennent de calculer ci-dessus -- l'IA
+    # decide elle-meme, sans jamais connaitre `direction`/`stop_loss`
+    # (voir ai_discretion._build_prompt, aucun parametre direction/bias).
+    # Place apres les deux garde-fous gratuits ci-dessus (distance,
+    # coupe-circuit) pour ne declencher l'appel reel que quand un trade
+    # a reellement une chance de s'ouvrir -- meme raison que l'ancien
+    # veto (incident de cout du 2026-10-29).
+    baseline_take_profit_distance = fibonacci_reversion.TARGET_R * distance
+    ftmo_buffer = (
+        ai_discretion.compute_ftmo_buffer(ftmo_guard_instance, equity)
+        if ftmo_guard_instance is not None
+        else {"daily_pct_remaining": None, "overall_pct_remaining": None}
+    )
+    ai_verdict = ai_discretion.judge_fibonacci_entry(
+        symbol, state, candles,
+        baseline_stop_loss_distance=distance, baseline_take_profit_distance=baseline_take_profit_distance,
+        ftmo_buffer=ftmo_buffer,
+    )
+    if ai_verdict is None:
+        return {"action": "aucune", "reason": "aucune decision IA (echec, rejet ou rien a faire)"}
+
+    direction = ai_verdict["action"]
+    distance = ai_verdict["stop_loss_distance"]
+    if distance < entry_price * fibonacci_reversion.MIN_DISTANCE_PCT:
+        # Meme garde-fou qu'avant l'appel IA (ligne ~503), applique cette
+        # fois a la distance FINALE : sl_multiplicateur peut aller jusqu'a
+        # 0.7x (SL_MULTIPLIER_BOUNDS), donc une distance initiale valide
+        # peut repasser sous le plancher apres ajustement IA -- raison
+        # distincte pour que les logs distinguent les deux rejets.
+        return {"action": "aucune", "reason": "distance entree-stop trop faible apres ajustement IA"}
+    take_profit_distance = ai_verdict["take_profit_distance"]
+    stop_loss = entry_price - distance if direction == "achat" else entry_price + distance
+
     raw_size = risk.compute_position_size(balance, entry_price, stop_loss, contract_size, risk_pct=risk_pct)
     total_size = risk.round_to_volume_step(raw_size, volume_step, min_volume, max_volume)
     if total_size is None:
         return {"action": "aucune", "reason": "compte trop petit pour ce stop (volume sous le minimum du broker)"}
 
-    # Veto IA branche pour de vrai depuis le 2026-11-06 (voir
-    # gold_bot/ai_shadow.py) -- meme design fail-open que
-    # decide_and_act_ichimoku : seul un verdict explicite "opposerait"
-    # bloque, un verdict None (API absente, timeout, erreur, verdict non
-    # parseable) OU "confirme" laisse le trade se faire normalement. Place
-    # ici, apres tous les garde-fous (distance, coupe-circuit, taille),
-    # pour qu'il ne se declenche QUE quand un vrai trade va reellement
-    # s'ouvrir -- pas a chaque cycle ou la direction est simplement
-    # determinee, ce qui peut rester vrai des heures sans jamais aboutir
-    # a un trade (cause de l'incident de cout du 2026-10-29). D'apres
-    # l'activite reelle, un trade ne s'ouvre que ~4 fois par semaine --
-    # donc ce declencheur est naturellement rare, en plus du cooldown.
-    # Decision utilisateur explicite (2026-11-06, en connaissance de
-    # cause : le veto etait reste en mode fantome par prudence depuis le
-    # 2026-10-28, aucune preuve de fiabilite sur plusieurs semaines en
-    # conditions reelles -- promu malgre tout, sur demande).
-    verdict = ai_shadow.shadow_judge_entry(
-        symbol, direction, state, candles,
-        engine_label="rebond de retracement de Fibonacci", real_decision=True,
-    )
-    if verdict is not None and verdict.get("verdict") == "opposerait":
-        return {"action": "aucune", "reason": "veto IA (opposition)"}
-
-    if verdict is not None and verdict.get("confiance") == "faible":
-        # Incident du 2026-11-10 : l'IA avait elle-meme recommande de
-        # reduire la taille faute de pouvoir verifier l'actualite --
-        # jamais applique avant ce correctif (voir ai_shadow.py).
+    if ai_verdict.get("confiance") == "faible":
+        # Incident du 2026-11-10 : meme reflexe que l'ancien veto IA
+        # (ai_shadow.py), porte ici tel quel -- independant des
+        # multiplicateurs TP/SL, deux leviers de risque distincts.
         reduced_size = risk.round_to_volume_step(
-            total_size * ai_shadow.LOW_CONFIDENCE_SIZE_FACTOR, volume_step, min_volume, max_volume)
+            total_size * ai_discretion.LOW_CONFIDENCE_SIZE_FACTOR, volume_step, min_volume, max_volume)
         if reduced_size is None:
             return {"action": "aucune", "reason": "taille reduite (confiance IA faible) sous le minimum du broker"}
         total_size = reduced_size
@@ -552,8 +571,8 @@ def decide_and_act_fibonacci(candles: list[dict], *, contract_size: float, balan
         }]}
 
     runner_volume = round(total_size - partial_volume, 2)
-    partial_target = (entry_price + fibonacci_reversion.TARGET_R * distance if direction == "achat"
-                       else entry_price - fibonacci_reversion.TARGET_R * distance)
+    partial_target = (entry_price + take_profit_distance if direction == "achat"
+                       else entry_price - take_profit_distance)
 
     steps = [{
         "type": "ouverture_simulee", "symbol": symbol, "direction": direction, "volume": partial_volume,

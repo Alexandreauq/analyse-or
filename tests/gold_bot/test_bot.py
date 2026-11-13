@@ -29,9 +29,34 @@ def _default_ai_shadow_veto(monkeypatch):
     ecriraient pour de vrai dans gold_bot/ai_shadow_log.jsonl (le vrai
     fichier de prod) et, si ANTHROPIC_API_KEY est present dans
     l'environnement de test, tenteraient un vrai appel reseau facture.
-    Un test qui veut exercer shadow_judge_entry directement l'ecrase
-    avec son propre monkeypatch (voir tests/gold_bot/test_ai_shadow.py)."""
+    Ne concerne plus que decide_and_act_ichimoku depuis ce chantier --
+    decide_and_act_fibonacci utilise desormais
+    ai_discretion.judge_fibonacci_entry (voir _default_ai_discretion_judge
+    ci-dessous). Un test qui veut exercer shadow_judge_entry directement
+    l'ecrase avec son propre monkeypatch (voir
+    tests/gold_bot/test_ai_shadow.py)."""
     monkeypatch.setattr(bot.ai_shadow, "shadow_judge_entry", lambda *a, **k: None)
+
+
+@pytest.fixture(autouse=True)
+def _default_ai_discretion_judge(monkeypatch):
+    """Les fiches "happy path" de decide_and_act_fibonacci (deux jambes,
+    TP/SL exacts...) datent d'avant ce chantier et ne testent pas le
+    jugement IA lui-meme (voir tests/gold_bot/test_ai_discretion.py pour
+    ca) -- ce defaut "confirme" systematiquement, dans le MEME sens et
+    aux MEMES distances que la regle (multiplicateurs 1.0/1.0 implicites,
+    en renvoyant directement les distances de reference), pour que ces
+    fiches restent inchangees. Un test qui veut exercer
+    judge_fibonacci_entry lui-meme l'ecrase avec son propre monkeypatch."""
+    def _confirm_rule(symbol, state, candles, *, baseline_stop_loss_distance,
+                       baseline_take_profit_distance, ftmo_buffer, log_path=None, now=None):
+        return {
+            "action": state.get("bias"), "confiance": "haute",
+            "stop_loss_distance": baseline_stop_loss_distance,
+            "take_profit_distance": baseline_take_profit_distance,
+            "raison": "defaut de test",
+        }
+    monkeypatch.setattr(bot.ai_discretion, "judge_fibonacci_entry", _confirm_rule)
 
 
 @pytest.fixture(autouse=True)
@@ -1289,23 +1314,6 @@ def test_decide_and_act_fibonacci_opens_achat_with_partial_and_runner_legs(monke
     assert runner["take_profit"] is None
 
 
-def test_decide_and_act_fibonacci_calls_ai_shadow_veto_only_when_a_real_trade_opens(monkeypatch):
-    """Deplace le 2026-10-29 (incident de cout : un veto declenche a
-    chaque cycle ou la direction est simplement determinee, sans jamais
-    aboutir a un vrai trade, a brule du credit API pour rien). Le veto
-    ne doit se declencher QUE quand un trade va reellement s'ouvrir."""
-    calls = []
-    monkeypatch.setattr(bot.ai_shadow, "shadow_judge_entry", lambda *a, **k: calls.append(a) or None)
-    state = _fib_state(close=1981.0, high=1982.0, low=1974.0, level=1980.0, bias="achat", atr=20.0)
-    monkeypatch.setattr(bot.fibonacci_reversion, "latest_state", lambda candles, historical_candles=None: state)
-    result = bot.decide_and_act_fibonacci(
-        [{"dummy": True, "time": "2026-01-05 12:00:00"}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
-        balance=10000, equity=10000, open_positions=[], circuit_breaker=_open_circuit_breaker(),
-    )
-    assert result["action"] == "simulation"
-    assert len(calls) == 1
-
-
 def test_decide_and_act_fibonacci_opens_vente_with_partial_and_runner_legs(monkeypatch):
     # biais vente, symetrique du test achat ci-dessus : high (1986)
     # touche le niveau 1980 avec tolerance 6 (1980+6=1986, 1986>=1986 ->
@@ -1341,159 +1349,18 @@ def test_decide_and_act_fibonacci_no_action_when_distance_too_small(monkeypatch)
     assert result == {"action": "aucune", "reason": "distance entree-stop trop faible"}
 
 
-def test_decide_and_act_fibonacci_blocks_trade_when_ai_opposes(monkeypatch):
-    # Veto IA branche pour de vrai depuis le 2026-11-06 (decision
-    # utilisateur explicite, promu depuis le mode fantome) -- meme
-    # patron fail-open que decide_and_act_ichimoku.
-    monkeypatch.setattr(bot.ai_shadow, "shadow_judge_entry", lambda *a, **k: {"verdict": "opposerait", "confiance": "haute", "raison": "test"})
-    state = _fib_state(close=1981.0, high=1982.0, low=1974.0, level=1980.0, bias="achat", atr=20.0)
-    monkeypatch.setattr(bot.fibonacci_reversion, "latest_state", lambda candles, historical_candles=None: state)
-    result = bot.decide_and_act_fibonacci(
-        [{"dummy": True, "time": "2026-01-05 12:00:00"}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
-        balance=10000, equity=10000, open_positions=[], circuit_breaker=_open_circuit_breaker(),
-    )
-    assert result == {"action": "aucune", "reason": "veto IA (opposition)"}
-
-
-def test_decide_and_act_fibonacci_blocks_vente_trade_when_ai_opposes(monkeypatch):
-    # Symetrique du test achat ci-dessus (releve M-5 en relecture
-    # finale : seul le sens achat etait teste jusqu'ici).
-    monkeypatch.setattr(bot.ai_shadow, "shadow_judge_entry", lambda *a, **k: {"verdict": "opposerait", "confiance": "haute", "raison": "test"})
-    state = _fib_state(close=1979.0, high=1986.0, low=1978.0, level=1980.0, bias="vente", atr=20.0)
-    monkeypatch.setattr(bot.fibonacci_reversion, "latest_state", lambda candles, historical_candles=None: state)
-    result = bot.decide_and_act_fibonacci(
-        [{"dummy": True, "time": "2026-01-05 12:00:00"}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
-        balance=10000, equity=10000, open_positions=[], circuit_breaker=_open_circuit_breaker(),
-    )
-    assert result == {"action": "aucune", "reason": "veto IA (opposition)"}
-
-
-def test_decide_and_act_fibonacci_proceeds_when_ai_verdict_is_malformed(monkeypatch):
-    # Fail-open strict : un dict sans la cle "verdict" (ou avec une
-    # valeur autre que "opposerait") laisse passer le trade -- releve
-    # M-5 en relecture finale, teste jusqu'ici seulement a l'echelle de
-    # shadow_judge_entry (test_ai_shadow.py), pas au niveau de
-    # decide_and_act_fibonacci lui-meme.
-    monkeypatch.setattr(bot.ai_shadow, "shadow_judge_entry", lambda *a, **k: {"confiance": "haute", "raison": "test"})
-    state = _fib_state(close=1981.0, high=1982.0, low=1974.0, level=1980.0, bias="achat", atr=20.0)
-    monkeypatch.setattr(bot.fibonacci_reversion, "latest_state", lambda candles, historical_candles=None: state)
-    result = bot.decide_and_act_fibonacci(
-        [{"dummy": True, "time": "2026-01-05 12:00:00"}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
-        balance=10000, equity=10000, open_positions=[], circuit_breaker=_open_circuit_breaker(),
-    )
-    assert result["action"] == "simulation"
-
-
-def test_decide_and_act_fibonacci_proceeds_when_ai_confirms(monkeypatch):
-    monkeypatch.setattr(bot.ai_shadow, "shadow_judge_entry", lambda *a, **k: {"verdict": "confirme", "confiance": "haute", "raison": "test"})
-    state = _fib_state(close=1981.0, high=1982.0, low=1974.0, level=1980.0, bias="achat", atr=20.0)
-    monkeypatch.setattr(bot.fibonacci_reversion, "latest_state", lambda candles, historical_candles=None: state)
-    result = bot.decide_and_act_fibonacci(
-        [{"dummy": True, "time": "2026-01-05 12:00:00"}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
-        balance=10000, equity=10000, open_positions=[], circuit_breaker=_open_circuit_breaker(),
-    )
-    assert result["action"] == "simulation"
-
-
 def _fib_total_volume(result):
     return round(sum(step["volume"] for step in result["steps"]), 8)
 
 
-def test_decide_and_act_fibonacci_halves_size_when_ai_confidence_is_low(monkeypatch):
-    state = _fib_state(close=1981.0, high=1982.0, low=1974.0, level=1980.0, bias="achat", atr=20.0)
-    monkeypatch.setattr(bot.fibonacci_reversion, "latest_state", lambda candles, historical_candles=None: state)
-
-    monkeypatch.setattr(bot.ai_shadow, "shadow_judge_entry", lambda *a, **k: {"verdict": "confirme", "confiance": "haute", "raison": "test"})
-    baseline = bot.decide_and_act_fibonacci(
-        [{"dummy": True, "time": "2026-01-05 12:00:00"}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
-        balance=10000, equity=10000, open_positions=[], circuit_breaker=_open_circuit_breaker(),
-    )
-    baseline_volume = _fib_total_volume(baseline)
-
-    monkeypatch.setattr(bot.ai_shadow, "shadow_judge_entry", lambda *a, **k: {"verdict": "confirme", "confiance": "faible", "raison": "test"})
-    reduced = bot.decide_and_act_fibonacci(
-        [{"dummy": True, "time": "2026-01-05 12:00:00"}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
-        balance=10000, equity=10000, open_positions=[], circuit_breaker=_open_circuit_breaker(),
-    )
-    reduced_volume = _fib_total_volume(reduced)
-
-    expected = bot.risk.round_to_volume_step(
-        baseline_volume * bot.ai_shadow.LOW_CONFIDENCE_SIZE_FACTOR, 0.01, 0.01, 500)
-    assert reduced_volume == expected
-    assert reduced_volume < baseline_volume
-
-
-def test_decide_and_act_fibonacci_does_not_reduce_size_for_moyenne_confidence(monkeypatch):
-    state = _fib_state(close=1981.0, high=1982.0, low=1974.0, level=1980.0, bias="achat", atr=20.0)
-    monkeypatch.setattr(bot.fibonacci_reversion, "latest_state", lambda candles, historical_candles=None: state)
-
-    monkeypatch.setattr(bot.ai_shadow, "shadow_judge_entry", lambda *a, **k: {"verdict": "confirme", "confiance": "haute", "raison": "test"})
-    baseline = bot.decide_and_act_fibonacci(
-        [{"dummy": True, "time": "2026-01-05 12:00:00"}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
-        balance=10000, equity=10000, open_positions=[], circuit_breaker=_open_circuit_breaker(),
-    )
-
-    monkeypatch.setattr(bot.ai_shadow, "shadow_judge_entry", lambda *a, **k: {"verdict": "confirme", "confiance": "moyenne", "raison": "test"})
-    moyenne = bot.decide_and_act_fibonacci(
-        [{"dummy": True, "time": "2026-01-05 12:00:00"}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
-        balance=10000, equity=10000, open_positions=[], circuit_breaker=_open_circuit_breaker(),
-    )
-    assert _fib_total_volume(moyenne) == _fib_total_volume(baseline)
-
-
-def test_decide_and_act_fibonacci_returns_aucune_when_halved_size_below_minimum(monkeypatch):
-    state = _fib_state(close=1981.0, high=1982.0, low=1974.0, level=1980.0, bias="achat", atr=20.0)
-    monkeypatch.setattr(bot.fibonacci_reversion, "latest_state", lambda candles, historical_candles=None: state)
-    monkeypatch.setattr(bot.ai_shadow, "shadow_judge_entry", lambda *a, **k: {"verdict": "confirme", "confiance": "haute", "raison": "test"})
-    baseline = bot.decide_and_act_fibonacci(
-        [{"dummy": True, "time": "2026-01-05 12:00:00"}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
-        balance=10000, equity=10000, open_positions=[], circuit_breaker=_open_circuit_breaker(),
-    )
-    baseline_volume = _fib_total_volume(baseline)
-    # min_volume choisi strictement entre la moitie et le total de la
-    # taille de base : la taille pleine passe, la taille reduite de
-    # moitie tombe en dessous.
-    min_volume = round(baseline_volume * 0.75, 2)
-
-    monkeypatch.setattr(bot.ai_shadow, "shadow_judge_entry", lambda *a, **k: {"verdict": "confirme", "confiance": "faible", "raison": "test"})
-    result = bot.decide_and_act_fibonacci(
-        [{"dummy": True, "time": "2026-01-05 12:00:00"}], contract_size=100, volume_step=0.01, min_volume=min_volume, max_volume=500,
-        balance=10000, equity=10000, open_positions=[], circuit_breaker=_open_circuit_breaker(),
-    )
-    assert result == {"action": "aucune", "reason": "taille reduite (confiance IA faible) sous le minimum du broker"}
-
-
-def test_decide_and_act_fibonacci_proceeds_when_ai_returns_none_fail_open(monkeypatch):
-    monkeypatch.setattr(bot.ai_shadow, "shadow_judge_entry", lambda *a, **k: None)
-    state = _fib_state(close=1981.0, high=1982.0, low=1974.0, level=1980.0, bias="achat", atr=20.0)
-    monkeypatch.setattr(bot.fibonacci_reversion, "latest_state", lambda candles, historical_candles=None: state)
-    result = bot.decide_and_act_fibonacci(
-        [{"dummy": True, "time": "2026-01-05 12:00:00"}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
-        balance=10000, equity=10000, open_positions=[], circuit_breaker=_open_circuit_breaker(),
-    )
-    assert result["action"] == "simulation"
-
-
-def test_decide_and_act_fibonacci_calls_ai_shadow_with_real_decision_true(monkeypatch):
-    calls = []
-    monkeypatch.setattr(bot.ai_shadow, "shadow_judge_entry", lambda *a, **k: calls.append(k) or {"verdict": "confirme", "confiance": "haute", "raison": "test"})
-    state = _fib_state(close=1981.0, high=1982.0, low=1974.0, level=1980.0, bias="achat", atr=20.0)
-    monkeypatch.setattr(bot.fibonacci_reversion, "latest_state", lambda candles, historical_candles=None: state)
-    bot.decide_and_act_fibonacci(
-        [{"dummy": True, "time": "2026-01-05 12:00:00"}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
-        balance=10000, equity=10000, open_positions=[], circuit_breaker=_open_circuit_breaker(),
-    )
-    assert calls[0]["real_decision"] is True
-    assert calls[0]["engine_label"] == "rebond de retracement de Fibonacci"
-
-
-def test_decide_and_act_fibonacci_does_not_call_ai_shadow_veto_when_distance_too_small(monkeypatch):
+def test_decide_and_act_fibonacci_does_not_call_ai_discretion_when_distance_too_small(monkeypatch):
     """C'est exactement ce scenario (signal persistant, jamais assez de
     distance pour ouvrir) qui a fait tourner le veto IA toutes les 1-2
     minutes pendant des heures le 2026-10-29, facturant 28 appels reels
-    pour 0 trade reellement ouvert."""
+    pour 0 trade reellement ouvert -- garde-fou desormais devant
+    ai_discretion.judge_fibonacci_entry (voir ce chantier)."""
     calls = []
-    monkeypatch.setattr(bot.ai_shadow, "shadow_judge_entry", lambda *a, **k: calls.append(a) or None)
+    monkeypatch.setattr(bot.ai_discretion, "judge_fibonacci_entry", lambda *a, **k: calls.append(a) or None)
     state = _fib_state(close=2000.001, high=2000.002, low=1999.999, level=2000.0, bias="achat", atr=0.0001)
     monkeypatch.setattr(bot.fibonacci_reversion, "latest_state", lambda candles, historical_candles=None: state)
     bot.decide_and_act_fibonacci(
@@ -1514,6 +1381,25 @@ def test_decide_and_act_fibonacci_blocked_by_circuit_breaker(monkeypatch):
         balance=10000, equity=8900, open_positions=[], circuit_breaker=cb,  # -11%, coupe-circuit declenche
     )
     assert result == {"action": "aucune", "reason": "coupe-circuit journalier déclenché"}
+
+
+def test_decide_and_act_fibonacci_does_not_call_ai_discretion_when_circuit_breaker_blocked(monkeypatch):
+    """Meme garde-fou de cout que le test ci-dessus pour la distance trop
+    faible, mais pour l'autre garde gratuit qui precede l'appel IA
+    payant : le coupe-circuit journalier. Si le coupe-circuit bloque,
+    ai_discretion.judge_fibonacci_entry ne doit jamais etre appele."""
+    calls = []
+    monkeypatch.setattr(bot.ai_discretion, "judge_fibonacci_entry", lambda *a, **k: calls.append(a) or None)
+    state = _fib_state(close=1981.0, high=1982.0, low=1974.0, level=1980.0, bias="achat", atr=20.0)
+    monkeypatch.setattr(bot.fibonacci_reversion, "latest_state", lambda candles, historical_candles=None: state)
+    from datetime import datetime, timezone
+    cb = risk.CircuitBreaker(threshold_pct=0.10, now_fn=lambda: datetime(2026, 9, 10, tzinfo=timezone.utc))
+    cb.check(10000)
+    bot.decide_and_act_fibonacci(
+        [{"dummy": True, "time": "2026-01-05 12:00:00"}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
+        balance=10000, equity=8900, open_positions=[], circuit_breaker=cb,  # -11%, coupe-circuit declenche
+    )
+    assert calls == []
 
 
 def test_decide_and_act_fibonacci_no_action_when_size_below_minimum(monkeypatch):
@@ -1794,5 +1680,204 @@ def test_decide_and_act_ichimoku_calls_ai_shadow_with_real_decision_true(monkeyp
         volume_step=0.01, min_volume=0.01, max_volume=20.0,
         open_positions=[], circuit_breaker=_default_circuit_breaker(),
     )
+    assert calls[0]["real_decision"] is True
+    assert calls[0]["engine_label"] == "croisement Tenkan/Kijun confirme par le nuage (Ichimoku)"
+
+
+def test_decide_and_act_fibonacci_calls_ai_discretion_only_when_a_real_trade_would_open(monkeypatch):
+    calls = []
+    def _spy(*a, **k):
+        calls.append(k)
+        return {"action": "achat", "confiance": "haute", "stop_loss_distance": 11.0,
+                "take_profit_distance": 16.5, "raison": "x"}
+    monkeypatch.setattr(bot.ai_discretion, "judge_fibonacci_entry", _spy)
+    state = _fib_state(close=1981.0, high=1982.0, low=1974.0, level=1980.0, bias="achat", atr=20.0)
+    monkeypatch.setattr(bot.fibonacci_reversion, "latest_state", lambda candles, historical_candles=None: state)
+    result = bot.decide_and_act_fibonacci(
+        [{"dummy": True, "time": "2026-01-05 12:00:00"}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
+        balance=10000, equity=10000, open_positions=[], circuit_breaker=_open_circuit_breaker(),
+    )
+    assert result["action"] == "simulation"
+    assert len(calls) == 1
+
+
+def test_decide_and_act_fibonacci_follows_ai_chosen_direction_even_when_opposite_of_rule(monkeypatch):
+    # La regle (bias="achat") proposerait un achat -- l'IA choisit
+    # "vente" a la place : c'est exactement l'autonomie de sens que ce
+    # chantier ajoute (voir la spec, section "Autonomie du sens").
+    monkeypatch.setattr(bot.ai_discretion, "judge_fibonacci_entry",
+                         lambda *a, **k: {"action": "vente", "confiance": "haute",
+                                           "stop_loss_distance": 11.0, "take_profit_distance": 16.5, "raison": "x"})
+    state = _fib_state(close=1981.0, high=1982.0, low=1974.0, level=1980.0, bias="achat", atr=20.0)
+    monkeypatch.setattr(bot.fibonacci_reversion, "latest_state", lambda candles, historical_candles=None: state)
+    result = bot.decide_and_act_fibonacci(
+        [{"dummy": True, "time": "2026-01-05 12:00:00"}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
+        balance=10000, equity=10000, open_positions=[], circuit_breaker=_open_circuit_breaker(),
+    )
+    assert result["action"] == "simulation"
+    partial, runner = result["steps"]
+    assert partial["direction"] == "vente"
+    assert runner["direction"] == "vente"
+    # stop_loss/take_profit calcules par rapport a entry_price=1981.0
+    # avec la distance DE L'IA (11.0/16.5), pas celle de la regle.
+    assert partial["stop_loss"] == pytest.approx(1981.0 + 11.0)
+    assert partial["take_profit"] == pytest.approx(1981.0 - 16.5)
+
+
+def test_decide_and_act_fibonacci_no_action_when_ai_discretion_returns_none(monkeypatch):
+    monkeypatch.setattr(bot.ai_discretion, "judge_fibonacci_entry", lambda *a, **k: None)
+    state = _fib_state(close=1981.0, high=1982.0, low=1974.0, level=1980.0, bias="achat", atr=20.0)
+    monkeypatch.setattr(bot.fibonacci_reversion, "latest_state", lambda candles, historical_candles=None: state)
+    result = bot.decide_and_act_fibonacci(
+        [{"dummy": True, "time": "2026-01-05 12:00:00"}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
+        balance=10000, equity=10000, open_positions=[], circuit_breaker=_open_circuit_breaker(),
+    )
+    assert result == {"action": "aucune", "reason": "aucune decision IA (echec, rejet ou rien a faire)"}
+
+
+def test_decide_and_act_fibonacci_no_action_when_ai_adjusted_stop_too_small(monkeypatch):
+    # fibonacci_reversion.MIN_DISTANCE_PCT == 0.002 ; entry_price=1981.0
+    # donc le plancher vaut 1981.0 * 0.002 = 3.962. La distance de la
+    # regle (avant appel IA) passerait ce garde-fou (atr=20.0 -> distance
+    # bien superieure), mais l'IA peut resserrer le stop jusqu'a 0.7x via
+    # sl_multiplicateur (voir SL_MULTIPLIER_BOUNDS) -- ici on simule
+    # directement un verdict IA deja resolu avec une distance finale de
+    # 2.0, sous le plancher, pour verifier que le garde-fou s'applique
+    # aussi APRES l'appel IA, pas seulement avant.
+    monkeypatch.setattr(bot.ai_discretion, "judge_fibonacci_entry",
+                         lambda *a, **k: {"action": "achat", "confiance": "haute",
+                                           "stop_loss_distance": 2.0, "take_profit_distance": 16.5, "raison": "x"})
+    state = _fib_state(close=1981.0, high=1982.0, low=1974.0, level=1980.0, bias="achat", atr=20.0)
+    monkeypatch.setattr(bot.fibonacci_reversion, "latest_state", lambda candles, historical_candles=None: state)
+    result = bot.decide_and_act_fibonacci(
+        [{"dummy": True, "time": "2026-01-05 12:00:00"}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
+        balance=10000, equity=10000, open_positions=[], circuit_breaker=_open_circuit_breaker(),
+    )
+    assert result == {"action": "aucune", "reason": "distance entree-stop trop faible apres ajustement IA"}
+
+
+def test_decide_and_act_fibonacci_applies_ai_tp_sl_distances_to_executed_legs(monkeypatch):
+    monkeypatch.setattr(bot.ai_discretion, "judge_fibonacci_entry",
+                         lambda *a, **k: {"action": "achat", "confiance": "haute",
+                                           "stop_loss_distance": 5.0, "take_profit_distance": 50.0, "raison": "x"})
+    state = _fib_state(close=1981.0, high=1982.0, low=1974.0, level=1980.0, bias="achat", atr=20.0)
+    monkeypatch.setattr(bot.fibonacci_reversion, "latest_state", lambda candles, historical_candles=None: state)
+    result = bot.decide_and_act_fibonacci(
+        [{"dummy": True, "time": "2026-01-05 12:00:00"}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
+        balance=10000, equity=10000, open_positions=[], circuit_breaker=_open_circuit_breaker(),
+    )
+    partial, _ = result["steps"]
+    assert partial["stop_loss"] == pytest.approx(1981.0 - 5.0)
+    assert partial["take_profit"] == pytest.approx(1981.0 + 50.0)
+
+
+def test_decide_and_act_fibonacci_halves_size_when_ai_confidence_is_low(monkeypatch):
+    state = _fib_state(close=1981.0, high=1982.0, low=1974.0, level=1980.0, bias="achat", atr=20.0)
+    monkeypatch.setattr(bot.fibonacci_reversion, "latest_state", lambda candles, historical_candles=None: state)
+
+    monkeypatch.setattr(bot.ai_discretion, "judge_fibonacci_entry",
+                         lambda *a, **k: {"action": "achat", "confiance": "haute",
+                                           "stop_loss_distance": 11.0, "take_profit_distance": 16.5, "raison": "x"})
+    baseline = bot.decide_and_act_fibonacci(
+        [{"dummy": True, "time": "2026-01-05 12:00:00"}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
+        balance=10000, equity=10000, open_positions=[], circuit_breaker=_open_circuit_breaker(),
+    )
+    baseline_volume = _fib_total_volume(baseline)
+
+    monkeypatch.setattr(bot.ai_discretion, "judge_fibonacci_entry",
+                         lambda *a, **k: {"action": "achat", "confiance": "faible",
+                                           "stop_loss_distance": 11.0, "take_profit_distance": 16.5, "raison": "x"})
+    reduced = bot.decide_and_act_fibonacci(
+        [{"dummy": True, "time": "2026-01-05 12:00:00"}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
+        balance=10000, equity=10000, open_positions=[], circuit_breaker=_open_circuit_breaker(),
+    )
+    reduced_volume = _fib_total_volume(reduced)
+
+    expected = bot.risk.round_to_volume_step(
+        baseline_volume * bot.ai_discretion.LOW_CONFIDENCE_SIZE_FACTOR, 0.01, 0.01, 500)
+    assert reduced_volume == expected
+    assert reduced_volume < baseline_volume
+
+
+def test_decide_and_act_fibonacci_does_not_reduce_size_for_moyenne_confidence(monkeypatch):
+    state = _fib_state(close=1981.0, high=1982.0, low=1974.0, level=1980.0, bias="achat", atr=20.0)
+    monkeypatch.setattr(bot.fibonacci_reversion, "latest_state", lambda candles, historical_candles=None: state)
+
+    monkeypatch.setattr(bot.ai_discretion, "judge_fibonacci_entry",
+                         lambda *a, **k: {"action": "achat", "confiance": "haute",
+                                           "stop_loss_distance": 11.0, "take_profit_distance": 16.5, "raison": "x"})
+    baseline = bot.decide_and_act_fibonacci(
+        [{"dummy": True, "time": "2026-01-05 12:00:00"}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
+        balance=10000, equity=10000, open_positions=[], circuit_breaker=_open_circuit_breaker(),
+    )
+
+    monkeypatch.setattr(bot.ai_discretion, "judge_fibonacci_entry",
+                         lambda *a, **k: {"action": "achat", "confiance": "moyenne",
+                                           "stop_loss_distance": 11.0, "take_profit_distance": 16.5, "raison": "x"})
+    moyenne = bot.decide_and_act_fibonacci(
+        [{"dummy": True, "time": "2026-01-05 12:00:00"}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
+        balance=10000, equity=10000, open_positions=[], circuit_breaker=_open_circuit_breaker(),
+    )
+    assert _fib_total_volume(moyenne) == _fib_total_volume(baseline)
+
+
+def test_decide_and_act_fibonacci_returns_aucune_when_halved_size_below_minimum(monkeypatch):
+    state = _fib_state(close=1981.0, high=1982.0, low=1974.0, level=1980.0, bias="achat", atr=20.0)
+    monkeypatch.setattr(bot.fibonacci_reversion, "latest_state", lambda candles, historical_candles=None: state)
+    monkeypatch.setattr(bot.ai_discretion, "judge_fibonacci_entry",
+                         lambda *a, **k: {"action": "achat", "confiance": "haute",
+                                           "stop_loss_distance": 11.0, "take_profit_distance": 16.5, "raison": "x"})
+    baseline = bot.decide_and_act_fibonacci(
+        [{"dummy": True, "time": "2026-01-05 12:00:00"}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
+        balance=10000, equity=10000, open_positions=[], circuit_breaker=_open_circuit_breaker(),
+    )
+    baseline_volume = _fib_total_volume(baseline)
+    min_volume = round(baseline_volume * 0.75, 2)
+
+    monkeypatch.setattr(bot.ai_discretion, "judge_fibonacci_entry",
+                         lambda *a, **k: {"action": "achat", "confiance": "faible",
+                                           "stop_loss_distance": 11.0, "take_profit_distance": 16.5, "raison": "x"})
+    result = bot.decide_and_act_fibonacci(
+        [{"dummy": True, "time": "2026-01-05 12:00:00"}], contract_size=100, volume_step=0.01, min_volume=min_volume, max_volume=500,
+        balance=10000, equity=10000, open_positions=[], circuit_breaker=_open_circuit_breaker(),
+    )
+    assert result == {"action": "aucune", "reason": "taille reduite (confiance IA faible) sous le minimum du broker"}
+
+
+def test_decide_and_act_fibonacci_passes_ftmo_buffer_computed_from_ftmo_guard_instance(monkeypatch):
+    calls = []
+    def _spy(*a, **k):
+        calls.append(k)
+        return {"action": "achat", "confiance": "haute", "stop_loss_distance": 11.0,
+                "take_profit_distance": 16.5, "raison": "x"}
+    monkeypatch.setattr(bot.ai_discretion, "judge_fibonacci_entry", _spy)
+    state = _fib_state(close=1981.0, high=1982.0, low=1974.0, level=1980.0, bias="achat", atr=20.0)
+    monkeypatch.setattr(bot.fibonacci_reversion, "latest_state", lambda candles, historical_candles=None: state)
+    guard = bot.ftmo_guard.FtmoGuard(isc=10000.0)
+    guard.check(balance=10000.0, equity=10000.0)
+    bot.decide_and_act_fibonacci(
+        [{"dummy": True, "time": "2026-01-05 12:00:00"}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
+        balance=10000, equity=9800, open_positions=[], circuit_breaker=_open_circuit_breaker(),
+        ftmo_guard_instance=guard,
+    )
+    assert calls[0]["ftmo_buffer"] == {"daily_pct_remaining": pytest.approx(0.02),
+                                        "overall_pct_remaining": pytest.approx(0.07)}
+
+
+def test_decide_and_act_ichimoku_still_uses_ai_shadow_unaffected_by_this_change(monkeypatch):
+    """Non-regression explicite : ce chantier ne touche que
+    decide_and_act_fibonacci. decide_and_act_ichimoku doit continuer a
+    utiliser ai_shadow.shadow_judge_entry exactement comme avant."""
+    calls = []
+    monkeypatch.setattr(bot.ai_shadow, "shadow_judge_entry", lambda *a, **k: calls.append(k) or None)
+    state = {"tenkan": 2650.0, "kijun": 2645.0, "senkou_a": 2640.0, "senkou_b": 2635.0,
+              "close": 2651.0, "high": 2652.0, "low": 2649.0, "atr": 2.0, "hour_utc": 10}
+    monkeypatch.setattr(bot.ichimoku_reversion, "latest_state", lambda candles: state)
+    monkeypatch.setattr(bot.ichimoku_reversion, "signal", lambda s: "achat")
+    bot.decide_and_act_ichimoku(
+        [{"dummy": True, "time": "2026-01-05 12:00:00"}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
+        balance=10000, equity=10000, open_positions=[], circuit_breaker=_open_circuit_breaker(), symbol="XAGUSD",
+    )
+    assert len(calls) == 1
     assert calls[0]["real_decision"] is True
     assert calls[0]["engine_label"] == "croisement Tenkan/Kijun confirme par le nuage (Ichimoku)"

@@ -407,6 +407,7 @@ def run_cycle(token: str, account_id: str,
                 volume_step=spec["volumeStep"], min_volume=spec["minVolume"], max_volume=spec["maxVolume"],
                 open_positions=open_positions, circuit_breaker=circuit_breaker, symbol=symbol,
                 risk_pct=profile_params["risk_pct"], historical_candles=historical_candles,
+                ftmo_guard_instance=ftmo_guard_instance,
             )
         decision = {**decision, "symbol": symbol}
         if ftmo_guard_instance is not None:

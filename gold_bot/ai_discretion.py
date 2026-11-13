@@ -162,3 +162,114 @@ def _build_prompt(symbol: str, *, level: float, close: float, high: float, low: 
         f'moyenne ou haute", "tp_multiplicateur": 1.0, "sl_multiplicateur": 1.0, '
         f'"raison": "une phrase"}}'
     )
+
+
+def _append_log(entry: dict, path: str = DISCRETION_LOG_PATH) -> None:
+    try:
+        with open(path, "a", encoding="utf-8") as fh:
+            fh.write(json.dumps(entry, ensure_ascii=False) + "\n")
+    except Exception:
+        pass
+
+
+def judge_fibonacci_entry(
+    symbol: str, state: dict, candles: list[dict], *,
+    baseline_stop_loss_distance: float, baseline_take_profit_distance: float,
+    ftmo_buffer: dict, log_path: str = DISCRETION_LOG_PATH, now: datetime | None = None,
+) -> dict | None:
+    """Decide elle-meme le sens d'entree (achat/vente/rien) sur un
+    signal Fibonacci deja confirme par les regles -- SANS jamais
+    recevoir le sens que les regles auraient choisi (voir _build_prompt,
+    aucun parametre direction/bias). Renvoie un dict {"action",
+    "confiance", "stop_loss_distance", "take_profit_distance", "raison"}
+    UNIQUEMENT quand un trade doit reellement s'ouvrir (appel reussi,
+    verdict valide, action != "rien", garde-fou R:R accepte) ; None dans
+    tous les autres cas (echec API, verdict invalide, action "rien",
+    garde-fou R:R rejete, cooldown actif) -- l'appelant traite toujours
+    None comme "aucun trade ce cycle", sans jamais se rabattre sur le
+    sens des regles. Jamais d'exception propagee."""
+    now = now or datetime.now(timezone.utc)
+    level = state.get("level")
+    cooldown_key = (symbol, round(level, 2) if level is not None else None)
+    with _cooldown_lock:
+        last = _last_call_at.get(cooldown_key)
+        if last is not None and now - last < DISCRETION_COOLDOWN:
+            return None
+        _last_call_at[cooldown_key] = now
+
+    entry: dict = {
+        "timestamp": now.strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "symbol": symbol,
+        "state": state,
+        "ftmo_buffer": ftmo_buffer,
+        "regle_contrefactuelle": {
+            "direction": state.get("bias"),
+            "stop_loss_distance": baseline_stop_loss_distance,
+            "take_profit_distance": baseline_take_profit_distance,
+        },
+    }
+    try:
+        import anthropic
+
+        api_key = os.environ.get("ANTHROPIC_API_KEY")
+        if not api_key:
+            entry["error"] = "ANTHROPIC_API_KEY absent"
+            entry["action_reelle"] = "erreur"
+            _append_log(entry, log_path)
+            return None
+
+        client = anthropic.Anthropic(api_key=api_key, timeout=REQUEST_TIMEOUT_SECONDS, max_retries=0)
+        response = client.messages.create(
+            model=MODEL,
+            max_tokens=MAX_TOKENS,
+            output_config={"effort": "high"},
+            tools=[{"type": "web_search_20260209", "name": "web_search", "max_uses": WEB_SEARCH_MAX_USES}],
+            messages=[{"role": "user", "content": _build_prompt(
+                symbol,
+                level=state.get("level"), close=state.get("close"), high=state.get("high"),
+                low=state.get("low"), atr=state.get("atr"),
+                trend_strength=state.get("trend_strength"), trend_strength_short=state.get("trend_strength_short"),
+                hour_utc=state.get("hour_utc"), candles=candles,
+                baseline_stop_loss_distance=baseline_stop_loss_distance,
+                baseline_take_profit_distance=baseline_take_profit_distance, ftmo_buffer=ftmo_buffer,
+            )}],
+        )
+        text = "".join(block.text for block in response.content if block.type == "text")
+        verdict = _parse_discretion_verdict(text)
+        entry["raw_text"] = text
+        entry["verdict"] = verdict
+        if verdict is None:
+            entry["error"] = "verdict JSON non trouve ou invalide dans la reponse"
+            entry["action_reelle"] = "erreur"
+            _append_log(entry, log_path)
+            return None
+
+        if verdict["action"] == "rien":
+            entry["action_reelle"] = "aucune_ia"
+            _append_log(entry, log_path)
+            return None
+
+        resolved = resolve_risk_reward(
+            baseline_take_profit_distance, baseline_stop_loss_distance,
+            verdict.get("tp_multiplicateur"), verdict.get("sl_multiplicateur"),
+        )
+        entry["resolved"] = resolved
+        if not resolved["accepted"]:
+            entry["action_reelle"] = "rejete_garde_fou_rr"
+            _append_log(entry, log_path)
+            return None
+
+        entry["action_reelle"] = "execute"
+        _append_log(entry, log_path)
+        return {
+            "action": verdict["action"],
+            "confiance": verdict.get("confiance"),
+            "stop_loss_distance": resolved["stop_loss_distance"],
+            "take_profit_distance": resolved["take_profit_distance"],
+            "raison": verdict.get("raison"),
+        }
+    except Exception as e:
+        entry["error"] = f"{type(e).__name__}: {e}"
+        entry["action_reelle"] = "erreur"
+        _append_log(entry, log_path)
+        return None

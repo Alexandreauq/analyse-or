@@ -14,7 +14,7 @@
       "name": "Dollar (DXY)",
       "score": -10,
       "weight": 0.15,
-      "raw_value": "103.22 (il y a 2 mois : 99.46)"
+      "raw_value": "103.38 (il y a 2 mois : 99.46)"
     },
     {
       "name": "Anticipations d'inflation",
@@ -48,9 +48,9 @@
     }
   ],
   "technical": {
-    "note": "Cours en-dessous de la MM200 (-13.0%) — tendance baissière",
-    "spot": 3891.800048828125,
-    "ma200": 4472.272995605469
+    "note": "Cours en-dessous de la MM200 (-13.2%) — tendance baissière",
+    "spot": 3883.60009765625,
+    "ma200": 4472.231995849609
   },
   "calendar": [
     {

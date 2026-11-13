@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-12T07:13:00Z",
+  "generated_at": "2026-11-13T07:13:11Z",
   "healthy": false,
-  "summary_fr": "Le robot continue d'analyser le marché : 433 cycles d'évaluation aujourd'hui et 9 074 sur les 7 derniers jours, pour 6 positions ouvertes sur cette période. En revanche, son interrupteur de sécurité est actuellement activé : le robot n'ouvre donc aucune nouvelle position tant qu'il n'est pas relancé. Il s'agit d'une mesure de protection volontaire du capital, pas d'une panne technique."
+  "summary_fr": "Sur les 7 derniers jours, le robot a évalué 9 075 situations de marché et ouvert 2 positions, la plupart des cycles ayant conclu à l'absence de signal d'entrée suffisamment net. Le système tourne et analyse toujours le marché, mais son interrupteur de sécurité est actuellement activé : le robot est donc volontairement en pause et n'ouvre aucune nouvelle position pour le moment. Aucune ouverture n'a eu lieu aujourd'hui."
 }

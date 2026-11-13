@@ -1,22 +1,22 @@
 {
-  "date": "2026-11-12",
+  "date": "2026-11-13",
   "commodity": "argent",
   "label": "Argent",
-  "composite_score": -20.3,
+  "composite_score": -19.7,
   "interpretation": "Défavorable — pas d'entrée même sur signal technique",
   "cftc_percentile": 4.487179487179487,
   "factors": [
     {
       "name": "Taux réels US 10 ans",
-      "score": 2.400000000000002,
+      "score": 2.6000000000000068,
       "weight": 0.3,
-      "raw_value": "2.78% (il y a ~45j : 2.90%)"
+      "raw_value": "2.78% (il y a ~45j : 2.91%)"
     },
     {
       "name": "Dollar (DXY)",
       "score": -10,
       "weight": 0.2,
-      "raw_value": "103.18 (il y a 2 mois : 99.46)"
+      "raw_value": "103.15 (il y a 2 mois : 99.46)"
     },
     {
       "name": "Positionnement CFTC",
@@ -34,21 +34,16 @@
       "name": "Dynamique récente",
       "score": -10.0,
       "weight": 0.1,
-      "raw_value": "-27.3% vs MM200"
+      "raw_value": "-26.7% vs MM200"
     }
   ],
   "technical": {
-    "note": "Cours en-dessous de la MM200 (-27.3%) — tendance baissière",
-    "spot": 49.95500183105469,
-    "ma200": 68.70667987823487,
+    "note": "Cours en-dessous de la MM200 (-26.7%) — tendance baissière",
+    "spot": 50.380001068115234,
+    "ma200": 68.70880487442017,
     "unite": "$ / oz"
   },
   "calendar": [
-    {
-      "date": "12/11/2026",
-      "label": "Inscriptions chômage (hebdo)",
-      "kind": "Donnée"
-    },
     {
       "date": "13/11/2026",
       "label": "PPI (prix à la production)",
@@ -57,6 +52,11 @@
     {
       "date": "17/11/2026",
       "label": "Ventes au détail",
+      "kind": "Donnée"
+    },
+    {
+      "date": "19/11/2026",
+      "label": "Inscriptions chômage (hebdo)",
       "kind": "Donnée"
     },
     {

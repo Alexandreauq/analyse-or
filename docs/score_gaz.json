@@ -1,5 +1,5 @@
 {
-  "date": "2026-11-12",
+  "date": "2026-11-13",
   "commodity": "gaz",
   "label": "Gaz naturel",
   "composite_score": 6.3,
@@ -22,13 +22,13 @@
       "name": "Dynamique récente",
       "score": 10.0,
       "weight": 0.26666666666666666,
-      "raw_value": "+12.9% vs MM200"
+      "raw_value": "+12.3% vs MM200"
     },
     {
       "name": "Dollar (DXY)",
       "score": -10,
       "weight": 0.13333333333333333,
-      "raw_value": "103.19 (il y a 2 mois : 99.46)"
+      "raw_value": "103.16 (il y a 2 mois : 99.46)"
     },
     {
       "name": "Stocks EIA",
@@ -38,17 +38,12 @@
     }
   ],
   "technical": {
-    "note": "Cours au-dessus de la MM200 (+12.9%) — tendance haussière",
-    "spot": 3.3610000610351562,
-    "ma200": 2.977205001115799,
+    "note": "Cours au-dessus de la MM200 (+12.3%) — tendance haussière",
+    "spot": 3.3440001010894775,
+    "ma200": 2.9771200013160706,
     "unite": "$ / MMBtu"
   },
   "calendar": [
-    {
-      "date": "12/11/2026",
-      "label": "Inscriptions chômage (hebdo)",
-      "kind": "Donnée"
-    },
     {
       "date": "13/11/2026",
       "label": "PPI (prix à la production)",
@@ -57,6 +52,11 @@
     {
       "date": "17/11/2026",
       "label": "Ventes au détail",
+      "kind": "Donnée"
+    },
+    {
+      "date": "19/11/2026",
+      "label": "Inscriptions chômage (hebdo)",
       "kind": "Donnée"
     },
     {

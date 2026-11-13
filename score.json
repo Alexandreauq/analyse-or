@@ -1,26 +1,26 @@
 {
-  "date": "2026-11-12",
-  "composite_score": 6.7,
+  "date": "2026-11-13",
+  "composite_score": 6.8,
   "interpretation": "Neutre — pas d'action",
   "cftc_percentile": 22.435897435897438,
   "factors": [
     {
       "name": "Taux réels US 10 ans",
-      "score": 2.400000000000002,
+      "score": 2.6000000000000068,
       "weight": 0.3,
-      "raw_value": "2.78% (il y a ~45j : 2.90%)"
+      "raw_value": "2.78% (il y a ~45j : 2.91%)"
     },
     {
       "name": "Dollar (DXY)",
       "score": -10,
       "weight": 0.15,
-      "raw_value": "103.18 (il y a 2 mois : 99.46)"
+      "raw_value": "103.16 (il y a 2 mois : 99.46)"
     },
     {
       "name": "Anticipations d'inflation",
-      "score": -3.3333333333333215,
+      "score": -3.6666666666666625,
       "weight": 0.15,
-      "raw_value": "2.24% (il y a ~45j : 2.34%)"
+      "raw_value": "2.24% (il y a ~45j : 2.35%)"
     },
     {
       "name": "Ton de la Fed",
@@ -48,16 +48,11 @@
     }
   ],
   "technical": {
-    "note": "Cours en-dessous de la MM200 (-13.3%) — tendance baissière",
-    "spot": 3881.699951171875,
-    "ma200": 4479.387994384766
+    "note": "Cours en-dessous de la MM200 (-12.6%) — tendance baissière",
+    "spot": 3913.0,
+    "ma200": 4479.544494628906
   },
   "calendar": [
-    {
-      "date": "12/11/2026",
-      "label": "Inscriptions chômage (hebdo)",
-      "kind": "Donnée"
-    },
     {
       "date": "13/11/2026",
       "label": "PPI (prix à la production)",
@@ -66,6 +61,11 @@
     {
       "date": "17/11/2026",
       "label": "Ventes au détail",
+      "kind": "Donnée"
+    },
+    {
+      "date": "19/11/2026",
+      "label": "Inscriptions chômage (hebdo)",
       "kind": "Donnée"
     },
     {
@@ -99,7 +99,7 @@
       "kind": "info",
       "title": "Pas de signal actif",
       "detail": "Aucune des conditions de veille, d'entrée ou de risque n'est réunie aujourd'hui.",
-      "date": "12/11/2026"
+      "date": "13/11/2026"
     }
   ],
   "news": [

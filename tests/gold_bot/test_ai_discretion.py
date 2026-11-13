@@ -452,3 +452,35 @@ def test_judge_fibonacci_entry_never_raises_on_unexpected_exception(monkeypatch,
         ftmo_buffer=_buffer(), log_path=log_path,
     )
     assert result is None
+
+
+def _guarded(equity_at_check=10000.0, balance_at_check=10000.0):
+    guard = ftmo_guard.FtmoGuard(isc=10000.0, now_fn=lambda: datetime(2026, 11, 13, 10, 0, tzinfo=timezone.utc))
+    guard.check(balance=balance_at_check, equity=equity_at_check)
+    return guard
+
+
+def test_compute_ftmo_buffer_returns_fractions_of_isc():
+    guard = _guarded()  # daily_floor=9600.0, overall_floor=9100.0
+    result = ai_discretion.compute_ftmo_buffer(guard, equity=9800.0)
+    assert result == {"daily_pct_remaining": pytest.approx(0.02), "overall_pct_remaining": pytest.approx(0.07)}
+
+
+def test_compute_ftmo_buffer_clamps_at_zero_when_equity_below_daily_floor():
+    guard = _guarded()  # daily_floor=9600.0, overall_floor=9100.0
+    result = ai_discretion.compute_ftmo_buffer(guard, equity=9500.0)
+    assert result["daily_pct_remaining"] == 0.0
+    assert result["overall_pct_remaining"] == pytest.approx(0.04)
+
+
+def test_compute_ftmo_buffer_clamps_at_zero_when_equity_below_overall_floor():
+    guard = _guarded()
+    result = ai_discretion.compute_ftmo_buffer(guard, equity=9000.0)
+    assert result == {"daily_pct_remaining": 0.0, "overall_pct_remaining": 0.0}
+
+
+def test_compute_ftmo_buffer_daily_remaining_is_none_when_daily_floor_not_yet_set():
+    guard = ftmo_guard.FtmoGuard(isc=10000.0)  # check() jamais appele
+    result = ai_discretion.compute_ftmo_buffer(guard, equity=9800.0)
+    assert result["daily_pct_remaining"] is None
+    assert result["overall_pct_remaining"] == pytest.approx(0.07)

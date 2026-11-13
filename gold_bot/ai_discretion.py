@@ -274,3 +274,19 @@ def judge_fibonacci_entry(
         entry["action_reelle"] = "erreur"
         _append_log(entry, log_path)
         return None
+
+
+def compute_ftmo_buffer(ftmo_guard_instance, equity: float) -> dict:
+    """Marge restante avant les deux planchers FTMO, exprimee en
+    fraction de l'ISC (meme base que daily_loss_pct/overall_loss_pct du
+    FtmoGuard) -- jamais negative (si deja franchi, le coupe-circuit de
+    loop.py a deja arrete le cycle avant d'atteindre ce calcul ; le
+    clamp est une defense supplementaire, pas un cas reel attendu).
+    `daily_pct_remaining` est None si `ftmo_guard_instance.check()` n'a
+    encore jamais ete appele (daily_floor pas encore rebase)."""
+    daily_floor = ftmo_guard_instance.daily_floor
+    overall_floor = ftmo_guard_instance.overall_floor
+    isc = ftmo_guard_instance.isc
+    daily_pct_remaining = max(0.0, (equity - daily_floor) / isc) if daily_floor is not None else None
+    overall_pct_remaining = max(0.0, (equity - overall_floor) / isc)
+    return {"daily_pct_remaining": daily_pct_remaining, "overall_pct_remaining": overall_pct_remaining}

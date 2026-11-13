@@ -163,6 +163,10 @@ class FtmoGuard(object):
     def target_equity(self) -> float:
         return self._target_equity
 
+    @property
+    def daily_floor(self) -> float | None:
+        return self._daily_floor
+
     def _persist(self) -> None:
         if self._persist_path is None:
             return

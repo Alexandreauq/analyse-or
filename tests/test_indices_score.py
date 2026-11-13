@@ -8069,15 +8069,11 @@ def test_fetch_index_prices_returns_latest_close_per_index(monkeypatch):
 
     monkeypatch.setattr(indices_score.yf, "Ticker", FakeTicker)
     result = indices_score.fetch_index_prices()
-    assert result == {
-        "CAC40": 7850.0, "DAX": 7850.0, "NASDAQ": 7850.0, "DOW": 7850.0,
-        "FTSE": 7850.0, "SMI": 7850.0, "IBEX35": 7850.0, "FTSEMIB": 7850.0,
-        "NIKKEI225": 7850.0, "HANGSENG": 7850.0, "EUROSTOXX50": 7850.0, "SBF120": 7850.0, "AEXALL": 7850.0, "SP500": 7850.0,
-        "MSCI World": 7850.0, "MSCI Emerging Markets": 7850.0, "MSCI Europe": 7850.0,
-        "TOPIX": 7850.0, "MSCI EMU": 7850.0, "Or (LBMA Gold Price PM, USD)": 7850.0,
-        "STOXX Europe 600 Health Care": 7850.0, "STOXX Europe 600 Technology": 7850.0,
-        "STOXX Europe 600 Banks": 7850.0, "STOXX Europe 600": 7850.0, "Russell 2000": 7850.0,
-    }
+    # Construit depuis INDEX_YFINANCE_TICKERS plutôt que de lister chaque clé
+    # à la main : le vrai contrat testé ici est "une entrée par clé du dict",
+    # pas un nombre de clés figé (voir l'extension ETF du 2026-11-13, qui en
+    # a ajouté 26 d'un coup).
+    assert result == {index_key: 7850.0 for index_key in indices_score.INDEX_YFINANCE_TICKERS}
 
 
 def test_fetch_index_prices_degrades_to_none_per_index_on_failure(monkeypatch):
@@ -8102,13 +8098,7 @@ def test_fetch_index_prices_degrades_to_none_per_index_on_failure(monkeypatch):
 def test_fetch_index_prices_returns_all_none_when_yfinance_unavailable(monkeypatch):
     monkeypatch.setattr(indices_score, "yf", None)
     assert indices_score.fetch_index_prices() == {
-        "CAC40": None, "DAX": None, "NASDAQ": None, "DOW": None, "FTSE": None,
-        "SMI": None, "IBEX35": None, "FTSEMIB": None, "NIKKEI225": None, "HANGSENG": None,
-        "EUROSTOXX50": None, "SBF120": None, "AEXALL": None, "SP500": None,
-        "MSCI World": None, "MSCI Emerging Markets": None, "MSCI Europe": None,
-        "TOPIX": None, "MSCI EMU": None, "Or (LBMA Gold Price PM, USD)": None,
-        "STOXX Europe 600 Health Care": None, "STOXX Europe 600 Technology": None,
-        "STOXX Europe 600 Banks": None, "STOXX Europe 600": None, "Russell 2000": None,
+        index_key: None for index_key in indices_score.INDEX_YFINANCE_TICKERS
     }
 
 

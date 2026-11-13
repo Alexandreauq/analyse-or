@@ -43,31 +43,57 @@
     "HKD": 4.98
   },
   "index_prices": {
-    "CAC40": 8365.4697265625,
-    "DAX": 26754.279296875,
-    "NASDAQ": 27757.45703125,
-    "DOW": 52147.421875,
-    "FTSE": 10885.66015625,
-    "SMI": 15091.6396484375,
-    "IBEX35": 20005.69921875,
-    "FTSEMIB": 51805.578125,
+    "CAC40": 8368.9697265625,
+    "DAX": 26738.640625,
+    "NASDAQ": 27734.0078125,
+    "DOW": 52188.28125,
+    "FTSE": 10902.9599609375,
+    "SMI": 15102.6796875,
+    "IBEX35": 20010.5,
+    "FTSEMIB": 51832.12890625,
     "NIKKEI225": 60819.359375,
-    "HANGSENG": 23637.599609375,
-    "EUROSTOXX50": 6387.25,
-    "SBF120": 6324.580078125,
-    "AEXALL": 1141.0799560546875,
-    "SP500": 7521.22021484375,
-    "MSCI World": 4833.60009765625,
-    "MSCI Emerging Markets": 60.36000061035156,
-    "MSCI Europe": 221.9499969482422,
+    "HANGSENG": 24008.55078125,
+    "EUROSTOXX50": 6383.97998046875,
+    "SBF120": 6327.31982421875,
+    "AEXALL": 1140.969970703125,
+    "SP500": 7524.31005859375,
+    "MSCI World": 4834.1201171875,
+    "MSCI Emerging Markets": 60.39500045776367,
+    "MSCI Europe": 222.24000549316406,
     "TOPIX": null,
-    "MSCI EMU": 249.0,
-    "Or (LBMA Gold Price PM, USD)": 3893.699951171875,
-    "STOXX Europe 600 Health Care": 126.54000091552734,
-    "STOXX Europe 600 Technology": 97.30999755859375,
-    "STOXX Europe 600 Banks": 40.154998779296875,
-    "STOXX Europe 600": 663.6199951171875,
-    "Russell 2000": 2787.212158203125
+    "MSCI EMU": 248.5500030517578,
+    "Or (LBMA Gold Price PM, USD)": 3886.199951171875,
+    "STOXX Europe 600 Health Care": 127.27999877929688,
+    "STOXX Europe 600 Technology": 96.62000274658203,
+    "STOXX Europe 600 Banks": 40.21500015258789,
+    "STOXX Europe 600": 663.780029296875,
+    "Russell 2000": 2776.446044921875,
+    "MSCI Japan IMI": 91.11000061035156,
+    "MSCI ACWI": 155.3498992919922,
+    "MSCI World ex USA": 96.67970275878906,
+    "MSCI Pacific ex Japan": 55.345001220703125,
+    "MSCI USA": 105.30000305175781,
+    "MSCI China": 49.400001525878906,
+    "STOXX Europe 600 Basic Resources": 76.29000091552734,
+    "STOXX Europe 600 Industrials": 114.68000030517578,
+    "STOXX Europe 600 Insurance": 58.77000045776367,
+    "STOXX Europe 600 Telecommunications": 26.969999313354492,
+    "STOXX Europe 600 Utilities": 60.599998474121094,
+    "STOXX Europe 600 Energy Screened+": 56.93000030517578,
+    "STOXX Europe 600 Industry Consumer Staples 30-15": 71.58000183105469,
+    "STOXX Europe 600 Food & Beverage": 455.20001220703125,
+    "STOXX Europe 600 Real Estate": 328.8500061035156,
+    "S&P Euro High Yield Dividend Aristocrats": 24.59000015258789,
+    "Solactive Eurozone Government Bond Index": 105.5,
+    "Bloomberg Euro Aggregate Corporate Bond Index": 116.72000122070312,
+    "ICE US Treasury 7-10 Year (EUR Hedged) Index": 90.2249984741211,
+    "Bloomberg Global Aggregate Bond Index (EUR Hedged)": 4.21999979019165,
+    "LBMA Silver Price": 49.150001525878906,
+    "Bloomberg Commodity Total Return Index": 30.795000076293945,
+    "WisdomTree Europe Infrastructure UCITS Index (NTR)": 66.98999786376953,
+    "MSCI ACWI IMI Water Custom Index": 65.30500030517578,
+    "MSCI Europe Small Cap": 76.44000244140625,
+    "S&P MidCap 400": 669.9400024414062
   },
   "companies": [
     {
@@ -177823,119 +177849,126 @@
       "ticker": "CW8.PA",
       "name": "Amundi MSCI World Swap UCITS ETF EUR Acc",
       "index": "ETF",
-      "current_price": 709.9000244140625,
+      "current_price": 707.9500122070312,
       "news": [],
       "is_etf": true,
       "etf_info": {
+        "isin": "LU1681043599",
         "benchmark_name": "MSCI World",
         "ter_pct": 0.38,
         "replication": "synthetique",
         "distribution": "capitalisant",
         "pea_eligible": true,
         "dividend_yield": 0.0,
-        "tracking_difference_pct": null
+        "tracking_difference_pct": -3.379711694193066
       }
     },
     {
       "ticker": "DCAM.PA",
       "name": "Amundi PEA Monde (MSCI World) UCITS ETF Acc",
       "index": "ETF",
-      "current_price": 6.3429999351501465,
+      "current_price": 6.321000099182129,
       "news": [],
       "is_etf": true,
       "etf_info": {
+        "isin": "FR001400U5Q4",
         "benchmark_name": "MSCI World",
         "ter_pct": 0.2,
         "replication": "synthetique",
         "distribution": "capitalisant",
         "pea_eligible": true,
         "dividend_yield": 0.0,
-        "tracking_difference_pct": null
+        "tracking_difference_pct": -3.348577975510228
       }
     },
     {
       "ticker": "WPEA.PA",
       "name": "iShares MSCI World Swap PEA UCITS ETF EUR (Acc)",
       "index": "ETF",
-      "current_price": 7.164999961853027,
+      "current_price": 7.138000011444092,
       "news": [],
       "is_etf": true,
       "etf_info": {
+        "isin": "IE0002XZSHO1",
         "benchmark_name": "MSCI World",
         "ter_pct": 0.2,
         "replication": "synthetique",
         "distribution": "capitalisant",
         "pea_eligible": true,
         "dividend_yield": 0.0,
-        "tracking_difference_pct": null
+        "tracking_difference_pct": -2.7759983650072364
       }
     },
     {
       "ticker": "PSP5.PA",
       "name": "Amundi PEA S&P 500 UCITS ETF Acc",
       "index": "ETF",
-      "current_price": 60.18000030517578,
+      "current_price": 59.95000076293945,
       "news": [],
       "is_etf": true,
       "etf_info": {
+        "isin": "FR0011871128",
         "benchmark_name": "S&P 500",
         "ter_pct": 0.12,
         "replication": "synthetique",
         "distribution": "capitalisant",
         "pea_eligible": true,
         "dividend_yield": 0.0,
-        "tracking_difference_pct": null
+        "tracking_difference_pct": -3.6968417843027837
       }
     },
     {
       "ticker": "ESE.PA",
       "name": "BNP Paribas Easy S&P 500 UCITS ETF EUR C",
       "index": "ETF",
-      "current_price": 34.720001220703125,
+      "current_price": 34.573001861572266,
       "news": [],
       "is_etf": true,
       "etf_info": {
+        "isin": "FR0011550185",
         "benchmark_name": "S&P 500",
         "ter_pct": 0.14,
         "replication": "synthetique",
         "distribution": "capitalisant",
         "pea_eligible": true,
         "dividend_yield": 0.0,
-        "tracking_difference_pct": null
+        "tracking_difference_pct": -3.885792974714832
       }
     },
     {
       "ticker": "PUST.PA",
       "name": "Amundi PEA Nasdaq-100 UCITS ETF Acc",
       "index": "ETF",
-      "current_price": 101.54000091552734,
+      "current_price": 100.73999786376953,
       "news": [],
       "is_etf": true,
       "etf_info": {
+        "isin": "FR0011871110",
         "benchmark_name": "Nasdaq-100",
         "ter_pct": 0.3,
         "replication": "synthetique",
         "distribution": "capitalisant",
         "pea_eligible": true,
         "dividend_yield": 0.0,
-        "tracking_difference_pct": null
+        "tracking_difference_pct": -5.633112603341253
       }
     },
     {
       "ticker": "AEEM.PA",
       "name": "Amundi MSCI Emerging Markets Swap UCITS ETF EUR Acc",
       "index": "ETF",
-      "current_price": 7.302999973297119,
+      "current_price": 7.28000020980835,
       "news": [],
       "is_etf": true,
       "etf_info": {
+        "isin": "LU1681045370",
         "benchmark_name": "MSCI Emerging Markets",
         "ter_pct": 0.2,
         "replication": "synthetique",
         "distribution": "capitalisant",
         "pea_eligible": false,
         "dividend_yield": 0.0,
-        "tracking_difference_pct": null
+        "tracking_difference_pct": -5.063512399238164
       }
     },
     {
@@ -177946,98 +177979,104 @@
       "news": [],
       "is_etf": true,
       "etf_info": {
+        "isin": "FR0013412038",
         "benchmark_name": "MSCI Europe",
         "ter_pct": 0.15,
         "replication": "synthetique",
         "distribution": "capitalisant",
         "pea_eligible": true,
         "dividend_yield": 0.0,
-        "tracking_difference_pct": null
+        "tracking_difference_pct": 6.814745049161509
       }
     },
     {
       "ticker": "PTPXE.PA",
       "name": "Amundi PEA Japon (TOPIX) UCITS ETF EUR Acc",
       "index": "ETF",
-      "current_price": 39.18000030517578,
+      "current_price": 39.09000015258789,
       "news": [],
       "is_etf": true,
       "etf_info": {
+        "isin": "FR0013411980",
         "benchmark_name": "TOPIX",
         "ter_pct": 0.2,
         "replication": "synthetique",
         "distribution": "capitalisant",
         "pea_eligible": true,
         "dividend_yield": 0.0,
-        "tracking_difference_pct": null
+        "tracking_difference_pct": -11.87298207279872
       }
     },
     {
       "ticker": "RS2K.PA",
       "name": "Amundi Russell 2000 UCITS ETF EUR Acc",
       "index": "ETF",
-      "current_price": 379.70001220703125,
+      "current_price": 379.0899963378906,
       "news": [],
       "is_etf": true,
       "etf_info": {
+        "isin": "LU1681038672",
         "benchmark_name": "Russell 2000",
         "ter_pct": 0.35,
         "replication": "synthetique",
         "distribution": "capitalisant",
         "pea_eligible": true,
         "dividend_yield": 0.0,
-        "tracking_difference_pct": null
+        "tracking_difference_pct": -5.004636126371587
       }
     },
     {
       "ticker": "CAC.PA",
       "name": "Amundi CAC 40 UCITS ETF Dist",
       "index": "ETF",
-      "current_price": 84.83999633789062,
+      "current_price": 84.86000061035156,
       "news": [],
       "is_etf": true,
       "etf_info": {
+        "isin": "FR0007052782",
         "benchmark_name": "CAC 40",
         "ter_pct": 0.25,
         "replication": "physique",
         "distribution": "distribuant",
         "pea_eligible": true,
         "dividend_yield": 2.88,
-        "tracking_difference_pct": null
+        "tracking_difference_pct": 7.170303560661107
       }
     },
     {
       "ticker": "C50.PA",
       "name": "Amundi Core EURO STOXX 50 UCITS ETF EUR Acc",
       "index": "ETF",
-      "current_price": 171.9600067138672,
+      "current_price": 171.97999572753906,
       "news": [],
       "is_etf": true,
       "etf_info": {
+        "isin": "LU1681047236",
         "benchmark_name": "Euro Stoxx 50",
         "ter_pct": 0.09,
         "replication": "physique",
         "distribution": "capitalisant",
         "pea_eligible": true,
         "dividend_yield": 0.0,
-        "tracking_difference_pct": null
+        "tracking_difference_pct": 7.9071547632284265
       }
     },
     {
       "ticker": "MFEC.PA",
       "name": "Amundi Core MSCI EMU UCITS ETF Acc",
       "index": "ETF",
-      "current_price": 19.312000274658203,
+      "current_price": 19.280000686645508,
       "news": [],
       "is_etf": true,
       "etf_info": {
+        "isin": "LU1646361276",
         "benchmark_name": "MSCI EMU",
         "ter_pct": 0.12,
         "replication": "physique",
         "distribution": "capitalisant",
         "pea_eligible": true,
         "dividend_yield": 0.0,
-        "tracking_difference_pct": null
+        "tracking_difference_pct": 0.026896355191667
       }
     },
     {
@@ -178048,30 +178087,32 @@
       "news": [],
       "is_etf": true,
       "etf_info": {
+        "isin": "FR0011550193",
         "benchmark_name": "STOXX Europe 600",
         "ter_pct": 0.19,
         "replication": "synthetique",
         "distribution": "capitalisant",
         "pea_eligible": true,
         "dividend_yield": 0.0,
-        "tracking_difference_pct": null
+        "tracking_difference_pct": 6.755517295780237
       }
     },
     {
       "ticker": "DAX.PA",
       "name": "Amundi DAX II UCITS ETF Acc",
       "index": "ETF",
-      "current_price": 243.39999389648438,
+      "current_price": 243.10000610351562,
       "news": [],
       "is_etf": true,
       "etf_info": {
+        "isin": "LU0252633754",
         "benchmark_name": "DAX",
         "ter_pct": 0.15,
         "replication": "physique",
         "distribution": "capitalisant",
         "pea_eligible": true,
         "dividend_yield": null,
-        "tracking_difference_pct": null
+        "tracking_difference_pct": -1.3477357733464856
       }
     },
     {
@@ -178082,64 +178123,824 @@
       "news": [],
       "is_etf": true,
       "etf_info": {
+        "isin": "FR0013416716",
         "benchmark_name": "Or (LBMA Gold Price PM, USD)",
         "ter_pct": 0.12,
         "replication": "physique",
         "distribution": "capitalisant",
         "pea_eligible": false,
         "dividend_yield": null,
-        "tracking_difference_pct": null
+        "tracking_difference_pct": -7.749725544059416
       }
     },
     {
       "ticker": "HLT.PA",
       "name": "Amundi STOXX Europe 600 Healthcare UCITS ETF Acc",
       "index": "ETF",
-      "current_price": 171.3000030517578,
+      "current_price": 171.8000030517578,
       "news": [],
       "is_etf": true,
       "etf_info": {
+        "isin": "LU1834986900",
         "benchmark_name": "STOXX Europe 600 Health Care",
         "ter_pct": 0.3,
         "replication": "synthetique",
         "distribution": "capitalisant",
         "pea_eligible": true,
         "dividend_yield": null,
-        "tracking_difference_pct": null
+        "tracking_difference_pct": 0.07038278730604297
       }
     },
     {
       "ticker": "TNO.PA",
       "name": "Amundi STOXX Europe 600 Technology UCITS ETF Acc",
       "index": "ETF",
-      "current_price": 117.62000274658203,
+      "current_price": 116.91999816894531,
       "news": [],
       "is_etf": true,
       "etf_info": {
+        "isin": "LU1834988518",
         "benchmark_name": "STOXX Europe 600 Technology",
         "ter_pct": 0.3,
         "replication": "synthetique",
         "distribution": "capitalisant",
         "pea_eligible": true,
         "dividend_yield": null,
-        "tracking_difference_pct": null
+        "tracking_difference_pct": 0.060315209162006056
       }
     },
     {
       "ticker": "BNK.PA",
       "name": "Amundi STOXX Europe 600 Banks UCITS ETF Acc",
       "index": "ETF",
-      "current_price": 70.73999786376953,
+      "current_price": 70.91999816894531,
       "news": [],
       "is_etf": true,
       "etf_info": {
+        "isin": "LU1834983477",
         "benchmark_name": "STOXX Europe 600 Banks",
         "ter_pct": 0.3,
         "replication": "synthetique",
         "distribution": "capitalisant",
         "pea_eligible": true,
         "dividend_yield": null,
-        "tracking_difference_pct": null
+        "tracking_difference_pct": -0.9581659218854384
+      }
+    },
+    {
+      "ticker": "EUNN.DE",
+      "name": "iShares Core MSCI Japan IMI UCITS ETF (Acc)",
+      "index": "ETF",
+      "current_price": 71.45999908447266,
+      "news": [],
+      "is_etf": true,
+      "etf_info": {
+        "isin": "IE00B4L5YX21",
+        "benchmark_name": "MSCI Japan IMI",
+        "ter_pct": 0.12,
+        "replication": "physique",
+        "distribution": "capitalisant",
+        "pea_eligible": false,
+        "dividend_yield": null,
+        "tracking_difference_pct": -3.973695664560026
+      }
+    },
+    {
+      "ticker": "100H.PA",
+      "name": "Amundi Core FTSE 100 Swap UCITS ETF EUR Hedged Acc",
+      "index": "ETF",
+      "current_price": 204.60000610351562,
+      "news": [],
+      "is_etf": true,
+      "etf_info": {
+        "isin": "LU1650492330",
+        "benchmark_name": "FTSE 100",
+        "ter_pct": 0.3,
+        "replication": "synthetique",
+        "distribution": "capitalisant",
+        "pea_eligible": false,
+        "dividend_yield": 0.0,
+        "tracking_difference_pct": 3.0023732141976964
+      }
+    },
+    {
+      "ticker": "DJE.PA",
+      "name": "Amundi Dow Jones Industrial Average UCITS ETF Dist",
+      "index": "ETF",
+      "current_price": 480.8500061035156,
+      "news": [],
+      "is_etf": true,
+      "etf_info": {
+        "isin": "FR0007056841",
+        "benchmark_name": "Dow Jones Industrial Average",
+        "ter_pct": 0.5,
+        "replication": "synthetique",
+        "distribution": "distribuant",
+        "pea_eligible": false,
+        "dividend_yield": 0.7,
+        "tracking_difference_pct": -2.9310889874156754
+      }
+    },
+    {
+      "ticker": "GPEA.PA",
+      "name": "Amundi PEA Global (MSCI ACWI) UCITS ETF Acc",
+      "index": "ETF",
+      "current_price": 5.093999862670898,
+      "news": [],
+      "is_etf": true,
+      "etf_info": {
+        "isin": "FR0014017NX3",
+        "benchmark_name": "MSCI ACWI",
+        "ter_pct": 0.3,
+        "replication": "synthetique",
+        "distribution": "capitalisant",
+        "pea_eligible": true,
+        "dividend_yield": null,
+        "tracking_difference_pct": 3.5670318323431927
+      }
+    },
+    {
+      "ticker": "WEXE.DE",
+      "name": "Amundi MSCI World Ex USA UCITS ETF Acc",
+      "index": "ETF",
+      "current_price": 12.425999641418457,
+      "news": [],
+      "is_etf": true,
+      "etf_info": {
+        "isin": "IE00085PWS28",
+        "benchmark_name": "MSCI World ex USA",
+        "ter_pct": 0.15,
+        "replication": "physique",
+        "distribution": "capitalisant",
+        "pea_eligible": false,
+        "dividend_yield": null,
+        "tracking_difference_pct": -5.989560400659784
+      }
+    },
+    {
+      "ticker": "EUNJ.DE",
+      "name": "iShares MSCI Pacific ex-Japan UCITS ETF (Dist)",
+      "index": "ETF",
+      "current_price": 50.13999938964844,
+      "news": [],
+      "is_etf": true,
+      "etf_info": {
+        "isin": "IE00B4WXJD03",
+        "benchmark_name": "MSCI Pacific ex Japan",
+        "ter_pct": 0.6,
+        "replication": "physique",
+        "distribution": "distribuant",
+        "pea_eligible": false,
+        "dividend_yield": null,
+        "tracking_difference_pct": -6.429095122779472
+      }
+    },
+    {
+      "ticker": "BIGUS.PA",
+      "name": "BNP Paribas Easy MSCI USA UCITS ETF EUR Acc",
+      "index": "ETF",
+      "current_price": 11.59000015258789,
+      "news": [],
+      "is_etf": true,
+      "etf_info": {
+        "isin": "IE000M46QA27",
+        "benchmark_name": "MSCI USA",
+        "ter_pct": 0.04,
+        "replication": "physique",
+        "distribution": "capitalisant",
+        "pea_eligible": false,
+        "dividend_yield": null,
+        "tracking_difference_pct": 5.2395221885271255
+      }
+    },
+    {
+      "ticker": "XCS6.DE",
+      "name": "Xtrackers MSCI China UCITS ETF 1C",
+      "index": "ETF",
+      "current_price": 14.949999809265137,
+      "news": [],
+      "is_etf": true,
+      "etf_info": {
+        "isin": "LU0514695690",
+        "benchmark_name": "MSCI China",
+        "ter_pct": 0.65,
+        "replication": "physique",
+        "distribution": "capitalisant",
+        "pea_eligible": false,
+        "dividend_yield": null,
+        "tracking_difference_pct": -5.623702560942335
+      }
+    },
+    {
+      "ticker": "LYXIB.MC",
+      "name": "Amundi IBEX 35 UCITS ETF Dist",
+      "index": "ETF",
+      "current_price": 213.0,
+      "news": [],
+      "is_etf": true,
+      "etf_info": {
+        "isin": "FR0010251744",
+        "benchmark_name": "IBEX 35",
+        "ter_pct": 0.3,
+        "replication": "physique",
+        "distribution": "distribuant",
+        "pea_eligible": true,
+        "dividend_yield": 1.29,
+        "tracking_difference_pct": 12.335998103029198
+      }
+    },
+    {
+      "ticker": "MIB.PA",
+      "name": "Amundi FTSE MIB UCITS ETF Dist",
+      "index": "ETF",
+      "current_price": 53.0,
+      "news": [],
+      "is_etf": true,
+      "etf_info": {
+        "isin": "FR0010010827",
+        "benchmark_name": "FTSE MIB",
+        "ter_pct": 0.35,
+        "replication": "physique",
+        "distribution": "distribuant",
+        "pea_eligible": true,
+        "dividend_yield": 3.24,
+        "tracking_difference_pct": 13.839273757988458
+      }
+    },
+    {
+      "ticker": "TDT.AS",
+      "name": "VanEck AEX UCITS ETF",
+      "index": "ETF",
+      "current_price": 114.62000274658203,
+      "news": [],
+      "is_etf": true,
+      "etf_info": {
+        "isin": "NL0009272749",
+        "benchmark_name": "AEX",
+        "ter_pct": 0.3,
+        "replication": "physique",
+        "distribution": "distribuant",
+        "pea_eligible": true,
+        "dividend_yield": 2.09,
+        "tracking_difference_pct": 6.458316205014199
+      }
+    },
+    {
+      "ticker": "XDJP.DE",
+      "name": "Xtrackers Nikkei 225 UCITS ETF 1D",
+      "index": "ETF",
+      "current_price": 35.5,
+      "news": [],
+      "is_etf": true,
+      "etf_info": {
+        "isin": "LU0839027447",
+        "benchmark_name": "Nikkei 225",
+        "ter_pct": 0.09,
+        "replication": "physique",
+        "distribution": "distribuant",
+        "pea_eligible": false,
+        "dividend_yield": null,
+        "tracking_difference_pct": -5.4386802570502155
+      }
+    },
+    {
+      "ticker": "BRES.PA",
+      "name": "Amundi STOXX Europe 600 Basic Resources UCITS ETF Acc",
+      "index": "ETF",
+      "current_price": 127.37999725341797,
+      "news": [],
+      "is_etf": true,
+      "etf_info": {
+        "isin": "LU1834983550",
+        "benchmark_name": "STOXX Europe 600 Basic Resources",
+        "ter_pct": 0.3,
+        "replication": "synthetique",
+        "distribution": "capitalisant",
+        "pea_eligible": true,
+        "dividend_yield": null,
+        "tracking_difference_pct": -0.544837322622385
+      }
+    },
+    {
+      "ticker": "IND.PA",
+      "name": "Amundi STOXX Europe 600 Industrials UCITS ETF Acc",
+      "index": "ETF",
+      "current_price": 149.52000427246094,
+      "news": [],
+      "is_etf": true,
+      "etf_info": {
+        "isin": "LU1834987890",
+        "benchmark_name": "STOXX Europe 600 Industrials",
+        "ter_pct": 0.3,
+        "replication": "synthetique",
+        "distribution": "capitalisant",
+        "pea_eligible": true,
+        "dividend_yield": null,
+        "tracking_difference_pct": -1.806859786241887
+      }
+    },
+    {
+      "ticker": "INS.PA",
+      "name": "Amundi STOXX Europe 600 Insurance UCITS ETF Acc",
+      "index": "ETF",
+      "current_price": 105.31999969482422,
+      "news": [],
+      "is_etf": true,
+      "etf_info": {
+        "isin": "LU1834987973",
+        "benchmark_name": "STOXX Europe 600 Insurance",
+        "ter_pct": 0.3,
+        "replication": "synthetique",
+        "distribution": "capitalisant",
+        "pea_eligible": true,
+        "dividend_yield": null,
+        "tracking_difference_pct": -0.09112961451196355
+      }
+    },
+    {
+      "ticker": "TELE.PA",
+      "name": "Amundi STOXX Europe 600 Telecommunications UCITS ETF Acc",
+      "index": "ETF",
+      "current_price": 51.400001525878906,
+      "news": [],
+      "is_etf": true,
+      "etf_info": {
+        "isin": "LU1834988609",
+        "benchmark_name": "STOXX Europe 600 Telecommunications",
+        "ter_pct": 0.3,
+        "replication": "synthetique",
+        "distribution": "capitalisant",
+        "pea_eligible": true,
+        "dividend_yield": null,
+        "tracking_difference_pct": -0.43206223601171345
+      }
+    },
+    {
+      "ticker": "UTI.PA",
+      "name": "Amundi STOXX Europe 600 Utilities UCITS ETF Acc",
+      "index": "ETF",
+      "current_price": 110.95999908447266,
+      "news": [],
+      "is_etf": true,
+      "etf_info": {
+        "isin": "LU1834988864",
+        "benchmark_name": "STOXX Europe 600 Utilities",
+        "ter_pct": 0.3,
+        "replication": "synthetique",
+        "distribution": "capitalisant",
+        "pea_eligible": true,
+        "dividend_yield": null,
+        "tracking_difference_pct": -0.44578443299215564
+      }
+    },
+    {
+      "ticker": "ENRG.PA",
+      "name": "Amundi STOXX Europe 600 Energy Screened UCITS ETF Acc",
+      "index": "ETF",
+      "current_price": 114.63999938964844,
+      "news": [],
+      "is_etf": true,
+      "etf_info": {
+        "isin": "LU1834988278",
+        "benchmark_name": "STOXX Europe 600 Energy Screened+",
+        "ter_pct": 0.3,
+        "replication": "physique",
+        "distribution": "capitalisant",
+        "pea_eligible": true,
+        "dividend_yield": null,
+        "tracking_difference_pct": 30.238083224427086
+      }
+    },
+    {
+      "ticker": "FOO.PA",
+      "name": "Amundi STOXX Europe 600 Consumer Staples UCITS ETF Acc",
+      "index": "ETF",
+      "current_price": 105.66000366210938,
+      "news": [],
+      "is_etf": true,
+      "etf_info": {
+        "isin": "LU1834985845",
+        "benchmark_name": "STOXX Europe 600 Industry Consumer Staples 30-15",
+        "ter_pct": 0.3,
+        "replication": "synthetique",
+        "distribution": "capitalisant",
+        "pea_eligible": true,
+        "dividend_yield": null,
+        "tracking_difference_pct": 6.0017203493864635
+      }
+    },
+    {
+      "ticker": "EXH3.DE",
+      "name": "iShares STOXX Europe 600 Food & Beverage UCITS ETF (DE)",
+      "index": "ETF",
+      "current_price": 71.58000183105469,
+      "news": [],
+      "is_etf": true,
+      "etf_info": {
+        "isin": "DE000A0H08H3",
+        "benchmark_name": "STOXX Europe 600 Food & Beverage",
+        "ter_pct": 0.46,
+        "replication": "physique",
+        "distribution": "distribuant",
+        "pea_eligible": false,
+        "dividend_yield": 2.17,
+        "tracking_difference_pct": 1.5760500708239533
+      }
+    },
+    {
+      "ticker": "EXI5.DE",
+      "name": "iShares STOXX Europe 600 Real Estate UCITS ETF (DE)",
+      "index": "ETF",
+      "current_price": 13.687999725341797,
+      "news": [],
+      "is_etf": true,
+      "etf_info": {
+        "isin": "DE000A0Q4R44",
+        "benchmark_name": "STOXX Europe 600 Real Estate",
+        "ter_pct": 0.46,
+        "replication": "physique",
+        "distribution": "distribuant",
+        "pea_eligible": false,
+        "dividend_yield": 2.71,
+        "tracking_difference_pct": -0.25534652808072433
+      }
+    },
+    {
+      "ticker": "EUDV.PA",
+      "name": "SPDR S&P Euro Dividend Aristocrats UCITS ETF (Dist)",
+      "index": "ETF",
+      "current_price": 31.809999465942383,
+      "news": [],
+      "is_etf": true,
+      "etf_info": {
+        "isin": "IE00B5M1WJ87",
+        "benchmark_name": "S&P Euro High Yield Dividend Aristocrats",
+        "ter_pct": 0.3,
+        "replication": "physique",
+        "distribution": "distribuant",
+        "pea_eligible": true,
+        "dividend_yield": null,
+        "tracking_difference_pct": -29.99849118919063
+      }
+    },
+    {
+      "ticker": "PRAR.DE",
+      "name": "Amundi Prime Euro Government Bond UCITS ETF Acc",
+      "index": "ETF",
+      "current_price": 17.628999710083008,
+      "news": [],
+      "is_etf": true,
+      "etf_info": {
+        "isin": "LU2089238898",
+        "benchmark_name": "Solactive Eurozone Government Bond Index",
+        "ter_pct": 0.05,
+        "replication": "physique",
+        "distribution": "capitalisant",
+        "pea_eligible": false,
+        "dividend_yield": 0.0,
+        "tracking_difference_pct": -0.10926880944468476
+      }
+    },
+    {
+      "ticker": "PR1C.DE",
+      "name": "Amundi Core EUR Corporate Bond UCITS ETF EUR Dist",
+      "index": "ETF",
+      "current_price": 18.743000030517578,
+      "news": [],
+      "is_etf": true,
+      "etf_info": {
+        "isin": "LU1931975079",
+        "benchmark_name": "Bloomberg Euro Aggregate Corporate Bond Index",
+        "ter_pct": 0.07,
+        "replication": "physique",
+        "distribution": "distribuant",
+        "pea_eligible": false,
+        "dividend_yield": 2.57,
+        "tracking_difference_pct": 0.06091821994194113
+      }
+    },
+    {
+      "ticker": "IBB1.DE",
+      "name": "iShares $ Treasury Bond 7-10yr UCITS ETF EUR Hedged (Dist)",
+      "index": "ETF",
+      "current_price": 3.7444000244140625,
+      "news": [],
+      "is_etf": true,
+      "etf_info": {
+        "isin": "IE00BGPP6697",
+        "benchmark_name": "ICE US Treasury 7-10 Year (EUR Hedged) Index",
+        "ter_pct": 0.1,
+        "replication": "physique",
+        "distribution": "distribuant",
+        "pea_eligible": false,
+        "dividend_yield": 4.43,
+        "tracking_difference_pct": -3.9030787376377996
+      }
+    },
+    {
+      "ticker": "EUNA.DE",
+      "name": "iShares Core Global Aggregate Bond UCITS ETF EUR Hedged (Acc)",
+      "index": "ETF",
+      "current_price": 4.85099983215332,
+      "news": [],
+      "is_etf": true,
+      "etf_info": {
+        "isin": "IE00BDBRDM35",
+        "benchmark_name": "Bloomberg Global Aggregate Bond Index (EUR Hedged)",
+        "ter_pct": 0.1,
+        "replication": "physique",
+        "distribution": "capitalisant",
+        "pea_eligible": false,
+        "dividend_yield": 0.0,
+        "tracking_difference_pct": -3.536884297180065
+      }
+    },
+    {
+      "ticker": "XAD6.DE",
+      "name": "Xtrackers Physical Silver ETC (EUR)",
+      "index": "ETF",
+      "current_price": 414.94000244140625,
+      "news": [],
+      "is_etf": true,
+      "etf_info": {
+        "isin": "DE000A1E0HS6",
+        "benchmark_name": "LBMA Silver Price",
+        "ter_pct": 0.4,
+        "replication": "physique",
+        "distribution": "capitalisant",
+        "pea_eligible": false,
+        "dividend_yield": null,
+        "tracking_difference_pct": -8.291774807869245
+      }
+    },
+    {
+      "ticker": "CMSE.PA",
+      "name": "iShares Diversified Commodity Swap UCITS ETF (DE)",
+      "index": "ETF",
+      "current_price": 35.75,
+      "news": [],
+      "is_etf": true,
+      "etf_info": {
+        "isin": "DE000A0H0728",
+        "benchmark_name": "Bloomberg Commodity Total Return Index",
+        "ter_pct": 0.46,
+        "replication": "synthetique",
+        "distribution": "capitalisant",
+        "pea_eligible": true,
+        "dividend_yield": null,
+        "tracking_difference_pct": -13.401727765038473
+      }
+    },
+    {
+      "ticker": "WBLD.PA",
+      "name": "WisdomTree Europe Infrastructure UCITS ETF",
+      "index": "ETF",
+      "current_price": 25.795000076293945,
+      "news": [],
+      "is_etf": true,
+      "etf_info": {
+        "isin": "IE000AFVONT7",
+        "benchmark_name": "WisdomTree Europe Infrastructure UCITS Index (NTR)",
+        "ter_pct": 0.45,
+        "replication": "physique",
+        "distribution": "capitalisant",
+        "pea_eligible": true,
+        "dividend_yield": null,
+        "tracking_difference_pct": 3.2976350984402547
+      }
+    },
+    {
+      "ticker": "AWAT.PA",
+      "name": "Amundi PEA Eau (MSCI Water) UCITS ETF Capi",
+      "index": "ETF",
+      "current_price": 33.95000076293945,
+      "news": [],
+      "is_etf": true,
+      "etf_info": {
+        "isin": "FR0011882364",
+        "benchmark_name": "MSCI ACWI IMI Water Custom Index",
+        "ter_pct": 0.6,
+        "replication": "synthetique",
+        "distribution": "capitalisant",
+        "pea_eligible": true,
+        "dividend_yield": 0.0,
+        "tracking_difference_pct": -10.461009511174058
+      }
+    },
+    {
+      "ticker": "XDWD.DE",
+      "name": "Xtrackers MSCI World UCITS ETF 1C",
+      "index": "ETF",
+      "current_price": 142.55999755859375,
+      "news": [],
+      "is_etf": true,
+      "etf_info": {
+        "isin": "IE00BJ0KDQ92",
+        "benchmark_name": "MSCI World",
+        "ter_pct": 0.12,
+        "replication": "physique",
+        "distribution": "capitalisant",
+        "pea_eligible": false,
+        "dividend_yield": null,
+        "tracking_difference_pct": -2.4049618192332183
+      }
+    },
+    {
+      "ticker": "D5BM.DE",
+      "name": "Xtrackers S&P 500 Swap UCITS ETF 1C",
+      "index": "ETF",
+      "current_price": 137.90499877929688,
+      "news": [],
+      "is_etf": true,
+      "etf_info": {
+        "isin": "LU0490618542",
+        "benchmark_name": "S&P 500",
+        "ter_pct": 0.15,
+        "replication": "synthetique",
+        "distribution": "capitalisant",
+        "pea_eligible": false,
+        "dividend_yield": null,
+        "tracking_difference_pct": -3.1327788844565987
+      }
+    },
+    {
+      "ticker": "EQQQ.PA",
+      "name": "Invesco EQQQ NASDAQ-100 UCITS ETF (Dist)",
+      "index": "ETF",
+      "current_price": 614.5,
+      "news": [],
+      "is_etf": true,
+      "etf_info": {
+        "isin": "IE0032077012",
+        "benchmark_name": "Nasdaq-100",
+        "ter_pct": 0.3,
+        "replication": "physique",
+        "distribution": "distribuant",
+        "pea_eligible": false,
+        "dividend_yield": null,
+        "tracking_difference_pct": -4.7436122721221
+      }
+    },
+    {
+      "ticker": "XMME.DE",
+      "name": "Xtrackers MSCI Emerging Markets UCITS ETF 1C",
+      "index": "ETF",
+      "current_price": 76.36599731445312,
+      "news": [],
+      "is_etf": true,
+      "etf_info": {
+        "isin": "IE00BTJRMP35",
+        "benchmark_name": "MSCI Emerging Markets",
+        "ter_pct": 0.18,
+        "replication": "physique",
+        "distribution": "capitalisant",
+        "pea_eligible": false,
+        "dividend_yield": null,
+        "tracking_difference_pct": -5.0856520560108365
+      }
+    },
+    {
+      "ticker": "XMEU.DE",
+      "name": "Xtrackers MSCI Europe UCITS ETF 1C",
+      "index": "ETF",
+      "current_price": 123.54000091552734,
+      "news": [],
+      "is_etf": true,
+      "etf_info": {
+        "isin": "LU0274209237",
+        "benchmark_name": "MSCI Europe",
+        "ter_pct": 0.12,
+        "replication": "physique",
+        "distribution": "capitalisant",
+        "pea_eligible": false,
+        "dividend_yield": null,
+        "tracking_difference_pct": 7.410371224755167
+      }
+    },
+    {
+      "ticker": "DX2G.DE",
+      "name": "Xtrackers CAC 40 UCITS ETF 1D",
+      "index": "ETF",
+      "current_price": 85.31999969482422,
+      "news": [],
+      "is_etf": true,
+      "etf_info": {
+        "isin": "LU0322250985",
+        "benchmark_name": "CAC 40",
+        "ter_pct": 0.2,
+        "replication": "physique",
+        "distribution": "distribuant",
+        "pea_eligible": true,
+        "dividend_yield": null,
+        "tracking_difference_pct": 7.360965816815245
+      }
+    },
+    {
+      "ticker": "XESC.DE",
+      "name": "Xtrackers Euro Stoxx 50 UCITS ETF 1C",
+      "index": "ETF",
+      "current_price": 114.22000122070312,
+      "news": [],
+      "is_etf": true,
+      "etf_info": {
+        "isin": "LU0380865021",
+        "benchmark_name": "Euro Stoxx 50",
+        "ter_pct": 0.09,
+        "replication": "physique",
+        "distribution": "capitalisant",
+        "pea_eligible": true,
+        "dividend_yield": 0.0,
+        "tracking_difference_pct": 7.8763743790336775
+      }
+    },
+    {
+      "ticker": "DBXD.DE",
+      "name": "Xtrackers DAX UCITS ETF 1C",
+      "index": "ETF",
+      "current_price": 249.4499969482422,
+      "news": [],
+      "is_etf": true,
+      "etf_info": {
+        "isin": "LU0274211480",
+        "benchmark_name": "DAX",
+        "ter_pct": 0.09,
+        "replication": "physique",
+        "distribution": "capitalisant",
+        "pea_eligible": true,
+        "dividend_yield": 0.0,
+        "tracking_difference_pct": -1.2250093485362257
+      }
+    },
+    {
+      "ticker": "XSX6.DE",
+      "name": "Xtrackers STOXX Europe 600 UCITS ETF 1C",
+      "index": "ETF",
+      "current_price": 173.5,
+      "news": [],
+      "is_etf": true,
+      "etf_info": {
+        "isin": "LU0328475792",
+        "benchmark_name": "STOXX Europe 600",
+        "ter_pct": 0.2,
+        "replication": "physique",
+        "distribution": "capitalisant",
+        "pea_eligible": false,
+        "dividend_yield": 0.0,
+        "tracking_difference_pct": 7.299388484136514
+      }
+    },
+    {
+      "ticker": "XRS2.DE",
+      "name": "Xtrackers Russell 2000 UCITS ETF 1C",
+      "index": "ETF",
+      "current_price": 373.45001220703125,
+      "news": [],
+      "is_etf": true,
+      "etf_info": {
+        "isin": "IE00BJZ2DD79",
+        "benchmark_name": "Russell 2000",
+        "ter_pct": 0.3,
+        "replication": "physique",
+        "distribution": "capitalisant",
+        "pea_eligible": false,
+        "dividend_yield": null,
+        "tracking_difference_pct": -5.269888729014795
+      }
+    },
+    {
+      "ticker": "SMC.PA",
+      "name": "SPDR MSCI Europe Small Cap UCITS ETF",
+      "index": "ETF",
+      "current_price": 403.6000061035156,
+      "news": [],
+      "is_etf": true,
+      "etf_info": {
+        "isin": "IE00BKWQ0M75",
+        "benchmark_name": "MSCI Europe Small Cap",
+        "ter_pct": 0.3,
+        "replication": "physique",
+        "distribution": "capitalisant",
+        "pea_eligible": false,
+        "dividend_yield": 0.0,
+        "tracking_difference_pct": 0.137518739444765
+      }
+    },
+    {
+      "ticker": "US4D.DE",
+      "name": "SPDR S&P 400 US Mid Cap UCITS ETF USD Unhedged (Dist)",
+      "index": "ETF",
+      "current_price": 32.54499816894531,
+      "news": [],
+      "is_etf": true,
+      "etf_info": {
+        "isin": "IE000UYVEVN3",
+        "benchmark_name": "S&P MidCap 400",
+        "ter_pct": 0.3,
+        "replication": "physique",
+        "distribution": "distribuant",
+        "pea_eligible": false,
+        "dividend_yield": null,
+        "tracking_difference_pct": 5.868733512791401
       }
     }
   ],

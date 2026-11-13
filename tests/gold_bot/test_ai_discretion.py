@@ -23,8 +23,9 @@ class _FakeTextBlock:
 
 
 class _FakeResponse:
-    def __init__(self, content):
+    def __init__(self, content, stop_reason="end_turn"):
         self.content = content
+        self.stop_reason = stop_reason
 
 
 class _FakeMessages:
@@ -165,6 +166,16 @@ def test_parse_discretion_verdict_normalizes_case_and_whitespace():
     result = ai_discretion._parse_discretion_verdict(text)
     assert result["action"] == "achat"
     assert result["confiance"] == "haute"
+
+
+def test_parse_discretion_verdict_treats_unrecognized_confiance_as_faible():
+    # Une valeur de "confiance" qui n'est ni "faible", ni "moyenne", ni
+    # "haute" doit devenir "faible" (le defaut sans danger) plutot que de
+    # rester telle quelle -- sinon le controle `== "faible"` de bot.py ne
+    # la detecterait pas et sauterait a tort la reduction de taille.
+    text = '{"action": "achat", "confiance": "incertaine", "tp_multiplicateur": 1.0, "sl_multiplicateur": 1.0, "raison": "x"}'
+    result = ai_discretion._parse_discretion_verdict(text)
+    assert result["confiance"] == "faible"
 
 
 def _prompt_kwargs(**overrides):

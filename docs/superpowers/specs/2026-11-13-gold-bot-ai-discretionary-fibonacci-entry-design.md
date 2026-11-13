@@ -84,13 +84,16 @@ def judge_fibonacci_entry(
 ) -> dict | None:
 ```
 
-Appelée depuis `gold_bot/bot.py::decide_and_act_fibonacci`, **au même
-emplacement** où `ai_shadow.shadow_judge_entry(..., real_decision=True)`
-est appelé aujourd'hui (après tous les garde-fous existants : distance
-entrée-stop, coupe-circuit, calcul de taille) — cet appel existant est
-**retiré** pour Fibonacci (remplacé, pas gardé en double). L'appel
-Ichimoku à `ai_shadow.shadow_judge_entry` reste inchangé dans son propre
-chemin de code.
+Appelée depuis `gold_bot/bot.py::decide_and_act_fibonacci`, **avant le
+calcul de taille** — pas au même emplacement que
+`ai_shadow.shadow_judge_entry(..., real_decision=True)` aujourd'hui (qui
+tourne, lui, APRÈS ce calcul) : la distance stop/TP résolue par l'IA
+déterminant directement la taille de position, l'appel doit précéder ce
+calcul, pas le suivre comme l'ancien veto. Il reste placé après les deux
+garde-fous gratuits existants (distance entrée-stop, coupe-circuit).
+Cet appel existant est **retiré** pour Fibonacci (remplacé, pas gardé en
+double). L'appel Ichimoku à `ai_shadow.shadow_judge_entry` reste inchangé
+dans son propre chemin de code.
 
 Le déclencheur reste **exactement** le calcul actuel de
 `fibonacci_reversion.py` (niveau touché + filtre de tendance OR 5j/20j,

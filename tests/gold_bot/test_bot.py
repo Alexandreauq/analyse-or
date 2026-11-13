@@ -1735,6 +1735,27 @@ def test_decide_and_act_fibonacci_no_action_when_ai_discretion_returns_none(monk
     assert result == {"action": "aucune", "reason": "aucune decision IA (echec, rejet ou rien a faire)"}
 
 
+def test_decide_and_act_fibonacci_no_action_when_ai_adjusted_stop_too_small(monkeypatch):
+    # fibonacci_reversion.MIN_DISTANCE_PCT == 0.002 ; entry_price=1981.0
+    # donc le plancher vaut 1981.0 * 0.002 = 3.962. La distance de la
+    # regle (avant appel IA) passerait ce garde-fou (atr=20.0 -> distance
+    # bien superieure), mais l'IA peut resserrer le stop jusqu'a 0.7x via
+    # sl_multiplicateur (voir SL_MULTIPLIER_BOUNDS) -- ici on simule
+    # directement un verdict IA deja resolu avec une distance finale de
+    # 2.0, sous le plancher, pour verifier que le garde-fou s'applique
+    # aussi APRES l'appel IA, pas seulement avant.
+    monkeypatch.setattr(bot.ai_discretion, "judge_fibonacci_entry",
+                         lambda *a, **k: {"action": "achat", "confiance": "haute",
+                                           "stop_loss_distance": 2.0, "take_profit_distance": 16.5, "raison": "x"})
+    state = _fib_state(close=1981.0, high=1982.0, low=1974.0, level=1980.0, bias="achat", atr=20.0)
+    monkeypatch.setattr(bot.fibonacci_reversion, "latest_state", lambda candles, historical_candles=None: state)
+    result = bot.decide_and_act_fibonacci(
+        [{"dummy": True, "time": "2026-01-05 12:00:00"}], contract_size=100, volume_step=0.01, min_volume=0.01, max_volume=500,
+        balance=10000, equity=10000, open_positions=[], circuit_breaker=_open_circuit_breaker(),
+    )
+    assert result == {"action": "aucune", "reason": "distance entree-stop trop faible apres ajustement IA"}
+
+
 def test_decide_and_act_fibonacci_applies_ai_tp_sl_distances_to_executed_legs(monkeypatch):
     monkeypatch.setattr(bot.ai_discretion, "judge_fibonacci_entry",
                          lambda *a, **k: {"action": "achat", "confiance": "haute",
@@ -1773,7 +1794,7 @@ def test_decide_and_act_fibonacci_halves_size_when_ai_confidence_is_low(monkeypa
     reduced_volume = _fib_total_volume(reduced)
 
     expected = bot.risk.round_to_volume_step(
-        baseline_volume * bot.ai_shadow.LOW_CONFIDENCE_SIZE_FACTOR, 0.01, 0.01, 500)
+        baseline_volume * bot.ai_discretion.LOW_CONFIDENCE_SIZE_FACTOR, 0.01, 0.01, 500)
     assert reduced_volume == expected
     assert reduced_volume < baseline_volume
 

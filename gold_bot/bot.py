@@ -534,6 +534,13 @@ def decide_and_act_fibonacci(candles: list[dict], *, contract_size: float, balan
 
     direction = ai_verdict["action"]
     distance = ai_verdict["stop_loss_distance"]
+    if distance < entry_price * fibonacci_reversion.MIN_DISTANCE_PCT:
+        # Meme garde-fou qu'avant l'appel IA (ligne ~503), applique cette
+        # fois a la distance FINALE : sl_multiplicateur peut aller jusqu'a
+        # 0.7x (SL_MULTIPLIER_BOUNDS), donc une distance initiale valide
+        # peut repasser sous le plancher apres ajustement IA -- raison
+        # distincte pour que les logs distinguent les deux rejets.
+        return {"action": "aucune", "reason": "distance entree-stop trop faible apres ajustement IA"}
     take_profit_distance = ai_verdict["take_profit_distance"]
     stop_loss = entry_price - distance if direction == "achat" else entry_price + distance
 
@@ -547,7 +554,7 @@ def decide_and_act_fibonacci(candles: list[dict], *, contract_size: float, balan
         # (ai_shadow.py), porte ici tel quel -- independant des
         # multiplicateurs TP/SL, deux leviers de risque distincts.
         reduced_size = risk.round_to_volume_step(
-            total_size * ai_shadow.LOW_CONFIDENCE_SIZE_FACTOR, volume_step, min_volume, max_volume)
+            total_size * ai_discretion.LOW_CONFIDENCE_SIZE_FACTOR, volume_step, min_volume, max_volume)
         if reduced_size is None:
             return {"action": "aucune", "reason": "taille reduite (confiance IA faible) sous le minimum du broker"}
         total_size = reduced_size

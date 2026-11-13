@@ -22,7 +22,13 @@ MODEL = "claude-opus-5-5"
 MAX_CANDLES_IN_PROMPT = 12
 REQUEST_TIMEOUT_SECONDS = 40.0
 WEB_SEARCH_MAX_USES = 2
-MAX_TOKENS = 1536
+MAX_TOKENS = 4096
+# Confiance "faible" reduit de moitie la taille de position cote appelant
+# (bot.py, decide_and_act_fibonacci) -- constante dediee plutot que
+# reutiliser ai_shadow.LOW_CONFIDENCE_SIZE_FACTOR : les deux moteurs
+# (Fibonacci ici, Ichimoku via ai_shadow) sont independants, un reglage
+# futur de l'un ne doit pas affecter silencieusement l'autre.
+LOW_CONFIDENCE_SIZE_FACTOR = 0.5
 # Anti-rafale (eviter un enchainement rapide de decisions si le marche
 # touche plusieurs niveaux coup sur coup) -- PAS un garde-fou de cout
 # comme les 24h de ai_shadow.SHADOW_COOLDOWN : le declencheur Fibonacci
@@ -90,6 +96,15 @@ def _parse_discretion_verdict(text: str) -> dict | None:
         value = parsed.get(key)
         if isinstance(value, str):
             parsed[key] = value.strip().lower()
+    # Une valeur de "confiance" non reconnue (typo, autre langue, etc.)
+    # doit devenir le defaut sans danger ("faible", qui declenche la
+    # reduction de taille cote bot.py) plutot que de rester telle quelle --
+    # sinon elle ne vaudrait ni "faible" ni "haute" et le controle
+    # `== "faible"` de bot.py la traiterait a tort comme une confiance
+    # haute (aucune reduction de taille). Ne concerne que "confiance" :
+    # "action" est deja rejetee entierement plus bas si invalide.
+    if parsed.get("confiance") not in ("faible", "moyenne", "haute"):
+        parsed["confiance"] = "faible"
     action = parsed.get("action")
     if action not in _VALID_ACTIONS:
         return None
@@ -238,6 +253,7 @@ def judge_fibonacci_entry(
         text = "".join(block.text for block in response.content if block.type == "text")
         verdict = _parse_discretion_verdict(text)
         entry["raw_text"] = text
+        entry["stop_reason"] = response.stop_reason
         entry["verdict"] = verdict
         if verdict is None:
             entry["error"] = "verdict JSON non trouve ou invalide dans la reponse"

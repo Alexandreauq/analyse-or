@@ -1,12 +1,20 @@
 # tests/test_etf_catalog.py
 from etf_catalog import ETF_CATALOG
 
-def test_etf_catalog_has_between_18_and_25_entries():
-    assert 18 <= len(ETF_CATALOG) <= 25
+def test_etf_catalog_has_between_18_and_100_entries():
+    # Plafond haut volontairement large (pas de taille cible figée) --
+    # catalogue étendu le 2026-11-13 à la demande explicite de l'utilisateur
+    # ("un maximum possible"). Sert juste à détecter une vraie régression
+    # (catalogue vidé ou dupliqué par erreur), pas à limiter la croissance.
+    assert 18 <= len(ETF_CATALOG) <= 100
 
 def test_etf_catalog_tickers_are_unique():
     tickers = [e["ticker"] for e in ETF_CATALOG]
     assert len(tickers) == len(set(tickers))
+
+def test_etf_catalog_isins_are_unique():
+    isins = [e["isin"] for e in ETF_CATALOG]
+    assert len(isins) == len(set(isins))
 
 def test_etf_catalog_entries_have_required_fields():
     required = {

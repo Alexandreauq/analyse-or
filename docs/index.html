@@ -7177,29 +7177,64 @@ function companyLogoZoom(ticker) {
 
 // Table de regroupement des ETF par indice suivi (maquette "Option C",
 // validée par l'utilisateur le 2026-11-13) -- clés = etf_info.benchmark_name
-// exact, voir etf_catalog.py pour les 19 valeurs réelles. Un benchmark non
-// répertorié ici (futur ajout au catalogue) tombe dans "Autres" plutôt que
-// de planter ou d'être mal classé.
+// exact, voir etf_catalog.py. Étendue le 2026-11-13 (même jour, extension du
+// catalogue de 19 à 61 ETF) avec deux nouveaux groupes (Obligations,
+// Dividendes & thématiques) pour ne pas tout renvoyer vers "Autres". Un
+// benchmark non répertorié ici (futur ajout au catalogue) tombe dans
+// "Autres" plutôt que de planter ou d'être mal classé.
 const ETF_BENCHMARK_GROUP_BY_NAME = {
   'MSCI World': 'Actions mondiales',
+  'MSCI ACWI': 'Actions mondiales',
+  'MSCI World ex USA': 'Actions mondiales',
   'S&P 500': 'États-Unis',
   'Nasdaq-100': 'États-Unis',
   'Russell 2000': 'États-Unis',
+  'Dow Jones Industrial Average': 'États-Unis',
+  'MSCI USA': 'États-Unis',
+  'S&P MidCap 400': 'États-Unis',
   'CAC 40': 'Europe',
   'Euro Stoxx 50': 'Europe',
   'MSCI EMU': 'Europe',
   'STOXX Europe 600': 'Europe',
   'DAX': 'Europe',
   'MSCI Europe': 'Europe',
+  'FTSE 100': 'Europe',
+  'IBEX 35': 'Europe',
+  'FTSE MIB': 'Europe',
+  'AEX': 'Europe',
+  'MSCI Europe Small Cap': 'Europe',
   'MSCI Emerging Markets': 'Marchés émergents & Japon',
   'TOPIX': 'Marchés émergents & Japon',
+  'MSCI Japan IMI': 'Marchés émergents & Japon',
+  'Nikkei 225': 'Marchés émergents & Japon',
+  'MSCI China': 'Marchés émergents & Japon',
+  'MSCI Pacific ex Japan': 'Marchés émergents & Japon',
   'STOXX Europe 600 Health Care': 'Secteurs',
   'STOXX Europe 600 Technology': 'Secteurs',
   'STOXX Europe 600 Banks': 'Secteurs',
+  'STOXX Europe 600 Basic Resources': 'Secteurs',
+  'STOXX Europe 600 Industrials': 'Secteurs',
+  'STOXX Europe 600 Insurance': 'Secteurs',
+  'STOXX Europe 600 Telecommunications': 'Secteurs',
+  'STOXX Europe 600 Utilities': 'Secteurs',
+  'STOXX Europe 600 Energy Screened+': 'Secteurs',
+  'STOXX Europe 600 Industry Consumer Staples 30-15': 'Secteurs',
+  'STOXX Europe 600 Food & Beverage': 'Secteurs',
+  'STOXX Europe 600 Real Estate': 'Secteurs',
   'Or (LBMA Gold Price PM, USD)': 'Matières premières',
+  'LBMA Silver Price': 'Matières premières',
+  'Bloomberg Commodity Total Return Index': 'Matières premières',
+  'Solactive Eurozone Government Bond Index': 'Obligations',
+  'Bloomberg Euro Aggregate Corporate Bond Index': 'Obligations',
+  'ICE US Treasury 7-10 Year (EUR Hedged) Index': 'Obligations',
+  'Bloomberg Global Aggregate Bond Index (EUR Hedged)': 'Obligations',
+  'S&P Euro High Yield Dividend Aristocrats': 'Dividendes & thématiques',
+  'WisdomTree Europe Infrastructure UCITS Index (NTR)': 'Dividendes & thématiques',
+  'MSCI ACWI IMI Water Custom Index': 'Dividendes & thématiques',
 };
 const ETF_BENCHMARK_GROUP_ORDER = [
-  'Actions mondiales', 'États-Unis', 'Europe', 'Marchés émergents & Japon', 'Secteurs', 'Matières premières', 'Autres',
+  'Actions mondiales', 'États-Unis', 'Europe', 'Marchés émergents & Japon', 'Secteurs',
+  'Matières premières', 'Obligations', 'Dividendes & thématiques', 'Autres',
 ];
 
 function etfBenchmarkGroupLabel(benchmarkName) {

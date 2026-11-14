@@ -258,15 +258,24 @@
     const c = indicesData.companies.find(x => x.ticker === r.ticker);
     return c ? c.name : null;
   }
-  // Libellé envoyé à l'API (inchangé depuis la première version de l'agent).
+  // Libellé envoyé à l'API -- réutilise decoupeRoute (assistant_suggestions.js,
+  // déjà la logique de référence pour majContexte() juste en dessous) plutôt
+  // que de reparser le hash soi-même : l'ancienne version testait seulement
+  // `h.indexOf('#indices/') === 0`, qui matche aussi #indices/suivi et
+  // #indices/compare/... (tous deux préfixés par #indices/) et les traitait
+  // à tort comme une fiche entreprise ("fiche de suivi (indices)").
   function contexteCourant() {
-    const h = routeCourante();
-    if (h.indexOf('#indices/') === 0) {
-      let ticker = h.slice('#indices/'.length);
-      try { ticker = decodeURIComponent(ticker); } catch (e) { /* on garde tel quel */ }
-      return 'fiche de ' + ticker + ' (indices)';
+    const r = decoupeRoute(routeCourante());
+    switch (r.section) {
+      case 'fiche': return 'fiche de ' + r.ticker + ' (indices)';
+      case 'analyse': return 'analyse factorielle de ' + r.ticker + ' (indices)';
+      case 'suivi': return 'suivi des signaux (indices)';
+      case 'compare': return 'comparateur d\'entreprises (indices)';
+      case 'or': return ETIQUETTES['#or'];
+      case 'indices': return ETIQUETTES['#indices'];
+      case 'portefeuille': return ETIQUETTES['#portefeuille'];
+      default: return 'accueil';
     }
-    return ETIQUETTES[h] || 'accueil';
   }
 
   function majContexte() {
@@ -470,7 +479,7 @@
     if (!token) {
       erreur = true;
       rep.texte.classList.add('is-error');
-      reveal.fix('Saisis d\'abord ton jeton d\'accès dans la barre d\'accueil.');
+      reveal.fix('Jeton d\'accès requis — réessaie et renseigne-le dans la fenêtre qui s\'affiche.');
       return;
     }
     enCours = true;

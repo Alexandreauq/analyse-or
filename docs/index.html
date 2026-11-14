@@ -32,8 +32,10 @@
     --bg-0: #0a0e1a; --bg-1: #0f1524; --bg-2: #161d30; --bg-3: #1e2740; --bg-4: #29334f;
     --border: #2a3550; --border-strong: #3c4a70; --border-subtle: #1a2136;
 
-    /* Texte */
-    --text: #e8ecf5; --muted: #9aa6c4; --text-faint: #5c6690;
+    /* Texte -- text-faint recalibré le 2026-11-14 (était #5c6690, sous le
+       seuil WCAG AA 4.5:1 sur tous les fonds du thème, jusqu'à 3.0:1) :
+       valeur minimale qui passe 4.5:1 partout, même hue conservée. */
+    --text: #e8ecf5; --muted: #9aa6c4; --text-faint: #7d85a6;
 
     /* Vert forêt — accent de marque + positif (échelle) */
     --green-100: #d9e9db; --green-300: #8fc29e; --green-500: #4f8a64;
@@ -118,7 +120,7 @@
     /* Champagne / Emerald Ink — palette claire. */
     --bg-0: #fbf2de; --bg-1: #fbf2de; --bg-2: #fdf8ee; --bg-3: #f3e4c2; --bg-4: #ead6a4;
     --border: #e6d3a8; --border-strong: #cbad72; --border-subtle: #f0e3c2;
-    --text: #064e3b; --muted: #7c6552; --text-faint: #8f7562;
+    --text: #064e3b; --muted: #7c6552; --text-faint: #6d594a;
 
     /* Paliers "décalés" vers le foncé : un composant lisible en clair sur
        fond sombre (300) doit devenir sombre sur fond clair — donc 300
@@ -954,6 +956,10 @@
     transition: height .3s cubic-bezier(.22,1,.36,1);
   }
   .scalp-chart-box.expanded { height: 560px; }
+  /* 768px volontairement distinct du point de bascule de la nav (1024px,
+     voir .bottom-nav/.top-bar) : ce graphique profite de la place
+     supplementaire dès la tablette, sans attendre le passage en layout
+     desktop. */
   @media (min-width: 768px) {
     .scalp-chart-box { height: 400px; }
     .scalp-chart-box.expanded { height: 750px; }
@@ -972,6 +978,8 @@
      50/50 partout, il n'est pas concerné). */
   #portefeuille .or-tabbar { justify-content: center; }
   #portefeuille .or-tab-btn { flex: 0 0 auto; padding: 10px 28px; }
+  /* 768px (pas 1024px, voir .bottom-nav/.top-bar) : ces boutons repassent
+     en 50/50 dès la tablette, avant même le passage en layout desktop. */
   @media (min-width: 768px) {
     #portefeuille .or-tab-btn { flex: 1; padding: 12px 0; }
   }
@@ -993,6 +1001,9 @@
   .tracking-row.open { color: var(--gold); }
   .tracking-row.positive { color: var(--green-500); }
   .tracking-row.negative { color: var(--rust); }
+  /* 767px (pas 1023px, voir .bottom-nav/.top-bar) : cette colonne reste
+     visible dès la tablette, qui a la largeur pour l'afficher même si la
+     nav est encore en layout mobile. */
   @media (max-width: 767px) {
     .tracking-row-reason { display: none; }
   }
@@ -1297,10 +1308,6 @@
     .gold-note { font-size: 14px; }
   }
   @media (prefers-reduced-motion: reduce) { .gold-day summary .chevron { transition: none; } }
-
-  .tech-row { display:flex; justify-content:space-between; font-size:13px; padding: 5px 0; }
-  .tech-label { color: var(--muted); }
-  .tech-value { font-weight: 500; }
 
   .price-panel { margin: 16px 0; }
   .price-row { display:flex; justify-content:space-between; font-size:14px; padding: 4px 0; }
@@ -2696,7 +2703,7 @@ function portfolioDiagnosisHtml(concentration, health, factorDiagnosis) {
 
   if (health.avgScore != null) {
     const qualifier = scoreQualifier(health.avgScore);
-    const scoreTxt = `${health.avgScore > 0 ? '+' : ''}${health.avgScore.toFixed(1)}`;
+    const scoreTxt = `${health.avgScore > 0 ? '+' : ''}${health.avgScore.toFixed(1).replace('.', ',')}`;
     if (health.avgScore > 0) {
       good.push(`Le score moyen du modèle est de ${scoreTxt} (profil ${qualifier}) : la sélection de titres reste globalement de bonne qualité fondamentale selon les propres critères du site.`);
     } else {
@@ -2718,10 +2725,10 @@ function portfolioDiagnosisHtml(concentration, health, factorDiagnosis) {
     const best = byAvg[0];
     const worst = byAvg[byAvg.length - 1];
     if (best.avgScore > 0) {
-      good.push(`Le facteur fondamental le plus solide du portefeuille est "${best.name}" (score moyen ${best.avgScore > 0 ? '+' : ''}${best.avgScore.toFixed(1)}/10) : ${best.strongest.name} s'y distingue particulièrement — ${best.strongest.rawValue}.`);
+      good.push(`Le facteur fondamental le plus solide du portefeuille est "${best.name}" (score moyen ${best.avgScore > 0 ? '+' : ''}${best.avgScore.toFixed(1).replace('.', ',')}/10) : ${best.strongest.name} s'y distingue particulièrement — ${best.strongest.rawValue}.`);
     }
     if (worst.avgScore < 0 && worst.name !== best.name) {
-      bad.push(`Le facteur fondamental le plus fragile est "${worst.name}" (score moyen ${worst.avgScore.toFixed(1)}/10) : ${worst.weakest.name} y pèse le plus — ${worst.weakest.rawValue}.`);
+      bad.push(`Le facteur fondamental le plus fragile est "${worst.name}" (score moyen ${worst.avgScore.toFixed(1).replace('.', ',')}/10) : ${worst.weakest.name} y pèse le plus — ${worst.weakest.rawValue}.`);
     }
   }
 
@@ -2840,7 +2847,7 @@ function portfolioAnalysisHtml(positions, companiesByTicker, currencyByIndex, pr
   const riskFreeRateByCurrency = indicesData.risk_free_rate_by_currency || {};
   const indexNamesForBenchmark = { ...INDEX_DISPLAY_NAMES, ...(indicesData.index_names || {}) };
   const benchmarkSelectHtml = currency => `
-    <select class="list-sort portfolio-benchmark-select" data-currency="${currency}">
+    <select class="list-sort portfolio-benchmark-select" data-currency="${currency}" aria-label="Indice de comparaison">
       ${Object.entries(INDEX_BENCHMARK_TICKERS).map(([key, yfTicker]) => `
         <option value="${yfTicker}" ${key === 'CAC40' ? 'selected' : ''}>${indexNamesForBenchmark[key] || key}</option>`).join('')}
     </select>`;
@@ -2865,8 +2872,8 @@ function portfolioAnalysisHtml(positions, companiesByTicker, currencyByIndex, pr
         ${benchmarkSelectHtml(currency)}
         <div class="portfolio-perf-chart-container">${performanceCurveSvg(performanceCurves[currency], benchmarkCurve, indexNamesForBenchmark.CAC40 || 'CAC40')}</div>
         <div class="signal-stats">
-          <div class="price-row"><span class="price-label">Volatilité annualisée</span><span class="price-value">${riskMetrics.volatility != null ? riskMetrics.volatility.toFixed(1) + '%' : '—'}</span></div>
-          <div class="price-row"><span class="price-label">Sharpe ratio</span><span class="price-value">${riskMetrics.sharpe != null ? (riskMetrics.sharpe > 0 ? '+' : '') + riskMetrics.sharpe.toFixed(2) : '—'}</span></div>
+          <div class="price-row"><span class="price-label">Volatilité annualisée</span><span class="price-value">${riskMetrics.volatility != null ? riskMetrics.volatility.toFixed(1).replace('.', ',') + '%' : '—'}</span></div>
+          <div class="price-row"><span class="price-label">Sharpe ratio</span><span class="price-value">${riskMetrics.sharpe != null ? (riskMetrics.sharpe > 0 ? '+' : '') + riskMetrics.sharpe.toFixed(2).replace('.', ',') : '—'}</span></div>
           <div class="price-row"><span class="price-label">Max drawdown</span><span class="price-value ${pctClass(riskMetrics.maxDrawdown)}">${riskMetrics.maxDrawdown != null ? formatPct(riskMetrics.maxDrawdown) : '—'}</span></div>
         </div>
       </div>`;
@@ -3366,7 +3373,7 @@ function portfolioTotalsHtml(totals) {
 
 // Petit camembert SVG -- memes conventions que performanceCurveSvg
 // (coordonnees calculees en JS, pas de lib de graphique).
-function donutSvg(slices, colors) {
+function donutSvg(slices, colors, label) {
   const size = 92, r = 36, cx = size / 2, cy = size / 2, stroke = 16;
   const total = slices.reduce((s, x) => s + x.value, 0);
   let angle = -90;
@@ -3384,7 +3391,7 @@ function donutSvg(slices, colors) {
     const largeArc = end - start > 180 ? 1 : 0;
     return `<path d="M ${x1.toFixed(2)} ${y1.toFixed(2)} A ${r} ${r} 0 ${largeArc} 1 ${x2.toFixed(2)} ${y2.toFixed(2)}" fill="none" stroke="${colors[i % colors.length]}" stroke-width="${stroke}" />`;
   }).join('');
-  return `<svg class="portfolio-donut-svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" role="img" aria-label="Répartition">${paths}</svg>`;
+  return `<svg class="portfolio-donut-svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" role="img" aria-label="${label || 'Répartition'}">${paths}</svg>`;
 }
 
 const PORTFOLIO_CHART_COLORS = ['var(--chart-1)', 'var(--chart-2)', 'var(--chart-3)', 'var(--chart-4)', 'var(--chart-5)', 'var(--chart-6)', 'var(--chart-7)'];
@@ -3415,7 +3422,7 @@ function portfolioDonutCardHtml(title, totalLabel, slices) {
     <div class="portfolio-legend-row">
       <span class="portfolio-legend-swatch" style="background:${PORTFOLIO_CHART_COLORS[i % PORTFOLIO_CHART_COLORS.length]}"></span>
       <span class="portfolio-legend-name">${p.name}</span>
-      <span class="portfolio-legend-pct">${total > 0 ? ((p.value / total) * 100).toFixed(1) : '0.0'}%</span>
+      <span class="portfolio-legend-pct">${total > 0 ? ((p.value / total) * 100).toFixed(1).replace('.', ',') : '0,0'}%</span>
     </div>`).join('');
   return `
     <div class="portfolio-donut-card">
@@ -3424,7 +3431,7 @@ function portfolioDonutCardHtml(title, totalLabel, slices) {
         <span class="portfolio-total-value">${totalLabel}</span>
       </div>
       <div class="portfolio-donut-body">
-        ${donutSvg(slices, PORTFOLIO_CHART_COLORS)}
+        ${donutSvg(slices, PORTFOLIO_CHART_COLORS, title)}
         <div class="portfolio-legend">${legend}</div>
       </div>
     </div>`;
@@ -3495,7 +3502,7 @@ function portfolioPositionsHtml(positions, companiesByTicker, currencyByIndex) {
           <span class="price-value">${pnl ? fmt(pnl.value) : 'Cours indisponible'}</span>
           ${pnl ? `<span style="color:${pnl.pnlAbs >= 0 ? 'var(--gold)' : 'var(--rust)'}">${pnl.pnlAbs >= 0 ? '+' : ''}${fmt(pnl.pnlAbs)} (${formatPct(pnl.pnlPct)})</span>` : ''}
           ${typeof company.score === 'number'
-            ? `<span class="company-score" style="color:${company.score >= 0 ? 'var(--gold)' : 'var(--rust)'};">${company.score > 0 ? '+' : ''}${company.score}</span>`
+            ? `<span class="company-score" style="color:${company.score >= 0 ? 'var(--green-500)' : 'var(--rust)'};">${company.score > 0 ? '+' : ''}${company.score}</span>`
             : (company.is_etf ? `<span class="company-score" style="color:var(--muted);font-size:var(--text-xs);">TER ${company.etf_info && company.etf_info.ter_pct != null ? company.etf_info.ter_pct.toLocaleString('fr-FR') + '%' : '—'}</span>` : '')}
         </div>
         <div class="portfolio-position-actions">
@@ -3778,25 +3785,6 @@ async function loadIbkrBotStatus() {
 // botPositionsHtml/botDecisionsHtml côté Bot Or (.portfolio-position-row
 // répétée) plutôt qu'un tableau .signal-stats — harmonisation visuelle
 // entre les deux panneaux bot demandée par l'utilisateur.
-function ibkrBotCountersHtml(s) {
-  const rows = [
-    ['Entrées', s.entrees_count],
-    ['Sorties', s.sorties_count],
-    ['Signaux rejetés', s.signaux_rejetes_count],
-    ['Anomalies', s.anomalies_count],
-    ['Erreurs', s.erreurs_count],
-  ];
-  return rows.map(([label, value]) => `
-    <div class="portfolio-position-row">
-      <div class="portfolio-position-main">
-        <span class="hero-sub">${label}</span>
-      </div>
-      <div class="portfolio-position-pnl">
-        <span class="price-value" style="${label === 'Erreurs' && value ? 'color:var(--rust)' : ''}">${value ?? '—'}</span>
-      </div>
-    </div>`).join('');
-}
-
 // Positions OUVERTES par le bot, memes noms de champs que
 // status_publish._public_position cote ibkr_bot (ticker, name, index,
 // quantite, prix_entree, date_entree, et depuis le plan FX P&L du
@@ -3985,12 +3973,6 @@ function renderIbkrBotStatus() {
   }));
 }
 
-function wireIbkrBotRefresh() {
-  const btn = document.getElementById('ibkrBotRefreshBtn');
-  if (!btn) return;
-  btn.addEventListener('click', () => loadIbkrBotStatus());
-}
-
 function getIbkrBotToken() {
   let token = localStorage.getItem('ibkrBotToken');
   if (!token) {
@@ -4007,50 +3989,6 @@ function getAiAssistantToken() {
     if (token) localStorage.setItem('aiAssistantToken', token);
   }
   return token;
-}
-
-function ibkrBotBalanceHtml(data) {
-  if (!data || data.balance == null) {
-    return `<div class="empty">Solde indisponible pour l'instant.</div>`;
-  }
-  const freshness = formatFetchedAgo(data.balance_fetched_at);
-  return `
-    <div class="portfolio-position-row">
-      <div class="portfolio-position-main">
-        <span class="company-name">${formatPrice(data.balance)}</span>
-        <span class="hero-sub">Solde disponible</span>
-        ${freshness ? `<span class="hero-sub">${freshness}</span>` : ''}
-      </div>
-    </div>`;
-}
-
-// Ticker -> entreprise resolu ici, cote frontend, plutot que duplique par
-// l'API (voir spec 4.4) : indicesData est deja charge pour toute la page.
-function ibkrBotActionsHtml(actions) {
-  if (!actions || actions.length === 0) {
-    return `<div class="empty">Aucune action récente.</div>`;
-  }
-  const companiesByTicker = {};
-  (indicesData.companies || []).forEach(c => { companiesByTicker[c.ticker] = c; });
-  return actions.slice().reverse().map(a => {
-    const label = a.sens === 'BUY' ? 'Achat' : a.sens === 'SELL' ? 'Vente' : '—';
-    const color = a.sens === 'BUY' ? 'var(--gold)' : a.sens === 'SELL' ? 'var(--rust)' : 'var(--muted)';
-    const company = companiesByTicker[a.ticker];
-    const name = company ? company.name : a.ticker;
-    const price = a.prix_execution != null
-      ? (company ? formatPriceForIndex(a.prix_execution, company.index) : formatPrice(a.prix_execution))
-      : '—';
-    return `
-    <div class="portfolio-position-row">
-      <div class="portfolio-position-main">
-        <a class="company-name" href="#indices/${encodeURIComponent(a.ticker)}" style="color:${color}">${label}</a>
-        <span class="hero-sub">${escHtml(name)}${a.quantite != null ? ` · ${a.quantite} titre${a.quantite > 1 ? 's' : ''}` : ''}${a.date ? ` · ${a.date}` : ''}</span>
-      </div>
-      <div class="portfolio-position-pnl">
-        <span class="price-value">${price}</span>
-      </div>
-    </div>`;
-  }).join('');
 }
 
 function ibkrBotUnlockHtml(label) {
@@ -5430,8 +5368,8 @@ function render(data) {
   const techHtml = `
     <div class="panel">
       <h2>Repère technique</h2>
-      <div class="tech-row"><span class="tech-label">Cours spot</span><span class="tech-value">${spotStr}</span></div>
-      <div class="tech-row"><span class="tech-label">Moyenne mobile 200j</span><span class="tech-value">${ma200Str}</span></div>
+      <div class="price-row"><span class="price-label">Cours spot</span><span class="price-value">${spotStr}</span></div>
+      <div class="price-row"><span class="price-label">Moyenne mobile 200j</span><span class="price-value">${ma200Str}</span></div>
       <p class="hero-sub" style="margin-top:8px;">${t.note || ''}</p>
     </div>`;
   const agendaHtml = `
@@ -6041,6 +5979,10 @@ function setHomeState(etat) {
   if (etat === 'thinking') startHomeParticles(); else stopHomeParticles();
   home.classList.toggle('thinking', etat === 'thinking');
   home.classList.toggle('answered', etat === 'answered');
+  // Sans ça, un lecteur d'écran n'a aucun signal pendant les jusqu'à 45s
+  // de réflexion (.home-patience, le seul indicateur visuel, est
+  // aria-hidden) -- la page peut se lire comme figée.
+  home.setAttribute('aria-busy', etat === 'thinking' ? 'true' : 'false');
   // Pendant la réflexion la barre est invisible : on retire le focus pour que
   // le clavier mobile se ferme et qu'un Enter ne reparte pas en double.
   if (etat === 'thinking') document.getElementById('homeSearchInput').blur();
@@ -7510,14 +7452,6 @@ function formatPct(v) {
   return `${sign}${v.toLocaleString('fr-FR', {maximumFractionDigits:1})}%`;
 }
 
-function formatPctPrecise(v) {
-  if (v == null) return '—';
-  const rounded = Math.round(v * 100) / 100;
-  const clean = Object.is(rounded, -0) ? 0 : rounded; // evite l'affichage "-0,00%"
-  const sign = clean > 0 ? '+' : '';
-  return `${sign}${clean.toLocaleString('fr-FR', {minimumFractionDigits:2, maximumFractionDigits:2})}%`;
-}
-
 function pctClass(v) {
   if (v == null) return '';
   return v >= 0 ? 'signal-return-positive' : 'signal-return-negative';
@@ -7754,7 +7688,7 @@ function renderSignalRowsAndCards() {
       <td>${p.name} <span class="hero-sub">${p.ticker}</span></td>
       <td>${p.entry_date}</td>
       <td>${formatPriceForIndex(p.entry_price, p.index)}</td>
-      <td>${p.status === 'open' ? '<span class="signal-status-open">en cours</span>' : p.close_date}</td>
+      <td>${p.status === 'open' ? '<span class="signal-status-open">En cours</span>' : p.close_date}</td>
       <td>${closePriceCell}</td>
       <td>${CLOSE_REASON_LABELS[p.close_reason] || '—'}</td>
       <td class="${pctClass(curReturn)}">${formatPct(curReturn)}</td>
@@ -8265,7 +8199,9 @@ function renderRoute(animate) {
   }
   previousRoute = route;
   document.querySelectorAll('.nav-item[data-route]').forEach(tab => {
-    tab.classList.toggle('active', tab.dataset.route === route.screen);
+    const isActive = tab.dataset.route === route.screen;
+    tab.classList.toggle('active', isActive);
+    if (isActive) tab.setAttribute('aria-current', 'page'); else tab.removeAttribute('aria-current');
   });
   SLIDING_PANES.forEach(id => {
     if (id === route.screen) showPane(id, animate);

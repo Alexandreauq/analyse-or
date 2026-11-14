@@ -59,9 +59,9 @@ function test_TV_TICKER_OVERRIDE_BY_YAHOO_TICKER_still_has_the_lse_epic_override
   console.log('OK: test_TV_TICKER_OVERRIDE_BY_YAHOO_TICKER_still_has_the_lse_epic_overrides');
 }
 
-function test_NO_RELIABLE_COMPANY_TV_DATA_contains_exactly_hangseng_nikkei_and_ftse() {
-  assert.deepStrictEqual([...NO_RELIABLE_COMPANY_TV_DATA].sort(), ['FTSE', 'HANGSENG', 'NIKKEI225']);
-  console.log('OK: test_NO_RELIABLE_COMPANY_TV_DATA_contains_exactly_hangseng_nikkei_and_ftse');
+function test_NO_RELIABLE_COMPANY_TV_DATA_contains_exactly_hangseng_nikkei_ftse_and_russell2000() {
+  assert.deepStrictEqual([...NO_RELIABLE_COMPANY_TV_DATA].sort(), ['FTSE', 'HANGSENG', 'NIKKEI225', 'RUSSELL2000']);
+  console.log('OK: test_NO_RELIABLE_COMPANY_TV_DATA_contains_exactly_hangseng_nikkei_ftse_and_russell2000');
 }
 
 function test_resolveCompanyTvSymbol_uses_yahoo_suffix_for_indices_without_mapping() {
@@ -90,15 +90,41 @@ function test_resolveCompanyTvSymbol_routes_sp500_companies_by_their_exchange() 
   console.log('OK: test_resolveCompanyTvSymbol_routes_sp500_companies_by_their_exchange');
 }
 
+function test_resolveCompanyTvSymbol_builds_symbol_for_tsx60_and_asx200() {
+  // TSX60/ASX200 ajoutés le 2026-11-14 : places uniques comme CAC40/DAX.
+  assert.strictEqual(resolveCompanyTvSymbol('RY.TO', 'TSX60'), 'TSX:RY');
+  assert.strictEqual(resolveCompanyTvSymbol('CBA.AX', 'ASX200'), 'ASX:CBA');
+  console.log('OK: test_resolveCompanyTvSymbol_builds_symbol_for_tsx60_and_asx200');
+}
+
+function test_resolveCompanyTvSymbol_uses_dot_override_for_tsx60_share_classes() {
+  // Yahoo utilise un tiret pour les classes d'actions canadiennes
+  // (BIP-UN.TO), TradingView un point (TSX:BIP.UN) -- même divergence
+  // que BT-A.L/BT.A côté FTSE, corrigée via le même mécanisme d'override.
+  assert.strictEqual(resolveCompanyTvSymbol('BIP-UN.TO', 'TSX60'), 'TSX:BIP.UN');
+  assert.strictEqual(resolveCompanyTvSymbol('CTC-A.TO', 'TSX60'), 'TSX:CTC.A');
+  console.log('OK: test_resolveCompanyTvSymbol_uses_dot_override_for_tsx60_share_classes');
+}
+
+function test_resolveCompanyTvSymbol_null_for_russell2000() {
+  // ~1954 entreprises sans place unique sourcée (NYSE/Nasdaq/AMEX) --
+  // même repli que Hang Seng/Nikkei/FTSE plutôt qu'un symbole probablement faux.
+  assert.strictEqual(resolveCompanyTvSymbol('AAP', 'RUSSELL2000'), null);
+  console.log('OK: test_resolveCompanyTvSymbol_null_for_russell2000');
+}
+
 function main() {
   test_resolveCompanyTvSymbol_null_for_hangseng();
   test_resolveCompanyTvSymbol_null_for_nikkei225();
   test_resolveCompanyTvSymbol_builds_symbol_for_working_indices();
   test_resolveCompanyTvSymbol_null_for_ftse();
   test_TV_TICKER_OVERRIDE_BY_YAHOO_TICKER_still_has_the_lse_epic_overrides();
-  test_NO_RELIABLE_COMPANY_TV_DATA_contains_exactly_hangseng_nikkei_and_ftse();
+  test_NO_RELIABLE_COMPANY_TV_DATA_contains_exactly_hangseng_nikkei_ftse_and_russell2000();
   test_resolveCompanyTvSymbol_uses_yahoo_suffix_for_indices_without_mapping();
   test_resolveCompanyTvSymbol_returns_null_without_known_suffix();
+  test_resolveCompanyTvSymbol_builds_symbol_for_tsx60_and_asx200();
+  test_resolveCompanyTvSymbol_uses_dot_override_for_tsx60_share_classes();
+  test_resolveCompanyTvSymbol_null_for_russell2000();
   test_resolveCompanyTvSymbol_routes_sp500_companies_by_their_exchange();
   console.log('Tous les tests company_quote_widget.test.js sont passés.');
 }

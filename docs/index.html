@@ -6434,6 +6434,7 @@ const INDEX_BENCHMARK_TICKERS = {
   CAC40: '^FCHI', DAX: '^GDAXI', NASDAQ: '^NDX', DOW: '^DJI',
   FTSE: '^FTSE', SMI: '^SSMI', IBEX35: '^IBEX', FTSEMIB: 'FTSEMIB.MI',
   NIKKEI225: '^N225', HANGSENG: '^HSI', EUROSTOXX50: '^STOXX50E', SBF120: '^SBF120', AEXALL: '^AEX',
+  TSX60: '^GSPTSE', ASX200: '^AXJO', RUSSELL2000: '^RUT',
 };
 
 // Traduction des secteurs (company.sector, valeurs Yahoo Finance en
@@ -6475,6 +6476,9 @@ const INDEX_COUNTRY_BY_KEY = {
   SBF120: 'France',
   AEXALL: 'Pays-Bas',
   SP500: 'États-Unis',
+  TSX60: 'Canada',
+  ASX200: 'Australie',
+  RUSSELL2000: 'États-Unis',
 };
 
 // Code court par indice, pour les badges (fiche entreprise, liste) — DJ
@@ -6485,6 +6489,9 @@ const INDEX_SHORT_CODE_BY_KEY = {
   DAX: 'DAX',
   NASDAQ: 'NASDAQ',
   DOW: 'DJ',
+  TSX60: 'TSX60',
+  ASX200: 'ASX200',
+  RUSSELL2000: 'RUSSELL',
 };
 
 // Devise par indice — repli local, écrasé par indicesData.index_currency
@@ -6510,7 +6517,7 @@ const INDEX_CURRENCY_BY_KEY = {
 // Symbole affiché par devise — un nouvel indice dans une devise pas
 // encore vue n'a qu'une ligne à ajouter ici (voir aussi INDEX_CURRENCY
 // côté backend et RISK_FREE_SERIES_BY_CURRENCY pour le taux sans risque).
-const CURRENCY_SYMBOL = { EUR: '€', USD: '$', GBP: '£', CHF: 'CHF', JPY: '¥', HKD: 'HK$' };
+const CURRENCY_SYMBOL = { EUR: '€', USD: '$', GBP: '£', CHF: 'CHF', JPY: '¥', HKD: 'HK$', CAD: 'C$', AUD: 'A$' };
 
 // Formate un prix d'entreprise dans la devise de SON indice (€ pour
 // CAC40/DAX, $ pour NASDAQ/DOW, £ pour FTSE) — corrige le bug de fond où

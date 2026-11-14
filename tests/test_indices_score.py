@@ -4877,12 +4877,14 @@ def test_main_payload_includes_index_metadata(monkeypatch, tmp_path):
         "FTSE": "FTSE 100", "SMI": "SMI", "IBEX35": "IBEX 35", "FTSEMIB": "FTSE MIB",
         "NIKKEI225": "Nikkei 225", "HANGSENG": "Hang Seng", "EUROSTOXX50": "Euro Stoxx 50",
         "SBF120": "SBF 120", "AEXALL": "AEX All-Share",
-        "SP500": "S&P 500", "ETF": "ETF",
+        "SP500": "S&P 500", "TSX60": "S&P/TSX 60", "ASX200": "S&P/ASX 200",
+        "RUSSELL2000": "Russell 2000", "ETF": "ETF",
     }
     assert written["index_currency"] == {
         "CAC40": "EUR", "DAX": "EUR", "NASDAQ": "USD", "DOW": "USD", "FTSE": "GBP",
         "SMI": "CHF", "IBEX35": "EUR", "FTSEMIB": "EUR", "NIKKEI225": "JPY", "HANGSENG": "HKD",
-        "EUROSTOXX50": "EUR", "SBF120": "EUR", "AEXALL": "EUR", "SP500": "USD", "ETF": "EUR",
+        "EUROSTOXX50": "EUR", "SBF120": "EUR", "AEXALL": "EUR", "SP500": "USD",
+        "TSX60": "CAD", "ASX200": "AUD", "RUSSELL2000": "USD", "ETF": "EUR",
     }
     assert written["index_prices"] == fake_index_prices
     written_by_ticker = {c["ticker"]: c["index"] for c in written["companies"]}
@@ -4891,6 +4893,7 @@ def test_main_payload_includes_index_metadata(monkeypatch, tmp_path):
     assert {c["index"] for c in written["companies"]} == {
         "CAC40", "DAX", "NASDAQ", "DOW", "FTSE", "SMI", "IBEX35", "FTSEMIB",
         "NIKKEI225", "HANGSENG", "EUROSTOXX50", "SBF120", "AEXALL", "SP500",
+        "TSX60", "ASX200", "RUSSELL2000",
     }
 
 
@@ -4956,6 +4959,8 @@ def test_main_payload_exposes_risk_free_rate_by_currency(monkeypatch, tmp_path):
             indices_score.FRED_RISK_FREE_SERIES_UK: 4.55,
             indices_score.FRED_RISK_FREE_SERIES_CH: 0.31,
             indices_score.FRED_RISK_FREE_SERIES_JP: 2.67,
+            indices_score.FRED_RISK_FREE_SERIES_CA: 3.88,
+            indices_score.FRED_RISK_FREE_SERIES_AU: 5.28,
         }[series_id]
 
     monkeypatch.setattr(indices_score, "fetch_risk_free_rate", _fake_fetch_risk_free_rate)
@@ -4979,6 +4984,7 @@ def test_main_payload_exposes_risk_free_rate_by_currency(monkeypatch, tmp_path):
             "CAC40": None, "DAX": None, "NASDAQ": None, "DOW": None,
             "FTSE": None, "SMI": None, "IBEX35": None, "FTSEMIB": None,
             "NIKKEI225": None, "HANGSENG": None, "EUROSTOXX50": None, "SBF120": None, "AEXALL": None, "SP500": None,
+            "TSX60": None, "ASX200": None, "RUSSELL2000": None,
         },
     )
     monkeypatch.setattr(indices_score, "update_price_history", lambda entries, **kwargs: entries)
@@ -5002,6 +5008,7 @@ def test_main_payload_exposes_risk_free_rate_by_currency(monkeypatch, tmp_path):
     assert written["risk_free_rate_by_currency"] == {
         "EUR": 3.68, "USD": 4.20, "GBP": 4.55, "CHF": 0.31, "JPY": 2.67,
         "HKD": 4.20,  # pas de serie FRED dediee, repli sur le Treasury US (voir RISK_FREE_SERIES_BY_CURRENCY)
+        "CAD": 3.88, "AUD": 5.28,
     }
 
 
@@ -5020,6 +5027,8 @@ def test_main_routes_risk_free_rate_by_currency(monkeypatch, tmp_path):
             indices_score.FRED_RISK_FREE_SERIES_UK: 4.55,
             indices_score.FRED_RISK_FREE_SERIES_CH: 0.31,
             indices_score.FRED_RISK_FREE_SERIES_JP: 2.67,
+            indices_score.FRED_RISK_FREE_SERIES_CA: 3.88,
+            indices_score.FRED_RISK_FREE_SERIES_AU: 5.28,
         }[series_id]
 
     monkeypatch.setattr(indices_score, "fetch_risk_free_rate", _fake_fetch_risk_free_rate)
@@ -5046,6 +5055,7 @@ def test_main_routes_risk_free_rate_by_currency(monkeypatch, tmp_path):
             "CAC40": None, "DAX": None, "NASDAQ": None, "DOW": None,
             "FTSE": None, "SMI": None, "IBEX35": None, "FTSEMIB": None,
             "NIKKEI225": None, "HANGSENG": None, "EUROSTOXX50": None, "SBF120": None, "AEXALL": None, "SP500": None,
+            "TSX60": None, "ASX200": None, "RUSSELL2000": None,
         },
     )
     monkeypatch.setattr(indices_score, "update_price_history", lambda entries, **kwargs: entries)
@@ -5073,6 +5083,9 @@ def test_main_routes_risk_free_rate_by_currency(monkeypatch, tmp_path):
     ftsemib_ticker = indices_score.FTSEMIB_COMPANIES[0]["ticker"]
     nikkei_ticker = indices_score.NIKKEI225_COMPANIES[0]["ticker"]
     hangseng_ticker = indices_score.HANGSENG_COMPANIES[0]["ticker"]
+    tsx60_ticker = indices_score.TSX60_COMPANIES[0]["ticker"]
+    asx200_ticker = indices_score.ASX200_COMPANIES[0]["ticker"]
+    russell2000_ticker = indices_score.RUSSELL2000_COMPANIES[0]["ticker"]
     assert received_rates[cac40_ticker] == 3.68
     assert received_rates[nasdaq_ticker] == 4.20
     assert received_rates[ftse_ticker] == 4.55
@@ -5084,6 +5097,10 @@ def test_main_routes_risk_free_rate_by_currency(monkeypatch, tmp_path):
     # le Treasury US (DGS10) vu le peg HKD/USD (audit I7, volet 4) --
     # reçoit donc le même taux que le Nasdaq, pas None/proxy générique.
     assert received_rates[hangseng_ticker] == 4.20
+    assert received_rates[tsx60_ticker] == 3.88
+    assert received_rates[asx200_ticker] == 5.28
+    # Russell 2000 est en USD, même taux que Nasdaq/Dow/S&P 500.
+    assert received_rates[russell2000_ticker] == 4.20
 
 
 import pandas as pd
@@ -6487,6 +6504,13 @@ def test_companies_combines_all_indices_with_correct_index_tag():
         + sum(1 for c in indices_score.SP500_COMPANIES
               if c["ticker"] not in {
                   e["ticker"] for e in indices_score.COMPANIES if e.get("index") != "SP500"})
+        # TSX60/ASX200/RUSSELL2000 (2026-11-14) : aucune collision avec un
+        # ticker deja suivi (verifie a la construction), donc simple somme
+        # comme CAC40/DAX/.../HANGSENG plus haut, pas de deduplication a
+        # soustraire comme EUROSTOXX50/SBF120/AEXALL/SP500 ci-dessus.
+        + len(indices_score.TSX60_COMPANIES)
+        + len(indices_score.ASX200_COMPANIES)
+        + len(indices_score.RUSSELL2000_COMPANIES)
     )
     by_ticker = {c["ticker"]: c["index"] for c in indices_score.COMPANIES}
     for c in indices_score.CAC40_COMPANIES:
@@ -6509,9 +6533,16 @@ def test_companies_combines_all_indices_with_correct_index_tag():
         assert by_ticker[c["ticker"]] == "NIKKEI225"
     for c in indices_score.HANGSENG_COMPANIES:
         assert by_ticker[c["ticker"]] == "HANGSENG"
+    for c in indices_score.TSX60_COMPANIES:
+        assert by_ticker[c["ticker"]] == "TSX60"
+    for c in indices_score.ASX200_COMPANIES:
+        assert by_ticker[c["ticker"]] == "ASX200"
+    for c in indices_score.RUSSELL2000_COMPANIES:
+        assert by_ticker[c["ticker"]] == "RUSSELL2000"
     assert set(indices_score.INDEX_NAMES) >= {
         "CAC40", "DAX", "NASDAQ", "DOW", "FTSE", "SMI", "IBEX35", "FTSEMIB",
         "NIKKEI225", "HANGSENG", "EUROSTOXX50", "SBF120", "AEXALL", "SP500",
+        "TSX60", "ASX200", "RUSSELL2000",
     }
 
 

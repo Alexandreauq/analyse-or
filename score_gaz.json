@@ -22,7 +22,7 @@
       "name": "Dynamique récente",
       "score": 10.0,
       "weight": 0.26666666666666666,
-      "raw_value": "+9.0% vs MM200"
+      "raw_value": "+8.6% vs MM200"
     },
     {
       "name": "Dollar (DXY)",
@@ -38,9 +38,9 @@
     }
   ],
   "technical": {
-    "note": "Cours au-dessus de la MM200 (+9.0%) — tendance haussière",
-    "spot": 3.242000102996826,
-    "ma200": 2.9737200009822846,
+    "note": "Cours au-dessus de la MM200 (+8.6%) — tendance haussière",
+    "spot": 3.2300000190734863,
+    "ma200": 2.973660000562668,
     "unite": "$ / MMBtu"
   },
   "calendar": [
@@ -106,19 +106,19 @@
       "importance": "mineure"
     },
     {
-      "title": "Goldman Sachs prévoit une hausse des prix du gaz TTF en cas de perturbation du GNL du Golfe - Investing.com France",
-      "date": "2026-11-13",
-      "link": "https://news.google.com/rss/articles/CBMi5gFBVV95cUxPNmdGdWJLNkltV1d4YnhqWjlyN2R2dllkamlZc2FjY0hPWVhJUUIwbWFfek9QUlhUeGFSX2JvSHZ5RHgwVFVEVUZQNEpJdFhoQ1IxUEhhdFZoajBTTm1zR0dJRzZsVWxqNk5jRG1tN3FaMFl0WUUwX29pdW5BTnBvRFVLOXJITlBUaXllYU1tRnRmeU9YOGNjelZSUTRRbkhGSl9nb3AyTV9CRUJsX19MVG5EMDBJQjlyNUptRHJRNUZ4VGpzVU9IczhybmJ0d1JDbDhzQlh2VzZQTWl1U3g2elJ6Y3VjZw?oc=5",
-      "source": "Investing.com France",
+      "title": "Décembre 2026 : augmentation de 5,8% TTC du prix repère du gaz - énergie-info",
+      "date": "2026-11-10",
+      "link": "https://news.google.com/rss/articles/CBMikAFBVV95cUxQMTFVdGFfYXFFeEdJajcxeFNjUVF0amFaYWZ6VzZEVk5DNy0xOEJPbGpjYzBDN1FuUlNMYWF5UldiUnBlMUwzeTRfeFNlNWVIU1dydnVldGJkVy15aVlhWWpOYnBrTkVwc1BSUW1RczY3Q3BxYkc1Q0FpN2MwYS1TVlNqTmEwWm45VzRZSDIzcEM?oc=5",
+      "source": "énergie-info",
       "summary": "",
       "sentiment": 0,
       "importance": "mineure"
     },
     {
-      "title": "Décembre 2026 : augmentation de 5,8% TTC du prix repère du gaz - énergie-info",
+      "title": "Gaz : le prix repère augmentera encore de 5,8 % en décembre - Que Choisir",
       "date": "2026-11-10",
-      "link": "https://news.google.com/rss/articles/CBMikAFBVV95cUxQMTFVdGFfYXFFeEdJajcxeFNjUVF0amFaYWZ6VzZEVk5DNy0xOEJPbGpjYzBDN1FuUlNMYWF5UldiUnBlMUwzeTRfeFNlNWVIU1dydnVldGJkVy15aVlhWWpOYnBrTkVwc1BSUW1RczY3Q3BxYkc1Q0FpN2MwYS1TVlNqTmEwWm45VzRZSDIzcEM?oc=5",
-      "source": "énergie-info",
+      "link": "https://news.google.com/rss/articles/CBMiowFBVV95cUxNTEo5TXhUVkZEdC1kTnlrY3Q1MVN1M0Nrbzg0dUhlTlY5aXVNUDc4RXJ4b0NaU1pUX2FUZjVHczdHU0haUnVUcFJacXFSdl9OVzd3WFhKSmlXVVNNQWg3eE5PUEJvSGdIQkNsQ2UyR1I4a3hmSU02U1ZQMXZLZC1MZkUwRWJjTXFNTjc4TE5TSUozUS1Wcm9tSHJrbHBuYklKanFv?oc=5",
+      "source": "Que Choisir",
       "summary": "",
       "sentiment": 0,
       "importance": "mineure"
@@ -133,7 +133,7 @@
       "importance": "mineure"
     }
   ],
-  "analysis_html": "<h3>Contexte récent</h3><p>Le gaz naturel américain (Henry Hub) s'établit à 3,00 $/MMBtu, soit 9,8 % au-dessus de sa moyenne mobile à 200 jours, ce qui confirme une tendance haussière de fond. Ce niveau reste toutefois nettement inférieur à la moyenne saisonnière habituelle du mois (3,60 $/MMBtu). La progression récente s'inscrit dans un contexte de refroidissement météorologique attendu aux États-Unis.</p><h3>Facteurs déterminants</h3><p>Le score composite résulte d'un équilibre entre quatre facteurs actifs de poids comparables. Les forces haussières et baissières se compensent presque, avec un <strong>léger avantage pour les facteurs positifs</strong>.</p><ul><li><strong>Saisonnalité (score -10, poids 33 %)</strong> : c'est le facteur le plus pondéré et il pèse au maximum à la baisse. Le prix évolue environ 0,60 $/MMBtu sous sa norme saisonnière, ce qui traduit une faiblesse relative du marché par rapport à ce qui est habituellement observé à cette période de l'année.</li><li><strong>Dynamique récente (score +10, poids 27 %)</strong> : la contribution haussière est maximale. Un écart de près de 10 % au-dessus de la MM200 témoigne d'une tendance porteuse à moyen terme, qui contrebalance à elle seule l'essentiel du signal saisonnier négatif.</li><li><strong>Positionnement CFTC (score +9,9, poids 27 %)</strong> : la position nette des spéculateurs est fortement vendeuse (-225 359 contrats), au 1er percentile sur trois ans. Ce positionnement extrême est interprété de manière contrarienne. Un marché aussi massivement vendeur est exposé à des rachats de positions courtes, ce qui peut amplifier une hausse. Cela concorde avec la dynamique positive observée.</li><li><strong>Dollar (DXY, score -10, poids 13 %)</strong> : le dollar s'est nettement apprécié, passant de 99,46 à 103,23 en deux mois. Ce mouvement constitue un vent contraire pour les matières premières libellées en dollars. Son poids plus faible limite toutefois son influence sur le score global.</li><li><strong>Stocks EIA (poids 0 %)</strong> : cette donnée n'est pas disponible faute de clé API configurée. Le score ne tient donc pas compte de l'état des réserves, qui est pourtant un déterminant fondamental du marché gazier américain.</li></ul><h3>Actualités à retenir</h3><p>Aucune actualité n'est classée comme notable ou majeure : l'ensemble du flux est jugé mineur. Quelques éléments éclairent néanmoins le contexte :</p><ul><li>La <strong>hausse de 4 % du gaz américain</strong>, qui atteint son plus haut niveau en quatre mois sur fond de refroidissement attendu, est cohérente avec le signal positif de la dynamique récente. Elle va aussi dans le sens d'une possible pression sur les vendeurs à découvert mise en évidence par le positionnement CFTC.</li><li>Les autres informations concernent surtout le <strong>marché européen</strong>. Elles portent sur la volatilité du TTF, sur le scénario conditionnel de Goldman Sachs (hausse du TTF en cas de perturbation du GNL du Golfe) et sur la hausse de 5,8 % du prix repère de vente du gaz en France en décembre. Elles n'ont qu'un lien indirect avec le Henry Hub, qui sert de référence au score.</li></ul><h3>Synthèse</h3><p>Le score composite du gaz naturel est proche de la neutralité, avec une légère inclination positive. D'un côté, une dynamique de prix favorable et un positionnement spéculatif vendeur extrême, propice à des rachats, soutiennent le marché. De l'autre, un prix sensiblement inférieur à sa norme saisonnière et un dollar en nette appréciation le freinent. L'absence des données de stocks EIA constitue une limite importante de cette lecture, car elle prive l'analyse d'un indicateur fondamental clé. Les actualités récentes, toutes mineures, ne modifient pas sensiblement ce diagnostic. Celle sur la hausse du gaz américain liée aux prévisions météorologiques corrobore toutefois la composante de dynamique.</p>",
+  "analysis_html": "<h3>Contexte récent</h3><p>Le gaz naturel américain (Henry Hub) cote environ <strong>3,00 $/MMBtu</strong>, soit <strong>+8,6 % au-dessus de sa moyenne mobile 200 jours</strong>. Cette dynamique haussière reste toutefois en deçà de la moyenne saisonnière du mois (3,60 $/MMBtu). Les actualités signalent un rebond récent vers un plus haut de quatre mois, porté par des anticipations de refroidissement. En Europe, les prix restent volatils.</p><h3>Facteurs déterminants</h3><ul><li><strong>Saisonnalité (poids 33 %, score -10,0)</strong> : c'est le facteur le plus pondéré, et il est au minimum de son échelle. Le prix actuel de 3,00 $/MMBtu se situe nettement sous sa référence saisonnière de 3,60 $/MMBtu. Le marché reste donc en retrait par rapport au niveau habituellement observé à cette période, malgré le rebond récent. Ce facteur constitue le principal frein du score composite.</li><li><strong>Dynamique récente (poids 27 %, score +10,0)</strong> : au maximum de son échelle. L'écart de +8,6 % au-dessus de la MM200 traduit une tendance de fond haussière. Cette contribution compense presque entièrement celle de la saisonnalité.</li><li><strong>Positionnement CFTC (poids 27 %, score +9,9)</strong> : la position nette des opérateurs non commerciaux s'élève à -225 359 contrats, au <strong>1er percentile sur trois ans</strong>. Ce positionnement vendeur extrême est interprété de manière contrariante : un tel excès de positions courtes laisse un potentiel de rachats si le contexte devient favorable. Il soutient fortement le score.</li><li><strong>Dollar (DXY) (poids 13 %, score -10,0)</strong> : l'indice est passé de 99,46 à 103,41 en deux mois. Un dollar plus fort pèse sur les matières premières libellées en dollars. Ce facteur est défavorable, mais son poids est plus limité.</li><li><strong>Stocks EIA (poids 0 %)</strong> : la donnée est indisponible faute de clé API configurée. Ce facteur fondamental, pourtant central pour le gaz naturel, ne contribue pas au score. Son absence réduit la portée de l'analyse, en particulier à l'approche de la saison de soutirage hivernal.</li></ul><p>Au total, deux facteurs haussiers (dynamique et positionnement) font face à deux facteurs baissiers (saisonnalité et dollar). Les contributions pondérées se neutralisent en grande partie. Le score composite ressort donc proche de la neutralité, avec un très léger biais positif.</p><h3>Actualités à retenir</h3><p>Aucune actualité n'est classée notable ou majeure ; toutes sont jugées mineures. Deux points méritent néanmoins d'être signalés :</p><ul><li><strong>Hausse de 4 % du gaz américain à un plus haut de quatre mois, sur fond de refroidissement attendu</strong> : c'est l'information la plus directement liée au Henry Hub. Elle va dans le sens du facteur de dynamique récente, au maximum de son échelle. La météo hivernale constitue un moteur typique de la demande de chauffage.</li><li><strong>Hausse de 5,8 % du prix repère de vente du gaz en France en décembre</strong> et <strong>volatilité des prix européens</strong> : ces informations concernent le marché européen et le consommateur français, et non directement le Henry Hub. Elles illustrent un contexte de prix du gaz orienté à la hausse à l'échelle internationale, mais leur lien avec le score composite reste indirect.</li></ul><h3>Synthèse</h3><p>Le score composite du gaz naturel reflète un <strong>équilibre de forces opposées</strong>. D'un côté, une tendance de prix haussière et un positionnement spéculatif vendeur extrême plaident pour un contexte favorable. De l'autre, un prix encore inférieur à sa norme saisonnière et un dollar en nette appréciation pèsent sur l'ensemble. Les actualités récentes, toutes mineures, confirment surtout le rebond de court terme lié aux anticipations météorologiques. Enfin, l'absence des données de stocks EIA limite la lecture fondamentale du marché et constitue la principale lacune de cette évaluation.</p>",
   "news_classifications": {
     "https://news.google.com/rss/articles/CBMic0FVX3lxTE1aLXB2OUQ5dWpLU3R0OHRqeXlrb3RwdXByenR5aTY5Y0tKa0xEZGdhVElrWjVZUzVjd3hlVkVjdmY0aE1oMnpTd01XZC1wbk1oY3FickFLVkxyY2dwSTJTbXdBc3lpUkMtZ25FbGVjRHR1aXc?oc=5": {
       "summary": "",
@@ -145,12 +145,12 @@
       "sentiment": 0,
       "importance": "mineure"
     },
-    "https://news.google.com/rss/articles/CBMi5gFBVV95cUxPNmdGdWJLNkltV1d4YnhqWjlyN2R2dllkamlZc2FjY0hPWVhJUUIwbWFfek9QUlhUeGFSX2JvSHZ5RHgwVFVEVUZQNEpJdFhoQ1IxUEhhdFZoajBTTm1zR0dJRzZsVWxqNk5jRG1tN3FaMFl0WUUwX29pdW5BTnBvRFVLOXJITlBUaXllYU1tRnRmeU9YOGNjelZSUTRRbkhGSl9nb3AyTV9CRUJsX19MVG5EMDBJQjlyNUptRHJRNUZ4VGpzVU9IczhybmJ0d1JDbDhzQlh2VzZQTWl1U3g2elJ6Y3VjZw?oc=5": {
+    "https://news.google.com/rss/articles/CBMikAFBVV95cUxQMTFVdGFfYXFFeEdJajcxeFNjUVF0amFaYWZ6VzZEVk5DNy0xOEJPbGpjYzBDN1FuUlNMYWF5UldiUnBlMUwzeTRfeFNlNWVIU1dydnVldGJkVy15aVlhWWpOYnBrTkVwc1BSUW1RczY3Q3BxYkc1Q0FpN2MwYS1TVlNqTmEwWm45VzRZSDIzcEM?oc=5": {
       "summary": "",
       "sentiment": 0,
       "importance": "mineure"
     },
-    "https://news.google.com/rss/articles/CBMikAFBVV95cUxQMTFVdGFfYXFFeEdJajcxeFNjUVF0amFaYWZ6VzZEVk5DNy0xOEJPbGpjYzBDN1FuUlNMYWF5UldiUnBlMUwzeTRfeFNlNWVIU1dydnVldGJkVy15aVlhWWpOYnBrTkVwc1BSUW1RczY3Q3BxYkc1Q0FpN2MwYS1TVlNqTmEwWm45VzRZSDIzcEM?oc=5": {
+    "https://news.google.com/rss/articles/CBMiowFBVV95cUxNTEo5TXhUVkZEdC1kTnlrY3Q1MVN1M0Nrbzg0dUhlTlY5aXVNUDc4RXJ4b0NaU1pUX2FUZjVHczdHU0haUnVUcFJacXFSdl9OVzd3WFhKSmlXVVNNQWg3eE5PUEJvSGdIQkNsQ2UyR1I4a3hmSU02U1ZQMXZLZC1MZkUwRWJjTXFNTjc4TE5TSUozUS1Wcm9tSHJrbHBuYklKanFv?oc=5": {
       "summary": "",
       "sentiment": 0,
       "importance": "mineure"

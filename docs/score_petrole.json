@@ -2,7 +2,7 @@
   "date": "2026-11-14",
   "commodity": "petrole",
   "label": "Pétrole (WTI)",
-  "composite_score": -18.5,
+  "composite_score": -20.7,
   "interpretation": "Défavorable — pas d'entrée même sur signal technique",
   "cftc_percentile": 10.256410256410255,
   "factors": [
@@ -22,13 +22,13 @@
       "name": "Spread WTI-Brent",
       "score": -10,
       "weight": 0.19999999999999998,
-      "raw_value": "+7.16 $/baril (il y a ~2 mois : +4.80 $/baril)"
+      "raw_value": "+7.28 $/baril (il y a ~2 mois : +4.80 $/baril)"
     },
     {
       "name": "Dynamique récente",
-      "score": 2.59947557413609,
+      "score": 1.7833711556976222,
       "weight": 0.26666666666666666,
-      "raw_value": "+1.3% vs MM200"
+      "raw_value": "+0.9% vs MM200"
     },
     {
       "name": "Stocks EIA",
@@ -38,9 +38,9 @@
     }
   ],
   "technical": {
-    "note": "Cours au-dessus de la MM200 (+1.3%) — tendance haussière",
-    "spot": 88.91999816894531,
-    "ma200": 87.77910003662109,
+    "note": "Cours proche de la MM200 (+0.9%) — zone de décision",
+    "spot": 88.55999755859375,
+    "ma200": 87.77730003356933,
     "unite": "$ / baril"
   },
   "calendar": [
@@ -97,10 +97,19 @@
       "importance": "mineure"
     },
     {
-      "title": "Les cours du pétrole s’apprêtent à enregistrer une deuxième baisse hebdomadaire, Trump maintenant le blocus de l’Iran - Zonebourse Suisse",
-      "date": "2026-11-13",
-      "link": "https://news.google.com/rss/articles/CBMi8AFBVV95cUxOM3lFdklRR1pRZGR1bTEzRFpoQmpZSnZ2eE1Ua1ZEbGRWRzFnY0hEQUZDWllTMU1CR2FKaUtFX1Q0M0xjOE03bUxoeDZBaTFhYUNKOEl4OUotcnZhTkphcGRzUVRROHFqcGZjZ2hGRHVvY0RNdjRMeHpZUFJEdnBQOWQ0ZzdvcVlsTUh2aEtIMHR5THZrbVJGSW5weDFNUDhBYzhJR2NxOTFvLVJBa2gxZDRWbkZmLXZkMVVER0YzQ1Zpem9pbFVneEtpUHMtdjJ0SVNQb2otQzR6M2ZJaWVvN2RCQkFINGNqS05FUXhKaGI?oc=5",
-      "source": "Zonebourse Suisse",
+      "title": "Prix du carburant - Comment se fixe le prix à la pompe - Que Choisir",
+      "date": "2026-11-10",
+      "link": "https://news.google.com/rss/articles/CBMinwFBVV95cUxQRk5KX05CcFRja3hrb2FWQmpyWFN0NFdxRVNzRFRxMVVnMl95c0ZyQ3hQeGpSTmFMajQ3RVlvMDF4Nl9oT1ZOUDUtYnZmQ1VmZFFYU3BzNktUZUVjNnJmcGpnR1hIUzI0M3BIc3BJYkV5dXdoS1czc2o3Y01sRFA0X0ZidExvWnlIdUVVbUpRTmQtMjZOWFFXRXZrMmZyWmM?oc=5",
+      "source": "Que Choisir",
+      "summary": "",
+      "sentiment": 0,
+      "importance": "mineure"
+    },
+    {
+      "title": "Prix ​​des carburants aujourd'hui, 14 novembre : Les prix mondiaux du pétrole augmentent légèrement, qu'en est-il des prix intérieurs ? - Vietnam.vn",
+      "date": "2026-11-14",
+      "link": "https://news.google.com/rss/articles/CBMinAFBVV95cUxOSlhOR2xiREFUNlNYQ0o5X19vTHUtaEpvWWhMQmRWYzd5bGltZjNSTnRzb2RSdTRMRFhuX1Z6Y2hXdXF1MmZUZE5ReVFSRS1kZ000WVc4cFBGcnBuSTdSUFNnWlBiRE03dWRvX20zMXk2aTlBOHJBaGpnZmRnS29nNzBSclFvUzRHSjJlVVk5UXoxQ3Iyek55LVR2emE?oc=5",
+      "source": "Vietnam.vn",
       "summary": "",
       "sentiment": 0,
       "importance": "mineure"
@@ -115,32 +124,28 @@
       "importance": "mineure"
     },
     {
-      "title": "Le prix du baril de pétrole bondit à 115 dollars, au plus haut depuis le début de la guerre au Moyen-Orient - Les Echos",
-      "date": "2026-10-23",
-      "link": "https://news.google.com/rss/articles/CBMigwJBVV95cUxPUGxteWZsQnlyWFd6RmM2QmhTWlY1NzBtYWNUNGQ5eGwwZ0dtSVVGZzFfSnlSazZSOXJmTjBpcUZ4TExzaldRSHRyQUNwN3dnQTVXTnlyM05hVEh4Z0h2eTJ2b3B0ZlhqbzU4dTBYV3A4ZGtHUmI1ZFA3cXlDMWNWS0o3cmF6cGlFZGtXT2luZF9oZERaMjJwMWRvSkEtVE1MVThhVi1VaDFId0xhaVVqTHR0cE00b1d6RW9hdW1tdDN3OVIwdTI0eFdKQzlBdGdIYkJrZnNSUkxBdnVyYlpyQnVUTzFmTktQUU5kaGlHeE9CSWNZZ3QxTm1WNkpCQVJVQkM0?oc=5",
-      "source": "Les Echos",
-      "summary": "",
-      "sentiment": 0,
-      "importance": "mineure"
-    },
-    {
-      "title": "Pétrole : les cours repartent à la hausse après des déclarations de Trump - H24info",
+      "title": "Le Brent au-dessus de 96 dollars, les Houthis visent le pétrole saoudien - Prix du baril",
       "date": "2026-11-13",
-      "link": "https://news.google.com/rss/articles/CBMiogFBVV95cUxNNmttNzE1TTZsOG5uUE9EOGRSSXZQZUVkc0QzTE93cGVCMjB3MnpIb0hUajhiQmstN0RZUUh0NUROY3ZYV3lYaHNvNThGU3dNeUwzc0d2cmdLWlNJSmJZcVB0ZmhFQ3JBUWxUZGJGMm5QdDhrVXJIclp1RzNXdlk2M2lmQVU0NlZKbVNIZEdXVEliVHlsd3pNVV9rWmhmME9MUFE?oc=5",
-      "source": "H24info",
+      "link": "https://news.google.com/rss/articles/CBMiuwFBVV95cUxQY0d3bFJ0a1RVdFJZWkp5V3VQaUxUWHl4SFM1WTVtLXloZ2lZV2YwYmZZdlRWdExway10d2JQUFVVY2NVNTRDZVdyU3VOOVRzVURWREhBaHhPb3hpYnVJU0ljbHpjeUhZMGpEajM5RXg0MWZ3czBMa21KckRyRkFfVmhtbXJjajZ5QVNobW16d01qSmhvbUlNMnlXTG8yWUVtcVNUSlZQbEtBMEFzQnpNSkEzV2RfOWhqemdR?oc=5",
+      "source": "Prix du baril",
       "summary": "",
       "sentiment": 0,
       "importance": "mineure"
     }
   ],
-  "analysis_html": "<h3>Contexte récent</h3><p>Le WTI évolue dans un environnement géopolitique tendu, marqué par la guerre au Moyen-Orient et le maintien d'un blocus de l'Iran annoncé par Donald Trump. Les actualités font état de mouvements de prix heurtés : un pic du baril à 115 dollars, puis une deuxième baisse hebdomadaire et des rebonds liés aux déclarations présidentielles. Sur le plan technique, le cours reste proche de sa moyenne mobile à 200 jours (+0,8 %), ce qui traduit une tendance de fond peu marquée malgré cette volatilité.</p><h3>Facteurs déterminants</h3><ul><li><strong>Dollar (DXY), score -10,0, poids 27 % :</strong> c'est le principal frein du score. L'indice dollar est passé de 99,46 à 103,22 en deux mois, soit une hausse d'environ 3,8 %. Un dollar plus fort renchérit le pétrole pour les acheteurs hors zone dollar et pèse en général sur la demande et sur les prix libellés en dollars. Le facteur est à son niveau le plus défavorable.</li><li><strong>Spread WTI-Brent, score -10,0, poids 20 % :</strong> autre contribution fortement négative. Le WTI cote 7,50 $/baril au-dessus du Brent, contre +4,80 $ il y a environ deux mois. Cette prime inhabituelle et croissante du brut américain signale qu'il est cher par rapport à la référence internationale. Cela peut réduire la compétitivité des exportations américaines et laisser envisager un rattrapage relatif.</li><li><strong>Positionnement CFTC, score +7,9, poids 27 % :</strong> c'est le principal soutien du score. Avec une position nette de 21 728 contrats, les spéculateurs se situent au 10e percentile sur trois ans, un positionnement acheteur historiquement faible. Ce facteur est interprété de façon contrariante : un marché déjà largement délesté de ses positions longues offre un potentiel de rachats et un risque de vente additionnelle limité.</li><li><strong>Dynamique récente, score +1,6, poids 27 % :</strong> contribution légèrement positive mais quasi neutre, le prix évoluant à peine au-dessus de sa moyenne mobile à 200 jours.</li><li><strong>Stocks EIA, score 0, poids 0 % :</strong> donnée indisponible faute de clé API configurée. Ce facteur n'entre donc pas dans le score, qui ne reflète pas l'état des stocks américains, un élément pourtant central pour le WTI.</li></ul><p>Au total, les deux facteurs à -10 (dollar et spread) l'emportent sur le soutien du positionnement CFTC. Le score composite penche donc du côté défavorable.</p><h3>Actualités à retenir</h3><p>Aucune actualité n'est classée notable ou majeure : les cinq éléments recensés sont tous jugés mineurs. Plusieurs d'entre eux éclairent toutefois le contexte :</p><ul><li><strong>Hausse du baril à 115 dollars</strong> (Les Echos), au plus haut depuis le début de la guerre au Moyen-Orient : elle illustre la prime de risque géopolitique intégrée par le marché.</li><li><strong>Deuxième baisse hebdomadaire malgré le maintien du blocus de l'Iran</strong> (Zonebourse) : elle suggère un reflux partiel de cette prime, cohérent avec une dynamique proche de la neutralité.</li><li><strong>Rebond après des déclarations de Trump</strong> (H24info) : il souligne la sensibilité des cours aux annonces politiques, source de volatilité de court terme.</li></ul><p>Ces actualités n'étant ni datées ni hiérarchisées comme significatives, leur lien avec l'évolution du score reste indirect. Elles expliquent surtout la volatilité observée, sans modifier les facteurs structurels (dollar, spread) qui dominent le score.</p><h3>Synthèse</h3><p>Le score composite du WTI est actuellement tiré vers le bas par deux facteurs au plus défavorable : un dollar nettement raffermi en deux mois et une prime du WTI sur le Brent qui s'est élargie. Le positionnement spéculatif très bas constitue le principal contrepoids, tandis que la dynamique de prix reste quasi neutre. Le contexte géopolitique (guerre au Moyen-Orient, blocus de l'Iran) alimente des mouvements de prix marqués dans les deux sens, sans qu'aucune actualité ne soit jugée déterminante. Enfin, l'absence des données de stocks EIA limite la portée de l'analyse sur les fondamentaux physiques du marché américain.</p>",
+  "analysis_html": "<h3>Contexte récent</h3><p>Le WTI évolue à un niveau proche de sa tendance de long terme : il se situe à +0,9 % au-dessus de sa moyenne mobile 200 jours, sans signal directionnel marqué. Sur les deux derniers mois, l'environnement s'est durci, avec un dollar nettement plus fort et un écart de prix WTI-Brent qui s'est élargi. Le marché pétrolier reste par ailleurs exposé à des tensions géopolitiques au Moyen-Orient, le Brent étant cité au-dessus de 96 dollars.</p><h3>Facteurs déterminants</h3><ul><li><strong>Dollar (DXY), score -10,0, poids 27 %</strong> : l'indice est passé de 99,46 à 103,41 en deux mois, soit une hausse d'environ 4 %. Le pétrole est coté en dollars : un billet vert plus fort renchérit le baril pour les acheteurs hors zone dollar, ce qui pèse traditionnellement sur la demande et sur les prix. Ce facteur atteint la borne négative de l'échelle et compte parmi les plus influents du score.</li><li><strong>Spread WTI-Brent, score -10,0, poids 20 %</strong> : l'écart est passé de +4,80 à +7,28 $/baril. Selon la convention du modèle, cet élargissement est lu comme défavorable au WTI. Il traduit une évolution relative moins favorable du brut américain par rapport à la référence internationale, possiblement liée à une prime de risque géopolitique qui profite davantage au Brent. Ce facteur est lui aussi à son niveau le plus négatif.</li><li><strong>Positionnement CFTC, score +7,9, poids 27 %</strong> : la position nette spéculative est de 21 728 contrats, ce qui la place au 10e percentile sur trois ans. Ce positionnement très peu acheteur est interprété comme un signal de contrepoids. Les opérateurs étant déjà largement allégés, le potentiel de ventes supplémentaires apparaît plus limité, et un éventuel retour acheteur pourrait soutenir les prix. C'est le principal facteur positif du score.</li><li><strong>Dynamique récente, score +1,8, poids 27 %</strong> : un prix légèrement supérieur à la moyenne mobile 200 jours (+0,9 %) donne un signal faiblement positif, proche de la neutralité.</li><li><strong>Stocks EIA, poids 0 %</strong> : la donnée est indisponible, faute de clé API EIA configurée. L'analyse ne tient donc pas compte de l'état des stocks américains, qui est pourtant un élément fondamental important pour le WTI.</li></ul><p>Au total, les deux facteurs les plus négatifs, le dollar et le spread, totalisent près de la moitié des pondérations. Ils sont partiellement compensés par le positionnement CFTC, tandis que la dynamique récente n'apporte qu'un soutien marginal. Le solde pondéré penche plutôt du côté défavorable.</p><h3>Actualités à retenir</h3><p>Aucune actualité n'est classée comme notable ou majeure dans la sélection fournie. La plupart des éléments sont pédagogiques ou de suivi général : tableau de bord IFPEN, formation du prix à la pompe, définition du Brent, prix des carburants au Vietnam.</p><ul><li><strong>Le Brent au-dessus de 96 dollars, les Houthis visent le pétrole saoudien</strong> (classée mineure) : c'est la seule information porteuse d'un élément de marché. Une menace sur l'offre saoudienne alimente une prime de risque géopolitique qui concerne d'abord le Brent. Cette information est cohérente avec l'élargissement de l'écart WTI-Brent observé, mais son classement mineur invite à ne pas en surestimer la portée.</li></ul><h3>Synthèse</h3><p>Le score composite du WTI est actuellement tiré vers le bas par deux facteurs à leur niveau le plus défavorable : un dollar en nette appréciation sur deux mois et un écart WTI-Brent qui s'élargit au détriment du brut américain. Ces pressions sont en partie atténuées par un positionnement spéculatif historiquement bas, qui limite le risque de liquidations supplémentaires. La dynamique de prix, elle, reste quasi neutre. Le contexte géopolitique au Moyen-Orient semble soutenir davantage le Brent que le WTI. Enfin, l'absence des données de stocks EIA laisse de côté un déterminant fondamental, ce qui invite à interpréter le score avec prudence.</p>",
   "news_classifications": {
     "https://news.google.com/rss/articles/CBMigAFBVV95cUxNcUtMQXZXa1NoaGxQZkJxU1hMSXBhUnlCWWloV2U3NE8tX1o2MFJESDg4ckd1amR0WW5BZWxyQ3hzQ1VwcXpGTEhxc1ZndDJHNi1iaTB2RHg0aDFYR0VaSElZY18wVUotS2dqUDEzaExCLXpyeU55amZkeHpwbnNhQQ?oc=5": {
       "summary": "",
       "sentiment": 0,
       "importance": "mineure"
     },
-    "https://news.google.com/rss/articles/CBMi8AFBVV95cUxOM3lFdklRR1pRZGR1bTEzRFpoQmpZSnZ2eE1Ua1ZEbGRWRzFnY0hEQUZDWllTMU1CR2FKaUtFX1Q0M0xjOE03bUxoeDZBaTFhYUNKOEl4OUotcnZhTkphcGRzUVRROHFqcGZjZ2hGRHVvY0RNdjRMeHpZUFJEdnBQOWQ0ZzdvcVlsTUh2aEtIMHR5THZrbVJGSW5weDFNUDhBYzhJR2NxOTFvLVJBa2gxZDRWbkZmLXZkMVVER0YzQ1Zpem9pbFVneEtpUHMtdjJ0SVNQb2otQzR6M2ZJaWVvN2RCQkFINGNqS05FUXhKaGI?oc=5": {
+    "https://news.google.com/rss/articles/CBMinwFBVV95cUxQRk5KX05CcFRja3hrb2FWQmpyWFN0NFdxRVNzRFRxMVVnMl95c0ZyQ3hQeGpSTmFMajQ3RVlvMDF4Nl9oT1ZOUDUtYnZmQ1VmZFFYU3BzNktUZUVjNnJmcGpnR1hIUzI0M3BIc3BJYkV5dXdoS1czc2o3Y01sRFA0X0ZidExvWnlIdUVVbUpRTmQtMjZOWFFXRXZrMmZyWmM?oc=5": {
+      "summary": "",
+      "sentiment": 0,
+      "importance": "mineure"
+    },
+    "https://news.google.com/rss/articles/CBMinAFBVV95cUxOSlhOR2xiREFUNlNYQ0o5X19vTHUtaEpvWWhMQmRWYzd5bGltZjNSTnRzb2RSdTRMRFhuX1Z6Y2hXdXF1MmZUZE5ReVFSRS1kZ000WVc4cFBGcnBuSTdSUFNnWlBiRE03dWRvX20zMXk2aTlBOHJBaGpnZmRnS29nNzBSclFvUzRHSjJlVVk5UXoxQ3Iyek55LVR2emE?oc=5": {
       "summary": "",
       "sentiment": 0,
       "importance": "mineure"
@@ -150,12 +155,7 @@
       "sentiment": 0,
       "importance": "mineure"
     },
-    "https://news.google.com/rss/articles/CBMigwJBVV95cUxPUGxteWZsQnlyWFd6RmM2QmhTWlY1NzBtYWNUNGQ5eGwwZ0dtSVVGZzFfSnlSazZSOXJmTjBpcUZ4TExzaldRSHRyQUNwN3dnQTVXTnlyM05hVEh4Z0h2eTJ2b3B0ZlhqbzU4dTBYV3A4ZGtHUmI1ZFA3cXlDMWNWS0o3cmF6cGlFZGtXT2luZF9oZERaMjJwMWRvSkEtVE1MVThhVi1VaDFId0xhaVVqTHR0cE00b1d6RW9hdW1tdDN3OVIwdTI0eFdKQzlBdGdIYkJrZnNSUkxBdnVyYlpyQnVUTzFmTktQUU5kaGlHeE9CSWNZZ3QxTm1WNkpCQVJVQkM0?oc=5": {
-      "summary": "",
-      "sentiment": 0,
-      "importance": "mineure"
-    },
-    "https://news.google.com/rss/articles/CBMiogFBVV95cUxNNmttNzE1TTZsOG5uUE9EOGRSSXZQZUVkc0QzTE93cGVCMjB3MnpIb0hUajhiQmstN0RZUUh0NUROY3ZYV3lYaHNvNThGU3dNeUwzc0d2cmdLWlNJSmJZcVB0ZmhFQ3JBUWxUZGJGMm5QdDhrVXJIclp1RzNXdlk2M2lmQVU0NlZKbVNIZEdXVEliVHlsd3pNVV9rWmhmME9MUFE?oc=5": {
+    "https://news.google.com/rss/articles/CBMiuwFBVV95cUxQY0d3bFJ0a1RVdFJZWkp5V3VQaUxUWHl4SFM1WTVtLXloZ2lZV2YwYmZZdlRWdExway10d2JQUFVVY2NVNTRDZVdyU3VOOVRzVURWREhBaHhPb3hpYnVJU0ljbHpjeUhZMGpEajM5RXg0MWZ3czBMa21KckRyRkFfVmhtbXJjajZ5QVNobW16d01qSmhvbUlNMnlXTG8yWUVtcVNUSlZQbEtBMEFzQnpNSkEzV2RfOWhqemdR?oc=5": {
       "summary": "",
       "sentiment": 0,
       "importance": "mineure"

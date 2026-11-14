@@ -1720,6 +1720,11 @@
      d'alerte quand ils se cumulent. Affiché seulement si éligible (pas de
      variante "non éligible", même logique que .majeure-tag). */
   .graham-tag { border-color: var(--green-500); color: var(--green-500); }
+  /* Badge "PEA éligible" (fiche détail ETF, renderEtfDetail) : même forme
+     et teinte que .graham-tag par coïncidence (les deux signalent un
+     statut positif), mais concept sans rapport -- classe dédiée pour ne
+     pas coupler un futur changement visuel du badge Graham à celui-ci. */
+  .pea-tag { border-color: var(--green-500); color: var(--green-500); }
   /* Liste des critères du badge Graham (voir renderGrahamCriteria) —
      lignes compactes avec icône ✓/✗, plus légères que .factor-row car
      pas de barre pondérée à afficher, juste un résultat booléen. */
@@ -7182,6 +7187,12 @@ const ETF_BENCHMARK_GROUP_ORDER = [
   'Matières premières', 'Obligations', 'Dividendes & thématiques', 'Autres',
 ];
 
+// Libellés FR pour les enums brutes de etf_catalog.py (replication/
+// distribution) -- affichées telles quelles sinon ("synthetique", sans
+// accent ni majuscule) sur les 61 fiches détail ETF.
+const ETF_REPLICATION_LABEL = { synthetique: 'Synthétique', physique: 'Physique' };
+const ETF_DISTRIBUTION_LABEL = { capitalisant: 'Capitalisant', distribuant: 'Distribuant' };
+
 function etfBenchmarkGroupLabel(benchmarkName) {
   return ETF_BENCHMARK_GROUP_BY_NAME[benchmarkName] || 'Autres';
 }
@@ -7210,7 +7221,7 @@ function etfGroupedRowsHtml(companies) {
   });
   return ETF_BENCHMARK_GROUP_ORDER
     .filter(label => byGroup[label] && byGroup[label].length)
-    .map(label => `<div class="etf-benchmark-group-label">${label}</div>${byGroup[label].map(companyRowHtml).join('')}`)
+    .map(label => `<div class="etf-benchmark-group-label" role="heading" aria-level="3">${label}</div>${byGroup[label].map(companyRowHtml).join('')}`)
     .join('');
 }
 
@@ -7894,7 +7905,7 @@ function renderEtfDetail(company) {
   // "indisponible" (échec de .info, voir etf_score.fetch_etf_data).
   const dividendValueHtml = info.dividend_yield != null
     ? `<span class="price-value">${formatPct(info.dividend_yield * 100)}${!info.dividend_yield && info.distribution === 'capitalisant' ? ' (capitalisant)' : ''}</span>`
-    : `<span class="price-value" style="color:var(--text-faint)">— ${info.distribution === 'capitalisant' ? '(capitalisant, pas de distribution)' : '(indisponible)'}</span>`;
+    : `<span class="price-value" style="color:var(--muted)">— ${info.distribution === 'capitalisant' ? '(capitalisant, pas de distribution)' : '(indisponible)'}</span>`;
 
   // Autres ETF du catalogue suivant le même indice (même etf_info.
   // benchmark_name) -- indicesData.companies est déjà chargé par
@@ -7913,7 +7924,7 @@ function renderEtfDetail(company) {
     <section class="hero">
       <div class="hero-name-meta">
         <span class="hero-ticker-sector">${company.ticker} · ETF</span>
-        ${info.pea_eligible ? '<span class="financial-tag graham-tag">PEA éligible</span>' : ''}
+        ${info.pea_eligible ? '<span class="financial-tag pea-tag">PEA éligible</span>' : ''}
       </div>
       <h1 class="hero-name">${company.name}</h1>
       <div class="hero-accent"></div>
@@ -7924,13 +7935,13 @@ function renderEtfDetail(company) {
     <div class="etf-detail-block signal-stats">
       <div class="price-row"><span class="price-label">Indice suivi</span><span class="price-value">${info.benchmark_name || '—'}</span></div>
       <div class="price-row"><span class="price-label">ISIN</span><span class="price-value etf-isin">${info.isin || '—'}</span></div>
-      <div class="price-row"><span class="price-label">Réplication</span><span class="price-value">${info.replication || '—'}</span></div>
-      <div class="price-row"><span class="price-label">Distribution</span><span class="price-value">${info.distribution || '—'}</span></div>
+      <div class="price-row"><span class="price-label">Réplication</span><span class="price-value">${ETF_REPLICATION_LABEL[info.replication] || info.replication || '—'}</span></div>
+      <div class="price-row"><span class="price-label">Distribution</span><span class="price-value">${ETF_DISTRIBUTION_LABEL[info.distribution] || info.distribution || '—'}</span></div>
     </div>
 
     <h2>Coûts &amp; suivi</h2>
     <div class="etf-detail-block signal-stats">
-      <div class="price-row"><span class="price-label">Frais de gestion (TER)</span><span class="etf-ter-value">${info.ter_pct != null ? info.ter_pct.toLocaleString('fr-FR') + '%' : '—'}</span></div>
+      <div class="price-row"><span class="price-label">Frais de gestion (TER)</span><span class="price-value etf-ter-value">${info.ter_pct != null ? info.ter_pct.toLocaleString('fr-FR') + '%' : '—'}</span></div>
       <div class="price-row"><span class="price-label">Écart de suivi (vs indice)</span><span class="price-value ${pctClass(info.tracking_difference_pct)}">${info.tracking_difference_pct != null ? formatPct(info.tracking_difference_pct) : 'Indisponible'}</span></div>
       <div class="price-row"><span class="price-label">Rendement du dividende</span>${dividendValueHtml}</div>
     </div>

@@ -30,7 +30,12 @@
 // quelle (données toujours correctes si cette limitation est un jour
 // levée, ou si un autre indice mélangeant les places l'atteint via le
 // repli par suffixe Yahoo ci-dessous).
-const NO_RELIABLE_COMPANY_TV_DATA = new Set(['HANGSENG', 'NIKKEI225', 'FTSE']);
+// RUSSELL2000 ajouté le 2026-11-14 : ~1954 entreprises réparties sur
+// NYSE/Nasdaq/AMEX sans place unique (contrairement à CAC40/DAX/TSX60/
+// ASX200) -- sourcer la place réelle de chacune (comme SP500_BOURSE plus
+// bas) n'a pas été fait vu le volume. Même traitement que Hang Seng/
+// Nikkei/FTSE : pas de widget plutôt qu'un symbole probablement faux.
+const NO_RELIABLE_COMPANY_TV_DATA = new Set(['HANGSENG', 'NIKKEI225', 'FTSE', 'RUSSELL2000']);
 
 // Préfixe d'échange TradingView par indice — dérivé du suffixe Yahoo
 // Finance pour CAC40 (.PA → Euronext Paris) et DAX (.DE → Xetra), vérifié
@@ -45,8 +50,10 @@ const NO_RELIABLE_COMPANY_TV_DATA = new Set(['HANGSENG', 'NIKKEI225', 'FTSE']);
 // sont toutes cotées au NYSE — les 9 composants du Dow cotés Nasdaq
 // (Apple, Microsoft...) sont déjà suivis côté NASDAQ, pas dupliqués ici,
 // donc un seul préfixe suffit comme pour les 3 autres indices.
-const TV_EXCHANGE_PREFIX_BY_INDEX = { CAC40: 'EURONEXT:', DAX: 'XETR:', NASDAQ: 'NASDAQ:', DOW: 'NYSE:', FTSE: 'LSE:', SMI: 'SIX:', IBEX35: 'BME:', FTSEMIB: 'MIL:', NIKKEI225: 'TSE:', HANGSENG: 'HKEX:' };
-const TV_TICKER_SUFFIX_BY_INDEX = { CAC40: '.PA', DAX: '.DE', NASDAQ: '', DOW: '', FTSE: '.L', SMI: '.SW', IBEX35: '.MC', FTSEMIB: '.MI', NIKKEI225: '.T', HANGSENG: '.HK' };
+// TSX60/ASX200 ajoutés le 2026-11-14 : préfixes "TSX:"/"ASX:" vérifiés
+// en direct contre tradingview.com (ex. TSX:RY, ASX:CBA résolvent bien).
+const TV_EXCHANGE_PREFIX_BY_INDEX = { CAC40: 'EURONEXT:', DAX: 'XETR:', NASDAQ: 'NASDAQ:', DOW: 'NYSE:', FTSE: 'LSE:', SMI: 'SIX:', IBEX35: 'BME:', FTSEMIB: 'MIL:', NIKKEI225: 'TSE:', HANGSENG: 'HKEX:', TSX60: 'TSX:', ASX200: 'ASX:' };
+const TV_TICKER_SUFFIX_BY_INDEX = { CAC40: '.PA', DAX: '.DE', NASDAQ: '', DOW: '', FTSE: '.L', SMI: '.SW', IBEX35: '.MC', FTSEMIB: '.MI', NIKKEI225: '.T', HANGSENG: '.HK', TSX60: '.TO', ASX200: '.AX' };
 // Indices sans entrée ci-dessus (Euro Stoxx 50, SBF 120, AEX All-Share, et
 // tout futur indice) : le préfixe TradingView se déduit du suffixe Yahoo de
 // la valeur, car un même indice mélange souvent plusieurs places (AEX
@@ -575,6 +582,12 @@ const SP500_BOURSE = {
 const TV_TICKER_OVERRIDE_BY_YAHOO_TICKER = {
   'AV.L': 'AV.', 'BA.L': 'BA.', 'BP.L': 'BP.', 'JD.L': 'JD.', 'NG.L': 'NG.',
   'RR.L': 'RR.', 'SN.L': 'SN.', 'UU.L': 'UU.', 'BT-A.L': 'BT.A',
+  // TSX60 (2026-11-14) : Yahoo utilise un tiret pour les classes d'actions
+  // (BIP-UN.TO), TradingView un point (TSX:BIP.UN) -- vérifié en direct
+  // contre tradingview.com pour les 6 entrées ci-dessous, même type de
+  // divergence que BT-A.L/BT.A ci-dessus.
+  'BIP-UN.TO': 'BIP.UN', 'CTC-A.TO': 'CTC.A', 'CCL-B.TO': 'CCL.B',
+  'GIB-A.TO': 'GIB.A', 'RCI-B.TO': 'RCI.B', 'TECK-B.TO': 'TECK.B',
 };
 
 /**

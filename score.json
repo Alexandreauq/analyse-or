@@ -1,26 +1,26 @@
 {
-  "date": "2026-11-13",
-  "composite_score": 6.8,
+  "date": "2026-11-14",
+  "composite_score": 2.7,
   "interpretation": "Neutre — pas d'action",
   "cftc_percentile": 22.435897435897438,
   "factors": [
     {
       "name": "Taux réels US 10 ans",
-      "score": 2.6000000000000068,
+      "score": 1.4000000000000057,
       "weight": 0.3,
-      "raw_value": "2.78% (il y a ~45j : 2.91%)"
+      "raw_value": "2.86% (il y a ~45j : 2.93%)"
     },
     {
       "name": "Dollar (DXY)",
       "score": -10,
       "weight": 0.15,
-      "raw_value": "103.38 (il y a 2 mois : 99.46)"
+      "raw_value": "103.41 (il y a 2 mois : 99.46)"
     },
     {
       "name": "Anticipations d'inflation",
-      "score": -3.6666666666666625,
+      "score": -3.9999999999999893,
       "weight": 0.15,
-      "raw_value": "2.24% (il y a ~45j : 2.35%)"
+      "raw_value": "2.24% (il y a ~45j : 2.36%)"
     },
     {
       "name": "Ton de la Fed",
@@ -48,16 +48,11 @@
     }
   ],
   "technical": {
-    "note": "Cours en-dessous de la MM200 (-13.2%) — tendance baissière",
-    "spot": 3883.60009765625,
-    "ma200": 4472.231995849609
+    "note": "Cours en-dessous de la MM200 (-13.1%) — tendance baissière",
+    "spot": 3887.60009765625,
+    "ma200": 4472.25199584961
   },
   "calendar": [
-    {
-      "date": "13/11/2026",
-      "label": "PPI (prix à la production)",
-      "kind": "Donnée"
-    },
     {
       "date": "17/11/2026",
       "label": "Ventes au détail",
@@ -92,6 +87,11 @@
       "date": "10/12/2026",
       "label": "CPI (Indice des prix à la consommation)",
       "kind": "Donnée"
+    },
+    {
+      "date": "15/12/2026",
+      "label": "PPI (prix à la production)",
+      "kind": "Donnée"
     }
   ],
   "alerts": [
@@ -99,7 +99,7 @@
       "kind": "info",
       "title": "Pas de signal actif",
       "detail": "Aucune des conditions de veille, d'entrée ou de risque n'est réunie aujourd'hui.",
-      "date": "13/11/2026"
+      "date": "14/11/2026"
     }
   ],
   "news": [

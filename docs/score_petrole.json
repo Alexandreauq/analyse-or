@@ -1,5 +1,5 @@
 {
-  "date": "2026-11-13",
+  "date": "2026-11-14",
   "commodity": "petrole",
   "label": "Pétrole (WTI)",
   "composite_score": -18.5,
@@ -10,7 +10,7 @@
       "name": "Dollar (DXY)",
       "score": -10,
       "weight": 0.26666666666666666,
-      "raw_value": "103.38 (il y a 2 mois : 99.46)"
+      "raw_value": "103.41 (il y a 2 mois : 99.46)"
     },
     {
       "name": "Positionnement CFTC",
@@ -22,7 +22,7 @@
       "name": "Spread WTI-Brent",
       "score": -10,
       "weight": 0.19999999999999998,
-      "raw_value": "+7.22 $/baril (il y a ~2 mois : +4.80 $/baril)"
+      "raw_value": "+7.16 $/baril (il y a ~2 mois : +4.80 $/baril)"
     },
     {
       "name": "Dynamique récente",
@@ -44,11 +44,6 @@
     "unite": "$ / baril"
   },
   "calendar": [
-    {
-      "date": "13/11/2026",
-      "label": "PPI (prix à la production)",
-      "kind": "Donnée"
-    },
     {
       "date": "17/11/2026",
       "label": "Ventes au détail",
@@ -82,6 +77,11 @@
     {
       "date": "10/12/2026",
       "label": "CPI (Indice des prix à la consommation)",
+      "kind": "Donnée"
+    },
+    {
+      "date": "15/12/2026",
+      "label": "PPI (prix à la production)",
       "kind": "Donnée"
     }
   ],

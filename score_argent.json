@@ -1,22 +1,22 @@
 {
-  "date": "2026-11-13",
+  "date": "2026-11-14",
   "commodity": "argent",
   "label": "Argent",
-  "composite_score": -18.0,
+  "composite_score": -20.2,
   "interpretation": "Défavorable — pas d'entrée même sur signal technique",
   "cftc_percentile": 4.487179487179487,
   "factors": [
     {
       "name": "Taux réels US 10 ans",
-      "score": 2.6000000000000068,
+      "score": 1.4000000000000057,
       "weight": 0.3,
-      "raw_value": "2.78% (il y a ~45j : 2.91%)"
+      "raw_value": "2.86% (il y a ~45j : 2.93%)"
     },
     {
       "name": "Dollar (DXY)",
       "score": -10,
       "weight": 0.2,
-      "raw_value": "103.38 (il y a 2 mois : 99.46)"
+      "raw_value": "103.41 (il y a 2 mois : 99.46)"
     },
     {
       "name": "Positionnement CFTC",
@@ -26,29 +26,24 @@
     },
     {
       "name": "Ratio or/argent",
-      "score": -3.7900552486187844,
+      "score": -3.237569060773481,
       "weight": 0.25,
-      "raw_value": "79.3 — 31e percentile (3 ans)"
+      "raw_value": "79.9 — 34e percentile (3 ans)"
     },
     {
       "name": "Dynamique récente",
       "score": -10.0,
       "weight": 0.1,
-      "raw_value": "-28.4% vs MM200"
+      "raw_value": "-28.9% vs MM200"
     }
   ],
   "technical": {
-    "note": "Cours en-dessous de la MM200 (-28.4%) — tendance baissière",
-    "spot": 48.974998474121094,
-    "ma200": 68.38145484924317,
+    "note": "Cours en-dessous de la MM200 (-28.9%) — tendance baissière",
+    "spot": 48.650001525878906,
+    "ma200": 68.37982986450196,
     "unite": "$ / oz"
   },
   "calendar": [
-    {
-      "date": "13/11/2026",
-      "label": "PPI (prix à la production)",
-      "kind": "Donnée"
-    },
     {
       "date": "17/11/2026",
       "label": "Ventes au détail",
@@ -82,6 +77,11 @@
     {
       "date": "10/12/2026",
       "label": "CPI (Indice des prix à la consommation)",
+      "kind": "Donnée"
+    },
+    {
+      "date": "15/12/2026",
+      "label": "PPI (prix à la production)",
       "kind": "Donnée"
     }
   ],

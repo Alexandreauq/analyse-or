@@ -15,6 +15,14 @@ permissions:
 jobs:
   run:
     runs-on: ubuntu-latest
+    # Plafond relevé a 10h (defaut implicite GitHub Actions = 6h) le
+    # 2026-11-15 : le run avec les nouveaux marches (TSX60/ASX200/
+    # RUSSELL2000, ~3510 entreprises) a ete tue a 6h00 sans publier --
+    # degradation Yahoo Finance progressive sous charge (voir le
+    # commentaire sur le rate-limiting pres de FETCH_RETRY_ATTEMPTS
+    # dans indices_score.py), pas un bug du code. Stopgap, pas une
+    # solution de fond -- la paralellisation du batch reste a faire.
+    timeout-minutes: 600
     steps:
       - name: Récupérer le dépôt
         uses: actions/checkout@v4

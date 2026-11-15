@@ -1,16 +1,16 @@
 {
-  "date": "2026-11-14",
+  "date": "2026-11-15",
   "commodity": "argent",
   "label": "Argent",
-  "composite_score": -21.8,
+  "composite_score": -24.8,
   "interpretation": "Défavorable — pas d'entrée même sur signal technique",
   "cftc_percentile": 4.487179487179487,
   "factors": [
     {
       "name": "Taux réels US 10 ans",
-      "score": 1.4000000000000057,
+      "score": 0.40000000000000036,
       "weight": 0.3,
-      "raw_value": "2.86% (il y a ~45j : 2.93%)"
+      "raw_value": "2.86% (il y a ~45j : 2.88%)"
     },
     {
       "name": "Dollar (DXY)",

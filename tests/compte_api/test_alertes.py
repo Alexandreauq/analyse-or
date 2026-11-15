@@ -4,12 +4,14 @@ import json
 from datetime import datetime, timedelta, timezone
 
 import pytest
+from fastapi.testclient import TestClient
 from sqlalchemy import select
 
 from compte_api import models
 from compte_api.jobs import alertes as job
 from compte_api.mailer import ConsoleMailer
 from compte_api.routers.alertes import MAX_REGLES, jeton_desinscription
+from .conftest import SECRET_PROXY
 
 # --- Aides -------------------------------------------------------------------
 
@@ -156,8 +158,19 @@ def test_reglage_email_adresse_non_confirmee(creer_membre, connecter):
 # --- Désinscription ------------------------------------------------------------
 
 
+def test_desinscription_lien_ne_change_rien(client, db, membre, settings):
+    # Les antivirus de messagerie ouvrent les liens : un GET n'agit pas.
+    jeton = jeton_desinscription(membre.id, settings)
+    r = client.get("/alerts/unsubscribe", params={"token": jeton})
+    assert r.status_code == 200
+    assert "text/html" in r.headers["content-type"]
+    assert '<form method="post"' in r.text and f"?token={jeton}" in r.text
+    db.expire_all()
+    assert db.get(models.User, membre.id).alerts_email_enabled is True
+
+
 def test_desinscription_valide(client, db, membre, autre_membre, settings):
-    r = client.get("/alerts/unsubscribe", params={"token": jeton_desinscription(membre.id, settings)})
+    r = client.post("/alerts/unsubscribe", params={"token": jeton_desinscription(membre.id, settings)})
     assert r.status_code == 200
     assert "text/html" in r.headers["content-type"]
     assert "Tu ne recevras plus d'e-mails d'alerte." in r.text
@@ -166,11 +179,25 @@ def test_desinscription_valide(client, db, membre, autre_membre, settings):
     assert db.get(models.User, autre_membre.id).alerts_email_enabled is True
 
 
+def test_desinscription_par_formulaire_sans_en_tete_csrf(app, db, membre, settings):
+    # Un formulaire HTML ne pose pas X-Requested-With : la route est exemptée.
+    client = TestClient(app)
+    client.headers.update({"X-Compte-Proxy": SECRET_PROXY})
+    r = client.post("/alerts/unsubscribe", params={"token": jeton_desinscription(membre.id, settings)})
+    assert r.status_code == 200
+    db.expire_all()
+    assert db.get(models.User, membre.id).alerts_email_enabled is False
+    # Les autres routes gardent l'exigence.
+    assert client.post("/logout").status_code == 403
+
+
+@pytest.mark.parametrize("methode", ["get", "post"])
 @pytest.mark.parametrize("jeton", ["", "abc", "1.", "1.deadbeef", "x.y", "-1.00"])
-def test_desinscription_jeton_invalide(client, db, membre, jeton):
-    r = client.get("/alerts/unsubscribe", params={"token": jeton})
+def test_desinscription_jeton_invalide(client, db, membre, jeton, methode):
+    r = getattr(client, methode)("/alerts/unsubscribe", params={"token": jeton})
     assert r.status_code == 400
     assert "text/html" in r.headers["content-type"]
+    assert "<form" not in r.text
     db.expire_all()
     assert db.get(models.User, membre.id).alerts_email_enabled is True
 
@@ -178,7 +205,7 @@ def test_desinscription_jeton_invalide(client, db, membre, jeton):
 def test_desinscription_jeton_falsifie(client, db, membre, settings):
     jeton = jeton_desinscription(membre.id, settings)
     falsifie = jeton[:-1] + ("0" if jeton[-1] != "0" else "1")
-    assert client.get("/alerts/unsubscribe", params={"token": falsifie}).status_code == 400
+    assert client.post("/alerts/unsubscribe", params={"token": falsifie}).status_code == 400
     db.expire_all()
     assert db.get(models.User, membre.id).alerts_email_enabled is True
 
@@ -186,11 +213,11 @@ def test_desinscription_jeton_falsifie(client, db, membre, settings):
 def test_desinscription_signature_d_un_autre_membre(client, db, membre, autre_membre, settings):
     # L'id du membre avec la signature d'un autre : refusé.
     signature = jeton_desinscription(autre_membre.id, settings).split(".", 1)[1]
-    r = client.get("/alerts/unsubscribe", params={"token": f"{membre.id}.{signature}"})
+    r = client.post("/alerts/unsubscribe", params={"token": f"{membre.id}.{signature}"})
     assert r.status_code == 400
     # Le jeton d'un autre membre ne désinscrit que cet autre membre.
-    assert client.get("/alerts/unsubscribe",
-                      params={"token": jeton_desinscription(autre_membre.id, settings)}).status_code == 200
+    assert client.post("/alerts/unsubscribe",
+                       params={"token": jeton_desinscription(autre_membre.id, settings)}).status_code == 200
     db.expire_all()
     assert db.get(models.User, membre.id).alerts_email_enabled is True
     assert db.get(models.User, autre_membre.id).alerts_email_enabled is False
@@ -200,9 +227,9 @@ def test_desinscription_secret_dedie(client, membre, settings, monkeypatch):
     jeton_repli = jeton_desinscription(membre.id, settings)
     monkeypatch.setenv("COMPTE_UNSUBSCRIBE_SECRET", "secret-dedie")
     assert jeton_desinscription(membre.id, settings) != jeton_repli
-    assert client.get("/alerts/unsubscribe", params={"token": jeton_repli}).status_code == 400
-    assert client.get("/alerts/unsubscribe",
-                      params={"token": jeton_desinscription(membre.id, settings)}).status_code == 200
+    assert client.post("/alerts/unsubscribe", params={"token": jeton_repli}).status_code == 400
+    assert client.post("/alerts/unsubscribe",
+                       params={"token": jeton_desinscription(membre.id, settings)}).status_code == 200
 
 
 # --- Détection : fonctions pures -------------------------------------------------

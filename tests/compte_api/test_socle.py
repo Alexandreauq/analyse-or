@@ -175,3 +175,42 @@ def test_settings_depuis_environnement():
                            "AI_QUOTA_PAR_JOUR": "5", "COMPTE_SITE_URL": "https://site/"})
     assert s.cookie_secure is True and s.ai_quota_par_jour == 5 and s.site_url == "https://site"
     assert Settings.from_env({"AI_QUOTA_PAR_JOUR": "abc"}).ai_quota_par_jour == 10
+
+
+# --- Revue sécurité (T9) ----------------------------------------------------------
+
+
+@pytest.mark.parametrize("reglages, manque", [
+    (dict(proxy_secret="dev-secret", cookie_secure=True, mailer="smtp"), "COMPTE_PROXY_SECRET"),
+    (dict(proxy_secret="court", cookie_secure=True, mailer="smtp"), "COMPTE_PROXY_SECRET"),
+    (dict(proxy_secret="x" * 40, cookie_secure=False, mailer="smtp"), "COMPTE_COOKIE_SECURE"),
+    (dict(proxy_secret="x" * 40, cookie_secure=True, mailer="console"), "COMPTE_MAILER"),
+])
+def test_production_refuse_un_reglage_de_dev(reglages, manque):
+    s = Settings(site_url="https://site.exemple.fr", **reglages)
+    with pytest.raises(RuntimeError, match=manque):
+        s.verifier_production()
+
+
+def test_production_bien_reglee_et_local_acceptes():
+    Settings(site_url="https://site.exemple.fr", proxy_secret="x" * 40, cookie_secure=True,
+             mailer="smtp").verifier_production()
+    Settings().verifier_production()  # développement local : tout est permis
+
+
+def test_reponses_jamais_mises_en_cache(client):
+    r = client.get("/sante")
+    assert r.headers["cache-control"] == "no-store"
+    assert r.headers["x-content-type-options"] == "nosniff"
+
+
+def test_connexion_ferme_la_session_precedente_du_navigateur(client, db, creer_membre):
+    from .conftest import MOT_DE_PASSE
+    creer_membre(email="a@exemple.test")
+    creer_membre(email="b@exemple.test")
+    assert client.post("/login", json={"email": "a@exemple.test", "password": MOT_DE_PASSE}).status_code == 200
+    ancien = client.cookies.get(COOKIE_SESSION)
+    assert client.post("/login", json={"email": "b@exemple.test", "password": MOT_DE_PASSE}).status_code == 200
+    db.expire_all()
+    assert db.get(models.Session, hacher_jeton(ancien)) is None
+    assert client.get("/me").json()["email"] == "b@exemple.test"

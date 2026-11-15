@@ -21,6 +21,9 @@ METHODES_MUTATION = {"POST", "PUT", "PATCH", "DELETE"}
 EN_TETE_PROXY = "x-compte-proxy"
 EN_TETE_CSRF = "x-requested-with"
 VALEUR_CSRF = "compte"
+# Routes POST appelées par un formulaire HTML (pas d'en-tête possible) :
+# elles se protègent elles-mêmes par un jeton signé dans l'adresse.
+SANS_CSRF = {"/alerts/unsubscribe"}
 
 
 def _routeurs():
@@ -34,6 +37,7 @@ def _routeurs():
 def create_app(settings: Settings | None = None, mailer: Mailer | None = None,
                creer_tables: bool = False) -> FastAPI:
     settings = settings or Settings.from_env()
+    settings.verifier_production()
     app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
     engine = make_engine(settings.database_url)
     if creer_tables:
@@ -54,9 +58,16 @@ def create_app(settings: Settings | None = None, mailer: Mailer | None = None,
         # Protection CSRF : un formulaire d'un autre site ne peut pas poser
         # cet en-tête sans déclencher une requête préalable que le
         # navigateur refuserait.
-        if request.method in METHODES_MUTATION and request.headers.get(EN_TETE_CSRF) != VALEUR_CSRF:
+        if (request.method in METHODES_MUTATION and request.url.path not in SANS_CSRF
+                and request.headers.get(EN_TETE_CSRF) != VALEUR_CSRF):
             return JSONResponse({"detail": "Requête refusée."}, status_code=403)
-        return await call_next(request)
+        response = await call_next(request)
+        # Réponses personnelles : jamais gardées par le CDN de Vercel ni par
+        # le navigateur, sauf si la route a choisi autre chose.
+        response.headers.setdefault("Cache-Control", "no-store")
+        response.headers.setdefault("X-Content-Type-Options", "nosniff")
+        response.headers.setdefault("Referrer-Policy", "same-origin")
+        return response
 
     @app.exception_handler(RequestValidationError)
     async def _validation(_request: Request, exc: RequestValidationError):

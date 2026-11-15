@@ -128,15 +128,32 @@ def test_connexion_google_sub_connu(client, google, creer_membre, db):
 
 
 def test_liaison_compte_existant_par_email_verifie(client, google, creer_membre, db):
+    user = creer_membre(email="carole@gmail.test")
+    reponse = _retour(client)
+    assert reponse.headers["location"] == ACCUEIL
+    assert client.get("/me").json()["id"] == user.id
+    db.refresh(user)
+    assert user.google_sub == "g-123"
+    assert verify_password(user.password_hash, MOT_DE_PASSE)  # mot de passe conservé
+    assert db.query(models.User).count() == 1
+
+
+def test_liaison_compte_non_confirme_efface_le_mot_de_passe(client, google, creer_membre, connecter, db):
+    # Quelqu'un a inscrit l'adresse de Carole avant elle, avec son propre mot
+    # de passe, sans jamais confirmer. Carole arrive par Google : l'intrus
+    # perd l'accès (mot de passe effacé, sessions fermées).
     user = creer_membre(email="carole@gmail.test", verifie=False)
+    intrus = connecter(user)
     reponse = _retour(client)
     assert reponse.headers["location"] == ACCUEIL
     assert client.get("/me").json()["id"] == user.id
     db.refresh(user)
     assert user.google_sub == "g-123"
     assert user.email_verified_at is not None  # Google garantit l'adresse
-    assert verify_password(user.password_hash, MOT_DE_PASSE)  # mot de passe conservé
-    assert db.query(models.User).count() == 1
+    assert user.password_hash is None
+    assert intrus.get("/me").status_code == 401
+    assert client.post("/login", json={"email": "carole@gmail.test",
+                                       "password": MOT_DE_PASSE}).status_code == 401
 
 
 def test_pas_de_liaison_si_email_non_verifie_chez_google(client, google, creer_membre, db):

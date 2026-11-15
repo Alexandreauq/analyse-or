@@ -130,7 +130,9 @@ def utilisateur_public(db: DbSession, user: models.User, settings: Settings) -> 
 
 def ouvrir_session(db: DbSession, request: Request, response: Response,
                    user: models.User, settings: Settings) -> None:
-    """Note la connexion, ouvre une session et pose le cookie."""
+    """Note la connexion, ouvre une session et pose le cookie. La session
+    que le navigateur avait peut-être déjà (autre compte) est fermée."""
+    supprimer_session(db, request.cookies.get(COOKIE_SESSION))
     user.last_login_at = models.maintenant()
     db.commit()
     jeton = creer_session(db, user.id, request.headers.get("user-agent"))

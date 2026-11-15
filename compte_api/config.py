@@ -4,6 +4,7 @@
 # développement local : jamais de secret réel ici.
 import os
 from dataclasses import dataclass
+from urllib.parse import urlparse
 
 
 def _bool(valeur: str | None, defaut: bool) -> bool:
@@ -39,6 +40,27 @@ class Settings:
     assistant_ia_token: str = ""
     google_client_id: str = ""
     google_client_secret: str = ""
+
+    def en_local(self) -> bool:
+        hote = urlparse(self.site_url).hostname or ""
+        return hote in ("127.0.0.1", "localhost", "::1") or hote.endswith(".test")
+
+    def verifier_production(self) -> None:
+        """Refuse de démarrer un service public avec un réglage de
+        développement oublié dans le .env : secret du proxy connu, cookie
+        sans Secure, e-mails (et donc liens de connexion) écrits dans les
+        journaux au lieu d'être envoyés."""
+        if self.en_local():
+            return
+        problemes = []
+        if self.proxy_secret == Settings.proxy_secret or len(self.proxy_secret) < 32:
+            problemes.append("COMPTE_PROXY_SECRET (32 caractères minimum, différent de la valeur de dev)")
+        if not self.cookie_secure:
+            problemes.append("COMPTE_COOKIE_SECURE=true")
+        if self.mailer != "smtp":
+            problemes.append("COMPTE_MAILER=smtp")
+        if problemes:
+            raise RuntimeError("Réglages de production manquants : " + ", ".join(problemes))
 
     @classmethod
     def from_env(cls, env=None) -> "Settings":

@@ -14,7 +14,7 @@ from urllib.parse import urlencode
 import httpx
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import RedirectResponse
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session as DbSession
 
@@ -140,6 +140,12 @@ def _trouver_ou_creer(db: DbSession, profil: dict) -> models.User:
             raise ErreurGoogle("liaison impossible")
         existant.google_sub = sub
         if existant.email_verified_at is None:
+            # Adresse jamais confirmée : le mot de passe a pu être choisi par
+            # quelqu'un d'autre qui a inscrit cette adresse en premier. On
+            # l'efface et on ferme ses sessions, sinon cette personne
+            # garderait l'accès au compte du vrai titulaire.
+            existant.password_hash = None
+            db.execute(delete(models.Session).where(models.Session.user_id == existant.id))
             existant.email_verified_at = models.maintenant()
         db.commit()
         journal.info("Compte Google lié au membre %s", existant.id)

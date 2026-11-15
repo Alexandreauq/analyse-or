@@ -247,6 +247,33 @@ Relecture de l'ensemble : authentification, sessions, CSRF, limites,
 isolation entre membres, fuites dans les journaux, en-tête secret,
 cookies. Tests de bout en bout via `scripts/dev_compte.py`.
 
+**Fait (2026-11-15).** Aucune fuite entre membres trouvée (chaque route
+filtre sur le membre connecté, un objet d'un autre répond 404). Corrigé :
+
+- Liaison Google sur un compte jamais confirmé : le mot de passe est
+  effacé et les sessions fermées (sinon la personne qui avait inscrit
+  l'adresse avant son titulaire gardait l'accès).
+- Désinscription des alertes : le lien affiche une page de confirmation,
+  la désinscription se fait au clic (POST). Les antivirus de messagerie
+  qui ouvrent les liens ne désinscrivent plus personne.
+- Démarrage refusé en production avec un réglage de développement
+  (secret du proxy par défaut ou trop court, cookie sans Secure, e-mails
+  en console).
+- `Cache-Control: no-store`, `nosniff` et `Referrer-Policy` sur toutes les
+  réponses ; une connexion ferme la session précédente du navigateur.
+
+Écarts assumés par rapport à la spec : `/password/reset` répond 200 avec
+le membre (connexion directe) ; « Mes suivis » n'affiche pas de variation
+de score (`indices.json` n'en fournit pas) ; pas de délai minimal de
+saisie anti-robot (contournable, le champ piège et les limites par IP
+suffisent) ; `/register` dit si l'adresse est déjà prise (choix de
+confort, limité à 5 essais par heure et par IP).
+
+À vérifier en T10 : Vercel doit remplacer `X-Forwarded-For` par l'IP
+réelle (sinon les limites par IP se contournent) ; les API du VPS
+n'autorisent en CORS que `alexandreauq.github.io`, à compléter avec le
+domaine Vercel.
+
 ## T10 — Mise en ligne (avec l'utilisateur)
 
 Projet Vercel, application Google OAuth, service systemd `compte-api` et

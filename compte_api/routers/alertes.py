@@ -176,25 +176,54 @@ _PAGE = """<!DOCTYPE html>
   p {{ color: #9aa6c4; margin: 0 0 1rem; }}
   a {{ color: #8fc29e; }}
 </style></head>
-<body><main><h1>{titre}</h1><p>{message}</p><p><a href="{site}">Retour au site</a></p></main></body></html>
+<body><main><h1>{titre}</h1><p>{message}</p>{formulaire}<p><a href="{site}">Retour au site</a></p></main></body></html>
 """
 
+# Bouton de confirmation : le jeton reste dans l'adresse (pas de corps de
+# formulaire à décoder), la requête POST arrive sur la même route.
+_FORMULAIRE = """<form method="post" action="?token={token}"><button type="submit" style="font:inherit;
+padding:.6rem 1.2rem;border-radius:10px;border:0;background:#8fc29e;color:#0a0e1a;cursor:pointer">
+Me désinscrire</button></form>"""
 
-def _page(settings: Settings, titre: str, message: str, statut: int) -> HTMLResponse:
+
+def _page(settings: Settings, titre: str, message: str, statut: int, token: str | None = None) -> HTMLResponse:
+    formulaire = _FORMULAIRE.format(token=html.escape(token, quote=True)) if token else ""
     contenu = _PAGE.format(titre=html.escape(titre, quote=False), message=html.escape(message, quote=False),
-                           site=html.escape(settings.site_url + "/", quote=True))
+                           site=html.escape(settings.site_url + "/", quote=True), formulaire=formulaire)
     return HTMLResponse(contenu, status_code=statut, headers={"Cache-Control": "no-store"})
 
 
+def _membre_du_jeton(db: DbSession, token: str, settings: Settings) -> models.User | None:
+    user_id = lire_jeton_desinscription(token, settings)
+    return db.get(models.User, user_id) if user_id is not None else None
+
+
+def _lien_invalide(settings: Settings) -> HTMLResponse:
+    return _page(settings, "Lien invalide",
+                 "Ce lien de désinscription n'est pas valide. Tu peux couper les e-mails "
+                 "d'alerte depuis ton espace, onglet Alertes.", 400)
+
+
 @router.get("/alerts/unsubscribe", response_class=HTMLResponse)
+def page_desinscription(token: str = Query(default="", max_length=200), db: DbSession = Depends(get_db),
+                        settings: Settings = Depends(get_settings)) -> HTMLResponse:
+    # Ouvrir le lien ne change rien : les antivirus de messagerie visitent
+    # les liens des e-mails. La désinscription demande un clic (POST).
+    if _membre_du_jeton(db, token, settings) is None:
+        return _lien_invalide(settings)
+    return _page(settings, "Se désinscrire des alertes",
+                 "Confirme pour ne plus recevoir le résumé quotidien de tes alertes par e-mail.",
+                 200, token=token)
+
+
+@router.post("/alerts/unsubscribe", response_class=HTMLResponse)
 def desinscription(token: str = Query(default="", max_length=200), db: DbSession = Depends(get_db),
                    settings: Settings = Depends(get_settings)) -> HTMLResponse:
-    user_id = lire_jeton_desinscription(token, settings)
-    user = db.get(models.User, user_id) if user_id is not None else None
+    # Exemptée de l'en-tête anti-CSRF (app.py) : un formulaire HTML ne peut
+    # pas le poser, et le jeton signé suffit à prouver la demande.
+    user = _membre_du_jeton(db, token, settings)
     if user is None:
-        return _page(settings, "Lien invalide",
-                     "Ce lien de désinscription n'est pas valide. Tu peux couper les e-mails "
-                     "d'alerte depuis ton espace, onglet Alertes.", 400)
+        return _lien_invalide(settings)
     user.alerts_email_enabled = False
     db.commit()
     return _page(settings, "Désinscription confirmée",

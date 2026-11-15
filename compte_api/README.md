@@ -17,6 +17,17 @@ Le site est alors sur http://127.0.0.1:8000, et `/api/compte/*` est relayé
 vers le service avec l'en-tête secret, comme le fera Vercel. En local, les
 e-mails s'affichent dans le terminal du service.
 
+## Production
+
+Dès que `COMPTE_SITE_URL` n'est pas une adresse locale, le service refuse
+de démarrer sans ces trois réglages dans son `.env` :
+
+- `COMPTE_PROXY_SECRET` : 32 caractères minimum (même valeur dans Vercel) ;
+- `COMPTE_COOKIE_SECURE=true` ;
+- `COMPTE_MAILER=smtp` (sinon les liens de connexion iraient dans les journaux).
+
+Conseillé : `COMPTE_UNSUBSCRIBE_SECRET`, distinct du secret du proxy.
+
 ## Tests
 
 ```bash
@@ -46,5 +57,8 @@ Fixtures disponibles (`tests/compte_api/conftest.py`) : `client` (anonyme),
 
 - Toute requête doit porter l'en-tête `X-Compte-Proxy` (posé par le proxy).
 - Toute écriture doit porter `X-Requested-With: compte` (posé par
-  `window.Compte.fetch`).
+  `window.Compte.fetch`). Seule exception : `POST /alerts/unsubscribe`
+  (formulaire HTML, protégé par son jeton signé).
+- Les réponses partent avec `Cache-Control: no-store` sauf choix contraire
+  de la route.
 - Erreurs : toujours `{"detail": "<message en français>"}`.

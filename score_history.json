@@ -348,5 +348,10 @@
     "date": "2026-11-14",
     "composite": 2.7,
     "cftc_percentile": 22.435897435897438
+  },
+  {
+    "date": "2026-11-15",
+    "composite": -0.3,
+    "cftc_percentile": 22.435897435897438
   }
 ]

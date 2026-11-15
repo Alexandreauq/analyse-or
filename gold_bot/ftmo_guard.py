@@ -38,7 +38,13 @@ CET_OFFSET_HOURS = 1
 # ~60s) et le slippage d'exécution réel. CE NE SONT PAS les seuils
 # officiels eux-mêmes -- voir ftmo_simulator.py pour ceux-ci.
 DEFAULT_DAILY_LOSS_PCT = 0.04
-DEFAULT_OVERALL_LOSS_PCT = 0.09
+# DEFAULT_OVERALL_LOSS_PCT ramené au seuil OFFICIEL FTMO (10%, plus de
+# marge de securite) le 2026-11-15, a la demande explicite de
+# l'utilisateur, pour permettre au compte de redemarrer (equite alors
+# entre 900 et 1000 de perte, sous l'ancien plancher 9% mais au-dessus
+# du vrai plancher FTMO 10%). Remettre a 0.09 une fois l'equite
+# remontee durablement au-dessus de 9100 (10000 * 0.91).
+DEFAULT_OVERALL_LOSS_PCT = 0.10
 
 # Objectif de profit OFFICIEL de la phase Challenge du 2-Step (10%) --
 # contrairement aux planchers de perte ci-dessus, AUCUNE marge de

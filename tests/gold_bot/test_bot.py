@@ -1861,7 +1861,7 @@ def test_decide_and_act_fibonacci_passes_ftmo_buffer_computed_from_ftmo_guard_in
         ftmo_guard_instance=guard,
     )
     assert calls[0]["ftmo_buffer"] == {"daily_pct_remaining": pytest.approx(0.02),
-                                        "overall_pct_remaining": pytest.approx(0.07)}
+                                        "overall_pct_remaining": pytest.approx(0.08)}
 
 
 def test_decide_and_act_ichimoku_still_uses_ai_shadow_unaffected_by_this_change(monkeypatch):

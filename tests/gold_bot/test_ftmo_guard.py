@@ -21,19 +21,19 @@ def test_daily_floor_is_four_percent_below_balance_at_rebaseline_by_default():
     assert guard.check(balance=10000, equity=9600) == "daily"
 
 
-def test_overall_floor_is_nine_percent_below_isc_by_default():
+def test_overall_floor_is_ten_percent_below_isc_by_default():
     guard = ftmo_guard.FtmoGuard(isc=10000, now_fn=lambda: _dt(2026, 11, 1))
-    assert guard.overall_floor == pytest.approx(9100)
+    assert guard.overall_floor == pytest.approx(9000)
     # daily_loss_pct=0.50 pour isoler le plancher global : avec les 4%
     # quotidiens par défaut, le plancher quotidien (9600) est plus haut
-    # que le plancher global (9100) et déclencherait "daily" en premier
+    # que le plancher global (9000) et déclencherait "daily" en premier
     # -- voir test_overall_breach_reported_in_priority_over_daily_breach
     # pour le cas où les deux planchers sont en jeu simultanément.
     guard = ftmo_guard.FtmoGuard(
         isc=10000, daily_loss_pct=0.50, now_fn=lambda: _dt(2026, 11, 1))
     guard.check(balance=10000, equity=10000)
-    assert guard.check(balance=10000, equity=9101) is None
-    assert guard.check(balance=10000, equity=9100) == "overall"
+    assert guard.check(balance=10000, equity=9001) is None
+    assert guard.check(balance=10000, equity=9000) == "overall"
 
 
 def test_overall_floor_never_rebaselines_across_days():
@@ -44,7 +44,7 @@ def test_overall_floor_never_rebaselines_across_days():
     # rebaserait sur ce nouveau solde laisserait passer une perte totale
     # bien supérieure à overall_loss_pct de l'ISC réel (10000).
     guard.check(balance=20000, equity=20000)
-    assert guard.overall_floor == pytest.approx(9100)
+    assert guard.overall_floor == pytest.approx(9000)
 
 
 def test_daily_floor_rebaselines_on_cet_day_change():

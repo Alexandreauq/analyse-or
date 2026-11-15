@@ -472,16 +472,16 @@ def _guarded(equity_at_check=10000.0, balance_at_check=10000.0):
 
 
 def test_compute_ftmo_buffer_returns_fractions_of_isc():
-    guard = _guarded()  # daily_floor=9600.0, overall_floor=9100.0
+    guard = _guarded()  # daily_floor=9600.0, overall_floor=9000.0
     result = ai_discretion.compute_ftmo_buffer(guard, equity=9800.0)
-    assert result == {"daily_pct_remaining": pytest.approx(0.02), "overall_pct_remaining": pytest.approx(0.07)}
+    assert result == {"daily_pct_remaining": pytest.approx(0.02), "overall_pct_remaining": pytest.approx(0.08)}
 
 
 def test_compute_ftmo_buffer_clamps_at_zero_when_equity_below_daily_floor():
-    guard = _guarded()  # daily_floor=9600.0, overall_floor=9100.0
+    guard = _guarded()  # daily_floor=9600.0, overall_floor=9000.0
     result = ai_discretion.compute_ftmo_buffer(guard, equity=9500.0)
     assert result["daily_pct_remaining"] == 0.0
-    assert result["overall_pct_remaining"] == pytest.approx(0.04)
+    assert result["overall_pct_remaining"] == pytest.approx(0.05)
 
 
 def test_compute_ftmo_buffer_clamps_at_zero_when_equity_below_overall_floor():
@@ -494,4 +494,4 @@ def test_compute_ftmo_buffer_daily_remaining_is_none_when_daily_floor_not_yet_se
     guard = ftmo_guard.FtmoGuard(isc=10000.0)  # check() jamais appele
     result = ai_discretion.compute_ftmo_buffer(guard, equity=9800.0)
     assert result["daily_pct_remaining"] is None
-    assert result["overall_pct_remaining"] == pytest.approx(0.07)
+    assert result["overall_pct_remaining"] == pytest.approx(0.08)

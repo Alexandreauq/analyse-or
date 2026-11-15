@@ -451,7 +451,12 @@
     if (enCours || !question) return;
     const maGeneration = generation;
     const depassee = () => maGeneration !== generation;
-    const token = typeof getAiAssistantToken === 'function' ? getAiAssistantToken() : null;
+    // Même règle que l'accueil (voir assistantViaCompte dans index.html) :
+    // via le compte si le membre est connecté, connexion proposée sinon.
+    if (typeof assistantDemandeConnexion === 'function' && assistantDemandeConnexion()) return;
+    const viaCompte = typeof assistantViaCompte === 'function' && assistantViaCompte();
+    const token = viaCompte ? null
+      : (typeof getAiAssistantToken === 'function' ? getAiAssistantToken() : null);
     ajouteQuestion(question);
     const rep = ajouteReponse();
     etatSphere.reflechit = true;
@@ -476,7 +481,7 @@
         suivre();
       },
     });
-    if (!token) {
+    if (!viaCompte && !token) {
       erreur = true;
       rep.texte.classList.add('is-error');
       reveal.fix('Jeton d\'accès requis — réessaie et renseigne-le dans la fenêtre qui s\'affiche.');
@@ -485,7 +490,21 @@
     enCours = true;
     const controleur = new AbortController();
     requete = controleur;
+    const traite = (ev) => {
+      if (ev.type === 'texte') { rep.avatar.classList.remove('is-thinking'); etatSphere.reflechit = false; texte += ev.texte; reveal.setText(texte); }
+      else if (ev.type === 'liens') liensRecus = ev.liens || [];
+      else if (ev.type === 'navigation') navigation = ev;
+      else if (ev.type === 'erreur') { erreur = true; rep.texte.classList.add('is-error'); reveal.replace(ev.detail || 'Erreur.'); }
+    };
     try {
+      if (viaCompte) {
+        await window.Compte.demanderIA(
+          { question, history: historique, contexte: contexteCourant(), niveau: niveauCourant() },
+          { signal: controleur.signal, onEvenement: (ev) => { if (!depassee()) traite(ev); } },
+        );
+        if (depassee()) return;
+        reveal.finish();
+      } else {
       const res = await fetch(ENDPOINT, {
         method: 'POST',
         signal: controleur.signal,
@@ -511,16 +530,13 @@
           tampon = tampon.slice(fin + 2);
           const ligne = bloc.split('\n').find((l) => l.indexOf('data: ') === 0);
           if (!ligne) continue;
-          const ev = JSON.parse(ligne.slice(6));
-          if (ev.type === 'texte') { rep.avatar.classList.remove('is-thinking'); etatSphere.reflechit = false; texte += ev.texte; reveal.setText(texte); }
-          else if (ev.type === 'liens') liensRecus = ev.liens || [];
-          else if (ev.type === 'navigation') navigation = ev;
-          else if (ev.type === 'erreur') { erreur = true; rep.texte.classList.add('is-error'); reveal.replace(ev.detail || 'Erreur.'); }
+          traite(JSON.parse(ligne.slice(6)));
         }
       }
       reveal.finish();
+      }
     } catch (e) {
-      if (depassee()) return;
+      if (depassee() || (e && e.name === 'AbortError')) return;
       erreur = true;
       rep.texte.classList.add('is-error');
       reveal.fix((e && e.message) ? e.message : "Je n'ai pas pu contacter l'assistant, réessaie dans un instant.");

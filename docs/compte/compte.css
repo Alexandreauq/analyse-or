@@ -1,0 +1,55 @@
+/* docs/compte/compte.css
+   Page « Mon compte » (compte.js). Réutilise les classes de base de
+   auth.css (compte-voile, compte-entete, compte-bouton, compte-input…). */
+
+.moncompte-voile { justify-content: flex-end; align-items: stretch; padding: 0; }
+.moncompte {
+  width: 100%; max-width: 560px; height: 100%; overflow-y: auto;
+  padding: calc(var(--space-5) + var(--safe-top)) var(--space-5) calc(var(--space-5) + var(--safe-bottom));
+  border-left: 1px solid var(--border); background: var(--bg-1); color: var(--text); box-shadow: var(--shadow-3);
+  display: flex; flex-direction: column;
+}
+.moncompte-onglets {
+  display: flex; gap: var(--space-1); overflow-x: auto; scrollbar-width: none;
+  border-bottom: 1px solid var(--border); margin-bottom: var(--space-4); flex-shrink: 0;
+}
+.moncompte-onglets::-webkit-scrollbar { display: none; }
+.moncompte-onglet {
+  flex: 0 0 auto; min-height: 44px; padding: 0 var(--space-3);
+  border: 0; border-bottom: 2px solid transparent; margin-bottom: -1px; background: none;
+  color: var(--muted); font: inherit; font-size: var(--text-sm); font-weight: 500; cursor: pointer;
+}
+.moncompte-onglet:hover { color: var(--text); }
+.moncompte-onglet[aria-selected="true"] { color: var(--gold); border-bottom-color: var(--gold); }
+.moncompte-onglet:focus-visible { outline: 2px solid var(--gold); outline-offset: -2px; }
+.moncompte-corps { flex: 1; min-height: 0; }
+
+.moncompte-infos { display: grid; grid-template-columns: auto 1fr; gap: var(--space-2) var(--space-4); margin: 0 0 var(--space-5); font-size: var(--text-sm); }
+.moncompte-infos dt { color: var(--muted); }
+.moncompte-infos dd { margin: 0; overflow-wrap: anywhere; }
+
+.moncompte-bloc { padding: var(--space-4) 0; border-top: 1px solid var(--border); }
+.moncompte-bloc:first-child { border-top: 0; padding-top: 0; }
+.moncompte-bloc h3 { margin: 0 0 var(--space-2); font-family: 'Newsreader', serif; font-weight: 400; font-size: var(--text-lg); }
+.moncompte-bloc .compte-texte { margin-bottom: var(--space-3); }
+.moncompte-danger { border-color: var(--rust); color: var(--rust-300); }
+.moncompte-danger:hover { background: var(--rust-soft); border-color: var(--rust); }
+.moncompte-legal { margin-top: var(--space-4); }
+.moncompte-legal a { color: var(--gold); }
+
+.moncompte-barre { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-3); }
+.moncompte-liste { list-style: none; margin: 0; padding: 0; }
+.moncompte-liste > li { border-top: 1px solid var(--border); }
+.moncompte-echange summary {
+  display: flex; justify-content: space-between; gap: var(--space-3); align-items: baseline;
+  min-height: 44px; padding: var(--space-2) 0; cursor: pointer; list-style: none;
+}
+.moncompte-echange summary::-webkit-details-marker { display: none; }
+.moncompte-question { font-weight: 500; overflow-wrap: anywhere; }
+.moncompte-date { color: var(--muted); font-size: var(--text-xs); flex-shrink: 0; }
+.moncompte-reponse { margin: 0 0 var(--space-2); color: var(--muted); font-size: var(--text-sm); line-height: var(--lh-relaxed); white-space: pre-line; }
+.moncompte-echange .compte-lien { margin-bottom: var(--space-3); }
+
+@media (max-width: 600px) {
+  .moncompte { max-width: none; border-left: 0; }
+}

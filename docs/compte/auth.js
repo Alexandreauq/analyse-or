@@ -322,6 +322,13 @@
       declencheur.setAttribute('aria-label', `Mon compte (${nom})`);
       const statut = el('p', { class: 'compte-message', role: 'status', 'aria-live': 'polite' });
       const actions = [];
+      // Page « Mon compte » (docs/compte/compte.js), si elle est chargée.
+      if (typeof C.ouvrirMonCompte === 'function') {
+        actions.push(el('button', {
+          type: 'button', class: 'compte-menu-item', text: 'Mon compte',
+          onclick: () => { fermerMenu(); C.ouvrirMonCompte(); },
+        }));
+      }
       if (!membre.email_verified) {
         actions.push(el('button', {
           type: 'button', class: 'compte-menu-item', text: 'Renvoyer l’e-mail de confirmation',

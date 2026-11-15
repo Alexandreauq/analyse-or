@@ -16,7 +16,7 @@
       "name": "Dollar (DXY)",
       "score": -10,
       "weight": 0.2,
-      "raw_value": "103.41 (il y a 2 mois : 99.65)"
+      "raw_value": "103.42 (il y a 2 mois : 99.65)"
     },
     {
       "name": "Positionnement CFTC",
@@ -26,7 +26,7 @@
     },
     {
       "name": "Ratio or/argent",
-      "score": -3.938053097345132,
+      "score": -3.9447513812154695,
       "weight": 0.25,
       "raw_value": "79.1 — 30e percentile (3 ans)"
     },
@@ -34,13 +34,13 @@
       "name": "Dynamique récente",
       "score": -10.0,
       "weight": 0.1,
-      "raw_value": "-28.2% vs MM200"
+      "raw_value": "-28.0% vs MM200"
     }
   ],
   "technical": {
-    "note": "Cours en-dessous de la MM200 (-28.2%) — tendance baissière",
+    "note": "Cours en-dessous de la MM200 (-28.0%) — tendance baissière",
     "spot": 49.12099838256836,
-    "ma200": 68.3821848487854,
+    "ma200": 68.23588983535767,
     "unite": "$ / oz"
   },
   "calendar": [

@@ -2,7 +2,7 @@
   "date": "2026-11-15",
   "commodity": "petrole",
   "label": "Pétrole (WTI)",
-  "composite_score": -20.7,
+  "composite_score": -21.4,
   "interpretation": "Défavorable — pas d'entrée même sur signal technique",
   "cftc_percentile": 10.256410256410255,
   "factors": [
@@ -10,7 +10,7 @@
       "name": "Dollar (DXY)",
       "score": -10,
       "weight": 0.26666666666666666,
-      "raw_value": "103.41 (il y a 2 mois : 99.65)"
+      "raw_value": "103.42 (il y a 2 mois : 99.65)"
     },
     {
       "name": "Positionnement CFTC",
@@ -26,9 +26,9 @@
     },
     {
       "name": "Dynamique récente",
-      "score": 1.7833711556976222,
+      "score": 1.5153415560149148,
       "weight": 0.26666666666666666,
-      "raw_value": "+0.9% vs MM200"
+      "raw_value": "+0.8% vs MM200"
     },
     {
       "name": "Stocks EIA",
@@ -38,9 +38,9 @@
     }
   ],
   "technical": {
-    "note": "Cours proche de la MM200 (+0.9%) — zone de décision",
+    "note": "Cours proche de la MM200 (+0.8%) — zone de décision",
     "spot": 88.55999755859375,
-    "ma200": 87.77730003356933,
+    "ma200": 87.89405002593995,
     "unite": "$ / baril"
   },
   "calendar": [

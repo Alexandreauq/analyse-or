@@ -1,0 +1,27 @@
+[Unit]
+Description=Compte - alertes e-mail (detection des franchissements puis resume quotidien)
+After=network-online.target
+Wants=network-online.target
+
+# Fourni, non installe (mise en ligne : tache T10). Hypotheses, a aligner
+# sur le futur service compte-api : meme utilisateur systeme "compte", meme
+# depot /home/compte/analyse-or, meme .env /home/compte/analyse-or/.env
+# (DATABASE_URL absolu de preference, pour pointer sur la MEME base que
+# l'API quel que soit le dossier courant ; COMPTE_SITE_URL, COMPTE_MAILER=smtp,
+# SMTP_*, MAIL_FROM, COMPTE_UNSUBSCRIBE_SECRET, COMPTE_INDICES_URL facultatif).
+# Le chemin du venv est a ajuster s'il differe (.venv-compte en local).
+[Service]
+Type=oneshot
+User=compte
+WorkingDirectory=/home/compte/analyse-or
+EnvironmentFile=/home/compte/analyse-or/.env
+# Deux etapes dans l'ordre : si la detection echoue (indices.json
+# injoignable), le resume part quand meme avec les evenements deja en base.
+ExecStart=-/home/compte/analyse-or/venv/bin/python3 -m compte_api.jobs.alertes detecter
+ExecStart=/home/compte/analyse-or/venv/bin/python3 -m compte_api.jobs.alertes resume
+TimeoutStartSec=900
+# Pas de Restart= : un resume relance a mi-parcours ne renverrait rien de
+# plus (emailed_at deja pose), mais le declenchement reste le timer seul.
+
+[Install]
+WantedBy=multi-user.target

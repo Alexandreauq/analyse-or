@@ -1,0 +1,19 @@
+[Unit]
+Description=Compte - alertes e-mail, declenchement quotidien a 07:30 UTC
+
+# Horaire : le workflow .github/workflows/indices.yml est programme a
+# 06:00 UTC mais GitHub le lance en retard et le calcul est long : en
+# pratique docs/indices.json est publie entre 13:30 et 21:00 UTC (historique
+# Git de novembre 2026). A 07:30 UTC, la publication de la veille est donc
+# toujours en ligne, et le resume arrive en debut de matinee en Europe
+# (08:30 a Paris en hiver, 09:30 en ete).
+[Timer]
+OnCalendar=*-*-* 07:30:00 UTC
+# Un passage manque (VPS eteint) est rattrape au redemarrage : sans
+# risque, une detection ne cree d'evenement qu'au franchissement et un
+# resume n'envoie que les evenements non envoyes.
+Persistent=true
+Unit=compte-alertes.service
+
+[Install]
+WantedBy=timers.target

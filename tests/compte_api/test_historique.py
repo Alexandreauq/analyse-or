@@ -395,3 +395,18 @@ def test_relais_httpx_assistant_injoignable_503():
     with pytest.raises(ErreurAssistant) as e:
         _relais_reel(gestionnaire)
     assert e.value.statut == 503
+
+
+def test_historique_ia_trie_par_date_et_non_par_ordre_d_ajout(client_membre, db, membre):
+    # Un échange importé (plus ancien) arrive après un échange récent : la
+    # liste doit rester du plus récent au plus ancien.
+    from datetime import datetime, timedelta
+    maintenant = datetime.utcnow().replace(microsecond=0)
+    db.add(models.AiExchange(user_id=membre.id, question="recente", answer="r", created_at=maintenant))
+    db.commit()
+    db.add(models.AiExchange(user_id=membre.id, question="ancienne", answer="r",
+                             created_at=maintenant - timedelta(days=3)))
+    db.add(models.AiExchange(user_id=membre.id, question="moyenne", answer="r",
+                             created_at=maintenant - timedelta(days=1)))
+    db.commit()
+    assert [e["question"] for e in client_membre.get("/ai/history").json()] == ["recente", "moyenne", "ancienne"]

@@ -299,9 +299,11 @@
       document.body.append(voile);
       document.documentElement.classList.add('compte-modale-ouverte');
       document.addEventListener('keydown', surTouche);
-      onglets[0].focus();
     }
     afficherOnglet(onglet || 'profil');
+    // Le focus va sur l'onglet affiché, pas toujours sur « Profil ».
+    const actif = panneau.onglets.find(b => b.getAttribute('aria-selected') === 'true');
+    if (actif) actif.focus();
   }
 
   function fermer() {

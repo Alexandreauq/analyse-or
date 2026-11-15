@@ -62,7 +62,8 @@ def _recherche(r: models.Search) -> dict:
 @router.get("/searches")
 def lister_recherches(user: models.User = Depends(current_user), db: DbSession = Depends(get_db)) -> list[dict]:
     lignes = db.scalars(select(models.Search).where(models.Search.user_id == user.id)
-                        .order_by(models.Search.id.desc()).limit(MAX_RECHERCHES))
+                        .order_by(models.Search.created_at.desc(), models.Search.id.desc())
+                        .limit(MAX_RECHERCHES))
     return [_recherche(r) for r in lignes]
 
 
@@ -106,7 +107,8 @@ def _echange(e: models.AiExchange) -> dict:
 @router.get("/ai/history")
 def lister_echanges(user: models.User = Depends(current_user), db: DbSession = Depends(get_db)) -> list[dict]:
     lignes = db.scalars(select(models.AiExchange).where(models.AiExchange.user_id == user.id)
-                        .order_by(models.AiExchange.id.desc()).limit(MAX_ECHANGES))
+                        .order_by(models.AiExchange.created_at.desc(), models.AiExchange.id.desc())
+                        .limit(MAX_ECHANGES))
     return [_echange(e) for e in lignes]
 
 
@@ -137,7 +139,7 @@ def _supprimer_un(db: DbSession, modele, ligne_id: int, user_id: int, introuvabl
 def _purger(db: DbSession, modele, user_id: int, garder: int) -> None:
     """Ne garde que les `garder` lignes les plus récentes du membre."""
     a_garder = (select(modele.id).where(modele.user_id == user_id)
-                .order_by(modele.id.desc()).limit(garder))
+                .order_by(modele.created_at.desc(), modele.id.desc()).limit(garder))
     db.execute(delete(modele).where(modele.user_id == user_id, modele.id.not_in(a_garder)))
 
 

@@ -1,0 +1,121 @@
+/* docs/compte/auth.css
+   Bouton de compte, menu du membre et fenêtre de connexion (auth.js).
+   Uniquement les variables du site (docs/index.html) : suit les thèmes
+   sombre et clair sans règle dédiée. */
+
+.compte-zone { position: relative; display: inline-flex; }
+
+.compte-bouton {
+  display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2);
+  min-height: 40px; padding: var(--space-2) var(--space-4);
+  border: 1px solid var(--border); border-radius: var(--radius-pill);
+  background: var(--bg-2); color: var(--text);
+  font: inherit; font-size: var(--text-sm); font-weight: 500; cursor: pointer;
+  transition: border-color .15s var(--ease), background .15s var(--ease);
+}
+.compte-bouton:hover { border-color: var(--border-strong); background: var(--bg-3); }
+.compte-bouton:focus-visible,
+.compte-lien:focus-visible,
+.compte-menu-item:focus-visible,
+.compte-fermer:focus-visible,
+.compte-input:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+.compte-bouton:disabled { opacity: .6; cursor: progress; }
+
+.compte-bouton-principal {
+  width: 100%; border-color: var(--gold); background: var(--gold); color: var(--bg-0); font-weight: 600;
+}
+.compte-bouton-principal:hover { background: var(--gold-100); border-color: var(--gold-100); }
+.compte-bouton-google { width: 100%; }
+
+.compte-bouton-membre { padding-left: var(--space-1); max-width: 220px; }
+.compte-initiale {
+  display: inline-grid; place-items: center; width: 30px; height: 30px; flex-shrink: 0;
+  border-radius: 50%; background: var(--gold); color: var(--bg-0); font-weight: 600;
+}
+.compte-nom { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* Menu du membre */
+.compte-menu {
+  position: absolute; top: calc(100% + var(--space-2)); right: 0; z-index: 60;
+  min-width: 240px; padding: var(--space-2);
+  border: 1px solid var(--border); border-radius: var(--radius-lg);
+  background: var(--bg-2); box-shadow: var(--shadow-3);
+}
+.compte-menu[hidden] { display: none; }
+.compte-menu-email {
+  margin: 0; padding: var(--space-2) var(--space-3);
+  color: var(--muted); font-size: var(--text-xs); overflow-wrap: anywhere;
+}
+.compte-menu-alerte { margin: 0 var(--space-3) var(--space-2); color: var(--rust-300); font-size: var(--text-xs); }
+.compte-menu-item {
+  display: block; width: 100%; padding: var(--space-2) var(--space-3);
+  border: 0; border-radius: var(--radius-sm); background: none; color: var(--text);
+  font: inherit; font-size: var(--text-sm); text-align: left; cursor: pointer;
+}
+.compte-menu-item:hover { background: var(--bg-3); }
+.compte-menu .compte-message { margin: var(--space-1) var(--space-3) 0; }
+
+/* Fenêtre modale */
+.compte-modale-ouverte { overflow: hidden; }
+.compte-voile {
+  position: fixed; inset: 0; z-index: 1000;
+  display: flex; align-items: center; justify-content: center;
+  padding: var(--space-4) calc(var(--space-4) + var(--safe-right)) var(--space-4) calc(var(--space-4) + var(--safe-left));
+  background: var(--scrim);
+}
+.compte-modale {
+  width: 100%; max-width: 420px; max-height: calc(100vh - 2 * var(--space-4)); overflow-y: auto;
+  padding: var(--space-5);
+  border: 1px solid var(--border); border-radius: var(--radius-lg);
+  background: var(--bg-2); color: var(--text); box-shadow: var(--shadow-3);
+}
+.compte-entete { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); margin-bottom: var(--space-4); }
+.compte-titre { margin: 0; font-family: 'Newsreader', serif; font-weight: 400; font-size: var(--text-xl); line-height: var(--lh-tight); }
+.compte-fermer {
+  width: 36px; height: 36px; flex-shrink: 0;
+  border: 1px solid var(--border); border-radius: 50%; background: none; color: var(--muted);
+  font-size: var(--text-lg); line-height: 1; cursor: pointer;
+}
+.compte-fermer:hover { color: var(--text); border-color: var(--border-strong); }
+
+.compte-form { display: flex; flex-direction: column; gap: var(--space-3); }
+.compte-champ { display: flex; flex-direction: column; gap: var(--space-1); }
+.compte-champ label { font-size: var(--text-sm); color: var(--text); }
+.compte-input {
+  width: 100%; min-height: 44px; padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
+  background: var(--bg-1); color: var(--text); font: inherit; font-size: var(--text-md);
+}
+.compte-input[aria-invalid="true"] { border-color: var(--rust); }
+.compte-aide { margin: 0; color: var(--muted); font-size: var(--text-xs); }
+
+.compte-message { margin: 0; font-size: var(--text-sm); }
+.compte-message:empty { display: none; }
+.compte-message[data-type="erreur"] { color: var(--rust-300); }
+.compte-message[data-type="succes"] { color: var(--green-300); }
+
+.compte-texte { margin: 0 0 var(--space-4); color: var(--muted); font-size: var(--text-sm); line-height: var(--lh-relaxed); }
+.compte-texte-erreur { color: var(--rust-300); }
+
+.compte-lien {
+  padding: 0; border: 0; background: none; color: var(--gold);
+  font: inherit; font-size: var(--text-sm); text-decoration: underline; text-underline-offset: 2px; cursor: pointer;
+}
+.compte-actions { margin: var(--space-3) 0 0; text-align: right; }
+.compte-bascule { margin: var(--space-4) 0 0; color: var(--muted); font-size: var(--text-sm); text-align: center; }
+
+.compte-separateur {
+  display: flex; align-items: center; gap: var(--space-3); margin: var(--space-4) 0;
+  color: var(--text-faint); font-size: var(--text-xs);
+}
+.compte-separateur::before, .compte-separateur::after { content: ""; flex: 1; border-top: 1px solid var(--border); }
+
+/* Champ piège anti-robot : hors de l'écran, jamais visible ni annoncé. */
+.compte-piege {
+  position: absolute; width: 1px; height: 1px; overflow: hidden;
+  clip-path: inset(50%); white-space: nowrap; opacity: 0; pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .compte-bouton { transition: none; }
+}

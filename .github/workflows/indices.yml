@@ -2,7 +2,7 @@ name: Score fondamental Indices (CAC 40 pilote)
 
 on:
   schedule:
-    - cron: "0 6 * * *"   # une fois par jour, 06h00 UTC
+    - cron: "17 5 * * *"   # une fois par jour, 05h17 UTC = ~06h17 heure française (hiver, UTC+1) ; repasser a "17 4 * * *" en avril (heure d'ete, UTC+2) pour rester vers 6h locale. Minute non ronde pour limiter la file d'attente GitHub Actions (delai observe de 6-8h sur les cron a heure ronde).
   workflow_dispatch: {}
 
 concurrency:

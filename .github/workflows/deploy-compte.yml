@@ -1,0 +1,38 @@
+name: Déploiement automatique - Compte membres
+
+# Relance deploy/deploy-compte.sh sur le VPS dédié (nomi.goldbot.fr) à
+# chaque push sur main qui touche le service compte_api. La clé SSH
+# utilisée (secret COMPTE_DEPLOY_SSH_KEY) est restreinte côté serveur par
+# une commande forcée dans authorized_keys -- même en cas de fuite, elle
+# ne peut exécuter que ce script, pas un shell.
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - "compte_api/**"
+      - "deploy/compte-api.service"
+      - "deploy/compte-alertes.service"
+      - "deploy/compte-alertes.timer"
+      - "deploy/compte-sauvegarde.service"
+      - "deploy/compte-sauvegarde.timer"
+      - "deploy/deploy-compte.sh"
+
+concurrency:
+  group: deploy-compte
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Déployer sur nomi.goldbot.fr
+        env:
+          SSH_KEY: ${{ secrets.COMPTE_DEPLOY_SSH_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H nomi.goldbot.fr >> ~/.ssh/known_hosts 2>/dev/null
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=yes compte@nomi.goldbot.fr

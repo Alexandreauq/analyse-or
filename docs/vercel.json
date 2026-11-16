@@ -3,7 +3,7 @@
   "routes": [
     {
       "src": "/api/compte/(.*)",
-      "dest": "https://goldbot.fr:8447/$1",
+      "dest": "https://nomi.goldbot.fr:8447/$1",
       "transforms": [
         {
           "type": "request.headers",

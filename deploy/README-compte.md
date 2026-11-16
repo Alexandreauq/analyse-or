@@ -1,21 +1,24 @@
-# Déploiement de l'espace membre (`compte_api`) sur le VPS
+# Déploiement de l'espace membre (`compte_api`) sur un VPS dédié
 
 > Ce guide concerne le **service des comptes membres** (`compte_api/`) : inscription,
 > connexion, favoris, portefeuille, historique, quota IA et alertes e-mail.
-> Il tourne sur le même VPS que les bots et l'assistant IA, sous un
-> utilisateur dédié `compte`, avec une base **PostgreSQL** locale.
-> Les autres services : `deploy/README.md` (Bot Or), `deploy/README-ibkr.md`.
+> Il tourne sur un **VPS séparé** de celui des bots/assistant IA (`goldbot.fr`),
+> sous le nom `nomi.goldbot.fr`, pour isoler les données des membres (base
+> PostgreSQL) du compte FTMO réel. Utilisateur dédié `compte` sur ce VPS,
+> avec une base **PostgreSQL** locale.
+> Les autres services, sur l'autre VPS : `deploy/README.md` (Bot Or), `deploy/README-ibkr.md`.
 
-Guide d'installation initiale, à faire une fois. Les mises à jour suivantes
-se font avec `deploy/deploy-compte.sh` (voir « Mises à jour »).
+Guide d'installation initiale, à faire une fois, **sur le nouveau VPS**
+(IP notée dans l'enregistrement DNS `nomi.goldbot.fr`). Les mises à jour
+suivantes se font avec `deploy/deploy-compte.sh` (voir « Mises à jour »).
 
 ## Vue d'ensemble
 
 ```
-Navigateur ──► Vercel (site docs/) ──/api/compte/*──► goldbot.fr:8447  compte-api (uvicorn, HTTPS)
-                    pose X-Compte-Proxy                    │
+Navigateur ──► Vercel (site docs/) ──/api/compte/*──► nomi.goldbot.fr:8447  compte-api (uvicorn, HTTPS)
+                    pose X-Compte-Proxy                    │                [VPS dédié, séparé de goldbot.fr]
                                                           ├──► PostgreSQL local (base « compte »)
-                                                          ├──► assistant-ia (goldbot.fr:8445)
+                                                          ├──► assistant-ia (goldbot.fr:8445, autre VPS)
                                                           └──► SMTP (e-mails)
 ```
 
@@ -32,15 +35,44 @@ Trois unités systemd :
 | `compte-alertes.timer` | détection des alertes et résumé par e-mail, chaque jour à 07:30 UTC |
 | `compte-sauvegarde.timer` | sauvegarde de la base, chaque jour à 03:00 UTC, 14 jours gardés |
 
-## 0. Prérequis
+## 0. Provisionnement de base du VPS (celui-ci est vierge)
+
+Ce service tourne sur un **second VPS**, distinct de celui des bots —
+contrairement aux autres guides de ce dossier, rien n'est encore en place
+dessus. Mêmes étapes que `deploy/README.md` §1-2, adaptées :
+
+```bash
+# Connexion SSH par clé uniquement
+echo 'PasswordAuthentication no' | sudo tee /etc/ssh/sshd_config.d/99-hardening.conf
+sudo systemctl restart sshd
+sudo sshd -T | grep -i passwordauthentication   # doit afficher "no"
+
+# Pare-feu : SSH (22), le défi certbot http-01 (80), l'API compte (8447)
+sudo apt install -y ufw
+sudo ufw allow 22
+sudo ufw allow 80
+sudo ufw allow 8447
+sudo ufw enable
+
+# Mises à jour de sécurité automatiques
+sudo apt install -y unattended-upgrades
+sudo dpkg-reconfigure -plow unattended-upgrades
+```
+
+Le DNS `nomi.goldbot.fr` (enregistrement A chez Gandi, zone `goldbot.fr`)
+doit déjà pointer vers l'IP de ce VPS avant l'étape 6 (certificat) —
+sinon Let's Encrypt ne pourra pas vérifier le domaine.
+
+## 1. Prérequis
 
 - Le code de l'espace membre est fusionné dans `main` sur GitHub.
 - Le **domaine du site sur Vercel** est connu (ex. `analyse-or.vercel.app`
   ou un domaine personnalisé). Il est noté `DOMAINE_DU_SITE` ci-dessous.
 - Les identifiants SMTP (les mêmes que ceux des bots conviennent).
-- Le certificat Let's Encrypt `goldbot.fr` existe déjà (`deploy/README.md`, étape 5).
+- Le DNS `nomi.goldbot.fr` pointe déjà vers ce VPS (voir ci-dessus) — le
+  certificat Let's Encrypt est obtenu à l'étape 6, il n'existe pas encore.
 
-Générer trois secrets différents (à garder pour les étapes 3, 8 et 9) :
+Générer trois secrets différents (à garder pour les étapes 4, 9 et 10) :
 
 ```bash
 openssl rand -hex 32   # COMPTE_PROXY_SECRET   (aussi dans Vercel)
@@ -48,7 +80,7 @@ openssl rand -hex 32   # COMPTE_UNSUBSCRIBE_SECRET
 openssl rand -hex 32   # jeton de service assistant IA (deux .env)
 ```
 
-## 1. PostgreSQL
+## 2. PostgreSQL
 
 ```bash
 sudo apt install -y postgresql
@@ -64,7 +96,7 @@ sudo -u postgres createdb -O compte compte
 PostgreSQL n'écoute que sur la machine elle-même (`listen_addresses =
 'localhost'` par défaut) : ne pas ouvrir le port 5432 dans le pare-feu.
 
-## 2. Utilisateur dédié + dépôt
+## 3. Utilisateur dédié + dépôt
 
 ```bash
 sudo adduser --disabled-password --gecos "" compte
@@ -81,7 +113,7 @@ source venv/bin/activate
 pip install -r compte_api/requirements.txt
 ```
 
-## 3. Fichier `.env` (jamais commité, déjà dans `.gitignore`)
+## 4. Fichier `.env` (jamais commité, déjà dans `.gitignore`)
 
 Créer `/home/compte/analyse-or/.env` :
 
@@ -91,7 +123,7 @@ DATABASE_URL=postgresql+psycopg:///compte
 
 # Adresse publique du site (liens des e-mails, retour Google)
 COMPTE_SITE_URL=https://DOMAINE_DU_SITE
-# Même valeur que la variable COMPTE_PROXY_SECRET du projet Vercel (étape 9)
+# Même valeur que la variable COMPTE_PROXY_SECRET du projet Vercel (étape 10)
 COMPTE_PROXY_SECRET=...
 COMPTE_COOKIE_SECURE=true
 COMPTE_UNSUBSCRIBE_SECRET=...
@@ -104,13 +136,13 @@ SMTP_USER=...
 SMTP_PASSWORD=...
 MAIL_FROM=...
 
-# Assistant IA (étape 8)
+# Assistant IA (étape 9 ; appel inter-serveurs vers goldbot.fr, autre VPS)
 ASSISTANT_IA_URL=https://goldbot.fr:8445
 ASSISTANT_IA_TOKEN=...
 # Questions gratuites par jour et par membre (10 par défaut)
 # AI_QUOTA_PAR_JOUR=10
 
-# Connexion Google (facultatif, étape 10 ; sans eux le bouton Google est inactif)
+# Connexion Google (facultatif, étape 11 ; sans eux le bouton Google est inactif)
 # GOOGLE_CLIENT_ID=...
 # GOOGLE_CLIENT_SECRET=...
 ```
@@ -125,7 +157,7 @@ caractères, si `COMPTE_COOKIE_SECURE` n'est pas `true` ou si
 `COMPTE_MAILER` n'est pas `smtp`. Le message d'erreur liste ce qui manque
 (`journalctl -u compte-api`).
 
-## 4. Créer les tables
+## 5. Créer les tables
 
 Toujours dans le shell `compte` :
 
@@ -137,24 +169,32 @@ set -a; . ./.env; set +a
 
 La dernière ligne doit afficher `Running upgrade -> f32f18b9848f, tables initiales`.
 
-## 5. Certificat HTTPS et pare-feu
+## 6. Certificat HTTPS et pare-feu
 
 *(En tant qu'administrateur, hors du shell `compte`.)*
 
+Contrairement aux autres services de ce dépôt, il n'y a **pas de certificat
+existant à réutiliser** ici : ce VPS est nouveau, donc on en obtient un pour
+`nomi.goldbot.fr` avec `deploy/setup-tls-compte.sh` (même procédure que
+`deploy/setup-tls.sh`, adaptée à ce domaine et service) :
+
 ```bash
-# Lire la clé privée Let's Encrypt (même groupe que goldbot)
-sudo usermod -aG ssl-cert compte
+cd /home/compte/analyse-or   # ou le chemin du dépôt cloné en tant qu'administrateur
+sudo bash deploy/setup-tls-compte.sh
+```
 
-# Redémarrer aussi compte-api quand le certificat est renouvelé
-echo '#!/bin/bash
-systemctl restart compte-api' | sudo tee /etc/letsencrypt/renewal-hooks/deploy/restart-compte-api.sh
-sudo chmod +x /etc/letsencrypt/renewal-hooks/deploy/restart-compte-api.sh
+Le script installe `certbot`, obtient le certificat en mode `standalone`
+(le port 80 doit être libre et joignable — DNS `nomi.goldbot.fr` déjà
+propagé, voir étape 0), configure le hook de renouvellement qui redémarre
+`compte-api`, ajoute `compte` au groupe `ssl-cert` et lui donne la
+permission de lire la clé privée.
 
+```bash
 # Port de l'API (Vercel s'y connecte)
 sudo ufw allow 8447
 ```
 
-## 6. Installer les services systemd
+## 7. Installer les services systemd
 
 ```bash
 cd /home/compte/analyse-or
@@ -166,23 +206,24 @@ sudo systemctl enable --now compte-alertes.timer
 sudo systemctl enable --now compte-sauvegarde.timer
 ```
 
-## 7. Vérifier le service
+## 8. Vérifier le service
 
 ```bash
 sudo systemctl status compte-api
 # Sans l'en-tête secret : refus attendu (403)
-curl -i https://goldbot.fr:8447/me
+curl -i https://nomi.goldbot.fr:8447/me
 # Avec l'en-tête : 401 attendu (personne n'est connecté), donc le service répond
-curl -i -H "X-Compte-Proxy: <COMPTE_PROXY_SECRET>" https://goldbot.fr:8447/me
+curl -i -H "X-Compte-Proxy: <COMPTE_PROXY_SECRET>" https://nomi.goldbot.fr:8447/me
 # Une sauvegarde tout de suite, pour tester
 sudo systemctl start compte-sauvegarde && ls -l /home/compte/sauvegardes
 ```
 
-## 8. Brancher l'assistant IA
+## 9. Brancher l'assistant IA
 
 `compte_api` pose les questions des membres à l'assistant avec un jeton de
-service. Dans `/home/assistantia/analyse-or/.env`, ajouter la **même
-valeur** que `ASSISTANT_IA_TOKEN` ci-dessus :
+service. **Sur l'autre VPS** (`goldbot.fr`), dans
+`/home/assistantia/analyse-or/.env`, ajouter la **même valeur** que
+`ASSISTANT_IA_TOKEN` ci-dessus :
 
 ```
 AI_ASSISTANT_SERVICE_TOKEN=...
@@ -191,18 +232,18 @@ AI_ASSISTANT_SERVICE_TOKEN=...
 puis `sudo systemctl restart assistant-ia-api`. Ce jeton n'ouvre que
 `/ask`, avec la limite par membre de l'assistant.
 
-## 9. Projet Vercel
+## 10. Projet Vercel
 
 1. Nouveau projet depuis le dépôt GitHub, **Root Directory : `docs`**,
    framework « Other », sans commande de build.
 2. *Settings → Environment Variables* : `COMPTE_PROXY_SECRET` = la même
    valeur que dans le `.env` du VPS (environnement Production).
 3. Déployer. Le relais est décrit dans `docs/vercel.json` : `/api/compte/*`
-   vers `https://goldbot.fr:8447/*` avec l'en-tête secret.
+   vers `https://nomi.goldbot.fr:8447/*` avec l'en-tête secret.
 4. Vérifier : `https://DOMAINE_DU_SITE/api/compte/me` doit répondre `401`
    (et non `403` ni `404`).
 
-## 10. Connexion Google (facultatif)
+## 11. Connexion Google (facultatif)
 
 Dans Google Cloud Console : *APIs & Services → Credentials → Create
 credentials → OAuth client ID*, type « Web application ».
@@ -211,7 +252,7 @@ credentials → OAuth client ID*, type « Web application ».
 - Reporter l'ID et le secret dans `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`
   du `.env`, puis `sudo systemctl restart compte-api`.
 
-## 11. Accès à la base pour l'administrateur (DBeaver)
+## 12. Accès à la base pour l'administrateur (DBeaver)
 
 La base n'est pas exposée sur Internet : on y accède par un **tunnel SSH**.
 Il faut donc deux choses : un compte SSH sans droits d'administration, et
@@ -253,7 +294,7 @@ sudo -u postgres psql -c "\password gestion"
 
 **Dans DBeaver** : *Nouvelle connexion → PostgreSQL*.
 
-- Onglet **SSH** : cocher « Use SSH Tunnel », hôte `goldbot.fr`, port 22,
+- Onglet **SSH** : cocher « Use SSH Tunnel », hôte `nomi.goldbot.fr`, port 22,
   utilisateur `IDENTIFIANT`, authentification « Public Key » avec le
   fichier `id_ed25519`.
 - Onglet **Main** : hôte `localhost`, port `5432`, base `compte`,
@@ -310,7 +351,7 @@ aussi. Pour une copie ailleurs, récupérer régulièrement
 
 | Symptôme | Cause probable |
 |---|---|
-| `compte-api` ne démarre pas, « Réglages de production manquants » | un des trois réglages de l'étape 3 |
+| `compte-api` ne démarre pas, « Réglages de production manquants » | un des trois réglages de l'étape 4 |
 | `403` sur `https://DOMAINE_DU_SITE/api/compte/me` | `COMPTE_PROXY_SECRET` différent entre Vercel et le `.env` |
 | `502`/`504` sur le même lien | port 8447 fermé (`ufw`) ou service arrêté |
 | « Assistant indisponible » pour les membres | `ASSISTANT_IA_URL` vide, ou jeton différent de `AI_ASSISTANT_SERVICE_TOKEN` |

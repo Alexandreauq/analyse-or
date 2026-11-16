@@ -1,5 +1,5 @@
 {
-  "date": "2026-11-15",
+  "date": "2026-11-16",
   "commodity": "gaz",
   "label": "Gaz naturel",
   "composite_score": 6.3,
@@ -16,19 +16,19 @@
       "name": "Saisonnalité (Henry Hub)",
       "score": -10,
       "weight": 0.3333333333333333,
-      "raw_value": "3.00 $/MMBtu (moyenne saisonnière du mois : 3.59 $/MMBtu)"
+      "raw_value": "3.00 $/MMBtu (moyenne saisonnière du mois : 3.57 $/MMBtu)"
     },
     {
       "name": "Dynamique récente",
       "score": 10.0,
       "weight": 0.26666666666666666,
-      "raw_value": "+8.8% vs MM200"
+      "raw_value": "+6.4% vs MM200"
     },
     {
       "name": "Dollar (DXY)",
       "score": -10,
       "weight": 0.13333333333333333,
-      "raw_value": "103.42 (il y a 2 mois : 99.65)"
+      "raw_value": "103.44 (il y a 2 mois : 99.65)"
     },
     {
       "name": "Stocks EIA",
@@ -38,9 +38,9 @@
     }
   ],
   "technical": {
-    "note": "Cours au-dessus de la MM200 (+8.8%) — tendance haussière",
-    "spot": 3.2300000190734863,
-    "ma200": 2.9680400002002716,
+    "note": "Cours au-dessus de la MM200 (+6.4%) — tendance haussière",
+    "spot": 3.1570000648498535,
+    "ma200": 2.9676750004291534,
     "unite": "$ / MMBtu"
   },
   "calendar": [

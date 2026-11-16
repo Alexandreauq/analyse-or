@@ -17,6 +17,7 @@ on:
       - "deploy/compte-sauvegarde.service"
       - "deploy/compte-sauvegarde.timer"
       - "deploy/deploy-compte.sh"
+  workflow_dispatch: {}   # permet de lancer manuellement depuis l'onglet Actions, pour tester
 
 concurrency:
   group: deploy-compte

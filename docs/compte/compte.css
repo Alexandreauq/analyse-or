@@ -50,6 +50,18 @@
 .moncompte-reponse { margin: 0 0 var(--space-2); color: var(--muted); font-size: var(--text-sm); line-height: var(--lh-relaxed); white-space: pre-line; }
 .moncompte-echange .compte-lien { margin-bottom: var(--space-3); }
 
+.moncompte-admin-tuiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-3); margin-bottom: var(--space-4); }
+.moncompte-admin-tuile { padding: var(--space-3); border: 1px solid var(--border); border-radius: 8px; text-align: center; }
+.moncompte-admin-tuile-valeur { margin: 0; font-family: 'Newsreader', serif; font-size: var(--text-lg); color: var(--gold); }
+.moncompte-admin-tuile-libelle { margin: var(--space-1) 0 0; font-size: var(--text-xs); color: var(--muted); }
+.moncompte-admin-tableau { width: 100%; border-collapse: collapse; font-size: var(--text-sm); }
+.moncompte-admin-tableau th, .moncompte-admin-tableau td { padding: var(--space-2); border-bottom: 1px solid var(--border); text-align: left; }
+.moncompte-admin-tableau th { color: var(--muted); font-weight: 500; }
+.moncompte-admin-point { color: var(--muted); }
+.moncompte-admin-point-actif { color: var(--gold); }
+
 @media (max-width: 600px) {
   .moncompte { max-width: none; border-left: 0; }
+  .moncompte-admin-tuiles { grid-template-columns: 1fr; }
+  .moncompte-admin-tableau { display: block; overflow-x: auto; white-space: nowrap; }
 }

@@ -9,13 +9,19 @@
 //   Compte.ouvrirMonCompte(onglet?)  'profil' | 'suivis' | 'alertes' | 'historique' | 'donnees'
 (function () {
   const C = (window.Compte = window.Compte || {});
-  const ONGLETS = [
+  const ONGLETS_BASE = [
     ['profil', 'Profil'],
     ['suivis', 'Mes suivis'],
     ['alertes', 'Alertes'],
     ['historique', 'Historique IA'],
     ['donnees', 'Mes données'],
   ];
+
+  function ongletsPour(membre) {
+    return membre && membre.role === 'admin'
+      ? [...ONGLETS_BASE, ['admin', 'Administration']]
+      : ONGLETS_BASE;
+  }
   let sourceIndices = async () => null;
   let panneau = null;   // {voile, boite, corps, onglets, demonter, retourFocus}
 
@@ -236,6 +242,74 @@
     ]);
   }
 
+  function tuileAdmin(libelle, valeur) {
+    return el('div', { class: 'moncompte-admin-tuile' }, [
+      el('p', { class: 'moncompte-admin-tuile-valeur', text: String(valeur) }),
+      el('p', { class: 'moncompte-admin-tuile-libelle', text: libelle }),
+    ]);
+  }
+
+  function ligneAdmin(m) {
+    return el('tr', {}, [
+      el('td', { text: m.email }),
+      el('td', { text: m.display_name || '—' }),
+      el('td', { text: m.role }),
+      el('td', { text: m.email_verified ? 'Oui' : 'Non' }),
+      el('td', { text: dateCourte(m.created_at) }),
+      el('td', { text: m.last_login_at ? dateCourte(m.last_login_at) : '—' }),
+      el('td', {}, [el('span', {
+        class: 'moncompte-admin-point' + (m.connecte ? ' moncompte-admin-point-actif' : ''),
+        'aria-label': m.connecte ? 'Connecté' : 'Non connecté',
+        text: m.connecte ? '●' : '○',
+      })]),
+    ]);
+  }
+
+  async function ongletAdmin(corps) {
+    const message = zoneMessage();
+    const tuiles = el('div', { class: 'moncompte-admin-tuiles' });
+    const tableau = el('table', { class: 'moncompte-admin-tableau' });
+    const actualiser = el('button', {
+      type: 'button', class: 'compte-bouton', text: 'Actualiser',
+      onclick: () => charger(),
+    });
+    corps.append(
+      el('div', { class: 'moncompte-barre' }, [
+        el('p', { class: 'compte-texte', text: 'Vue d’ensemble des membres inscrits.' }),
+        actualiser,
+      ]),
+      message, tuiles, tableau,
+    );
+
+    async function charger() {
+      actualiser.disabled = true;
+      annoncer(message, '', '');
+      tuiles.replaceChildren(el('p', { class: 'compte-texte', text: 'Chargement…' }));
+      tableau.replaceChildren();
+      try {
+        const [stats, membres] = await Promise.all([C.fetch('/admin/stats'), C.fetch('/admin/users')]);
+        tuiles.replaceChildren(
+          tuileAdmin('Membres', stats.total_membres),
+          tuileAdmin('Adresses confirmées', stats.verifies),
+          tuileAdmin('Connectés maintenant', stats.connectes_maintenant),
+        );
+        tableau.replaceChildren(
+          el('thead', {}, [el('tr', {}, [
+            el('th', { text: 'E-mail' }), el('th', { text: 'Nom' }), el('th', { text: 'Rôle' }),
+            el('th', { text: 'Confirmé' }), el('th', { text: 'Inscrit le' }),
+            el('th', { text: 'Dernière connexion' }), el('th', { text: 'Connecté' }),
+          ])]),
+          el('tbody', {}, membres.map(ligneAdmin)),
+        );
+      } catch (err) {
+        annoncer(message, err.message, 'erreur');
+      } finally {
+        actualiser.disabled = false;
+      }
+    }
+    await charger();
+  }
+
   // ------------------------------------------------------------- panneau
 
   function surTouche(e) {
@@ -269,6 +343,8 @@
     } else if (nom === 'alertes' && typeof C.monterAlertes === 'function') {
       const demonter = await ongletAvecIndices(corps, (racine, donnees) => C.monterAlertes(racine, donnees));
       if (panneau) panneau.demonter = demonter;
+    } else if (nom === 'admin') {
+      await ongletAdmin(corps);
     } else {
       corps.append(el('p', { class: 'compte-texte', text: 'Section indisponible.' }));
     }
@@ -281,7 +357,8 @@
     }
     if (!panneau) {
       const idTitre = 'moncompteTitre';
-      const onglets = ONGLETS.map(([cle, libelle]) => el('button', {
+      const membreActuel = C.membre && C.membre();
+      const onglets = ongletsPour(membreActuel).map(([cle, libelle]) => el('button', {
         type: 'button', role: 'tab', class: 'moncompte-onglet', 'data-onglet': cle, text: libelle,
         onclick: () => afficherOnglet(cle),
       }));

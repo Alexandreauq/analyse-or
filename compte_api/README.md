@@ -17,7 +17,13 @@ Le site est alors sur http://127.0.0.1:8000, et `/api/compte/*` est relayé
 vers le service avec l'en-tête secret, comme le fera Vercel. En local, les
 e-mails s'affichent dans le terminal du service.
 
+En local, la base est un fichier SQLite (`compte.db`). En production c'est
+PostgreSQL : il suffit de changer `DATABASE_URL`.
+
 ## Production
+
+Installation complète sur le VPS (PostgreSQL, systemd, Vercel, Google,
+accès DBeaver, sauvegardes) : `deploy/README-compte.md`.
 
 Dès que `COMPTE_SITE_URL` n'est pas une adresse locale, le service refuse
 de démarrer sans ces trois réglages dans son `.env` :
@@ -32,6 +38,14 @@ Conseillé : `COMPTE_UNSUBSCRIBE_SECRET`, distinct du secret du proxy.
 
 ```bash
 .venv-compte/Scripts/python -m pytest tests/compte_api
+```
+
+Par défaut sur SQLite. Pour les faire tourner sur PostgreSQL (la base de
+production), sur une base de test **vidée à chaque test** :
+
+```bash
+COMPTE_TEST_DATABASE_URL=postgresql+psycopg://postgres@localhost:5432/compte_test \
+  .venv-compte/Scripts/python -m pytest tests/compte_api
 ```
 
 Fixtures disponibles (`tests/compte_api/conftest.py`) : `client` (anonyme),

@@ -268,7 +268,9 @@
   .home-quota { margin-left: auto; align-self: center; }
   .index-card { position: relative; }
   .index-card:has(.fav-slot-index) .index-card-header { padding-right: 56px; }
-  .fav-slot-index { position: absolute; top: 6px; right: 6px; }
+  /* Sélecteur renforcé : .compte-etoile-hote (favoris.css, chargé après)
+     remettait l'emplacement en position: relative, sur sa propre ligne. */
+  .index-card > .fav-slot-index { position: absolute; top: 6px; right: 6px; z-index: 1; }
   .compte-notice {
     position: fixed; left: 50%; bottom: calc(var(--bottomnav-h, 0px) + 16px); transform: translateX(-50%); z-index: 1100;
     max-width: min(92vw, 420px); padding: 10px 16px; border-radius: var(--radius-lg);

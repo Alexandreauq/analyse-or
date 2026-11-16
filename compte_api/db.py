@@ -23,6 +23,10 @@ def make_engine(url: str) -> Engine:
             curseur.close()
 
         return engine
+    if url.startswith("postgresql"):
+        # PostgreSQL rend les dates dans le fuseau de la connexion, celui de la
+        # machine par défaut : on le fixe à UTC, comme partout dans le service.
+        return create_engine(url, pool_pre_ping=True, connect_args={"options": "-c timezone=UTC"})
     return create_engine(url, pool_pre_ping=True)
 
 

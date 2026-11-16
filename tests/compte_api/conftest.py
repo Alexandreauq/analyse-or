@@ -1,13 +1,16 @@
 # Fixtures partagées par tous les tests du service compte : application sur
 # une base SQLite temporaire, e-mails gardés en mémoire, membres connectés.
+import os
 from datetime import datetime, timezone
 
 import pytest
 from fastapi.testclient import TestClient
+from sqlalchemy import text
 
 from compte_api import models
 from compte_api.app import create_app
 from compte_api.config import Settings
+from compte_api.db import Base, make_engine
 from compte_api.mailer import ConsoleMailer
 from compte_api.security import hash_password
 from compte_api.sessions import COOKIE_SESSION, creer_session
@@ -17,10 +20,21 @@ MOT_DE_PASSE = "motdepasse-solide-42"
 EN_TETES = {"X-Compte-Proxy": SECRET_PROXY, "X-Requested-With": "compte"}
 
 
+# COMPTE_TEST_DATABASE_URL=postgresql+psycopg://... fait tourner les tests sur
+# PostgreSQL (base vidée avant chaque test) au lieu d'un fichier SQLite.
+URL_TEST = os.environ.get("COMPTE_TEST_DATABASE_URL")
+
+
 @pytest.fixture
 def settings(tmp_path):
-    return Settings(database_url=f"sqlite:///{tmp_path / 'compte.db'}", proxy_secret=SECRET_PROXY,
-                    site_url="http://site.test")
+    if URL_TEST:
+        engine = make_engine(URL_TEST)
+        Base.metadata.drop_all(engine)
+        with engine.begin() as c:
+            c.execute(text("DROP TABLE IF EXISTS alembic_version"))
+        engine.dispose()
+    url = URL_TEST or f"sqlite:///{tmp_path / 'compte.db'}"
+    return Settings(database_url=url, proxy_secret=SECRET_PROXY, site_url="http://site.test")
 
 
 @pytest.fixture
@@ -30,7 +44,9 @@ def mailer():
 
 @pytest.fixture
 def app(settings, mailer):
-    return create_app(settings, mailer=mailer, creer_tables=True)
+    application = create_app(settings, mailer=mailer, creer_tables=True)
+    yield application
+    application.state.engine.dispose()
 
 
 @pytest.fixture

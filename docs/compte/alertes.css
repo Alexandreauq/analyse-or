@@ -82,8 +82,10 @@
 .alertes-bouton-texte:disabled { opacity: .5; cursor: default; }
 
 @media (min-width: 720px) {
-  .alertes-formulaire { grid-template-columns: minmax(0, 2fr) minmax(0, 1.4fr) minmax(0, 1fr) auto; align-items: end; }
-  .alertes-formulaire .alertes-sous-titre { grid-column: 1 / -1; }
+  /* Entreprise sur toute la largeur, puis type, seuil et bouton : sur
+     quatre colonnes, le panneau est trop étroit et le type était coupé. */
+  .alertes-formulaire { grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr) auto; align-items: end; }
+  .alertes-formulaire .alertes-sous-titre, .alertes-formulaire .alertes-recherche { grid-column: 1 / -1; }
 }
 
 /* Liste des règles */

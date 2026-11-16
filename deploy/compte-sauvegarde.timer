@@ -1,0 +1,11 @@
+[Unit]
+Description=Compte - sauvegarde quotidienne de la base a 03:00 UTC
+
+[Timer]
+OnCalendar=*-*-* 03:00:00 UTC
+# Sauvegarde manquee (VPS eteint) : faite au redemarrage.
+Persistent=true
+Unit=compte-sauvegarde.service
+
+[Install]
+WantedBy=timers.target

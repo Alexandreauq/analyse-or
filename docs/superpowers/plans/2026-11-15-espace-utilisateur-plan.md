@@ -280,3 +280,13 @@ Projet Vercel, application Google OAuth, service systemd `compte-api` et
 minuteur des alertes sur le VPS, sauvegarde quotidienne de la base,
 vérification que les cookies traversent bien le rewrite Vercel (repli
 `app.goldbot.fr` / `api.goldbot.fr` sinon), essai complet en ligne.
+
+Préparé (2026-11-15) : la production passe sur **PostgreSQL**, installé
+sur le VPS (accès à la base par DBeaver à travers un tunnel SSH). Le VPS
+est administré par un collaborateur : le guide pas à pas est
+`deploy/README-compte.md`, avec les unités `compte-api.service`,
+`compte-sauvegarde.{service,timer}` et le script `deploy-compte.sh`.
+Les 325 tests passent sur SQLite et sur PostgreSQL 17
+(`COMPTE_TEST_DATABASE_URL`) ; seule correction nécessaire : connexions
+PostgreSQL forcées en UTC (`compte_api/db.py`). Migration Alembic et
+parcours complet dans le navigateur vérifiés sur PostgreSQL.

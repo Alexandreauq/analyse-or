@@ -47,3 +47,6 @@ ibkr_bot/circuit_breaker_state.json
 # Environnement local du service compte
 .venv-compte/
 compte.db
+
+# Secrets des services sur le VPS (.env dans le dossier du dépôt)
+.env

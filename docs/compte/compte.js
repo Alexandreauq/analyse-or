@@ -79,7 +79,8 @@
         el('dt', { text: 'Statut' }),
         el('dd', { text: membre.email_verified ? 'Adresse confirmée' : 'Adresse non confirmée : alertes et assistant IA désactivés' }),
         el('dt', { text: 'Questions à l’IA restantes aujourd’hui' }),
-        el('dd', { text: membre.quota_ia_restant == null ? 'Illimité' : String(membre.quota_ia_restant) }),
+        el('dd', { text: !membre.email_verified ? 'Après confirmation de l’adresse'
+          : (membre.quota_ia_restant == null ? 'Illimité' : String(membre.quota_ia_restant)) }),
       ]),
       formulaire,
     );

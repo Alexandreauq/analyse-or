@@ -152,21 +152,24 @@ def test_suppression_en_cascade(db, creer_membre):
     assert db.query(models.Position).count() == 0
 
 
-def test_migration_identique_aux_modeles(tmp_path, monkeypatch):
+def test_migration_identique_aux_modeles(settings, monkeypatch):
     """La migration Alembic doit créer exactement les tables de models.py."""
     from pathlib import Path
 
     from alembic import command
     from alembic.config import Config
-    from sqlalchemy import create_engine, inspect
+    from sqlalchemy import inspect
 
-    from compte_api.db import Base
+    from compte_api.db import Base, make_engine
 
-    url = f"sqlite:///{tmp_path / 'migration.db'}"
+    # `settings` pointe vers une base vide (SQLite temporaire ou PostgreSQL de test).
+    url = settings.database_url
     monkeypatch.setenv("DATABASE_URL", url)
     config = Config(str(Path(__file__).resolve().parents[2] / "compte_api" / "alembic.ini"))
     command.upgrade(config, "head")
-    tables = set(inspect(create_engine(url)).get_table_names()) - {"alembic_version"}
+    engine = make_engine(url)
+    tables = set(inspect(engine).get_table_names()) - {"alembic_version"}
+    engine.dispose()
     assert tables == set(Base.metadata.tables)
 
 

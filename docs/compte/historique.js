@@ -24,9 +24,10 @@
   }
 
   // Le quota suit l'état de connexion : /me donne quota_ia_restant (null
-  // pour l'administrateur).
+  // pour l'administrateur). Adresse non confirmée : l'IA refuse les
+  // questions, on n'affiche donc pas de compteur.
   function suivreMembre(membre) {
-    if (!membre) { quota = undefined; return; }
+    if (!membre || !membre.email_verified) { quota = undefined; return; }
     quota = membre.role === 'admin' ? null
       : (typeof membre.quota_ia_restant === 'number' ? membre.quota_ia_restant : undefined);
   }

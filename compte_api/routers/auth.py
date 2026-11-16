@@ -17,6 +17,7 @@ from sqlalchemy.orm import Session as DbSession
 from compte_api import models
 from compte_api.config import Settings
 from compte_api.deps import current_user, get_db, get_mailer, get_settings
+from compte_api.email_templates import gabarit_bouton
 from compte_api.mailer import Mailer
 from compte_api.quota import quota_restant
 from compte_api.ratelimit import Limiteur, adresse_client
@@ -175,11 +176,11 @@ def _marquer_utilise(db: DbSession, clair: str) -> None:
     jeton.used_at = models.maintenant()
 
 
-def _envoyer(mailer: Mailer, destinataire: str, sujet: str, texte: str) -> None:
+def _envoyer(mailer: Mailer, destinataire: str, sujet: str, texte: str, html: str | None = None) -> None:
     # Une panne SMTP ne doit pas faire échouer l'inscription : le membre
     # peut redemander le lien.
     try:
-        mailer.envoyer(destinataire, sujet, texte)
+        mailer.envoyer(destinataire, sujet, texte, html)
     except Exception:  # noqa: BLE001
         journal.exception("Envoi d'e-mail impossible (%s)", email_masque(destinataire))
 
@@ -193,6 +194,12 @@ def envoyer_confirmation(db: DbSession, mailer: Mailer, settings: Settings, user
         f"{lien}\n\n"
         "Le lien est valable 24 heures. Si tu n'as pas créé de compte, ignore ce message.\n\n"
         "Nomi"
+    ), gabarit_bouton(
+        "Confirme ton adresse",
+        "Un dernier clic pour activer ton compte et débloquer ton portefeuille, les alertes et l'analyse IA.",
+        "Confirmer mon adresse", lien,
+        expiration="Ce lien expire dans 24 heures.",
+        mention_bas="Tu n'as pas créé de compte ? Ignore simplement ce message.",
     ))
 
 

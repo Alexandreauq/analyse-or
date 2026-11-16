@@ -14,10 +14,11 @@ class EmailEnvoye:
     destinataire: str
     sujet: str
     texte: str
+    html: str | None = None
 
 
 class Mailer:
-    def envoyer(self, destinataire: str, sujet: str, texte: str) -> None:
+    def envoyer(self, destinataire: str, sujet: str, texte: str, html: str | None = None) -> None:
         raise NotImplementedError
 
 
@@ -26,8 +27,8 @@ class ConsoleMailer(Mailer):
     afficher: bool = True
     envoyes: list[EmailEnvoye] = field(default_factory=list)
 
-    def envoyer(self, destinataire: str, sujet: str, texte: str) -> None:
-        self.envoyes.append(EmailEnvoye(destinataire, sujet, texte))
+    def envoyer(self, destinataire: str, sujet: str, texte: str, html: str | None = None) -> None:
+        self.envoyes.append(EmailEnvoye(destinataire, sujet, texte, html))
         if self.afficher:
             print(f"\n--- E-mail (console) pour {destinataire} : {sujet}\n{texte}\n---")
 
@@ -36,13 +37,17 @@ class SmtpMailer(Mailer):
     def __init__(self, settings: Settings):
         self.settings = settings
 
-    def envoyer(self, destinataire: str, sujet: str, texte: str) -> None:
+    def envoyer(self, destinataire: str, sujet: str, texte: str, html: str | None = None) -> None:
         s = self.settings
         message = EmailMessage()
         message["From"] = s.mail_from or s.smtp_user
         message["To"] = destinataire
         message["Subject"] = sujet
         message.set_content(texte)
+        if html:
+            # Multipart/alternative : les clients qui savent afficher du
+            # HTML montrent cette version, les autres gardent le texte brut.
+            message.add_alternative(html, subtype="html")
         contexte = ssl.create_default_context()
         if s.smtp_port == 465:
             with smtplib.SMTP_SSL(s.smtp_host, s.smtp_port, context=contexte, timeout=20) as smtp:

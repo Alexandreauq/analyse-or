@@ -57,6 +57,9 @@ def test_inscription_nominale(client, db, mailer):
     email = mailer.envoyes[0]
     assert email.destinataire == "carole@exemple.test"
     assert "http://site.test/?verify=" in email.texte and "Nomi" in email.texte
+    # Version HTML (gabarit à bouton), transmise en plus du texte brut.
+    assert email.html is not None and "http://site.test/?verify=" in email.html
+    assert "Confirme ton adresse" in email.html
     # Jeton stocké haché seulement.
     jeton = _jeton(mailer, "verify")
     assert db.get(models.EmailToken, hacher_jeton(jeton)).purpose == "verify"

@@ -160,7 +160,7 @@
           const blob = await reponse.blob();
           const lien = el('a', {
             href: URL.createObjectURL(blob),
-            download: `ai-investment-mes-donnees-${new Date().toISOString().slice(0, 10)}.json`,
+            download: `nomi-mes-donnees-${new Date().toISOString().slice(0, 10)}.json`,
           });
           document.body.append(lien);
           lien.click();

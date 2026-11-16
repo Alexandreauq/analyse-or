@@ -192,7 +192,7 @@ def envoyer_confirmation(db: DbSession, mailer: Mailer, settings: Settings, user
         "Pour confirmer l'adresse e-mail de ton compte, ouvre ce lien :\n"
         f"{lien}\n\n"
         "Le lien est valable 24 heures. Si tu n'as pas créé de compte, ignore ce message.\n\n"
-        "AI Investment"
+        "Nomi"
     ))
 
 
@@ -205,7 +205,7 @@ def _envoyer_reinitialisation(db: DbSession, mailer: Mailer, settings: Settings,
         f"{lien}\n\n"
         "Le lien est valable 1 heure. Si tu n'as rien demandé, ignore ce message : "
         "ton mot de passe actuel reste valable.\n\n"
-        "AI Investment"
+        "Nomi"
     ))
 
 

@@ -102,7 +102,7 @@ def exporter(user: models.User = Depends(current_user), db: DbSession = Depends(
                                        ordre=models.AlertEvent.triggered_at) if ids_regles else [],
         "reglages": json.loads(reglages.json) if reglages and reglages.json else {},
     }
-    nom_fichier = f"ai-investment-mes-donnees-{models.maintenant().date().isoformat()}.json"
+    nom_fichier = f"nomi-mes-donnees-{models.maintenant().date().isoformat()}.json"
     return Response(
         json.dumps(donnees, ensure_ascii=False, indent=2), media_type="application/json",
         headers={"Content-Disposition": f'attachment; filename="{nom_fichier}"'},
@@ -132,10 +132,10 @@ def supprimer_compte(donnees: SuppressionIn, request: Request, response: Respons
     db.commit()
     try:
         mailer.envoyer(
-            email, "Ton compte AI Investment a été supprimé",
-            "Bonjour,\n\nTon compte AI Investment et toutes ses données (favoris, portefeuille, "
+            email, "Ton compte Nomi a été supprimé",
+            "Bonjour,\n\nTon compte Nomi et toutes ses données (favoris, portefeuille, "
             "historique, alertes) viennent d'être supprimés définitivement.\n\n"
-            "Si tu n'es pas à l'origine de cette suppression, réponds à cet e-mail.\n\n— AI Investment",
+            "Si tu n'es pas à l'origine de cette suppression, réponds à cet e-mail.\n\n— Nomi",
         )
     except Exception:
         journal.warning("E-mail de confirmation de suppression non envoyé pour %s", email_masque(email))

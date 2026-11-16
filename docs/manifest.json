@@ -1,6 +1,6 @@
 {
-  "name": "AI Investment",
-  "short_name": "AI Invest",
+  "name": "Nomi",
+  "short_name": "Nomi",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",

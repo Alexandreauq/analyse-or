@@ -376,5 +376,166 @@
    ],
    "raison": "-11% en 5j (volume 1.72x) alors que la news propre est mineure (acquisition Xtera) : probable contagion du sell-off infrastructures IA/data centers ; rebond possible si le secteur se stabilise."
   }
- ]
+ ],
+ "resultats_verification": {
+  "date_verification_reelle": "2026-11-16",
+  "source_prix": "docs/indices.json current_price (maj 2026-11-14, dernier close connu du depot); yfinance/Yahoo inaccessible (proxy 403). Prix de depart = prix_entree du pari.",
+  "regles_de_notation": "Haussier/baissier: correct si mouvement >=3% dans le sens predit, faux si >=3% a l'oppose, sinon ambigu. Neutre*: correct si |variation|<=5%, faux si >=8%, ambigu entre les deux. Seuils choisis a posteriori par le verificateur; rendements non ajustes du marche.",
+  "paris": [
+   {
+    "ticker": "CRWV",
+    "appel": "neutre",
+    "confiance": "tres_faible",
+    "prix_depart": 61.39,
+    "prix_ou_tendance_actuelle": 53.13,
+    "variation_pct": -13.45,
+    "correct": false,
+    "commentaire": "Appel neutre (neutre): mouvement -13.4%, sortie de la zone +-8% (faux)"
+   },
+   {
+    "ticker": "NBIS",
+    "appel": "neutre_leger_haussier",
+    "confiance": "faible",
+    "prix_depart": 165.47,
+    "prix_ou_tendance_actuelle": 115.88,
+    "variation_pct": -29.97,
+    "correct": false,
+    "commentaire": "Appel neutre (neutre_leger_haussier): mouvement -30.0%, sortie de la zone +-8% (faux)"
+   },
+   {
+    "ticker": "VRT",
+    "appel": "neutre",
+    "confiance": "tres_faible",
+    "prix_depart": 206.42,
+    "prix_ou_tendance_actuelle": 202.07,
+    "variation_pct": -2.11,
+    "correct": true,
+    "commentaire": "Appel neutre (neutre): mouvement -2.1%, reste dans +-5% (correct)"
+   },
+   {
+    "ticker": "6857.T",
+    "appel": "haussier",
+    "confiance": "faible",
+    "prix_depart": 34530.0,
+    "prix_ou_tendance_actuelle": 30610.0,
+    "variation_pct": -11.35,
+    "correct": false,
+    "commentaire": "Appel haussier: mouvement -11.3% -> dans le sens oppose (>=3%)"
+   },
+   {
+    "ticker": "7733.T",
+    "appel": "baissier",
+    "confiance": "moyenne",
+    "prix_depart": 1690.0,
+    "prix_ou_tendance_actuelle": 1776.0,
+    "variation_pct": 5.09,
+    "correct": false,
+    "commentaire": "Appel baissier: mouvement +5.1% -> dans le sens oppose (>=3%)"
+   },
+   {
+    "ticker": "RCO.PA",
+    "appel": "baissier",
+    "confiance": "faible",
+    "prix_depart": 51.55,
+    "prix_ou_tendance_actuelle": 51.85,
+    "variation_pct": 0.58,
+    "correct": "ambigu",
+    "commentaire": "Appel baissier: mouvement +0.6% -> mouvement <3%, non tranche"
+   },
+   {
+    "ticker": "BC.MI",
+    "appel": "haussier",
+    "confiance": "faible",
+    "prix_depart": 87.28,
+    "prix_ou_tendance_actuelle": 87.8,
+    "variation_pct": 0.6,
+    "correct": "ambigu",
+    "commentaire": "Appel haussier: mouvement +0.6% -> mouvement <3%, non tranche"
+   },
+   {
+    "ticker": "ETL.PA",
+    "appel": "baissier",
+    "confiance": "faible",
+    "prix_depart": 1.77,
+    "prix_ou_tendance_actuelle": 1.745,
+    "variation_pct": -1.41,
+    "correct": "ambigu",
+    "commentaire": "Appel baissier: mouvement -1.4% -> mouvement <3%, non tranche"
+   },
+   {
+    "ticker": "ERA.PA",
+    "appel": "baissier",
+    "confiance": "faible",
+    "prix_depart": 37.36,
+    "prix_ou_tendance_actuelle": 32.92,
+    "variation_pct": -11.88,
+    "correct": true,
+    "commentaire": "Appel baissier: mouvement -11.9% -> dans le bon sens (>=3%)"
+   },
+   {
+    "ticker": "4506.T",
+    "appel": "neutre_prudent",
+    "confiance": "faible",
+    "prix_depart": 1840.5,
+    "prix_ou_tendance_actuelle": 2028.0,
+    "variation_pct": 10.19,
+    "correct": false,
+    "commentaire": "Appel neutre (neutre_prudent): mouvement +10.2%, sortie de la zone +-8% (faux)"
+   },
+   {
+    "ticker": "GIVN.SW",
+    "appel": "haussier",
+    "confiance": "faible",
+    "prix_depart": 3915.0,
+    "prix_ou_tendance_actuelle": 4090.0,
+    "variation_pct": 4.47,
+    "correct": true,
+    "commentaire": "Appel haussier: mouvement +4.5% -> dans le bon sens (>=3%)"
+   },
+   {
+    "ticker": "IMB.L",
+    "appel": "neutre_leger_haussier",
+    "confiance": "faible",
+    "prix_depart": 28.79,
+    "prix_ou_tendance_actuelle": 29.67,
+    "variation_pct": 3.06,
+    "correct": true,
+    "commentaire": "Appel neutre (neutre_leger_haussier): mouvement +3.1%, reste dans +-5% (correct)"
+   },
+   {
+    "ticker": "FAST.AS",
+    "appel": "baissier",
+    "confiance": "faible",
+    "prix_depart": 35.55,
+    "prix_ou_tendance_actuelle": 34.35,
+    "variation_pct": -3.38,
+    "correct": true,
+    "commentaire": "Appel baissier: mouvement -3.4% -> dans le bon sens (>=3%)"
+   },
+   {
+    "ticker": "PRY.MI",
+    "appel": "neutre_leger_haussier",
+    "confiance": "faible",
+    "prix_depart": 109.4,
+    "prix_ou_tendance_actuelle": 107.65,
+    "variation_pct": -1.6,
+    "correct": true,
+    "commentaire": "Appel neutre (neutre_leger_haussier): mouvement -1.6%, reste dans +-5% (correct)"
+   }
+  ],
+  "resume": {
+   "n_total": 14,
+   "n_correct": 6,
+   "n_faux": 5,
+   "n_ambigu": 3,
+   "taux_de_reussite": 0.429,
+   "directionnels": {
+    "n": 8,
+    "correct": 3,
+    "faux": 2,
+    "ambigu": 3
+   },
+   "commentaire_global": "Point de donnee, pas une preuve: avec 14 paris, des seuils de notation arbitraires, aucun ajustement au marche et un resultat dependant d'un seul prix de cloture, ce lot ne permet de conclure ni a un edge ni a une absence d'edge (l'intervalle d'incertitude d'un taux sur n=14 est tres large). A lire avec les lots precedents, et en gardant en tete le biais de selection des candidats (gros mouvements recents)."
+  }
+ }
 }

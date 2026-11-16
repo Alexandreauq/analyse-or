@@ -1,0 +1,21 @@
+[Unit]
+Description=Compte - API des comptes membres (relayee par Vercel sur /api/compte)
+After=network-online.target postgresql.service
+Wants=network-online.target
+Requires=postgresql.service
+
+# Installation : deploy/README-compte.md. Ecoute en HTTPS sur 8447 avec le
+# certificat goldbot.fr, comme assistant-ia-api (8445) : c'est l'adresse
+# que docs/vercel.json donne au relais. Toute requete sans l'en-tete
+# secret X-Compte-Proxy (pose par Vercel) est refusee.
+[Service]
+Type=simple
+User=compte
+WorkingDirectory=/home/compte/analyse-or
+EnvironmentFile=/home/compte/analyse-or/.env
+ExecStart=/home/compte/analyse-or/venv/bin/uvicorn compte_api.app:app --host 0.0.0.0 --port 8447 --ssl-keyfile /etc/letsencrypt/live/goldbot.fr/privkey.pem --ssl-certfile /etc/letsencrypt/live/goldbot.fr/fullchain.pem
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

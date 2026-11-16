@@ -43,3 +43,10 @@ ibkr_bot/circuit_breaker_state.json
 # dupliquee ici au niveau du repo pour ne pas en dependre)
 .claude/settings.local.json
 .claude/settings.json.graphify-bak
+
+# Environnement local du service compte
+.venv-compte/
+compte.db
+
+# Secrets des services sur le VPS (.env dans le dossier du dépôt)
+.env

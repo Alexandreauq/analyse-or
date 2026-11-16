@@ -1,0 +1,19 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "routes": [
+    {
+      "src": "/api/compte/(.*)",
+      "dest": "https://goldbot.fr:8447/$1",
+      "transforms": [
+        {
+          "type": "request.headers",
+          "op": "set",
+          "target": { "key": "x-compte-proxy" },
+          "args": "$COMPTE_PROXY_SECRET",
+          "env": ["COMPTE_PROXY_SECRET"]
+        }
+      ]
+    },
+    { "handle": "filesystem" }
+  ]
+}

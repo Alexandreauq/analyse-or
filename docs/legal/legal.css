@@ -1,0 +1,43 @@
+/* Pages légales : mêmes couleurs que le site (thème sombre par défaut,
+   thème clair si l'utilisateur l'a choisi sur le site ou sur son appareil). */
+:root {
+  --bg: #0f1524; --panel: #161d30; --border: #2a3550;
+  --text: #e8ecf5; --muted: #9aa6c4; --gold: #b99a68;
+  color-scheme: dark;
+}
+:root[data-theme="light"] {
+  --bg: #f0dfc0; --panel: #f5ecd8; --border: #d9c193;
+  --text: #2a2418; --muted: #5d5340; --gold: #064e3b;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --bg: #f0dfc0; --panel: #f5ecd8; --border: #d9c193;
+    --text: #2a2418; --muted: #5d5340; --gold: #064e3b;
+    color-scheme: light;
+  }
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--bg); color: var(--text);
+  font-family: 'Inter', system-ui, sans-serif; font-size: 16px; line-height: 1.65;
+}
+main { max-width: 720px; margin: 0 auto; padding: 40px 16px 64px; }
+a { color: var(--gold); }
+a:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+.retour { display: inline-flex; align-items: center; min-height: 44px; font-weight: 600; text-decoration: none; }
+h1, h2 { font-family: 'Newsreader', Georgia, serif; font-weight: 400; text-wrap: balance; }
+h1 { font-size: 36px; line-height: 1.15; margin: 12px 0 4px; }
+h2 { font-size: 24px; margin: 36px 0 8px; }
+.maj { color: var(--muted); font-size: 14px; margin: 0 0 24px; }
+p, li { max-width: 65ch; }
+ul { padding-left: 20px; }
+table { width: 100%; border-collapse: collapse; font-size: 15px; margin: 12px 0; }
+th, td { text-align: left; vertical-align: top; padding: 10px 8px; border-top: 1px solid var(--border); }
+th { color: var(--muted); font-weight: 500; }
+.tableau { overflow-x: auto; }
+.a-completer {
+  background: var(--panel); border: 1px dashed var(--gold); border-radius: 6px;
+  padding: 0 6px; font-family: ui-monospace, monospace; font-size: 14px;
+}
+.encadre { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; }

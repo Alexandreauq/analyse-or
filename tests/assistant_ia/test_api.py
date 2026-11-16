@@ -133,6 +133,75 @@ def test_ask_truncates_the_history_sent_to_the_assistant(client, monkeypatch):
     assert recus[0][-1]["content"] == "39"
 
 
+def _ask_codes(client, monkeypatch, envois):
+    """Envoie des questions (en-tetes par envoi) avec une limite de 1 par
+    minute et rend les codes HTTP obtenus."""
+    monkeypatch.setattr(api.usage, "budget_exceeded", lambda **kwargs: False)
+    monkeypatch.setattr(api, "_frequence", api.limits.RateLimiter(1, 60))
+
+    def fake_loop(question, history, manual_positions=None, **kwargs):
+        yield {"type": "fin"}
+
+    monkeypatch.setattr(api.assistant, "run_assistant_loop", fake_loop)
+    return [client.post("/ask", json={"question": "Q", "history": []}, headers=entetes).status_code
+            for entetes in envois]
+
+
+def test_ask_rate_limits_each_member_with_the_service_token(client, monkeypatch):
+    monkeypatch.setenv("AI_ASSISTANT_SERVICE_TOKEN", "service-token")
+    service = {"X-Bot-Token": "service-token"}
+
+    codes = _ask_codes(client, monkeypatch, [
+        {**service, "X-Compte-User": "1"},
+        {**service, "X-Compte-User": "2"},  # meme IP, autre membre : sa propre limite
+        {**service, "X-Compte-User": "1"},
+    ])
+
+    assert codes == [200, 200, 429]
+
+
+def test_ask_ignores_the_member_header_without_the_service_token(client, monkeypatch):
+    monkeypatch.setenv("AI_ASSISTANT_SERVICE_TOKEN", "service-token")
+    normal = {"X-Bot-Token": "secret-token"}
+
+    codes = _ask_codes(client, monkeypatch, [
+        {**normal, "X-Compte-User": "1"},
+        {**normal, "X-Compte-User": "2"},  # limite par IP inchangee
+    ])
+
+    assert codes == [200, 429]
+
+
+def test_ask_service_token_without_member_header_limits_by_ip(client, monkeypatch):
+    monkeypatch.setenv("AI_ASSISTANT_SERVICE_TOKEN", "service-token")
+
+    codes = _ask_codes(client, monkeypatch, [{"X-Bot-Token": "service-token"}, {"X-Bot-Token": "secret-token"}])
+
+    assert codes == [200, 429]
+
+
+@pytest.mark.parametrize("valeur", [None, ""])
+def test_ask_refuses_the_service_token_when_the_variable_is_missing(client, monkeypatch, valeur):
+    if valeur is None:
+        monkeypatch.delenv("AI_ASSISTANT_SERVICE_TOKEN", raising=False)
+    else:
+        monkeypatch.setenv("AI_ASSISTANT_SERVICE_TOKEN", valeur)
+
+    codes = _ask_codes(client, monkeypatch, [{"X-Bot-Token": "", "X-Compte-User": "1"},
+                                             {"X-Bot-Token": "service-token", "X-Compte-User": "1"}])
+
+    assert codes == [401, 401]
+
+
+def test_service_token_is_accepted_by_check_token(client, monkeypatch):
+    monkeypatch.setenv("AI_ASSISTANT_SERVICE_TOKEN", "service-token")
+    monkeypatch.setattr(api.portfolio_analysis, "derniere_analyse_complete", lambda **kwargs: None)
+
+    response = client.get("/portfolio-analysis/last", headers={"X-Bot-Token": "service-token"})
+
+    assert response.status_code == 200
+
+
 def test_financial_analysis_returns_the_subprocess_result(client, monkeypatch):
     monkeypatch.setattr(api, "_generate_one_subprocess",
                          lambda ticker: {"html": "<p>Analyse</p>", "genere": True})

@@ -1,0 +1,25 @@
+[Unit]
+Description=Compte - alertes e-mail (detection des franchissements puis resume quotidien)
+After=network-online.target postgresql.service
+Wants=network-online.target
+
+# Installation : deploy/README-compte.md. Meme utilisateur systeme
+# "compte", meme depot et meme .env que compte-api.service, donc la meme
+# base (DATABASE_URL) et les memes reglages e-mail (COMPTE_SITE_URL,
+# COMPTE_MAILER=smtp, SMTP_*, MAIL_FROM, COMPTE_UNSUBSCRIBE_SECRET,
+# COMPTE_INDICES_URL facultatif).
+[Service]
+Type=oneshot
+User=compte
+WorkingDirectory=/home/compte/analyse-or
+EnvironmentFile=/home/compte/analyse-or/.env
+# Deux etapes dans l'ordre : si la detection echoue (indices.json
+# injoignable), le resume part quand meme avec les evenements deja en base.
+ExecStart=-/home/compte/analyse-or/venv/bin/python3 -m compte_api.jobs.alertes detecter
+ExecStart=/home/compte/analyse-or/venv/bin/python3 -m compte_api.jobs.alertes resume
+TimeoutStartSec=900
+# Pas de Restart= : un resume relance a mi-parcours ne renverrait rien de
+# plus (emailed_at deja pose), mais le declenchement reste le timer seul.
+
+[Install]
+WantedBy=multi-user.target

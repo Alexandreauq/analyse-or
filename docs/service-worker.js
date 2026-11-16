@@ -1,7 +1,7 @@
 // Service worker minimal : met en cache la coquille de l'app pour qu'elle
 // s'ouvre instantanément, sans bloquer les mises à jour de score.json qui
 // doit toujours être rechargé depuis le réseau (données du jour).
-const CACHE_NAME = "analyse-or-shell-v100";
+const CACHE_NAME = "analyse-or-shell-v103";
 // index.html charge portfolio.js à la demande (premier clic sur l'onglet
 // Portefeuille) — le précacher ici garantit qu'il est disponible hors-ligne
 // dès la première ouverture de l'app, pas seulement après une première
@@ -42,6 +42,8 @@ self.addEventListener("activate", (event) => {
 
 self.addEventListener("fetch", (event) => {
   const url = new URL(event.request.url);
+  // Service compte (/api/...) : jamais mis en cache, données personnelles.
+  if (url.origin === self.location.origin && url.pathname.startsWith("/api/")) return;
 
   // score.json : toujours réseau d'abord (données fraîches), jamais de cache
   if (url.pathname.endsWith("score.json") || url.pathname.endsWith("indices.json") || url.pathname.endsWith("real_portfolio.json") || url.pathname.endsWith("real_portfolio_mt5.json")) {

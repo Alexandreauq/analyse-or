@@ -1,0 +1,15 @@
+[Unit]
+Description=Compte - sauvegarde quotidienne de la base PostgreSQL
+After=postgresql.service
+Requires=postgresql.service
+
+# Installation : deploy/README-compte.md. Une copie par jour dans
+# /home/compte/sauvegardes (format pg_dump -Fc, a restaurer avec
+# pg_restore), les 14 dernieres sont gardees. Connexion par socket local
+# en authentification "peer" : aucun mot de passe a stocker.
+[Service]
+Type=oneshot
+User=compte
+ExecStartPre=/bin/mkdir -p /home/compte/sauvegardes
+ExecStart=/bin/sh -c 'pg_dump -Fc -d compte -f /home/compte/sauvegardes/compte-$$(date -u +%%Y-%%m-%%d).dump'
+ExecStartPost=/bin/sh -c 'ls -1t /home/compte/sauvegardes/compte-*.dump | tail -n +15 | xargs -r rm --'

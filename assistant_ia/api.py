@@ -30,9 +30,20 @@ app.add_middleware(
 )
 
 
+def _jeton_de_service(x_bot_token: str | None) -> bool:
+    """Jeton dedie au relais du service compte (compte_api) : echec ferme si
+    AI_ASSISTANT_SERVICE_TOKEN est absente ou vide, temps constant."""
+    attendu = os.environ.get("AI_ASSISTANT_SERVICE_TOKEN")
+    return bool(attendu) and hmac.compare_digest(
+        (x_bot_token or "").encode("utf-8", "surrogateescape"), attendu.encode("utf-8"))
+
+
 def _check_token(x_bot_token: str | None) -> None:
     """Identique a gold_bot.api._check_token : echec ferme, comparaison
-    a temps constant sur les octets UTF-8."""
+    a temps constant sur les octets UTF-8. Le jeton de service du compte
+    est aussi accepte."""
+    if _jeton_de_service(x_bot_token):
+        return
     expected = os.environ.get("AI_ASSISTANT_API_TOKEN")
     if not expected or not hmac.compare_digest(
         (x_bot_token or "").encode("utf-8", "surrogateescape"), expected.encode("utf-8")
@@ -106,12 +117,18 @@ def _flux_protege(evenements):
 
 
 @app.post("/ask")
-async def ask(request: Request, x_bot_token: str | None = Header(default=None)):
+async def ask(request: Request, x_bot_token: str | None = Header(default=None),
+              x_compte_user: str | None = Header(default=None)):
     _check_token(x_bot_token)
     if usage.budget_exceeded():
         raise HTTPException(status_code=429, detail="Plafond quotidien de l'assistant atteint, reessaie demain")
 
     adresse = request.client.host if request.client else "inconnue"
+    # Derriere le relais du service compte, tous les membres partagent son
+    # IP : la limite s'applique alors par membre. En-tete ignore sans le
+    # jeton de service (un visiteur ne peut pas choisir sa cle).
+    if x_compte_user and _jeton_de_service(x_bot_token):
+        adresse = f"compte:{x_compte_user}"
     if not _frequence.autorise(adresse):
         raise HTTPException(status_code=429, detail="Trop de questions en peu de temps : réessaie dans une minute.")
 

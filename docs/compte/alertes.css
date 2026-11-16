@@ -1,0 +1,130 @@
+/* docs/compte/alertes.css
+   Onglet « Alertes » de l'espace membre (docs/compte/alertes.js).
+   Uniquement les variables CSS du site (début de docs/index.html), pour
+   suivre les thèmes sombre et clair sans rien redéfinir. */
+
+.alertes { display: flex; flex-direction: column; gap: var(--space-4); color: var(--text); }
+
+.alertes-titre { margin: 0; font-size: var(--text-lg); line-height: var(--lh-snug); }
+.alertes-sous-titre {
+  margin: 0 0 var(--space-3); font-size: var(--text-base); line-height: var(--lh-snug);
+  display: flex; align-items: baseline; gap: var(--space-2);
+}
+.alertes-compteur, .alertes-meta { color: var(--text-faint); font-size: var(--text-sm); font-weight: 400; }
+.alertes-meta { margin: 0; }
+
+.alertes-bloc {
+  background: var(--bg-2); border: 1px solid var(--border); border-radius: var(--radius-md);
+  padding: var(--space-4);
+}
+
+.alertes-vide {
+  background: var(--bg-2); border: 1px solid var(--border); border-radius: var(--radius-md);
+  padding: var(--space-5); color: var(--muted);
+}
+.alertes-vide p { margin: var(--space-2) 0 0; line-height: var(--lh-normal); }
+
+.alertes-message {
+  margin: 0; padding: var(--space-2) var(--space-3); border-radius: var(--radius-sm);
+  font-size: var(--text-sm); background: var(--bg-3); color: var(--muted);
+}
+.alertes-message[data-type="ok"] { background: var(--green-soft); color: var(--green-300); }
+.alertes-message[data-type="erreur"] { background: var(--rust-soft); color: var(--rust-300); }
+
+.alertes-avertissement {
+  margin: var(--space-3) 0 0; padding: var(--space-2) var(--space-3); border-radius: var(--radius-sm);
+  background: var(--taupe-soft); color: var(--taupe-300); font-size: var(--text-sm); line-height: var(--lh-normal);
+}
+
+/* Formulaire */
+.alertes-formulaire { display: grid; gap: var(--space-3); grid-template-columns: 1fr; }
+.alertes-formulaire .alertes-sous-titre { margin: 0; }
+.alertes-champ { display: flex; flex-direction: column; gap: var(--space-1); min-width: 0; }
+.alertes-champ[hidden] { display: none; }
+.alertes-champ label { font-size: var(--text-xs); color: var(--muted); }
+.alertes-champ input, .alertes-champ select {
+  width: 100%; box-sizing: border-box; min-height: 40px; padding: var(--space-2) var(--space-3);
+  background: var(--bg-1); color: var(--text); border: 1px solid var(--border); border-radius: var(--radius-sm);
+  font: inherit; font-size: var(--text-base);
+}
+.alertes-champ input:focus-visible, .alertes-champ select:focus-visible,
+.alertes-bouton:focus-visible, .alertes-bouton-texte:focus-visible {
+  outline: 2px solid var(--gold); outline-offset: 2px;
+}
+
+.alertes-recherche { position: relative; }
+.alertes-suggestions {
+  position: absolute; z-index: 5; top: 100%; left: 0; right: 0; margin: var(--space-1) 0 0; padding: var(--space-1);
+  list-style: none; background: var(--bg-3); border: 1px solid var(--border-strong); border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-2); max-height: 18rem; overflow-y: auto;
+}
+.alertes-suggestions li {
+  display: flex; justify-content: space-between; gap: var(--space-3); align-items: baseline;
+  padding: var(--space-2) var(--space-3); border-radius: var(--radius-sm); cursor: pointer;
+}
+.alertes-suggestions li[aria-selected="true"], .alertes-suggestions li[data-index]:hover { background: var(--bg-4); }
+.alertes-suggestions li[aria-disabled="true"] { cursor: default; }
+
+.alertes-ticker { color: var(--text-faint); font-size: var(--text-xs); letter-spacing: .02em; white-space: nowrap; }
+
+.alertes-bouton {
+  justify-self: start; min-height: 40px; padding: var(--space-2) var(--space-5);
+  background: var(--gold); color: var(--bg-0); border: 0; border-radius: var(--radius-pill);
+  font: inherit; font-weight: 600; cursor: pointer; transition: opacity .2s var(--ease);
+}
+.alertes-bouton:disabled { opacity: .5; cursor: default; }
+
+.alertes-bouton-texte {
+  background: none; border: 0; padding: var(--space-1) var(--space-2); border-radius: var(--radius-sm);
+  color: var(--rust-300); font: inherit; font-size: var(--text-sm); cursor: pointer;
+}
+.alertes-bouton-texte:hover { background: var(--rust-soft); }
+.alertes-bouton-texte:disabled { opacity: .5; cursor: default; }
+
+@media (min-width: 720px) {
+  /* Entreprise sur toute la largeur, puis type, seuil et bouton : sur
+     quatre colonnes, le panneau est trop étroit et le type était coupé. */
+  .alertes-formulaire { grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr) auto; align-items: end; }
+  .alertes-formulaire .alertes-sous-titre, .alertes-formulaire .alertes-recherche { grid-column: 1 / -1; }
+}
+
+/* Liste des règles */
+.alertes-liste { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.alertes-regle {
+  display: flex; justify-content: space-between; align-items: center; gap: var(--space-3);
+  padding: var(--space-3) 0; border-top: 1px solid var(--border-subtle);
+}
+.alertes-regle:first-child { border-top: 0; padding-top: 0; }
+.alertes-regle.est-inactive .alertes-regle-texte { opacity: .55; }
+.alertes-regle-texte { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-1) var(--space-2); min-width: 0; }
+.alertes-regle-nom { color: var(--text); font-weight: 600; text-decoration: none; overflow-wrap: anywhere; }
+.alertes-regle-nom:hover { color: var(--gold); }
+.alertes-regle-condition { flex-basis: 100%; color: var(--muted); font-size: var(--text-sm); }
+.alertes-regle-meta { flex-basis: 100%; color: var(--text-faint); font-size: var(--text-xs); }
+.alertes-regle-actions { display: flex; align-items: center; gap: var(--space-2); flex-shrink: 0; }
+
+/* Interrupteur (case à cocher restylée, reste accessible au clavier) */
+.alertes-interrupteur { position: relative; display: inline-flex; align-items: center; gap: var(--space-3); cursor: pointer; }
+.alertes-interrupteur input { position: absolute; opacity: 0; width: 1px; height: 1px; margin: 0; }
+.alertes-interrupteur-piste {
+  position: relative; flex-shrink: 0; width: 40px; height: 22px; border-radius: var(--radius-pill);
+  background: var(--bg-4); border: 1px solid var(--border-strong); transition: background .2s var(--ease);
+}
+.alertes-interrupteur-piste::after {
+  content: ""; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%;
+  background: var(--muted); transition: transform .2s var(--ease), background .2s var(--ease);
+}
+.alertes-interrupteur input:checked + .alertes-interrupteur-piste { background: var(--green-soft); border-color: var(--green-500); }
+.alertes-interrupteur input:checked + .alertes-interrupteur-piste::after { transform: translateX(18px); background: var(--green-300); }
+.alertes-interrupteur input:focus-visible + .alertes-interrupteur-piste { outline: 2px solid var(--gold); outline-offset: 2px; }
+.alertes-interrupteur input:disabled + .alertes-interrupteur-piste { opacity: .5; }
+.alertes-email { font-size: var(--text-base); }
+
+.alertes-sr {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden;
+  clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .alertes-interrupteur-piste, .alertes-interrupteur-piste::after, .alertes-bouton { transition: none; }
+}

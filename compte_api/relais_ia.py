@@ -40,6 +40,10 @@ class FluxAssistant:
 
 
 Relais = Callable[[str, str, int, dict], Awaitable[FluxAssistant]]
+# Relais non-streaming (JSON) : /portfolio-analysis et consorts répondent
+# un objet JSON complet, pas un flux SSE -- pas de X-Compte-User, le jeton
+# de service identifie un seul utilisateur légitime côté assistant.
+RelaisJson = Callable[[str, str, str, str, dict | None], Awaitable[dict]]
 
 
 def _detail(corps: bytes) -> str | None:
@@ -87,3 +91,21 @@ async def relais_httpx(url: str, jeton: str, user_id: int, payload: dict,
         await client.aclose()
 
     return FluxAssistant(morceaux=reponse.aiter_raw(), fermer=fermer)
+
+
+async def relais_json_httpx(metode: str, chemin: str, url: str, jeton: str, payload: dict | None = None,
+                            transport: httpx.AsyncBaseTransport | None = None) -> dict:
+    """Relais réel non-streaming : {metode} {url}{chemin} avec le jeton de
+    service. Lève ErreurAssistant avant tout contenu ; renvoie le JSON décodé
+    sinon. `transport` ne sert qu'aux tests (httpx.MockTransport)."""
+    async with httpx.AsyncClient(timeout=_DELAIS, transport=transport) as client:
+        try:
+            reponse = await client.request(metode, url.rstrip("/") + chemin, json=payload,
+                                           headers={"X-Bot-Token": jeton})
+        except httpx.HTTPError:
+            raise ErreurAssistant(503, MESSAGE_INJOIGNABLE)
+        if reponse.status_code != 200:
+            if reponse.status_code in (400, 429, 503):
+                raise ErreurAssistant(reponse.status_code, _detail(reponse.content) or MESSAGE_ERREUR)
+            raise ErreurAssistant(502, MESSAGE_ERREUR)
+        return reponse.json()

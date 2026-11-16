@@ -410,3 +410,143 @@ def test_historique_ia_trie_par_date_et_non_par_ordre_d_ajout(client_membre, db,
                              created_at=maintenant - timedelta(days=1)))
     db.commit()
     assert [e["question"] for e in client_membre.get("/ai/history").json()] == ["recente", "moyenne", "ancienne"]
+
+
+# --- Relais vers l'analyse de portefeuille -------------------------------
+
+from compte_api.routers.historique import get_relais_portefeuille  # noqa: E402
+
+
+class FauxRelaisPortefeuille:
+    """Remplace l'appel HTTP non-streaming : rejoue un résultat JSON ou lève
+    une erreur. Garde trace des appels pour vérifier metode/chemin/jeton."""
+
+    def __init__(self, resultat=None, erreur=None):
+        self.resultat = resultat if resultat is not None else {"disponible": True, "resultat": {"sante_globale": 80}}
+        self.erreur = erreur
+        self.appels = []
+
+    async def __call__(self, metode, chemin, url, jeton, payload):
+        self.appels.append({"metode": metode, "chemin": chemin, "url": url, "jeton": jeton, "payload": payload})
+        if self.erreur:
+            raise self.erreur
+        return self.resultat
+
+
+@pytest.fixture
+def relais_portefeuille(app):
+    faux = FauxRelaisPortefeuille()
+    app.dependency_overrides[get_relais_portefeuille] = lambda: faux
+    yield faux
+    app.dependency_overrides.clear()
+
+
+def test_analyser_portefeuille_relaie_le_resultat(client_membre, relais_portefeuille):
+    reponse = client_membre.post("/ai/portfolio-analysis", json={"positions": [{"ticker": "MC.PA"}]})
+    assert reponse.status_code == 200
+    assert reponse.json() == relais_portefeuille.resultat
+    appel = relais_portefeuille.appels[0]
+    assert (appel["metode"], appel["chemin"]) == ("POST", "/portfolio-analysis")
+    assert appel["jeton"] == "jeton-service"
+    assert appel["payload"] == {"positions": [{"ticker": "MC.PA"}]}
+
+
+def test_derniere_analyse_portefeuille_relaie_le_resultat(client_membre, relais_portefeuille):
+    relais_portefeuille.resultat = {"disponible": False, "resultat": None}
+    reponse = client_membre.get("/ai/portfolio-analysis/last")
+    assert reponse.status_code == 200
+    assert reponse.json() == {"disponible": False, "resultat": None}
+    assert relais_portefeuille.appels[0]["chemin"] == "/portfolio-analysis/last"
+
+
+def test_historique_sante_portefeuille_relaie_le_resultat(client_membre, relais_portefeuille):
+    relais_portefeuille.resultat = {"historique": [{"date": "2026-11-01", "sante": 70}]}
+    reponse = client_membre.get("/ai/portfolio-analysis/history")
+    assert reponse.status_code == 200
+    assert reponse.json() == {"historique": [{"date": "2026-11-01", "sante": 70}]}
+    assert relais_portefeuille.appels[0]["chemin"] == "/portfolio-analysis/history"
+
+
+@pytest.mark.parametrize("route,metode", [
+    ("/ai/portfolio-analysis", "post"),
+    ("/ai/portfolio-analysis/last", "get"),
+    ("/ai/portfolio-analysis/history", "get"),
+])
+def test_portefeuille_erreur_assistant_propagee(client_membre, relais_portefeuille, route, metode):
+    relais_portefeuille.erreur = ErreurAssistant(429, "Trop de demandes en peu de temps : reessaie dans une minute.")
+    appel = getattr(client_membre, metode)
+    reponse = appel(route, json={"positions": []}) if metode == "post" else appel(route)
+    assert reponse.status_code == 429
+    assert reponse.json() == {"detail": "Trop de demandes en peu de temps : reessaie dans une minute."}
+
+
+@pytest.mark.parametrize("route,metode", [
+    ("/ai/portfolio-analysis", "post"),
+    ("/ai/portfolio-analysis/last", "get"),
+    ("/ai/portfolio-analysis/history", "get"),
+])
+def test_portefeuille_echec_inattendu_502(client_membre, relais_portefeuille, route, metode):
+    relais_portefeuille.erreur = RuntimeError("boom")
+    appel = getattr(client_membre, metode)
+    reponse = appel(route, json={"positions": []}) if metode == "post" else appel(route)
+    assert reponse.status_code == 502
+
+
+def test_analyser_portefeuille_sans_assistant_configure_503(client_membre, relais_portefeuille, app, settings):
+    from dataclasses import replace
+
+    from compte_api.deps import get_settings
+    app.dependency_overrides[get_settings] = lambda: replace(settings, assistant_ia_url="")
+    try:
+        reponse = client_membre.post("/ai/portfolio-analysis", json={"positions": []})
+    finally:
+        del app.dependency_overrides[get_settings]
+    assert reponse.status_code == 503
+
+
+def test_analyser_portefeuille_sans_session_401(client, relais_portefeuille):
+    assert client.post("/ai/portfolio-analysis", json={"positions": []}).status_code == 401
+
+
+def test_analyser_portefeuille_email_non_verifie_403(app, db, creer_membre, relais_portefeuille):
+    from tests.compte_api.conftest import _connecter
+    membre_non_verifie = creer_membre(email="pasverifie@exemple.test", verifie=False)
+    client = _connecter(app, db, membre_non_verifie)
+    assert client.post("/ai/portfolio-analysis", json={"positions": []}).status_code == 403
+
+
+def test_relais_json_httpx_reel_transmet_le_resultat():
+    import asyncio
+
+    import httpx
+
+    from compte_api.relais_ia import relais_json_httpx
+
+    def gestionnaire(requete):
+        assert requete.headers["x-bot-token"] == "jeton-service"
+        return httpx.Response(200, json={"disponible": True, "resultat": {"sante_globale": 42}})
+
+    async def appel():
+        return await relais_json_httpx("GET", "/portfolio-analysis/last", "http://assistant.test/", "jeton-service",
+                                        transport=httpx.MockTransport(gestionnaire))
+
+    assert asyncio.run(appel()) == {"disponible": True, "resultat": {"sante_globale": 42}}
+
+
+def test_relais_json_httpx_reel_injoignable_503():
+    import asyncio
+
+    import httpx
+
+    from compte_api.relais_ia import relais_json_httpx
+
+    def gestionnaire(requete):
+        raise httpx.ConnectError("refusé", request=requete)
+
+    async def appel():
+        return await relais_json_httpx("GET", "/portfolio-analysis/last", "http://assistant.test/", "jeton-service",
+                                        transport=httpx.MockTransport(gestionnaire))
+
+    with pytest.raises(ErreurAssistant) as e:
+        asyncio.run(appel())
+    assert e.value.statut == 503

@@ -17,7 +17,7 @@ from compte_api import models
 from compte_api.config import Settings
 from compte_api.deps import current_user, current_user_verified, get_db, get_settings
 from compte_api.quota import consommer_quota, quota_restant, rendre_quota
-from compte_api.relais_ia import ErreurAssistant, Relais, relais_httpx
+from compte_api.relais_ia import ErreurAssistant, Relais, RelaisJson, relais_httpx, relais_json_httpx
 
 router = APIRouter()
 journal = logging.getLogger("compte_api.historique")
@@ -178,6 +178,11 @@ def get_relais() -> Relais:
     return relais_httpx
 
 
+def get_relais_portefeuille() -> RelaisJson:
+    """Relais JSON vers /portfolio-analysis* ; remplacé par un faux dans les tests."""
+    return relais_json_httpx
+
+
 def _en_tetes_quota(restant: int | None) -> dict:
     # Pas d'en-tête pour l'administrateur (quota illimité).
     return {} if restant is None else {"X-Quota-Restant": str(restant)}
@@ -284,3 +289,66 @@ async def demander_ia(entree: QuestionIA, request: Request,
     return StreamingResponse(transmettre(), media_type="text/event-stream",
                              headers={**_en_tetes_quota(restant), "Cache-Control": "no-cache",
                                       "X-Accel-Buffering": "no"})
+
+
+# --- Relais vers l'analyse de portefeuille ------------------------------
+# Même assistant, route différente (/portfolio-analysis, pas de flux SSE,
+# pas de quota quotidien -- déjà limité côté assistant par IP, voir
+# PORTFOLIO_RATE_MAX_PAR_MINUTE dans assistant_ia/api.py). Le jeton de
+# service est déjà accepté par ces routes (_check_token côté assistant).
+
+def _erreur_simple(statut: int, detail: str) -> JSONResponse:
+    return JSONResponse({"detail": detail}, status_code=statut)
+
+
+@router.post("/ai/portfolio-analysis")
+async def analyser_portefeuille(request: Request,
+                                user: models.User = Depends(current_user_verified),
+                                settings: Settings = Depends(get_settings),
+                                relais: RelaisJson = Depends(get_relais_portefeuille)):
+    if not settings.assistant_ia_url:
+        return _erreur_simple(503, "Assistant indisponible.")
+    payload = await request.json()
+    try:
+        resultat = await relais("POST", "/portfolio-analysis", settings.assistant_ia_url,
+                                settings.assistant_ia_token, payload)
+    except ErreurAssistant as e:
+        return _erreur_simple(e.statut, e.detail)
+    except Exception:
+        journal.exception("Relais analyse portefeuille : échec inattendu (membre %s)", user.id)
+        return _erreur_simple(502, "L'assistant ne peut pas répondre pour le moment, réessaie dans un instant.")
+    return JSONResponse(resultat)
+
+
+@router.get("/ai/portfolio-analysis/last")
+async def derniere_analyse_portefeuille(user: models.User = Depends(current_user_verified),
+                                        settings: Settings = Depends(get_settings),
+                                        relais: RelaisJson = Depends(get_relais_portefeuille)):
+    if not settings.assistant_ia_url:
+        return _erreur_simple(503, "Assistant indisponible.")
+    try:
+        resultat = await relais("GET", "/portfolio-analysis/last", settings.assistant_ia_url,
+                                settings.assistant_ia_token, None)
+    except ErreurAssistant as e:
+        return _erreur_simple(e.statut, e.detail)
+    except Exception:
+        journal.exception("Relais dernière analyse portefeuille : échec inattendu (membre %s)", user.id)
+        return _erreur_simple(502, "L'assistant ne peut pas répondre pour le moment, réessaie dans un instant.")
+    return JSONResponse(resultat)
+
+
+@router.get("/ai/portfolio-analysis/history")
+async def historique_sante_portefeuille(user: models.User = Depends(current_user_verified),
+                                        settings: Settings = Depends(get_settings),
+                                        relais: RelaisJson = Depends(get_relais_portefeuille)):
+    if not settings.assistant_ia_url:
+        return _erreur_simple(503, "Assistant indisponible.")
+    try:
+        resultat = await relais("GET", "/portfolio-analysis/history", settings.assistant_ia_url,
+                                settings.assistant_ia_token, None)
+    except ErreurAssistant as e:
+        return _erreur_simple(e.statut, e.detail)
+    except Exception:
+        journal.exception("Relais historique portefeuille : échec inattendu (membre %s)", user.id)
+        return _erreur_simple(502, "L'assistant ne peut pas répondre pour le moment, réessaie dans un instant.")
+    return JSONResponse(resultat)

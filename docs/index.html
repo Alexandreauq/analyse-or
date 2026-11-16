@@ -3231,11 +3231,19 @@ function wirePortfolioAiSubsection(positions, closedPositions, companiesByTicker
     renderView();
   };
 
+  // Membre connecté : les deux endpoints passent par le relais du service
+  // compte (meme jeton de service que la recherche generale, voir
+  // assistantViaCompte) -- pas de jeton personnel a demander. Sinon, acces
+  // d'origine par jeton personnel, inchange.
   const refreshChart = async (token) => {
     try {
-      const res = await fetch('https://goldbot.fr:8445/portfolio-analysis/history', { headers: { 'X-Bot-Token': token } });
-      if (!res.ok) return;
-      const data = await res.json();
+      const data = assistantViaCompte()
+        ? await window.Compte.fetch('/ai/portfolio-analysis/history')
+        : await (async () => {
+            const res = await fetch('https://goldbot.fr:8445/portfolio-analysis/history', { headers: { 'X-Bot-Token': token } });
+            return res.ok ? res.json() : null;
+          })();
+      if (!data) return;
       lastHistorique = data.historique || [];
       const chartEl = document.getElementById('portfolioAiChart');
       if (chartEl) chartEl.innerHTML = aiJudgmentCurveSvg(lastHistorique);
@@ -3244,19 +3252,23 @@ function wirePortfolioAiSubsection(positions, closedPositions, companiesByTicker
   };
 
   const tokenDejaMemorise = localStorage.getItem('aiAssistantToken');
-  if (tokenDejaMemorise) {
-    fetch('https://goldbot.fr:8445/portfolio-analysis/last', { headers: { 'X-Bot-Token': tokenDejaMemorise } })
-      .then(res => {
-        // 401 = jeton perime/invalide : on l'oublie (meme convention que
-        // fetchIbkrBotDashboard), sinon "Aucune analyse encore." mentirait
-        // a chaque rechargement. Toute autre panne : message vide.
-        if (res.status === 401) localStorage.removeItem('aiAssistantToken');
-        if (!res.ok) {
-          if (freshnessEl) freshnessEl.textContent = '';
-          return null;
-        }
-        return res.json();
-      })
+  const analyseViaCompte = assistantViaCompte();
+  if (analyseViaCompte || tokenDejaMemorise) {
+    const chargerDerniere = analyseViaCompte
+      ? window.Compte.fetch('/ai/portfolio-analysis/last')
+      : fetch('https://goldbot.fr:8445/portfolio-analysis/last', { headers: { 'X-Bot-Token': tokenDejaMemorise } })
+          .then(res => {
+            // 401 = jeton perime/invalide : on l'oublie (meme convention que
+            // fetchIbkrBotDashboard), sinon "Aucune analyse encore." mentirait
+            // a chaque rechargement. Toute autre panne : message vide.
+            if (res.status === 401) localStorage.removeItem('aiAssistantToken');
+            if (!res.ok) {
+              if (freshnessEl) freshnessEl.textContent = '';
+              return null;
+            }
+            return res.json();
+          });
+    chargerDerniere
       .then(data => {
         if (data && data.disponible) {
           applyResultat(data.resultat);
@@ -3272,8 +3284,9 @@ function wirePortfolioAiSubsection(positions, closedPositions, companiesByTicker
   }
 
   btn.addEventListener('click', async () => {
-    const jeton = getAiAssistantToken();
-    if (!jeton) return;
+    const viaCompte = assistantViaCompte();
+    const jeton = viaCompte ? null : getAiAssistantToken();
+    if (!viaCompte && !jeton) return;
     btn.disabled = true;
     const texteInitial = btn.textContent;
     btn.textContent = 'Analyse en cours…';
@@ -3290,24 +3303,38 @@ function wirePortfolioAiSubsection(positions, closedPositions, companiesByTicker
       const payload = buildPortfolioAnalysisPayload(
         positions, totals, concentration, health, attribution, dividendsReceived, projectedIncome);
 
-      const res = await fetch('https://goldbot.fr:8445/portfolio-analysis', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-Bot-Token': jeton },
-        body: JSON.stringify(payload),
-      });
-      if (res.status === 401) {
-        localStorage.removeItem('aiAssistantToken');
-        setError('Ton jeton d\'accès est invalide. Recharge la page pour en saisir un nouveau.');
-        return;
+      let data;
+      if (viaCompte) {
+        // Membre connecté : relais compte_api, cookie de session, pas de
+        // jeton personnel. Les erreurs (quota, 429, 503...) arrivent via
+        // CompteErreur avec un message déjà prêt à afficher (compte_api
+        // transmet le detail de l'assistant tel quel).
+        try {
+          data = await window.Compte.fetch('/ai/portfolio-analysis', { method: 'POST', body: payload });
+        } catch (e) {
+          setError(e instanceof window.Compte.Erreur ? e.message : "L'analyse n'est pas possible pour le moment.");
+          return;
+        }
+      } else {
+        const res = await fetch('https://goldbot.fr:8445/portfolio-analysis', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-Bot-Token': jeton },
+          body: JSON.stringify(payload),
+        });
+        if (res.status === 401) {
+          localStorage.removeItem('aiAssistantToken');
+          setError('Ton jeton d\'accès est invalide. Recharge la page pour en saisir un nouveau.');
+          return;
+        }
+        if (res.status === 429 || res.status === 503 || res.status === 400) {
+          let detail = "L'analyse n'est pas possible pour le moment.";
+          try { const corps = await res.json(); if (corps && corps.detail) detail = corps.detail; } catch (e) { /* message par défaut */ }
+          setError(detail);
+          return;
+        }
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        data = await res.json();
       }
-      if (res.status === 429 || res.status === 503 || res.status === 400) {
-        let detail = "L'analyse n'est pas possible pour le moment.";
-        try { const corps = await res.json(); if (corps && corps.detail) detail = corps.detail; } catch (e) { /* message par défaut */ }
-        setError(detail);
-        return;
-      }
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
       if (!data.disponible) {
         setError(data.erreur || "Analyse indisponible pour le moment.");
         return;

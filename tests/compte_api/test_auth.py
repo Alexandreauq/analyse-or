@@ -295,6 +295,8 @@ def test_oubli_compte_existant(client, membre, mailer):
     assert len(mailer.envoyes) == 1
     assert mailer.envoyes[0].destinataire == "alice@exemple.test"
     assert "http://site.test/?reset=" in mailer.envoyes[0].texte
+    assert mailer.envoyes[0].html is not None and "http://site.test/?reset=" in mailer.envoyes[0].html
+    assert "Réinitialise ton mot de passe" in mailer.envoyes[0].html
 
 
 def test_oubli_reponse_identique_si_compte_inconnu(client, membre, mailer):

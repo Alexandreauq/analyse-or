@@ -213,6 +213,12 @@ def _envoyer_reinitialisation(db: DbSession, mailer: Mailer, settings: Settings,
         "Le lien est valable 1 heure. Si tu n'as rien demandé, ignore ce message : "
         "ton mot de passe actuel reste valable.\n\n"
         "Nomi"
+    ), gabarit_bouton(
+        "Réinitialise ton mot de passe",
+        "Tu as demandé à choisir un nouveau mot de passe. Clique ci-dessous pour en définir un.",
+        "Choisir un nouveau mot de passe", lien,
+        expiration="Ce lien expire dans 1 heure.",
+        mention_bas="Tu n'as rien demandé ? Ignore ce message, ton mot de passe actuel reste valable.",
     ))
 
 

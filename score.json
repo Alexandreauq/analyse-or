@@ -1,26 +1,26 @@
 {
   "date": "2026-11-16",
-  "composite_score": 2.1,
+  "composite_score": -4.3,
   "interpretation": "Neutre — pas d'action",
-  "cftc_percentile": 22.435897435897438,
+  "cftc_percentile": 29.48717948717949,
   "factors": [
     {
       "name": "Taux réels US 10 ans",
-      "score": 1.200000000000001,
+      "score": 0.19999999999999574,
       "weight": 0.3,
-      "raw_value": "2.86% (il y a ~45j : 2.92%)"
+      "raw_value": "2.91% (il y a ~45j : 2.92%)"
     },
     {
       "name": "Dollar (DXY)",
       "score": -10,
       "weight": 0.15,
-      "raw_value": "103.50 (il y a 2 mois : 100.31)"
+      "raw_value": "103.58 (il y a 2 mois : 100.31)"
     },
     {
       "name": "Anticipations d'inflation",
-      "score": -3.9999999999999893,
+      "score": -5.333333333333323,
       "weight": 0.15,
-      "raw_value": "2.24% (il y a ~45j : 2.36%)"
+      "raw_value": "2.20% (il y a ~45j : 2.36%)"
     },
     {
       "name": "Ton de la Fed",
@@ -36,9 +36,9 @@
     },
     {
       "name": "Positionnement CFTC",
-      "score": 5.512820512820512,
+      "score": 4.102564102564102,
       "weight": 0.1,
-      "raw_value": "22e percentile (3 ans) — position nette 179,548 contrats"
+      "raw_value": "29e percentile (3 ans) — position nette 190,107 contrats"
     },
     {
       "name": "Achats banques centrales",
@@ -48,9 +48,9 @@
     }
   ],
   "technical": {
-    "note": "Cours en-dessous de la MM200 (-13.3%) — tendance baissière",
-    "spot": 3875.199951171875,
-    "ma200": 4467.895994873047
+    "note": "Cours en-dessous de la MM200 (-13.6%) — tendance baissière",
+    "spot": 3859.0,
+    "ma200": 4467.814995117187
   },
   "calendar": [
     {

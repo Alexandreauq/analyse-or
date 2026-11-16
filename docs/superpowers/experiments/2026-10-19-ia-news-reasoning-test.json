@@ -28,7 +28,12 @@
     "COHR -25.5% (5j)",
     "LITE -25.3% (5j)"
    ],
-   "raison": "Peur de la dette des 'neocloud' IA : -25% en 5j, volume 2.59x. Contagion sectorielle evidente mais capitulation vs debut de purge indecidable ; fondamentaux tres faibles. Aucun avantage directionnel."
+   "raison": "Peur de la dette des 'neocloud' IA : -25% en 5j, volume 2.59x. Contagion sectorielle evidente mais capitulation vs debut de purge indecidable ; fondamentaux tres faibles. Aucun avantage directionnel.",
+   "resultats": {
+    "prix_sortie": 53.130001068115234,
+    "rendement_pct_reel": -13.45,
+    "appel_correct": null
+   }
   },
   {
    "ticker": "NBIS",
@@ -55,7 +60,12 @@
     "PSKY -24.6% (5j)",
     "SESG.PA +19.1% (5j)"
    ],
-   "raison": "-26% sur 20j, victime collaterale de la contagion CoreWeave (la presse note un bilan different). Survente technique -> rebond possible, mais tendance et contagion IA restent contre."
+   "raison": "-26% sur 20j, victime collaterale de la contagion CoreWeave (la presse note un bilan different). Survente technique -> rebond possible, mais tendance et contagion IA restent contre.",
+   "resultats": {
+    "prix_sortie": 115.87999725341797,
+    "rendement_pct_reel": -29.97,
+    "appel_correct": null
+   }
   },
   {
    "ticker": "VRT",
@@ -82,7 +92,12 @@
     "6532.T +22.2% (5j)",
     "BE -21.1% (5j)"
    ],
-   "raison": "-15% en 5j avec resultats T3 annonces prochainement : evenement binaire, phase Declin mais score fondamental positif. Direction non tranchee."
+   "raison": "-15% en 5j avec resultats T3 annonces prochainement : evenement binaire, phase Declin mais score fondamental positif. Direction non tranchee.",
+   "resultats": {
+    "prix_sortie": 202.07000732421875,
+    "rendement_pct_reel": -2.11,
+    "appel_correct": null
+   }
   },
   {
    "ticker": "6857.T",
@@ -107,7 +122,12 @@
     "COHR -25.5% (5j)",
     "LITE -25.3% (5j)"
    ],
-   "raison": "Phase Achat, score 97, mais -15.6% en 5j ('s'effondre') dans le sell-off semi/IA. Repli dans une tendance haussiere avec volume 1.5x : rebond probable mais le secteur reste fragile."
+   "raison": "Phase Achat, score 97, mais -15.6% en 5j ('s'effondre') dans le sell-off semi/IA. Repli dans une tendance haussiere avec volume 1.5x : rebond probable mais le secteur reste fragile.",
+   "resultats": {
+    "prix_sortie": 30610.0,
+    "rendement_pct_reel": -11.35,
+    "appel_correct": false
+   }
   },
   {
    "ticker": "7733.T",
@@ -134,7 +154,12 @@
     "MEDCL.PA -11.5% (5j)",
     "2269.HK -10.5% (5j)"
    ],
-   "raison": "Warning Letter de la FDA -> -15% et volume 1.69x. Ces dossiers se resolvent en mois, risque de nouvelles restrictions ; 20j a -21%, momentum negatif."
+   "raison": "Warning Letter de la FDA -> -15% et volume 1.69x. Ces dossiers se resolvent en mois, risque de nouvelles restrictions ; 20j a -21%, momentum negatif.",
+   "resultats": {
+    "prix_sortie": 1776.0,
+    "rendement_pct_reel": 5.09,
+    "appel_correct": false
+   }
   },
   {
    "ticker": "RCO.PA",
@@ -161,7 +186,12 @@
     "BF-B +9.4% (5j)",
     "MICC.AS +9.3% (5j)"
    ],
-   "raison": "+20.6% en 5j, volume 2.7x, sur lecture croisee des ventes LVMH (pas de news propre). Score fondamental -78 : excès de mouvement sectoriel, retracement partiel probable."
+   "raison": "+20.6% en 5j, volume 2.7x, sur lecture croisee des ventes LVMH (pas de news propre). Score fondamental -78 : excès de mouvement sectoriel, retracement partiel probable.",
+   "resultats": {
+    "prix_sortie": 51.849998474121094,
+    "rendement_pct_reel": 0.58,
+    "appel_correct": false
+   }
   },
   {
    "ticker": "BC.MI",
@@ -188,7 +218,12 @@
     "5802.T -11.6% (5j)",
     "JD.L +11.0% (5j)"
    ],
-   "raison": "T3 meilleur que prevu et objectifs 2026 releves : post-earnings drift positif, phase Achat, volume 1.54x. Mais deja +8% en 5j donc potentiel partiellement consomme."
+   "raison": "T3 meilleur que prevu et objectifs 2026 releves : post-earnings drift positif, phase Achat, volume 1.54x. Mais deja +8% en 5j donc potentiel partiellement consomme.",
+   "resultats": {
+    "prix_sortie": 87.80000305175781,
+    "rendement_pct_reel": 0.6,
+    "appel_correct": true
+   }
   },
   {
    "ticker": "ETL.PA",
@@ -215,7 +250,12 @@
     "PSKY -24.6% (5j)",
     "SESG.PA +19.1% (5j)"
    ],
-   "raison": "+28% en 5j, volume 3.3x, sur restrictions Starlink en Ukraine : pic speculatif/narratif avec fondamentaux tres faibles (-98). Retracement attendu, mais le theme geopolitique peut prolonger."
+   "raison": "+28% en 5j, volume 3.3x, sur restrictions Starlink en Ukraine : pic speculatif/narratif avec fondamentaux tres faibles (-98). Retracement attendu, mais le theme geopolitique peut prolonger.",
+   "resultats": {
+    "prix_sortie": 1.7450000047683716,
+    "rendement_pct_reel": -1.41,
+    "appel_correct": true
+   }
   },
   {
    "ticker": "ERA.PA",
@@ -242,7 +282,12 @@
     "4004.T -13.7% (5j)",
     "5301.T -11.4% (5j)"
    ],
-   "raison": "Etat 'au secours' d'un groupe en difficulte financiere : -17.6% en 5j, volume 2.28x, fondamentaux -99.9. Dilution/restructuration possible ; mais le soutien public limite la baisse."
+   "raison": "Etat 'au secours' d'un groupe en difficulte financiere : -17.6% en 5j, volume 2.28x, fondamentaux -99.9. Dilution/restructuration possible ; mais le soutien public limite la baisse.",
+   "resultats": {
+    "prix_sortie": 32.91999816894531,
+    "rendement_pct_reel": -11.88,
+    "appel_correct": true
+   }
   },
   {
    "ticker": "4506.T",
@@ -267,7 +312,12 @@
     "MEDCL.PA -11.5% (5j)",
     "2269.HK -10.5% (5j)"
    ],
-   "raison": "Upgrade Morgan Stanley, +16% en 5j et +24% sur 20j, volume 1.9x : mouvement deja tres etendu apres une news mineure, fondamentaux neutres. Pas d'avantage."
+   "raison": "Upgrade Morgan Stanley, +16% en 5j et +24% sur 20j, volume 1.9x : mouvement deja tres etendu apres une news mineure, fondamentaux neutres. Pas d'avantage.",
+   "resultats": {
+    "prix_sortie": 2028.0,
+    "rendement_pct_reel": 10.19,
+    "appel_correct": null
+   }
   },
   {
    "ticker": "GIVN.SW",
@@ -294,7 +344,12 @@
     "4004.T -13.7% (5j)",
     "5301.T -11.4% (5j)"
    ],
-   "raison": "Phase Achat, 9 mois portes par la parfumerie, +13.8% en 5j (volume 2.18x) apres cinq hausses d'affilee. Tendance forte mais deja etendue : haussier prudent."
+   "raison": "Phase Achat, 9 mois portes par la parfumerie, +13.8% en 5j (volume 2.18x) apres cinq hausses d'affilee. Tendance forte mais deja etendue : haussier prudent.",
+   "resultats": {
+    "prix_sortie": 4090.0,
+    "rendement_pct_reel": 4.47,
+    "appel_correct": true
+   }
   },
   {
    "ticker": "IMB.L",
@@ -321,7 +376,12 @@
     "RI.PA +10.7% (5j)",
     "BF-B +9.4% (5j)"
    ],
-   "raison": "Resultats FY26 et rachat d'actions de 1.5 Md GBP : soutien mecanique, defensif. Deja +15% sur 20j, donc potentiel limite."
+   "raison": "Resultats FY26 et rachat d'actions de 1.5 Md GBP : soutien mecanique, defensif. Deja +15% sur 20j, donc potentiel limite.",
+   "resultats": {
+    "prix_sortie": 29.67,
+    "rendement_pct_reel": 3.06,
+    "appel_correct": null
+   }
   },
   {
    "ticker": "FAST.AS",
@@ -348,7 +408,12 @@
     "JD.L +11.0% (5j)",
     "7832.T +10.1% (5j)"
    ],
-   "raison": "Support 37.95 enfonce malgre guidance confirmee, -18% en 5j, volume 1.6x : la technique domine l'actu neutre. Mais survente."
+   "raison": "Support 37.95 enfonce malgre guidance confirmee, -18% en 5j, volume 1.6x : la technique domine l'actu neutre. Mais survente.",
+   "resultats": {
+    "prix_sortie": 34.349998474121094,
+    "rendement_pct_reel": -3.38,
+    "appel_correct": true
+   }
   },
   {
    "ticker": "PRY.MI",
@@ -374,7 +439,26 @@
     "6532.T +22.2% (5j)",
     "BE -21.1% (5j)"
    ],
-   "raison": "-11% en 5j (volume 1.72x) alors que la news propre est mineure (acquisition Xtera) : probable contagion du sell-off infrastructures IA/data centers ; rebond possible si le secteur se stabilise."
+   "raison": "-11% en 5j (volume 1.72x) alors que la news propre est mineure (acquisition Xtera) : probable contagion du sell-off infrastructures IA/data centers ; rebond possible si le secteur se stabilise.",
+   "resultats": {
+    "prix_sortie": 107.6500015258789,
+    "rendement_pct_reel": -1.6,
+    "appel_correct": null
+   }
   }
- ]
+ ],
+ "resume_resolution": {
+  "date_resolution": "2026-11-16",
+  "source_prix": "docs/indices.json current_price (maj 2026-11-14)",
+  "paris_directionnels_corrects": "5/8",
+  "rendement_moyen_pct_par_type_appel": {
+   "neutre": -7.78,
+   "neutre_leger_haussier": -9.5,
+   "haussier": -2.09,
+   "baissier": -2.2,
+   "neutre_prudent": 10.19
+  },
+  "rendement_moyen_pct_tous": -3.65,
+  "lecture_honnete": "Echantillon minuscule (8 paris directionnels), rendements non ajustes du marche, aucune conclusion statistique. Les deux plus gros mouvements (NBIS -30%, CRWV -13%) etaient des appels neutres/faible confiance : le raisonnement n'a pas anticipe la chute du secteur IA/neocloud. Les appels neutres ne sont pas notes."
+ }
 }

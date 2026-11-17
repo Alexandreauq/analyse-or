@@ -74,6 +74,12 @@
           "price": 3886.300048828125,
           "decision": "garder",
           "raison": "Après un nouvel échec sous 4 150 et une forte bougie baissière, la pause du 13/11 sous 3 930 n'invalide pas la thèse vendeuse ; la position, à l'équilibre, reste valable tant que l'or ne clôture pas au-dessus d'environ 3 930-3 950, sachant que l'actualité n'a pas pu être vérifiée."
+        },
+        {
+          "date": "2026-11-16",
+          "price": 3853.0,
+          "decision": "garder",
+          "raison": "La cassure du bas de 3879 tient et un nouveau plus bas à 3835 confirme la tendance baissière, donc la thèse reste valide, avec un stop abaissé vers 3930 pour gérer le risque de rebond ou de choc géopolitique."
         }
       ]
     }

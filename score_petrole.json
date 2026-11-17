@@ -1,8 +1,8 @@
 {
-  "date": "2026-11-16",
+  "date": "2026-11-17",
   "commodity": "petrole",
   "label": "Pétrole (WTI)",
-  "composite_score": -42.5,
+  "composite_score": -41.2,
   "interpretation": "Défavorable — pas d'entrée même sur signal technique",
   "cftc_percentile": 12.179487179487179,
   "factors": [
@@ -10,7 +10,7 @@
       "name": "Dollar (DXY)",
       "score": -10,
       "weight": 0.26666666666666666,
-      "raw_value": "103.58 (il y a 2 mois : 100.31)"
+      "raw_value": "103.51 (il y a 2 mois : 100.31)"
     },
     {
       "name": "Positionnement CFTC",
@@ -20,13 +20,13 @@
     },
     {
       "name": "Spread WTI-Brent",
-      "score": -9.449996948242188,
+      "score": -8.950004577636719,
       "weight": 0.19999999999999998,
-      "raw_value": "+6.78 $/baril (il y a ~2 mois : +4.89 $/baril)"
+      "raw_value": "+6.68 $/baril (il y a ~2 mois : +4.89 $/baril)"
     },
     {
       "name": "Dynamique récente",
-      "score": -6.410248164077396,
+      "score": -6.319650090455527,
       "weight": 0.26666666666666666,
       "raw_value": "-3.2% vs MM200"
     },
@@ -39,8 +39,8 @@
   ],
   "technical": {
     "note": "Cours en-dessous de la MM200 (-3.2%) — tendance baissière",
-    "spot": 85.05999755859375,
-    "ma200": 87.87655002593993,
+    "spot": 85.0999984741211,
+    "ma200": 87.87675003051758,
     "unite": "$ / baril"
   },
   "calendar": [

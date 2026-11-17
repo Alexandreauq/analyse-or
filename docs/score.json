@@ -14,7 +14,7 @@
       "name": "Dollar (DXY)",
       "score": -10,
       "weight": 0.15,
-      "raw_value": "103.51 (il y a 2 mois : 100.31)"
+      "raw_value": "103.70 (il y a 2 mois : 100.22)"
     },
     {
       "name": "Anticipations d'inflation",
@@ -48,9 +48,9 @@
     }
   ],
   "technical": {
-    "note": "Cours en-dessous de la MM200 (-13.3%) — tendance baissière",
-    "spot": 3875.10009765625,
-    "ma200": 4467.895495605469
+    "note": "Cours en-dessous de la MM200 (-13.8%) — tendance baissière",
+    "spot": 3849.800048828125,
+    "ma200": 4463.770994873047
   },
   "calendar": [
     {
@@ -104,20 +104,20 @@
   ],
   "news": [
     {
-      "title": "Prévisions du cours de l’or : le XAU/USD se redresse au-dessus de 3 850 $, mais le biais baissier persiste - www.tmgm.com",
-      "date": "2026-11-16",
-      "link": "https://news.google.com/rss/articles/CBMi2wFBVV95cUxNS2pvN0VYNXJGbmpNR2pkQzd6aGlOSE5NeU5BdEw0UE1ZS1ozLXFadlluakY0ZG8xVnVBbm5ZRXpNVXBEUC0teDBQZDg2QmlEZnE5eFRpVU5PZ3h2ZG84YllhS2kySktxd3BzV1lUWXlpdmhzOURVYmdBd2FrWmVSalB1RjdNNDN2QTh1ZHFUT1BINTllY0d4cjZDU29UeFVnVHZJaVg0eTBhY1JSeEFUSjFmRk5FLWlSTmwxRlJfYU1pX1ZMQTR5U0ExdzFjeVZ5X0pyeGItdVBtWWc?oc=5",
-      "source": "www.tmgm.com",
-      "summary": "",
+      "title": "Dong vietnamien et cours de l’or – 17 novembre - Zonebourse Suisse",
+      "date": "2026-11-17",
+      "link": "https://news.google.com/rss/articles/CBMiqwFBVV95cUxObk56SEdiNkttUWJUNnRiNnFJaVRCcHhBNHVDTV82cVZZTE5KQ1NVVXAyOUtXNFYwdzlGTG5Bd0wybGQxenR5cFRDZi1qd3dBUzlJZTVXQXRrT2cyVmJyMVNWeWNUcDFyQ1g1TWdRRGR3cmZhbzRsQ19oMzNobHJpR0dYa0c2NERzQVBmanNvcFpiZXB3VkRHZWQ3Rk9OTUJNalo5TnpmOWlQcHM?oc=5",
+      "source": "Zonebourse Suisse",
+      "summary": "Cet article suggère, à partir du seul titre, qu'il traite de la relation entre le dong vietnamien et le cours de l'or à une date donnée (17 novembre), sans que le contenu permette d'en confirmer les détails.",
       "sentiment": 0,
       "importance": "mineure"
     },
     {
-      "title": "Cours de l'or aujourd'hui (après-midi du 16 novembre) : Inchangé - Vietnam.vn",
-      "date": "2026-11-16",
-      "link": "https://news.google.com/rss/articles/CBMicEFVX3lxTFBkWDJWSFpldU9DMVZGS1RVLVN2V196V2NCNHZHamdnNEZqek8yLUJvbGtLNllFYjhEemdlLWNEUWpNWFNEQks2VWhkNTd2Z2ZBc3VxQU5paFF3aHNLSjdjSTRyeWEyaGVTbExhTU9ScVk?oc=5",
-      "source": "Vietnam.vn",
-      "summary": "Cet article suggère qu'il s'agit d'un bulletin quotidien de cotation de l'or publié par un site d'information vietnamien, le titre indiquant un cours sans variation (« Inchangé ») à l'après-midi du 16 novembre, sans permettre de confirmer le contexte de marché ni les facteurs explicatifs.",
+      "title": "Les cours de l'or progressent légèrement dans un contexte de dollar fort et de craintes de hausse des taux - Business AM",
+      "date": "2026-11-17",
+      "link": "https://news.google.com/rss/articles/CBMiywFBVV95cUxQYkRpUk9lWkxpNU9CRWpuc3JrOEU0YlVvb3dzQi15dlVVb0Z0Y1ktY0VzX3JKR0hYa2JSbUdPdjVvT2NmeFZWZUJabTRkWUNuZVZJR1FIaHhHbkRNTDhUTXo2MkRGY2wydDg3ZHpYYjhhdko5VnpmQ3BXTFQ4MEV0aTh0U1hBZUN6WHJHdUhVUWhjbjlqd1JLRW9WRWdUTU1SbGNhYW5EdHVhOTZDQVhxSU5QUjVDNDVBbWtuTUNubWQwNDJhRERpbU93aw?oc=5",
+      "source": "Business AM",
+      "summary": "",
       "sentiment": 0,
       "importance": "mineure"
     },
@@ -131,33 +131,33 @@
       "importance": "mineure"
     },
     {
-      "title": "Goldman Sachs prévoit une hausse du cours de l'or en 2027 moins forte que prévu initialement - Business AM",
+      "title": "16/11 « De nombreuses raisons de vendre »... | De L'Or - Actualités et analyses - BullionVault FR",
       "date": "2026-11-16",
-      "link": "https://news.google.com/rss/articles/CBMiuAFBVV95cUxQMDN2cmVnUTlDR0tTUVpBbVhjUV94NEgzZDUzZ0c1OHpIeG1FbGpsdVZvU2UwWjlfSGRaWDNrVU80VE9HR2I4ZUNtNzc5QWhuYnY0MGJMUTdtOTZHZlkwNjdpX1J3c2FZaVFobXZXMG1Xd3pQN1o4VWVzc2YyeHF5TjU3SkthNWdVLV9GbV84QTk2eHV1Y3RmV2FqZU1sXzU5djFnV3JFdnZ2YWxhbFlwbkxsTUNfMGUx?oc=5",
-      "source": "Business AM",
+      "link": "https://news.google.com/rss/articles/CBMimgFBVV95cUxPX0pVZWhhbVpHNGE3ZURSQUMxdUdCdlhVYUhrZTJadHNwUUZVcHZic1l4TU92VG5aTE1QY05XRXRpSTkyUFVQRHliUzZxejRoWXJPQVhKRDUxazVxOTQ0MHBmVGtEVlRMclJKeHJvbDNubzR2dWVZdmRFTWZBTE4yVGQwanE5QkhYX0dwVVBpRjl0aDBTWVNwcTFR?oc=5",
+      "source": "BullionVault FR",
       "summary": "",
       "sentiment": 0,
       "importance": "mineure"
     },
     {
-      "title": "Krach crypto : le cours de l'or tombe à 3 886 dollars, l’or reste-t-il une valeur refuge ? - CryptoTicker.io",
-      "date": "2026-11-15",
-      "link": "https://news.google.com/rss/articles/CBMiswFBVV95cUxOdy13U2FFYzAxQk1rLTJkOTBlemhTOXFaNUIwbk1zd25lU3lUeTUzVXRsUmlSZ0QxemxkZjRZWjhKMEZrOG5CUzBjbVlySm9DUDdGbGQ0SGtEaFdfOEZqMWtLRW1JUUNaazNTb1lxSnVMaGRLdWp1WnMtcWlMbTBJNm95VmxWNG9VVVJJcUIzMUxSMXI0VHpKdEpTeFZKV0tTbTliX0tKS3JCU1lhM2d5NmJfaw?oc=5",
-      "source": "CryptoTicker.io",
+      "title": "Crise pétrolière : le paradoxe de l’or - Or.fr",
+      "date": "2026-11-17",
+      "link": "https://news.google.com/rss/articles/CBMia0FVX3lxTE9xUXBYOEp6ODNOYUVzeGI0dVNGMmV0ZEVLNmVnWmFiNkM1VEpmUDdPcEY1V1JpVmNtUmQtWnkwUE82RkJJSjNUTTFxeVdVUUxOb2h3OHoxbkxZWUFKTFpJUU1MOTBCRHItWjB3?oc=5",
+      "source": "Or.fr",
       "summary": "",
       "sentiment": 0,
       "importance": "mineure"
     }
   ],
-  "analysis_html": "<h3>Contexte récent</h3><p>L'or a nettement reculé fin octobre. Depuis, il évolue autour de 3 850–3 890 $ l'once, avec un léger redressement au-dessus de 3 850 $, et les commentaires de marché parlent encore d'un biais baissier. Le score composite ressort proche de la neutralité : les vents contraires liés au dollar et aux anticipations d'inflation sont compensés par des facteurs de positionnement, de politique monétaire et de demande structurelle.</p><h3>Facteurs déterminants</h3><ul><li><strong>Dollar (DXY), principal frein :</strong> avec un score de -10,0 pondéré à 15 %, c'est la plus forte contribution négative, d'environ -1,5 point. Le DXY est passé de 100,31 à 103,50 en deux mois. Cette appréciation renchérit l'or pour les détenteurs d'autres devises et pèse sur la demande.</li><li><strong>Anticipations d'inflation, second frein :</strong> le score de -4,0 (poids 15 %) contribue pour environ -0,6 point. Le point mort d'inflation a reculé de 2,36 % à 2,24 % sur environ 45 jours, ce qui réduit l'attrait de l'or comme couverture contre l'inflation.</li><li><strong>Ton de la Fed, principal soutien :</strong> le score de +5,0 (poids 15 %), issu d'une saisie manuelle, apporte environ +0,75 point. Il traduit une orientation perçue comme plutôt accommodante, favorable à un actif sans rendement.</li><li><strong>Positionnement CFTC :</strong> le score de +5,5 (poids 10 %) contribue pour environ +0,55 point. Avec une position nette de 179 548 contrats, au 22e percentile sur trois ans, le positionnement spéculatif est relativement allégé. Le risque de liquidations forcées est donc limité, et une marge de reconstitution des positions existe.</li><li><strong>Taux réels US 10 ans :</strong> le score de +1,2 porte le poids le plus élevé (30 %) mais n'apporte qu'environ +0,36 point. Le recul de 2,92 % à 2,86 % est modeste. Ce facteur, habituellement dominant, est donc peu discriminant en ce moment.</li><li><strong>Achats des banques centrales et flux ETF :</strong> les scores de +7,0 (poids 5 %) et +3,0 (poids 10 %), tous deux issus de saisies manuelles, apportent chacun environ +0,3 point. Ils signalent une demande de fond toujours présente.</li></ul><h3>Actualités à retenir</h3><p>Aucune actualité classée notable ou majeure ne figure dans la période. Les éléments disponibles, tous jugés mineurs, apportent surtout du contexte :</p><ul><li><strong>Chute de fin octobre (XTB) :</strong> l'article s'interroge sur une remise en cause du statut de valeur refuge ou sur une recherche de liquidités. Cela rejoint le tassement des anticipations d'inflation et le raffermissement du dollar.</li><li><strong>Krach des cryptomonnaies (CryptoTicker) :</strong> l'or est tombé vers 3 886 $ dans ce contexte. Cela suggère que des ventes pour dégager des liquidités ont pu toucher plusieurs classes d'actifs en même temps.</li><li><strong>Révision de Goldman Sachs :</strong> la banque anticipe désormais une hausse du cours en 2027 moins forte que prévu. C'est un signal de prudence sur les perspectives, sans effet direct sur les composantes du score.</li><li><strong>Autres articles :</strong> le bulletin de cotation vietnamien et la note TMGM sur le rebond au-dessus de 3 850 $ décrivent le prix sans éclairer les facteurs explicatifs.</li></ul><h3>Synthèse</h3><p>Le score composite reflète un équilibre fragile. La vigueur du dollar et la baisse des anticipations d'inflation pèsent sur l'or. À l'inverse, un ton de la Fed perçu comme accommodant, un positionnement spéculatif allégé et une demande structurelle (banques centrales, ETF) apportent un soutien. Les taux réels, malgré leur poids élevé, ne jouent qu'un rôle marginal en raison de leur faible variation. Plusieurs composantes reposent sur des saisies manuelles, ce qui invite à interpréter le score avec prudence. Aucune actualité majeure ne vient modifier ce diagnostic sur la période.</p>",
+  "analysis_html": "<h3>Contexte récent</h3><p>Selon les actualités disponibles, l’or a nettement reculé fin octobre, puis a légèrement progressé à la mi-novembre malgré un dollar ferme et des craintes de hausse des taux. Sur les dernières semaines, le dollar s’est sensiblement apprécié (DXY de 100,22 à 103,70 en deux mois, soit environ +3,5 %). Les taux réels américains à 10 ans sont restés quasi stables à un niveau élevé (2,91 % contre 2,95 %), tandis que les anticipations d’inflation ont reculé (2,20 % contre 2,36 %).</p><h3>Facteurs déterminants</h3><ul><li><strong>Dollar (DXY), score -10,0, poids 15 %</strong> : c’est le facteur le plus défavorable du score et celui qui pèse le plus en contribution pondérée. La hausse marquée du billet vert renchérit l’or pour les acheteurs hors zone dollar et constitue le principal vent contraire actuel.</li><li><strong>Anticipations d’inflation, score -5,3, poids 15 %</strong> : leur repli de 16 points de base réduit l’attrait de l’or comme couverture contre l’inflation. Ce facteur est le deuxième élément négatif du score.</li><li><strong>Ton de la Fed, score +5,0, poids 15 %</strong> : il s’agit d’une saisie manuelle, jugée favorable. C’est la principale contribution positive pondérée et elle compense une partie de la pression exercée par le dollar. Ce jugement est toutefois à mettre en regard des « craintes de hausse des taux » évoquées dans la presse.</li><li><strong>Taux réels US 10 ans, score +0,8, poids 30 %</strong> : c’est le facteur le plus lourdement pondéré, mais son impact reste faible. La légère détente (-4 points de base) n’apporte qu’un soutien marginal, alors que le niveau absolu des taux réels (près de 2,9 %) demeure élevé et représente un coût d’opportunité important pour un actif sans rendement.</li><li><strong>Positionnement CFTC, score +4,1, poids 10 %</strong> : avec une position nette de 190 107 contrats, au 29e percentile sur trois ans, le positionnement spéculatif est relativement léger. Cette configuration est lue comme favorable, car elle laisse une marge de reconstitution des positions acheteuses et limite le risque de liquidation forcée.</li><li><strong>Flux ETF (GLD + IAU), score +3,0, poids 10 %, et achats des banques centrales, score +7,0, poids 5 %</strong> : ces deux facteurs, issus de saisies manuelles, sont modérément positifs. Les achats des banques centrales affichent le score individuel le plus élevé, mais leur faible pondération en limite l’effet sur l’ensemble.</li></ul><h3>Actualités à retenir</h3><p>Aucune actualité n’est classée notable ou majeure : les cinq éléments recensés sont tous mineurs. Ils restent toutefois cohérents avec la lecture du score :</p><ul><li>La forte baisse de fin octobre, analysée par XTB comme une possible recherche de liquidités plutôt qu’une remise en cause du statut de valeur refuge, ainsi que le titre de BullionVault (« De nombreuses raisons de vendre ») traduisent un climat de marché prudent. Ce climat est compatible avec un positionnement CFTC relativement bas.</li><li>L’article de Business AM sur une légère hausse dans un contexte de dollar fort et de craintes de hausse des taux illustre directement la tension entre le principal facteur négatif (le dollar) et les soutiens structurels.</li><li>Les articles sur la crise pétrolière (Or.fr) et sur le dong vietnamien (Zonebourse) ne permettent pas, en l’état des informations fournies, d’établir un lien précis avec l’évolution du score.</li></ul><h3>Synthèse</h3><p>Le score composite de l’or reflète un équilibre fragile :</p><ul><li><strong>Pressions négatives</strong> : l’appréciation du dollar et le repli des anticipations d’inflation exercent la pression la plus nette.</li><li><strong>Soutiens</strong> : un ton de la Fed jugé favorable, un positionnement spéculatif léger, des flux ETF positifs et des achats de banques centrales compensent en partie ces pressions.</li><li><strong>Facteur neutre</strong> : les taux réels, pourtant le facteur le plus pondéré, sont quasi neutres car ils ont peu varié.</li></ul><p>Plusieurs composantes favorables reposent sur des saisies manuelles et la presse signale des craintes de hausse des taux. L’évolution du dollar apparaît donc comme la variable la plus déterminante pour la dynamique du score à court terme.</p>",
   "news_classifications": {
-    "https://news.google.com/rss/articles/CBMi2wFBVV95cUxNS2pvN0VYNXJGbmpNR2pkQzd6aGlOSE5NeU5BdEw0UE1ZS1ozLXFadlluakY0ZG8xVnVBbm5ZRXpNVXBEUC0teDBQZDg2QmlEZnE5eFRpVU5PZ3h2ZG84YllhS2kySktxd3BzV1lUWXlpdmhzOURVYmdBd2FrWmVSalB1RjdNNDN2QTh1ZHFUT1BINTllY0d4cjZDU29UeFVnVHZJaVg0eTBhY1JSeEFUSjFmRk5FLWlSTmwxRlJfYU1pX1ZMQTR5U0ExdzFjeVZ5X0pyeGItdVBtWWc?oc=5": {
-      "summary": "",
+    "https://news.google.com/rss/articles/CBMiqwFBVV95cUxObk56SEdiNkttUWJUNnRiNnFJaVRCcHhBNHVDTV82cVZZTE5KQ1NVVXAyOUtXNFYwdzlGTG5Bd0wybGQxenR5cFRDZi1qd3dBUzlJZTVXQXRrT2cyVmJyMVNWeWNUcDFyQ1g1TWdRRGR3cmZhbzRsQ19oMzNobHJpR0dYa0c2NERzQVBmanNvcFpiZXB3VkRHZWQ3Rk9OTUJNalo5TnpmOWlQcHM?oc=5": {
+      "summary": "Cet article suggère, à partir du seul titre, qu'il traite de la relation entre le dong vietnamien et le cours de l'or à une date donnée (17 novembre), sans que le contenu permette d'en confirmer les détails.",
       "sentiment": 0,
       "importance": "mineure"
     },
-    "https://news.google.com/rss/articles/CBMicEFVX3lxTFBkWDJWSFpldU9DMVZGS1RVLVN2V196V2NCNHZHamdnNEZqek8yLUJvbGtLNllFYjhEemdlLWNEUWpNWFNEQks2VWhkNTd2Z2ZBc3VxQU5paFF3aHNLSjdjSTRyeWEyaGVTbExhTU9ScVk?oc=5": {
-      "summary": "Cet article suggère qu'il s'agit d'un bulletin quotidien de cotation de l'or publié par un site d'information vietnamien, le titre indiquant un cours sans variation (« Inchangé ») à l'après-midi du 16 novembre, sans permettre de confirmer le contexte de marché ni les facteurs explicatifs.",
+    "https://news.google.com/rss/articles/CBMiywFBVV95cUxQYkRpUk9lWkxpNU9CRWpuc3JrOEU0YlVvb3dzQi15dlVVb0Z0Y1ktY0VzX3JKR0hYa2JSbUdPdjVvT2NmeFZWZUJabTRkWUNuZVZJR1FIaHhHbkRNTDhUTXo2MkRGY2wydDg3ZHpYYjhhdko5VnpmQ3BXTFQ4MEV0aTh0U1hBZUN6WHJHdUhVUWhjbjlqd1JLRW9WRWdUTU1SbGNhYW5EdHVhOTZDQVhxSU5QUjVDNDVBbWtuTUNubWQwNDJhRERpbU93aw?oc=5": {
+      "summary": "",
       "sentiment": 0,
       "importance": "mineure"
     },
@@ -166,12 +166,12 @@
       "sentiment": 0,
       "importance": "mineure"
     },
-    "https://news.google.com/rss/articles/CBMiuAFBVV95cUxQMDN2cmVnUTlDR0tTUVpBbVhjUV94NEgzZDUzZ0c1OHpIeG1FbGpsdVZvU2UwWjlfSGRaWDNrVU80VE9HR2I4ZUNtNzc5QWhuYnY0MGJMUTdtOTZHZlkwNjdpX1J3c2FZaVFobXZXMG1Xd3pQN1o4VWVzc2YyeHF5TjU3SkthNWdVLV9GbV84QTk2eHV1Y3RmV2FqZU1sXzU5djFnV3JFdnZ2YWxhbFlwbkxsTUNfMGUx?oc=5": {
+    "https://news.google.com/rss/articles/CBMimgFBVV95cUxPX0pVZWhhbVpHNGE3ZURSQUMxdUdCdlhVYUhrZTJadHNwUUZVcHZic1l4TU92VG5aTE1QY05XRXRpSTkyUFVQRHliUzZxejRoWXJPQVhKRDUxazVxOTQ0MHBmVGtEVlRMclJKeHJvbDNubzR2dWVZdmRFTWZBTE4yVGQwanE5QkhYX0dwVVBpRjl0aDBTWVNwcTFR?oc=5": {
       "summary": "",
       "sentiment": 0,
       "importance": "mineure"
     },
-    "https://news.google.com/rss/articles/CBMiswFBVV95cUxOdy13U2FFYzAxQk1rLTJkOTBlemhTOXFaNUIwbk1zd25lU3lUeTUzVXRsUmlSZ0QxemxkZjRZWjhKMEZrOG5CUzBjbVlySm9DUDdGbGQ0SGtEaFdfOEZqMWtLRW1JUUNaazNTb1lxSnVMaGRLdWp1WnMtcWlMbTBJNm95VmxWNG9VVVJJcUIzMUxSMXI0VHpKdEpTeFZKV0tTbTliX0tKS3JCU1lhM2d5NmJfaw?oc=5": {
+    "https://news.google.com/rss/articles/CBMia0FVX3lxTE9xUXBYOEp6ODNOYUVzeGI0dVNGMmV0ZEVLNmVnWmFiNkM1VEpmUDdPcEY1V1JpVmNtUmQtWnkwUE82RkJJSjNUTTFxeVdVUUxOb2h3OHoxbkxZWUFKTFpJUU1MOTBCRHItWjB3?oc=5": {
       "summary": "",
       "sentiment": 0,
       "importance": "mineure"

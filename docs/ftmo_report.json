@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-17T07:12:36Z",
+  "generated_at": "2026-11-18T07:12:45Z",
   "healthy": false,
-  "summary_fr": "Le robot est actuellement en pause volontaire : son interrupteur de sécurité est activé, donc il n'ouvre aucune nouvelle position, même s'il continue d'analyser le marché. Aujourd'hui, 433 cycles d'analyse ont été évalués et aucune position n'a été ouverte ; sur les 7 derniers jours, 9 077 cycles ont été évalués et aucune position n'a été ouverte. Il s'agit d'une mesure de prudence, pas d'une panne : la dernière analyse date de quelques minutes seulement."
+  "summary_fr": "Le robot continue d'analyser le marché de l'or en permanence : 433 cycles d'évaluation ont été réalisés aujourd'hui et plus de 9 000 sur les 7 derniers jours. Aucune position n'a été ouverte sur les 7 derniers jours. Le dispositif de sécurité (coupe-circuit) est actuellement activé : le robot est donc volontairement en pause côté prise de position, par prudence, afin de protéger le compte de challenge."
 }

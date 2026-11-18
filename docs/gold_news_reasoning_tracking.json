@@ -80,6 +80,12 @@
           "price": 3853.0,
           "decision": "garder",
           "raison": "La cassure du bas de 3879 tient et un nouveau plus bas à 3835 confirme la tendance baissière, donc la thèse reste valide, avec un stop abaissé vers 3930 pour gérer le risque de rebond ou de choc géopolitique."
+        },
+        {
+          "date": "2026-11-17",
+          "price": 3864.199951171875,
+          "decision": "garder",
+          "raison": "La thèse baissière reste intacte avec une Fed qui laisse entrevoir une hausse des taux en décembre, un pétrole en net repli et un or à son plus bas depuis plus d'un an, sans signal de retournement qui justifie de clôturer."
         }
       ]
     }

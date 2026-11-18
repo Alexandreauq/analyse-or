@@ -1,6 +1,6 @@
 {
-  "date": "2026-11-17",
-  "composite_score": -3.1,
+  "date": "2026-11-18",
+  "composite_score": -2.6,
   "interpretation": "Neutre — pas d'action",
   "cftc_percentile": 29.48717948717949,
   "factors": [
@@ -14,13 +14,13 @@
       "name": "Dollar (DXY)",
       "score": -10,
       "weight": 0.15,
-      "raw_value": "103.55 (il y a 2 mois : 100.22)"
+      "raw_value": "103.62 (il y a 2 mois : 100.22)"
     },
     {
       "name": "Anticipations d'inflation",
-      "score": -5.333333333333323,
+      "score": -4.999999999999997,
       "weight": 0.15,
-      "raw_value": "2.20% (il y a ~45j : 2.36%)"
+      "raw_value": "2.21% (il y a ~45j : 2.36%)"
     },
     {
       "name": "Ton de la Fed",
@@ -48,16 +48,11 @@
     }
   ],
   "technical": {
-    "note": "Cours en-dessous de la MM200 (-13.7%) — tendance baissière",
-    "spot": 3852.10009765625,
-    "ma200": 4463.782495117188
+    "note": "Cours en-dessous de la MM200 (-14.9%) — tendance baissière",
+    "spot": 3798.300048828125,
+    "ma200": 4463.5134948730465
   },
   "calendar": [
-    {
-      "date": "17/11/2026",
-      "label": "Ventes au détail",
-      "kind": "Donnée"
-    },
     {
       "date": "19/11/2026",
       "label": "Inscriptions chômage (hebdo)",
@@ -92,6 +87,11 @@
       "date": "15/12/2026",
       "label": "PPI (prix à la production)",
       "kind": "Donnée"
+    },
+    {
+      "date": "16/12/2026",
+      "label": "Ventes au détail",
+      "kind": "Donnée"
     }
   ],
   "alerts": [
@@ -99,7 +99,7 @@
       "kind": "info",
       "title": "Pas de signal actif",
       "detail": "Aucune des conditions de veille, d'entrée ou de risque n'est réunie aujourd'hui.",
-      "date": "17/11/2026"
+      "date": "18/11/2026"
     }
   ],
   "news": [

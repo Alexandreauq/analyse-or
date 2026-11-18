@@ -1,8 +1,8 @@
 {
-  "date": "2026-11-17",
+  "date": "2026-11-18",
   "commodity": "argent",
   "label": "Argent",
-  "composite_score": -20.2,
+  "composite_score": -18.6,
   "interpretation": "Défavorable — pas d'entrée même sur signal technique",
   "cftc_percentile": 3.205128205128205,
   "factors": [
@@ -16,7 +16,7 @@
       "name": "Dollar (DXY)",
       "score": -10,
       "weight": 0.2,
-      "raw_value": "103.55 (il y a 2 mois : 100.22)"
+      "raw_value": "103.62 (il y a 2 mois : 100.22)"
     },
     {
       "name": "Positionnement CFTC",
@@ -26,29 +26,24 @@
     },
     {
       "name": "Ratio or/argent",
-      "score": -2.411504424778761,
+      "score": -1.769911504424779,
       "weight": 0.25,
-      "raw_value": "81.5 — 38e percentile (3 ans)"
+      "raw_value": "82.5 — 41e percentile (3 ans)"
     },
     {
       "name": "Dynamique récente",
       "score": -10.0,
       "weight": 0.1,
-      "raw_value": "-30.5% vs MM200"
+      "raw_value": "-32.4% vs MM200"
     }
   ],
   "technical": {
-    "note": "Cours en-dessous de la MM200 (-30.5%) — tendance baissière",
-    "spot": 47.28499984741211,
-    "ma200": 68.0767448425293,
+    "note": "Cours en-dessous de la MM200 (-32.4%) — tendance baissière",
+    "spot": 46.04499816894531,
+    "ma200": 68.07054483413697,
     "unite": "$ / oz"
   },
   "calendar": [
-    {
-      "date": "17/11/2026",
-      "label": "Ventes au détail",
-      "kind": "Donnée"
-    },
     {
       "date": "19/11/2026",
       "label": "Inscriptions chômage (hebdo)",
@@ -82,6 +77,11 @@
     {
       "date": "15/12/2026",
       "label": "PPI (prix à la production)",
+      "kind": "Donnée"
+    },
+    {
+      "date": "16/12/2026",
+      "label": "Ventes au détail",
       "kind": "Donnée"
     }
   ],

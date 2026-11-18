@@ -1,5 +1,5 @@
 {
-  "date": "2026-11-17",
+  "date": "2026-11-18",
   "commodity": "gaz",
   "label": "Gaz naturel",
   "composite_score": 6.0,
@@ -16,19 +16,19 @@
       "name": "Saisonnalité (Henry Hub)",
       "score": -10,
       "weight": 0.3333333333333333,
-      "raw_value": "3.00 $/MMBtu (moyenne saisonnière du mois : 3.56 $/MMBtu)"
+      "raw_value": "3.00 $/MMBtu (moyenne saisonnière du mois : 3.54 $/MMBtu)"
     },
     {
       "name": "Dynamique récente",
       "score": 10.0,
       "weight": 0.26666666666666666,
-      "raw_value": "+7.7% vs MM200"
+      "raw_value": "+6.9% vs MM200"
     },
     {
       "name": "Dollar (DXY)",
       "score": -10,
       "weight": 0.13333333333333333,
-      "raw_value": "103.55 (il y a 2 mois : 100.22)"
+      "raw_value": "103.62 (il y a 2 mois : 100.22)"
     },
     {
       "name": "Stocks EIA",
@@ -38,17 +38,12 @@
     }
   ],
   "technical": {
-    "note": "Cours au-dessus de la MM200 (+7.7%) — tendance haussière",
-    "spot": 3.196000099182129,
-    "ma200": 2.967295000553131,
+    "note": "Cours au-dessus de la MM200 (+6.9%) — tendance haussière",
+    "spot": 3.1710000038146973,
+    "ma200": 2.967170000076294,
     "unite": "$ / MMBtu"
   },
   "calendar": [
-    {
-      "date": "17/11/2026",
-      "label": "Ventes au détail",
-      "kind": "Donnée"
-    },
     {
       "date": "19/11/2026",
       "label": "Inscriptions chômage (hebdo)",
@@ -82,6 +77,11 @@
     {
       "date": "15/12/2026",
       "label": "PPI (prix à la production)",
+      "kind": "Donnée"
+    },
+    {
+      "date": "16/12/2026",
+      "label": "Ventes au détail",
       "kind": "Donnée"
     }
   ],

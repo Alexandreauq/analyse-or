@@ -86,6 +86,12 @@
           "price": 3864.199951171875,
           "decision": "garder",
           "raison": "La thèse baissière reste intacte avec une Fed qui laisse entrevoir une hausse des taux en décembre, un pétrole en net repli et un or à son plus bas depuis plus d'un an, sans signal de retournement qui justifie de clôturer."
+        },
+        {
+          "date": "2026-11-18",
+          "price": 3741.89990234375,
+          "decision": "garder",
+          "raison": "Le marché anticipe désormais une hausse des taux de la Fed, ce qui renforce la thèse vendeuse, et la cassure nette du support 3835-3840 confirme la tendance baissière, donc on laisse courir le gain en remontant le stop au-dessus de 3860."
         }
       ]
     }

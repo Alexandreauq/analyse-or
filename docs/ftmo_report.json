@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-18T07:12:45Z",
+  "generated_at": "2026-11-19T07:11:21Z",
   "healthy": false,
-  "summary_fr": "Le robot continue d'analyser le marché de l'or en permanence : 433 cycles d'évaluation ont été réalisés aujourd'hui et plus de 9 000 sur les 7 derniers jours. Aucune position n'a été ouverte sur les 7 derniers jours. Le dispositif de sécurité (coupe-circuit) est actuellement activé : le robot est donc volontairement en pause côté prise de position, par prudence, afin de protéger le compte de challenge."
+  "summary_fr": "Le robot continue d'analyser le marché de l'or en continu : 432 cycles d'évaluation ont été réalisés aujourd'hui et 9 074 sur les 7 derniers jours. Aucune position n'a été ouverte sur les 7 derniers jours. Le robot est actuellement mis en pause par son interrupteur de sécurité : il surveille le marché mais n'ouvre aucune nouvelle position tant que cette pause n'est pas levée."
 }

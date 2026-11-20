@@ -1,5 +1,5 @@
 {
-  "date": "2026-11-19",
+  "date": "2026-11-20",
   "commodity": "gaz",
   "label": "Gaz naturel",
   "composite_score": 11.8,
@@ -22,7 +22,7 @@
       "name": "Dynamique récente",
       "score": 10.0,
       "weight": 0.26666666666666666,
-      "raw_value": "+10.6% vs MM200"
+      "raw_value": "+9.2% vs MM200"
     },
     {
       "name": "Dollar (DXY)",
@@ -38,20 +38,20 @@
     }
   ],
   "technical": {
-    "note": "Cours au-dessus de la MM200 (+10.6%) — tendance haussière",
-    "spot": 3.2809998989105225,
-    "ma200": 2.9667399990558625,
+    "note": "Cours au-dessus de la MM200 (+9.2%) — tendance haussière",
+    "spot": 3.239000082015991,
+    "ma200": 2.9665299999713897,
     "unite": "$ / MMBtu"
   },
   "calendar": [
     {
-      "date": "19/11/2026",
-      "label": "Inscriptions chômage (hebdo)",
+      "date": "25/11/2026",
+      "label": "PCE (dépenses de consommation des ménages)",
       "kind": "Donnée"
     },
     {
       "date": "25/11/2026",
-      "label": "PCE (dépenses de consommation des ménages)",
+      "label": "Inscriptions chômage (hebdo)",
       "kind": "Donnée"
     },
     {

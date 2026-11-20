@@ -1,22 +1,22 @@
 {
-  "date": "2026-11-19",
+  "date": "2026-11-20",
   "commodity": "argent",
   "label": "Argent",
-  "composite_score": -15.9,
-  "interpretation": "Défavorable — pas d'entrée même sur signal technique",
+  "composite_score": -10.5,
+  "interpretation": "Neutre — pas d'action",
   "cftc_percentile": 3.205128205128205,
   "factors": [
     {
       "name": "Taux réels US 10 ans",
-      "score": 1.200000000000001,
+      "score": 0.600000000000005,
       "weight": 0.3,
-      "raw_value": "2.89% (il y a ~45j : 2.95%)"
+      "raw_value": "2.88% (il y a ~45j : 2.91%)"
     },
     {
       "name": "Dollar (DXY)",
       "score": -10,
       "weight": 0.2,
-      "raw_value": "103.88 (il y a 2 mois : 100.43)"
+      "raw_value": "103.89 (il y a 2 mois : 100.43)"
     },
     {
       "name": "Positionnement CFTC",
@@ -26,32 +26,32 @@
     },
     {
       "name": "Ratio or/argent",
-      "score": -1.4254143646408834,
+      "score": 1.4475138121546975,
       "weight": 0.25,
-      "raw_value": "83.1 — 43e percentile (3 ans)"
+      "raw_value": "85.2 — 57e percentile (3 ans)"
     },
     {
       "name": "Dynamique récente",
       "score": -10.0,
       "weight": 0.1,
-      "raw_value": "-34.7% vs MM200"
+      "raw_value": "-37.8% vs MM200"
     }
   ],
   "technical": {
-    "note": "Cours en-dessous de la MM200 (-34.7%) — tendance baissière",
-    "spot": 44.20500183105469,
-    "ma200": 67.6867448425293,
+    "note": "Cours en-dessous de la MM200 (-37.8%) — tendance baissière",
+    "spot": 42.11000061035156,
+    "ma200": 67.67626983642577,
     "unite": "$ / oz"
   },
   "calendar": [
     {
-      "date": "19/11/2026",
-      "label": "Inscriptions chômage (hebdo)",
+      "date": "25/11/2026",
+      "label": "PCE (dépenses de consommation des ménages)",
       "kind": "Donnée"
     },
     {
       "date": "25/11/2026",
-      "label": "PCE (dépenses de consommation des ménages)",
+      "label": "Inscriptions chômage (hebdo)",
       "kind": "Donnée"
     },
     {

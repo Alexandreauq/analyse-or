@@ -1,5 +1,5 @@
 {
-  "date": "2026-11-19",
+  "date": "2026-11-20",
   "commodity": "petrole",
   "label": "Pétrole (WTI)",
   "composite_score": -53.2,
@@ -10,7 +10,7 @@
       "name": "Dollar (DXY)",
       "score": -10,
       "weight": 0.26666666666666666,
-      "raw_value": "103.88 (il y a 2 mois : 100.43)"
+      "raw_value": "103.89 (il y a 2 mois : 100.43)"
     },
     {
       "name": "Positionnement CFTC",
@@ -22,13 +22,13 @@
       "name": "Spread WTI-Brent",
       "score": -10,
       "weight": 0.19999999999999998,
-      "raw_value": "+6.82 $/baril (il y a ~2 mois : +4.56 $/baril)"
+      "raw_value": "+6.98 $/baril (il y a ~2 mois : +4.56 $/baril)"
     },
     {
       "name": "Dynamique récente",
       "score": -10.0,
       "weight": 0.26666666666666666,
-      "raw_value": "-5.8% vs MM200"
+      "raw_value": "-6.0% vs MM200"
     },
     {
       "name": "Stocks EIA",
@@ -38,20 +38,20 @@
     }
   ],
   "technical": {
-    "note": "Cours en-dessous de la MM200 (-5.8%) — tendance baissière",
-    "spot": 83.08999633789062,
-    "ma200": 88.1892000579834,
+    "note": "Cours en-dessous de la MM200 (-6.0%) — tendance baissière",
+    "spot": 82.86000061035156,
+    "ma200": 88.1880500793457,
     "unite": "$ / baril"
   },
   "calendar": [
     {
-      "date": "19/11/2026",
-      "label": "Inscriptions chômage (hebdo)",
+      "date": "25/11/2026",
+      "label": "PCE (dépenses de consommation des ménages)",
       "kind": "Donnée"
     },
     {
       "date": "25/11/2026",
-      "label": "PCE (dépenses de consommation des ménages)",
+      "label": "Inscriptions chômage (hebdo)",
       "kind": "Donnée"
     },
     {

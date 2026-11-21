@@ -2,7 +2,7 @@
   "date": "2026-11-21",
   "commodity": "argent",
   "label": "Argent",
-  "composite_score": -6.9,
+  "composite_score": -8.5,
   "interpretation": "Neutre — pas d'action",
   "cftc_percentile": 3.205128205128205,
   "factors": [
@@ -16,7 +16,7 @@
       "name": "Dollar (DXY)",
       "score": -10,
       "weight": 0.2,
-      "raw_value": "103.84 (il y a 2 mois : 100.43)"
+      "raw_value": "103.81 (il y a 2 mois : 100.43)"
     },
     {
       "name": "Positionnement CFTC",
@@ -26,21 +26,21 @@
     },
     {
       "name": "Ratio or/argent",
-      "score": 2.6629834254143647,
+      "score": 2.044198895027624,
       "weight": 0.25,
-      "raw_value": "86.1 — 63e percentile (3 ans)"
+      "raw_value": "85.7 — 60e percentile (3 ans)"
     },
     {
       "name": "Dynamique récente",
       "score": -10.0,
       "weight": 0.1,
-      "raw_value": "-39.1% vs MM200"
+      "raw_value": "-39.2% vs MM200"
     }
   ],
   "technical": {
-    "note": "Cours en-dessous de la MM200 (-39.1%) — tendance baissière",
-    "spot": 41.08000183105469,
-    "ma200": 67.51006484985352,
+    "note": "Cours en-dessous de la MM200 (-39.2%) — tendance baissière",
+    "spot": 41.03499984741211,
+    "ma200": 67.5098398399353,
     "unite": "$ / oz"
   },
   "calendar": [
@@ -115,10 +115,10 @@
       "importance": "mineure"
     },
     {
-      "title": "Le cours de l'argent chute face aux anticipations de taux d'intérêt : que doivent faire les investisseurs ? - Vietnam.vn",
-      "date": "2026-11-19",
-      "link": "https://news.google.com/rss/articles/CBMiiAFBVV95cUxOaU1jZEppbnkxYmZlUjNxeXE0WlUwcW1TUklvSHBneHd4NWxsUmZPNzhHdlllVWV5TUF2OXlVWmRtWmR2c2N5d3NvRDdKUldPQnBjd0dsNmFfSU5TNFYwaHZ5anF1eVFtZUJ1Yk1uVGdVMWJ2bWFHWHdPV3lPRTFQTGxxNWU3YUk3?oc=5",
-      "source": "Vietnam.vn",
+      "title": "Prévisions du cours de l’argent : la tendance baissière s’accentue alors que le RSI entre en zone de survente - www.tmgm.com",
+      "date": "2026-11-18",
+      "link": "https://news.google.com/rss/articles/CBMi1AFBVV95cUxQdDdYWlFNOHd2cDZmcnJIWVJNQkd5cTQzdXVLaVF5d1FraXkwZFp2X09GTFd4M3JvN2VMcGdnQkhiWGNVcGNsTUhadnFSUGg5aDZCR29vXzZFMkItV3Z0b3k1RDhkWDI3Qy1xWEp6d0xaRlpnc2tFRUhRWlJ4UzIzd2I3NnBERGJlcFdKSmxvY29nM3dESkxhMGQzUndtTjNuVi1RM2FSQmxPYkNrYV90NXZUS3RtS2ViOUs1a0NNSFlGRG5sMmQ0QTBmUXZkVDZYeXgwNw?oc=5",
+      "source": "www.tmgm.com",
       "summary": "",
       "sentiment": 0,
       "importance": "mineure"
@@ -133,7 +133,7 @@
       "importance": "mineure"
     }
   ],
-  "analysis_html": "<h3>Contexte récent</h3><p>L'argent a connu une correction marquée après une très forte hausse : son cours se situe à <strong>-37,3 % sous sa moyenne mobile 200 jours</strong>. Les titres récents évoquent une stabilisation autour de 50 dollars l'once et la recherche d'un nouvel équilibre après une année jugée exceptionnelle. En parallèle, le dollar s'est nettement raffermi : le DXY est passé d'environ 100,4 à 103,9 en deux mois.</p><h3>Facteurs déterminants</h3><ul><li><strong>Dollar (DXY), score -10,0, poids 20 %</strong> : c'est le principal facteur négatif du score. Un dollar plus fort renchérit le métal pour les détenteurs d'autres devises. Il exerce donc une pression défavorable sur les métaux précieux libellés en dollars. Avec un score au plancher et un poids significatif, ce facteur pèse le plus lourdement à la baisse.</li><li><strong>Positionnement CFTC, score +9,4, poids 15 %</strong> : c'est le principal soutien du score. La position nette spéculative, à 19 364 contrats, se situe au <strong>3e percentile sur trois ans</strong>, soit un niveau historiquement très bas. Selon une lecture contrariante, ce positionnement déjà allégé limite le potentiel de ventes supplémentaires des spéculateurs. Il compense en grande partie l'effet négatif du dollar.</li><li><strong>Dynamique récente, score -10,0, poids 10 %</strong> : l'écart de -37,3 % par rapport à la MM200 traduit une tendance baissière prononcée à court et moyen terme. Son poids reste toutefois plus modeste que celui des autres facteurs.</li><li><strong>Taux réels US 10 ans, score +0,6, poids 30 %</strong> : malgré le poids le plus élevé, ce facteur est quasi neutre. Les taux réels sont restés pratiquement stables (2,91 % il y a environ 45 jours, contre 2,88 % aujourd'hui). Ce léger recul est marginalement favorable à un actif sans rendement comme l'argent.</li><li><strong>Ratio or/argent, score +0,5, poids 25 %</strong> : à 84,5, le ratio se situe au 52e percentile sur trois ans, donc dans sa zone médiane. Il ne signale ni sous-évaluation ni surévaluation marquée de l'argent par rapport à l'or et contribue très peu au score.</li></ul><h3>Actualités à retenir</h3><p>Aucune actualité classée notable ou majeure ne figure dans les données fournies : toutes les informations récentes sont qualifiées de mineures. Elles éclairent néanmoins le contexte :</p><ul><li>Plusieurs titres décrivent une <strong>phase de stabilisation après correction</strong>, avec des prix qui restent élevés. Cela concorde avec le score de dynamique négatif, lié à l'ampleur de la baisse par rapport à la MM200.</li><li>Un article relie la baisse du cours aux <strong>anticipations de taux d'intérêt</strong>. Dans les données disponibles, les taux réels sont toutefois quasi stables ; c'est surtout le dollar qui a évolué défavorablement.</li><li>L'évocation d'une <strong>transition du secteur solaire vers le cuivre</strong> renvoie à un enjeu de demande industrielle pour l'argent. Ce thème n'est pas directement capté par les facteurs du score.</li><li>Le débat sur la valeur relative de l'argent face à l'or fait écho au ratio or/argent, aujourd'hui en position médiane.</li></ul><h3>Synthèse</h3><p>Le score composite résulte principalement de l'opposition entre deux forces. D'un côté, des facteurs défavorables : un <strong>dollar en nette appréciation</strong> et une <strong>dynamique de prix fortement baissière</strong>. De l'autre, un <strong>positionnement spéculatif historiquement bas</strong>, qui constitue un soutien de nature contrariante. Les deux facteurs les plus pondérés, les taux réels et le ratio or/argent, sont actuellement proches de la neutralité et influencent peu l'orientation d'ensemble. Les actualités, toutes mineures, décrivent un marché en consolidation après une correction. Elles n'apportent pas d'élément susceptible de modifier sensiblement la lecture des facteurs.</p>",
+  "analysis_html": "<h3>Contexte récent</h3><p>L’argent traverse une phase de correction marquée après une année de forte hausse. Le cours évolue autour de 50 dollars l’once selon les actualités, mais il se situe 39,2 % sous sa moyenne mobile à 200 jours, ce qui traduit un repli rapide et prononcé. Le marché semble chercher un nouveau point d’équilibre, dans un environnement où le dollar s’est nettement raffermi.</p><h3>Facteurs déterminants</h3><ul><li><strong>Dollar (DXY), le principal frein :</strong> son score est de -10,0 pour un poids de 20 %. Le DXY est passé de 100,43 à 103,81 en deux mois, soit une hausse d’environ 3,4 %. Un dollar plus fort renchérit le métal pour les acheteurs hors zone dollar et pèse traditionnellement sur les métaux précieux. Une fois pondéré, c’est le facteur qui contribue le plus négativement au score.</li><li><strong>Dynamique récente, un signal négatif fort :</strong> son score est de -10,0 pour un poids de 10 %. L’écart de -39,2 % par rapport à la MM200 confirme une tendance baissière installée. Son poids limité réduit toutefois son impact relatif sur le score.</li><li><strong>Positionnement CFTC, le principal soutien :</strong> son score est de +9,4 pour un poids de 15 %. La position nette spéculative de 18 291 contrats se situe au 3e percentile sur trois ans, un niveau historiquement très bas. Ce facteur se lit de manière contrariante : les spéculateurs sont déjà largement allégés, ce qui limite le potentiel de ventes supplémentaires et peut favoriser des rachats.</li><li><strong>Ratio or/argent, un soutien modéré :</strong> son score est de +2,0 pour un poids de 25 %. À 85,7, au 60e percentile sur trois ans, le ratio indique que l’argent est légèrement bon marché par rapport à l’or, sans décote extrême. L’effet reste modeste malgré un poids élevé.</li><li><strong>Taux réels US 10 ans, un facteur quasi neutre :</strong> son score est de +0,8 pour un poids de 30 %. Le taux réel a reculé de 2,92 % à 2,88 % en 45 jours environ. Cette légère détente est marginalement favorable, mais elle reste trop faible pour peser réellement, alors même que ce facteur a le poids le plus élevé.</li></ul><p>Le score est donc tiraillé entre deux forces. D’un côté, des facteurs de marché négatifs, le dollar et la dynamique de prix. De l’autre, des signaux de positionnement et de valorisation relative plutôt favorables. Le facteur structurellement le plus pondéré, les taux réels, n’apporte pas de direction claire.</p><h3>Actualités à retenir</h3><p>Aucune actualité n’est classée notable ou majeure. Toutes sont jugées mineures et n’expliquent donc pas, à elles seules, l’évolution du score. Elles éclairent néanmoins le contexte :</p><ul><li>La <strong>stabilisation autour de 50 dollars</strong> et la <strong>recherche d’un nouvel équilibre après une année exceptionnelle</strong> (pv magazine, Comptoir National de l’Or, RFI) concordent avec un marché en correction qui reste à un niveau de prix élevé.</li><li>La mention d’un <strong>RSI en zone de survente</strong> (TMGM) recoupe le score très négatif de la dynamique récente. Elle rejoint aussi la lecture contrariante du positionnement CFTC.</li><li>L’<strong>accélération de la substitution de l’argent par le cuivre dans le solaire</strong> (pv magazine) signale un risque structurel sur la demande industrielle. Ce thème n’est pas capté directement par les facteurs du score.</li><li>Le débat sur la <strong>valeur relative de l’argent face à l’or</strong> (The Conversation) fait écho au facteur ratio or/argent. Le titre seul ne permet cependant pas d’en tirer une conclusion.</li></ul><h3>Synthèse</h3><p>Le score composite de l’argent reflète un équilibre fragile. Le raffermissement du dollar et une dynamique de prix nettement baissière exercent la pression la plus visible. En face, un positionnement spéculatif au plus bas sur trois ans et un ratio or/argent légèrement favorable constituent des contrepoids. Les taux réels, malgré leur poids élevé, restent quasi neutres. Les actualités, toutes mineures, décrivent un marché en correction après une forte hausse, techniquement survendu, avec une interrogation de fond sur la demande industrielle liée au solaire. Cette analyse est descriptive et ne constitue pas un conseil d’investissement.</p>",
   "news_classifications": {
     "https://news.google.com/rss/articles/CBMi7wFBVV95cUxQOVFfQXFnc29HeVV6LXM3U1ByLW9NVGtXNW1tMWZZZDAzWldTMVg2bmM5OUlpamVUeHhfN2E4S2RvWjBRZ2d4RTNJTFpoYjBpbGhKRW9ldnhSYkRmQVNhTmp0a0w4ZldSR1JEclBzVjJZclNKVmxCT1NtTWZHOURCX2lmRnhhNXAwMGxQTERhbURiRlNvMUhtTnZTam9HSWNXRXJhdGd0V3NjT0V2UUpUaHhsRlJZR3hObDFlLWY4aDlFMVRLMkFVUktyNTZwVGNwOVl3MEhxbUZjTVBIZ2ZpNGplcWlaSDRoME01OXBjQQ?oc=5": {
       "summary": "",
@@ -150,7 +150,7 @@
       "sentiment": 0,
       "importance": "mineure"
     },
-    "https://news.google.com/rss/articles/CBMiiAFBVV95cUxOaU1jZEppbnkxYmZlUjNxeXE0WlUwcW1TUklvSHBneHd4NWxsUmZPNzhHdlllVWV5TUF2OXlVWmRtWmR2c2N5d3NvRDdKUldPQnBjd0dsNmFfSU5TNFYwaHZ5anF1eVFtZUJ1Yk1uVGdVMWJ2bWFHWHdPV3lPRTFQTGxxNWU3YUk3?oc=5": {
+    "https://news.google.com/rss/articles/CBMi1AFBVV95cUxQdDdYWlFNOHd2cDZmcnJIWVJNQkd5cTQzdXVLaVF5d1FraXkwZFp2X09GTFd4M3JvN2VMcGdnQkhiWGNVcGNsTUhadnFSUGg5aDZCR29vXzZFMkItV3Z0b3k1RDhkWDI3Qy1xWEp6d0xaRlpnc2tFRUhRWlJ4UzIzd2I3NnBERGJlcFdKSmxvY29nM3dESkxhMGQzUndtTjNuVi1RM2FSQmxPYkNrYV90NXZUS3RtS2ViOUs1a0NNSFlGRG5sMmQ0QTBmUXZkVDZYeXgwNw?oc=5": {
       "summary": "",
       "sentiment": 0,
       "importance": "mineure"

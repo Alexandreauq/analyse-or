@@ -1,16 +1,16 @@
 {
-  "date": "2026-11-20",
+  "date": "2026-11-21",
   "commodity": "gaz",
   "label": "Gaz naturel",
-  "composite_score": 11.8,
+  "composite_score": 11.5,
   "interpretation": "Neutre — pas d'action",
-  "cftc_percentile": 1.282051282051282,
+  "cftc_percentile": 1.9230769230769231,
   "factors": [
     {
       "name": "Positionnement CFTC",
-      "score": 9.743589743589743,
+      "score": 9.615384615384615,
       "weight": 0.26666666666666666,
-      "raw_value": "1e percentile (3 ans) — position nette -224,463 contrats"
+      "raw_value": "2e percentile (3 ans) — position nette -211,545 contrats"
     },
     {
       "name": "Saisonnalité (Henry Hub)",
@@ -22,13 +22,13 @@
       "name": "Dynamique récente",
       "score": 10.0,
       "weight": 0.26666666666666666,
-      "raw_value": "+23.3% vs MM200"
+      "raw_value": "+27.7% vs MM200"
     },
     {
       "name": "Dollar (DXY)",
       "score": -10,
       "weight": 0.13333333333333333,
-      "raw_value": "103.81 (il y a 2 mois : 100.43)"
+      "raw_value": "103.84 (il y a 2 mois : 100.43)"
     },
     {
       "name": "Stocks EIA",
@@ -38,9 +38,9 @@
     }
   ],
   "technical": {
-    "note": "Cours au-dessus de la MM200 (+23.3%) — tendance haussière",
-    "spot": 3.6589999198913574,
-    "ma200": 2.967424998283386,
+    "note": "Cours au-dessus de la MM200 (+27.7%) — tendance haussière",
+    "spot": 3.7909998893737793,
+    "ma200": 2.968084998130798,
     "unite": "$ / MMBtu"
   },
   "calendar": [

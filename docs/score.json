@@ -1,14 +1,14 @@
 {
-  "date": "2026-11-21",
-  "composite_score": -2.3,
+  "date": "2026-11-22",
+  "composite_score": -4.8,
   "interpretation": "Neutre — pas d'action",
   "cftc_percentile": 16.025641025641026,
   "factors": [
     {
       "name": "Taux réels US 10 ans",
-      "score": 0.8000000000000007,
+      "score": -0.19999999999999574,
       "weight": 0.3,
-      "raw_value": "2.88% (il y a ~45j : 2.92%)"
+      "raw_value": "2.88% (il y a ~45j : 2.87%)"
     },
     {
       "name": "Dollar (DXY)",
@@ -18,9 +18,9 @@
     },
     {
       "name": "Anticipations d'inflation",
-      "score": -7.0,
+      "score": -6.666666666666673,
       "weight": 0.15,
-      "raw_value": "2.15% (il y a ~45j : 2.36%)"
+      "raw_value": "2.15% (il y a ~45j : 2.35%)"
     },
     {
       "name": "Ton de la Fed",
@@ -99,7 +99,7 @@
       "kind": "info",
       "title": "Pas de signal actif",
       "detail": "Aucune des conditions de veille, d'entrée ou de risque n'est réunie aujourd'hui.",
-      "date": "21/11/2026"
+      "date": "22/11/2026"
     }
   ],
   "news": [

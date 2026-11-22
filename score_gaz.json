@@ -22,13 +22,13 @@
       "name": "Dynamique récente",
       "score": 10.0,
       "weight": 0.26666666666666666,
-      "raw_value": "+15.0% vs MM200"
+      "raw_value": "+26.3% vs MM200"
     },
     {
       "name": "Dollar (DXY)",
       "score": -10,
       "weight": 0.13333333333333333,
-      "raw_value": "103.81 (il y a 2 mois : 100.43)"
+      "raw_value": "103.81 (il y a 2 mois : 100.60)"
     },
     {
       "name": "Stocks EIA",
@@ -38,9 +38,9 @@
     }
   ],
   "technical": {
-    "note": "Cours au-dessus de la MM200 (+15.0%) — tendance haussière",
-    "spot": 3.4110000133514404,
-    "ma200": 2.9661849987506868,
+    "note": "Cours au-dessus de la MM200 (+26.3%) — tendance haussière",
+    "spot": 3.747999906539917,
+    "ma200": 2.9678699982166292,
     "unite": "$ / MMBtu"
   },
   "calendar": [
@@ -97,6 +97,15 @@
       "importance": "mineure"
     },
     {
+      "title": "Gaz : l’Europe s’est éloignée de la Russie, mais accroît sa vulnérabilité aux crises mondiales - The Conversation",
+      "date": "2026-11-21",
+      "link": "https://news.google.com/rss/articles/CBMiwgFBVV95cUxQQzNnR3ppeDBKaW16SVlUT3BobExyYWUtamJmSnZGbjNRNkRIbFY5SlJ6UlhxUzl4WHoxa19XNHVfcFc3NWRIS1NJYUljM25vMmRrVlRMMkRCRFJJa2xMbDUwYlE4akh0MnFRMElZekZETHBoSE9BeXhkWGlYRXpVajhwbklLQUhCU2VRc211TFBZMjI1dUFYeFVZSUJkdXltS2J1WlBXVk1LOTZMLUtiOEVpaGE5dzM5UDJmX1F0bFJTZw?oc=5",
+      "source": "The Conversation",
+      "summary": "",
+      "sentiment": 0,
+      "importance": "mineure"
+    },
+    {
       "title": "Les prix du gaz naturel en Europe s'envolent : quel impact sur vos factures d'hiver - Euronews.com",
       "date": "2026-10-27",
       "link": "https://news.google.com/rss/articles/CBMitAFBVV95cUxNUlJtRHJWZS1uVmZiZUxKWkNrVXBvT1M2c01MRDNPUlBZZWhwbnNRTzRLd1N6eFRNY05NTlNkd1JpTnh0OXBOUzcyMzdSTkpiRzJwdjAwNjUtNnRBNm81X2hrdGVDaUVTRm5MMXhKYlh2eVdNRV9rWGdwZGZBSGg4UHZVX01zREhWdWRqMkQyTGpVU1U2aGhmWjFaeG5CUEJsUnlTWkV4MzJacDFVeUgtRnlVYjA?oc=5",
@@ -115,27 +124,23 @@
       "importance": "mineure"
     },
     {
-      "title": "Les prix du gaz européen reculent malgré l’escalade des attaques iraniennes - Investing.com France",
+      "title": "UBS abaisse ses prévisions sur le gaz naturel américain pour 2027 - Investing.com France",
       "date": "2026-11-18",
-      "link": "https://news.google.com/rss/articles/CBMiyAFBVV95cUxNcWt4QUxnUER5UVd6X2FBR01pQVFudVloLVJNTzh0WkpHak1RZEFjbklDSWFhYmkxLUN2RDQyZlVMVDJTR25KYk5laWRib0MtTUM0Uy1LLUZBV01VcTM4NTdINHZFTHRReFBpMXdBZ3pOWHNHU3JwaU9EVGRmV1hjRVZFYVNEbXdaZWhQcmFZNjZsWmhhMEsycWk2OFROLXZhalA2MlFkQ1VrYmZEVGpNbWlHNEZFVDJfandmczlUSXB3RkRjVUxRNQ?oc=5",
+      "link": "https://news.google.com/rss/articles/CBMiwAFBVV95cUxNRTZlVFlrQlUxNFVXQmZBVWhqSWFEY0JxWU0tY0RZSDBKVHdsT2FqUVJyMUNnYnB4Um03akM1TWhsSno0ZXZtNnhXM1NkakkwNTQ2anl1WDlIN0pMMV9ISENtSy1rZXV3MFdlenQ3U3pzN2E2WHhpVTdiV2lYTmUwSHZvd1J0Y2JyUVp3VDZGZW5Pc2picy1ZdHhuZVo2TnBsaC1xeTJsakV3Y2RoeE9rWE9pWHBMU3lUcFVORjZZZDk?oc=5",
       "source": "Investing.com France",
-      "summary": "",
-      "sentiment": 0,
-      "importance": "mineure"
-    },
-    {
-      "title": "Guerre en Iran : le prix du gaz a presque doublé en Europe depuis le début des frappes israélo-américaines - Touteleurope.eu",
-      "date": "2026-03-03",
-      "link": "https://news.google.com/rss/articles/CBMi5wFBVV95cUxPdTF4ZXpFWk5ndHoyVGVrX0tPZnZZWk5GdHI0NlRFLUEta050bW44ZGxRaUtuNFJSSFk1UGZyNGJWVEF4R1dnckZrMnRxSER5MGxlRkdvUEZNbEhXOFdmQ2REaFlJcnFGd1Jnakx1RjUzOWpGLUctYUl6ekI5SjNXZ0JoSUJJdE9nd3BUZmx2N3daRVRyVmVDXzdTM1R1T3p3Q2dtVkpnYzA4RVAzT0tVQlJnS1FmQ2JWVE5QQ3dmSXZfRGowak9ncVNUcEdzV3YzNUZtNWNrMkg1VmN2ZDNoWWdYblBlUzQ?oc=5",
-      "source": "Touteleurope.eu",
       "summary": "",
       "sentiment": 0,
       "importance": "mineure"
     }
   ],
-  "analysis_html": "<h3>Contexte récent</h3><p>Le gaz naturel américain (Henry Hub) cote 3,10 $/MMBtu, sous sa moyenne saisonnière du mois (3,51 $/MMBtu). Il reste toutefois nettement au-dessus de sa tendance de long terme, à <strong>+15,0 % par rapport à sa moyenne mobile 200 jours</strong>. Le score composite se situe proche de l'équilibre, avec une légère inclinaison positive : deux signaux haussiers (positionnement et dynamique) s'opposent à deux signaux baissiers (saisonnalité et dollar).</p><h3>Facteurs déterminants</h3><ul><li><strong>Saisonnalité (score -8,2, poids 33 %)</strong> : c'est le facteur le plus pondéré et le principal frein du score. Le prix spot se situe environ 0,41 $/MMBtu sous la moyenne saisonnière du mois. Le marché ne profite donc pas pleinement du soutien habituellement observé à cette période.</li><li><strong>Dynamique récente (score +10,0, poids 27 %)</strong> : le signal atteint son maximum. L'écart de +15 % avec la MM200 traduit une tendance de fond haussière, qui compense à elle seule l'essentiel de l'effet saisonnier négatif.</li><li><strong>Positionnement CFTC (score +9,6, poids 27 %)</strong> : la position nette des spéculateurs s'établit à -211 545 contrats, soit le <strong>2e percentile sur 3 ans</strong>. Ce positionnement vendeur extrême est lu comme un signal contrarien : un marché aussi chargé en positions courtes est exposé à des rachats de couverture en cas de surprise haussière. Ce facteur pèse donc à la hausse dans le score.</li><li><strong>Dollar DXY (score -10,0, poids 13 %)</strong> : l'indice est passé de 100,43 à 103,81 en deux mois. Ce raffermissement marqué du dollar constitue un vent contraire pour les matières premières libellées en dollars. Sa pondération plus faible limite toutefois son impact.</li><li><strong>Stocks EIA (poids 0 %)</strong> : la donnée n'est pas disponible, faute de clé API configurée. Le score ne reflète donc pas l'état des réserves américaines, pourtant un déterminant fondamental majeur du Henry Hub.</li></ul><h3>Actualités à retenir</h3><p>Aucune actualité n'est classée notable ou majeure : les cinq informations recensées sont toutes mineures. Elles concernent surtout le <strong>marché européen</strong> et les prix de détail en France (hausse de 5,8 % du prix repère de vente en décembre, impact sur les factures d'hiver). Leur lien avec le Henry Hub n'est donc qu'indirect.</p><p>Le contexte géopolitique lié à l'Iran ressort néanmoins. Une source fait état d'un quasi-doublement du prix du gaz en Europe depuis le début des frappes israélo-américaines, tandis qu'une autre signale un recul des prix européens malgré l'escalade. Ces signaux contradictoires suggèrent une forte volatilité de la prime de risque en Europe, sans traduction directe identifiable dans les facteurs du score composite.</p><h3>Synthèse</h3><p>Le score composite reflète un <strong>équilibre fragile, légèrement orienté à la hausse</strong>. Du côté positif, une tendance de fond solide et un positionnement spéculatif extrêmement vendeur, potentiellement propice à des rachats. Du côté négatif, un prix inférieur à sa norme saisonnière et un dollar en net raffermissement. L'absence des données de stocks EIA limite la portée de cette lecture. Les actualités, toutes mineures et centrées sur l'Europe, n'apportent pas d'élément décisif pour le marché américain.</p>",
+  "analysis_html": "<h3>Contexte récent</h3><p>Le gaz naturel américain (Henry Hub) s'échange à <strong>3,10 $/MMBtu</strong>, sous sa moyenne saisonnière du mois (3,50 $/MMBtu). Il évolue pourtant nettement au-dessus de sa tendance de long terme, avec un écart de <strong>+26,3 % par rapport à sa moyenne mobile 200 jours</strong>. Le tableau combine donc un niveau de prix modéré pour la saison et une dynamique haussière marquée sur plusieurs mois, dans un environnement de dollar plus ferme.</p><h3>Facteurs déterminants</h3><p>Le score composite résulte d'un équilibre entre forces opposées. Une fois pondérés, aucun facteur ne domine seul :</p><ul><li><strong>Dynamique récente (score +10,0, poids 27 %)</strong> : c'est la contribution positive la plus forte, d'environ +2,7 points pondérés. L'écart de +26,3 % au-dessus de la moyenne mobile 200 jours traduit une tendance haussière installée, et le facteur atteint son score maximal.</li><li><strong>Saisonnalité (score -8,0, poids 33 %)</strong> : c'est le facteur le plus pondéré et la principale contribution négative, d'environ -2,6 points. Un prix inférieur d'environ 0,40 $/MMBtu à la norme saisonnière du mois est interprété comme un signal défavorable. Il peut refléter une demande ou un équilibre offre/demande moins tendu qu'habituellement à cette période.</li><li><strong>Positionnement CFTC (score +9,6, poids 27 %)</strong> : sa contribution est positive, d'environ +2,6 points. La position nette vendeuse des opérateurs spéculatifs (-211 545 contrats) se situe au <strong>2e percentile sur 3 ans</strong>, soit un pessimisme quasi extrême. Le modèle lit ce niveau comme un signal contrarien : un positionnement aussi déséquilibré accroît le potentiel de rachats de positions courtes.</li><li><strong>Dollar (DXY, score -10,0, poids 13 %)</strong> : sa contribution est négative, d'environ -1,3 point. L'indice est passé de 100,60 à 103,81 en deux mois. Un dollar plus fort pèse généralement sur les matières premières libellées en dollars, et le facteur est à son score minimal.</li><li><strong>Stocks EIA (poids 0 %)</strong> : ce facteur est indisponible faute de clé API configurée. Son absence constitue une limite importante, car les niveaux de stockage sont habituellement un déterminant central du prix du gaz, surtout à l'approche ou au cours de la saison de chauffage.</li></ul><p>Au total, la dynamique et le positionnement contrarien compensent un peu plus que la faiblesse saisonnière et la fermeté du dollar. Il en ressort un score globalement proche de l'équilibre, avec une légère inclinaison positive.</p><h3>Actualités à retenir</h3><p>Aucune des actualités récentes n'est classée notable ou majeure. Toutes sont jugées mineures et ne modifient donc pas de manière significative la lecture du score. Quelques éléments de contexte peuvent néanmoins être relevés :</p><ul><li>Plusieurs articles portent sur le <strong>marché européen</strong> : hausse du prix repère de vente de gaz en France en décembre (+5,8 %), envolée des prix en Europe, vulnérabilité accrue de l'Europe aux crises mondiales depuis son éloignement du gaz russe. Ces informations concernent des prix européens et de détail, distincts du Henry Hub. Le lien avec le prix américain reste indirect, principalement via la demande d'exportations de GNL.</li><li>La <strong>révision à la baisse par UBS de ses prévisions sur le gaz américain pour 2027</strong> porte sur un horizon lointain. Elle n'a pas d'effet direct sur les facteurs de court terme du score, mais elle s'inscrit dans une lecture prudente des perspectives de moyen terme.</li></ul><h3>Synthèse</h3><p>Le gaz naturel américain présente un profil contrasté. D'un côté, une tendance haussière solide et un positionnement spéculatif extrêmement vendeur jouent en faveur du score. De l'autre, un prix inférieur à sa norme saisonnière et un dollar en nette appréciation le tirent vers le bas. Il en résulte un score composite proche de la neutralité, légèrement orienté à la hausse. Les actualités récentes, toutes mineures et largement centrées sur l'Europe, n'apportent pas d'élément de nature à modifier cet équilibre. Enfin, l'absence des données de stocks EIA limite la portée de l'analyse, ce facteur étant habituellement déterminant pour ce marché.</p>",
   "news_classifications": {
     "https://news.google.com/rss/articles/CBMic0FVX3lxTE1aLXB2OUQ5dWpLU3R0OHRqeXlrb3RwdXByenR5aTY5Y0tKa0xEZGdhVElrWjVZUzVjd3hlVkVjdmY0aE1oMnpTd01XZC1wbk1oY3FickFLVkxyY2dwSTJTbXdBc3lpUkMtZ25FbGVjRHR1aXc?oc=5": {
+      "summary": "",
+      "sentiment": 0,
+      "importance": "mineure"
+    },
+    "https://news.google.com/rss/articles/CBMiwgFBVV95cUxQQzNnR3ppeDBKaW16SVlUT3BobExyYWUtamJmSnZGbjNRNkRIbFY5SlJ6UlhxUzl4WHoxa19XNHVfcFc3NWRIS1NJYUljM25vMmRrVlRMMkRCRFJJa2xMbDUwYlE4akh0MnFRMElZekZETHBoSE9BeXhkWGlYRXpVajhwbklLQUhCU2VRc211TFBZMjI1dUFYeFVZSUJkdXltS2J1WlBXVk1LOTZMLUtiOEVpaGE5dzM5UDJmX1F0bFJTZw?oc=5": {
       "summary": "",
       "sentiment": 0,
       "importance": "mineure"
@@ -150,12 +155,7 @@
       "sentiment": 0,
       "importance": "mineure"
     },
-    "https://news.google.com/rss/articles/CBMiyAFBVV95cUxNcWt4QUxnUER5UVd6X2FBR01pQVFudVloLVJNTzh0WkpHak1RZEFjbklDSWFhYmkxLUN2RDQyZlVMVDJTR25KYk5laWRib0MtTUM0Uy1LLUZBV01VcTM4NTdINHZFTHRReFBpMXdBZ3pOWHNHU3JwaU9EVGRmV1hjRVZFYVNEbXdaZWhQcmFZNjZsWmhhMEsycWk2OFROLXZhalA2MlFkQ1VrYmZEVGpNbWlHNEZFVDJfandmczlUSXB3RkRjVUxRNQ?oc=5": {
-      "summary": "",
-      "sentiment": 0,
-      "importance": "mineure"
-    },
-    "https://news.google.com/rss/articles/CBMi5wFBVV95cUxPdTF4ZXpFWk5ndHoyVGVrX0tPZnZZWk5GdHI0NlRFLUEta050bW44ZGxRaUtuNFJSSFk1UGZyNGJWVEF4R1dnckZrMnRxSER5MGxlRkdvUEZNbEhXOFdmQ2REaFlJcnFGd1Jnakx1RjUzOWpGLUctYUl6ekI5SjNXZ0JoSUJJdE9nd3BUZmx2N3daRVRyVmVDXzdTM1R1T3p3Q2dtVkpnYzA4RVAzT0tVQlJnS1FmQ2JWVE5QQ3dmSXZfRGowak9ncVNUcEdzV3YzNUZtNWNrMkg1VmN2ZDNoWWdYblBlUzQ?oc=5": {
+    "https://news.google.com/rss/articles/CBMiwAFBVV95cUxNRTZlVFlrQlUxNFVXQmZBVWhqSWFEY0JxWU0tY0RZSDBKVHdsT2FqUVJyMUNnYnB4Um03akM1TWhsSno0ZXZtNnhXM1NkakkwNTQ2anl1WDlIN0pMMV9ISENtSy1rZXV3MFdlenQ3U3pzN2E2WHhpVTdiV2lYTmUwSHZvd1J0Y2JyUVp3VDZGZW5Pc2picy1ZdHhuZVo2TnBsaC1xeTJsakV3Y2RoeE9rWE9pWHBMU3lUcFVORjZZZDk?oc=5": {
       "summary": "",
       "sentiment": 0,
       "importance": "mineure"

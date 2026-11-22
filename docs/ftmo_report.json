@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-21T07:10:35Z",
+  "generated_at": "2026-11-22T07:10:56Z",
   "healthy": false,
-  "summary_fr": "Le bot continue d'analyser le marché de l'or en continu : 431 cycles d'évaluation ont été effectués aujourd'hui et plus de 9 000 sur les 7 derniers jours. Aucune position n'a été ouverte sur cette période. Le bot est actuellement en pause volontaire : son interrupteur de sécurité est activé, ce qui bloque toute nouvelle prise de position tant qu'il n'est pas relâché."
+  "summary_fr": "Sur les 7 derniers jours, le robot a évalué 9 071 situations de marché et n'a ouvert aucune position. Le robot est actuellement en pause : son interrupteur de sécurité est activé, ce qui l'empêche d'ouvrir de nouvelles positions, même si la surveillance du marché continue de tourner normalement. Le marché de l'or est de toute façon fermé ce week-end, et aucune action n'est nécessaire de votre part."
 }

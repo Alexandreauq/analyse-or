@@ -28,7 +28,12 @@
    "contexte_sectoriel": [
     "Healthcare: NANO.PA +34.8%, PHARM.AS +20.8%, CRL +15.1% (5j) : secteur tres porte, pas specifique a Qiagen"
    ],
-   "raison": "Rachat EQT/KKR en discussions avancees : volume 5.2x, +9.8% 5j. Prime de rachat deja largement integree ; reste un plancher d'offre mais le gain residuel depend d'une surenchere ou d'un echec. Le volume domine : la hausse est un evenement, pas une tendance."
+   "raison": "Rachat EQT/KKR en discussions avancees : volume 5.2x, +9.8% 5j. Prime de rachat deja largement integree ; reste un plancher d'offre mais le gain residuel depend d'une surenchere ou d'un echec. Le volume domine : la hausse est un evenement, pas une tendance.",
+   "resultats": {
+    "prix_sortie": 45.29999923706055,
+    "rendement_pct_reel": 0.55,
+    "appel_correct": null
+   }
   },
   {
    "ticker": "HAS",
@@ -54,7 +59,12 @@
    "contexte_sectoriel": [
     "Consumer Cyclical: FR.PA -18.4%, KER.PA -17.9% (5j) : le luxe/cyclique chute pendant que Hasbro monte, mouvement idiosyncratique"
    ],
-   "raison": "Hausse des previsions, +18.9% 5j / +33% 20j, volume 2.6x : drift post-resultats plausible mais mouvement deja tres etendu (risque de retracement) ; score fondamental -77 et appel contradictoire. Aucun avantage directionnel."
+   "raison": "Hausse des previsions, +18.9% 5j / +33% 20j, volume 2.6x : drift post-resultats plausible mais mouvement deja tres etendu (risque de retracement) ; score fondamental -77 et appel contradictoire. Aucun avantage directionnel.",
+   "resultats": {
+    "prix_sortie": 120.55000305175781,
+    "rendement_pct_reel": 2.65,
+    "appel_correct": null
+   }
   },
   {
    "ticker": "FLEX",
@@ -80,7 +90,12 @@
    "contexte_sectoriel": [
     "Technology: 6976.T -16.9%, 7735.T -15.8% : purge du hardware IA/electronique, contagion sectorielle partielle"
    ],
-   "raison": "-15.4% 5j / -33% 20j avec volume 2.0x apres finalisation d'EPC Power et scission annoncee, sans nouvelle fondamentalement negative : survente probable, rebond de court terme possible mais couteau qui tombe, stage Neutre."
+   "raison": "-15.4% 5j / -33% 20j avec volume 2.0x apres finalisation d'EPC Power et scission annoncee, sans nouvelle fondamentalement negative : survente probable, rebond de court terme possible mais couteau qui tombe, stage Neutre.",
+   "resultats": {
+    "prix_sortie": 74.9800033569336,
+    "rendement_pct_reel": -2.05,
+    "appel_correct": false
+   }
   },
   {
    "ticker": "NOW",
@@ -106,7 +121,12 @@
    "contexte_sectoriel": [
     "Technology: ROP +14.5%, CRWD +13.3% : logiciels en reprise, tendance sectorielle concordante"
    ],
-   "raison": "Score 99.6, stage Achat, +12% 5j / +17% 20j, volume normal (1.11x) : momentum propre sans exces de volume, actu IA/securite positive ; mais cible deja bien valorisee, avantage modeste."
+   "raison": "Score 99.6, stage Achat, +12% 5j / +17% 20j, volume normal (1.11x) : momentum propre sans exces de volume, actu IA/securite positive ; mais cible deja bien valorisee, avantage modeste.",
+   "resultats": {
+    "prix_sortie": 102.25,
+    "rendement_pct_reel": -35.68,
+    "appel_correct": false
+   }
   },
   {
    "ticker": "NOKIA.HE",
@@ -132,7 +152,12 @@
    "contexte_sectoriel": [
     "Technology: 6976.T -16.9%, FLEX -15.4% : faiblesse sectorielle large qui complique la lecture"
    ],
-   "raison": "Bug Nokia a l'origine de la panne geante Orange (risque reputationnel/contractuel) apres resultats T3 pourtant au-dessus des attentes ; -12.5% 5j deja integre, volume normal (0.98x) donc pas de capitulation. Actu negative dominante mais prix a deja reagi."
+   "raison": "Bug Nokia a l'origine de la panne geante Orange (risque reputationnel/contractuel) apres resultats T3 pourtant au-dessus des attentes ; -12.5% 5j deja integre, volume normal (0.98x) donc pas de capitulation. Actu negative dominante mais prix a deja reagi.",
+   "resultats": {
+    "prix_sortie": 7.294000148773193,
+    "rendement_pct_reel": -1.03,
+    "appel_correct": true
+   }
   },
   {
    "ticker": "SMCI",
@@ -158,7 +183,12 @@
    "contexte_sectoriel": [
     "Technology: purge hardware IA (FLEX, 6976.T) vs reprise logiciels (ROP, CRWD) : signaux contradictoires"
    ],
-   "raison": "Relevement de previsions de 4 Md$ (+) mais -23.9% sur 20j et profil historique erratique ; volume 1.28x modere. La demande IA aide mais la volatilite rend la direction indecidable."
+   "raison": "Relevement de previsions de 4 Md$ (+) mais -23.9% sur 20j et profil historique erratique ; volume 1.28x modere. La demande IA aide mais la volatilite rend la direction indecidable.",
+   "resultats": {
+    "prix_sortie": 26.8700008392334,
+    "rendement_pct_reel": -18.43,
+    "appel_correct": null
+   }
   },
   {
    "ticker": "UAL",
@@ -184,7 +214,12 @@
    "contexte_sectoriel": [
     "Industrials: pas de contagion aerienne clairement visible dans les gros mouvements du secteur"
    ],
-   "raison": "Previsions de benefice inferieures aux attentes a cause du carburant, BPA sous consensus, volume 1.47x ; -14% sur 20j. Le cout carburant est un facteur persistant mais deja largement escompte."
+   "raison": "Previsions de benefice inferieures aux attentes a cause du carburant, BPA sous consensus, volume 1.47x ; -14% sur 20j. Le cout carburant est un facteur persistant mais deja largement escompte.",
+   "resultats": {
+    "prix_sortie": 109.30999755859375,
+    "rendement_pct_reel": 11.62,
+    "appel_correct": false
+   }
   },
   {
    "ticker": "FDJU.PA",
@@ -210,7 +245,12 @@
    "contexte_sectoriel": [
     "Consumer Cyclical: faiblesse du luxe europeen (KER.PA -17.9%) sans lien causal direct"
    ],
-   "raison": "Baisse des objectifs (frequentation des points de vente, hausse de taxes), volume 1.57x, stage Declin : actu negative majeure + signal technique et volume alignes. Titre defensif, la baisse peut etre limitee."
+   "raison": "Baisse des objectifs (frequentation des points de vente, hausse de taxes), volume 1.57x, stage Declin : actu negative majeure + signal technique et volume alignes. Titre defensif, la baisse peut etre limitee.",
+   "resultats": {
+    "prix_sortie": 21.81999969482422,
+    "rendement_pct_reel": 5.87,
+    "appel_correct": false
+   }
   },
   {
    "ticker": "LMT",
@@ -236,7 +276,12 @@
    "contexte_sectoriel": [
     "Industrials: SAF.PA -14.3%, HWM -15.9% (aero) : divergence avec la defense US"
    ],
-   "raison": "Relevement des previsions et negociation de 850 F-35 par le Pentagone, +9.4% 5j / +16% 20j, volume 1.55x. Fondamentalement positif mais extension deja forte (retracement possible)."
+   "raison": "Relevement des previsions et negociation de 850 F-35 par le Pentagone, +9.4% 5j / +16% 20j, volume 1.55x. Fondamentalement positif mais extension deja forte (retracement possible).",
+   "resultats": {
+    "prix_sortie": 596.0399780273438,
+    "rendement_pct_reel": -1.35,
+    "appel_correct": null
+   }
   },
   {
    "ticker": "MRO.L",
@@ -262,7 +307,12 @@
    "contexte_sectoriel": [
     "Industrials: mouvements sectoriels dispersés, pas de tendance claire"
    ],
-   "raison": "Dossier GKN/OPA a l'etat de dependance actionnariale, news ambigue (sentiment 0), -6.7% 5j, volume normal. Rien d'exploitable."
+   "raison": "Dossier GKN/OPA a l'etat de dependance actionnariale, news ambigue (sentiment 0), -6.7% 5j, volume normal. Rien d'exploitable.",
+   "resultats": {
+    "prix_sortie": 4.842000122070313,
+    "rendement_pct_reel": 6.98,
+    "appel_correct": null
+   }
   },
   {
    "ticker": "BAMI.MI",
@@ -288,7 +338,12 @@
    "contexte_sectoriel": [
     "Banques italiennes ISP -4.7%, BMPS -4.8%, MB -2.2% (5j) : repli sectoriel simultane lie aux offres croisees"
    ],
-   "raison": "Jeu de consolidation bancaire italienne (MPS, Credit Agricole Italia, UniCredit) sous controle du golden power : -20% 20j mais issue politique imprevisible. Volume normal."
+   "raison": "Jeu de consolidation bancaire italienne (MPS, Credit Agricole Italia, UniCredit) sous controle du golden power : -20% 20j mais issue politique imprevisible. Volume normal.",
+   "resultats": {
+    "prix_sortie": 14.875,
+    "rendement_pct_reel": 13.68,
+    "appel_correct": null
+   }
   },
   {
    "ticker": "CMG",
@@ -314,7 +369,12 @@
    "contexte_sectoriel": [
     "Consumer Cyclical: restauration/conso faible mais sans mouvement sectoriel clair"
    ],
-   "raison": "Plus bas 52 semaines (28.03$), -7.9% 5j / -12.2% 20j, rumeur de rachat Starbucks dementie : la prime speculative s'evapore ; stage Declin, tendance baissiere etablie. Score fondamental eleve (61.6) freine le pari."
+   "raison": "Plus bas 52 semaines (28.03$), -7.9% 5j / -12.2% 20j, rumeur de rachat Starbucks dementie : la prime speculative s'evapore ; stage Declin, tendance baissiere etablie. Score fondamental eleve (61.6) freine le pari.",
+   "resultats": {
+    "prix_sortie": 35.279998779296875,
+    "rendement_pct_reel": 28.2,
+    "appel_correct": false
+   }
   },
   {
    "ticker": "BKNG",
@@ -340,7 +400,26 @@
    "contexte_sectoriel": [
     "Consumer Cyclical: pas de signal sectoriel net"
    ],
-   "raison": "Enquete UE sur fraude (actu negative majeure) mais analystes toujours acheteurs, volume 0.9x (pas de panique), -4.7% 5j. Risque reglementaire de long terme, effet court terme probablement limite."
+   "raison": "Enquete UE sur fraude (actu negative majeure) mais analystes toujours acheteurs, volume 0.9x (pas de panique), -4.7% 5j. Risque reglementaire de long terme, effet court terme probablement limite.",
+   "resultats": {
+    "prix_sortie": 159.5800018310547,
+    "rendement_pct_reel": 2.41,
+    "appel_correct": null
+   }
   }
- ]
+ ],
+ "resume_resolution": {
+  "date_resolution": "2026-11-23",
+  "source_prix": "docs/indices.json current_price (maj 2026-11-14, derniere mise a jour disponible dans le depot)",
+  "paris_directionnels_corrects": "1/6",
+  "rendement_moyen_pct_par_type_appel": {
+   "neutre_leger_haussier": -0.4,
+   "neutre": -1.6,
+   "haussier": -18.86,
+   "baissier": 11.16,
+   "incertain": 13.68
+  },
+  "rendement_moyen_pct_tous": 1.03,
+  "lecture_honnete": "Echantillon minuscule, rendements bruts non ajustes du marche, prix de sortie du 2026-11-14 (donnees non rafraichies depuis) donc horizon reel ~19 jours. Appels neutres non notes. Aucune conclusion statistique."
+ }
 }

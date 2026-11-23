@@ -1,5 +1,5 @@
 {
-  "date": "2026-11-22",
+  "date": "2026-11-23",
   "commodity": "petrole",
   "label": "Pétrole (WTI)",
   "composite_score": -52.1,
@@ -10,7 +10,7 @@
       "name": "Dollar (DXY)",
       "score": -10,
       "weight": 0.26666666666666666,
-      "raw_value": "103.84 (il y a 2 mois : 100.60)"
+      "raw_value": "103.75 (il y a 2 mois : 100.60)"
     },
     {
       "name": "Positionnement CFTC",
@@ -28,7 +28,7 @@
       "name": "Dynamique récente",
       "score": -10.0,
       "weight": 0.26666666666666666,
-      "raw_value": "-5.5% vs MM200"
+      "raw_value": "-5.8% vs MM200"
     },
     {
       "name": "Stocks EIA",
@@ -38,9 +38,9 @@
     }
   ],
   "technical": {
-    "note": "Cours en-dessous de la MM200 (-5.5%) — tendance baissière",
-    "spot": 83.41000366210938,
-    "ma200": 88.29040008544922,
+    "note": "Cours en-dessous de la MM200 (-5.8%) — tendance baissière",
+    "spot": 83.2699966430664,
+    "ma200": 88.39185007095337,
     "unite": "$ / baril"
   },
   "calendar": [

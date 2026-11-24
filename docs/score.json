@@ -14,7 +14,7 @@
       "name": "Dollar (DXY)",
       "score": -10,
       "weight": 0.15,
-      "raw_value": "104.28 (il y a 2 mois : 101.10)"
+      "raw_value": "104.01 (il y a 2 mois : 101.29)"
     },
     {
       "name": "Anticipations d'inflation",
@@ -48,9 +48,9 @@
     }
   ],
   "technical": {
-    "note": "Cours en-dessous de la MM200 (-17.5%) — tendance baissière",
-    "spot": 3660.5,
-    "ma200": 4438.083995361329
+    "note": "Cours en-dessous de la MM200 (-18.1%) — tendance baissière",
+    "spot": 3628.699951171875,
+    "ma200": 4430.7849951171875
   },
   "calendar": [
     {
@@ -104,6 +104,42 @@
   ],
   "news": [
     {
+      "title": "Cours de l’or : après le creux des 3 500 dollars, l’once rebondit - business-times.fr",
+      "date": "2026-11-24",
+      "link": "https://news.google.com/rss/articles/CBMiZkFVX3lxTFBmbF83eGQ0ZEs5R2RkTVBCSUVJT2ZHX3Vzby15X2pkNzZhbEktcXk2b0hXNlkwMEEwXzlqdkM4Vk8zVHk3ZW1HSFBqODU2ZUZiLTNmSGtiMm03Y2k5RVRwcE1lUXd1Zw?oc=5",
+      "source": "business-times.fr",
+      "summary": "",
+      "sentiment": 0,
+      "importance": "mineure"
+    },
+    {
+      "title": "23/11 Les cours de l'or et de l'argent rebondissent... | De L'Or - Actualités et analyses - BullionVault FR",
+      "date": "2026-11-23",
+      "link": "https://news.google.com/rss/articles/CBMimgFBVV95cUxQZ01QSTlNUHNja0RyZlBxYmdmRW1Wb0dWampDV29JcUd4dDM1R045NEgtS1JtY2RxN1F6eUc1bUJ2Vjg0S2NUblpWcHpwWUxmM09sZEMtRU1tTnJzakswQXRYcEVhNUI4UXlDS1ZVdWMzUXRvb1RBcFpjZkJPNkozcTlndVJsTEtVbWJQUjYzWWdzZjIySmRfSkpn?oc=5",
+      "source": "BullionVault FR",
+      "summary": "",
+      "sentiment": 0,
+      "importance": "mineure"
+    },
+    {
+      "title": "L’or rebondit et retrouve un peu d’éclat - Le Revenu",
+      "date": "2026-11-24",
+      "link": "https://news.google.com/rss/articles/CBMinAFBVV95cUxPQVY0Vktuam5DNXhOTW1fbU9uUzRaSmdIcWlwWXp2T1B2U2VMM09QdUZMSEpHWk5IYTdjREdUelBjU1dCOWJCWTNGeHYwc3NsMmRxajVPdHJCdERSeFBfcW9zWl9sUXdWX0VQWEpZMktVRFl6aFZrRV93Q05PWEJkUFpCdUtSa1BYUVVCM25KQWQxanE1U1hid19lT2M?oc=5",
+      "source": "Le Revenu",
+      "summary": "",
+      "sentiment": 0,
+      "importance": "mineure"
+    },
+    {
+      "title": "Sell-off : simple retour à la norme ou début du krach ? - Or.fr",
+      "date": "2026-11-24",
+      "link": "https://news.google.com/rss/articles/CBMic0FVX3lxTE1HUExYc3UtanRaUjJhaVZ4Q2dlby1JQmpvZmNEVHAxZ0hkeTJsNVFSd3pVUDU4alFDb05QV0dvSzBGZmprbENmNXkzSUtIVU1leGd5dmdJVGFFVHZVTjB5bG1UcEZYMjBrOVBtTVl1WGpvR1E?oc=5",
+      "source": "Or.fr",
+      "summary": "",
+      "sentiment": 0,
+      "importance": "mineure"
+    },
+    {
       "title": "Valeur refuge : faut-il acheter de l'or pour profiter de la baisse ? - Les Echos",
       "date": "2026-11-23",
       "link": "https://news.google.com/rss/articles/CBMitwFBVV95cUxOcmNIQ2lKc0pGLVY3VlM3YkRXem1uSDRRRjdzRWNZMmJfNEE4VElfOEZVY2Ezc0wtRk9qMTM5aFhhcFU1dmZ2MzVfdG14VjFLSzJXQkNoeUVxaXdNcjBtNFRzV0hDdThTQnJESmVENnpXTDRaNUFlWTYzWTFOM3ZsQ2Q1QVFYeDVhaUJ2TDNQSXlaUzgxSDllQXRZWko1YktWYjJ5SHF1TEJ4eUpSZDdKcFVmT3U0Q28?oc=5",
@@ -111,67 +147,31 @@
       "summary": "",
       "sentiment": 0,
       "importance": "mineure"
-    },
-    {
-      "title": "L'or a perdu près de 37 % de sa valeur, est-ce le moment d'en acheter ? - ABC Bourse",
-      "date": "2026-11-23",
-      "link": "https://news.google.com/rss/articles/CBMirAFBVV95cUxNS2wzOEtRN1VYU1Bkc01tcEZWQ0M1bFpzSDlaRmFaLVg0N2t0V3ExMWhUd3hnUFJOVGJ3N2g4c0t4SWVKODB3SXViRmNkRUlnNkZoWjFEcEJpWHd5d1pFcXN6dzFJRWE0QmVIOGxRbkFDUEhweVRGQ0c0cVljbTBvRG9TaGs0alRBbDlSOFBkNEExcFlRVnVQZzJBTzdVeWpObFZsaEdkamZOUHhG?oc=5",
-      "source": "ABC Bourse",
-      "summary": "",
-      "sentiment": 0,
-      "importance": "mineure"
-    },
-    {
-      "title": "Vous avez de l’or chez vous ? Il a perdu 37% en dix mois, et la chute s’accélère - Capital.fr",
-      "date": "2026-11-20",
-      "link": "https://news.google.com/rss/articles/CBMiugFBVV95cUxQZ29xVk1BWkVJOWFxUEtBVkdWem1vTnlQdFVrY0VSNTlzVjVkMkF6cnlzWVR4Y04wclVuX0xKSGFLc0NvNnBRd3BPeEl0ZUg1eVBHVC1hNV9PMzM1bk51LUdvTE9qUGRtdm83REtTampvSWMtejBQd2ozUDVzdHctS0lnbGh6NEdCc1JsSnhMLUJPQ21Ba29zdmxqdGJHdUp2RHhteHh5WlJsNHNuSTlOVnR4ZXVzT0ZUaGc?oc=5",
-      "source": "Capital.fr",
-      "summary": "",
-      "sentiment": 0,
-      "importance": "mineure"
-    },
-    {
-      "title": "Les cours de l'or ont rebondi de près de 3 % après avoir atteint leur plus bas niveau en 14 mois. - Vietnam.vn",
-      "date": "2026-11-23",
-      "link": "https://news.google.com/rss/articles/CBMigAFBVV95cUxNQWtsWG1ONUhlUnlLejNSaVNOV1NDNU9pRnl0QlluSFY4VXd0NjduNmx3QmdwM1VQRlZNcHg1YUZ1LXhqWVhST18xMTZIZUJwczQ1ZkZKSWVQaktvNXhRX0xPU2N6aDZHYml0SjUyRWlhTE1mTUxUcUUydGpBa244eA?oc=5",
-      "source": "Vietnam.vn",
-      "summary": "",
-      "sentiment": 0,
-      "importance": "mineure"
-    },
-    {
-      "title": "L'or est en pleine chute: qu'est-il arrivé à la \"valeur refuge\"? - magazine GEO",
-      "date": "2026-11-20",
-      "link": "https://news.google.com/rss/articles/CBMie0FVX3lxTE42M0xFcWl4UVExV2lfc3RRZWd1NTNFNEdMeXVFZnQzX2d4QUtZLU9HV3dtV0JDeF9xMUVjeDROQ0V0VElCbFgzdkU5NVplMElsSnU4WXM1QllJY08xdkE2U2hTcnZJYnJ0RVppaE1hNWJyWklwT2ZIOHVtdw?oc=5",
-      "source": "magazine GEO",
-      "summary": "",
-      "sentiment": 0,
-      "importance": "mineure"
     }
   ],
-  "analysis_html": "<h3>Contexte récent</h3><p>Selon plusieurs titres de presse, l'or traverse une correction marquée : environ <strong>37 % de baisse en une dizaine de mois</strong>, avec un plus bas sur 14 mois récemment atteint. Un rebond technique de près de 3 % a suivi ce point bas, sans que cela suffise à inverser la tendance. Le score composite reflète un équilibre fragile entre des vents contraires macro (dollar, inflation anticipée) et des signaux de soutien plus secondaires (positionnement, Fed, demande officielle).</p><h3>Facteurs déterminants</h3><ul><li><strong>Dollar (DXY), principal frein :</strong> avec un score de -10 (le plus défavorable de l'échelle) et un poids de 15 %, c'est la contribution pondérée négative la plus lourde du score. Le DXY est passé de 101,10 à 104,06 en deux mois (environ +2,9 %). Un dollar plus fort renchérit l'or pour les acheteurs hors zone dollar et pèse traditionnellement sur son cours.</li><li><strong>Anticipations d'inflation, second frein :</strong> score de -6 (poids 15 %). Le recul de 2,33 % à 2,15 % en environ 45 jours réduit l'attrait de l'or comme couverture contre l'inflation.</li><li><strong>Taux réels US 10 ans, quasi neutres :</strong> malgré le poids le plus élevé (30 %), leur score (+0,6) n'a qu'un effet marginal. La légère baisse de 2,91 % à 2,88 % est à peine favorable, alors que le niveau absolu reste élevé et maintient un coût d'opportunité important pour la détention d'un actif sans rendement.</li><li><strong>Ton de la Fed, soutien notable :</strong> le score de +5 (saisie manuelle, poids 15 %) compense une partie des pressions négatives. C'est le principal contrepoids parmi les facteurs fortement pondérés.</li><li><strong>Positionnement CFTC, signal de soutien :</strong> la position nette spéculative (166 132 contrats) se situe au 16e percentile sur trois ans, d'où un score de +6,8 (poids 10 %). Un positionnement aussi allégé suggère qu'une grande partie de la liquidation spéculative a déjà eu lieu. Le modèle l'interprète comme un facteur de soutien d'inspiration contrarienne.</li><li><strong>Flux ETF et banques centrales, appuis secondaires :</strong> les flux ETF (GLD + IAU, +3, poids 10 %) sont modestement positifs. Les achats des banques centrales (+7) sont nettement favorables, mais leur faible pondération (5 %) limite leur influence sur le score.</li></ul><h3>Actualités à retenir</h3><p>Aucune actualité récente n'est classée comme <strong>notable ou majeure</strong>. Les cinq articles recensés sont tous jugés mineurs et n'apportent pas d'élément nouveau susceptible de modifier directement les facteurs du score. Ils documentent surtout l'ampleur de la baisse (environ -37 % selon Capital.fr et ABC Bourse, plus bas sur 14 mois) et le rebond d'environ 3 % qui a suivi. Ils s'interrogent aussi sur le rôle de « valeur refuge » de l'or. Cette couverture médiatique illustre un sentiment dégradé, cohérent avec le positionnement CFTC historiquement bas observé dans les données.</p><h3>Synthèse</h3><p>Le score composite résulte d'un arbitrage entre deux blocs. D'un côté, des <strong>facteurs macro défavorables</strong> : la nette appréciation du dollar et le reflux des anticipations d'inflation. De l'autre, des <strong>éléments de soutien</strong> : un ton de la Fed jugé favorable, un positionnement spéculatif très allégé, des flux ETF légèrement positifs et des achats de banques centrales. Les taux réels, malgré leur poids dominant, restent quasi neutres et ne départagent pas ces deux blocs. Le tableau qui en ressort est globalement équilibré, voire légèrement fragile. La trajectoire du dollar et des anticipations d'inflation apparaît comme le principal déterminant des prochaines évolutions du score. Cette analyse est descriptive et ne constitue pas une recommandation d'investissement.</p>",
+  "analysis_html": "<h3>Contexte récent</h3><p>L'or sort d'une phase de correction marquée, qualifiée de sell-off par une partie de la presse spécialisée, au cours de laquelle l'once est revenue vers la zone des 3 500 dollars avant d'amorcer un rebond. Ce mouvement intervient dans un environnement macro contrasté : le dollar s'est nettement raffermi et les anticipations d'inflation ont reculé, tandis que les taux réels américains ont légèrement baissé.</p><h3>Facteurs déterminants</h3><p>Les forces haussières et baissières se compensent en grande partie. Le score composite ne dégage donc pas de signal directionnel tranché.</p><ul><li><strong>Dollar (DXY), principal frein :</strong> avec un score de -10,0 et un poids de 15%, c'est le facteur au plus fort impact négatif (contribution d'environ -1,5 point). Le DXY est passé de 101,29 à 104,01 en deux mois. Un dollar plus fort renchérit l'or pour les acheteurs hors zone dollar et pèse traditionnellement sur le métal.</li><li><strong>Anticipations d'inflation, second frein :</strong> leur recul de 2,33% à 2,13% en environ 45 jours se traduit par un score de -6,7 (poids 15%, contribution d'environ -1,0 point). Cette baisse affaiblit la demande d'or comme couverture contre l'inflation.</li><li><strong>Ton de la Fed, soutien principal :</strong> le score de +5,0 (poids 15%, contribution d'environ +0,75 point) reflète une orientation jugée favorable au métal. Il s'agit toutefois d'une saisie manuelle, donc d'une appréciation qualitative.</li><li><strong>Positionnement CFTC, signal de contre-tendance :</strong> la position nette spéculative de 166 132 contrats se situe au 16e percentile sur 3 ans, ce qui donne un score de +6,8 (poids 10%, contribution d'environ +0,7 point). Ce faible niveau relatif suggère une purge du positionnement après la correction, et donc un risque réduit de liquidations supplémentaires.</li><li><strong>Taux réels US 10 ans, soutien modéré :</strong> le léger repli de 2,88% à 2,77% se traduit par un score de +2,2. Grâce à son poids élevé (30%), ce facteur contribue à hauteur d'environ +0,7 point. Le niveau des taux réels reste néanmoins élevé, ce qui limite son effet favorable.</li><li><strong>Facteurs secondaires positifs :</strong> les flux ETF (GLD + IAU) ont un score de +3,0 (poids 10%) et les achats des banques centrales un score de +7,0 (poids 5%). Ces deux saisies manuelles apportent un soutien d'appoint, d'environ +0,3 et +0,35 point.</li></ul><h3>Actualités à retenir</h3><p>Aucune actualité classée notable ou majeure n'a été recensée sur la période. Les cinq articles retenus sont tous de portée mineure et convergent vers un même récit : un rebond de l'or après un creux autour de 3 500 dollars, à la suite d'un épisode de ventes marqué.</p><p>Ce récit est cohérent avec deux éléments du score :</p><ul><li>le positionnement CFTC bas, compatible avec un nettoyage des positions spéculatives pendant le sell-off ;</li><li>la pression exercée par le dollar et le recul des anticipations d'inflation, qui peuvent expliquer l'ampleur de la correction.</li></ul><p>Les interrogations de la presse, entre simple normalisation et début de krach, illustrent l'incertitude sur la nature du mouvement, sans apporter d'élément fondamental nouveau.</p><h3>Synthèse</h3><p>Le score composite de l'or reflète un équilibre entre deux blocs :</p><ul><li><strong>Vents contraires macro :</strong> un dollar plus fort et des anticipations d'inflation en baisse.</li><li><strong>Soutiens :</strong> un ton de la Fed jugé favorable, un positionnement spéculatif allégé, une légère détente des taux réels, ainsi que des flux ETF et des achats de banques centrales positifs.</li></ul><p>La lecture d'ensemble est proche de la neutralité. Le rebond récent rapporté par l'actualité s'inscrit dans ce contexte, sans qu'aucune nouvelle majeure ne vienne modifier l'équilibre des facteurs. Plusieurs composantes reposent sur des saisies manuelles, ce qui invite à interpréter ces signaux avec prudence.</p>",
   "news_classifications": {
+    "https://news.google.com/rss/articles/CBMiZkFVX3lxTFBmbF83eGQ0ZEs5R2RkTVBCSUVJT2ZHX3Vzby15X2pkNzZhbEktcXk2b0hXNlkwMEEwXzlqdkM4Vk8zVHk3ZW1HSFBqODU2ZUZiLTNmSGtiMm03Y2k5RVRwcE1lUXd1Zw?oc=5": {
+      "summary": "",
+      "sentiment": 0,
+      "importance": "mineure"
+    },
+    "https://news.google.com/rss/articles/CBMimgFBVV95cUxQZ01QSTlNUHNja0RyZlBxYmdmRW1Wb0dWampDV29JcUd4dDM1R045NEgtS1JtY2RxN1F6eUc1bUJ2Vjg0S2NUblpWcHpwWUxmM09sZEMtRU1tTnJzakswQXRYcEVhNUI4UXlDS1ZVdWMzUXRvb1RBcFpjZkJPNkozcTlndVJsTEtVbWJQUjYzWWdzZjIySmRfSkpn?oc=5": {
+      "summary": "",
+      "sentiment": 0,
+      "importance": "mineure"
+    },
+    "https://news.google.com/rss/articles/CBMinAFBVV95cUxPQVY0Vktuam5DNXhOTW1fbU9uUzRaSmdIcWlwWXp2T1B2U2VMM09QdUZMSEpHWk5IYTdjREdUelBjU1dCOWJCWTNGeHYwc3NsMmRxajVPdHJCdERSeFBfcW9zWl9sUXdWX0VQWEpZMktVRFl6aFZrRV93Q05PWEJkUFpCdUtSa1BYUVVCM25KQWQxanE1U1hid19lT2M?oc=5": {
+      "summary": "",
+      "sentiment": 0,
+      "importance": "mineure"
+    },
+    "https://news.google.com/rss/articles/CBMic0FVX3lxTE1HUExYc3UtanRaUjJhaVZ4Q2dlby1JQmpvZmNEVHAxZ0hkeTJsNVFSd3pVUDU4alFDb05QV0dvSzBGZmprbENmNXkzSUtIVU1leGd5dmdJVGFFVHZVTjB5bG1UcEZYMjBrOVBtTVl1WGpvR1E?oc=5": {
+      "summary": "",
+      "sentiment": 0,
+      "importance": "mineure"
+    },
     "https://news.google.com/rss/articles/CBMitwFBVV95cUxOcmNIQ2lKc0pGLVY3VlM3YkRXem1uSDRRRjdzRWNZMmJfNEE4VElfOEZVY2Ezc0wtRk9qMTM5aFhhcFU1dmZ2MzVfdG14VjFLSzJXQkNoeUVxaXdNcjBtNFRzV0hDdThTQnJESmVENnpXTDRaNUFlWTYzWTFOM3ZsQ2Q1QVFYeDVhaUJ2TDNQSXlaUzgxSDllQXRZWko1YktWYjJ5SHF1TEJ4eUpSZDdKcFVmT3U0Q28?oc=5": {
-      "summary": "",
-      "sentiment": 0,
-      "importance": "mineure"
-    },
-    "https://news.google.com/rss/articles/CBMirAFBVV95cUxNS2wzOEtRN1VYU1Bkc01tcEZWQ0M1bFpzSDlaRmFaLVg0N2t0V3ExMWhUd3hnUFJOVGJ3N2g4c0t4SWVKODB3SXViRmNkRUlnNkZoWjFEcEJpWHd5d1pFcXN6dzFJRWE0QmVIOGxRbkFDUEhweVRGQ0c0cVljbTBvRG9TaGs0alRBbDlSOFBkNEExcFlRVnVQZzJBTzdVeWpObFZsaEdkamZOUHhG?oc=5": {
-      "summary": "",
-      "sentiment": 0,
-      "importance": "mineure"
-    },
-    "https://news.google.com/rss/articles/CBMiugFBVV95cUxQZ29xVk1BWkVJOWFxUEtBVkdWem1vTnlQdFVrY0VSNTlzVjVkMkF6cnlzWVR4Y04wclVuX0xKSGFLc0NvNnBRd3BPeEl0ZUg1eVBHVC1hNV9PMzM1bk51LUdvTE9qUGRtdm83REtTampvSWMtejBQd2ozUDVzdHctS0lnbGh6NEdCc1JsSnhMLUJPQ21Ba29zdmxqdGJHdUp2RHhteHh5WlJsNHNuSTlOVnR4ZXVzT0ZUaGc?oc=5": {
-      "summary": "",
-      "sentiment": 0,
-      "importance": "mineure"
-    },
-    "https://news.google.com/rss/articles/CBMigAFBVV95cUxNQWtsWG1ONUhlUnlLejNSaVNOV1NDNU9pRnl0QlluSFY4VXd0NjduNmx3QmdwM1VQRlZNcHg1YUZ1LXhqWVhST18xMTZIZUJwczQ1ZkZKSWVQaktvNXhRX0xPU2N6aDZHYml0SjUyRWlhTE1mTUxUcUUydGpBa244eA?oc=5": {
-      "summary": "",
-      "sentiment": 0,
-      "importance": "mineure"
-    },
-    "https://news.google.com/rss/articles/CBMie0FVX3lxTE42M0xFcWl4UVExV2lfc3RRZWd1NTNFNEdMeXVFZnQzX2d4QUtZLU9HV3dtV0JDeF9xMUVjeDROQ0V0VElCbFgzdkU5NVplMElsSnU4WXM1QllJY08xdkE2U2hTcnZJYnJ0RVppaE1hNWJyWklwT2ZIOHVtdw?oc=5": {
       "summary": "",
       "sentiment": 0,
       "importance": "mineure"

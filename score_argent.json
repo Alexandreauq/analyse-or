@@ -2,7 +2,7 @@
   "date": "2026-11-25",
   "commodity": "argent",
   "label": "Argent",
-  "composite_score": 0.3,
+  "composite_score": 5.4,
   "interpretation": "Neutre — pas d'action",
   "cftc_percentile": 3.205128205128205,
   "factors": [
@@ -16,7 +16,7 @@
       "name": "Dollar (DXY)",
       "score": -10,
       "weight": 0.2,
-      "raw_value": "103.97 (il y a 2 mois : 101.29)"
+      "raw_value": "103.97 (il y a 2 mois : 100.97)"
     },
     {
       "name": "Positionnement CFTC",
@@ -26,21 +26,21 @@
     },
     {
       "name": "Ratio or/argent",
-      "score": 4.358407079646019,
+      "score": 6.397790055248618,
       "weight": 0.25,
-      "raw_value": "87.5 — 72e percentile (3 ans)"
+      "raw_value": "89.0 — 82e percentile (3 ans)"
     },
     {
       "name": "Dynamique récente",
       "score": -10.0,
       "weight": 0.1,
-      "raw_value": "-39.6% vs MM200"
+      "raw_value": "-41.5% vs MM200"
     }
   ],
   "technical": {
-    "note": "Cours en-dessous de la MM200 (-39.6%) — tendance baissière",
-    "spot": 40.56999969482422,
-    "ma200": 67.13442481994629,
+    "note": "Cours en-dessous de la MM200 (-41.5%) — tendance baissière",
+    "spot": 39.16999816894531,
+    "ma200": 66.93013479232788,
     "unite": "$ / oz"
   },
   "calendar": [
@@ -89,7 +89,7 @@
   "news": [
     {
       "title": "Prévisions du cours de l’argent pour 2026, 2027, 2028–2030 et au-delà - LiteFinance",
-      "date": "2026-11-23",
+      "date": "2026-11-24",
       "link": "https://news.google.com/rss/articles/CBMiggFBVV95cUxQMzJNaUdZQlVJajk1cHlxaTdsN3FaS1IwRUxzcXR3OGhWVFJLMTBOc1ZwcUE2OHN6aVNPaFpJX1FIampDakphX0UtXzhfdm9IVDNYVVlNYTFhcHQtSEpCcENzVi1Ib0dxOGM0SlFxNHJVWjV5ejRHWEgzVDBiNkxudkJn?oc=5",
       "source": "LiteFinance",
       "summary": "",
@@ -97,9 +97,18 @@
       "importance": "mineure"
     },
     {
-      "title": "Prévisions du cours de l’argent : le XAG/USD poursuit son redressement au-dessus de 43 $ ; les perspectives restent prudentes - www.tmgm.com",
+      "title": "Les cours de l’or et de l’argent sont en baisse : est-ce le bon moment pour acheter ? - Epoch Times",
       "date": "2026-11-24",
-      "link": "https://news.google.com/rss/articles/CBMi3AFBVV95cUxNOXJUdkZ5TkR0dWsxMV9WaFB6Zm4xaHN5X0FXM3Fya25zVTNVSTE5U0N0N1NhdFZ0cWJ4eDc3ZlZYMjZQU3dlSHlWLXNIM2lGWDFDMVkzRmhZaTY3TGR6YVU2aGt0OE5SMUg0RlZjOFR6b1A4Rl9fVVktUmlIN3pPMHRmN3dPWFA2WC1rNHo1c09MMjdtamtSVnRpekk3S2cwYUpOaDgtNklCRUZyY2RsLVFmeU1WNzlPdUhvVFhwRlhXa3pfR3prNDlicWdGc0VKZlJfd3FTYnFfbVhM?oc=5",
+      "link": "https://news.google.com/rss/articles/CBMiugFBVV95cUxNZlpGOUV5T1Vaa1VCZHVNY3VGbV9NN2Fxb1pEUnZ0OEp6eEJMSEhJaXk1bVU2blh3NURwaWpsajdpb1VUakJFRmpBajNCSTZkb1VrdGhzVFFaTE5JY0g0YUcyeVVxd3YzbWFNajFISm1mb18zcFFuc3Vnd25NdUpMajBEWnF0NGtqMDNyM3JxUGs2bTlwM3VEay1XdEtaTkxUa0I1Y0JhXzNHSEhzcmdaaHN3bGEyejBYMWc?oc=5",
+      "source": "Epoch Times",
+      "summary": "",
+      "sentiment": 0,
+      "importance": "mineure"
+    },
+    {
+      "title": "Cours de l’argent aujourd’hui : le métal recule, selon les données de FXStreet - www.tmgm.com",
+      "date": "2026-11-20",
+      "link": "https://news.google.com/rss/articles/CBMiwgFBVV95cUxNQk55b0dVaG1hYmhua0RwTjlZV2ZFdGV0MDVRb2ItSkFNeUZicHY4R0tNc2JjNUFGVU5BWHRDNFFPSHNQZ2lWU1NUNzNTUFN6a25rWWdTOEw1VVNlaXY5RFU1MWFKejdObDRWeHlibjVyYjNBMkVjcEJPbmVpXzhtMEJLZEU2SVNFZWxNWFJUUjRySi1zWjBGRzI3WURwbXZyX3JLT3MxVUhUVnZTTGluTEVzR1BKWjdfWVIyOXJ2Q0FVUQ?oc=5",
       "source": "www.tmgm.com",
       "summary": "",
       "sentiment": 0,
@@ -122,25 +131,21 @@
       "summary": "",
       "sentiment": 0,
       "importance": "mineure"
-    },
-    {
-      "title": "Le cours de l’argent se stabilise autour de 50 dollars l’once, tandis que le solaire accélère sa transition vers le cuivre - pv magazine France",
-      "date": "2026-11-19",
-      "link": "https://news.google.com/rss/articles/CBMi7wFBVV95cUxQOVFfQXFnc29HeVV6LXM3U1ByLW9NVGtXNW1tMWZZZDAzWldTMVg2bmM5OUlpamVUeHhfN2E4S2RvWjBRZ2d4RTNJTFpoYjBpbGhKRW9ldnhSYkRmQVNhTmp0a0w4ZldSR1JEclBzVjJZclNKVmxCT1NtTWZHOURCX2lmRnhhNXAwMGxQTERhbURiRlNvMUhtTnZTam9HSWNXRXJhdGd0V3NjT0V2UUpUaHhsRlJZR3hObDFlLWY4aDlFMVRLMkFVUktyNTZwVGNwOVl3MEhxbUZjTVBIZ2ZpNGplcWlaSDRoME01OXBjQQ?oc=5",
-      "source": "pv magazine France",
-      "summary": "",
-      "sentiment": 0,
-      "importance": "mineure"
     }
   ],
-  "analysis_html": "<h3>Contexte récent</h3><p>L'argent traverse une phase de correction marquée après une année très volatile : le cours se situe à <strong>-37,4 % sous sa moyenne mobile 200 jours</strong>. Les sources récentes évoquent une stabilisation, avec des niveaux cités entre environ 43 $ et 50 $ l'once selon les dates de publication. Le contexte macro reste partagé : le dollar se renforce, tandis que les taux réels américains reculent légèrement.</p><h3>Facteurs déterminants</h3><ul><li><strong>Dollar (DXY), score -10,0, poids 20 %</strong> : c'est le principal frein. Le DXY est passé de 101,29 à 104,01 en deux mois. Cette appréciation nette renchérit l'argent pour les acheteurs hors zone dollar et pèse traditionnellement sur les métaux précieux. Combinant un score extrême et un poids significatif, c'est la contribution négative la plus lourde du score.</li><li><strong>Positionnement CFTC, score +9,4, poids 15 %</strong> : c'est le principal soutien. La position nette spéculative (18 291 contrats) se situe au <strong>3e percentile sur 3 ans</strong>, ce qui traduit un positionnement très allégé. Selon une lecture contrariante, cela limite le potentiel de ventes forcées supplémentaires et laisse de la marge à un repositionnement acheteur.</li><li><strong>Dynamique récente, score -10,0, poids 10 %</strong> : l'écart de -37,4 % sous la MM200 traduit une tendance technique fortement dégradée. Son poids plus faible modère toutefois son influence.</li><li><strong>Ratio or/argent, score +2,9, poids 25 %</strong> : à 86,3 (65e percentile sur 3 ans), l'argent apparaît modérément bon marché relativement à l'or. Le signal est positif mais peu marqué. Son poids élevé lui confère néanmoins une contribution non négligeable.</li><li><strong>Taux réels US 10 ans, score +2,2, poids 30 %</strong> : le léger repli de 2,88 % à 2,77 % en environ 45 jours réduit le coût d'opportunité de la détention d'un actif sans rendement. Malgré le poids le plus élevé du score, le signal reste faible, car la baisse est modeste et le niveau des taux réels demeure élevé.</li></ul><p>Au total, les forces s'opposent. Les signaux négatifs, dollar fort et tendance dégradée, sont extrêmes. Les signaux positifs sont plus diffus : positionnement très bas, ratio or/argent et taux réels légèrement favorables. Cet ensemble suggère un score composite proche de l'équilibre.</p><h3>Actualités à retenir</h3><p>Aucune actualité n'est classée notable ou majeure : les cinq articles recensés sont jugés mineurs et ne constituent pas un catalyseur identifiable de l'évolution du score. Ils éclairent toutefois le contexte :</p><ul><li>Plusieurs sources (Comptoir National de l'Or, RFI, TMGM) décrivent une recherche d'équilibre après une forte correction, avec des niveaux de prix qui restent élevés en perspective historique. Ce constat est cohérent avec la forte baisse relative à la MM200.</li><li>pv magazine signale que la filière solaire accélère sa transition vers le cuivre. Ce thème de substitution pourrait, à terme, peser sur la demande industrielle d'argent. Il n'est cependant pas directement capté par les facteurs du score.</li></ul><h3>Synthèse</h3><p>Le score de l'argent reflète une situation tiraillée. D'un côté, un <strong>dollar en nette appréciation</strong> et une <strong>dynamique de prix fortement dégradée</strong> pèsent sur le métal. De l'autre, un <strong>positionnement spéculatif historiquement bas</strong>, un ratio or/argent légèrement favorable et un léger recul des taux réels apportent un soutien. L'absence d'actualité majeure indique que l'évolution récente s'explique davantage par ces facteurs macro et de marché que par un événement spécifique. Le thème de la substitution dans le solaire constitue un point de vigilance structurel hors du périmètre du score.</p>",
+  "analysis_html": "<h3>Contexte récent</h3><p>Après une année marquée par une très forte volatilité, l'argent traverse une phase de correction prononcée : le cours se situe désormais 41,5 % sous sa moyenne mobile à 200 jours. Le métal évolue dans un environnement macro mitigé, entre un dollar qui se raffermit nettement et des taux réels américains en légère détente.</p><h3>Facteurs déterminants</h3><ul><li><strong>Dollar (DXY), principal facteur négatif :</strong> score de -10,0 avec un poids de 20 %. L'indice est passé d'environ 100,97 à 103,97 en deux mois. Cette appréciation de 3 points renchérit les métaux libellés en dollars pour les acheteurs hors zone dollar. C'est le frein le plus lourd du score actuel.</li><li><strong>Ratio or/argent, principal facteur positif :</strong> score de +6,4 avec un poids de 25 %. À 89,0, le ratio se situe au 82e percentile sur trois ans. L'argent apparaît donc relativement bon marché par rapport à l'or, ce qui constitue historiquement un élément de soutien potentiel en valeur relative.</li><li><strong>Positionnement CFTC, signal contrarien favorable :</strong> score de +9,4 avec un poids de 15 %. La position nette spéculative de 18 291 contrats se situe au 3e percentile sur trois ans. Les spéculateurs sont donc très peu exposés à la hausse. Ce positionnement allégé limite le risque de liquidations supplémentaires et est interprété comme un facteur positif par le score.</li><li><strong>Dynamique récente, nettement négative :</strong> score de -10,0 avec un poids de 10 %. L'écart de -41,5 % par rapport à la moyenne mobile à 200 jours traduit une tendance baissière marquée. Le poids modéré de ce facteur en limite toutefois l'impact sur l'ensemble.</li><li><strong>Taux réels US 10 ans, soutien modeste :</strong> score de +1,8 avec le poids le plus élevé (30 %). Le recul de 2,88 % à 2,79 % en environ 45 jours réduit légèrement le coût d'opportunité de détenir un actif sans rendement. L'ampleur limitée du mouvement en fait toutefois un contributeur faible.</li></ul><p>En pondérant, les facteurs de valorisation relative et de positionnement (ratio or/argent, CFTC) compensent globalement les vents contraires du dollar et de la dynamique de prix. Le score composite se retrouve ainsi dans une zone d'équilibre, proche de la neutralité.</p><h3>Actualités à retenir</h3><p>Aucune actualité notable ou majeure ne figure parmi les informations récentes : les cinq éléments recensés sont tous classés mineurs. Ils consistent surtout en des commentaires de marché et des prévisions de long terme, sans événement susceptible de modifier directement les facteurs du score. Ils confirment néanmoins le contexte décrit :</p><ul><li>une phase de baisse des cours, relevée par plusieurs sources (FXStreet via TMGM, Epoch Times) ;</li><li>une recherche d'un nouvel équilibre après une année jugée exceptionnelle (Le Comptoir National de l'Or) ;</li><li>des niveaux de prix qui resteraient élevés dans une perspective historique malgré la correction (RFI).</li></ul><h3>Synthèse</h3><p>L'argent se trouve dans une configuration contrastée. D'un côté, la vigueur récente du dollar et une dynamique de prix fortement dégradée pèsent sur le score. De l'autre, une valorisation relative favorable face à l'or et un positionnement spéculatif très allégé apportent des éléments de soutien. La légère baisse des taux réels n'offre qu'un appui marginal. En l'absence d'actualité majeure, l'évolution du score dépendra principalement de la trajectoire du dollar et des taux réels, ainsi que de l'éventuelle normalisation du positionnement et du ratio or/argent.</p>",
   "news_classifications": {
     "https://news.google.com/rss/articles/CBMiggFBVV95cUxQMzJNaUdZQlVJajk1cHlxaTdsN3FaS1IwRUxzcXR3OGhWVFJLMTBOc1ZwcUE2OHN6aVNPaFpJX1FIampDakphX0UtXzhfdm9IVDNYVVlNYTFhcHQtSEpCcENzVi1Ib0dxOGM0SlFxNHJVWjV5ejRHWEgzVDBiNkxudkJn?oc=5": {
       "summary": "",
       "sentiment": 0,
       "importance": "mineure"
     },
-    "https://news.google.com/rss/articles/CBMi3AFBVV95cUxNOXJUdkZ5TkR0dWsxMV9WaFB6Zm4xaHN5X0FXM3Fya25zVTNVSTE5U0N0N1NhdFZ0cWJ4eDc3ZlZYMjZQU3dlSHlWLXNIM2lGWDFDMVkzRmhZaTY3TGR6YVU2aGt0OE5SMUg0RlZjOFR6b1A4Rl9fVVktUmlIN3pPMHRmN3dPWFA2WC1rNHo1c09MMjdtamtSVnRpekk3S2cwYUpOaDgtNklCRUZyY2RsLVFmeU1WNzlPdUhvVFhwRlhXa3pfR3prNDlicWdGc0VKZlJfd3FTYnFfbVhM?oc=5": {
+    "https://news.google.com/rss/articles/CBMiugFBVV95cUxNZlpGOUV5T1Vaa1VCZHVNY3VGbV9NN2Fxb1pEUnZ0OEp6eEJMSEhJaXk1bVU2blh3NURwaWpsajdpb1VUakJFRmpBajNCSTZkb1VrdGhzVFFaTE5JY0g0YUcyeVVxd3YzbWFNajFISm1mb18zcFFuc3Vnd25NdUpMajBEWnF0NGtqMDNyM3JxUGs2bTlwM3VEay1XdEtaTkxUa0I1Y0JhXzNHSEhzcmdaaHN3bGEyejBYMWc?oc=5": {
+      "summary": "",
+      "sentiment": 0,
+      "importance": "mineure"
+    },
+    "https://news.google.com/rss/articles/CBMiwgFBVV95cUxNQk55b0dVaG1hYmhua0RwTjlZV2ZFdGV0MDVRb2ItSkFNeUZicHY4R0tNc2JjNUFGVU5BWHRDNFFPSHNQZ2lWU1NUNzNTUFN6a25rWWdTOEw1VVNlaXY5RFU1MWFKejdObDRWeHlibjVyYjNBMkVjcEJPbmVpXzhtMEJLZEU2SVNFZWxNWFJUUjRySi1zWjBGRzI3WURwbXZyX3JLT3MxVUhUVnZTTGluTEVzR1BKWjdfWVIyOXJ2Q0FVUQ?oc=5": {
       "summary": "",
       "sentiment": 0,
       "importance": "mineure"
@@ -151,11 +156,6 @@
       "importance": "mineure"
     },
     "https://news.google.com/rss/articles/CBMitgJBVV95cUxQRlZNeG9jaEZLQXY1TXl5b0dUZktCcDFSbTBMZi1jY3FGSU11Z3Q1UzdFTWFQTEp2a0wzWll3TkNoR1ZFR3ZHMjJnSk5iWlV4TVNhdjhHVzZlb3M5M1FyZjRyUnVJaktkS3BtWnNjZURsRWxmaVZaMVlFSjNfYi0xWWQ2aVQtVHVaTzE0QkNxQ2RTUi11MmpncGhld0dZNXFaM2I1bXpXYnp0WEg1N1ZfSmxJdHdMdldsQTItSGR4ZmhqODk0MVpBbC1LRl9xWndqTl9hMGpxSF9RRTU0bkJrVDB4WFJyOS1xaEQyWmtQcXFnTkw5dG5RWEFVcnNuZVplTFRIUzVnUTRIN1NuemVUN2xkdzVSVDRfbHdrQUpGRG1ab0VWLUNMT3NTd3luRThDV1M3RHFn?oc=5": {
-      "summary": "",
-      "sentiment": 0,
-      "importance": "mineure"
-    },
-    "https://news.google.com/rss/articles/CBMi7wFBVV95cUxQOVFfQXFnc29HeVV6LXM3U1ByLW9NVGtXNW1tMWZZZDAzWldTMVg2bmM5OUlpamVUeHhfN2E4S2RvWjBRZ2d4RTNJTFpoYjBpbGhKRW9ldnhSYkRmQVNhTmp0a0w4ZldSR1JEclBzVjJZclNKVmxCT1NtTWZHOURCX2lmRnhhNXAwMGxQTERhbURiRlNvMUhtTnZTam9HSWNXRXJhdGd0V3NjT0V2UUpUaHhsRlJZR3hObDFlLWY4aDlFMVRLMkFVUktyNTZwVGNwOVl3MEhxbUZjTVBIZ2ZpNGplcWlaSDRoME01OXBjQQ?oc=5": {
       "summary": "",
       "sentiment": 0,
       "importance": "mineure"

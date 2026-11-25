@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-24T07:11:15Z",
+  "generated_at": "2026-11-25T07:11:03Z",
   "healthy": false,
-  "summary_fr": "Le bot continue d'analyser le marché de l'or en continu : 432 cycles d'évaluation ont été réalisés aujourd'hui et 9 072 sur les 7 derniers jours. Aucune position n'a été ouverte sur les 7 derniers jours. Le bot est actuellement en pause volontaire (le coupe-circuit de sécurité est activé), il surveille donc le marché sans passer de nouvel ordre."
+  "summary_fr": "Le bot a évalué 432 situations de marché aujourd'hui et 9 072 sur les 7 derniers jours, sans ouvrir aucune position sur cette période. Le bot est actuellement en pause : son interrupteur de sécurité est activé, ce qui l'empêche de prendre de nouvelles positions, même s'il continue d'analyser le marché en continu. Aucune intervention n'est requise de votre part."
 }

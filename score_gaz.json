@@ -22,13 +22,13 @@
       "name": "Dynamique récente",
       "score": 10.0,
       "weight": 0.26666666666666666,
-      "raw_value": "+23.5% vs MM200"
+      "raw_value": "+22.0% vs MM200"
     },
     {
       "name": "Dollar (DXY)",
       "score": -10,
       "weight": 0.13333333333333333,
-      "raw_value": "103.83 (il y a 2 mois : 101.20)"
+      "raw_value": "103.77 (il y a 2 mois : 101.20)"
     },
     {
       "name": "Stocks EIA",
@@ -38,9 +38,9 @@
     }
   ],
   "technical": {
-    "note": "Cours au-dessus de la MM200 (+23.5%) — tendance haussière",
-    "spot": 3.6679999828338623,
-    "ma200": 2.9692349994182585,
+    "note": "Cours au-dessus de la MM200 (+22.0%) — tendance haussière",
+    "spot": 3.621000051498413,
+    "ma200": 2.9689999997615812,
     "unite": "$ / MMBtu"
   },
   "calendar": [
@@ -88,37 +88,19 @@
   "alerts": [],
   "news": [
     {
+      "title": "Prix du gaz : le marché a fini la semaine en hausse de 5,3 %, le niveau exact du PEG ce 21 novembre - Selectra",
+      "date": "2026-11-21",
+      "link": "https://news.google.com/rss/articles/CBMibEFVX3lxTE9LQ25MTXpTZkd5c0JPT3pQSjctc1Nnakd0LXVxWHBTT0R1b2J3RUhXOVFaVmoyTTNoWjNjSmtaODhWZmFaVlZmVXlrbmtlYVR5OXI5NmIwTkV2VUJnTkExTm5sekUzbml1Z2RuXw?oc=5",
+      "source": "Selectra",
+      "summary": "",
+      "sentiment": 0,
+      "importance": "mineure"
+    },
+    {
       "title": "Les prix du gaz naturel européen chutent avec des prévisions météo plus douces - Investing.com France",
       "date": "2026-11-25",
       "link": "https://news.google.com/rss/articles/CBMizgFBVV95cUxNSDI0Nkw1bDRUYzJ0SEhmXy12Y1ZRaUxxUS1zbnBLeVVBU1M2TTVHVzFZaGo0Y3BnajFHRkZoei1LUW43YXlxMGFVSzYxZGxjOHpGUkJZSGxuZHl4QkE3MGZJTi10UF9Cbm9OcU9lN3lobjRZajJ5Sk9XR2NBS0N3ZDhKRDVMR2NSWUlsSGVkUjZyYjRTQ1A1SkI5Sk0wX3VacGgzZmRnSEkxWG9vRnZkanhnOUdFa296NTV5b3BjQks2b1ZhdGxrY0kyWFBwQQ?oc=5",
       "source": "Investing.com France",
-      "summary": "",
-      "sentiment": 0,
-      "importance": "mineure"
-    },
-    {
-      "title": "Énergie -Le prix repère de vente de gaz va augmenter de 5,8 % en décembre - Service Public",
-      "date": "2026-11-10",
-      "link": "https://news.google.com/rss/articles/CBMic0FVX3lxTE1aLXB2OUQ5dWpLU3R0OHRqeXlrb3RwdXByenR5aTY5Y0tKa0xEZGdhVElrWjVZUzVjd3hlVkVjdmY0aE1oMnpTd01XZC1wbk1oY3FickFLVkxyY2dwSTJTbXdBc3lpUkMtZ25FbGVjRHR1aXc?oc=5",
-      "source": "Service Public",
-      "summary": "",
-      "sentiment": 0,
-      "importance": "mineure"
-    },
-    {
-      "title": "Genève : Le gaz naturel va coûter 9,5 % plus cher en 2027 - La Radio Plus",
-      "date": "2026-11-25",
-      "link": "https://news.google.com/rss/articles/CBMiowFBVV95cUxNUDZDQ3JwNUZyaFE0anpHSjQzWHdJMGtsbndBeXNRdHN3YU54amRFYk1yQV96S1ZVUDR1bE9DMUZJNWVOQnQ3ck1Ud2pGWHdLbEtJSFdLbGZVMmxKQVc3S0JfeDBxX0xvRktqZmd2dUNEVXZTd2lfSUJnbk9kQ3ExcTRWbEd3Z2tQNkgyaTRkdnkwMnJHV1hUdlFhWGFZOGQ4R3NF?oc=5",
-      "source": "La Radio Plus",
-      "summary": "",
-      "sentiment": 0,
-      "importance": "mineure"
-    },
-    {
-      "title": "Ofgem relève le plafond de prix de l'énergie de la Grande-Bretagne pour l'hiver - energynews.pro",
-      "date": "2026-11-25",
-      "link": "https://news.google.com/rss/articles/CBMiogFBVV95cUxPenZXd1liTDBsRm02YVFBMFFQajlIc202QmwtemFsVjNuZ29uN0ZJZUhDVVhuUlpGMko5MFY4YjMtNm80ellpa1F4MXZ5amQ5ZzFzdThaVHhSZTl3QVMyOWNpdjFZNnhjMVJNaE5YY0toSzZPR2FXVFJRV1NpWUgzR0hncHUzdDBIQ2JEdlhnajdZdGhkNmdjTGY5bHJaOERrb0E?oc=5",
-      "source": "energynews.pro",
       "summary": "",
       "sentiment": 0,
       "importance": "mineure"
@@ -131,31 +113,49 @@
       "summary": "",
       "sentiment": 0,
       "importance": "mineure"
+    },
+    {
+      "title": "Le prix du gaz va franchir un nouveau cap en décembre - Connaissance des Énergies",
+      "date": "2026-11-06",
+      "link": "https://news.google.com/rss/articles/CBMimAFBVV95cUxNZHVieDNocGFRWUhCem9kSnBXSzNSMUNMSWkzcDNfTkpIUENQSjcwNXN6NmxPd1Vta0F2bFZ6YUNZekUzWHFUanFtOEswYzNTRmZ6QmRoX3NDN09NMGlyOElFYmlaMmN6NE1PM0VkRTY1d2NwbzU2TjVhbVZycXdGcHBodkFaMXJPLXhrcDdPNHdUUmxvZmJ3Tw?oc=5",
+      "source": "Connaissance des Énergies",
+      "summary": "",
+      "sentiment": 0,
+      "importance": "mineure"
+    },
+    {
+      "title": "Genève : Le gaz naturel va coûter 9,5 % plus cher en 2027 - La Radio Plus",
+      "date": "2026-11-25",
+      "link": "https://news.google.com/rss/articles/CBMiowFBVV95cUxNUDZDQ3JwNUZyaFE0anpHSjQzWHdJMGtsbndBeXNRdHN3YU54amRFYk1yQV96S1ZVUDR1bE9DMUZJNWVOQnQ3ck1Ud2pGWHdLbEtJSFdLbGZVMmxKQVc3S0JfeDBxX0xvRktqZmd2dUNEVXZTd2lfSUJnbk9kQ3ExcTRWbEd3Z2tQNkgyaTRkdnkwMnJHV1hUdlFhWGFZOGQ4R3NF?oc=5",
+      "source": "La Radio Plus",
+      "summary": "",
+      "sentiment": 0,
+      "importance": "mineure"
     }
   ],
-  "analysis_html": "<h3>Contexte récent</h3><p>Le gaz naturel américain (Henry Hub) s'échange autour de 3,10 $/MMBtu. Ce niveau est inférieur d'environ 10 % à la moyenne saisonnière du mois (3,47 $/MMBtu), mais supérieur de 22,9 % à sa moyenne mobile 200 jours. Le marché combine donc une forte dynamique haussière de moyen terme, un positionnement spéculatif très vendeur et un dollar qui s'est raffermi ces deux derniers mois.</p><h3>Facteurs déterminants</h3><ul><li><strong>Dynamique récente (score +10,0, poids 27 %) :</strong> c'est la contribution positive la plus forte (environ +2,7 points pondérés). L'écart de +22,9 % au-dessus de la MM200 traduit une tendance haussière nette, et le facteur atteint le maximum de son échelle.</li><li><strong>Positionnement CFTC (score +9,6, poids 27 %) :</strong> deuxième soutien du score (environ +2,6 points pondérés). La position nette des non-commerciaux, à -211 545 contrats, se situe au 2e percentile sur trois ans, soit un niveau de vente spéculative extrême. Le modèle l'interprète de façon contrariante : une position courte aussi concentrée expose le marché à des rachats de couverture en cas de surprise haussière.</li><li><strong>Saisonnalité (score -7,3, poids 33 %) :</strong> c'est le facteur le plus pondéré et le principal frein (environ -2,4 points pondérés). Le prix reste nettement sous sa moyenne saisonnière du mois, alors que cette période correspond normalement à un renforcement des prix avec l'arrivée de l'hiver.</li><li><strong>Dollar DXY (score -10,0, poids 13 %) :</strong> l'indice est passé de 100,97 à 103,98 en deux mois (environ +3 %). Ce raffermissement pèse au maximum de l'échelle du facteur, mais son poids limité ramène sa contribution à environ -1,3 point pondéré.</li><li><strong>Stocks EIA (poids 0 %) :</strong> la donnée est indisponible faute de clé API configurée. Le score repose donc sur quatre facteurs seulement, sans l'indicateur fondamental de l'équilibre offre/demande américain.</li></ul><h3>Actualités à retenir</h3><p>Aucune actualité n'est classée notable ou majeure. Les cinq informations recensées sont mineures et concernent surtout l'Europe et les tarifs de détail :</p><ul><li>Les deux titres sur le marché européen se contredisent. L'un évoque une baisse liée à des prévisions météo plus douces, l'autre une envolée à la veille d'une première vague de froid. Cela illustre la forte sensibilité des prix à la météo en début d'hiver.</li><li>Les hausses tarifaires annoncées (prix repère de vente en France, Genève en 2027, plafond Ofgem au Royaume-Uni) reflètent des décisions réglementaires ou commerciales. Elles n'ont pas d'incidence directe sur le Henry Hub.</li></ul><p>Ces actualités ne modifient donc pas l'interprétation du score. Elles rappellent seulement le contexte saisonnier hivernal, déjà intégré via le facteur de saisonnalité.</p><h3>Synthèse</h3><p>Le score composite ressort légèrement positif, d'environ +1,6 point selon la somme des contributions pondérées. Deux facteurs le soutiennent : une dynamique de prix vigoureuse et un positionnement spéculatif extrêmement court, interprété comme un signal contrariant. Deux facteurs le freinent : un prix sous ses normes saisonnières et un dollar plus fort. Ces forces opposées se compensent en grande partie, ce qui donne un signal globalement modéré. Ce signal reste incomplet tant que les stocks EIA, facteur fondamental clé, ne sont pas intégrés au calcul. Les actualités récentes, toutes mineures et centrées sur l'Europe, n'apportent pas d'élément déterminant pour le marché américain.</p>",
+  "analysis_html": "<h3>Contexte récent</h3><p>Le Henry Hub s’établit à <strong>3,30 $/MMBtu</strong>, soit <strong>22 % au-dessus de sa moyenne mobile à 200 jours</strong>. Le prix a donc nettement progressé sur les derniers mois. Il reste toutefois légèrement sous sa moyenne saisonnière du mois (3,46 $/MMBtu), ce qui nuance l’ampleur du mouvement. Dans le même temps, le dollar s’est raffermi : le DXY est passé de 101,20 à 103,77 en deux mois.</p><h3>Facteurs déterminants</h3><ul><li><strong>Dynamique récente (score +10,0, poids 27 %)</strong> : c’est le principal soutien du score. L’écart de +22 % par rapport à la MM200 traduit une tendance haussière marquée, et le facteur atteint son niveau maximal.</li><li><strong>Positionnement CFTC (score +9,6, poids 27 %)</strong> : la position nette est très vendeuse (-211 545 contrats), au <strong>2e percentile sur trois ans</strong>. Un positionnement aussi extrême se lit comme un signal contrariant favorable. Le marché est déjà largement positionné à la baisse, et d’éventuels rachats de positions courtes pourraient alimenter la hausse. Avec la dynamique, ce facteur porte l’essentiel de la contribution positive.</li><li><strong>Saisonnalité (score -3,1, poids 33 %)</strong> : c’est le facteur le plus pondéré, mais son score modéré limite son influence. Le prix se situe un peu sous la norme saisonnière du mois, ce qui pèse légèrement sur l’ensemble.</li><li><strong>Dollar (score -10,0, poids 13 %)</strong> : la hausse du DXY constitue un vent contraire maximal sur ce facteur. Son poids plus faible en limite toutefois l’impact sur le score global.</li><li><strong>Stocks EIA (poids 0 %)</strong> : la donnée est indisponible faute de clé API configurée. Ce facteur fondamental est habituellement central pour le gaz naturel américain, et son absence est une limite notable de l’analyse.</li></ul><p>Au total, les facteurs techniques et de positionnement (dynamique et CFTC) l’emportent sur les freins modérés liés à la saisonnalité et au dollar. Le score composite s’oriente donc vers le positif.</p><h3>Actualités à retenir</h3><p>Aucune actualité n’est classée notable ou majeure : les cinq informations recensées sont toutes <strong>mineures</strong>. Elles portent pour l’essentiel sur le marché européen (PEG, prix de gros) ou sur des tarifs de détail (Genève, 2027), et non directement sur le Henry Hub. Elles illustrent néanmoins la sensibilité des prix aux conditions météorologiques. Les signaux sont contradictoires : hausse hebdomadaire de 5,3 % et envolée avant une vague de froid d’un côté, repli sur des prévisions plus douces de l’autre. Ces informations n’expliquent pas directement l’évolution du score, mais elles reflètent un contexte hivernal volatil.</p><h3>Synthèse</h3><p>Le score composite du gaz naturel est principalement soutenu par une <strong>forte dynamique de prix</strong> et un <strong>positionnement spéculatif extrêmement vendeur</strong>, lu comme un signal contrariant. Une saisonnalité légèrement défavorable et un dollar en hausse tempèrent ce constat. L’actualité récente, mineure et centrée sur l’Europe, souligne surtout le rôle de la météo dans la volatilité hivernale. L’absence des données de stocks EIA invite à interpréter ce score avec prudence, car un fondamental clé n’est pas pris en compte.</p>",
   "news_classifications": {
+    "https://news.google.com/rss/articles/CBMibEFVX3lxTE9LQ25MTXpTZkd5c0JPT3pQSjctc1Nnakd0LXVxWHBTT0R1b2J3RUhXOVFaVmoyTTNoWjNjSmtaODhWZmFaVlZmVXlrbmtlYVR5OXI5NmIwTkV2VUJnTkExTm5sekUzbml1Z2RuXw?oc=5": {
+      "summary": "",
+      "sentiment": 0,
+      "importance": "mineure"
+    },
     "https://news.google.com/rss/articles/CBMizgFBVV95cUxNSDI0Nkw1bDRUYzJ0SEhmXy12Y1ZRaUxxUS1zbnBLeVVBU1M2TTVHVzFZaGo0Y3BnajFHRkZoei1LUW43YXlxMGFVSzYxZGxjOHpGUkJZSGxuZHl4QkE3MGZJTi10UF9Cbm9OcU9lN3lobjRZajJ5Sk9XR2NBS0N3ZDhKRDVMR2NSWUlsSGVkUjZyYjRTQ1A1SkI5Sk0wX3VacGgzZmRnSEkxWG9vRnZkanhnOUdFa296NTV5b3BjQks2b1ZhdGxrY0kyWFBwQQ?oc=5": {
       "summary": "",
       "sentiment": 0,
       "importance": "mineure"
     },
-    "https://news.google.com/rss/articles/CBMic0FVX3lxTE1aLXB2OUQ5dWpLU3R0OHRqeXlrb3RwdXByenR5aTY5Y0tKa0xEZGdhVElrWjVZUzVjd3hlVkVjdmY0aE1oMnpTd01XZC1wbk1oY3FickFLVkxyY2dwSTJTbXdBc3lpUkMtZ25FbGVjRHR1aXc?oc=5": {
+    "https://news.google.com/rss/articles/CBMi1gFBVV95cUxOVFZ2OHVwOWV3b095WlJHWHpVZDhmbUtmSmMxOHlMNUhfUjdieGN2VVVobWZpaEtuT1p0RXB2ZFJvakJPRlpTa1owVU8wSVpYNlU4Smp4amdJS2RSUjZCVnZqZkdpLThCSC1KMEhRbFFKX0RIUThnTG9GMHFXVGxTQTVNZ1NQSThzLWU2U3NUemZUYkNERGFZVmMyZjVfWU56YnNVSGJWQk1WV1dMMi1EZ09ad2x5MllmYlNrdFZDQWlXVDJEV1lLSGd3YWF3UTJ0OFFEY1l3?oc=5": {
+      "summary": "",
+      "sentiment": 0,
+      "importance": "mineure"
+    },
+    "https://news.google.com/rss/articles/CBMimAFBVV95cUxNZHVieDNocGFRWUhCem9kSnBXSzNSMUNMSWkzcDNfTkpIUENQSjcwNXN6NmxPd1Vta0F2bFZ6YUNZekUzWHFUanFtOEswYzNTRmZ6QmRoX3NDN09NMGlyOElFYmlaMmN6NE1PM0VkRTY1d2NwbzU2TjVhbVZycXdGcHBodkFaMXJPLXhrcDdPNHdUUmxvZmJ3Tw?oc=5": {
       "summary": "",
       "sentiment": 0,
       "importance": "mineure"
     },
     "https://news.google.com/rss/articles/CBMiowFBVV95cUxNUDZDQ3JwNUZyaFE0anpHSjQzWHdJMGtsbndBeXNRdHN3YU54amRFYk1yQV96S1ZVUDR1bE9DMUZJNWVOQnQ3ck1Ud2pGWHdLbEtJSFdLbGZVMmxKQVc3S0JfeDBxX0xvRktqZmd2dUNEVXZTd2lfSUJnbk9kQ3ExcTRWbEd3Z2tQNkgyaTRkdnkwMnJHV1hUdlFhWGFZOGQ4R3NF?oc=5": {
-      "summary": "",
-      "sentiment": 0,
-      "importance": "mineure"
-    },
-    "https://news.google.com/rss/articles/CBMiogFBVV95cUxPenZXd1liTDBsRm02YVFBMFFQajlIc202QmwtemFsVjNuZ29uN0ZJZUhDVVhuUlpGMko5MFY4YjMtNm80ellpa1F4MXZ5amQ5ZzFzdThaVHhSZTl3QVMyOWNpdjFZNnhjMVJNaE5YY0toSzZPR2FXVFJRV1NpWUgzR0hncHUzdDBIQ2JEdlhnajdZdGhkNmdjTGY5bHJaOERrb0E?oc=5": {
-      "summary": "",
-      "sentiment": 0,
-      "importance": "mineure"
-    },
-    "https://news.google.com/rss/articles/CBMi1gFBVV95cUxOVFZ2OHVwOWV3b095WlJHWHpVZDhmbUtmSmMxOHlMNUhfUjdieGN2VVVobWZpaEtuT1p0RXB2ZFJvakJPRlpTa1owVU8wSVpYNlU4Smp4amdJS2RSUjZCVnZqZkdpLThCSC1KMEhRbFFKX0RIUThnTG9GMHFXVGxTQTVNZ1NQSThzLWU2U3NUemZUYkNERGFZVmMyZjVfWU56YnNVSGJWQk1WV1dMMi1EZ09ad2x5MllmYlNrdFZDQWlXVDJEV1lLSGd3YWF3UTJ0OFFEY1l3?oc=5": {
       "summary": "",
       "sentiment": 0,
       "importance": "mineure"

@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-25T07:11:03Z",
+  "generated_at": "2026-11-26T07:10:58Z",
   "healthy": false,
-  "summary_fr": "Le bot a évalué 432 situations de marché aujourd'hui et 9 072 sur les 7 derniers jours, sans ouvrir aucune position sur cette période. Le bot est actuellement en pause : son interrupteur de sécurité est activé, ce qui l'empêche de prendre de nouvelles positions, même s'il continue d'analyser le marché en continu. Aucune intervention n'est requise de votre part."
+  "summary_fr": "Sur les 7 derniers jours, le bot a évalué 9 071 situations de marché (dont 431 aujourd'hui) et n'a ouvert aucune position. Le dispositif de sécurité (coupe-circuit) est actuellement activé : le bot continue d'analyser le marché mais reste volontairement en pause et n'ouvre pas de nouveaux trades. C'est un comportement de protection du capital, pas une panne technique."
 }

@@ -1,5 +1,5 @@
 {
-  "date": "2026-11-25",
+  "date": "2026-11-26",
   "composite_score": 0.7,
   "interpretation": "Neutre — pas d'action",
   "cftc_percentile": 16.025641025641026,
@@ -14,7 +14,7 @@
       "name": "Dollar (DXY)",
       "score": -10,
       "weight": 0.15,
-      "raw_value": "103.70 (il y a 2 mois : 100.97)"
+      "raw_value": "103.83 (il y a 2 mois : 101.20)"
     },
     {
       "name": "Anticipations d'inflation",
@@ -48,24 +48,14 @@
     }
   ],
   "technical": {
-    "note": "Cours en-dessous de la MM200 (-18.4%) — tendance baissière",
-    "spot": 3608.699951171875,
-    "ma200": 4423.339494628906
+    "note": "Cours en-dessous de la MM200 (-18.2%) — tendance baissière",
+    "spot": 3610.800048828125,
+    "ma200": 4415.536495361328
   },
   "calendar": [
     {
-      "date": "25/11/2026",
-      "label": "PCE (dépenses de consommation des ménages)",
-      "kind": "Donnée"
-    },
-    {
-      "date": "25/11/2026",
+      "date": "03/12/2026",
       "label": "Inscriptions chômage (hebdo)",
-      "kind": "Donnée"
-    },
-    {
-      "date": "25/11/2026",
-      "label": "PIB (GDP)",
       "kind": "Donnée"
     },
     {
@@ -92,6 +82,16 @@
       "date": "16/12/2026",
       "label": "Ventes au détail",
       "kind": "Donnée"
+    },
+    {
+      "date": "23/12/2026",
+      "label": "PCE (dépenses de consommation des ménages)",
+      "kind": "Donnée"
+    },
+    {
+      "date": "23/12/2026",
+      "label": "PIB (GDP)",
+      "kind": "Donnée"
     }
   ],
   "alerts": [
@@ -99,7 +99,7 @@
       "kind": "info",
       "title": "Pas de signal actif",
       "detail": "Aucune des conditions de veille, d'entrée ou de risque n'est réunie aujourd'hui.",
-      "date": "25/11/2026"
+      "date": "26/11/2026"
     }
   ],
   "news": [

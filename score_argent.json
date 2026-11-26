@@ -1,8 +1,8 @@
 {
-  "date": "2026-11-25",
+  "date": "2026-11-26",
   "commodity": "argent",
   "label": "Argent",
-  "composite_score": -2.6,
+  "composite_score": -4.3,
   "interpretation": "Neutre — pas d'action",
   "cftc_percentile": 3.205128205128205,
   "factors": [
@@ -16,7 +16,7 @@
       "name": "Dollar (DXY)",
       "score": -10,
       "weight": 0.2,
-      "raw_value": "103.70 (il y a 2 mois : 100.97)"
+      "raw_value": "103.83 (il y a 2 mois : 101.20)"
     },
     {
       "name": "Positionnement CFTC",
@@ -26,37 +26,27 @@
     },
     {
       "name": "Ratio or/argent",
-      "score": 3.171270718232046,
+      "score": 2.516556291390728,
       "weight": 0.25,
-      "raw_value": "86.5 — 66e percentile (3 ans)"
+      "raw_value": "86.1 — 63e percentile (3 ans)"
     },
     {
       "name": "Dynamique récente",
       "score": -10.0,
       "weight": 0.1,
-      "raw_value": "-37.7% vs MM200"
+      "raw_value": "-37.1% vs MM200"
     }
   ],
   "technical": {
-    "note": "Cours en-dessous de la MM200 (-37.7%) — tendance baissière",
-    "spot": 41.70500183105469,
-    "ma200": 66.94280981063842,
+    "note": "Cours en-dessous de la MM200 (-37.1%) — tendance baissière",
+    "spot": 41.94499969482422,
+    "ma200": 66.72549980163575,
     "unite": "$ / oz"
   },
   "calendar": [
     {
-      "date": "25/11/2026",
-      "label": "PCE (dépenses de consommation des ménages)",
-      "kind": "Donnée"
-    },
-    {
-      "date": "25/11/2026",
+      "date": "03/12/2026",
       "label": "Inscriptions chômage (hebdo)",
-      "kind": "Donnée"
-    },
-    {
-      "date": "25/11/2026",
-      "label": "PIB (GDP)",
       "kind": "Donnée"
     },
     {
@@ -82,6 +72,16 @@
     {
       "date": "16/12/2026",
       "label": "Ventes au détail",
+      "kind": "Donnée"
+    },
+    {
+      "date": "23/12/2026",
+      "label": "PCE (dépenses de consommation des ménages)",
+      "kind": "Donnée"
+    },
+    {
+      "date": "23/12/2026",
+      "label": "PIB (GDP)",
       "kind": "Donnée"
     }
   ],

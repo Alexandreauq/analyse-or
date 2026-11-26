@@ -169,7 +169,14 @@
       "return_pct": null,
       "buyhold_price_at_close": null,
       "buyhold_return_pct": null,
-      "journal": []
+      "journal": [
+        {
+          "date": "2026-11-25",
+          "price": 3535.800048828125,
+          "decision": "garder",
+          "raison": "La Fed laisse entrevoir une hausse des taux d'ici la fin de l'année, ce qui soutient toujours la thèse vendeuse, mais la longue mèche basse du 25/11 sur un marché très survendu justifie d'abaisser le stop vers 3 600 $."
+        }
+      ]
     }
   ]
 }

@@ -14,7 +14,7 @@
       "name": "Dollar (DXY)",
       "score": -10,
       "weight": 0.15,
-      "raw_value": "103.78 (il y a 2 mois : 101.20)"
+      "raw_value": "103.80 (il y a 2 mois : 101.20)"
     },
     {
       "name": "Anticipations d'inflation",
@@ -48,9 +48,9 @@
     }
   ],
   "technical": {
-    "note": "Cours en-dessous de la MM200 (-18.6%) — tendance baissière",
-    "spot": 3592.10009765625,
-    "ma200": 4415.442995605469
+    "note": "Cours en-dessous de la MM200 (-16.0%) — tendance baissière",
+    "spot": 3709.800048828125,
+    "ma200": 4416.031495361328
   },
   "calendar": [
     {
@@ -104,20 +104,38 @@
   ],
   "news": [
     {
-      "title": "Comment le Liberia compte transformer la flambée des cours de l’or en routes et en électricité - La Tribune",
-      "date": "2026-11-26",
-      "link": "https://news.google.com/rss/articles/CBMi5AFBVV95cUxQNTNPeHZmdFZ5YmNVZzNsRjFBcW1pU0hHc0dZVFlPeU1WM0RDU3R3aXhPTGkzRkxndXkwRklIUWFVMUJrTlJQOUI3Q3BNVzZXbVhFTnBsSWNTTU9icGRCQjlaVWpERktPQ1J6Y3R1TzVSdlZOWmlwUnQ2NFhMRTZEYXVuODVLVFB4emVZdkdvV2xNc2ZSekhHaHZqczRRdWRpeE5ES05nRkRGcmk4ZGJJbm5PYmZ2QjhuOW9sdEY4dVJ2SW43VVVyYkZ2NnVJUEhxc3NkenBPVm5rVXpodlotUGgxVFA?oc=5",
-      "source": "La Tribune",
+      "title": "Cours de l’or en Inde aujourd’hui : l’or progresse, selon les données de FXStreet - www.tmgm.com",
+      "date": "2026-11-27",
+      "link": "https://news.google.com/rss/articles/CBMixAFBVV95cUxNeHlPZzhlQVFBT3gzQlFjMEpKUU0tN2ZfOWZNSXlmQTh4TkdjV2p5R0VyVi1XZkhjbEtHYjZKblFSZWVmNHY3dmkwWVFodDA3Q1YteENNMV9CZVdha08zV3hoSFZUZlFxdTZkQ3gxNi1hU3JxTTlaOHZ0UUxyNy1DcE5ZU0VDN0NMXzFaaEVTeW1nemN1ekZZSVZOMjRlWnZHcVQtUGR4NHVGYmFhTWtoS3N2WnMySzBLV2ZqTEh2OU5KTTA3?oc=5",
+      "source": "www.tmgm.com",
       "summary": "",
       "sentiment": 0,
       "importance": "mineure"
     },
     {
-      "title": "Dong vietnamien, cours de l’or – 26 novembre - Zonebourse Suisse",
-      "date": "2026-11-26",
-      "link": "https://news.google.com/rss/articles/CBMipwFBVV95cUxNaUhEUlBDaTBvcEtoQlBXTzY2eFZFb1VZOXVnSl94cHFnSmN5LU1NcmtGSWMwc2poa29OU01xYmlvNkhnc2pMU2tRQm1kMFdoamRUd29FVW00dzROTmEtVUdHOVMtWEZpU3VGaTU2YUlhMVJaeGVzY05EbVR2V1VDMFhsODU0bVg5cEtndGJ0dkxHbE5TbXJCSnhseWZscndHSWtKU3QyZw?oc=5",
+      "title": "Dong vietnamien, cours de l’or – 27 novembre - Zonebourse Suisse",
+      "date": "2026-11-27",
+      "link": "https://news.google.com/rss/articles/CBMipwFBVV95cUxNSGk1WmZyVUFmYnFtZ1hpSkRpNURYUi04SW5Ba2o2YUVBNFNzRDM4LU54eXplY1VmdmtnN1dFeUdva1BQSFlrTEZZY0VXWjdQaDVEaEZRZjBqdXEzVUJ4ZFYyZDk5b0o1X3JRTkpmS1doZUpYSU1GdTlkZklUb0cyMVNRTDU1VldPNGFnZ0tvU1dDRzNudjhCUEo3SFg1cDRNX0dhdFplQQ?oc=5",
       "source": "Zonebourse Suisse",
-      "summary": "Cet article suggère qu'il s'agit d'une mise à jour quotidienne de cours mentionnant le dong vietnamien et l'or, probablement publiée le 26 novembre sur un site d'information financière ; le titre seul ne permet pas de confirmer le contenu ni les niveaux de prix évoqués.",
+      "summary": "",
+      "sentiment": 0,
+      "importance": "mineure"
+    },
+    {
+      "title": "26/11 L'or perd 17 % depuis le dernier Thanksgiving... | De L'Or - Actualités et analyses - BullionVault FR",
+      "date": "2026-11-26",
+      "link": "https://news.google.com/rss/articles/CBMimAFBVV95cUxPZjB1UW1WUVdtZlFfYU9LdDYtczJlaDJZUEZaakJtRDhrVWRPSmtEc29yV0RBSHpkbGNVam0xcDVKS1lHclFHSC1pWlc0TVhTck1ybFE2RlB3bkhQcnNkZHBKQzU1eWNSX01zMEhHTXJITUFsNHN6OUF4cTRFSncyNjA0SGRQaUQzLWxVS1AyME9GY3BUaGFYbw?oc=5",
+      "source": "BullionVault FR",
+      "summary": "",
+      "sentiment": 0,
+      "importance": "mineure"
+    },
+    {
+      "title": "Actualité crypto : l'or bondit de 2,7 % à 3 662 dollars, le bitcoin tient les 61 000 - CryptoTicker.io",
+      "date": "2026-11-27",
+      "link": "https://news.google.com/rss/articles/CBMie0FVX3lxTFAwaVBHdzhaSDdrVzRQcEJiaHRXSTZRWmlaUGdKZ0VSTy1NS1N6ODV0SkU2ZEZBZlFRTnlrWVdzb242QXExTWNNRUdRMnVOVWQ3RWQyQUxqd3BUY2xTM2hIZEpMSXNlRWhRU2YtLTRXUjVXWHV3bjk3ZkFZMA?oc=5",
+      "source": "CryptoTicker.io",
+      "summary": "",
       "sentiment": 0,
       "importance": "mineure"
     },
@@ -129,49 +147,31 @@
       "summary": "",
       "sentiment": 0,
       "importance": "mineure"
-    },
-    {
-      "title": "23/11 Les cours de l'or et de l'argent rebondissent... | De L'Or - Actualités et analyses - BullionVault FR",
-      "date": "2026-11-23",
-      "link": "https://news.google.com/rss/articles/CBMimgFBVV95cUxQZ01QSTlNUHNja0RyZlBxYmdmRW1Wb0dWampDV29JcUd4dDM1R045NEgtS1JtY2RxN1F6eUc1bUJ2Vjg0S2NUblpWcHpwWUxmM09sZEMtRU1tTnJzakswQXRYcEVhNUI4UXlDS1ZVdWMzUXRvb1RBcFpjZkJPNkozcTlndVJsTEtVbWJQUjYzWWdzZjIySmRfSkpn?oc=5",
-      "source": "BullionVault FR",
-      "summary": "",
-      "sentiment": 0,
-      "importance": "mineure"
-    },
-    {
-      "title": "Les cours de l’or se stabilisent après avoir atteint leur plus bas niveau depuis un an - Business AM",
-      "date": "2026-11-26",
-      "link": "https://news.google.com/rss/articles/CBMisAFBVV95cUxOOW00SHJkczNyOUdtYnNiYWktY1FpU25GcFF4SmF4VS1CUThzZ3VRNmlrTW44QzROdVpTeFBXTWRjZGtfV2Fpai0wRGZzRjNrbDNDd3d5M2czTlQ4ZnFuaU02MkZCVm1EMXVITEtsVE1jZVlCNURWN1d4bDNSM1ZaZ3JrdVlzUk9DaHB5VkItX2hiNWlhNGVtOWpZMHpfUl9ndGJNVElwSENKQmZXQ01KYQ?oc=5",
-      "source": "Business AM",
-      "summary": "",
-      "sentiment": 0,
-      "importance": "mineure"
     }
   ],
-  "analysis_html": "<h3>Contexte récent</h3><p>Sur les deux derniers mois, le <strong>dollar s’est nettement raffermi</strong> (DXY de 101,20 à 103,76), tandis que les <strong>anticipations d’inflation ont reculé</strong> (de 2,33 % à 2,12 % en ~45 jours). Les taux réels US à 10 ans ont légèrement baissé (de 2,88 % à 2,79 %), ce qui atténue un peu la pression sur l’or. Les titres d’actualité évoquent un repli des cours vers un plus bas d’un an, suivi d’une stabilisation et d’un rebond. Les données fournies ne permettent toutefois pas de confirmer les niveaux de prix.</p><h3>Facteurs déterminants</h3><ul><li><strong>Dollar (DXY), score -10,0, poids 15 %</strong> : c’est le facteur le plus pénalisant. Son score est au plancher et sa contribution pondérée est la plus lourde du composite. Un dollar plus fort renchérit l’or pour les acheteurs hors zone dollar et pèse traditionnellement sur sa demande.</li><li><strong>Anticipations d’inflation, score -7,0, poids 15 %</strong> : le recul d’environ 21 points de base réduit l’attrait de l’or comme couverture contre l’inflation. Ce facteur constitue le second frein majeur.</li><li><strong>Taux réels US 10 ans, score +1,8, poids 30 %</strong> : c’est le facteur le plus pondéré, mais son score n’est que modérément positif. La légère détente des taux réels diminue le coût d’opportunité de détenir un actif sans rendement. Son niveau absolu reste cependant élevé, ce qui limite son effet de soutien malgré son poids important.</li><li><strong>Ton de la Fed, score +5,0, poids 15 %</strong> : il apporte un soutien notable, perçu comme plutôt favorable à l’or. Il s’agit toutefois d’une saisie manuelle, donc d’une appréciation qualitative.</li><li><strong>Positionnement CFTC, score +6,8, poids 10 %</strong> : la position nette spéculative (166 132 contrats) se situe au 16e percentile sur 3 ans. Ce positionnement relativement allégé est interprété comme un signal contrarien favorable : le potentiel de rachats est plus important que le risque de liquidations massives.</li><li><strong>Flux ETF, score +3,0, et achats des banques centrales, score +7,0</strong> : ces deux facteurs donnent un soutien positif mais d’impact limité (poids respectifs de 10 % et 5 %). Leurs valeurs proviennent aussi de saisies manuelles.</li></ul><p>Au total, les deux facteurs négatifs (dollar et inflation anticipée) sont en grande partie compensés par l’addition de plusieurs facteurs positifs modérés : Fed, positionnement, taux réels, banques centrales et ETF. Il en résulte un équilibre assez serré entre forces opposées.</p><h3>Actualités à retenir</h3><p><strong>Aucune actualité n’est classée notable ou majeure</strong> sur la période. Les titres mineurs ont surtout une valeur de contexte :</p><ul><li>Plusieurs titres (Business AM, Epoch Times, BullionVault) décrivent une phase de <strong>baisse vers un plus bas d’un an</strong>, puis une stabilisation et un rebond autour du 23 novembre. Ce mouvement est cohérent avec la pression exercée par le dollar fort et le reflux des anticipations d’inflation.</li><li>L’article sur le Liberia évoque une « flambée des cours » sur un horizon plus long. Il relève de l’impact économique pour les pays producteurs et n’apporte pas d’éclairage direct sur les facteurs du score.</li><li>La mise à jour de cours du 26 novembre (Zonebourse) est purement informative. Son contenu n’est pas confirmé par le titre seul.</li></ul><p>Ces actualités ne modifient pas en elles-mêmes les facteurs du score. Elles illustrent plutôt les mouvements de prix qui en découlent.</p><h3>Synthèse</h3><p>Le score composite de l’or reflète un <strong>équilibre tendu</strong>. D’un côté, un dollar en net renforcement et des anticipations d’inflation en repli constituent les principaux vents contraires. De l’autre, une légère détente des taux réels, un ton de la Fed jugé favorable et un positionnement spéculatif bas offrent des soutiens. Les actualités récentes, toutes mineures, décrivent un repli des cours vers un plus bas annuel puis une stabilisation, ce qui est compatible avec cette configuration. Plusieurs facteurs positifs (Fed, ETF, banques centrales) reposent sur des saisies manuelles : leur interprétation comporte donc une part d’appréciation qualitative. L’évolution du dollar et des anticipations d’inflation apparaît comme le principal élément à surveiller pour l’orientation future du score.</p>",
+  "analysis_html": "<h3>Contexte récent</h3><p>Sur les deux derniers mois, l'environnement macro de l'or est contrasté. Le dollar s'est nettement raffermi (DXY de 101,20 à 103,80) et les anticipations d'inflation ont reculé (de 2,33 % à 2,12 % en environ 45 jours). Les taux réels US à 10 ans ont légèrement baissé (de 2,88 % à 2,79 %). Les données fournies ne comprennent pas de série de prix de l'or, et les actualités disponibles donnent des signaux contradictoires sur sa direction récente.</p><h3>Facteurs déterminants</h3><p>Les contributions pondérées (score × poids) font apparaître deux blocs qui se compensent presque entièrement. La somme des contributions est proche de zéro, autour de +0,07.</p><ul><li><strong>Dollar (DXY), le principal frein (≈ -1,5)</strong> : avec un score de -10, le plus bas possible, et un poids de 15 %, c'est le facteur le plus pénalisant. La hausse d'environ 2,6 points du DXY renchérit l'or pour les détenteurs d'autres devises, ce qui pèse traditionnellement sur sa demande.</li><li><strong>Anticipations d'inflation, deuxième frein (≈ -1,05)</strong> : leur repli d'environ 21 points de base réduit l'attrait de l'or comme couverture contre l'inflation.</li><li><strong>Ton de la Fed, premier soutien (≈ +0,75)</strong> : le score de +5, saisi manuellement, traduit une orientation jugée favorable à l'or, par exemple des perspectives d'assouplissement.</li><li><strong>Positionnement CFTC (≈ +0,68)</strong> : la position nette spéculative de 166 132 contrats se situe au 16e percentile sur 3 ans. Ce positionnement acheteur peu chargé est interprété comme un soutien, car il laisse de la marge à une reconstitution des positions.</li><li><strong>Taux réels US 10 ans (≈ +0,54)</strong> : c'est le facteur le plus lourdement pondéré (30 %), mais son score reste modeste (+1,8). La légère baisse des taux réels réduit le coût d'opportunité de détenir de l'or, sans constituer à ce stade un moteur puissant.</li><li><strong>Soutiens secondaires</strong> : les achats des banques centrales (≈ +0,35) et les flux ETF GLD + IAU (≈ +0,3) restent positifs. Leur faible pondération limite toutefois leur influence.</li></ul><h3>Actualités à retenir</h3><p>Aucune actualité n'est classée notable ou majeure. Les cinq éléments fournis sont tous mineurs et n'expliquent pas à eux seuls l'évolution du score.</p><ul><li>Les titres sont contradictoires. L'un fait état d'une hausse de 2,7 % à 3 662 dollars. D'autres évoquent des cours en baisse, ou un recul de 17 % depuis le dernier Thanksgiving.</li><li>Ce chiffre de -17 % paraît difficilement compatible avec un cours de l'ordre de 3 662 dollars. Il peut s'agir de dates, de devises ou de périodes de référence différentes, et il est à prendre avec prudence.</li><li>Les autres éléments, sur les cours en Inde et au Vietnam, relèvent du suivi de prix local sans portée macro particulière.</li></ul><p>Ces actualités traduisent surtout une volatilité de court terme. Aucune n'apporte d'information nouvelle sur les facteurs fondamentaux du score.</p><h3>Synthèse</h3><p>Le score composite reflète un équilibre de forces opposées.</p><ul><li><strong>Vents contraires</strong> : le renforcement du dollar et le recul des anticipations d'inflation constituent les principaux freins.</li><li><strong>Soutiens</strong> : un ton de la Fed jugé favorable, un positionnement spéculatif peu chargé, une légère détente des taux réels et une demande structurelle (banques centrales, ETF) restée positive.</li></ul><p>Le résultat net est proche de la neutralité. L'orientation à venir du score dépendra principalement de l'évolution du dollar et des taux réels, ces derniers ayant le poids le plus important. Les actualités récentes, toutes mineures et contradictoires, ne modifient pas ce diagnostic.</p>",
   "news_classifications": {
-    "https://news.google.com/rss/articles/CBMi5AFBVV95cUxQNTNPeHZmdFZ5YmNVZzNsRjFBcW1pU0hHc0dZVFlPeU1WM0RDU3R3aXhPTGkzRkxndXkwRklIUWFVMUJrTlJQOUI3Q3BNVzZXbVhFTnBsSWNTTU9icGRCQjlaVWpERktPQ1J6Y3R1TzVSdlZOWmlwUnQ2NFhMRTZEYXVuODVLVFB4emVZdkdvV2xNc2ZSekhHaHZqczRRdWRpeE5ES05nRkRGcmk4ZGJJbm5PYmZ2QjhuOW9sdEY4dVJ2SW43VVVyYkZ2NnVJUEhxc3NkenBPVm5rVXpodlotUGgxVFA?oc=5": {
+    "https://news.google.com/rss/articles/CBMixAFBVV95cUxNeHlPZzhlQVFBT3gzQlFjMEpKUU0tN2ZfOWZNSXlmQTh4TkdjV2p5R0VyVi1XZkhjbEtHYjZKblFSZWVmNHY3dmkwWVFodDA3Q1YteENNMV9CZVdha08zV3hoSFZUZlFxdTZkQ3gxNi1hU3JxTTlaOHZ0UUxyNy1DcE5ZU0VDN0NMXzFaaEVTeW1nemN1ekZZSVZOMjRlWnZHcVQtUGR4NHVGYmFhTWtoS3N2WnMySzBLV2ZqTEh2OU5KTTA3?oc=5": {
       "summary": "",
       "sentiment": 0,
       "importance": "mineure"
     },
-    "https://news.google.com/rss/articles/CBMipwFBVV95cUxNaUhEUlBDaTBvcEtoQlBXTzY2eFZFb1VZOXVnSl94cHFnSmN5LU1NcmtGSWMwc2poa29OU01xYmlvNkhnc2pMU2tRQm1kMFdoamRUd29FVW00dzROTmEtVUdHOVMtWEZpU3VGaTU2YUlhMVJaeGVzY05EbVR2V1VDMFhsODU0bVg5cEtndGJ0dkxHbE5TbXJCSnhseWZscndHSWtKU3QyZw?oc=5": {
-      "summary": "Cet article suggère qu'il s'agit d'une mise à jour quotidienne de cours mentionnant le dong vietnamien et l'or, probablement publiée le 26 novembre sur un site d'information financière ; le titre seul ne permet pas de confirmer le contenu ni les niveaux de prix évoqués.",
+    "https://news.google.com/rss/articles/CBMipwFBVV95cUxNSGk1WmZyVUFmYnFtZ1hpSkRpNURYUi04SW5Ba2o2YUVBNFNzRDM4LU54eXplY1VmdmtnN1dFeUdva1BQSFlrTEZZY0VXWjdQaDVEaEZRZjBqdXEzVUJ4ZFYyZDk5b0o1X3JRTkpmS1doZUpYSU1GdTlkZklUb0cyMVNRTDU1VldPNGFnZ0tvU1dDRzNudjhCUEo3SFg1cDRNX0dhdFplQQ?oc=5": {
+      "summary": "",
+      "sentiment": 0,
+      "importance": "mineure"
+    },
+    "https://news.google.com/rss/articles/CBMimAFBVV95cUxPZjB1UW1WUVdtZlFfYU9LdDYtczJlaDJZUEZaakJtRDhrVWRPSmtEc29yV0RBSHpkbGNVam0xcDVKS1lHclFHSC1pWlc0TVhTck1ybFE2RlB3bkhQcnNkZHBKQzU1eWNSX01zMEhHTXJITUFsNHN6OUF4cTRFSncyNjA0SGRQaUQzLWxVS1AyME9GY3BUaGFYbw?oc=5": {
+      "summary": "",
+      "sentiment": 0,
+      "importance": "mineure"
+    },
+    "https://news.google.com/rss/articles/CBMie0FVX3lxTFAwaVBHdzhaSDdrVzRQcEJiaHRXSTZRWmlaUGdKZ0VSTy1NS1N6ODV0SkU2ZEZBZlFRTnlrWVdzb242QXExTWNNRUdRMnVOVWQ3RWQyQUxqd3BUY2xTM2hIZEpMSXNlRWhRU2YtLTRXUjVXWHV3bjk3ZkFZMA?oc=5": {
+      "summary": "",
       "sentiment": 0,
       "importance": "mineure"
     },
     "https://news.google.com/rss/articles/CBMiugFBVV95cUxNZlpGOUV5T1Vaa1VCZHVNY3VGbV9NN2Fxb1pEUnZ0OEp6eEJMSEhJaXk1bVU2blh3NURwaWpsajdpb1VUakJFRmpBajNCSTZkb1VrdGhzVFFaTE5JY0g0YUcyeVVxd3YzbWFNajFISm1mb18zcFFuc3Vnd25NdUpMajBEWnF0NGtqMDNyM3JxUGs2bTlwM3VEay1XdEtaTkxUa0I1Y0JhXzNHSEhzcmdaaHN3bGEyejBYMWc?oc=5": {
-      "summary": "",
-      "sentiment": 0,
-      "importance": "mineure"
-    },
-    "https://news.google.com/rss/articles/CBMimgFBVV95cUxQZ01QSTlNUHNja0RyZlBxYmdmRW1Wb0dWampDV29JcUd4dDM1R045NEgtS1JtY2RxN1F6eUc1bUJ2Vjg0S2NUblpWcHpwWUxmM09sZEMtRU1tTnJzakswQXRYcEVhNUI4UXlDS1ZVdWMzUXRvb1RBcFpjZkJPNkozcTlndVJsTEtVbWJQUjYzWWdzZjIySmRfSkpn?oc=5": {
-      "summary": "",
-      "sentiment": 0,
-      "importance": "mineure"
-    },
-    "https://news.google.com/rss/articles/CBMisAFBVV95cUxOOW00SHJkczNyOUdtYnNiYWktY1FpU25GcFF4SmF4VS1CUThzZ3VRNmlrTW44QzROdVpTeFBXTWRjZGtfV2Fpai0wRGZzRjNrbDNDd3d5M2czTlQ4ZnFuaU02MkZCVm1EMXVITEtsVE1jZVlCNURWN1d4bDNSM1ZaZ3JrdVlzUk9DaHB5VkItX2hiNWlhNGVtOWpZMHpfUl9ndGJNVElwSENKQmZXQ01KYQ?oc=5": {
       "summary": "",
       "sentiment": 0,
       "importance": "mineure"

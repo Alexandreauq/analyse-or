@@ -1,22 +1,22 @@
 {
-  "date": "2026-11-27",
+  "date": "2026-11-28",
   "commodity": "argent",
   "label": "Argent",
-  "composite_score": -11.9,
+  "composite_score": -10.7,
   "interpretation": "Neutre — pas d'action",
   "cftc_percentile": 3.205128205128205,
   "factors": [
     {
       "name": "Taux réels US 10 ans",
-      "score": 1.7999999999999972,
+      "score": 2.1999999999999975,
       "weight": 0.3,
-      "raw_value": "2.79% (il y a ~45j : 2.88%)"
+      "raw_value": "2.73% (il y a ~45j : 2.84%)"
     },
     {
       "name": "Dollar (DXY)",
       "score": -10,
       "weight": 0.2,
-      "raw_value": "104.04 (il y a 2 mois : 101.20)"
+      "raw_value": "104.01 (il y a 2 mois : 101.20)"
     },
     {
       "name": "Positionnement CFTC",

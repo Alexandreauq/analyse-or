@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-27T07:10:59Z",
+  "generated_at": "2026-11-28T07:11:07Z",
   "healthy": false,
-  "summary_fr": "Aujourd'hui, le bot a évalué 432 situations de marché, et 9 072 sur les 7 derniers jours, sans ouvrir aucune position sur cette période. Le bot continue d'analyser le marché en continu, mais son interrupteur de sécurité est actuellement activé : il est donc volontairement en pause et n'ouvre pas de nouvelles positions pour le moment. Il s'agit d'une mesure de protection du capital, pas d'une panne."
+  "summary_fr": "Sur les 7 derniers jours, le bot a évalué 9 073 situations de marché (dont 432 aujourd'hui) et n'a ouvert aucune position. Le bot est actuellement mis en pause par un interrupteur de sécurité (« kill switch ») : aucune nouvelle position ne peut être ouverte tant qu'il reste activé. Il s'agit d'une mesure de protection volontaire, le suivi du marché continue normalement."
 }
